@@ -28,4 +28,29 @@ class JSONUtilTest {
 
         assertThat(parent.has("missing")).isFalse();
     }
+
+    @Test
+    void findValue_readsNestedFieldCaseInsensitive() {
+        ObjectNode parent = objectMapper.createObjectNode();
+        ObjectNode child = objectMapper.createObjectNode();
+        child.put("TenantId", "pb.amritsar");
+        parent.set("data", child);
+
+        StringBuffer value = new StringBuffer();
+        JSONUtil.findValue(parent, "tenantid", value);
+
+        assertThat(value.toString()).isEqualTo("pb.amritsar");
+    }
+
+    @Test
+    void replaceFieldValue_updatesNestedArrayObjects() {
+        ObjectNode parent = objectMapper.createObjectNode();
+        ObjectNode item = objectMapper.createObjectNode();
+        item.put("status", "OLD");
+        parent.putArray("items").add(item);
+
+        JSONUtil.replaceFieldValue(parent, "status", "NEW");
+
+        assertThat(parent.get("items").get(0).get("status").asText()).isEqualTo("NEW");
+    }
 }

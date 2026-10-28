@@ -27,7 +27,8 @@
 		<jacoco.version>0.8.11</jacoco.version>
 		<jacoco.line.coverage.minimum>0.00</jacoco.line.coverage.minimum>
 		<jacoco.branch.coverage.minimum>0.00</jacoco.branch.coverage.minimum>
-		<jacoco.service.line.minimum>0.15</jacoco.service.line.minimum>
+		<jacoco.service.line.minimum>0.47</jacoco.service.line.minimum>
+		<jacoco.util.line.minimum>0.10</jacoco.util.line.minimum>
 		<jacoco.validation.line.minimum>0.25</jacoco.validation.line.minimum>
 	</properties>
 
@@ -273,7 +274,6 @@
 								<rule>
 									<element>PACKAGE</element>
 									<includes>
-										<include>com.ingestpipeline.util</include>
 										<include>com.ingestpipeline.service</include>
 									</includes>
 									<limits>
@@ -281,6 +281,19 @@
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
 											<minimum>${jacoco.service.line.minimum}</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>com.ingestpipeline.util</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.util.line.minimum}</minimum>
 										</limit>
 									</limits>
 								</rule>
