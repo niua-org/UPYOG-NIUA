@@ -210,15 +210,16 @@
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
-                                    <includes>
-                                        <include>org.egov.infra.mdms.service.MDMSService</include>
-                                        <include>org.egov.infra.mdms.service.validator.*</include>
-                                    </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.10</minimum>
+                                            <minimum>0.25</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.24</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
