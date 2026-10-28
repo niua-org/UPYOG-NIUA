@@ -1,6 +1,6 @@
 package org.upyog.adv.validator;
 
-import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -13,20 +13,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 class DateValidatorTest {
 
-    private final DateValidator validator = new DateValidator();
+    private DateValidator validator;
 
     @Mock
     private ConstraintValidatorContext context;
 
-    @Test
-    @DisplayName("isValid_whenNull_returnsTrue")
-    void isValid_whenNull_returnsTrue() {
-        assertThat(validator.isValid(null, context)).isTrue();
+    @BeforeEach
+    void setUp() {
+        validator = new DateValidator();
     }
 
     @Test
-    @DisplayName("isValid_whenInvalidFormat_returnsFalse")
+    void isValid_whenBlank_returnsTrue() {
+        assertThat(validator.isValid("", context)).isTrue();
+    }
+
+    @Test
     void isValid_whenInvalidFormat_returnsFalse() {
         assertThat(validator.isValid("not-a-date", context)).isFalse();
+    }
+
+    @Test
+    void isValid_whenValidFormat_returnsTrue() {
+        assertThat(validator.isValid("2025-01-01", context)).isTrue();
     }
 }
