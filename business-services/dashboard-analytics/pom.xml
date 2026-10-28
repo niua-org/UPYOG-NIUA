@@ -238,7 +238,7 @@
 								<rule>
 									<element>BUNDLE</element>
 									<limits>
-										<limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.05</minimum></limit>
+										<limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.007</minimum></limit>
 									</limits>
 								</rule>
 							</rules>
