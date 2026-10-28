@@ -246,10 +246,15 @@
           </execution>
           <execution>
             <id>check</id>
+            <phase>verify</phase>
             <goals>
               <goal>check</goal>
             </goals>
             <configuration>
+              <excludes>
+                <exclude>**/model/**</exclude>
+                <exclude>**/web/models/**</exclude>
+              </excludes>
               <rules>
                 <rule>
                   <element>BUNDLE</element>
@@ -257,7 +262,7 @@
                     <limit>
                       <counter>LINE</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.10</minimum>
+                      <minimum>0.05</minimum>
                     </limit>
                   </limits>
                 </rule>

@@ -28,6 +28,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+
 @RunWith(MockitoJUnitRunner.class)
 public class TransactionValidatorTest {
 
@@ -81,6 +84,8 @@ public class TransactionValidatorTest {
 
         validator.validateCreateTxn(transactionRequest);
 
+        verify(gatewayService).isGatewayActive(txn.getGateway());
+        verify(transactionRepository).fetchTransactions(any(TransactionCriteria.class));
     }
 
     /**
@@ -129,6 +134,8 @@ public class TransactionValidatorTest {
 
         validator.validateCreateTxn(transactionRequest);
 
+        verify(gatewayService).isGatewayActive(txn.getGateway());
+        verify(transactionRepository, never()).fetchTransactions(any(TransactionCriteria.class));
     }
 
 
