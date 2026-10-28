@@ -445,6 +445,27 @@ class UserServiceTest {
         verifyNoInteractions(userRepository);
     }
 
+    @Test
+    void validateOtp_validReference_delegatesToOtpRepository() {
+        User user = storedUser("alice", UserType.CITIZEN).toBuilder()
+                .otpReference("654321")
+                .build();
+        when(otpRepository.validateOtp(any())).thenReturn(true);
+
+        assertThat(userService.validateOtp(user)).isTrue();
+        verify(otpRepository).validateOtp(any());
+    }
+
+    @Test
+    void validateOtp_invalidOtp_returnsFalse() {
+        User user = storedUser("alice", UserType.CITIZEN).toBuilder()
+                .otpReference("000000")
+                .build();
+        when(otpRepository.validateOtp(any())).thenReturn(false);
+
+        assertThat(userService.validateOtp(user)).isFalse();
+    }
+
     private RequestInfo requestWithUser() {
         return RequestInfo.builder()
                 .userInfo(org.egov.common.contract.request.User.builder().uuid("actor").id(1L).build())
