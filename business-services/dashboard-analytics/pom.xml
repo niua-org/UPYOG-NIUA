@@ -215,6 +215,12 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.11</version>
+				<configuration>
+					<excludes>
+						<exclude>**/dto/**</exclude>
+						<exclude>**/model/**</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>prepare-agent</id>
@@ -230,15 +236,12 @@
 						<phase>verify</phase>
 						<goals><goal>check</goal></goals>
 						<configuration>
-							<excludes>
-								<exclude>**/dto/**</exclude>
-								<exclude>**/model/**</exclude>
-							</excludes>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>
 									<limits>
-										<limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.007</minimum></limit>
+										<limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.19</minimum></limit>
+										<limit><counter>BRANCH</counter><value>COVEREDRATIO</value><minimum>0.17</minimum></limit>
 									</limits>
 								</rule>
 							</rules>
