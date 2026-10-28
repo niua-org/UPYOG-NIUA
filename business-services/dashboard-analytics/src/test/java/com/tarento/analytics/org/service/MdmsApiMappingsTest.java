@@ -42,4 +42,20 @@ class MdmsApiMappingsTest {
         mappings.setTranslate(true);
         assertThat(mappings.getAll()).containsKey("DDR-A");
     }
+
+    @Test
+    void getDDRNameByCode_returnsMappedName() {
+        ReflectionTestUtils.setField(mappings, "ddrTenantMapping", java.util.Map.of("1", "Amritsar-DDR"));
+        assertThat(mappings.getDDRNameByCode("1")).isEqualTo("Amritsar-DDR");
+    }
+
+    @Test
+    void getDDRName_findsDdrForTenant() {
+        assertThat(mappings.getDDRName("pb.city1")).isEqualTo("DDR-A");
+    }
+
+    @Test
+    void valueOf_returnsNullForUnknownCode() {
+        assertThat(mappings.valueOf("missing")).isNull();
+    }
 }

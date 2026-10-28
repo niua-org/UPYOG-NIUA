@@ -44,4 +44,12 @@ class MetadataServiceImplTest {
         assertThat(dashboards).isNotEmpty();
         assertThat(dashboards.get(0).get("id").asText()).isEqualTo("home");
     }
+
+    @Test
+    void getDashboardConfiguration_withCategory_filtersVisualizations() throws Exception {
+        var dashboards = metadataService.getDashboardConfiguration("home", "DSS_OVERVIEW", Collections.emptyList());
+
+        assertThat(dashboards).isNotEmpty();
+        assertThat(dashboards.get(0).get("visualizations").size()).isGreaterThan(0);
+    }
 }
