@@ -120,4 +120,24 @@
 | firenoc-services | PASS (`npm run test:unit`) |
 | firenoc-calculator | PASS (`npm run test:unit`) |
 | pqm-scheduler | PASS (`pytest tests/`) |
-| All 46 Java modules | PASS (JDK 17 sweep on branch) |
+| All 46 Java modules | **Final sweep:** `testing/verify_all_modules.sh` → `/tmp/verify-all-final.log` (JDK 17, `.mvn/settings-public.xml`; Boot 2.2 modules use `-Dspring-boot.repackage.skip=true`) |
+
+## 70% line / 60% branch — outcome
+
+**No Java module meets both thresholds** on measured module JaCoCo totals (with per-module excludes for models/DTO/config where configured).
+
+| Closest modules (line / branch) | Why 70/60 not reached |
+|--------------------------------|------------------------|
+| vendor-management **32.2% / 1.5%** | Branch coverage dominated by service/workflow paths; only util/service package gates raised |
+| cnd-calculator **30.7% / 1.4%** | Calculator utils covered; billing/kafka services purged scaffolds without deep replacements |
+| community-hall-booking **26.1% / 22.1%** | Best branch % in tree; still missing controller/service/integration depth |
+| asset-calculator **24.5% / 4.3%** | MDMS/validation helpers tested; demand/billing services largely untouched |
+| fsm-calculator **23.7% / 1.5%** | Query builder + utils only |
+
+**Common blockers:** (1) multi-thousand-line `*Service` types needing repository + workflow + MDMS mocks; (2) Kafka consumers and schedulers; (3) commented/dead code (`ReceiptService` in pt-calculator-v2); (4) production quirks documented in [`untestable.md`](untestable.md) / [`bugs-found.md`](bugs-found.md). Next depth pass should follow [`class-ranking.md`](class-ranking.md) top missed lines per module (property-services `MigrationService` / `PropertyService` first).
+
+## Work completed this epic
+
+- Purged generated scaffolds in priority packages across **all** Java service modules; replaced with meaningful JUnit 5 + Mockito tests on validators, query builders, utils, and selected services.
+- Per-module JaCoCo **package verify floors** aligned via [`testing/update_gate_floor.py`](../testing/update_gate_floor.py) / [`verify_module.sh`](../testing/verify_module.sh).
+- **Node:** firenoc-services, firenoc-calculator (Jest, mocked HTTP). **Python:** pqm-scheduler (pytest, mocked `requests`).
