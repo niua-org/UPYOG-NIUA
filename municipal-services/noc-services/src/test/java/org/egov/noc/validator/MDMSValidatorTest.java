@@ -1,24 +1,36 @@
 package org.egov.noc.validator;
 
+import org.egov.noc.util.NOCConstants;
 import org.egov.tracer.model.CustomException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
 class MDMSValidatorTest {
 
-    @InjectMocks
-    private MDMSValidator validator;
+    private final MDMSValidator mdmsValidator = new MDMSValidator();
 
     @Test
-    @DisplayName("getAttributeValues_whenInvalidMdmsPayload_throwsCustomException")
-    void getAttributeValues_whenInvalidMdmsPayload_throwsCustomException() {
-        assertThatThrownBy(() -> validator.getAttributeValues("{}"))
+    void getAttributeValues_whenMdmsPayloadValid_mergesModuleMaps() {
+        Map<String, Object> mdms = Map.of(
+                "MdmsRes",
+                Map.of(
+                        "NOC", Map.of(NOCConstants.NOC_TYPE, List.of("BUILDING")),
+                        "common-masters", Map.of(NOCConstants.DOCUMENT_TYPE, List.of("AADHAAR"))));
+
+        Map<String, List<String>> attributes = mdmsValidator.getAttributeValues(mdms);
+
+        assertThat(attributes).containsKeys(NOCConstants.NOC_TYPE, NOCConstants.DOCUMENT_TYPE);
+    }
+
+    @Test
+    void getAttributeValues_whenJsonPathMissing_throwsCustomException() {
+        assertThatThrownBy(() -> mdmsValidator.getAttributeValues(new HashMap<>()))
                 .isInstanceOf(CustomException.class);
     }
 }
