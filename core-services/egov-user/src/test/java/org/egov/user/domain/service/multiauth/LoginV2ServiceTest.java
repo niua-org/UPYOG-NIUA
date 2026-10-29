@@ -87,7 +87,7 @@ public class LoginV2ServiceTest {
         AuthenticatedUserResult multiUserResult = AuthenticatedUserResult.builder()
                 .multipleUsersFound(true)
                 .matchedUsers(matchedUsers)
-                .authType(AuthType.MOBILE)
+                .authType(AuthType.MOBILE_NUMBER)
                 .build();
 
         when(strategyFactory.getStrategy(request)).thenReturn(mobileStrategy);
@@ -120,7 +120,7 @@ public class LoginV2ServiceTest {
         AuthenticatedUserResult singleUserResult = AuthenticatedUserResult.builder()
                 .user(user)
                 .isNewUser(false)
-                .authType(AuthType.MOBILE)
+                .authType(AuthType.MOBILE_NUMBER)
                 .build();
 
         LoginV2Response expectedResponse = LoginV2Response.builder()
@@ -129,12 +129,12 @@ public class LoginV2ServiceTest {
                 .tokenType("Bearer")
                 .expiresIn(3600)
                 .isNewUser(false)
-                .authenticatedVia(AuthType.MOBILE)
+                .authenticatedVia(AuthType.MOBILE_NUMBER)
                 .build();
 
         when(strategyFactory.getStrategy(request)).thenReturn(mobileStrategy);
         when(mobileStrategy.authenticateAndResolveUser(request)).thenReturn(singleUserResult);
-        when(tokenGenerationService.generateTokensAndResponse(user, request.getScope(), AuthType.MOBILE, false))
+        when(tokenGenerationService.generateTokensAndResponse(user, request.getScope(), AuthType.MOBILE_NUMBER, false))
                 .thenReturn(expectedResponse);
 
         LoginV2Response response = loginV2Service.login(request);
@@ -142,7 +142,7 @@ public class LoginV2ServiceTest {
         assertNotNull(response);
         assertEquals("mock-access-token", response.getAccessToken());
         assertEquals("mock-refresh-token", response.getRefreshToken());
-        assertEquals(AuthType.MOBILE, response.getAuthenticatedVia());
-        verify(userRepository, times(1)).updateLastLoginMethod(101L, "MOBILE");
+        assertEquals(AuthType.MOBILE_NUMBER, response.getAuthenticatedVia());
+        verify(userRepository, times(1)).updateLastLoginMethod(101L, "MOBILE_NUMBER");
     }
 }

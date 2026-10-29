@@ -117,10 +117,10 @@ public class UserService {
     @Lazy
     private TokenGenerationService tokenGenerationService;
 
-    @Value("${citizen.login.password.otp.fixed.enabled:false}")
+    @Value("${citizen.login.password.otp.fixed.enabled}")
     private boolean fixedOTPEnabled;
 
-    @Value("${citizen.login.password.otp.fixed.value:123456}")
+    @Value("${citizen.login.password.otp.fixed.value}")
     private String fixedOTPPassword;
 
 	public UserService(UserRepository userRepository, OtpRepository otpRepository, FileStoreRepository fileRepository,
@@ -451,7 +451,7 @@ public class UserService {
                 return tokenGenerationService.generateTokensAndResponse(
                         user,
                         effectiveScope,
-                        AuthType.MOBILE,
+                        AuthType.MOBILE_NUMBER,
                         true
                 );
             }
@@ -504,6 +504,8 @@ public class UserService {
      * @return
      */
     public Boolean validateOtp(User user) {
+        // Bypass egov-otp validation in non-production/test environments if fixed OTP is enabled
+        // This allows registration with configured fixed OTP (e.g., 123456) without prior OTP generation
         if (fixedOTPEnabled && StringUtils.isNotBlank(fixedOTPPassword) && fixedOTPPassword.equals(user.getOtpReference())) {
             log.info("Fixed OTP matched successfully for user: {}", user.getMobileNumber());
             return true;

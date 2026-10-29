@@ -108,7 +108,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
 
     @Override
     public boolean supports(AuthType authType) {
-        return AuthType.AADHAAR.equals(authType);
+        return AuthType.AADHAAR_NUMBER.equals(authType);
     }
 
     @Override
@@ -160,7 +160,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             existingUser.setIsIdentityVerified(true);
             existingUser.setIdentityVerifiedDate(new Date());
             existingUser.setLastResyncDate(new Date());
-            existingUser.setLastLoginMethod(AuthType.AADHAAR.name());
+            existingUser.setLastLoginMethod(AuthType.AADHAAR_NUMBER.name());
             if (StringUtils.isNotBlank(searchAadhaar)) {
                 existingUser.setAadhaarNumber(searchAadhaar);
             }
@@ -185,7 +185,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             return AuthenticatedUserResult.builder()
                     .user(existingUser)
                     .isNewUser(false)
-                    .authType(AuthType.AADHAAR)
+                    .authType(AuthType.AADHAAR_NUMBER)
                     .build();
         }
 
@@ -214,7 +214,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 .isIdentityVerified(true)
                 .identityVerifiedDate(new Date())
                 .lastResyncDate(new Date())
-                .lastLoginMethod(AuthType.AADHAAR.name())
+                .lastLoginMethod(AuthType.AADHAAR_NUMBER.name())
                 .edittedCount(0)
                 .tenantId(stateTenant)
                 .type(UserType.CITIZEN)
@@ -231,7 +231,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         return AuthenticatedUserResult.builder()
                 .user(createdUser)
                 .isNewUser(true)
-                .authType(AuthType.AADHAAR)
+                .authType(AuthType.AADHAAR_NUMBER)
                 .build();
     }
 

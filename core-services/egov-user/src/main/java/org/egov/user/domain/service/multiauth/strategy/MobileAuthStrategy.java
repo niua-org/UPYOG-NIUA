@@ -96,7 +96,7 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
 
     @Override
     public boolean supports(AuthType authType) {
-        return AuthType.MOBILE.equals(authType);
+        return AuthType.MOBILE_NUMBER.equals(authType);
     }
 
     @Override
@@ -149,11 +149,11 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                 log.error("[MOBILE-AUTH-STRATEGY] Selected citizen profile not found or does not belong to verified mobile: {}", request.getSelectedUserUuid());
                 throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, UserConstants.MSG_SELECTED_USER_NOT_FOUND);
             }
-            selectedUser.setLastLoginMethod(AuthType.MOBILE.name());
+            selectedUser.setLastLoginMethod(AuthType.MOBILE_NUMBER.name());
             return AuthenticatedUserResult.builder()
                     .user(selectedUser)
                     .isNewUser(false)
-                    .authType(AuthType.MOBILE)
+                    .authType(AuthType.MOBILE_NUMBER)
                     .build();
         }
 
@@ -164,7 +164,7 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
             return AuthenticatedUserResult.builder()
                     .multipleUsersFound(true)
                     .matchedUsers(matchedUsers)
-                    .authType(AuthType.MOBILE)
+                    .authType(AuthType.MOBILE_NUMBER)
                     .build();
         }
 
@@ -173,11 +173,11 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
             User user = matchedUsers.get(0);
             log.info("[MOBILE-AUTH-STRATEGY] Matched single citizen ID: {}, UUID: {} for mobile: {}",
                     user.getId(), user.getUuid(), maskMobile(mobileNumber));
-            user.setLastLoginMethod(AuthType.MOBILE.name());
+            user.setLastLoginMethod(AuthType.MOBILE_NUMBER.name());
             return AuthenticatedUserResult.builder()
                     .user(user)
                     .isNewUser(false)
-                    .authType(AuthType.MOBILE)
+                    .authType(AuthType.MOBILE_NUMBER)
                     .build();
         }
 
@@ -197,7 +197,7 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                 .tenantId(stateTenant)
                 .type(UserType.CITIZEN)
                 .active(true)
-                .lastLoginMethod(AuthType.MOBILE.name())
+                .lastLoginMethod(AuthType.MOBILE_NUMBER.name())
                 .roles(Collections.singleton(Role.getCitizenRole()))
                 .otpValidationMandatory(false)
                 .build();
@@ -209,7 +209,7 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         return AuthenticatedUserResult.builder()
                 .user(createdUser)
                 .isNewUser(true)
-                .authType(AuthType.MOBILE)
+                .authType(AuthType.MOBILE_NUMBER)
                 .build();
     }
 
