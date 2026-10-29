@@ -19,8 +19,8 @@
 		<java.version>17</java.version>
 <log4j2.version>2.17.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.1276</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
+        <jacoco.line.coverage>0.2523</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.0655</jacoco.branch.coverage>
 	</properties>
 	<dependencies>
 		<dependency>
