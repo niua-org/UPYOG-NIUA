@@ -154,7 +154,7 @@ public class ProfileSearchIncludeFlagsTest {
 
     @Test
     @DisplayName("Should omit demographics if only ADDRESS is requested in UserSearchResponseContent")
-    public void testResponseContentWithOnlyAddress() {
+    public void testResponseContentWithOnlyAddress() throws Exception {
         User user = createSampleUser("uuid-123");
         Address address = Address.builder().id(201L).city("City A").build();
         user.setAddresses(Collections.singleton(address));
@@ -173,6 +173,16 @@ public class ProfileSearchIncludeFlagsTest {
         assertNotNull(content.getAddresses());
         assertEquals(1, content.getAddresses().size());
         assertNull(content.getDocuments());
+
+        // Verify JSON serialization omits null demographic fields
+        String json = objectMapper.writeValueAsString(content);
+        assertFalse(json.contains("\"name\""));
+        assertFalse(json.contains("\"mobileNumber\""));
+        assertFalse(json.contains("\"fatherName\""));
+        assertFalse(json.contains("\"motherName\""));
+        assertFalse(json.contains("\"documents\""));
+        assertTrue(json.contains("\"addresses\""));
+        assertTrue(json.contains("\"userName\":\"9876543210\""));
     }
 
     @Test

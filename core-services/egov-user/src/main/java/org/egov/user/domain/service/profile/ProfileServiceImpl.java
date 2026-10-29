@@ -38,7 +38,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -91,9 +101,9 @@ public class ProfileServiceImpl implements ProfileService {
                               EncryptionDecryptionUtil encryptionDecryptionUtil,
                               AddressRepository addressRepository,
                               UserDocumentRepository userDocumentRepository,
-                              @Autowired(required = false) AddressMasterDataService addressMasterDataService,
-                              @Autowired(required = false) AddressService addressService,
-                              @Autowired(required = false) UserDocumentService userDocumentService) {
+                              AddressMasterDataService addressMasterDataService,
+                              AddressService addressService,
+                              UserDocumentService userDocumentService) {
         this.userRepository = userRepository;
         this.profileValidator = profileValidator;
         this.identityVerificationService = identityVerificationService;

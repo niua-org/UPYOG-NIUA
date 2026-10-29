@@ -1,5 +1,6 @@
 package org.egov.user.domain.service.profile;
 
+import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.User;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -8,6 +9,7 @@ import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service contract for citizen profile lifecycle management, supporting full profile creation,
@@ -69,7 +71,7 @@ public interface ProfileService {
      * @param rawIncludes raw include flags from request
      * @return set of normalized uppercase include flags
      */
-    java.util.Set<String> resolveIncludes(List<String> rawIncludes);
+    Set<String> resolveIncludes(List<String> rawIncludes);
 
     /**
      * Re-synchronizes citizen profile demographics with verified Aadhaar e-KYC.
