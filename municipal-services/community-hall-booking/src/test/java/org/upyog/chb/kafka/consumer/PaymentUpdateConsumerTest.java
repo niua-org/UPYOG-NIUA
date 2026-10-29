@@ -1,6 +1,6 @@
 package org.upyog.chb.kafka.consumer;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
