@@ -12,8 +12,8 @@
 | ws-services | 11.5 (audit) | **1.8** → **10.7** | 0.6 | **1.1** → **7.0** | Deep pass: `WaterServiceImplTest`, `EnrichmentServiceTest`, `EditNotificationServiceTest`, `WaterConnectionValidatorTest`, workflow/consumer tests; JaCoCo gates on **service**, **util**, **validator** | No |
 | sw-services | 11.3 | **9.7** → **14.8** | 0.5 | **9.0** → **12.8** | Deep pass: `SewerageServiceImplTest`, `EnrichmentServiceTest`; JaCoCo gates on **service**, **util**, **validator**, **builder** | No |
 | pgr-services | 17.6 | **13.4** → **31.3** | 0.9 | **13.4** → **22.8** | Deep pass: `PGRServiceTest`, `WorkflowServiceTest`, `UserServiceTest`, extended `EnrichmentServiceTest`, consumer + validator tests; raised **service** package JaCoCo floors | No |
-| tl-services | 13.1 | **11.2** | 0.3 | **9.3** | ~37 methods (validator, util, builder, workflow) | No |
-| bpa-services | 6.5 | **9.3** | 0.0 | **8.4** | 27 methods (validator, util, workflow, builder) | No |
+| tl-services | 13.1 | **11.2** → **15.3** | 0.3 | **9.3** → **13.6** | Deep pass: `TradeLicenseServiceTest`, `EnrichmentServiceTest`, `TradeLicenseConsumerTest`, extended `TLValidatorTest`; JaCoCo gates on **service**, **consumer**, validator, util, builder, workflow | No |
+| bpa-services | 6.5 | **9.3** → **11.6** | 0.0 | **8.4** → **9.3** | Deep pass: `BPAServiceTest`, `EnrichmentServiceTest`, `BPAConsumerTest`; JaCoCo gates on **service**, **consumer**, validator, util, workflow, querybuilder | No |
 | ws-calculator | 0.0 | **11.3** | 0.0 | **1.1** | ~12 methods (`CalculatorUtilTest`, `MeterReadingUtilTest`, `WSCalculatorQueryBuilderTest`; purged 21 service/util/validator scaffolds) | No |
 | sw-calculator | 0.0 | **10.7** | 0.0 | **0.6** | ~4 methods (`CalculatorUtilsTest`, `SWCalculatorQueryBuilderTest`; purged 15 scaffolds) | No |
 | pt-calculator-v2 | 0.0 | **13.3** | 0.0 | **0.6** | ~3 methods (`BillingSlabQueryBuilderTest`, `CalculatorUtilsTest`; purged 19 scaffolds) | No |
@@ -75,8 +75,8 @@
 | ws-services | PASS (service/util/validator package JaCoCo gates) |
 | sw-services | PASS (service/util/validator/builder package JaCoCo gates) |
 | pgr-services | PASS (validator/util/service/rowmapper package JaCoCo gates) |
-| bpa-services | PASS (validator/util/workflow/querybuilder package JaCoCo gates) |
-| tl-services | PASS (validator/util/builder/workflow package JaCoCo gates) |
+| bpa-services | PASS (validator/util/workflow/querybuilder/**service**/**consumer** package JaCoCo gates, deep-pass floors) |
+| tl-services | PASS (validator/util/builder/workflow/**service**/**consumer** package JaCoCo gates, deep-pass floors) |
 | ws-calculator | PASS (util package JaCoCo gate) |
 | sw-calculator | PASS (util package JaCoCo gate) |
 | pt-calculator-v2 | PASS (util package JaCoCo gate) |
