@@ -19,10 +19,12 @@
         
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.util.line.minimum>0.06</jacoco.util.line.minimum>
-        <jacoco.util.branch.minimum>0.03</jacoco.util.branch.minimum>
-        <jacoco.builder.line.minimum>0.04</jacoco.builder.line.minimum>
-        <jacoco.builder.branch.minimum>0.02</jacoco.builder.branch.minimum>
+        <jacoco.util.line.minimum>0.2317</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.4019</jacoco.util.branch.minimum>
+        <jacoco.builder.line.minimum>0.2558</jacoco.builder.line.minimum>
+        <jacoco.builder.branch.minimum>0.2794</jacoco.builder.branch.minimum>
+        <jacoco.service.line.minimum>0.0388</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.0359</jacoco.service.branch.minimum>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 	</properties>
@@ -290,6 +292,24 @@
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.builder.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.garbageservice.service</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
