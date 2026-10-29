@@ -1,9 +1,11 @@
 package org.egov.user.web.contract;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -13,12 +15,17 @@ import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.*;
+import org.egov.user.web.contract.deserializer.MultiFormatDateDeserializer;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Contract payload for creating or updating user records via HTTP requests.
+ * Contains demographic details, guardian information, identity verification flags, and credentials.
+ */
 @Setter
 @Getter
 @Builder
@@ -33,6 +40,8 @@ public class UserRequest {
 
     @Size(max = 40)
     private String access_token;
+
+    private String scope;
 
     @Size(max = 5)
     private String salutation;
@@ -49,7 +58,36 @@ public class UserRequest {
     private String mobileNumber;
     
     @Pattern(regexp = UserServiceConstants.PATTERN_MOBILE)
+    @JsonAlias({"alternateMobileNumber", "alternateMobileNo"})
     private String alternatemobilenumber;
+
+    public String getAlternatemobilenumber() {
+        return this.alternatemobilenumber;
+    }
+
+    public void setAlternatemobilenumber(String alternatemobilenumber) {
+        this.alternatemobilenumber = alternatemobilenumber;
+    }
+
+    public String getAlternateMobileNumber() {
+        return this.alternatemobilenumber;
+    }
+
+    public void setAlternateMobileNumber(String alternateMobileNumber) {
+        this.alternatemobilenumber = alternateMobileNumber;
+    }
+
+    public String getGuardian() {
+        return this.fatherOrHusbandName;
+    }
+
+    public void setGuardian(String guardian) {
+        this.fatherOrHusbandName = guardian;
+    }
+
+    public String getGuardianRelation() {
+        return this.relationship != null ? this.relationship.name() : null;
+    }
 
     @Email
     @Size(max = 128)
@@ -64,24 +102,30 @@ public class UserRequest {
     @Size(max = 20)
     private String aadhaarNumber;
 
+    @JsonIgnore
     @Size(max = 300)
     private String permanentAddress;
 
+    @JsonIgnore
     @Pattern(regexp = UserServiceConstants.PATTERN_CITY)
     @Size(max = 50)
     private String permanentCity;
 
+    @JsonIgnore
     @Pattern(regexp = UserServiceConstants.PATTERN_PINCODE)
     @Size(max = 10)
     private String permanentPinCode;
 
+    @JsonIgnore
     @Size(max = 300)
     private String correspondenceAddress;
 
+    @JsonIgnore
     @Pattern(regexp = UserServiceConstants.PATTERN_CITY)
     @Size(max = 50)
     private String correspondenceCity;
 
+    @JsonIgnore
     @Pattern(regexp = UserServiceConstants.PATTERN_PINCODE)
     @Size(max = 10)
     private String correspondencePinCode;
@@ -96,16 +140,21 @@ public class UserRequest {
 
     @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
     @Size(max = 50)
+    @JsonProperty("fatherOrHusbandName")
+    @JsonAlias({"guardian"})
     private String fatherOrHusbandName;
+
+    @JsonProperty("relationship")
+    @JsonAlias({"guardianRelation"})
     private GuardianRelation relationship;
 
-    @Size(max = 36)
+    @Size(max = 300)
     private String signature;
 
     @Size(max = 32)
     private String bloodGroup;
 
-    @Size(max = 36)
+    @Size(max = 1000)
     private String photo;
 
     @Size(max = 300)
@@ -130,12 +179,36 @@ public class UserRequest {
     @Size(max = 36)
     private String digilockerid;
 
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String fatherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String motherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String spouseName;
+
+    private Boolean isIdentityVerified;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date identityVerifiedDate;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date lastResyncDate;
+
+    private Integer edittedCount;
+    private String lastLoginMethod;
+
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date lastModifiedDate;
     @JsonFormat(pattern = "dd/MM/yyyy")
+    @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date dob;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date pwdExpiryDate;
@@ -144,6 +217,7 @@ public class UserRequest {
 
         this.id = user.getId();
         this.access_token = user.getAccess_token();
+        this.scope = user.getScope();
         this.userName = user.getUsername();
         this.salutation = user.getSalutation();
         this.name = user.getName();
@@ -175,8 +249,14 @@ public class UserRequest {
         this.uuid = user.getUuid();
         this.digilockerid = user.getDigilockerid();
         this.alternatemobilenumber=user.getAlternateMobileNumber();
-        mapPermanentAddress(user);
-        mapCorrespondenceAddress(user);
+        this.fatherName = user.getFatherName();
+        this.motherName = user.getMotherName();
+        this.spouseName = user.getSpouseName();
+        this.isIdentityVerified = user.getIsIdentityVerified();
+        this.identityVerifiedDate = user.getIdentityVerifiedDate();
+        this.lastResyncDate = user.getLastResyncDate();
+        this.edittedCount = user.getEdittedCount();
+        this.lastLoginMethod = user.getLastLoginMethod();
     }
 
     private void mapCorrespondenceAddress(User user) {
@@ -200,6 +280,14 @@ public class UserRequest {
         return roleEntities.stream().map(RoleRequest::new).collect(Collectors.toSet());
     }
 
+    /**
+     * Converts this {@link UserRequest} DTO to a domain {@link User} entity.
+     *
+     * @param loggedInUserId   numeric ID of authenticated requester
+     * @param loggedInUserUuid UUID of authenticated requester
+     * @param isCreate         flag indicating create mode vs update mode
+     * @return populated {@link User} domain entity
+     */
     @JsonIgnore
     public User toDomain(Long loggedInUserId, String loggedInUserUuid, boolean isCreate) {
         BloodGroup bloodGroup = null;
@@ -211,6 +299,7 @@ public class UserRequest {
         }
         return User.builder()
                 .uuid(this.uuid)
+                .scope(this.scope)
                 .id(this.id)
                 .name(this.name)
                 .username(this.userName)
@@ -241,10 +330,18 @@ public class UserRequest {
                 .roles(toDomainRoles())
                 .loggedInUserId(loggedInUserId)
                 .loggedInUserUuid(loggedInUserUuid)
-                .permanentAddress(toDomainPermanentAddress())
-                .correspondenceAddress(toDomainCorrespondenceAddress())
+                .permanentAddress(null)
+                .correspondenceAddress(null)
                 .guardian(fatherOrHusbandName)
                 .guardianRelation(relationship).alternateMobileNumber(this.alternatemobilenumber)
+                .fatherName(this.fatherName)
+                .motherName(this.motherName)
+                .spouseName(this.spouseName)
+                .isIdentityVerified(this.isIdentityVerified)
+                .identityVerifiedDate(this.identityVerifiedDate)
+                .lastResyncDate(this.lastResyncDate)
+                .edittedCount(this.edittedCount)
+                .lastLoginMethod(this.lastLoginMethod)
                 .build();
     }
 

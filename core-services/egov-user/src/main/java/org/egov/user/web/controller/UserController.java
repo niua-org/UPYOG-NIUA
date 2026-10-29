@@ -17,6 +17,8 @@ import org.egov.user.web.contract.UserDetailResponseV2;
 import org.egov.user.web.contract.*;
 import org.egov.user.web.contract.auth.CustomUserDetails;
 import org.json.JSONObject;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
 import static org.egov.tracer.http.HttpUtils.isInterServiceCall;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
+@Tag(name = "User Management", description = "Core citizen and employee lifecycle management endpoints")
 @RestController
 @Slf4j
 public class UserController {
@@ -217,18 +220,10 @@ public class UserController {
     }
 
     /**
-     * end-point to update user profile.
-     *
-     * @param createUserRequest
-     * @return
+     * Legacy end-point to update user profile (delegated to ProfileController under /profile/_update).
      */
-    @PostMapping("/profile/_update")
-    public UpdateResponse patch(@RequestBody final @Valid CreateUserRequest createUserRequest) {
-        log.info("Received Profile Update Request  " + createUserRequest);
-        User user = createUserRequest.toDomain(false);
-        final User updatedUser = userService.partialUpdate(user, createUserRequest.getRequestInfo());
-        return  createResponseforUpdate(updatedUser);
-    }
+    // Legacy endpoint migrated to ProfileController.java to enforce source-based field locking and proper auditing.
+
 
     @PostMapping("/digilocker/oauth/token")
     public Object authDigiLocker(@RequestBody @Valid CreateUserRequest createUserRequest, @RequestHeader HttpHeaders headers) {
@@ -399,6 +394,7 @@ public class UserController {
      * @param headers           HTTP headers for additional request context
      * @return the response object containing the created user details
      */
+    @Operation(summary = "Create User with Address (V2)", description = "Creates a new user account along with address details in a single operation.")
     @PostMapping("/users/v2/_create")
     public Object createUserWithAddress(@RequestBody @Valid CreateUserRequestV2 createUserRequest,
                                         @RequestHeader HttpHeaders headers) {
@@ -428,6 +424,7 @@ public class UserController {
      * @param headers           HTTP headers for additional request context
      * @return the response object containing updated user details
      */
+    @Operation(summary = "Update User with Address (V2)", description = "Updates user account details along with address information (V2).")
     @PostMapping("/users/v2/_update")
     public UpdateResponse updateUserV2(@RequestBody @Valid CreateUserRequestV2 createUserRequest,
                                                 @RequestHeader HttpHeaders headers) {
@@ -457,6 +454,7 @@ public class UserController {
      * @param headers HTTP headers for additional request context
      * @return the response object containing matching user details
      */
+    @Operation(summary = "Search Users with Address (V2)", description = "Searches users by criteria and enriches results with address information.")
     @PostMapping("/users/v2/_search")
     public UserSearchResponse getUsersV2(@RequestBody UserSearchRequestV2 request, @RequestHeader HttpHeaders headers) {
 
