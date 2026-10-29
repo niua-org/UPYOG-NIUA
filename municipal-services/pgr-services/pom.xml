@@ -12,14 +12,14 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <logback.version>1.4.14</logback.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.validator.line.minimum>0.50</jacoco.validator.line.minimum>
-        <jacoco.validator.branch.minimum>0.28</jacoco.validator.branch.minimum>
-        <jacoco.util.line.minimum>0.09</jacoco.util.line.minimum>
-        <jacoco.util.branch.minimum>0.15</jacoco.util.branch.minimum>
-        <jacoco.service.line.minimum>0.02</jacoco.service.line.minimum>
-        <jacoco.service.branch.minimum>0.03</jacoco.service.branch.minimum>
-        <jacoco.rowmapper.line.minimum>0.35</jacoco.rowmapper.line.minimum>
-        <jacoco.rowmapper.branch.minimum>0.35</jacoco.rowmapper.branch.minimum>
+        <jacoco.validator.line.minimum>0.5349</jacoco.validator.line.minimum>
+        <jacoco.validator.branch.minimum>0.3239</jacoco.validator.branch.minimum>
+        <jacoco.util.line.minimum>0.1016</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.1839</jacoco.util.branch.minimum>
+        <jacoco.service.line.minimum>0.2998</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.1689</jacoco.service.branch.minimum>
+        <jacoco.rowmapper.line.minimum>0.3556</jacoco.rowmapper.line.minimum>
+        <jacoco.rowmapper.branch.minimum>0.3598</jacoco.rowmapper.branch.minimum>
     </properties>
     <parent>
         <groupId>org.springframework.boot</groupId>

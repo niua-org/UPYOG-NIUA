@@ -210,6 +210,23 @@ class ServiceRequestValidatorTest {
                 .isInstanceOf(CustomException.class);
     }
 
+    @Test
+    @DisplayName("validateCreate_whenMandatoryFieldsMissing_throwsAggregatedErrors")
+    void validateCreate_whenMandatoryFieldsMissing_throwsAggregatedErrors() {
+        Service service = Service.builder()
+                .serviceCode(" ")
+                .source("web")
+                .tenantId("pg.citya")
+                .build();
+        ServiceRequest request = ServiceRequest.builder()
+                .requestInfo(citizenRequestInfo())
+                .service(service)
+                .build();
+
+        assertThatThrownBy(() -> validator.validateCreate(request, mdmsFixture()))
+                .isInstanceOf(CustomException.class);
+    }
+
     private RequestInfo citizenRequestInfo() {
         User user = User.builder().type("CITIZEN").uuid("citizen-1").tenantId("pg.citya").build();
         return RequestInfo.builder().userInfo(user).build();

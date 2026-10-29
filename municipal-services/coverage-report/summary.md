@@ -10,8 +10,8 @@
 |--------|----------------:|-----------:|------------------:|-------------:|-----------------------:|:----------:|
 | property-services | 8.0 (audit) / 2.2 (class baseline) | **4.6** → **12.8** | 0.3 / 1.5 | **4.6** → **9.7** | Deep pass (round 2): notification/workflow/consumer tests + extended `PropertyValidatorTest`; JaCoCo gates on **service**, **util**, **consumer**, validator, builder | No |
 | ws-services | 11.5 (audit) | **1.8** → **10.7** | 0.6 | **1.1** → **7.0** | Deep pass: `WaterServiceImplTest`, `EnrichmentServiceTest`, `EditNotificationServiceTest`, `WaterConnectionValidatorTest`, workflow/consumer tests; JaCoCo gates on **service**, **util**, **validator** | No |
-| sw-services | 11.3 | **9.7** | 0.5 | **9.0** | 38 methods (validator, util, builder batch) | No |
-| pgr-services | 17.6 | **13.4** | 0.9 | **13.4** | ~24 methods (validator, builder, util, service) | No |
+| sw-services | 11.3 | **9.7** → **14.8** | 0.5 | **9.0** → **12.8** | Deep pass: `SewerageServiceImplTest`, `EnrichmentServiceTest`; JaCoCo gates on **service**, **util**, **validator**, **builder** | No |
+| pgr-services | 17.6 | **13.4** → **31.3** | 0.9 | **13.4** → **22.8** | Deep pass: `PGRServiceTest`, `WorkflowServiceTest`, `UserServiceTest`, extended `EnrichmentServiceTest`, consumer + validator tests; raised **service** package JaCoCo floors | No |
 | tl-services | 13.1 | **11.2** | 0.3 | **9.3** | ~37 methods (validator, util, builder, workflow) | No |
 | bpa-services | 6.5 | **9.3** | 0.0 | **8.4** | 27 methods (validator, util, workflow, builder) | No |
 | ws-calculator | 0.0 | **11.3** | 0.0 | **1.1** | ~12 methods (`CalculatorUtilTest`, `MeterReadingUtilTest`, `WSCalculatorQueryBuilderTest`; purged 21 service/util/validator scaffolds) | No |
@@ -73,7 +73,7 @@
 |--------|-------------------|
 | property-services | PASS (validator + builder + **service** package JaCoCo gates, deep-pass floors) |
 | ws-services | PASS (service/util/validator package JaCoCo gates) |
-| sw-services | PASS (validator/util/builder package JaCoCo gates) |
+| sw-services | PASS (service/util/validator/builder package JaCoCo gates) |
 | pgr-services | PASS (validator/util/service/rowmapper package JaCoCo gates) |
 | bpa-services | PASS (validator/util/workflow/querybuilder package JaCoCo gates) |
 | tl-services | PASS (validator/util/builder/workflow package JaCoCo gates) |

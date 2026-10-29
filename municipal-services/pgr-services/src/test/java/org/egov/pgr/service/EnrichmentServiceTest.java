@@ -5,7 +5,15 @@ import org.egov.common.contract.request.User;
 import org.egov.pgr.config.PGRConfiguration;
 import org.egov.pgr.repository.IdGenRepository;
 import org.egov.pgr.util.PGRUtils;
+import org.egov.pgr.web.models.Document;
+import org.egov.pgr.web.models.Idgen.IdGenerationResponse;
+import org.egov.pgr.web.models.Idgen.IdResponse;
 import org.egov.pgr.web.models.RequestSearchCriteria;
+import org.egov.pgr.web.models.Service;
+import org.egov.pgr.web.models.ServiceRequest;
+import org.egov.pgr.web.models.Workflow;
+import org.egov.pgr.web.models.AuditDetails;
+import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +23,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.util.Collections;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,6 +55,8 @@ class EnrichmentServiceTest {
         when(config.getDefaultLimit()).thenReturn(10);
         when(config.getDefaultOffset()).thenReturn(0);
         when(config.getMaxLimit()).thenReturn(100);
+        when(config.getServiceRequestIdGenName()).thenReturn("pgr.servicerequestid");
+        when(config.getServiceRequestIdGenFormat()).thenReturn("[pg.citya]-SR-[0000000000]");
     }
 
     @Test
@@ -80,5 +97,72 @@ class EnrichmentServiceTest {
         enrichmentService.enrichSearchRequest(requestInfo, criteria);
 
         assertThat(criteria.getLimit()).isEqualTo(100);
+    }
+
+    @Test
+    void enrichCreateRequest_setsIdsAuditDetailsAndServiceRequestId() {
+        User citizen = User.builder().type("CITIZEN").uuid("citizen-1").tenantId("pg.citya").build();
+        RequestInfo requestInfo = RequestInfo.builder().userInfo(citizen).build();
+        Document document = Document.builder().fileStoreId("fs-1").build();
+        Service service = Service.builder()
+                .tenantId("pg.citya")
+                .address(org.egov.pgr.web.models.Address.builder().build())
+                .build();
+        ServiceRequest request = ServiceRequest.builder()
+                .requestInfo(requestInfo)
+                .service(service)
+                .workflow(Workflow.builder().verificationDocuments(List.of(document)).build())
+                .build();
+        AuditDetails auditDetails = AuditDetails.builder().createdBy("citizen-1").build();
+        when(utils.getAuditDetails(eq("citizen-1"), any(Service.class), eq(true))).thenReturn(auditDetails);
+        IdGenerationResponse idResponse = IdGenerationResponse.builder()
+                .idResponses(List.of(IdResponse.builder().id("PG-SR-001").build()))
+                .build();
+        when(idGenRepository.getId(any(), eq("pg.citya"), any(), any(), eq(1))).thenReturn(idResponse);
+
+        enrichmentService.enrichCreateRequest(request);
+
+        assertThat(request.getService().getAccountId()).isEqualTo("citizen-1");
+        assertThat(request.getService().getServiceRequestId()).isEqualTo("PG-SR-001");
+        assertThat(request.getService().getId()).isNotBlank();
+        assertThat(request.getService().getAddress().getId()).isNotBlank();
+        assertThat(document.getId()).isNotBlank();
+        verify(userService).callUserService(request);
+    }
+
+    @Test
+    void enrichCreateRequest_whenIdGenEmpty_throwsCustomException() {
+        User citizen = User.builder().type("CITIZEN").uuid("citizen-1").tenantId("pg.citya").build();
+        ServiceRequest request = ServiceRequest.builder()
+                .requestInfo(RequestInfo.builder().userInfo(citizen).build())
+                .service(Service.builder()
+                        .tenantId("pg.citya")
+                        .address(org.egov.pgr.web.models.Address.builder().build())
+                        .build())
+                .workflow(Workflow.builder().build())
+                .build();
+        when(utils.getAuditDetails(any(), any(Service.class), anyBoolean())).thenReturn(AuditDetails.builder().build());
+        when(idGenRepository.getId(any(), any(), any(), any(), eq(1)))
+                .thenReturn(IdGenerationResponse.builder().idResponses(Collections.emptyList()).build());
+
+        assertThatThrownBy(() -> enrichmentService.enrichCreateRequest(request))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("No ids returned");
+    }
+
+    @Test
+    void enrichUpdateRequest_refreshesAuditDetailsAndCallsUserService() {
+        User employee = User.builder().type("EMPLOYEE").uuid("emp-1").build();
+        ServiceRequest request = ServiceRequest.builder()
+                .requestInfo(RequestInfo.builder().userInfo(employee).build())
+                .service(Service.builder().tenantId("pg.citya").build())
+                .build();
+        AuditDetails auditDetails = AuditDetails.builder().lastModifiedBy("emp-1").build();
+        when(utils.getAuditDetails("emp-1", request.getService(), false)).thenReturn(auditDetails);
+
+        enrichmentService.enrichUpdateRequest(request);
+
+        assertThat(request.getService().getAuditDetails()).isEqualTo(auditDetails);
+        verify(userService).callUserService(request);
     }
 }
