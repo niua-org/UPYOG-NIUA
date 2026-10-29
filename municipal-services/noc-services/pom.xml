@@ -11,10 +11,10 @@
 		<java.version>17</java.version>
 <log4j2.version>2.17.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.validator.line.minimum>0.03</jacoco.validator.line.minimum>
-        <jacoco.validator.branch.minimum>0.005</jacoco.validator.branch.minimum>
-        <jacoco.builder.line.minimum>0.02</jacoco.builder.line.minimum>
-        <jacoco.builder.branch.minimum>0.01</jacoco.builder.branch.minimum>
+        <jacoco.validator.line.minimum>0.0697</jacoco.validator.line.minimum>
+        <jacoco.validator.branch.minimum>0.0</jacoco.validator.branch.minimum>
+        <jacoco.builder.line.minimum>0.5387</jacoco.builder.line.minimum>
+        <jacoco.builder.branch.minimum>0.4275</jacoco.builder.branch.minimum>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.22</lombok.version>
