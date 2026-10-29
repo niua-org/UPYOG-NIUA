@@ -19,22 +19,22 @@
 | pt-calculator-v2 | 0.0 | **13.3** | 0.0 | **0.6** | ~3 methods (`BillingSlabQueryBuilderTest`, `CalculatorUtilsTest`; purged 19 scaffolds) | No |
 | cnd-calculator | 0.0 | **30.7** | 0.0 | **1.4** | ~4 methods (`CalculationUtilsTest`; purged 7 kafka/service/util scaffolds) | No |
 | echallan-calculator | 0.0 | **17.4** | 0.0 | **0.5** | ~3 methods (`CalculationUtilsTest`; purged 2 service scaffolds) | No |
-| fsm-calculator | 0.0 | **23.7** | 0.0 | **1.5** | ~6 methods (`BillingSlabQueryBuilderTest`, `CalculationUtilsTest`; purged 3 scaffolds) | No |
+| fsm-calculator | 0.0 | **23.7** → **23.9** | 0.0 | **1.5** → **1.5** | Deep pass: meaningful `CalculationServiceTest` (empty criteria guard) | No |
 | tl-calculator | 0.0 | **19.0** | 0.0 | **0.8** | ~3 methods (`CalculationQueryBuilderTest`, `CalculationUtilsTest`; purged 11 scaffolds) | No |
 | bpa-calculator | 0.0 | **14.7** | 0.0 | **1.9** | ~4 methods (`PreapprovedPlanQueryBuilderTest`, `CalculationUtilsTest`; purged 1 scaffold) | No |
 | ndc-calculator | 0.0 | **19.4** | 0.0 | **1.0** | ~6 methods (`CalculatorUtilsTest`, `ResponseInfoFactoryTest`, existing `SanitizeHtmlValidatorTest`) | No |
 | challan-generation-calculator | 0.0 | **11.8** | 0.0 | **0.4** | ~2 methods (`CalculationUtilsTest`; purged 2 service scaffolds) | No |
 | inbox | 0.0 | **3.9** → **4.5** | 0.0 | **1.8** → **2.3** | Deep pass: `ModuleHandlerRegistryTest`, `ElasticSearchQueryBuilderTest.merge` | No |
-| community-hall-booking | 0.0 | **26.1** | 0.0 | **22.1** | ~13 methods (validator, util, querybuilder; purged 25 scaffolds) | No |
+| community-hall-booking | 0.0 | **26.1** | 0.0 | **22.1** | **Skipped** deep pass (>25% line; no easy wins targeted) | No |
 | garbage-service | 0.0 | **6.3** → **8.5** | 0.0 | **5.6** → **7.9** | Deep pass: `GarbageAccountServiceTest`; JaCoCo **service** package gate | No |
 | fsm | 0.0 | **8.3** → **9.4** | 0.0 | **3.2** → **7.0** | Deep pass: `FSMServiceTest`, `EnrichmentServiceTest`, `FSMQueryBuilderTest`, `FSMValidatorTest`, `ActionValidatorTest`, `FSMUtilTest`; JaCoCo **service** package gate | No |
-| street-vending | 0.0 | **8.6** → **10.0** | 0.0 | **6.2** → **6.7** | Deep pass: `StreetVendingServiceImplTest`; JaCoCo **service** package gate (pending floor sync) | No |
-| ndc-services | 0.0 | **15.0** | 0.0 | **9.9** | ~15 methods (validator, util, builder, config; purged 14 scaffolds) | No |
-| request-service | 0.0 | **5.3** | 0.0 | **6.5** | ~12 methods (util, querybuilder, validation; purged 24 scaffolds) | No |
-| pet-services | 0.0 | **7.8** | 0.0 | **5.6** | ~8 methods (util, validator; purged 19 scaffolds) | No |
-| rainmaker-pgr | 0.0 | **6.3** | 0.0 | **2.2** | ~10 methods (utils, repository; purged 6 scaffolds) | No |
-| noc-services | 0.0 | **5.1** | 0.0 | **2.5** | ~6 methods (validator, builder; purged 15 scaffolds) | No |
-| vendor | 0.0 | **6.2** | 0.0 | **2.9** | ~10 methods (validator, util, querybuilder; purged 14 scaffolds) | No |
+| street-vending | 0.0 | **8.6** → **10.0** | 0.0 | **6.2** → **6.7** | Deep pass: `StreetVendingServiceImplTest`; JaCoCo **service** package gate | No |
+| ndc-services | 0.0 | **15.0** → **16.6** | 0.0 | **9.9** → **10.5** | Deep pass: `NDCServiceTest` | No |
+| request-service | 0.0 | **5.3** → **5.7** | 0.0 | **6.5** → **6.6** | Deep pass: `WaterTankerServiceImplTest` | No |
+| pet-services | 0.0 | **7.8** → **8.2** | 0.0 | **5.6** → **5.9** | Deep pass: `PetRegistrationServiceTest` | No |
+| rainmaker-pgr | 0.0 | **6.3** → **6.7** | 0.0 | **2.2** → **2.3** | Deep pass: `ReportServiceTest` | No |
+| noc-services | 0.0 | **5.1** → **5.7** | 0.0 | **2.5** → **2.7** | Deep pass: `NOCServiceTest` | No |
+| vendor | 0.0 | **6.2** → **8.9** | 0.0 | **2.9** → **5.7** | Deep pass: `VendorServiceTest` | No |
 | advertisement-service | 0.0 | **16.7** | 0.0 | **3.0** | ~18 methods (validator, util, querybuilder; purged service/kafka scaffolds) | No |
 | asset-calculator | 0.0 | **24.5** | 0.0 | **4.3** | ~8 methods (`CalculationUtilsTest`, `MDMSValidatorTest`, `ResponseInfoFactoryTest`) | No |
 | asset-services | 0.0 | **22.5** | 0.0 | **1.7** | ~6 methods (`AssetUtilTest`, `AssetQueryBuilderTest`, `ResponseInfoFactoryTest`) | No |
