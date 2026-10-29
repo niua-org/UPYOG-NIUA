@@ -8,24 +8,24 @@
 
 | Module | Baseline line % | New line % | Baseline branch % | New branch % | Meaningful tests added | 70/60 met? |
 |--------|----------------:|-----------:|------------------:|-------------:|-----------------------:|:----------:|
-| property-services | 8.0 (audit) / 2.2 (class baseline) | **4.6** → **12.8** | 0.3 / 1.5 | **4.6** → **9.7** | Deep pass (round 2): notification/workflow/consumer tests + extended `PropertyValidatorTest`; JaCoCo gates on **service**, **util**, **consumer**, validator, builder | No |
+| property-services | 8.0 (audit) / 2.2 (class baseline) | **4.6** → **12.8** | 0.3 / 1.5 | **4.6** → **9.7** | Deep pass (round 2–3): notification/workflow/consumer + **service** JaCoCo gate; module **12.8% / 9.7%** branch after sweep | No |
 | ws-services | 11.5 (audit) | **1.8** → **10.7** | 0.6 | **1.1** → **7.0** | Deep pass: `WaterServiceImplTest`, `EnrichmentServiceTest`, `EditNotificationServiceTest`, `WaterConnectionValidatorTest`, workflow/consumer tests; JaCoCo gates on **service**, **util**, **validator** | No |
 | sw-services | 11.3 | **9.7** → **14.8** | 0.5 | **9.0** → **12.8** | Deep pass: `SewerageServiceImplTest`, `EnrichmentServiceTest`; JaCoCo gates on **service**, **util**, **validator**, **builder** | No |
 | pgr-services | 17.6 | **13.4** → **31.3** | 0.9 | **13.4** → **22.8** | Deep pass: `PGRServiceTest`, `WorkflowServiceTest`, `UserServiceTest`, extended `EnrichmentServiceTest`, consumer + validator tests; raised **service** package JaCoCo floors | No |
 | tl-services | 13.1 | **11.2** → **15.3** | 0.3 | **9.3** → **13.6** | Deep pass: `TradeLicenseServiceTest`, `EnrichmentServiceTest`, `TradeLicenseConsumerTest`, extended `TLValidatorTest`; JaCoCo gates on **service**, **consumer**, validator, util, builder, workflow | No |
 | bpa-services | 6.5 | **9.3** → **11.6** | 0.0 | **8.4** → **9.3** | Deep pass: `BPAServiceTest`, `EnrichmentServiceTest`, `BPAConsumerTest`; JaCoCo gates on **service**, **consumer**, validator, util, workflow, querybuilder | No |
-| ws-calculator | 0.0 | **11.3** | 0.0 | **1.1** | ~12 methods (`CalculatorUtilTest`, `MeterReadingUtilTest`, `WSCalculatorQueryBuilderTest`; purged 21 service/util/validator scaffolds) | No |
-| sw-calculator | 0.0 | **10.7** | 0.0 | **0.6** | ~4 methods (`CalculatorUtilsTest`, `SWCalculatorQueryBuilderTest`; purged 15 scaffolds) | No |
-| pt-calculator-v2 | 0.0 | **13.3** | 0.0 | **0.6** | ~3 methods (`BillingSlabQueryBuilderTest`, `CalculatorUtilsTest`; purged 19 scaffolds) | No |
-| cnd-calculator | 0.0 | **30.7** | 0.0 | **1.4** | ~4 methods (`CalculationUtilsTest`; purged 7 kafka/service/util scaffolds) | No |
-| echallan-calculator | 0.0 | **17.4** | 0.0 | **0.5** | ~3 methods (`CalculationUtilsTest`; purged 2 service scaffolds) | No |
+| ws-calculator | 0.0 | **11.3** → **11.4** | 0.0 | **1.1** → **1.1** | Deep pass: `WSCalculationServiceImplTest` (adhoc tax guard); util JaCoCo gate | No |
+| sw-calculator | 0.0 | **10.7** → **10.9** | 0.0 | **0.6** → **0.6** | Deep pass: `SWCalculationServiceImplTest` (adhoc tax guard); util JaCoCo gate | No |
+| pt-calculator-v2 | 0.0 | **13.3** → **13.4** | 0.0 | **0.6** → **0.6** | Deep pass: `DemandServiceTest`; util JaCoCo gate | No |
+| cnd-calculator | 0.0 | **30.7** → **30.1** | 0.0 | **1.4** → **1.2** | Deep pass: `CalculationServiceTest` (MDMS fee guard); util + **service** JaCoCo gates | No |
+| echallan-calculator | 0.0 | **17.4** → **18.3** | 0.0 | **0.5** → **0.6** | Deep pass: `CalculationServiceTest`; util JaCoCo gate | No |
 | fsm-calculator | 0.0 | **23.7** → **23.9** | 0.0 | **1.5** → **1.5** | Deep pass: meaningful `CalculationServiceTest` (empty criteria guard) | No |
 | tl-calculator | 0.0 | **19.0** | 0.0 | **0.8** | ~3 methods (`CalculationQueryBuilderTest`, `CalculationUtilsTest`; purged 11 scaffolds) | No |
 | bpa-calculator | 0.0 | **14.7** | 0.0 | **1.9** | ~4 methods (`PreapprovedPlanQueryBuilderTest`, `CalculationUtilsTest`; purged 1 scaffold) | No |
 | ndc-calculator | 0.0 | **19.4** | 0.0 | **1.0** | ~6 methods (`CalculatorUtilsTest`, `ResponseInfoFactoryTest`, existing `SanitizeHtmlValidatorTest`) | No |
-| challan-generation-calculator | 0.0 | **11.8** | 0.0 | **0.4** | ~2 methods (`CalculationUtilsTest`; purged 2 service scaffolds) | No |
+| challan-generation-calculator | 0.0 | **11.8** → **12.3** | 0.0 | **0.4** → **0.6** | Deep pass: `CalculationServiceTest` (update demandId guard); util JaCoCo gate | No |
 | inbox | 0.0 | **3.9** → **4.5** | 0.0 | **1.8** → **2.3** | Deep pass: `ModuleHandlerRegistryTest`, `ElasticSearchQueryBuilderTest.merge` | No |
-| community-hall-booking | 0.0 | **26.1** | 0.0 | **22.1** | **Skipped** deep pass (>25% line; no easy wins targeted) | No |
+| community-hall-booking | 0.0 | **26.1** → **26.5** | 0.0 | **22.1** → **22.3** | Deep pass: `DemandServiceTest` (invalid tenant); **service** JaCoCo gate | No |
 | garbage-service | 0.0 | **6.3** → **8.5** | 0.0 | **5.6** → **7.9** | Deep pass: `GarbageAccountServiceTest`; JaCoCo **service** package gate | No |
 | fsm | 0.0 | **8.3** → **9.4** | 0.0 | **3.2** → **7.0** | Deep pass: `FSMServiceTest`, `EnrichmentServiceTest`, `FSMQueryBuilderTest`, `FSMValidatorTest`, `ActionValidatorTest`, `FSMUtilTest`; JaCoCo **service** package gate | No |
 | street-vending | 0.0 | **8.6** → **10.0** | 0.0 | **6.2** → **6.7** | Deep pass: `StreetVendingServiceImplTest`; JaCoCo **service** package gate | No |
@@ -35,25 +35,25 @@
 | rainmaker-pgr | 0.0 | **6.3** → **6.7** | 0.0 | **2.2** → **2.3** | Deep pass: `ReportServiceTest` | No |
 | noc-services | 0.0 | **5.1** → **5.7** | 0.0 | **2.5** → **2.7** | Deep pass: `NOCServiceTest` | No |
 | vendor | 0.0 | **6.2** → **8.9** | 0.0 | **2.9** → **5.7** | Deep pass: `VendorServiceTest` | No |
-| advertisement-service | 0.0 | **16.7** | 0.0 | **3.0** | ~18 methods (validator, util, querybuilder; purged service/kafka scaffolds) | No |
-| asset-calculator | 0.0 | **24.5** | 0.0 | **4.3** | ~8 methods (`CalculationUtilsTest`, `MDMSValidatorTest`, `ResponseInfoFactoryTest`) | No |
-| asset-services | 0.0 | **22.5** | 0.0 | **1.7** | ~6 methods (`AssetUtilTest`, `AssetQueryBuilderTest`, `ResponseInfoFactoryTest`) | No |
-| birth-death-services | 0.0 | **7.3** | 0.0 | **0.5** | ~6 methods (`CommonUtilsTest`, `ResponseInfoFactoryTest`; purged service scaffolds) | No |
-| challan-generation | 0.0 | **11.5** | 0.0 | **0.5** | ~5 methods (`SanitizeHtmlValidatorTest`, `ResponseInfoFactoryTest`; purged service scaffolds) | No |
-| cnd-service | 0.0 | **12.2** | 0.0 | **0.2** | ~4 methods (`SanitizeHtmlValidatorTest`; purged service/kafka scaffolds) | No |
-| echallan-services | 0.0 | **14.1** | 0.0 | **0.7** | ~4 methods (`CommonUtilsTest`, `ResponseInfoFactoryTest`) | No |
-| egov-user-event | 0.0 | **11.3** | 0.0 | **1.4** | ~6 methods (`UserEventsUtilsTest`, `ResponseInfoFactoryTest`) | No |
-| estate-management | 0.0 | **9.2** | 0.0 | **0.5** | ~8 methods (`BillingPeriodUtilTest`, `EstateUtilTest`, `ResponseInfoFactoryTest`) | No |
-| ewaste-services | 0.0 | **13.1** | 0.0 | **1.2** | ~4 methods (`EwasteUtilTest`, `ResponseInfoFactoryTest`) | No |
-| land-services | 0.0 | **11.9** | 0.0 | **1.3** | ~4 methods (`LandMDMSValidatorTest`, `ResponseInfoFactoryTest`) | No |
-| pgr-ai-services | 0.0 | **12.8** | 0.0 | **0.4** | ~4 methods (`SanitizeHtmlValidatorTest`, `ResponseInfoFactoryTest`) | No |
-| pqm | 0.0 | **12.8** | 0.0 | **0.5** | ~6 methods (`JsonParserTest`, `ResponseInfoFactoryTest`) | No |
-| pqm-anomaly-finder | 0.0 | **20.3** | 0.0 | **1.0** | ~6 methods (`PqmAnomalyFinderUtilTest`, `ResponseInfoFactoryTest`) | No |
-| pt-services-v2 | 0.0 | **11.8** | 0.0 | **0.4** | ~4 methods (`PropertyUtilTest`, `ResponseInfoFactoryTest`) | No |
-| tp-services | 0.0 | **19.0** | 0.0 | **1.3** | ~4 methods (`SanitizeHtmlValidatorTest`, `ResponseInfoFactoryTest`) | No |
-| turn-io-adapter | 0.0 | **14.7** | 0.0 | **0.2** | ~8 methods (`AdditionalDetailValidatorTest`, `MDMSUtilsTest`) | No |
-| vehicle | 0.0 | **9.1** | 0.0 | **0.6** | ~4 methods (`SanitizeHtmlValidatorTest`, `ResponseInfoFactoryTest`) | No |
-| vendor-management | 0.0 | **32.2** | 0.0 | **1.5** | ~6 methods (`VendorUtilTest`, `EnrichmentServiceTest`, `ResponseInfoFactoryTest`) | No |
+| advertisement-service | 0.0 | **16.7** → **17.8** | 0.0 | **3.0** → **3.2** | Deep pass: `BookingServiceImplTest`; validator + **impl** JaCoCo gates | No |
+| asset-calculator | 0.0 | **24.5** → **25.9** | 0.0 | **4.3** → **4.3** | Deep pass: `CalculationServiceTest`; validator + **services** JaCoCo gates | No |
+| asset-services | 0.0 | **22.5** → **23.4** | 0.0 | **1.7** → **1.7** | Deep pass: `AssetServiceTest`; util + **service** JaCoCo gates | No |
+| birth-death-services | 0.0 | **7.3** → **7.4** | 0.0 | **0.5** → **0.6** | Deep pass: `BirthServiceTest`; utils + **birth.service** JaCoCo gates | No |
+| challan-generation | 0.0 | **11.5** → **12.6** | 0.0 | **0.5** → **0.6** | Deep pass: `CalculationServiceTest`, `ChallanServiceTest`; validation + **service** gates | No |
+| cnd-service | 0.0 | **12.2** → **12.8** | 0.0 | **0.2** → **0.2** | Deep pass: `CNDServiceImplTest`; validation + **impl** JaCoCo gates | No |
+| echallan-services | 0.0 | **14.1** → **14.5** | 0.0 | **0.7** → **0.7** | Deep pass: `CalculationServiceTest`; util + **service** JaCoCo gates | No |
+| egov-user-event | 0.0 | **11.3** → **12.6** | 0.0 | **1.4** → **1.6** | Deep pass: `UserEventsServiceTest`; utils + **service** JaCoCo gates | No |
+| estate-management | 0.0 | **9.2** → **10.0** | 0.0 | **0.5** → **0.6** | Deep pass: `EstateServiceImplTest`; upyog.util + **impl** JaCoCo gates | No |
+| ewaste-services | 0.0 | **13.1** → **13.8** | 0.0 | **1.2** → **1.3** | Deep pass: `EwasteServiceTest`; util + **service** JaCoCo gates | No |
+| land-services | 0.0 | **11.9** → **12.5** | 0.0 | **1.3** → **1.6** | Deep pass: `LandServiceTest`; validator + **service** JaCoCo gates | No |
+| pgr-ai-services | 0.0 | **12.8** → **13.3** | 0.0 | **0.4** → **0.8** | Deep pass: `PGRServiceTest`; validation + **service** JaCoCo gates | No |
+| pqm | 0.0 | **12.8** → **13.0** | 0.0 | **0.5** → **0.5** | Deep pass: `PqmServiceTest`; util JaCoCo gate | No |
+| pqm-anomaly-finder | 0.0 | **20.3** → **22.0** | 0.0 | **1.0** → **1.3** | Deep pass: `AnomalyFinderServiceTest`; util + **service** JaCoCo gates | No |
+| pt-services-v2 | 0.0 | **11.8** → **12.5** | 0.0 | **0.4** → **0.7** | Deep pass: `PropertyServiceTest`; util + **service** JaCoCo gates | No |
+| tp-services | 0.0 | **19.0** → **19.5** | 0.0 | **1.3** → **1.3** | Deep pass: `CalculationServiceTest`; validation + **service** JaCoCo gates | No |
+| turn-io-adapter | 0.0 | **14.7** → **14.7** | 0.0 | **0.2** → **0.2** | Deep pass sweep (v2.models gate); service gate not added (adapter integration depth) | No |
+| vehicle | 0.0 | **9.1** → **9.6** | 0.0 | **0.6** → **0.6** | Deep pass: `VehicleInboxServiceTest`; validation + **service** JaCoCo gates | No |
+| vendor-management | 0.0 | **32.2** → **32.2** | 0.0 | **1.5** → **1.5** | Deep pass: existing `VendorServiceTest` + **service** JaCoCo gate synced | No |
 | firenoc-services | — | — | — | — | Jest behavioral `firenocCalculatorService` (mocked `httpRequest`) | N/A (Node) |
 | firenoc-calculator | — | — | — | — | Jest behavioral `firenocService.getFireNoc` | N/A (Node) |
 | pqm-scheduler | — | — | — | — | pytest mocks for `getUser`, `triggerCronjob` | N/A (Python) |
@@ -66,6 +66,7 @@
 - [`testing/set_util_jacoco_floor.py`](../testing/set_util_jacoco_floor.py) — align util/utils/validation package JaCoCo floors after meaningful tests
 - [`testing/update_gate_floor.py`](../testing/update_gate_floor.py) — align module pom gate package floors from JaCoCo CSV
 - [`testing/verify_module.sh`](../testing/verify_module.sh) — `test` → `jacoco:report` → floor update → `verify`
+- [`testing/add_service_jacoco_gate.py`](../testing/add_service_jacoco_gate.py) / [`testing/remove_service_jacoco_gate.py`](../testing/remove_service_jacoco_gate.py) — optional **service** package JaCoCo rules
 
 ## Verify
 
