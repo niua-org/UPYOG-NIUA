@@ -1,1740 +1,694 @@
 package org.egov.wf.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Stream;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
 import org.egov.wf.config.WorkflowConfig;
+import org.egov.wf.producer.Producer;
 import org.egov.wf.repository.BusinessServiceRepository;
 import org.egov.wf.repository.WorKflowRepository;
 import org.egov.wf.util.WorkflowUtil;
 import org.egov.wf.validator.WorkflowValidator;
+import org.egov.wf.web.models.DashboardProcessInstance;
+import org.egov.wf.web.models.DashboardProcessInstanceResponse;
 import org.egov.wf.web.models.ProcessInstance;
 import org.egov.wf.web.models.ProcessInstanceRequest;
 import org.egov.wf.web.models.ProcessInstanceSearchCriteria;
 import org.egov.wf.web.models.ProcessStateAndAction;
-import org.junit.jupiter.api.Disabled;
+import org.egov.wf.web.models.State;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-@ContextConfiguration(classes = {WorkflowService.class})
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 class WorkflowServiceTest {
-    @MockBean
-    private BusinessMasterService businessMasterService;
 
-    @MockBean
-    private BusinessServiceRepository businessServiceRepository;
+    private static final String TRANSITION_TOPIC = "save-wf-transition";
 
-    @MockBean
-    private EnrichmentService enrichmentService;
-
-    @MockBean
-    private MDMSService mDMSService;
-
-    @MockBean
-    private StatusUpdateService statusUpdateService;
-
-    @MockBean
+    @Mock
     private TransitionService transitionService;
+    @Mock
+    private EnrichmentService enrichmentService;
+    @Mock
+    private WorkflowValidator workflowValidator;
+    @Mock
+    private WorKflowRepository workflowRepository;
+    @Mock
+    private WorkflowUtil util;
+    @Mock
+    private BusinessServiceRepository businessServiceRepository;
+    @Mock
+    private MDMSService mdmsService;
+    @Mock
+    private BusinessMasterService businessMasterService;
+    @Mock
+    private Producer producer;
+    @Mock
+    private WorkflowConfig config;
 
-    @MockBean
-    private WorKflowRepository worKflowRepository;
+    @Captor
+    private ArgumentCaptor<Object> eventPayloadCaptor;
+    @Captor
+    private ArgumentCaptor<ProcessInstanceSearchCriteria> criteriaCaptor;
 
-    @MockBean
-    private WorkflowConfig workflowConfig;
-
-    @Autowired
     private WorkflowService workflowService;
 
-    @MockBean
-    private WorkflowUtil workflowUtil;
-
-    @MockBean
-    private WorkflowValidator workflowValidator;
-
-
-    @Test
-    void testTransition() {
-        doNothing().when(this.workflowValidator)
-                .validateRequest((org.egov.common.contract.request.RequestInfo) any(), (List<ProcessStateAndAction>) any());
-        when(this.transitionService.getProcessStateAndActions((List<ProcessInstance>) any(), (Boolean) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.statusUpdateService)
-                .updateStatus((org.egov.common.contract.request.RequestInfo) any(), (List<ProcessStateAndAction>) any());
-        doNothing().when(this.enrichmentService)
-                .enrichProcessRequest((org.egov.common.contract.request.RequestInfo) any(),
-                        (List<ProcessStateAndAction>) any());
-        assertNull(this.workflowService.transition(new ProcessInstanceRequest()));
-        verify(this.workflowValidator).validateRequest((org.egov.common.contract.request.RequestInfo) any(),
-                (List<ProcessStateAndAction>) any());
-        verify(this.transitionService).getProcessStateAndActions((List<ProcessInstance>) any(), (Boolean) any());
-        verify(this.statusUpdateService).updateStatus((org.egov.common.contract.request.RequestInfo) any(),
-                (List<ProcessStateAndAction>) any());
-        verify(this.enrichmentService).enrichProcessRequest((org.egov.common.contract.request.RequestInfo) any(),
-                (List<ProcessStateAndAction>) any());
+    @BeforeEach
+    void setUp() {
+        lenient().when(config.getSaveTransitionTopic()).thenReturn(TRANSITION_TOPIC);
+        StatusUpdateService statusUpdateService = new StatusUpdateService(producer, config);
+        workflowService = new WorkflowService(config, transitionService, enrichmentService, workflowValidator,
+                statusUpdateService, workflowRepository, util, businessServiceRepository);
+        ReflectionTestUtils.setField(workflowService, "mdmsService", mdmsService);
+        ReflectionTestUtils.setField(workflowService, "businessMasterService", businessMasterService);
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("stateTransitions")
+    void transitionPublishesResultantState(String name, String currentStateUuid, String nextStateName,
+            String expectedPreviousStatus, String expectedStateName) {
+        RequestInfo requestInfo = requestInfo("user-1");
+        ProcessInstance instance = processInstance("BIZ-1");
+        if (currentStateUuid != null) {
+            instance.setState(State.builder().uuid(currentStateUuid).state("CURRENT").build());
+        }
+        State resultant = nextStateName == null ? null : State.builder().uuid("next-id").state(nextStateName).build();
+        ProcessStateAndAction action = actionFor(instance, resultant);
+        ProcessInstanceRequest request = request(requestInfo, List.of(instance));
+        when(transitionService.getProcessStateAndActions(request.getProcessInstances(), true))
+                .thenReturn(List.of(action));
 
-    @Test
-    void testTransitionWithErrorCode() {
-        doNothing().when(this.workflowValidator)
-                .validateRequest((org.egov.common.contract.request.RequestInfo) any(), (List<ProcessStateAndAction>) any());
-        when(this.transitionService.getProcessStateAndActions((List<ProcessInstance>) any(), (Boolean) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.statusUpdateService)
-                .updateStatus((org.egov.common.contract.request.RequestInfo) any(), (List<ProcessStateAndAction>) any());
-        doThrow(new CustomException("Code", "An error occurred")).when(this.enrichmentService)
-                .enrichProcessRequest((org.egov.common.contract.request.RequestInfo) any(),
-                        (List<ProcessStateAndAction>) any());
-        assertThrows(CustomException.class, () -> this.workflowService.transition(new ProcessInstanceRequest()));
-        verify(this.transitionService).getProcessStateAndActions((List<ProcessInstance>) any(), (Boolean) any());
-        verify(this.enrichmentService).enrichProcessRequest((org.egov.common.contract.request.RequestInfo) any(),
-                (List<ProcessStateAndAction>) any());
+        List<ProcessInstance> result = workflowService.transition(request);
+
+        assertThat(result).containsExactly(instance);
+        assertThat(instance.getPreviousStatus()).isEqualTo(expectedPreviousStatus);
+        if (expectedStateName == null) {
+            assertThat(instance.getState()).isNull();
+        } else {
+            assertThat(instance.getState().getState()).isEqualTo(expectedStateName);
+        }
+
+        verify(producer).push(eq(TRANSITION_TOPIC), eventPayloadCaptor.capture());
+        ProcessInstanceRequest published = (ProcessInstanceRequest) eventPayloadCaptor.getValue();
+        assertThat(published.getRequestInfo()).isSameAs(requestInfo);
+        assertThat(published.getProcessInstances()).containsExactly(instance);
+
+        InOrder order = inOrder(transitionService, enrichmentService, workflowValidator, producer);
+        order.verify(transitionService).getProcessStateAndActions(request.getProcessInstances(), true);
+        order.verify(enrichmentService).enrichProcessRequest(requestInfo, List.of(action));
+        order.verify(workflowValidator).validateRequest(requestInfo, List.of(action));
+        order.verify(producer).push(eq(TRANSITION_TOPIC), any());
     }
 
-
     @Test
-    void testTransitions() {
-        doNothing().when(this.workflowValidator)
-                .validateRequest((org.egov.common.contract.request.RequestInfo) any(), (List<ProcessStateAndAction>) any());
-        when(this.transitionService.getProcessStateAndActions((List<ProcessInstance>) any(), (Boolean) any()))
-                .thenReturn(new ArrayList<>());
-        doThrow(new CustomException("Code", "An error occurred")).when(this.statusUpdateService)
-                .updateStatus((org.egov.common.contract.request.RequestInfo) any(), (List<ProcessStateAndAction>) any());
-        doNothing().when(this.enrichmentService)
-                .enrichProcessRequest((org.egov.common.contract.request.RequestInfo) any(),
-                        (List<ProcessStateAndAction>) any());
-        assertThrows(CustomException.class, () -> this.workflowService.transition(new ProcessInstanceRequest()));
-        verify(this.workflowValidator).validateRequest((org.egov.common.contract.request.RequestInfo) any(),
-                (List<ProcessStateAndAction>) any());
-        verify(this.transitionService).getProcessStateAndActions((List<ProcessInstance>) any(), (Boolean) any());
-        verify(this.statusUpdateService).updateStatus((org.egov.common.contract.request.RequestInfo) any(),
-                (List<ProcessStateAndAction>) any());
-        verify(this.enrichmentService).enrichProcessRequest((org.egov.common.contract.request.RequestInfo) any(),
-                (List<ProcessStateAndAction>) any());
+    void transitionPublishesInstancesInRequestOrder() {
+        RequestInfo requestInfo = requestInfo("user-1");
+        ProcessInstance first = processInstance("BIZ-1");
+        ProcessInstance second = processInstance("BIZ-2");
+        State approved = State.builder().uuid("approved").state("APPROVED").build();
+        State rejected = State.builder().uuid("rejected").state("REJECTED").build();
+        ProcessInstanceRequest request = request(requestInfo, List.of(first, second));
+        when(transitionService.getProcessStateAndActions(request.getProcessInstances(), true))
+                .thenReturn(List.of(actionFor(first, approved), actionFor(second, rejected)));
+
+        List<ProcessInstance> result = workflowService.transition(request);
+
+        assertThat(result).containsExactly(first, second);
+        verify(producer).push(eq(TRANSITION_TOPIC), eventPayloadCaptor.capture());
+        ProcessInstanceRequest published = (ProcessInstanceRequest) eventPayloadCaptor.getValue();
+        assertThat(published.getProcessInstances()).extracting(ProcessInstance::getBusinessId)
+                .containsExactly("BIZ-1", "BIZ-2");
+        assertThat(published.getProcessInstances()).extracting(instance -> instance.getState().getState())
+                .containsExactly("APPROVED", "REJECTED");
     }
 
+    @Test
+    void transitionWithEmptyProcessInstancesStillPublishesEmptyPayload() {
+        RequestInfo requestInfo = requestInfo("user-1");
+        ProcessInstanceRequest request = request(requestInfo, Collections.emptyList());
+        when(transitionService.getProcessStateAndActions(request.getProcessInstances(), true))
+                .thenReturn(Collections.emptyList());
+
+        assertThat(workflowService.transition(request)).isEmpty();
+
+        verify(producer).push(eq(TRANSITION_TOPIC), eventPayloadCaptor.capture());
+        ProcessInstanceRequest published = (ProcessInstanceRequest) eventPayloadCaptor.getValue();
+        assertThat(published.getProcessInstances()).isEmpty();
+        assertThat(published.getRequestInfo()).isSameAs(requestInfo);
+    }
 
     @Test
-    void testSearch() {
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
+    void transitionWithNullProcessInstanceListPublishesEmptyPayloadAndReturnsNull() {
+        RequestInfo requestInfo = requestInfo("user-1");
+        ProcessInstanceRequest request = request(requestInfo, null);
+        when(transitionService.getProcessStateAndActions(null, true)).thenReturn(Collections.emptyList());
+
+        assertThat(workflowService.transition(request)).isNull();
+
+        verify(producer).push(eq(TRANSITION_TOPIC), eventPayloadCaptor.capture());
+        ProcessInstanceRequest published = (ProcessInstanceRequest) eventPayloadCaptor.getValue();
+        assertThat(published.getProcessInstances()).isEmpty();
+    }
+
+    @Test
+    void transitionDoesNotPublishWhenValidatorRejectsTheAction() {
+        ProcessInstanceRequest request = request(requestInfo("user-1"), List.of(processInstance("BIZ-1")));
+        when(transitionService.getProcessStateAndActions(any(), eq(true)))
+                .thenReturn(List.of(actionFor(request.getProcessInstances().get(0), State.builder().state("APPROVED").build())));
+        org.mockito.Mockito.doThrow(new CustomException("INVALID ACTION", "Action not found for businessIds: PT"))
+                .when(workflowValidator).validateRequest(any(), any());
+
+        assertThatThrownBy(() -> workflowService.transition(request))
+                .isInstanceOf(CustomException.class)
+                .satisfies(thrown -> {
+                    CustomException exception = (CustomException) thrown;
+                    assertThat(exception.getCode()).isEqualTo("INVALID ACTION");
+                    assertThat(exception.getMessage()).contains("Action not found");
+                });
+
+        verify(producer, never()).push(any(), any());
+    }
+
+    @Test
+    void transitionDoesNotPublishWhenResolvingTheNextStateFails() {
+        ProcessInstanceRequest request = request(requestInfo("user-1"), List.of(processInstance("BIZ-1")));
+        when(transitionService.getProcessStateAndActions(any(), eq(true)))
+                .thenThrow(new CustomException("INVALID ACTION", "No transition from PENDING on REJECT"));
+
+        assertThatThrownBy(() -> workflowService.transition(request))
+                .isInstanceOf(CustomException.class)
+                .satisfies(thrown -> assertThat(((CustomException) thrown).getCode()).isEqualTo("INVALID ACTION"));
+
+        verifyNoInteractions(enrichmentService, workflowValidator, producer);
+    }
+
+    @Test
+    void transitionDoesNotPublishWhenTheActionPayloadHasNoProcessInstance() {
+        ProcessInstanceRequest request = request(requestInfo("user-1"), List.of(processInstance("BIZ-1")));
+        when(transitionService.getProcessStateAndActions(any(), eq(true)))
+                .thenReturn(List.of(new ProcessStateAndAction()));
+
+        assertThatThrownBy(() -> workflowService.transition(request)).isInstanceOf(NullPointerException.class);
+
+        verify(producer, never()).push(any(), any());
+    }
+
+    @Test
+    void transitionRejectsANullRequest() {
+        assertThatThrownBy(() -> workflowService.transition(null)).isInstanceOf(NullPointerException.class);
+        verifyNoInteractions(producer, transitionService);
+    }
+
+    @ParameterizedTest(name = "businessIds={0}, ids={1}, assignee={2}, status={3}, inbox={4}")
+    @MethodSource("directVersusInboxSearch")
+    void searchUsesInboxOnlyWhenCriteriaHasNoIdsStatusOrAssignee(List<String> businessIds, List<String> ids,
+            String assignee, List<String> status, boolean inbox) {
+        ProcessInstanceSearchCriteria criteria = criteria(businessIds, ids, assignee, status);
+        RequestInfo requestInfo = requestInfo("user-1");
+        if (inbox) {
+            when(workflowRepository.getProcessInstancesForUserInbox(criteria)).thenReturn(Collections.emptyList());
+        } else {
+            when(workflowRepository.getProcessInstances(criteria)).thenReturn(Collections.emptyList());
+        }
+
+        assertThat(workflowService.search(requestInfo, criteria)).isEmpty();
+
+        if (inbox) {
+            assertThat(criteria.getAssignee()).isEqualTo("user-1");
+            verify(util).enrichStatusesInSearchCriteria(requestInfo, criteria);
+            verify(workflowRepository).getProcessInstancesForUserInbox(criteria);
+            verify(workflowRepository, never()).getProcessInstances(any());
+        } else {
+            verify(workflowRepository).getProcessInstances(criteria);
+            verify(workflowRepository, never()).getProcessInstancesForUserInbox(any());
+            verify(util, never()).enrichStatusesInSearchCriteria(any(), any());
+        }
+        verifyNoInteractions(enrichmentService);
+    }
+
+    @Test
+    void searchReturnsRepositoryNullWithoutEnrichment() {
+        ProcessInstanceSearchCriteria criteria = criteria(List.of("BIZ-1"), null, null, null);
+        when(workflowRepository.getProcessInstances(criteria)).thenReturn(null);
+
+        assertThat(workflowService.search(requestInfo("user-1"), criteria)).isNull();
+
+        verifyNoInteractions(enrichmentService, workflowValidator);
+    }
+
+    @Test
+    void searchEnrichesANonEmptyDirectResultAndSkipsRoleValidation() {
+        ProcessInstanceSearchCriteria criteria = criteria(List.of("BIZ-1"), null, null, null);
+        ProcessInstance instance = processInstance("BIZ-1");
+        RequestInfo requestInfo = requestInfo("user-1");
+        when(workflowRepository.getProcessInstances(criteria)).thenReturn(List.of(instance));
+        when(enrichmentService.enrichNextActionForSearch(requestInfo, List.of(instance)))
+                .thenReturn(Collections.emptyList());
+
+        assertThat(workflowService.search(requestInfo, criteria)).containsExactly(instance);
+
+        verify(enrichmentService).enrichUsersFromSearch(requestInfo, List.of(instance));
+        verify(enrichmentService).enrichNextActionForSearch(requestInfo, List.of(instance));
+        verify(enrichmentService).enrichAndUpdateSlaForSearch(List.of(instance));
+        verifyNoInteractions(workflowValidator);
+    }
+
+    @Test
+    void searchInboxKeepsTheLatestRowForADuplicateBusinessId() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        ProcessInstance older = processInstance("BIZ-1");
+        older.setId("old");
+        ProcessInstance latest = processInstance("BIZ-1");
+        latest.setId("latest");
+        ProcessInstance other = processInstance("BIZ-2");
+        other.setId("other");
+        RequestInfo requestInfo = requestInfo("user-1");
+        when(workflowRepository.getProcessInstancesForUserInbox(criteria))
+                .thenReturn(List.of(older, other, latest));
+        when(enrichmentService.enrichNextActionForSearch(eq(requestInfo), any())).thenReturn(Collections.emptyList());
+
+        List<ProcessInstance> result = workflowService.search(requestInfo, criteria);
+
+        assertThat(result).extracting(ProcessInstance::getId).containsExactly("latest", "other");
+        assertThat(criteria.getAssignee()).isEqualTo("user-1");
+        verify(enrichmentService).enrichUsersFromSearch(eq(requestInfo), eq(result));
+    }
+
+    @Test
+    void searchInboxRejectsANullRow() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        when(workflowRepository.getProcessInstancesForUserInbox(criteria))
+                .thenReturn(Arrays.asList(processInstance("BIZ-1"), null));
+
+        assertThatThrownBy(() -> workflowService.search(requestInfo("user-1"), criteria))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void searchRejectsANullCriteria() {
+        assertThatThrownBy(() -> workflowService.search(requestInfo("user-1"), null))
+                .isInstanceOf(NullPointerException.class);
+        verifyNoInteractions(workflowRepository);
+    }
+
+    @Test
+    void searchInboxRequiresUserInfo() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+
+        assertThatThrownBy(() -> workflowService.search(new RequestInfo(), criteria))
+                .isInstanceOf(NullPointerException.class);
+        verifyNoInteractions(workflowRepository);
+    }
+
+    @ParameterizedTest(name = "nearingSla={0}, inboxCriteria={1}")
+    @CsvSource({
+            "false, true",
+            "false, false"
+    })
+    void countUsesInboxOnlyWhenCriteriaIsNull(boolean nearingSla, boolean inboxCriteria) {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setIsNearingSlaCount(nearingSla);
+        if (!inboxCriteria) {
+            criteria.setStatus(List.of("PENDING"));
+        }
+        RequestInfo requestInfo = requestInfo("user-1");
+        if (inboxCriteria) {
+            when(workflowRepository.getInboxCount(criteria)).thenReturn(4);
+        } else {
+            when(workflowRepository.getProcessInstancesCount(criteria)).thenReturn(4);
+        }
+
+        assertThat(workflowService.count(requestInfo, criteria)).isEqualTo(4);
+
+        if (inboxCriteria) {
+            assertThat(criteria.getAssignee()).isEqualTo("user-1");
+            verify(util).enrichStatusesInSearchCriteria(requestInfo, criteria);
+            verify(workflowRepository).getInboxCount(criteria);
+            verify(workflowRepository, never()).getProcessInstancesCount(any());
+        } else {
+            verify(workflowRepository).getProcessInstancesCount(criteria);
+            verify(util, never()).enrichStatusesInSearchCriteria(any(), any());
+        }
+        verifyNoInteractions(mdmsService, businessMasterService);
+    }
+
+    @ParameterizedTest(name = "maxSla={0}, slotPercent={1}, limit={2}")
+    @CsvSource({
+            "100, 20, 80",
+            "200, 10, 180",
+            "50, 25, 50",
+            "99, 50, 99",
+            "1, 100, 1"
+    })
+    void nearingSlaLimitUsesIntegerDivision(long maxSla, int slotPercent, long expectedLimit) {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setIsNearingSlaCount(true);
+        criteria.setBusinessService("PT");
+        criteria.setStatus(List.of("PENDING"));
+        RequestInfo requestInfo = requestInfo("user-1");
+        when(mdmsService.fetchSlotPercentageForNearingSla(requestInfo)).thenReturn(slotPercent);
+        when(businessMasterService.getMaxBusinessServiceSla(criteria)).thenReturn(maxSla);
+        when(workflowRepository.getProcessInstancesCount(criteria)).thenReturn(3);
+
+        assertThat(workflowService.count(requestInfo, criteria)).isEqualTo(3);
+        assertThat(criteria.getSlotPercentageSlaLimit()).isEqualTo(expectedLimit);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void nearingSlaRequiresABusinessService(String businessService) {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setIsNearingSlaCount(true);
+        criteria.setBusinessService(businessService);
+
+        assertThatThrownBy(() -> workflowService.count(requestInfo("user-1"), criteria))
+                .isInstanceOf(CustomException.class)
+                .satisfies(thrown -> {
+                    CustomException exception = (CustomException) thrown;
+                    assertThat(exception.getCode()).isEqualTo("EG_WF_BUSINESSSRV_ERR");
+                    assertThat(exception.getMessage())
+                            .isEqualTo("Providing business service is mandatory for nearing escalation count");
+                });
+
+        verifyNoInteractions(mdmsService, businessMasterService, workflowRepository);
+    }
+
+    @Test
+    void countRejectsANullNearingSlaFlag() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+
+        assertThatThrownBy(() -> workflowService.count(requestInfo("user-1"), criteria))
+                .isInstanceOf(NullPointerException.class);
+        verifyNoInteractions(workflowRepository, mdmsService);
+    }
+
+    @Test
+    void nearingSlaRejectsANullSlotPercentage() {
+        ProcessInstanceSearchCriteria criteria = nearingSlaCriteria();
+        when(mdmsService.fetchSlotPercentageForNearingSla(any())).thenReturn(null);
+        when(businessMasterService.getMaxBusinessServiceSla(criteria)).thenReturn(100L);
+
+        assertThatThrownBy(() -> workflowService.count(requestInfo("user-1"), criteria))
+                .isInstanceOf(NullPointerException.class);
+        verify(workflowRepository, never()).getProcessInstancesCount(any());
+    }
+
+    @Test
+    void nearingSlaRejectsANullMaxSla() {
+        ProcessInstanceSearchCriteria criteria = nearingSlaCriteria();
+        when(mdmsService.fetchSlotPercentageForNearingSla(any())).thenReturn(20);
+        when(businessMasterService.getMaxBusinessServiceSla(criteria)).thenReturn(null);
+
+        assertThatThrownBy(() -> workflowService.count(requestInfo("user-1"), criteria))
+                .isInstanceOf(NullPointerException.class);
+        verify(workflowRepository, never()).getProcessInstancesCount(any());
+    }
+
+    @Test
+    void countPropagatesARepositoryFailure() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setIsNearingSlaCount(false);
+        criteria.setStatus(List.of("PENDING"));
+        when(workflowRepository.getProcessInstancesCount(criteria)).thenThrow(new IllegalStateException("db down"));
+
+        assertThatThrownBy(() -> workflowService.count(requestInfo("user-1"), criteria))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("db down");
+    }
+
+    @Test
+    void userInboxCountIgnoresRequestInfo() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        when(workflowRepository.getProcessInstancesForUserInboxCount(criteria)).thenReturn(9);
+
+        assertThat(workflowService.getUserBasedProcessInstancesCount(null, criteria)).isEqualTo(9);
+
+        verify(util, never()).enrichStatusesInSearchCriteria(any(), any());
+        assertThat(criteria.getAssignee()).isNull();
+    }
+
+    @ParameterizedTest(name = "inboxCriteria={0}, businessService={1}, inboxCount={2}")
+    @MethodSource("statusCountRoutes")
+    void statusCountUsesInboxOnlyForNonFsmWhenCriteriaIsNull(boolean inboxCriteria, String businessService,
+            boolean inboxCount) {
+        ProcessInstanceSearchCriteria criteria = inboxCriteria
+                ? new ProcessInstanceSearchCriteria()
+                : criteria(null, null, null, List.of("PENDING"));
+        criteria.setBusinessService(businessService);
+        RequestInfo requestInfo = requestInfo("user-1");
+        if (inboxCount) {
+            when(workflowRepository.getInboxStatusCount(criteria)).thenReturn(List.of("INBOX"));
+        } else {
+            when(workflowRepository.getProcessInstancesStatusCount(criteria)).thenReturn(List.of("ALL"));
+        }
+
+        assertThat(workflowService.statusCount(requestInfo, criteria))
+                .containsExactly(inboxCount ? "INBOX" : "ALL");
+
+        if (inboxCount) {
+            assertThat(criteria.getAssignee()).isEqualTo("user-1");
+            verify(util).enrichStatusesInSearchCriteria(requestInfo, criteria);
+            verify(workflowRepository, never()).getProcessInstancesStatusCount(any());
+        } else {
+            verify(util, never()).enrichStatusesInSearchCriteria(any(), any());
+            verify(workflowRepository, never()).getInboxStatusCount(any());
+        }
+    }
+
+    @Test
+    void statusCountRejectsANullCriteria() {
+        assertThatThrownBy(() -> workflowService.statusCount(requestInfo("user-1"), null))
+                .isInstanceOf(NullPointerException.class);
+        verifyNoInteractions(workflowRepository);
+    }
+
+    @Test
+    void escalatedSearchReturnsEmptyWhenNoBusinessIdsMatch() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setTenantId("pb.amritsar");
+        criteria.setBusinessService("PT");
+        criteria.setLimit(10);
+        RequestInfo requestInfo = requestInfo("user-1");
+        when(workflowRepository.fetchEscalatedApplicationsBusinessIdsFromDb(requestInfo, criteria))
+                .thenReturn(Collections.emptyList());
+
+        assertThat(workflowService.escalatedApplicationsSearch(requestInfo, criteria)).isEmpty();
+        assertThat(criteria.getIsEscalatedCount()).isFalse();
+        verify(workflowRepository, never()).getProcessInstances(any());
+    }
+
+    @Test
+    void escalatedSearchRequeriesByBusinessIdAndDropsPaging() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setTenantId("pb.amritsar");
+        criteria.setBusinessService("PT");
+        criteria.setLimit(5);
+        criteria.setOffset(10);
+        criteria.setHistory(true);
+        RequestInfo requestInfo = requestInfo("user-1");
+        ProcessInstance instance = processInstance("BIZ-9");
+        when(workflowRepository.fetchEscalatedApplicationsBusinessIdsFromDb(requestInfo, criteria))
+                .thenReturn(List.of("BIZ-9", "BIZ-8"));
+        when(workflowRepository.getProcessInstances(any())).thenReturn(List.of(instance));
+        when(enrichmentService.enrichNextActionForSearch(eq(requestInfo), any())).thenReturn(Collections.emptyList());
+
+        assertThat(workflowService.escalatedApplicationsSearch(requestInfo, criteria)).containsExactly(instance);
+        assertThat(criteria.getIsEscalatedCount()).isFalse();
+
+        verify(workflowRepository).getProcessInstances(criteriaCaptor.capture());
+        ProcessInstanceSearchCriteria followUp = criteriaCaptor.getValue();
+        assertThat(followUp).isNotSameAs(criteria);
+        assertThat(followUp.getBusinessIds()).containsExactly("BIZ-9", "BIZ-8");
+        assertThat(followUp.getTenantId()).isEqualTo("pb.amritsar");
+        assertThat(followUp.getBusinessService()).isEqualTo("PT");
+        assertThat(followUp.getLimit()).isNull();
+        assertThat(followUp.getOffset()).isNull();
+        assertThat(followUp.getHistory()).isFalse();
+    }
+
+    @Test
+    void escalatedSearchReturnsNullWhenTheFollowUpQueryReturnsNull() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setTenantId("pb");
+        criteria.setBusinessService("PT");
+        RequestInfo requestInfo = requestInfo("user-1");
+        when(workflowRepository.fetchEscalatedApplicationsBusinessIdsFromDb(requestInfo, criteria))
+                .thenReturn(List.of("BIZ-1"));
+        when(workflowRepository.getProcessInstances(any())).thenReturn(null);
+
+        assertThat(workflowService.escalatedApplicationsSearch(requestInfo, criteria)).isNull();
+    }
+
+    @Test
+    void countEscalatedApplicationsMarksTheCriteriaAndReturnsTheRepositoryCount() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        RequestInfo requestInfo = requestInfo("user-1");
+        when(workflowRepository.getEscalatedApplicationsCount(requestInfo, criteria)).thenReturn(6);
+
+        assertThat(workflowService.countEscalatedApplications(requestInfo, criteria)).isEqualTo(6);
+        assertThat(criteria.getIsEscalatedCount()).isTrue();
+        verify(workflowRepository).getEscalatedApplicationsCount(requestInfo, criteria);
+    }
+
+    @Test
+    void dashboardCountReturnsTheRepositoryCount() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setTenantId("pb");
+        criteria.setStatus(List.of("APPROVED"));
+        criteria.setCreatedBy("creator-1");
+        when(workflowRepository.getDashboardApplicationCount(criteria)).thenReturn(7);
+
+        assertThat(workflowService.getDashboardApplicationCount(requestInfo("user-1"), criteria)).isEqualTo(7);
+        verify(workflowRepository).getDashboardApplicationCount(criteria);
+    }
+
+    @Test
+    void dashboardCountRejectsANullCriteria() {
+        assertThatThrownBy(() -> workflowService.getDashboardApplicationCount(requestInfo("user-1"), null))
+                .isInstanceOf(NullPointerException.class);
+        verifyNoInteractions(workflowRepository);
+    }
+
+    @Test
+    void dashboardApplicationsMapProcessFieldsAndTreatNullOrEmptyAsEmpty() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        ProcessInstance instance = processInstance("BIZ-3");
+        instance.setAction("FORWARD");
+        instance.setModuleName("PT");
+        when(workflowRepository.getDashboardApplications(criteria)).thenReturn(List.of(instance), null,
+                Collections.emptyList());
+
+        List<DashboardProcessInstance> mapped = workflowService.getDashboardApplications(requestInfo("user-1"), criteria);
+
+        assertThat(mapped).singleElement().satisfies(row -> {
+            assertThat(row.getId()).isEqualTo("id-BIZ-3");
+            assertThat(row.getTenantId()).isEqualTo("pb.amritsar");
+            assertThat(row.getBusinessService()).isEqualTo("PT");
+            assertThat(row.getBusinessId()).isEqualTo("BIZ-3");
+            assertThat(row.getAction()).isEqualTo("FORWARD");
+            assertThat(row.getModuleName()).isEqualTo("PT");
+        });
+        assertThat(workflowService.getDashboardApplications(requestInfo("user-1"), criteria)).isEmpty();
+        assertThat(workflowService.getDashboardApplications(requestInfo("user-1"), criteria)).isEmpty();
+    }
+
+    @Test
+    void dashboardApplicationsWithCountReturnsTheRepositoryResponse() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        DashboardProcessInstanceResponse expected = DashboardProcessInstanceResponse.builder().totalCount(2).build();
+        when(workflowRepository.getDashboardApplicationsWithCount(criteria)).thenReturn(expected);
+
+        assertThat(workflowService.getDashboardApplicationsWithCount(requestInfo("user-1"), criteria)).isSameAs(expected);
+    }
+
+    @Test
+    void dashboardApplicationsWithCountRejectsANullCriteria() {
+        assertThatThrownBy(() -> workflowService.getDashboardApplicationsWithCount(requestInfo("user-1"), null))
+                .isInstanceOf(NullPointerException.class);
+        verifyNoInteractions(workflowRepository);
+    }
+
+    private static Stream<Arguments> stateTransitions() {
+        return Stream.of(
+                Arguments.of("copies previous status and moves to the next state", "state-1", "APPROVED", "state-1",
+                        "APPROVED"),
+                Arguments.of("null current state leaves previous status empty", null, "APPROVED", null, "APPROVED"),
+                Arguments.of("null resultant state clears the current state", "state-1", null, "state-1", null));
+    }
+
+    private static Stream<Arguments> directVersusInboxSearch() {
+        return Stream.of(
+                Arguments.of(null, null, null, null, true),
+                Arguments.of(List.of("BIZ-1"), null, null, null, false),
+                Arguments.of(null, List.of("id-1"), null, null, false),
+                Arguments.of(null, null, "assignee-1", null, false),
+                Arguments.of(null, null, null, List.of("PENDING"), false),
+                Arguments.of(Collections.emptyList(), null, null, null, false));
+    }
+
+    private static Stream<Arguments> statusCountRoutes() {
+        return Stream.of(
+                Arguments.of(true, "PT", true),
+                Arguments.of(true, "FSM", false),
+                Arguments.of(true, "fsm", false),
+                Arguments.of(true, " FSM", true),
+                Arguments.of(true, null, false),
+                Arguments.of(false, "PT", false),
+                Arguments.of(false, "FSM", false));
+    }
+
+    private static RequestInfo requestInfo(String uuid) {
+        User user = new User();
+        user.setUuid(uuid);
         RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List<ProcessInstance> actualSearchResult = this.workflowService.search(requestInfo, processInstanceSearchCriteria);
-        assertSame(processInstanceList, actualSearchResult);
-        assertTrue(actualSearchResult.isEmpty());
-        verify(this.worKflowRepository).getProcessInstances((ProcessInstanceSearchCriteria) any());
+        requestInfo.setUserInfo(user);
+        return requestInfo;
     }
 
-
-    @Test
-    void testSearchWithActualSearchResult() {
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-        when(this.enrichmentService.enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        doNothing().when(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List<ProcessInstance> actualSearchResult = this.workflowService.search(requestInfo, processInstanceSearchCriteria);
-        assertSame(processInstanceList, actualSearchResult);
-        assertEquals(1, actualSearchResult.size());
-        verify(this.worKflowRepository).getProcessInstances((ProcessInstanceSearchCriteria) any());
-        verify(this.enrichmentService).enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
+    private static ProcessInstance processInstance(String businessId) {
+        return ProcessInstance.builder()
+                .id("id-" + businessId)
+                .tenantId("pb.amritsar")
+                .businessService("PT")
+                .businessId(businessId)
+                .action("FORWARD")
+                .moduleName("PT")
+                .build();
     }
 
-
-    @Test
-    void testSearchWithErrorCode() {
-        doThrow(new CustomException("Code", "An error occurred")).when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-        when(this.enrichmentService.enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        doNothing().when(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        RequestInfo requestInfo = new RequestInfo();
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class, () -> this.workflowService.search(requestInfo, processInstanceSearchCriteria));
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
+    private static ProcessInstanceRequest request(RequestInfo requestInfo, List<ProcessInstance> processInstances) {
+        return ProcessInstanceRequest.builder().requestInfo(requestInfo).processInstances(processInstances).build();
     }
 
-
-    @Test
-    void testSearchWithEmpty() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        ArrayList<ProcessInstance> processInstanceList1 = new ArrayList<>();
-        when(this.worKflowRepository.getProcessInstancesForUserInbox((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList1);
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-        when(this.enrichmentService.enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        doNothing().when(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List<ProcessInstance> actualSearchResult = this.workflowService.search(requestInfo, processInstanceSearchCriteria);
-        assertSame(processInstanceList1, actualSearchResult);
-        assertTrue(actualSearchResult.isEmpty());
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getProcessInstancesForUserInbox((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria, atLeast(1)).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
+    private static ProcessStateAndAction actionFor(ProcessInstance instance, State resultant) {
+        ProcessStateAndAction action = new ProcessStateAndAction();
+        action.setProcessInstanceFromRequest(instance);
+        action.setResultantState(resultant);
+        return action;
     }
 
-
-    @Test
-    void TestSearch() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-
-        ArrayList<ProcessInstance> processInstanceList1 = new ArrayList<>();
-        processInstanceList1.add(new ProcessInstance());
-        when(this.worKflowRepository.getProcessInstancesForUserInbox((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList1);
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-        when(this.enrichmentService.enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        doNothing().when(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertEquals(1, this.workflowService.search(requestInfo, processInstanceSearchCriteria).size());
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getProcessInstancesForUserInbox((ProcessInstanceSearchCriteria) any());
-        verify(this.enrichmentService).enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria, atLeast(1)).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
+    private static ProcessInstanceSearchCriteria criteria(List<String> businessIds, List<String> ids, String assignee,
+            List<String> status) {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setBusinessIds(businessIds);
+        criteria.setIds(ids);
+        criteria.setAssignee(assignee);
+        criteria.setStatus(status);
+        return criteria;
     }
 
-
-    @Test
-    void testCount() {
-        when(this.worKflowRepository.getProcessInstancesCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.mDMSService.fetchSlotPercentageForNearingSla((RequestInfo) any())).thenReturn(1);
-        when(this.businessMasterService.getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any())).thenReturn(1L);
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertEquals(3, this.workflowService.count(requestInfo, processInstanceSearchCriteria).intValue());
-        verify(this.worKflowRepository).getProcessInstancesCount((ProcessInstanceSearchCriteria) any());
-        verify(this.mDMSService).fetchSlotPercentageForNearingSla((RequestInfo) any());
-        verify(this.businessMasterService).getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any());
-        assertEquals(1L, processInstanceSearchCriteria.getSlotPercentageSlaLimit().longValue());
-    }
-
-
-    @Test
-    void testCountWithErrorCode() {
-        when(this.worKflowRepository.getProcessInstancesCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.mDMSService.fetchSlotPercentageForNearingSla((RequestInfo) any())).thenReturn(1);
-        when(this.businessMasterService.getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any()))
-                .thenThrow(new CustomException("Code", "An error occurred"));
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class, () -> this.workflowService.count(requestInfo, processInstanceSearchCriteria));
-        verify(this.mDMSService).fetchSlotPercentageForNearingSla((RequestInfo) any());
-        verify(this.businessMasterService).getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any());
-    }
-
-
-    @Test
-    void testCountWithSerachCriteria() {
-        doThrow(new CustomException("Code", "An error occurred")).when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getProcessInstancesCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.mDMSService.fetchSlotPercentageForNearingSla((RequestInfo) any())).thenReturn(1);
-        when(this.businessMasterService.getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any())).thenReturn(1L);
-        RequestInfo requestInfo = new RequestInfo();
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.getIsNearingSlaCount()).thenReturn(true);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class, () -> this.workflowService.count(requestInfo, processInstanceSearchCriteria));
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.mDMSService).fetchSlotPercentageForNearingSla((RequestInfo) any());
-        verify(this.businessMasterService).getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).getIsNearingSlaCount();
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria).getBusinessService();
-        verify(processInstanceSearchCriteria).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria, atLeast(1)).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-
-    @Test
-    void testCountWithBusinessService() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getInboxCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.worKflowRepository.getProcessInstancesCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.mDMSService.fetchSlotPercentageForNearingSla((RequestInfo) any())).thenReturn(1);
-        when(this.businessMasterService.getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any())).thenReturn(1L);
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.getIsNearingSlaCount()).thenReturn(true);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertEquals(3, this.workflowService.count(requestInfo, processInstanceSearchCriteria).intValue());
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getInboxCount((ProcessInstanceSearchCriteria) any());
-        verify(this.mDMSService).fetchSlotPercentageForNearingSla((RequestInfo) any());
-        verify(this.businessMasterService).getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).getIsNearingSlaCount();
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria).getBusinessService();
-        verify(processInstanceSearchCriteria, atLeast(1)).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria, atLeast(1)).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-
-    @Test
-    void testCountWithEmptyString() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getInboxCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.worKflowRepository.getProcessInstancesCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.mDMSService.fetchSlotPercentageForNearingSla((RequestInfo) any())).thenReturn(1);
-        when(this.businessMasterService.getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any())).thenReturn(1L);
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("");
-        when(processInstanceSearchCriteria.getIsNearingSlaCount()).thenReturn(true);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class, () -> this.workflowService.count(requestInfo, processInstanceSearchCriteria));
-        verify(processInstanceSearchCriteria).getIsNearingSlaCount();
-        verify(processInstanceSearchCriteria).getBusinessService();
-        verify(processInstanceSearchCriteria).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-
-    @Test
-    void testCountWithFalse() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getInboxCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.worKflowRepository.getProcessInstancesCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.mDMSService.fetchSlotPercentageForNearingSla((RequestInfo) any())).thenReturn(1);
-        when(this.businessMasterService.getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any())).thenReturn(1L);
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.getIsNearingSlaCount()).thenReturn(false);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertEquals(3, this.workflowService.count(requestInfo, processInstanceSearchCriteria).intValue());
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getInboxCount((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).getIsNearingSlaCount();
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria, atLeast(1)).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-
-    @Test
-    void testCountWithTrue() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getInboxCount((ProcessInstanceSearchCriteria) any()))
-                .thenThrow(new CustomException("Code", "An error occurred"));
-        when(this.worKflowRepository.getProcessInstancesCount((ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        when(this.mDMSService.fetchSlotPercentageForNearingSla((RequestInfo) any())).thenReturn(1);
-        when(this.businessMasterService.getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any())).thenReturn(1L);
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.getIsNearingSlaCount()).thenReturn(true);
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class, () -> this.workflowService.count(requestInfo, processInstanceSearchCriteria));
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getInboxCount((ProcessInstanceSearchCriteria) any());
-        verify(this.mDMSService).fetchSlotPercentageForNearingSla((RequestInfo) any());
-        verify(this.businessMasterService).getMaxBusinessServiceSla((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).getIsNearingSlaCount();
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria).getBusinessService();
-        verify(processInstanceSearchCriteria, atLeast(1)).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria, atLeast(1)).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-    @Test
-    void testGetUserBasedProcessInstancesCount() {
-        when(this.worKflowRepository.getProcessInstancesForUserInboxCount((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(3);
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertEquals(3,
-                this.workflowService.getUserBasedProcessInstancesCount(requestInfo, processInstanceSearchCriteria).intValue());
-        verify(this.worKflowRepository).getProcessInstancesForUserInboxCount((ProcessInstanceSearchCriteria) any());
-    }
-
-    @Test
-    void testGetUserBasedProcessInstancesCountWithErrorCode() {
-        when(this.worKflowRepository.getProcessInstancesForUserInboxCount((ProcessInstanceSearchCriteria) any()))
-                .thenThrow(new CustomException("Code", "An error occurred"));
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class,
-                () -> this.workflowService.getUserBasedProcessInstancesCount(requestInfo, processInstanceSearchCriteria));
-        verify(this.worKflowRepository).getProcessInstancesForUserInboxCount((ProcessInstanceSearchCriteria) any());
-    }
-
-
-    @Test
-    void testStatusCount() {
-        ArrayList<Object> objectList = new ArrayList<>();
-        when(this.worKflowRepository.getProcessInstancesStatusCount((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(objectList);
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List actualStatusCountResult = this.workflowService.statusCount(requestInfo, processInstanceSearchCriteria);
-        assertSame(objectList, actualStatusCountResult);
-        assertTrue(actualStatusCountResult.isEmpty());
-        verify(this.worKflowRepository).getProcessInstancesStatusCount((ProcessInstanceSearchCriteria) any());
-    }
-
-
-    @Test
-    void testStatusCountWithErrorFSM() {
-        doThrow(new CustomException("FSM", "An error occurred")).when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getProcessInstancesStatusCount((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-        RequestInfo requestInfo = new RequestInfo();
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class,
-                () -> this.workflowService.statusCount(requestInfo, processInstanceSearchCriteria));
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria, atLeast(1)).getBusinessService();
-        verify(processInstanceSearchCriteria).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-
-    @Test
-    void testStatusCountWithTrueService() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        ArrayList<Object> objectList = new ArrayList<>();
-        when(this.worKflowRepository.getInboxStatusCount((ProcessInstanceSearchCriteria) any())).thenReturn(objectList);
-        when(this.worKflowRepository.getProcessInstancesStatusCount((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List actualStatusCountResult = this.workflowService.statusCount(requestInfo, processInstanceSearchCriteria);
-        assertSame(objectList, actualStatusCountResult);
-        assertTrue(actualStatusCountResult.isEmpty());
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getInboxStatusCount((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria, atLeast(1)).getBusinessService();
-        verify(processInstanceSearchCriteria, atLeast(1)).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-    @Test
-    void testStatusCountWithFSM() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getInboxStatusCount((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-        ArrayList<Object> objectList = new ArrayList<>();
-        when(this.worKflowRepository.getProcessInstancesStatusCount((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(objectList);
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("FSM");
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List actualStatusCountResult = this.workflowService.statusCount(requestInfo, processInstanceSearchCriteria);
-        assertSame(objectList, actualStatusCountResult);
-        assertTrue(actualStatusCountResult.isEmpty());
-        verify(this.worKflowRepository).getProcessInstancesStatusCount((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria, atLeast(1)).getBusinessService();
-        verify(processInstanceSearchCriteria).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-
-    @Test
-    void TestStatusCount() {
-        doNothing().when(this.workflowUtil)
-                .enrichStatusesInSearchCriteria((RequestInfo) any(), (ProcessInstanceSearchCriteria) any());
-        when(this.worKflowRepository.getInboxStatusCount((ProcessInstanceSearchCriteria) any()))
-                .thenThrow(new CustomException("FSM", "An error occurred"));
-        when(this.worKflowRepository.getProcessInstancesStatusCount((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        RequestInfo requestInfo = new RequestInfo();
-        requestInfo.setUserInfo(new User());
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.isNull()).thenReturn(true);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertThrows(CustomException.class,
-                () -> this.workflowService.statusCount(requestInfo, processInstanceSearchCriteria));
-        verify(this.workflowUtil).enrichStatusesInSearchCriteria((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getInboxStatusCount((ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).isNull();
-        verify(processInstanceSearchCriteria, atLeast(1)).getBusinessService();
-        verify(processInstanceSearchCriteria, atLeast(1)).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-    @Test
-    void testEscalatedApplicationsSearch() {
-        when(this.worKflowRepository.fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any())).thenReturn(new ArrayList<>());
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertTrue(this.workflowService.escalatedApplicationsSearch(requestInfo, processInstanceSearchCriteria).isEmpty());
-        verify(this.worKflowRepository).fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        assertFalse(processInstanceSearchCriteria.getIsEscalatedCount());
-    }
-
-
-    @Test
-    void testEscalatedApplicationsSearchWithAddStirngList() {
-        ArrayList<String> stringList = new ArrayList<>();
-        stringList.add("foo");
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-        when(this.worKflowRepository.fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any())).thenReturn(stringList);
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List<ProcessInstance> actualEscalatedApplicationsSearchResult = this.workflowService
-                .escalatedApplicationsSearch(requestInfo, processInstanceSearchCriteria);
-        assertSame(processInstanceList, actualEscalatedApplicationsSearchResult);
-        assertTrue(actualEscalatedApplicationsSearchResult.isEmpty());
-        verify(this.worKflowRepository).fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getProcessInstances((ProcessInstanceSearchCriteria) any());
-        assertFalse(processInstanceSearchCriteria.getIsEscalatedCount());
-    }
-
-
-    @Test
-    void TestEscalatedApplicationsSearch() {
-        ArrayList<String> stringList = new ArrayList<>();
-        stringList.add("foo");
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-        when(this.worKflowRepository.fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any())).thenReturn(stringList);
-        when(this.enrichmentService.enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        doNothing().when(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List<ProcessInstance> actualEscalatedApplicationsSearchResult = this.workflowService
-                .escalatedApplicationsSearch(requestInfo, processInstanceSearchCriteria);
-        assertSame(processInstanceList, actualEscalatedApplicationsSearchResult);
-        assertEquals(1, actualEscalatedApplicationsSearchResult.size());
-        verify(this.worKflowRepository).fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getProcessInstances((ProcessInstanceSearchCriteria) any());
-        verify(this.enrichmentService).enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        assertFalse(processInstanceSearchCriteria.getIsEscalatedCount());
-    }
-
-
-    @Test
-    void testEscalatedApplicationsSearchWithResult() {
-        ArrayList<String> stringList = new ArrayList<>();
-        stringList.add("foo");
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        when(this.worKflowRepository.getProcessInstances((ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-        when(this.worKflowRepository.fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any())).thenReturn(stringList);
-        when(this.enrichmentService.enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any()))
-                .thenReturn(new ArrayList<>());
-        doNothing().when(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        doNothing().when(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        RequestInfo requestInfo = new RequestInfo();
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        when(processInstanceSearchCriteria.getBusinessService()).thenReturn("Business Service");
-        when(processInstanceSearchCriteria.getTenantId()).thenReturn("42");
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        List<ProcessInstance> actualEscalatedApplicationsSearchResult = this.workflowService
-                .escalatedApplicationsSearch(requestInfo, processInstanceSearchCriteria);
-        assertSame(processInstanceList, actualEscalatedApplicationsSearchResult);
-        assertEquals(1, actualEscalatedApplicationsSearchResult.size());
-        verify(this.worKflowRepository).fetchEscalatedApplicationsBusinessIdsFromDb((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(this.worKflowRepository).getProcessInstances((ProcessInstanceSearchCriteria) any());
-        verify(this.enrichmentService).enrichNextActionForSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichAndUpdateSlaForSearch((List<ProcessInstance>) any());
-        verify(this.enrichmentService).enrichUsersFromSearch((RequestInfo) any(), (List<ProcessInstance>) any());
-        verify(processInstanceSearchCriteria).getBusinessService();
-        verify(processInstanceSearchCriteria).getTenantId();
-        verify(processInstanceSearchCriteria).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria, atLeast(1)).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
-    }
-
-
-    @Test
-    void testCountEscalatedApplications() {
-        when(this.worKflowRepository.getEscalatedApplicationsCount((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        RequestInfo requestInfo = new RequestInfo();
-
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = new ProcessInstanceSearchCriteria();
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertEquals(3,
-                this.workflowService.countEscalatedApplications(requestInfo, processInstanceSearchCriteria).intValue());
-        verify(this.worKflowRepository).getEscalatedApplicationsCount((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        assertTrue(processInstanceSearchCriteria.getIsEscalatedCount());
-    }
-
-
-    @Test
-    void testCountEscalatedApplication() {
-        when(this.worKflowRepository.getEscalatedApplicationsCount((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any())).thenReturn(3);
-        RequestInfo requestInfo = new RequestInfo();
-        ProcessInstanceSearchCriteria processInstanceSearchCriteria = mock(ProcessInstanceSearchCriteria.class);
-        doNothing().when(processInstanceSearchCriteria).setAssignee((String) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setBusinessService((String) any());
-        doNothing().when(processInstanceSearchCriteria).setFromDate((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setHistory((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsEscalatedCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        doNothing().when(processInstanceSearchCriteria).setLimit((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setModuleName((String) any());
-        doNothing().when(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setOffset((Integer) any());
-        doNothing().when(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        doNothing().when(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantId((String) any());
-        doNothing().when(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        doNothing().when(processInstanceSearchCriteria).setToDate((Long) any());
-        processInstanceSearchCriteria.setAssignee("Assignee");
-        processInstanceSearchCriteria.setBusinessIds(new ArrayList<>());
-        processInstanceSearchCriteria.setBusinessService("Business Service");
-        processInstanceSearchCriteria.setFromDate(1L);
-        processInstanceSearchCriteria.setHistory(true);
-        processInstanceSearchCriteria.setIds(new ArrayList<>());
-        processInstanceSearchCriteria.setIsAssignedToMeCount(true);
-        processInstanceSearchCriteria.setIsEscalatedCount(true);
-        processInstanceSearchCriteria.setIsNearingSlaCount(true);
-        processInstanceSearchCriteria.setLimit(1);
-        processInstanceSearchCriteria.setModuleName("Module Name");
-        processInstanceSearchCriteria.setMultipleAssignees(new ArrayList<>());
-        processInstanceSearchCriteria.setOffset(2);
-        processInstanceSearchCriteria.setSlotPercentageSlaLimit(1L);
-        processInstanceSearchCriteria.setStatesToIgnore(new ArrayList<>());
-        processInstanceSearchCriteria.setStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setStatusesIrrespectiveOfTenant(new ArrayList<>());
-        processInstanceSearchCriteria.setTenantId("42");
-        processInstanceSearchCriteria.setTenantSpecifiStatus(new ArrayList<>());
-        processInstanceSearchCriteria.setToDate(1L);
-        assertEquals(3,
-                this.workflowService.countEscalatedApplications(requestInfo, processInstanceSearchCriteria).intValue());
-        verify(this.worKflowRepository).getEscalatedApplicationsCount((RequestInfo) any(),
-                (ProcessInstanceSearchCriteria) any());
-        verify(processInstanceSearchCriteria).setAssignee((String) any());
-        verify(processInstanceSearchCriteria).setBusinessIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setBusinessService((String) any());
-        verify(processInstanceSearchCriteria).setFromDate((Long) any());
-        verify(processInstanceSearchCriteria).setHistory((Boolean) any());
-        verify(processInstanceSearchCriteria).setIds((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setIsAssignedToMeCount((Boolean) any());
-        verify(processInstanceSearchCriteria, atLeast(1)).setIsEscalatedCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setIsNearingSlaCount((Boolean) any());
-        verify(processInstanceSearchCriteria).setLimit((Integer) any());
-        verify(processInstanceSearchCriteria).setModuleName((String) any());
-        verify(processInstanceSearchCriteria).setMultipleAssignees((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setOffset((Integer) any());
-        verify(processInstanceSearchCriteria).setSlotPercentageSlaLimit((Long) any());
-        verify(processInstanceSearchCriteria).setStatesToIgnore((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setStatusesIrrespectiveOfTenant((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setTenantId((String) any());
-        verify(processInstanceSearchCriteria).setTenantSpecifiStatus((java.util.List<String>) any());
-        verify(processInstanceSearchCriteria).setToDate((Long) any());
+    private static ProcessInstanceSearchCriteria nearingSlaCriteria() {
+        ProcessInstanceSearchCriteria criteria = new ProcessInstanceSearchCriteria();
+        criteria.setIsNearingSlaCount(true);
+        criteria.setBusinessService("PT");
+        criteria.setStatus(List.of("PENDING"));
+        return criteria;
     }
 }
-

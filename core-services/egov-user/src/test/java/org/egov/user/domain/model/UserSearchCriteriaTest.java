@@ -2,28 +2,29 @@ package org.egov.user.domain.model;
 
 import org.egov.user.domain.exception.InvalidUserSearchCriteriaException;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class UserSearchCriteriaTest {
 
     @Test
-    public void test_should_not_throw_exception_when_search_criteria_is_valid() {
+    public void validate_validCriteriaWithTenantAndUserName_doesNotThrow() {
         final UserSearchCriteria searchCriteria = UserSearchCriteria.builder()
                 .tenantId("tenantId")
                 .userName("greenfish424")
                 .build();
 
-        searchCriteria.validate(true);
+        assertThatCode(() -> searchCriteria.validate(true)).doesNotThrowAnyException();
     }
 
-//    @Test(expected = InvalidUserSearchCriteriaException.class)
-    public void test_should_throw_exception_when_tenant_id_is_not_present() {
+    @Test
+    public void validate_missingTenantId_throwsInvalidUserSearchCriteriaException() {
         final UserSearchCriteria searchCriteria = UserSearchCriteria.builder()
                 .tenantId(null)
                 .build();
 
-        searchCriteria.validate(true);
+        assertThatThrownBy(() -> searchCriteria.validate(true))
+                .isInstanceOf(InvalidUserSearchCriteriaException.class);
     }
-
-
 }

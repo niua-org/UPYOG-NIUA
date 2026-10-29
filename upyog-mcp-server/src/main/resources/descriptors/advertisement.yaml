@@ -1,0 +1,170 @@
+id: advertisement
+displayName: Advertisement
+description: Advertisement booking search and create.
+allowedRolesHint:
+  - CITIZEN
+  - ADS_CEMP
+masters:
+  - module: Advertisement
+    name: CalculationType
+  - module: Advertisement
+    name: AdType
+  - module: Advertisement
+    name: Location
+  - module: Advertisement
+    name: FaceArea
+operations:
+  search:
+    type: READ
+    description: Search advertisement bookings.
+    readOnly: true
+    destructive: false
+    requiresConfirmation: false
+    httpMethod: POST
+    gatewayPath: /adv-services/booking/v1/_search
+    supportsStatus: true
+    statusArgument: bookingNo
+    inputSchema:
+      type: object
+      additionalProperties: false
+      required: [tenantId]
+      properties:
+        tenantId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        bookingNo:
+          type: string
+          maxLength: 128
+        status:
+          type: string
+          maxLength: 64
+        mobileNumber:
+          type: string
+          maxLength: 15
+    query:
+      tenantId:
+        "$payload": tenantId
+      bookingNo:
+        "$payload": bookingNo
+      status:
+        "$payload": status
+      mobileNumber:
+        "$payload": mobileNumber
+      limit:
+        "$page": size
+      offset:
+        "$page": offset
+    response:
+      listPath: bookingApplication
+      keep:
+        - bookingNo
+        - bookingId
+        - bookingStatus
+        - tenantId
+    examples:
+      - tenantId: pg.citya
+        bookingNo: ADV-101
+  create:
+    type: WRITE
+    description: Create an advertisement booking. Sample documents are uploaded to filestore during prepare.
+    readOnly: false
+    destructive: false
+    requiresConfirmation: true
+    httpMethod: POST
+    gatewayPath: /adv-services/booking/v1/_create
+    filestoreModule: Advertisement
+    documentsTarget: bookingApplication.documents
+    inputSchema:
+      type: object
+      additionalProperties: false
+      required: [tenantId, cartDetails]
+      properties:
+        tenantId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        cartDetails:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              addType:
+                type: string
+              location:
+                type: string
+              faceArea:
+                type: string
+              nightLight:
+                type: boolean
+              bookingDate:
+                type: string
+              bookingFromTime:
+                type: string
+              bookingToTime:
+                type: string
+        applicantDetail:
+          type: object
+          additionalProperties: false
+          properties:
+            applicantName:
+              type: string
+            applicantMobileNo:
+              type: string
+            applicantEmailId:
+              type: string
+        address:
+          type: object
+          additionalProperties: false
+          properties:
+            addressLine1:
+              type: string
+            city:
+              type: string
+            pincode:
+              type: string
+        documents:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [documentType, fileName, contentType, contentBase64]
+            properties:
+              documentType:
+                type: string
+              fileName:
+                type: string
+              contentType:
+                type: string
+              contentBase64:
+                type: string
+    requestBody:
+      bookingApplication:
+        tenantId:
+          "$payload": tenantId
+        cartDetails:
+          "$payload": cartDetails
+        applicantDetail:
+          "$payload": applicantDetail
+        address:
+          "$payload": address
+      isDraftApplication:
+        "$constant": false
+    response:
+      listPath: bookingApplication
+      keep:
+        - bookingNo
+        - bookingId
+        - bookingStatus
+        - tenantId
+    examples:
+      - tenantId: pg.citya
+        cartDetails:
+          - addType: Hoarding
+            location: Market
+            faceArea: "20"
+            bookingDate: "2026-10-10"
+            bookingFromTime: "06:00:00"
+            bookingToTime: "18:00:00"
