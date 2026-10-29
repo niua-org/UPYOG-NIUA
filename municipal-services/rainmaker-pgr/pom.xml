@@ -20,10 +20,10 @@
 <log4j2.version>2.17.1</log4j2.version>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.utils.line.minimum>0.02</jacoco.utils.line.minimum>
-        <jacoco.utils.branch.minimum>0.01</jacoco.utils.branch.minimum>
-        <jacoco.repository.line.minimum>0.02</jacoco.repository.line.minimum>
-        <jacoco.repository.branch.minimum>0.01</jacoco.repository.branch.minimum>
+        <jacoco.utils.line.minimum>0.2057</jacoco.utils.line.minimum>
+        <jacoco.utils.branch.minimum>0.1446</jacoco.utils.branch.minimum>
+        <jacoco.repository.line.minimum>0.1795</jacoco.repository.line.minimum>
+        <jacoco.repository.branch.minimum>0.05</jacoco.repository.branch.minimum>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lombok.version>1.18.22</lombok.version>
   </properties>
