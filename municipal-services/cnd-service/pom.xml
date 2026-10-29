@@ -7,6 +7,8 @@
     <version>2.0.0</version>
     <properties>
         
+        <jacoco.impl.line.minimum>0.087</jacoco.impl.line.minimum>
+        <jacoco.impl.branch.minimum>0.0198</jacoco.impl.branch.minimum>
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
         <jacoco.line.coverage>0.95</jacoco.line.coverage>
@@ -84,6 +86,24 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.cdwm.service.impl</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.impl.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.impl.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
