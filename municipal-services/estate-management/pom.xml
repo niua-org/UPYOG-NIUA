@@ -7,10 +7,12 @@
     <version>1.0.0</version>
     <properties>
         
+        <jacoco.impl.line.minimum>0.0352</jacoco.impl.line.minimum>
+        <jacoco.impl.branch.minimum>0.0148</jacoco.impl.branch.minimum>
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.0857</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.1443</jacoco.branch.coverage>
+        <jacoco.line.coverage>0.1129</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.1563</jacoco.branch.coverage>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 </properties>
@@ -84,6 +86,24 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>upyog.service.impl</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.impl.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.impl.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
