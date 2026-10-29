@@ -13,11 +13,13 @@
   <name>echallan-calculator</name>
   <properties>
     
+        <jacoco.service.line.minimum>0.0342</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.0136</jacoco.service.branch.minimum>
 		<java.version>17</java.version>
 <log4j2.version>2.17.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.1466</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
+        <jacoco.line.coverage>0.5216</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.1583</jacoco.branch.coverage>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <lombok.version>1.18.22</lombok.version>
@@ -194,6 +196,24 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.echallancalculation.service</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
