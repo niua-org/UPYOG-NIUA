@@ -103,7 +103,7 @@ public class MobileAuthStrategyTest {
         assertFalse(result.isMultipleUsersFound());
         assertNotNull(result.getUser());
         assertEquals("uuid-user-1", result.getUser().getUuid());
-        assertEquals(AuthType.MOBILE, result.getAuthType());
+        assertEquals(AuthType.MOBILE_NUMBER, result.getAuthType());
         assertFalse(result.isNewUser());
     }
 
@@ -164,7 +164,7 @@ public class MobileAuthStrategyTest {
         assertNotNull(result.getUser());
         assertEquals("uuid-son", result.getUser().getUuid());
         assertEquals("Aarav Kumar (Son)", result.getUser().getName());
-        assertEquals(AuthType.MOBILE, result.getAuthType());
+        assertEquals(AuthType.MOBILE_NUMBER, result.getAuthType());
     }
 
     @Test
