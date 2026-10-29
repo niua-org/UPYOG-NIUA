@@ -20,8 +20,8 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.22</lombok.version>
-		<jacoco.line.coverage>0.0758</jacoco.line.coverage>
-		<jacoco.branch.coverage>0.01</jacoco.branch.coverage>
+		<jacoco.line.coverage>0.0851</jacoco.line.coverage>
+		<jacoco.branch.coverage>0.0734</jacoco.branch.coverage>
 	</properties>
 	<dependencyManagement>
 	    <dependencies>
@@ -288,12 +288,12 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.06</minimum>
+											<minimum>0.0759</minimum>
 										</limit>
 										<limit>
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.06</minimum>
+											<minimum>0.0691</minimum>
 										</limit>
 									</limits>
 								</rule>
@@ -306,12 +306,30 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.18</minimum>
+											<minimum>0.1873</minimum>
 										</limit>
 										<limit>
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.12</minimum>
+											<minimum>0.1484</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>org.egov.pt.service</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.0813</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.0687</minimum>
 										</limit>
 									</limits>
 								</rule>
