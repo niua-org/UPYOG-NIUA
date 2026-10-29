@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
 
+import jakarta.annotation.Generated;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -13,7 +14,7 @@ import jakarta.validation.constraints.Size;
  * ResponseInfo should be used to carry metadata information about the response from the server. apiId, ver and msgId in ResponseInfo should always correspond to the same values in respective request&#39;s RequestInfo.
  */
 @Validated
-@jakarta.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-06-05T12:58:12.679+05:30")
+@Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2018-06-05T12:58:12.679+05:30")
 
 @Getter
 @Setter
