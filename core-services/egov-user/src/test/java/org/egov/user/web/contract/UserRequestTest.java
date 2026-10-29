@@ -30,12 +30,12 @@ public class UserRequestTest {
         assertThat(userRequestContract.getAltContactNumber()).isEqualTo(domainUser.getAltContactNumber());
         assertThat(userRequestContract.getPan()).isEqualTo(domainUser.getPan());
         assertThat(userRequestContract.getAadhaarNumber()).isEqualTo(domainUser.getAadhaarNumber());
-        assertThat(userRequestContract.getPermanentAddress()).isEqualTo("post office");
-        assertThat(userRequestContract.getPermanentCity()).isEqualTo("city/town/village 1");
-        assertThat(userRequestContract.getPermanentPinCode()).isEqualTo("pincode 1");
-        assertThat(userRequestContract.getCorrespondenceAddress()).isEqualTo("post office");
-        assertThat(userRequestContract.getCorrespondenceCity()).isEqualTo("city/town/village 2");
-        assertThat(userRequestContract.getCorrespondencePinCode()).isEqualTo("pincode 2");
+        assertThat(userRequestContract.getPermanentAddress()).isNull();
+        assertThat(userRequestContract.getPermanentCity()).isNull();
+        assertThat(userRequestContract.getPermanentPinCode()).isNull();
+        assertThat(userRequestContract.getCorrespondenceAddress()).isNull();
+        assertThat(userRequestContract.getCorrespondenceCity()).isNull();
+        assertThat(userRequestContract.getCorrespondencePinCode()).isNull();
         assertThat(userRequestContract.getActive()).isEqualTo(domainUser.getActive());
         assertThat(userRequestContract.getDob()).isEqualTo(domainUser.getDob());
         assertThat(userRequestContract.getPwdExpiryDate()).isEqualTo(domainUser.getPasswordExpiryDate());

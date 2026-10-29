@@ -5,13 +5,17 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.tracer.model.ServiceCallException;
 import org.egov.user.domain.exception.DuplicateUserNameException;
+import org.egov.user.domain.exception.MultipleUsersFoundException;
 import org.egov.user.domain.exception.UserNotFoundException;
 import org.egov.user.domain.model.SecureUser;
 import org.egov.user.domain.model.User;
+import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
+import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.auth.Role;
+import org.egov.user.web.contract.multiauth.UserAccountSummary;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -24,6 +28,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -38,13 +43,11 @@ import static org.springframework.util.StringUtils.isEmpty;
 @Slf4j
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
-    private UserService userService;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private EncryptionDecryptionUtil encryptionDecryptionUtil;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final EncryptionDecryptionUtil encryptionDecryptionUtil;
+    private final UserRepository userRepository;
+    private final HttpServletRequest request;
 
     @Value("${citizen.login.password.otp.enabled}")
     private boolean citizenLoginPasswordOtpEnabled;
@@ -59,10 +62,16 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     private boolean fixedOTPEnabled;
 
     @Autowired
-    private HttpServletRequest request;
-
-    public CustomAuthenticationProvider(UserService userService) {
+    public CustomAuthenticationProvider(UserService userService,
+                                        PasswordEncoder passwordEncoder,
+                                        EncryptionDecryptionUtil encryptionDecryptionUtil,
+                                        UserRepository userRepository,
+                                        @Autowired(required = false) HttpServletRequest request) {
         this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+        this.encryptionDecryptionUtil = encryptionDecryptionUtil;
+        this.userRepository = userRepository;
+        this.request = request;
     }
 
     @Override
@@ -97,7 +106,67 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 .action("authenticate")
                 .ts(System.currentTimeMillis())
                 .build();
-            User user = userService.getUniqueUser(username, tenantId, UserType.fromValue(userType), requestInfo);
+
+            UserType userTypeEnum = UserType.fromValue(userType);
+            final Map<String, Object> details = (Map<String, Object>) authentication.getDetails();
+            String selectedUserUuid = details != null ? (String) details.get("selectedUserUuid") : null;
+
+            User user = null;
+
+            if (selectedUserUuid != null) {
+                log.info("Resolving user by selectedUserUuid: {}", selectedUserUuid);
+                user = userService.getUserByUuid(selectedUserUuid);
+                if (user == null) {
+                    log.error("Selected user account not found for uuid: {}", selectedUserUuid);
+                    throw new BadCredentialsException("Selected user account not found");
+                }
+            } else if (userTypeEnum == UserType.CITIZEN && citizenLoginPasswordOtpEnabled) {
+                String stateTenant = tenantId != null && tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
+                List<User> matchedUsers = findCitizenUsersByMobile(username, stateTenant);
+
+                if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() > 1) {
+                    log.info("Multiple ({}) citizen accounts found for mobile: {}. Validating OTP before returning selector.",
+                            matchedUsers.size(), username);
+
+                    boolean isOtpValid = false;
+                    if (fixedOTPEnabled && fixedOTPPassword != null && fixedOTPPassword.equals(password)) {
+                        isOtpValid = true;
+                    } else {
+                        User tempUser = User.builder()
+                                .username(username)
+                                .mobileNumber(username)
+                                .tenantId(tenantId)
+                                .otpReference(password)
+                                .build();
+                        try {
+                            isOtpValid = userService.validateOtp(tempUser);
+                        } catch (Exception e) {
+                            log.error("OTP validation error during multi-user check for mobile {}: {}", username, e.getMessage());
+                            isOtpValid = false;
+                        }
+                    }
+
+                    if (!isOtpValid) {
+                        log.error("Invalid OTP entered for multi-user mobile: {}", username);
+                        throw new BadCredentialsException("Invalid password");
+                    }
+
+                    List<User> decryptedUsers = decryptUserList(matchedUsers, requestInfo);
+                    List<UserAccountSummary> summaries = (decryptedUsers != null ? decryptedUsers : matchedUsers)
+                            .stream()
+                            .map(UserAccountSummary::fromUser)
+                            .collect(Collectors.toList());
+
+                    log.info("Prompting user to select from {} accounts linked to mobile: {}", summaries.size(), username);
+                    throw new MultipleUsersFoundException(username, summaries);
+                } else if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() == 1) {
+                    user = matchedUsers.get(0);
+                } else {
+                    user = userService.getUniqueUser(username, tenantId, userTypeEnum, requestInfo);
+                }
+            } else {
+                user = userService.getUniqueUser(username, tenantId, userTypeEnum, requestInfo);
+            }
             
             if (user == null) {
                 log.error("User not found in database for username: {}, tenantId: {}, userType: {}", username, tenantId, userType);
@@ -122,7 +191,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             }
 
             // Validate password
-            UserType userTypeEnum = UserType.fromValue(userType);
             boolean isOtpBased = (userTypeEnum == UserType.CITIZEN && citizenLoginPasswordOtpEnabled) ||
                                (userTypeEnum == UserType.EMPLOYEE && employeeLoginPasswordOtpEnabled);
 
@@ -213,6 +281,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             log.info("Authentication successful for user: {}", username);
             return new UsernamePasswordAuthenticationToken(secureUser, password, secureUser.getAuthorities());
             
+        } catch (MultipleUsersFoundException e) {
+            log.info("MultipleUsersFoundException for username: {} - propagating for account selection", username);
+            throw e;
         } catch (UserNotFoundException e) {
             log.error("UserNotFoundException for username: {}, tenantId: {}, userType: {} - {}", username, tenantId, userType, e.getMessage());
             throw new BadCredentialsException("User not found: " + e.getMessage());
@@ -397,5 +468,84 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         userService.resetFailedLoginAttempts(contractUser);
 
         return updatedUser;
+    }
+
+    /**
+     * Resolves all citizen users matching a mobile number across encrypted mobile and username columns.
+     *
+     * @param mobileNumber the 10-digit mobile number
+     * @param stateTenant  the state-level tenant identifier
+     * @return list of domain {@link User} profiles matching the mobile number
+     */
+    private List<User> findCitizenUsersByMobile(String mobileNumber, String stateTenant) {
+        Map<String, User> userMap = new LinkedHashMap<>();
+
+        // 1. Search by encrypted mobileNumber
+        UserSearchCriteria mobileCriteria = UserSearchCriteria.builder()
+                .mobileNumber(mobileNumber)
+                .tenantId(stateTenant)
+                .type(UserType.CITIZEN)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(mobileCriteria, "User", UserSearchCriteria.class);
+            List<User> usersByMobile = userRepository.findAll(encCriteria != null ? encCriteria : mobileCriteria);
+            if (!CollectionUtils.isEmpty(usersByMobile)) {
+                for (User u : usersByMobile) {
+                    if (u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error querying citizen users by mobile: {}", e.getMessage());
+        }
+
+        // 2. Search by encrypted userName
+        UserSearchCriteria userCriteria = UserSearchCriteria.builder()
+                .userName(mobileNumber)
+                .tenantId(stateTenant)
+                .type(UserType.CITIZEN)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(userCriteria, "User", UserSearchCriteria.class);
+            List<User> usersByUserName = userRepository.findAll(encCriteria != null ? encCriteria : userCriteria);
+            if (!CollectionUtils.isEmpty(usersByUserName)) {
+                for (User u : usersByUserName) {
+                    if (u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error querying citizen users by userName: {}", e.getMessage());
+        }
+
+        return new ArrayList<>(userMap.values());
+    }
+
+    /**
+     * Decrypts a list of users using UserSelf key or fallback.
+     *
+     * @param users       list of users with encrypted fields
+     * @param requestInfo RequestInfo context
+     * @return list of decrypted users
+     */
+    private List<User> decryptUserList(List<User> users, RequestInfo requestInfo) {
+        if (CollectionUtils.isEmpty(users)) {
+            return Collections.emptyList();
+        }
+        try {
+            List<User> decrypted = encryptionDecryptionUtil.decryptObject(users, "UserSelf", User.class, requestInfo);
+            return !CollectionUtils.isEmpty(decrypted) ? decrypted : users;
+        } catch (Exception e) {
+            log.warn("Failed to decrypt user list using UserSelf: {}. Attempting fallback key.", e.getMessage());
+            try {
+                List<User> decrypted = encryptionDecryptionUtil.decryptObject(users, null, User.class, requestInfo);
+                return !CollectionUtils.isEmpty(decrypted) ? decrypted : users;
+            } catch (Exception ex) {
+                log.warn("Decryption fallback returned raw user list: {}", ex.getMessage());
+                return users;
+            }
+        }
     }
 }

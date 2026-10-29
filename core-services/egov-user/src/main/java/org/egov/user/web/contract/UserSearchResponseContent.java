@@ -18,6 +18,9 @@ import org.egov.user.domain.model.enums.UserType;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Response DTO representing an individual user item returned by search endpoints.
+ */
 @Setter
 @Getter
 @NoArgsConstructor
@@ -35,15 +38,22 @@ public class UserSearchResponseContent {
     private String altContactNumber;
     private String pan;
     private String aadhaarNumber;
+
+    @JsonIgnore
     private String permanentAddress;
+    @JsonIgnore
     private String permanentCity;
+    @JsonIgnore
     private String permanentPinCode;
+    @JsonIgnore
     private String correspondenceAddress;
+    @JsonIgnore
     private String correspondenceCity;
+    @JsonIgnore
     private String correspondencePinCode;
     private String alternatemobilenumber;
 
-//    @JsonIgnore // This is removed to include address details in user search response V2
+    @JsonIgnore
     private Set<Address> addresses;
 
     private Boolean active;
@@ -63,6 +73,19 @@ public class UserSearchResponseContent {
     private Set<RoleRequest> roles;
     private String uuid;
     private String digilockerid;
+    private String fatherName;
+    private String motherName;
+    private String spouseName;
+    private Boolean isIdentityVerified;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date identityVerifiedDate;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date lastResyncDate;
+
+    private Integer edittedCount;
+    private String lastLoginMethod;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
@@ -108,10 +131,15 @@ public class UserSearchResponseContent {
         this.relationship = user.getGuardianRelation();
         this.uuid = user.getUuid();
         this.digilockerid = user.getDigilockerid();
-        this.addresses = user.getAddresses();
         this.alternatemobilenumber=user.getAlternateMobileNumber();
-        mapPermanentAddress(user);
-        mapCorrespondenceAddress(user);
+        this.fatherName = user.getFatherName();
+        this.motherName = user.getMotherName();
+        this.spouseName = user.getSpouseName();
+        this.isIdentityVerified = user.getIsIdentityVerified();
+        this.identityVerifiedDate = user.getIdentityVerifiedDate();
+        this.lastResyncDate = user.getLastResyncDate();
+        this.edittedCount = user.getEdittedCount();
+        this.lastLoginMethod = user.getLastLoginMethod();
     }
 
     private void mapCorrespondenceAddress(User user) {
@@ -137,6 +165,11 @@ public class UserSearchResponseContent {
     }
 
     
+    /**
+     * Converts this {@link UserSearchResponseContent} DTO back to a domain {@link User} entity.
+     *
+     * @return reconstructed {@link User} entity
+     */
     public User toUser() {
     	 
         User user = new User();
@@ -189,6 +222,14 @@ public class UserSearchResponseContent {
         user.setGuardianRelation(this.relationship);
         user.setActive(this.active);
         user.setAlternateMobileNumber(this.alternatemobilenumber);
+        user.setFatherName(this.fatherName);
+        user.setMotherName(this.motherName);
+        user.setSpouseName(this.spouseName);
+        user.setIsIdentityVerified(this.isIdentityVerified);
+        user.setIdentityVerifiedDate(this.identityVerifiedDate);
+        user.setLastResyncDate(this.lastResyncDate);
+        user.setEdittedCount(this.edittedCount);
+        user.setLastLoginMethod(this.lastLoginMethod);
  
         // Address mappings
         if (this.permanentAddress != null || this.permanentCity != null || this.permanentPinCode != null) {

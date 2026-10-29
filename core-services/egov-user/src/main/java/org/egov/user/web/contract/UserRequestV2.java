@@ -17,6 +17,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * V2 contract payload for creating or updating user records via HTTP requests.
+ * Supports additional demographics, multi-auth metadata, and extended address models.
+ */
 @Setter
 @Getter
 @Builder
@@ -61,6 +65,7 @@ public class UserRequestV2 {
 
     private Boolean active;
 
+    @JsonIgnore
     private Set<Address> addresses;
 
     @Size(max = 16)
@@ -102,6 +107,29 @@ public class UserRequestV2 {
 
     @Size(max = 36)
     private String uuid;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String fatherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String motherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String spouseName;
+
+    private Boolean isIdentityVerified;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date identityVerifiedDate;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date lastResyncDate;
+
+    private Integer edittedCount;
+    private String lastLoginMethod;
 
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -146,7 +174,14 @@ public class UserRequestV2 {
         this.relationship = user.getGuardianRelation();
         this.uuid = user.getUuid();
         this.alternatemobilenumber=user.getAlternateMobileNumber();
-        this.addresses=user.getAddresses();
+        this.fatherName = user.getFatherName();
+        this.motherName = user.getMotherName();
+        this.spouseName = user.getSpouseName();
+        this.isIdentityVerified = user.getIsIdentityVerified();
+        this.identityVerifiedDate = user.getIdentityVerifiedDate();
+        this.lastResyncDate = user.getLastResyncDate();
+        this.edittedCount = user.getEdittedCount();
+        this.lastLoginMethod = user.getLastLoginMethod();
     }
 
 
@@ -155,6 +190,14 @@ public class UserRequestV2 {
         return roleEntities.stream().map(RoleRequest::new).collect(Collectors.toSet());
     }
 
+    /**
+     * Converts this {@link UserRequestV2} DTO to a domain {@link User} entity.
+     *
+     * @param loggedInUserId   numeric ID of authenticated requester
+     * @param loggedInUserUuid UUID of authenticated requester
+     * @param isCreate         flag indicating create mode vs update mode
+     * @return populated {@link User} domain entity
+     */
     @JsonIgnore
     public User toDomain(Long loggedInUserId, String loggedInUserUuid, boolean isCreate) {
         BloodGroup bloodGroup = null;
@@ -195,9 +238,17 @@ public class UserRequestV2 {
                 .roles(toDomainRoles())
                 .loggedInUserId(loggedInUserId)
                 .loggedInUserUuid(loggedInUserUuid)
-                .addresses(addresses)
+                .addresses(null)
                 .guardian(fatherOrHusbandName)
                 .guardianRelation(relationship).alternateMobileNumber(this.alternatemobilenumber)
+                .fatherName(this.fatherName)
+                .motherName(this.motherName)
+                .spouseName(this.spouseName)
+                .isIdentityVerified(this.isIdentityVerified)
+                .identityVerifiedDate(this.identityVerifiedDate)
+                .lastResyncDate(this.lastResyncDate)
+                .edittedCount(this.edittedCount)
+                .lastLoginMethod(this.lastLoginMethod)
                 .build();
     }
 

@@ -46,6 +46,9 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.egov.user.config.UserServiceConstants.USER_CLIENT_ID;
 import static org.springframework.util.CollectionUtils.isEmpty;
+import org.egov.user.domain.service.multiauth.TokenGenerationService;
+import org.egov.user.web.contract.multiauth.AuthType;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -109,6 +112,16 @@ public class UserService {
 
     @Autowired
     private NotificationUtil notificationUtil;
+
+    @Autowired
+    @Lazy
+    private TokenGenerationService tokenGenerationService;
+
+    @Value("${citizen.login.password.otp.fixed.enabled}")
+    private boolean fixedOTPEnabled;
+
+    @Value("${citizen.login.password.otp.fixed.value}")
+    private String fixedOTPPassword;
 
 	public UserService(UserRepository userRepository, OtpRepository otpRepository, FileStoreRepository fileRepository,
 			PasswordEncoder passwordEncoder, EncryptionDecryptionUtil encryptionDecryptionUtil,
@@ -420,16 +433,32 @@ public class UserService {
      */
     public Object registerWithLogin(User user, RequestInfo requestInfo) {
         user.setActive(true);
-        createCitizen(user, requestInfo);
-        return getAccess(user, user.getOtpReference());
+        User createdUser = createCitizen(user, requestInfo);
+        User targetUser = createdUser != null ? createdUser : user;
+        if (StringUtils.isNotBlank(user.getScope()) && StringUtils.isBlank(targetUser.getScope())) {
+            targetUser.setScope(user.getScope());
+        }
+        return getAccess(targetUser, user.getOtpReference());
     }
 
     private Object getAccess(User user, String password) {
         log.info("Fetch access token for register with login flow");
         try {
+            String effectiveScope = StringUtils.isNotBlank(user.getScope()) ? user.getScope() : "read write";
+
+            // Direct in-process token generation (eliminates loopback HTTP overhead and 404 URL errors)
+            if (tokenGenerationService != null) {
+                return tokenGenerationService.generateTokensAndResponse(
+                        user,
+                        effectiveScope,
+                        AuthType.MOBILE_NUMBER,
+                        true
+                );
+            }
+
+            // Fallback to loopback HTTP if tokenGenerationService is not available
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-            // Note: Remove Authorization header if using custom endpoint
             
             MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
             map.add("username", user.getUsername());
@@ -440,15 +469,14 @@ public class UserService {
                 map.add("password", user.getPassword());
                 
             map.add("grant_type", "password");
-            map.add("scope", "read write");
+            map.add("scope", effectiveScope);
             map.add("tenantId", user.getTenantId());
             map.add("userType", UserType.CITIZEN.name());
             map.add("isInternal", "true");
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-            
-            // Use custom auth endpoint instead of standard OAuth2 token endpoint
-            return restTemplate.postForEntity(userHost + "/auth/token", request, Map.class).getBody();
+            String tokenUrl = (userHost.endsWith("/") ? userHost.substring(0, userHost.length() - 1) : userHost) + "/user/oauth/token";
+            return restTemplate.postForEntity(tokenUrl, request, Map.class).getBody();
 
         } catch (Exception e) {
             log.error("Error occurred while logging-in via register flow", e);
@@ -476,6 +504,12 @@ public class UserService {
      * @return
      */
     public Boolean validateOtp(User user) {
+        // Bypass egov-otp validation in non-production/test environments if fixed OTP is enabled
+        // This allows registration with configured fixed OTP (e.g., 123456) without prior OTP generation
+        if (fixedOTPEnabled && StringUtils.isNotBlank(fixedOTPPassword) && fixedOTPPassword.equals(user.getOtpReference())) {
+            log.info("Fixed OTP matched successfully for user: {}", user.getMobileNumber());
+            return true;
+        }
         Otp otp = Otp.builder().otp(user.getOtpReference()).identity(user.getMobileNumber()).tenantId(user.getTenantId())
                 .userType(user.getType()).build();
         RequestInfo requestInfo = RequestInfo.builder().action("validate").ts(System.currentTimeMillis()).build();
@@ -494,8 +528,15 @@ public class UserService {
      */
     // TODO Fix date formats
     public User updateWithoutOtpValidation(User user, RequestInfo requestInfo) {
-         	User existingUser = getUserByUuid(user.getUuid());
-            user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
+        if (user == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_UPDATE_REQUEST, "User payload cannot be null");
+        }
+        User existingUser = getUserByUuid(user.getUuid());
+        if (user.getId() != null && existingUser.getId() != null && !user.getId().equals(existingUser.getId())) {
+            log.error("[USER-SERVICE] Data mismatch: provided id {} does not match database id {}", user.getId(), existingUser.getId());
+            throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());
+        }
+        user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
             validateUserRoles(user);
             user.validateUserModification();
             validatePassword(user.getPassword());
@@ -1024,7 +1065,16 @@ public class UserService {
      * @return The updated user object with decrypted details.
      */
     public User updateUserV2(User user, RequestInfo requestInfo) {
+        if (user == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_UPDATE_REQUEST, "User payload cannot be null");
+        }
         final User existingUser = getUserByUuid(user.getUuid());
+        if (user.getId() != null && existingUser.getId() != null && !user.getId().equals(existingUser.getId())) {
+            log.error("[USER-SERVICE-V2] Data mismatch: provided id {} does not match database id {}", user.getId(), existingUser.getId());
+            throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());
+        }
+        User decryptedExistingUser = encryptionDecryptionUtil.decryptObject(existingUser, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
+        user.validateNonEditableProfileFields(decryptedExistingUser != null ? decryptedExistingUser : existingUser, false);
         user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
         validateUserRoles(user);
         user.validateUserModification();
