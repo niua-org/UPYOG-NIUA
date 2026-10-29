@@ -8,14 +8,16 @@
     <name>community-hall-booking</name>
     <version>2.0.0</version>
     <properties>
+        <jacoco.service.line.minimum>0.0239</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.0104</jacoco.service.branch.minimum>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.validator.line.minimum>0.08</jacoco.validator.line.minimum>
-        <jacoco.validator.branch.minimum>0.03</jacoco.validator.branch.minimum>
-        <jacoco.util.line.minimum>0.07</jacoco.util.line.minimum>
-        <jacoco.util.branch.minimum>0.05</jacoco.util.branch.minimum>
+        <jacoco.validator.line.minimum>0.118</jacoco.validator.line.minimum>
+        <jacoco.validator.branch.minimum>0.0317</jacoco.validator.branch.minimum>
+        <jacoco.util.line.minimum>0.0796</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.1446</jacoco.util.branch.minimum>
         <jacoco.builder.line.minimum>0.06</jacoco.builder.line.minimum>
         <jacoco.builder.branch.minimum>0.03</jacoco.builder.branch.minimum>
     </properties>
@@ -177,6 +179,24 @@
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.builder.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.chb.service</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
