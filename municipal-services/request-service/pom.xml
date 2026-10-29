@@ -9,12 +9,12 @@
         
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.validation.line.minimum>0.04</jacoco.validation.line.minimum>
-        <jacoco.validation.branch.minimum>0.02</jacoco.validation.branch.minimum>
-        <jacoco.util.line.minimum>0.05</jacoco.util.line.minimum>
-        <jacoco.util.branch.minimum>0.02</jacoco.util.branch.minimum>
-        <jacoco.querybuilder.line.minimum>0.03</jacoco.querybuilder.line.minimum>
-        <jacoco.querybuilder.branch.minimum>0.01</jacoco.querybuilder.branch.minimum>
+        <jacoco.validation.line.minimum>0.95</jacoco.validation.line.minimum>
+        <jacoco.validation.branch.minimum>0.95</jacoco.validation.branch.minimum>
+        <jacoco.util.line.minimum>0.0748</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.1348</jacoco.util.branch.minimum>
+        <jacoco.querybuilder.line.minimum>0.244</jacoco.querybuilder.line.minimum>
+        <jacoco.querybuilder.branch.minimum>0.1629</jacoco.querybuilder.branch.minimum>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <lombok.version>1.18.22</lombok.version>
