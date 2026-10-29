@@ -8,7 +8,7 @@
 
 | Module | Baseline line % | New line % | Baseline branch % | New branch % | Meaningful tests added | 70/60 met? |
 |--------|----------------:|-----------:|------------------:|-------------:|-----------------------:|:----------:|
-| property-services | 8.0 (audit) / 2.2 (class baseline) | **4.6** → **9.4** | 0.3 / 1.5 | **4.6** → **7.6** | Deep pass: `PropertyServiceTest` (13), `MigrationServiceTest` (8), `EnrichmentServiceTest` (4), `UserServiceTest` (1), `PropertyMigrationValidatorTest` (1); JaCoCo gates on **service** + raised validator/builder floors | No |
+| property-services | 8.0 (audit) / 2.2 (class baseline) | **4.6** → **12.8** | 0.3 / 1.5 | **4.6** → **9.7** | Deep pass (round 2): notification/workflow/consumer tests + extended `PropertyValidatorTest`; JaCoCo gates on **service**, **util**, **consumer**, validator, builder | No |
 | ws-services | 11.5 (audit) | **1.8** | 0.6 | **1.1** | 4 (`ActionValidatorTest`, `ResponseInfoFactoryTest`) | No |
 | sw-services | 11.3 | **9.7** | 0.5 | **9.0** | 38 methods (validator, util, builder batch) | No |
 | pgr-services | 17.6 | **13.4** | 0.9 | **13.4** | ~24 methods (validator, builder, util, service) | No |

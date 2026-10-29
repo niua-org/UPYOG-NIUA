@@ -20,8 +20,8 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.22</lombok.version>
-		<jacoco.line.coverage>0.0851</jacoco.line.coverage>
-		<jacoco.branch.coverage>0.0734</jacoco.branch.coverage>
+		<jacoco.line.coverage>0.1413</jacoco.line.coverage>
+		<jacoco.branch.coverage>0.0964</jacoco.branch.coverage>
 	</properties>
 	<dependencyManagement>
 	    <dependencies>
@@ -288,12 +288,12 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.0759</minimum>
+											<minimum>0.1413</minimum>
 										</limit>
 										<limit>
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.0691</minimum>
+											<minimum>0.0964</minimum>
 										</limit>
 									</limits>
 								</rule>
@@ -324,12 +324,48 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.0813</minimum>
+											<minimum>0.1424</minimum>
 										</limit>
 										<limit>
 											<counter>BRANCH</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.0687</minimum>
+											<minimum>0.0966</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>org.egov.pt.util</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.1357</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.1092</minimum>
+										</limit>
+									</limits>
+								</rule>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>org.egov.pt.consumer</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.3414</minimum>
+										</limit>
+										<limit>
+											<counter>BRANCH</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>0.3455</minimum>
 										</limit>
 									</limits>
 								</rule>
