@@ -30,9 +30,9 @@ public class GatewayCpuFixDiagnostics {
             UserAuthCache userAuthCache,
             GatewayCpuFixMetrics metrics,
             @Value("#{'${egov.custom.async.uris}'.split(',')}") List<String> customAsyncUris,
-            @Value("${egov.gateway.user-auth-cache-ttl-seconds:120}") long userAuthCacheTtlSeconds,
-            @Value("${egov.gateway.user-auth-cache-max-size:10000}") long userAuthCacheMaxSize,
-            @Value("${spring.kafka.producer.properties.max.block.ms:5000}") long kafkaProducerMaxBlockMs) {
+            @Value("${egov.gateway.user-auth-cache-ttl-seconds}") long userAuthCacheTtlSeconds,
+            @Value("${egov.gateway.user-auth-cache-max-size}") long userAuthCacheMaxSize,
+            @Value("${spring.kafka.producer.properties.max.block.ms}") long kafkaProducerMaxBlockMs) {
         this.userAuthCache = userAuthCache;
         this.metrics = metrics;
         this.customAsyncUris = customAsyncUris.stream().map(String::trim).collect(Collectors.toList());
@@ -52,7 +52,7 @@ public class GatewayCpuFixDiagnostics {
                 kafkaProducerMaxBlockMs);
     }
 
-    @Scheduled(fixedRateString = "${egov.gateway.cpu-fix-metrics-interval-ms:300000}")
+    @Scheduled(fixedRateString = "${egov.gateway.cpu-fix-metrics-interval-ms}")
     public void logPeriodicSummary() {
         UserAuthCache.StatsSnapshot cacheStats = userAuthCache.snapshotStats();
         long skipped = metrics.drainCustomAsyncSkippedSinceLastReport();

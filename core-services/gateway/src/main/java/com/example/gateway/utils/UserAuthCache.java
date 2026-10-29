@@ -25,8 +25,8 @@ public class UserAuthCache {
     private final long maximumSize;
 
     public UserAuthCache(
-            @Value("${egov.gateway.user-auth-cache-ttl-seconds:120}") long ttlSeconds,
-            @Value("${egov.gateway.user-auth-cache-max-size:10000}") long maximumSize) {
+            @Value("${egov.gateway.user-auth-cache-ttl-seconds}") long ttlSeconds,
+            @Value("${egov.gateway.user-auth-cache-max-size}") long maximumSize) {
         this.ttlSeconds = ttlSeconds;
         this.maximumSize = maximumSize;
         this.cache = Caffeine.newBuilder()
