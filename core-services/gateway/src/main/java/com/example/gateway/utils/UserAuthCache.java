@@ -9,6 +9,11 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.function.Function;
 
+/**
+ * In-memory cache of auth-token → {@link User} from {@code user/_details}.
+ * Reduces repeated blocking HTTP calls during a request burst. Entries expire after a short TTL;
+ * {@link com.example.gateway.filters.post.CustomAsyncFilter} invalidates the token on {@code /user/_logout}.
+ */
 @Component
 public class UserAuthCache {
 

@@ -36,6 +36,7 @@ public class AuthCheckFilterHelper implements RewriteFunction<Map, Map> {
 
     @Override
     public Publisher<Map> apply(ServerWebExchange serverWebExchange, Map body) {
+        // RestTemplate in enrichWithAuthenticatedUser is blocking; must not run on reactor-http-epoll.
         return Mono.fromCallable(() -> enrichWithAuthenticatedUser(serverWebExchange, body))
                 .subscribeOn(Schedulers.boundedElastic());
     }

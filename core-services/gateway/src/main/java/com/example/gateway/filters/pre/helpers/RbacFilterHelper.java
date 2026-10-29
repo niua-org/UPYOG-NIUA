@@ -55,6 +55,7 @@ public class RbacFilterHelper implements RewriteFunction<Map, Map> {
 
     @Override
     public Publisher<Map> apply(ServerWebExchange serverWebExchange, Map map) {
+        // Access-control RestTemplate call is blocking; offload from the Netty event loop.
         return Mono.fromCallable(() -> {
             isIncomingURIInAuthorizedActionList(serverWebExchange, map);
             serverWebExchange.getAttributes().put(CURRENT_REQUEST_SANITIZED_BODY, map);

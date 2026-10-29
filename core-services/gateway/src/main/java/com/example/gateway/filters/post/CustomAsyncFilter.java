@@ -62,6 +62,7 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
                 .request(requestBody)
                 .build();
 
+        // Fire-and-forget: run blocking Kafka send off the Netty event loop (boundedElastic), same as Zuul's servlet thread model.
         Mono.fromRunnable(() -> {
             try {
                 log.debug("Publishing CustomAsyncFilter message to topic {}", topic);
