@@ -13,8 +13,14 @@
 		<java.version>17</java.version>
 <log4j2.version>2.21.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
-        <jacoco.line.coverage>0.109</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.01</jacoco.branch.coverage>
+        <jacoco.line.coverage>0.2161</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.1654</jacoco.branch.coverage>
+        <jacoco.validator.line.minimum>0.2161</jacoco.validator.line.minimum>
+        <jacoco.validator.branch.minimum>0.1654</jacoco.validator.branch.minimum>
+        <jacoco.util.line.minimum>0.0269</jacoco.util.line.minimum>
+        <jacoco.util.branch.minimum>0.0368</jacoco.util.branch.minimum>
+        <jacoco.service.line.minimum>0.0709</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.0477</jacoco.service.branch.minimum>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<lombok.version>1.18.22</lombok.version>
@@ -243,19 +249,54 @@
                                 <rule>
                                     <element>PACKAGE</element>
                                     <includes>
-                                        <include>org.egov.waterconnection.util</include>
                                         <include>org.egov.waterconnection.validator</include>
                                     </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.01</minimum>
+                                            <minimum>${jacoco.validator.line.minimum}</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.03</minimum>
+                                            <minimum>${jacoco.validator.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.waterconnection.util</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.util.branch.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.waterconnection.service</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

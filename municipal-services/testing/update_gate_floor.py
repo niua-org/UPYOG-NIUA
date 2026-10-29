@@ -50,17 +50,28 @@ def update_pom(pom: Path, line: float, branch: float) -> None:
         text,
         count=1,
     )
-    # vendor-management style minimums
-    for prop in ("validator", "util", "builder", "querybuilder", "utils", "validation", "service"):
+    # Per-package minimums: sync each jacoco.<segment>.minimum from its <include> package CSV ratio.
+    includes = re.findall(r"<include>([^<]+)</include>", text)
+    for pkg in includes:
+        if "IT.java" in pkg:
+            continue
+        prop = pkg.rsplit(".", 1)[-1]
+        pkg_line, pkg_branch = package_ratio(pom.parent, pkg)
+        if pkg_line == 0 and pkg_branch == 0:
+            continue
+        pkg_floor_line = max(0.01, round(pkg_line * 0.95, 4))
+        pkg_floor_branch = round(pkg_branch * 0.95, 4) if pkg_branch > 0 else 0.0
+        if f"<jacoco.{prop}.line.minimum>" not in text:
+            continue
         text = re.sub(
             rf"(<jacoco\.{prop}\.line\.minimum>)[^<]+(</jacoco\.{prop}\.line\.minimum>)",
-            rf"\g<1>{floor_line}\g<2>",
+            rf"\g<1>{pkg_floor_line}\g<2>",
             text,
             count=1,
         )
         text = re.sub(
             rf"(<jacoco\.{prop}\.branch\.minimum>)[^<]+(</jacoco\.{prop}\.branch\.minimum>)",
-            rf"\g<1>{floor_branch}\g<2>",
+            rf"\g<1>{pkg_floor_branch}\g<2>",
             text,
             count=1,
         )
