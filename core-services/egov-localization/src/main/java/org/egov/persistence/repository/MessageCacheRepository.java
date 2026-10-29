@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @Service
@@ -28,20 +29,53 @@ public class MessageCacheRepository {
 		this.objectMapper = objectMapper;
 	}
 
-	public List<Message> getComputedMessages(String locale, Tenant tenant) {
-		return getMessages(locale, tenant, COMPUTED_MESSAGES_HASH_KEY);
+	/**
+	 * Computed messages cached for one locale, tenant, and module.
+	 *
+	 * @param locale requested locale
+	 * @param tenant requested tenant
+	 * @param module module whose computed list is stored apart from other modules
+	 * @return cached messages, or {@code null} on a cache miss
+	 */
+	public List<Message> getComputedMessages(String locale, Tenant tenant, String module) {
+		return getMessages(locale, tenant, module, COMPUTED_MESSAGES_HASH_KEY);
 	}
 
-	public void cacheComputedMessages(String locale, Tenant tenant, List<Message> messages) {
-		putMessages(locale, tenant, COMPUTED_MESSAGES_HASH_KEY, messages);
+	/**
+	 * Stores the computed message list for one module. The Redis field is
+	 * {@code locale:tenant:module}, so the cached value is limited to that module.
+	 *
+	 * @param locale requested locale
+	 * @param tenant requested tenant
+	 * @param module module this list was computed for
+	 * @param messages computed messages to cache
+	 */
+	public void cacheComputedMessages(String locale, Tenant tenant, String module, List<Message> messages) {
+		putMessages(locale, tenant, module, COMPUTED_MESSAGES_HASH_KEY, messages);
 	}
 
-	public List<Message> getMessages(String locale, Tenant tenant) {
-		return getMessages(locale, tenant, MESSAGES_HASH_KEY);
+	/**
+	 * Raw Postgres messages cached for one locale, tenant, and module.
+	 *
+	 * @param locale message locale
+	 * @param tenant tenant the rows belong to
+	 * @param module module the rows belong to
+	 * @return cached messages, or {@code null} on a cache miss
+	 */
+	public List<Message> getMessages(String locale, Tenant tenant, String module) {
+		return getMessages(locale, tenant, module, MESSAGES_HASH_KEY);
 	}
 
-	public void cacheMessages(String locale, Tenant tenant, List<Message> messages) {
-		putMessages(locale, tenant, MESSAGES_HASH_KEY, messages);
+	/**
+	 * Stores raw Postgres messages for one module under the field {@code locale:tenant:module}.
+	 *
+	 * @param locale message locale
+	 * @param tenant tenant the rows belong to
+	 * @param module module the rows belong to
+	 * @param messages rows read from Postgres
+	 */
+	public void cacheMessages(String locale, Tenant tenant, String module, List<Message> messages) {
+		putMessages(locale, tenant, module, MESSAGES_HASH_KEY, messages);
 	}
 
 	public void bustCache() {
@@ -56,7 +90,8 @@ public class MessageCacheRepository {
 
 	private void bustRawMessagesCacheEntry(String locale, Tenant tenant) {
 		String messageKey = getKey(locale, tenant.getTenantId());
-		stringRedisTemplate.opsForHash().delete(MESSAGES_HASH_KEY, messageKey);
+		getMatchingHashKeys(MESSAGES_HASH_KEY, messageKey)
+				.forEach(key -> stringRedisTemplate.opsForHash().delete(MESSAGES_HASH_KEY, key));
 	}
 
 	private void bustComputedMessagesCache(String locale, Tenant tenant) {
@@ -81,15 +116,28 @@ public class MessageCacheRepository {
 
 	private Stream<String> getMatchingSubTenantCacheKeys(String locale, Tenant tenant) {
 		String parentCacheKey = getKey(locale, tenant.getTenantId());
-		return getAllComputedMessageCacheKeys().filter(key -> key.contains(parentCacheKey));
+		return getMatchingHashKeys(COMPUTED_MESSAGES_HASH_KEY, parentCacheKey);
 	}
 
-	private Stream<String> getAllComputedMessageCacheKeys() {
-		return stringRedisTemplate.opsForHash().keys(COMPUTED_MESSAGES_HASH_KEY).stream().map(key -> (String) key);
+	/**
+	 * Hash field names that contain {@code keyFragment}. Uses {@code HKEYS}, which returns
+	 * names only, so cache bust does not pull cached message JSON into the heap. A locale
+	 * and tenant prefix matches that entry, its per-module fields, and child tenants.
+	 *
+	 * @param hashKey Redis hash to scan
+	 * @param keyFragment locale and tenant prefix, for example {@code en_IN:mh.panvel}
+	 * @return matching field names; empty when the hash has none
+	 */
+	private Stream<String> getMatchingHashKeys(String hashKey, String keyFragment) {
+		Set<Object> keys = stringRedisTemplate.opsForHash().keys(hashKey);
+		if (keys == null || keys.isEmpty()) {
+			return Stream.empty();
+		}
+		return keys.stream().map(key -> (String) key).filter(key -> key.contains(keyFragment));
 	}
 
-	private List<Message> getMessages(String locale, Tenant tenant, String hashKey) {
-		String messageKey = getKey(locale, tenant.getTenantId());
+	private List<Message> getMessages(String locale, Tenant tenant, String module, String hashKey) {
+		String messageKey = getKey(locale, tenant.getTenantId(), module);
 		final String entry = (String) stringRedisTemplate.opsForHash().get(hashKey, messageKey);
 		if (entry != null) {
 			final MessageCacheEntry messageCacheEntry;
@@ -103,8 +151,8 @@ public class MessageCacheRepository {
 		return null;
 	}
 
-	private void putMessages(String locale, Tenant tenant, String hashKey, List<Message> messages) {
-		String messageKey = getKey(locale, tenant.getTenantId());
+	private void putMessages(String locale, Tenant tenant, String module, String hashKey, List<Message> messages) {
+		String messageKey = getKey(locale, tenant.getTenantId(), module);
 		final MessageCacheEntry messageCacheEntry = new MessageCacheEntry(messages);
 		try {
 			final String cacheEntry = objectMapper.writeValueAsString(messageCacheEntry);
@@ -116,6 +164,18 @@ public class MessageCacheRepository {
 
 	private String getKey(String locale, String tenant) {
 		return String.format("%s:%s", locale, tenant);
+	}
+
+	/**
+	 * Redis hash field for one module, shaped as {@code locale:tenant:module}.
+	 *
+	 * @param locale message locale
+	 * @param tenant tenant id
+	 * @param module module name
+	 * @return field name used for both raw and computed cache entries
+	 */
+	private String getKey(String locale, String tenant, String module) {
+		return String.format("%s:%s:%s", locale, tenant, module);
 	}
 
 }

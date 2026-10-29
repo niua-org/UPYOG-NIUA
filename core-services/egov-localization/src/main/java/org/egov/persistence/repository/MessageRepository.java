@@ -1,5 +1,7 @@
 package org.egov.persistence.repository;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,36 @@ public class MessageRepository {
 	public List<Message> findByTenantIdAndLocale(Tenant tenant, String locale) {
 		return messageJpaRepository.find(tenant.getTenantId(), locale).stream()
 				.map(org.egov.persistence.entity.Message::toDomain).collect(Collectors.toList());
+	}
+
+	/**
+	 * Messages stored for one tenant, locale, and module. The module predicate keeps the
+	 * query, and the resulting list, to one slice of the catalog.
+	 *
+	 * @param tenant tenant that owns the rows
+	 * @param locale message locale
+	 * @param module message module
+	 * @return domain messages for that slice; empty when none are stored
+	 */
+	public List<Message> findByTenantIdLocaleAndModule(Tenant tenant, String locale, String module) {
+		return messageJpaRepository.find(tenant.getTenantId(), locale, module).stream()
+				.map(org.egov.persistence.entity.Message::toDomain).collect(Collectors.toList());
+	}
+
+	/**
+	 * Distinct module names for the given tenants and locales. Returns names only, so a search
+	 * that does not name a module can discover what to load without reading every message.
+	 *
+	 * @param tenantIds tenant ids to include, typically the request tenant and its parents
+	 * @param locales locales to include, typically the requested locale and {@code en_IN}
+	 * @return module names; empty when either input is empty or no rows match
+	 */
+	public List<String> findModules(Collection<String> tenantIds, Collection<String> locales) {
+		if (CollectionUtils.isEmpty(tenantIds) || CollectionUtils.isEmpty(locales)) {
+			return Collections.emptyList();
+		}
+		List<String> modules = messageJpaRepository.findDistinctModules(tenantIds, locales);
+		return modules == null ? Collections.emptyList() : modules;
 	}
 
 	public List<Message> findAllMessage(Tenant tenant, String locale, String module, String code) {
