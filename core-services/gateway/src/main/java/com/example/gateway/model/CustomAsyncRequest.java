@@ -3,7 +3,6 @@ package com.example.gateway.model;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.Map;
 
 @Setter
 @Getter
-@ToString
 @Slf4j
 @Builder
 public class CustomAsyncRequest {
