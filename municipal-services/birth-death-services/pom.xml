@@ -11,6 +11,8 @@
   <name>birth-death-services</name>
   <properties>
         
+        <jacoco.service.line.minimum>0.0245</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.0432</jacoco.service.branch.minimum>
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
         <jacoco.line.coverage>0.2815</jacoco.line.coverage>
@@ -202,6 +204,24 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.bel.birthdeath.birth.service</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
