@@ -2,11 +2,13 @@ package com.example.gateway.utils;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import org.egov.common.contract.request.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
@@ -18,11 +20,19 @@ import java.util.function.Function;
 public class UserAuthCache {
 
     private final Cache<String, User> cache;
+    private final AtomicLong invalidations = new AtomicLong();
+    private final long ttlSeconds;
+    private final long maximumSize;
 
-    public UserAuthCache(@Value("${egov.gateway.user-auth-cache-ttl-seconds:120}") long ttlSeconds) {
+    public UserAuthCache(
+            @Value("${egov.gateway.user-auth-cache-ttl-seconds:120}") long ttlSeconds,
+            @Value("${egov.gateway.user-auth-cache-max-size:10000}") long maximumSize) {
+        this.ttlSeconds = ttlSeconds;
+        this.maximumSize = maximumSize;
         this.cache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofSeconds(ttlSeconds))
-                .maximumSize(10_000)
+                .maximumSize(maximumSize)
+                .recordStats()
                 .build();
     }
 
@@ -30,9 +40,32 @@ public class UserAuthCache {
         return cache.get(authToken, loader);
     }
 
-    public void invalidate(String authToken) {
+    public boolean invalidate(String authToken) {
         if (authToken != null && !authToken.isEmpty()) {
             cache.invalidate(authToken);
+            invalidations.incrementAndGet();
+            return true;
         }
+        return false;
+    }
+
+    public long getTtlSeconds() {
+        return ttlSeconds;
+    }
+
+    public long getMaximumSize() {
+        return maximumSize;
+    }
+
+    public StatsSnapshot snapshotStats() {
+        CacheStats stats = cache.stats();
+        return new StatsSnapshot(
+                cache.estimatedSize(),
+                stats.hitRate(),
+                stats.evictionCount(),
+                invalidations.get());
+    }
+
+    public record StatsSnapshot(long estimatedSize, double hitRate, long evictionCount, long invalidations) {
     }
 }

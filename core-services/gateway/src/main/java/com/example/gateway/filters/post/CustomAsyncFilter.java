@@ -1,5 +1,6 @@
 package com.example.gateway.filters.post;
 
+import com.example.gateway.metrics.GatewayCpuFixMetrics;
 import com.example.gateway.model.CustomAsyncRequest;
 import com.example.gateway.utils.UserAuthCache;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +28,8 @@ import static com.example.gateway.utils.CommonUtils.isCustomAsyncUri;
 @Component
 public class CustomAsyncFilter implements GlobalFilter, Ordered {
 
+    private static final String LOG_PREFIX = "GATEWAY_CPU_FIX";
+
     @Value("#{'${egov.custom.async.uris}'.split(',')}")
     private List<String> sourceUri;
 
@@ -42,14 +45,16 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
     @Autowired
     private UserAuthCache userAuthCache;
 
+    @Autowired
+    private GatewayCpuFixMetrics gatewayCpuFixMetrics;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String requestPath = exchange.getRequest().getURI().getPath();
         if (!isCustomAsyncUri(requestPath, sourceUri)) {
+            gatewayCpuFixMetrics.recordCustomAsyncSkipped();
             return chain.filter(exchange);
         }
-
-        log.debug("Executing CustomAsyncFilter for path {}", requestPath);
 
         @SuppressWarnings("unchecked")
         Map<String, Object> requestBody = (Map<String, Object>) exchange.getAttributes().get(ORIGINAL_REQUEST_BODY);
@@ -62,13 +67,35 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
                 .request(requestBody)
                 .build();
 
+        gatewayCpuFixMetrics.recordCustomAsyncPublishAttempt();
+
         // Fire-and-forget: run blocking Kafka send off the Netty event loop (boundedElastic), same as Zuul's servlet thread model.
         Mono.fromRunnable(() -> {
+            String workerThread = Thread.currentThread().getName();
+            log.info("{}: CustomAsyncFilter publishing path={} topic={} thread={}",
+                    LOG_PREFIX, requestPath, topic, workerThread);
             try {
-                log.debug("Publishing CustomAsyncFilter message to topic {}", topic);
-                kafkaTemplate.send(topic, customAsyncRequest);
+                kafkaTemplate.send(topic, customAsyncRequest).whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        gatewayCpuFixMetrics.recordCustomAsyncPublishFailure();
+                        log.info("{}: CustomAsyncFilter publish failed path={} topic={} thread={} error={}",
+                                LOG_PREFIX, requestPath, topic, Thread.currentThread().getName(), ex.getMessage());
+                    } else {
+                        gatewayCpuFixMetrics.recordCustomAsyncPublishSuccess();
+                        log.info(
+                                "{}: CustomAsyncFilter publish succeeded path={} topic={} thread={} partition={} offset={}",
+                                LOG_PREFIX,
+                                requestPath,
+                                topic,
+                                Thread.currentThread().getName(),
+                                result.getRecordMetadata().partition(),
+                                result.getRecordMetadata().offset());
+                    }
+                });
             } catch (Exception ex) {
-                log.error("Exception while sending async request to kafka topic: {}", ex.getMessage());
+                gatewayCpuFixMetrics.recordCustomAsyncPublishFailure();
+                log.info("{}: CustomAsyncFilter publish failed path={} topic={} thread={} error={}",
+                        LOG_PREFIX, requestPath, topic, workerThread, ex.getMessage());
             }
         }).subscribeOn(Schedulers.boundedElastic()).subscribe();
 
@@ -82,10 +109,24 @@ public class CustomAsyncFilter implements GlobalFilter, Ordered {
         try {
             RequestInfo requestInfo = objectMapper.convertValue(
                     requestBody.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class);
-            userAuthCache.invalidate(requestInfo.getAuthToken());
+            String authToken = requestInfo.getAuthToken();
+            if (userAuthCache.invalidate(authToken)) {
+                log.info("{}: user auth cache invalidated on logout tokenSuffix={}",
+                        LOG_PREFIX, maskTokenSuffix(authToken));
+            }
         } catch (Exception e) {
             log.debug("Could not invalidate user auth cache on logout: {}", e.getMessage());
         }
+    }
+
+    static String maskTokenSuffix(String token) {
+        if (token == null || token.isEmpty()) {
+            return "n/a";
+        }
+        if (token.length() <= 4) {
+            return "****";
+        }
+        return "****" + token.substring(token.length() - 4);
     }
 
     @Override
