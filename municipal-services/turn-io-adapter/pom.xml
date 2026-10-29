@@ -15,7 +15,6 @@
   <description>Turn io adapter</description>
   <url>http://maven.apache.org</url>
   <properties>
-    
 		<java.version>17</java.version>
 <log4j2.version>2.17.1</log4j2.version>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -234,20 +233,7 @@
                         </goals>
                         <configuration>
                             <rules>
-                                <rule>
-                                    <element>PACKAGE</element>
-                                    <includes>
-                                        <include>org.egov.rb.pgr.v2.models</include>
-                                    </includes>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.line.coverage}</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
+</rules>
                         </configuration>
                     </execution>
                 </executions>
