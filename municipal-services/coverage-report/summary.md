@@ -24,11 +24,11 @@
 | bpa-calculator | 0.0 | **14.7** | 0.0 | **1.9** | ~4 methods (`PreapprovedPlanQueryBuilderTest`, `CalculationUtilsTest`; purged 1 scaffold) | No |
 | ndc-calculator | 0.0 | **19.4** | 0.0 | **1.0** | ~6 methods (`CalculatorUtilsTest`, `ResponseInfoFactoryTest`, existing `SanitizeHtmlValidatorTest`) | No |
 | challan-generation-calculator | 0.0 | **11.8** | 0.0 | **0.4** | ~2 methods (`CalculationUtilsTest`; purged 2 service scaffolds) | No |
-| inbox | 0.0 | **3.9** | 0.0 | **1.8** | ~14 methods (util, `WorkflowServiceTest`, `InboxQueryBuilderTest`, `ValidatorDefaultImplementationTest`; purged 60 scaffolds) | No |
+| inbox | 0.0 | **3.9** → **4.5** | 0.0 | **1.8** → **2.3** | Deep pass: `ModuleHandlerRegistryTest`, `ElasticSearchQueryBuilderTest.merge` | No |
 | community-hall-booking | 0.0 | **26.1** | 0.0 | **22.1** | ~13 methods (validator, util, querybuilder; purged 25 scaffolds) | No |
-| garbage-service | 0.0 | **6.3** | 0.0 | **5.6** | ~6 methods (util, `GarbageAccountQueryBuilderTest`; purged 15 scaffolds) | No |
+| garbage-service | 0.0 | **6.3** → **8.5** | 0.0 | **5.6** → **7.9** | Deep pass: `GarbageAccountServiceTest`; JaCoCo **service** package gate | No |
 | fsm | 0.0 | **8.3** → **9.4** | 0.0 | **3.2** → **7.0** | Deep pass: `FSMServiceTest`, `EnrichmentServiceTest`, `FSMQueryBuilderTest`, `FSMValidatorTest`, `ActionValidatorTest`, `FSMUtilTest`; JaCoCo **service** package gate | No |
-| street-vending | 0.0 | **8.6** | 0.0 | **6.2** | ~8 methods (util, validator, querybuilder; purged 28 scaffolds) | No |
+| street-vending | 0.0 | **8.6** → **10.0** | 0.0 | **6.2** → **6.7** | Deep pass: `StreetVendingServiceImplTest`; JaCoCo **service** package gate (pending floor sync) | No |
 | ndc-services | 0.0 | **15.0** | 0.0 | **9.9** | ~15 methods (validator, util, builder, config; purged 14 scaffolds) | No |
 | request-service | 0.0 | **5.3** | 0.0 | **6.5** | ~12 methods (util, querybuilder, validation; purged 24 scaffolds) | No |
 | pet-services | 0.0 | **7.8** | 0.0 | **5.6** | ~8 methods (util, validator; purged 19 scaffolds) | No |
