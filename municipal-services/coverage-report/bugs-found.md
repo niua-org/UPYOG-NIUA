@@ -7,3 +7,4 @@
 | street-vending / tp-services | `GlobalExceptionHandler` | Standalone MockMvc returns **500** for some validation paths where API docs imply **400** | Legacy controller tests |
 | property-services | `PropertyValidator.validateCreateRequest` | `owners.remove(null)` on immutable lists throws `UnsupportedOperationException` instead of validation error | Removed duplicate-owner test; documented in `untestable.md` |
 | property-services | `PropertyValidator.validateMobileNumber` | NPE when `ownershipCategory` is null (`ownershipCategory.contains(...)`) | `PropertyValidatorTest` sets ownershipCategory to reach creation-reason validation |
+| sw-services | `SewerageServiceImpl.validateDisconnectionRequest` / `validateReconnectionRequest` | Assumes `getAllSewerageApplications` returns a non-empty list before `previousConnectionsList.get(0)` | `SewerageServiceImplTest` covers status guards only; empty history not exercised |

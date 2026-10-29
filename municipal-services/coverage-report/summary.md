@@ -72,7 +72,7 @@
 | Module | `mvn clean verify` |
 |--------|-------------------|
 | property-services | PASS (validator + builder + **service** package JaCoCo gates, deep-pass floors) |
-| ws-services | PASS (util/validator floors) |
+| ws-services | PASS (service/util/validator package JaCoCo gates) |
 | sw-services | PASS (validator/util/builder package JaCoCo gates) |
 | pgr-services | PASS (validator/util/service/rowmapper package JaCoCo gates) |
 | bpa-services | PASS (validator/util/workflow/querybuilder package JaCoCo gates) |
