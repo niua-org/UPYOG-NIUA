@@ -46,6 +46,7 @@ public class User {
     private String uuid;
     private String digilockerid;
     private String access_token;
+    private String scope;
 
     @Pattern(regexp = UserServiceConstants.PATTERN_TENANT)
     @Size(max = 50)

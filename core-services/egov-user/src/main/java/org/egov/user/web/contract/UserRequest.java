@@ -41,6 +41,8 @@ public class UserRequest {
     @Size(max = 40)
     private String access_token;
 
+    private String scope;
+
     @Size(max = 5)
     private String salutation;
 
@@ -215,6 +217,7 @@ public class UserRequest {
 
         this.id = user.getId();
         this.access_token = user.getAccess_token();
+        this.scope = user.getScope();
         this.userName = user.getUsername();
         this.salutation = user.getSalutation();
         this.name = user.getName();
@@ -296,6 +299,7 @@ public class UserRequest {
         }
         return User.builder()
                 .uuid(this.uuid)
+                .scope(this.scope)
                 .id(this.id)
                 .name(this.name)
                 .username(this.userName)

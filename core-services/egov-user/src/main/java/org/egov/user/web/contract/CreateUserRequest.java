@@ -20,8 +20,14 @@ public class CreateUserRequest {
     @Valid
     private UserRequest user;
 
+    private String scope;
+
     public User toDomain(boolean isCreate) {
-        return user.toDomain(loggedInUserId(),loggedInUserUuid(), isCreate);
+        User domainUser = user.toDomain(loggedInUserId(), loggedInUserUuid(), isCreate);
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(this.scope)) {
+            domainUser.setScope(this.scope);
+        }
+        return domainUser;
     }
 
     // TODO Update libraries to have uuid in request info
