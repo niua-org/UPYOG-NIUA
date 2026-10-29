@@ -1,12 +1,14 @@
 package org.egov.tl.validator;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.User;
 import org.egov.tl.config.TLConfiguration;
 import org.egov.tl.repository.TLRepository;
 import org.egov.tl.service.UserService;
 import org.egov.tl.util.TradeUtil;
 import org.egov.tl.web.models.TradeLicense;
 import org.egov.tl.web.models.TradeLicenseRequest;
+import org.egov.tl.web.models.TradeLicenseSearchCriteria;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +20,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.egov.tl.util.TLConstants.businessService_TL;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TLValidatorTest {
@@ -80,5 +84,48 @@ class TLValidatorTest {
                 .build();
 
         tlValidator.validateBusinessService(request, businessService_TL);
+    }
+
+    @Test
+    void validateSearch_whenEmployeeEmptyCriteria_throwsInvalidSearch() {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(User.builder().type("EMPLOYEE").build())
+                .build();
+
+        assertThatThrownBy(() -> tlValidator.validateSearch(requestInfo, TradeLicenseSearchCriteria.builder().build(),
+                businessService_TL, false))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("Search without any paramters is not allowed");
+    }
+
+    @Test
+    void validateSearch_whenBusinessServiceMismatch_throws() {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(User.builder().type("EMPLOYEE").build())
+                .build();
+        TradeLicenseSearchCriteria criteria = TradeLicenseSearchCriteria.builder()
+                .tenantId("pb.amritsar")
+                .businessService("OTHER")
+                .applicationNumber("TL-1")
+                .build();
+
+        assertThatThrownBy(() -> tlValidator.validateSearch(requestInfo, criteria, businessService_TL, false))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("Business service in Path param and requestbody not matching");
+    }
+
+    @Test
+    void validateSearch_whenEmployeeAllowedParams_passes() {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(User.builder().type("EMPLOYEE").build())
+                .build();
+        when(config.getAllowedEmployeeSearchParameters()).thenReturn("tenantId,applicationNumber,status");
+        TradeLicenseSearchCriteria criteria = TradeLicenseSearchCriteria.builder()
+                .tenantId("pb.amritsar")
+                .applicationNumber("TL-001")
+                .build();
+
+        assertThatCode(() -> tlValidator.validateSearch(requestInfo, criteria, businessService_TL, false))
+                .doesNotThrowAnyException();
     }
 }
