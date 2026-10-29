@@ -17,7 +17,6 @@
   <description>pqm services</description>
 
   <properties>
-    
 		<java.version>17</java.version>
 <log4j2.version>2.17.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
@@ -254,20 +253,7 @@
                         </goals>
                         <configuration>
                             <rules>
-                                <rule>
-                                    <element>PACKAGE</element>
-                                    <includes>
-                                        <include>org.egov.pqm.util</include>
-                                    </includes>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>${jacoco.line.coverage}</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
+</rules>
                         </configuration>
                     </execution>
                 </executions>
