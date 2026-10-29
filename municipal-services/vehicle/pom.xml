@@ -16,6 +16,8 @@
 
 	<properties>
 		
+        <jacoco.service.line.minimum>0.0233</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.014</jacoco.service.branch.minimum>
 		<java.version>17</java.version>
 <log4j2.version>2.21.1</log4j2.version>
         <testcontainers.version>1.19.7</testcontainers.version>
@@ -236,6 +238,24 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.egov.vehicle.service</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
