@@ -1,199 +1,217 @@
 package org.egov.demand.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
 import org.egov.common.contract.request.RequestInfo;
-import org.egov.demand.amendment.model.*;
+import org.egov.demand.amendment.model.Amendment;
+import org.egov.demand.amendment.model.AmendmentCriteria;
+import org.egov.demand.amendment.model.AmendmentRequest;
+import org.egov.demand.amendment.model.AmendmentUpdate;
+import org.egov.demand.amendment.model.AmendmentUpdateRequest;
+import org.egov.demand.amendment.model.State;
 import org.egov.demand.amendment.model.enums.AmendmentStatus;
 import org.egov.demand.config.ApplicationProperties;
+import org.egov.demand.model.AuditDetails;
 import org.egov.demand.model.Demand;
-import org.egov.demand.model.DemandCriteria;
+import org.egov.demand.model.DemandDetail;
+import org.egov.demand.model.UpdateBillCriteria;
 import org.egov.demand.repository.AmendmentRepository;
 import org.egov.demand.repository.BillRepositoryV2;
 import org.egov.demand.util.Util;
+import org.egov.demand.web.contract.DemandRequest;
 import org.egov.demand.web.validator.AmendmentValidator;
-import org.egov.tracer.model.CustomException;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.util.CollectionUtils;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+@ExtendWith(MockitoExtension.class)
+class AmendmentServiceTest {
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-@ExtendWith(SpringExtension.class)
-@SpringBootTest
-public class AmendmentServiceTest {
-
-    @MockBean
+    @Mock
     private Util util;
 
-    @MockBean
+    @Mock
     private ApplicationProperties props;
 
-    @MockBean
+    @Mock
     private DemandService demandService;
 
-    @MockBean
+    @Mock
     private BillRepositoryV2 billRepositoryV2;
 
-    @MockBean
+    @Mock
     private AmendmentValidator amendmentValidator;
 
-    @MockBean
+    @Mock
     private AmendmentRepository amendmentRepository;
 
-    @Autowired
+    @InjectMocks
     private AmendmentService amendmentService;
 
-
     @Test
-    @DisplayName("Should update the demand with amendment tax when the demand is not empty")
-    public void testUpdateDemandWithAmendmentTaxWhenDemandIsNotEmpty() {
+    void search_withoutMobile_delegatesToRepository() {
+        AmendmentCriteria criteria = AmendmentCriteria.builder().tenantId("ap.kurnool").build();
+        List<Amendment> expected = List.of(Amendment.builder().amendmentId("a1").build());
+        when(amendmentRepository.getAmendments(criteria)).thenReturn(expected);
 
-        RequestInfo requestInfo = new RequestInfo();
-        Amendment amendment =
-                Amendment.builder()
-                        .consumerCode("consumerCode")
-                        .businessService("businessService")
-                        .tenantId("tenantId")
-                        .build();
-
-        DemandCriteria demandCriteria =
-                DemandCriteria.builder()
-                        .consumerCode(Stream.of(amendment.getConsumerCode()).collect(Collectors.toSet()))
-                        .businessService(amendment.getBusinessService())
-                        .tenantId(amendment.getTenantId())
-                        .isPaymentCompleted(false)
-                        .build();
-
-        Demand demand =
-                Demand.builder()
-                        .id("id")
-                        .consumerCode("consumerCode")
-                        .businessService("businessService")
-                        .tenantId("tenantId")
-                        .build();
-
-        when(demandService.getDemands(demandCriteria, requestInfo)).thenReturn(Arrays.asList(demand));
-
-
-
-
+        assertThat(amendmentService.search(criteria, new RequestInfo())).isSameAs(expected);
+        verify(demandService, never()).getDemands(any(), any());
     }
 
     @Test
-    @DisplayName("Should update the amendment when the status is active")
-    public void testUpdateAmendmentWhenStatusIsActive() {
+    void search_withMobileAndNoDemands_returnsEmpty() {
+        AmendmentCriteria criteria = AmendmentCriteria.builder()
+                .tenantId("ap.kurnool")
+                .mobileNumber("9999999999")
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of());
 
-        RequestInfo requestInfo = new RequestInfo();
-        AmendmentUpdate amendmentUpdate =
-                AmendmentUpdate.builder().status(AmendmentStatus.ACTIVE).build();
-        AmendmentUpdateRequest amendmentUpdateRequest =
-                AmendmentUpdateRequest.builder()
-                        .requestInfo(requestInfo)
-                        .amendmentUpdate(amendmentUpdate)
-                        .build();
-
-        Amendment amendmentFromSearch = Amendment.builder().build();
-
-        when(amendmentValidator.validateAndEnrichAmendmentForUpdate(amendmentUpdateRequest))
-                .thenReturn(amendmentFromSearch);
-
-
+        assertThat(amendmentService.search(criteria, new RequestInfo())).isEmpty();
+        verify(amendmentRepository, never()).getAmendments(any());
     }
 
     @Test
-    @DisplayName("Should update the amendment when the status is inactive")
-    public void testUpdateAmendmentWhenStatusIsInactive() {
+    void search_withMobile_enrichesConsumerCodesFromDemands() {
+        AmendmentCriteria criteria = AmendmentCriteria.builder()
+                .tenantId("ap.kurnool")
+                .mobileNumber("9999999999")
+                .consumerCode(new HashSet<>())
+                .build();
+        Demand demand = Demand.builder().consumerCode("cc-1").build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
+        when(amendmentRepository.getAmendments(criteria)).thenReturn(List.of());
 
-        RequestInfo requestInfo = new RequestInfo();
-        AmendmentUpdateRequest amendmentUpdateRequest =
-                AmendmentUpdateRequest.builder()
-                        .requestInfo(requestInfo)
-                        .amendmentUpdate(
-                                AmendmentUpdate.builder()
-                                        .amendmentId("1")
-                                        .tenantId("ap.kurnool")
-                                        .status(AmendmentStatus.INACTIVE)
-                                        .build())
-                        .build();
+        amendmentService.search(criteria, new RequestInfo());
 
-        Amendment amendmentFromSearch =
-                Amendment.builder()
-                        .amendmentId("1")
-                        .tenantId("ap.kurnool")
-                        .status(AmendmentStatus.ACTIVE)
-                        .build();
-
-        when(amendmentValidator.validateAndEnrichAmendmentForUpdate(amendmentUpdateRequest))
-                .thenReturn(amendmentFromSearch);
-
-
+        assertThat(criteria.getConsumerCode()).contains("cc-1");
+        verify(amendmentRepository).getAmendments(criteria);
     }
 
     @Test
-    @DisplayName("Should throws an exception when the tenantId is null")
-    public void testCreateWhenTenantIdIsNullThenThrowsException() {
+    void create_withoutWorkflow_updatesDemandImmediately() {
+        when(props.getIsAmendmentworkflowEnabed()).thenReturn(false);
+        Amendment amendment = Amendment.builder()
+                .tenantId("ap.kurnool")
+                .consumerCode("cc-1")
+                .businessService("TL")
+                .demandDetails(new ArrayList<>(List.of(
+                        DemandDetail.builder().taxHeadMasterCode("TL_TAX").taxAmount(BigDecimal.TEN).build())))
+                .build();
+        AmendmentRequest request = AmendmentRequest.builder()
+                .requestInfo(new RequestInfo())
+                .amendment(amendment)
+                .build();
 
-        AmendmentRequest amendmentRequest =
-                AmendmentRequest.builder()
-                        .amendment(Amendment.builder().tenantId(null).build())
-                        .requestInfo(RequestInfo.builder().build())
-                        .build();
+        Demand demand = Demand.builder()
+                .id("dem-1")
+                .tenantId("ap.kurnool")
+                .consumerCode("cc-1")
+                .businessService("TL")
+                .demandDetails(new ArrayList<>())
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
+        when(util.getAuditDetail(any())).thenReturn(AuditDetails.builder().build());
 
-        when(amendmentService.create(amendmentRequest)).thenReturn(null);
+        Amendment created = amendmentService.create(request);
 
+        assertThat(created).isSameAs(amendment);
+        verify(amendmentRepository).saveAmendment(request);
+        verify(demandService).update(any(DemandRequest.class), any());
+        verify(billRepositoryV2).updateBillStatus(any(UpdateBillCriteria.class));
     }
 
     @Test
-    @DisplayName("Should return empty list when the mobile number is not present in any demand")
-    public void testSearchWhenMobileNumberIsNotPresentInAnyDemandThenReturnEmptyList() {
+    void create_withWorkflow_callsWorkflowAndSkipsImmediateDemandUpdate() {
+        when(props.getIsAmendmentworkflowEnabed()).thenReturn(true);
+        Amendment amendment = Amendment.builder()
+                .workflow(new org.egov.demand.amendment.model.ProcessInstance())
+                .build();
+        AmendmentRequest request = AmendmentRequest.builder()
+                .requestInfo(new RequestInfo())
+                .amendment(amendment)
+                .build();
+        when(util.callWorkFlow(any(), any())).thenReturn(State.builder().applicationStatus("ACTIVE").build());
 
-        AmendmentCriteria amendmentCriteria =
-                AmendmentCriteria.builder().mobileNumber("1234567890").build();
+        amendmentService.create(request);
 
-        when(demandService.getDemands(any(), any())).thenReturn(Collections.emptyList());
-
-        List<Amendment> amendments = amendmentService.search(amendmentCriteria, null);
-
-        assertEquals(0, amendments.size());
+        verify(amendmentRepository).saveAmendment(request);
+        verify(demandService, never()).update(any(), any());
+        assertThat(amendment.getStatus()).isEqualTo(AmendmentStatus.ACTIVE);
     }
 
     @Test
-    @DisplayName(
-            "Should return empty list when the mobile number is present in demands but consumer code is not present in any demand")
-    public void
-    testSearchWhenMobileNumberIsPresentInDemandsButConsumerCodeIsNotPresentInAnyDemandThenReturnEmptyList() {
+    void updateAmendment_activeStatus_triggersDemandUpdate() {
+        when(props.getIsAmendmentworkflowEnabed()).thenReturn(false);
+        AmendmentUpdate update = AmendmentUpdate.builder()
+                .status(AmendmentStatus.ACTIVE)
+                .amendmentId("a1")
+                .tenantId("ap.kurnool")
+                .build();
+        AmendmentUpdateRequest request = AmendmentUpdateRequest.builder()
+                .requestInfo(new RequestInfo())
+                .amendmentUpdate(update)
+                .build();
+        Amendment fromSearch = Amendment.builder()
+                .amendmentId("a1")
+                .tenantId("ap.kurnool")
+                .consumerCode("cc-1")
+                .businessService("TL")
+                .demandDetails(List.of())
+                .build();
+        when(amendmentValidator.validateAndEnrichAmendmentForUpdate(request)).thenReturn(fromSearch);
+        when(amendmentRepository.getAmendments(any())).thenReturn(List.of(fromSearch));
+        when(demandService.getDemands(any(), any())).thenReturn(List.of());
 
-        AmendmentCriteria amendmentCriteria =
-                AmendmentCriteria.builder()
-                        .mobileNumber("1234567890")
+        amendmentService.updateAmendment(request);
 
-                        .build();
+        verify(amendmentRepository).updateAmendment(List.of(update));
+    }
 
-        DemandCriteria demandCriteria =
-                DemandCriteria.builder()
-                        .mobileNumber("1234567890")
+    @Test
+    void updateDemandWithAmendmentTax_withMultipleDemands_picksLatestPeriod() {
+        Demand older = Demand.builder()
+                .id("old")
+                .consumerCode("cc-1")
+                .businessService("TL")
+                .tenantId("ap.kurnool")
+                .taxPeriodFrom(1L)
+                .taxPeriodTo(2L)
+                .demandDetails(new ArrayList<>())
+                .build();
+        Demand newer = Demand.builder()
+                .id("new")
+                .consumerCode("cc-1")
+                .businessService("TL")
+                .tenantId("ap.kurnool")
+                .taxPeriodFrom(10L)
+                .taxPeriodTo(20L)
+                .demandDetails(new ArrayList<>())
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(new ArrayList<>(List.of(older, newer)));
+        when(util.getAuditDetail(any())).thenReturn(AuditDetails.builder().build());
 
-                        .build();
+        Amendment amendment = Amendment.builder()
+                .consumerCode("cc-1")
+                .businessService("TL")
+                .tenantId("ap.kurnool")
+                .demandDetails(List.of(
+                        DemandDetail.builder().taxHeadMasterCode("TL_TAX").taxAmount(BigDecimal.ONE).build()))
+                .build();
 
-        when(amendmentRepository.getAmendments(amendmentCriteria))
-                .thenReturn(Collections.singletonList(Amendment.builder().build()));
+        amendmentService.updateDemandWithAmendmentTax(new RequestInfo(), amendment);
 
-        when(demandService.getDemands(demandCriteria, null)).thenReturn(Collections.emptyList());
-
-        List<Amendment> amendments = amendmentService.search(amendmentCriteria, null);
-
-        assertTrue(CollectionUtils.isEmpty(amendments));
+        verify(demandService).update(any(DemandRequest.class), any());
+        assertThat(newer.getDemandDetails()).hasSize(1);
     }
 }

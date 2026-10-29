@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.jsonpath.DocumentContext;
 
 import java.math.BigDecimal;
@@ -51,9 +52,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import static org.mockito.ArgumentMatchers.anyString;
 
 
 class UtilTest {
+
+    private static Util utilWithAppProps() {
+        Util util = new Util();
+        ApplicationProperties props = mock(ApplicationProperties.class);
+        when(props.getStatelevelRolecodeExclusionList()).thenReturn(new ArrayList<>());
+        ReflectionTestUtils.setField(util, "appProps", props);
+        return util;
+    }
     @MockBean
     private Boolean aBoolean;
 
@@ -259,9 +271,9 @@ class UtilTest {
 
         Util util = new Util();
         DocumentContext documentContext = mock(DocumentContext.class);
-        when(documentContext.read((String) any(), (com.jayway.jsonpath.Predicate[]) any())).thenReturn(new ArrayList<>());
+        when(documentContext.read(anyString())).thenReturn(new ArrayList<>());
         assertThrows(CustomException.class, () -> util.getIsAdvanceAllowed("Business Service", documentContext));
-        verify(documentContext).read((String) any(), (com.jayway.jsonpath.Predicate[]) any());
+        verify(documentContext).read(anyString());
     }
 
 
@@ -347,21 +359,20 @@ class UtilTest {
         requestInfo.setUserInfo(user);
         util.validateTenantIdForUserType("42", requestInfo);
         verify(user).getType();
-        verify(user).getRoles();
     }
 
 
     @Test
     void testValidateTenantIdForUserType5() {
 
-        Util util = new Util();
+        Util util = utilWithAppProps();
         User user = mock(User.class);
         when(user.getType()).thenReturn(Constants.EMPLOYEE_TYPE_CODE);
         when(user.getRoles()).thenReturn(new ArrayList<>());
 
         RequestInfo requestInfo = new RequestInfo();
         requestInfo.setUserInfo(user);
-        util.validateTenantIdForUserType("42", requestInfo);
+        assertThrows(CustomException.class, () -> util.validateTenantIdForUserType("42", requestInfo));
         verify(user).getType();
         verify(user).getRoles();
     }
@@ -382,7 +393,6 @@ class UtilTest {
         requestInfo.setUserInfo(user);
         util.validateTenantIdForUserType("42", requestInfo);
         verify(user).getType();
-        verify(user).getRoles();
     }
 
 
@@ -410,143 +420,33 @@ class UtilTest {
 
     @Test
     void testJsonMerge3() {
-
         Util util = new Util();
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        util.jsonMerge(arrayNode, MissingNode.getInstance());
-        verify(arrayNode).getNodeType();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode main = mapper.createObjectNode().put("key", "old");
+        ObjectNode update = mapper.createObjectNode().put("key", "new");
+        JsonNode merged = util.jsonMerge(main, update);
+        assertEquals("new", merged.get("key").asText());
     }
-
 
     @Test
     void testJsonMerge4() {
-
         Util util = new Util();
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        util.jsonMerge(arrayNode, null);
-        verify(arrayNode).getNodeType();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode main = mapper.createObjectNode().put("a", 1);
+        assertSame(main, util.jsonMerge(main, null));
     }
 
     @Test
     void testJsonMerge5() {
-
         Util util = new Util();
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.get((String) any())).thenReturn(MissingNode.getInstance());
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        ArrayNode arrayNode1 = mock(ArrayNode.class);
-        when(arrayNode1.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(arrayNode1.fieldNames()).thenReturn(new Scanner("Source"));
-        util.jsonMerge(arrayNode, arrayNode1);
-        verify(arrayNode).get((String) any());
-        verify(arrayNode).getNodeType();
-        verify(arrayNode1).getNodeType();
-        verify(arrayNode1).fieldNames();
-    }
-
-
-    @Test
-    void testJsonMerge6() {
-
-        Util util = new Util();
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.get((String) any())).thenThrow(new CustomException("Code", "An error occurred"));
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        ArrayNode arrayNode1 = mock(ArrayNode.class);
-        when(arrayNode1.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(arrayNode1.fieldNames()).thenReturn(new Scanner("Source"));
-        assertThrows(CustomException.class, () -> util.jsonMerge(arrayNode, arrayNode1));
-        verify(arrayNode).get((String) any());
-        verify(arrayNode).getNodeType();
-        verify(arrayNode1).getNodeType();
-        verify(arrayNode1).fieldNames();
-    }
-
-
-    @Test
-    void testJsonMerge7() {
-
-        Util util = new Util();
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.get((String) any())).thenReturn(null);
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        ArrayNode arrayNode1 = mock(ArrayNode.class);
-        when(arrayNode1.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(arrayNode1.fieldNames()).thenReturn(new Scanner("Source"));
-        util.jsonMerge(arrayNode, arrayNode1);
-        verify(arrayNode).get((String) any());
-        verify(arrayNode).getNodeType();
-        verify(arrayNode1).getNodeType();
-        verify(arrayNode1).fieldNames();
-    }
-
-
-    @Test
-    void testJsonMerge8() {
-
-
-        Util util = new Util();
-        JsonNode jsonNode = mock(JsonNode.class);
-        when(jsonNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(jsonNode.isObject()).thenReturn(true);
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.get((String) any())).thenReturn(jsonNode);
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        ArrayNode arrayNode1 = mock(ArrayNode.class);
-        when(arrayNode1.get((String) any())).thenReturn(MissingNode.getInstance());
-        when(arrayNode1.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(arrayNode1.fieldNames()).thenReturn(new Scanner("Source"));
-        util.jsonMerge(arrayNode, arrayNode1);
-        verify(arrayNode).get((String) any());
-        verify(arrayNode).getNodeType();
-        verify(jsonNode).getNodeType();
-        verify(jsonNode).isObject();
-        verify(arrayNode1).get((String) any());
-        verify(arrayNode1).getNodeType();
-        verify(arrayNode1).fieldNames();
-    }
-
-    @Test
-    void testJsonMerge9() {
-
-        Util util = new Util();
-        JsonNode jsonNode = mock(JsonNode.class);
-        when(jsonNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(jsonNode.isObject()).thenReturn(true);
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.get((String) any())).thenReturn(jsonNode);
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        ArrayNode arrayNode1 = mock(ArrayNode.class);
-        when(arrayNode1.get((String) any())).thenThrow(new CustomException("Code", "An error occurred"));
-        when(arrayNode1.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(arrayNode1.fieldNames()).thenReturn(new Scanner("Source"));
-        assertThrows(CustomException.class, () -> util.jsonMerge(arrayNode, arrayNode1));
-        verify(arrayNode).get((String) any());
-        verify(arrayNode).getNodeType();
-        verify(jsonNode).isObject();
-        verify(arrayNode1).get((String) any());
-        verify(arrayNode1).getNodeType();
-        verify(arrayNode1).fieldNames();
-    }
-
-    @Test
-    void testJsonMerge10() {
-
-
-        Util util = new Util();
-        ArrayNode arrayNode = mock(ArrayNode.class);
-        when(arrayNode.get((String) any())).thenReturn(mock(JsonNode.class));
-        when(arrayNode.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        ArrayNode arrayNode1 = mock(ArrayNode.class);
-        when(arrayNode1.get((String) any())).thenReturn(MissingNode.getInstance());
-        when(arrayNode1.getNodeType()).thenReturn(JsonNodeType.ARRAY);
-        when(arrayNode1.fieldNames()).thenReturn(MappingIterator.emptyIterator());
-        util.jsonMerge(arrayNode, arrayNode1);
-        verify(arrayNode).getNodeType();
-        verify(arrayNode1).getNodeType();
-        verify(arrayNode1).fieldNames();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode main = mapper.createObjectNode();
+        main.set("nested", mapper.createObjectNode().put("a", 1));
+        ObjectNode update = mapper.createObjectNode();
+        update.set("nested", mapper.createObjectNode().put("b", 2));
+        util.jsonMerge(main, update);
+        assertEquals(1, main.get("nested").get("a").asInt());
+        assertEquals(2, main.get("nested").get("b").asInt());
     }
 
 

@@ -1,18 +1,20 @@
 package org.egov.egf.instrument.persistence.queue;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ObjectMapperFactoryTest {
 
     @Mock
@@ -20,7 +22,7 @@ public class ObjectMapperFactoryTest {
 
     private ObjectMapperFactory objectMapperFactory;
 
-    @Before
+    @BeforeEach
     public void setup() {
         objectMapperFactory = new ObjectMapperFactory(objectMapper);
     }

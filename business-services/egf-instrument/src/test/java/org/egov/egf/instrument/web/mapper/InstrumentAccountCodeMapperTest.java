@@ -1,6 +1,7 @@
 package org.egov.egf.instrument.web.mapper;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.egov.common.contract.request.User;
 import org.egov.egf.instrument.domain.model.InstrumentAccountCode;
@@ -10,19 +11,20 @@ import org.egov.egf.instrument.web.contract.InstrumentAccountCodeContract;
 import org.egov.egf.instrument.web.contract.InstrumentAccountCodeSearchContract;
 import org.egov.egf.instrument.web.contract.InstrumentTypeContract;
 import org.egov.egf.master.web.contract.ChartOfAccountContract;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(MockitoJUnitRunner.class)
+import org.mockito.InjectMocks;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
 public class InstrumentAccountCodeMapperTest {
 
     @InjectMocks
     private InstrumentAccountCodeMapper instrumentAccountCodeMapper;
 
-    @Before
+    @BeforeEach
     public void setup() {
         instrumentAccountCodeMapper = new InstrumentAccountCodeMapper();
     }

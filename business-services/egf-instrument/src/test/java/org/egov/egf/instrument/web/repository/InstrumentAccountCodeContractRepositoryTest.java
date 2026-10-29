@@ -1,6 +1,7 @@
 package org.egov.egf.instrument.web.repository;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.client.ExpectedCount.once;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -8,16 +9,17 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import org.egov.egf.instrument.utils.RequestJsonReader;
 import org.egov.egf.instrument.web.contract.InstrumentAccountCodeContract;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class InstrumentAccountCodeContractRepositoryTest {
 
     private InstrumentAccountCodeContractRepository instrumentAccountCodeContractRepository;
@@ -28,7 +30,7 @@ public class InstrumentAccountCodeContractRepositoryTest {
 
     private RequestJsonReader resources = new RequestJsonReader();
 
-    @Before
+    @BeforeEach
     public void setup() {
         final RestTemplate restTemplate = new RestTemplate();
         instrumentAccountCodeContractRepository = new InstrumentAccountCodeContractRepository(HOST, restTemplate);

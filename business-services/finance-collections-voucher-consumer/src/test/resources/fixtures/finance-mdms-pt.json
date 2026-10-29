@@ -1,0 +1,70 @@
+{
+  "MdmsRes": {
+    "FinanceModule": {
+      "BusinessServiceMapping": [
+        {
+          "code": "PT",
+          "voucherCreationEnabled": true,
+          "fund": "01",
+          "function": "001",
+          "department": "DEPT",
+          "functionary": "FN1",
+          "scheme": "SC1"
+        }
+      ],
+      "TaxHeadMasterGlCodeMapping": [
+        {
+          "billingservicecode": "PT",
+          "taxhead": "PT_TAX",
+          "glcode": "110100"
+        }
+      ],
+      "InstrumentGLcodeMapping": [
+        {
+          "instrumenttype": "Cash",
+          "glcode": "450100"
+        }
+      ],
+      "FinanceInstrumentStatusMapping": [
+        {
+          "id": "New",
+          "code": "New",
+          "moduleType": "Instrument",
+          "description": "New instrument"
+        },
+        {
+          "id": "Cancelled",
+          "code": "Cancelled",
+          "moduleType": "Instrument",
+          "description": "Cancelled instrument"
+        }
+      ],
+      "OnlineGLCodeMapping": [
+        {
+          "servicecode": "PT",
+          "glcode": "450200"
+        }
+      ]
+    },
+    "BillingService": {
+      "BusinessService": [
+        {
+          "code": "PT",
+          "businessService": "Property Tax"
+        }
+      ]
+    },
+    "tenant": {
+      "citymodule": [
+        {
+          "code": "Finance",
+          "tenants": [
+            {
+              "code": "pb.amritsar"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
