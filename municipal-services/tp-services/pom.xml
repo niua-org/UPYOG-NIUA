@@ -8,6 +8,8 @@
     <version>2.0.0</version>
     <properties>
         
+        <jacoco.service.line.minimum>0.0223</jacoco.service.line.minimum>
+        <jacoco.service.branch.minimum>0.0122</jacoco.service.branch.minimum>
 		<java.version>17</java.version>
 <testcontainers.version>1.19.7</testcontainers.version>
         <jacoco.line.coverage>0.95</jacoco.line.coverage>
@@ -85,6 +87,24 @@
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>${jacoco.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>org.upyog.tp.service</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.line.minimum}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.service.branch.minimum}</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
