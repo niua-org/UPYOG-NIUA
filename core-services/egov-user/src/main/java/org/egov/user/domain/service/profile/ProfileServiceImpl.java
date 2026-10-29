@@ -16,6 +16,8 @@ import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.service.address.AddressMasterDataService;
+import org.egov.user.domain.service.address.AddressService;
+import org.egov.user.domain.service.document.UserDocumentService;
 import org.egov.user.domain.service.identity.IdentityVerificationService;
 import org.egov.user.domain.service.identity.VerifiedAadhaarDemographics;
 import org.egov.user.domain.service.profile.validator.ProfileValidator;
@@ -25,7 +27,9 @@ import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.UserRequest;
+import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
+import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
 import org.egov.user.web.contract.profile.ProfileResyncRequest;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
@@ -35,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Core implementation of {@link ProfileService} orchestrating citizen profile onboarding,
@@ -76,6 +81,8 @@ public class ProfileServiceImpl implements ProfileService {
     private final AddressRepository addressRepository;
     private final UserDocumentRepository userDocumentRepository;
     private final AddressMasterDataService addressMasterDataService;
+    private final AddressService addressService;
+    private final UserDocumentService userDocumentService;
 
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository,
@@ -84,7 +91,9 @@ public class ProfileServiceImpl implements ProfileService {
                               EncryptionDecryptionUtil encryptionDecryptionUtil,
                               AddressRepository addressRepository,
                               UserDocumentRepository userDocumentRepository,
-                              @Autowired(required = false) AddressMasterDataService addressMasterDataService) {
+                              @Autowired(required = false) AddressMasterDataService addressMasterDataService,
+                              @Autowired(required = false) AddressService addressService,
+                              @Autowired(required = false) UserDocumentService userDocumentService) {
         this.userRepository = userRepository;
         this.profileValidator = profileValidator;
         this.identityVerificationService = identityVerificationService;
@@ -92,6 +101,18 @@ public class ProfileServiceImpl implements ProfileService {
         this.addressRepository = addressRepository;
         this.userDocumentRepository = userDocumentRepository;
         this.addressMasterDataService = addressMasterDataService;
+        this.addressService = addressService;
+        this.userDocumentService = userDocumentService;
+    }
+
+    public ProfileServiceImpl(UserRepository userRepository,
+                              ProfileValidator profileValidator,
+                              IdentityVerificationService identityVerificationService,
+                              EncryptionDecryptionUtil encryptionDecryptionUtil,
+                              AddressRepository addressRepository,
+                              UserDocumentRepository userDocumentRepository,
+                              AddressMasterDataService addressMasterDataService) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, null, null);
     }
 
     public ProfileServiceImpl(UserRepository userRepository,
@@ -100,7 +121,7 @@ public class ProfileServiceImpl implements ProfileService {
                               EncryptionDecryptionUtil encryptionDecryptionUtil,
                               AddressRepository addressRepository,
                               UserDocumentRepository userDocumentRepository) {
-        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, null);
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, null, null, null);
     }
 
     /**
@@ -513,11 +534,24 @@ public class ProfileServiceImpl implements ProfileService {
      * @throws CustomException if search criteria are invalid or empty
      */
     @Override
+    public Set<String> resolveIncludes(List<String> rawIncludes) {
+        if (CollectionUtils.isEmpty(rawIncludes)) {
+            return Collections.singleton(ProfileIncludeEntity.PROFILE.name());
+        }
+        Set<String> resolved = rawIncludes.stream()
+                .filter(StringUtils::isNotBlank)
+                .map(s -> s.trim().toUpperCase())
+                .collect(Collectors.toSet());
+        return resolved.isEmpty() ? Collections.singleton(ProfileIncludeEntity.PROFILE.name()) : resolved;
+    }
+
+    @Override
     public List<User> searchProfile(ProfileSearchRequest request) {
-        log.info("[PROFILE-SERVICE] Searching citizen profiles with filters: tenant={}, mobile={}, aadhaar={}",
+        log.info("[PROFILE-SERVICE] Searching citizen profiles with filters: tenant={}, mobile={}, aadhaar={}, include={}",
                 request != null ? request.getTenantId() : null,
                 maskMobile(request != null ? request.getMobileNumber() : null),
-                maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+                maskAadhaar(request != null ? request.getAadhaarNumber() : null),
+                request != null ? request.getInclude() : null);
 
         profileValidator.validateSearch(request);
 
@@ -540,7 +574,74 @@ public class ProfileServiceImpl implements ProfileService {
             return Collections.emptyList();
         }
 
-        return decryptUserList(userList, request.getRequestInfo());
+        List<User> decryptedUsers = decryptUserList(userList, request.getRequestInfo());
+        Set<String> includes = resolveIncludes(request != null ? request.getInclude() : null);
+
+        enrichRelatedEntities(decryptedUsers, stateTenant, includes, request != null ? request.getRequestInfo() : null);
+
+        return decryptedUsers;
+    }
+
+    private void enrichRelatedEntities(List<User> users, String stateTenant, Set<String> includes, RequestInfo requestInfo) {
+        if (CollectionUtils.isEmpty(users) || CollectionUtils.isEmpty(includes)) {
+            return;
+        }
+
+        boolean includeAddresses = includes.contains(ProfileIncludeEntity.ADDRESS.name());
+        boolean includeDocuments = includes.contains(ProfileIncludeEntity.DOCUMENT.name());
+
+        if (!includeAddresses && !includeDocuments) {
+            return;
+        }
+
+        for (User user : users) {
+            if (StringUtils.isBlank(user.getUuid())) {
+                continue;
+            }
+
+            if (includeAddresses) {
+                try {
+                    AddressSearchCriteria addrCriteria = AddressSearchCriteria.builder()
+                            .uuid(user.getUuid())
+                            .status(UserConstants.ADDRESS_ACTIVE_STATUS)
+                            .build();
+
+                    List<Address> addresses = null;
+                    if (addressService != null) {
+                        addresses = addressService.searchAddress(addrCriteria, requestInfo);
+                    } else if (addressRepository != null) {
+                        addresses = addressRepository.getAddressV2(addrCriteria);
+                    }
+
+                    if (addresses != null) {
+                        user.setAddresses(new HashSet<>(addresses));
+                    }
+                } catch (Exception e) {
+                    log.error("[PROFILE-SERVICE] Error fetching addresses for user UUID: {}", user.getUuid(), e);
+                }
+            }
+
+            if (includeDocuments) {
+                try {
+                    UserDocumentSearchCriteria docCriteria = UserDocumentSearchCriteria.builder()
+                            .uuid(user.getUuid())
+                            .build();
+
+                    List<UserDocument> documents = null;
+                    if (userDocumentService != null) {
+                        documents = userDocumentService.searchDocuments(docCriteria, requestInfo);
+                    } else if (userDocumentRepository != null) {
+                        documents = userDocumentRepository.search(docCriteria);
+                    }
+
+                    if (documents != null) {
+                        user.setDocuments(documents);
+                    }
+                } catch (Exception e) {
+                    log.error("[PROFILE-SERVICE] Error fetching documents for user UUID: {}", user.getUuid(), e);
+                }
+            }
+        }
     }
 
     /**

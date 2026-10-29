@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -169,22 +170,28 @@ public class ProfileController {
     })
     @PostMapping("/_search")
     public ResponseEntity<ProfileResponse> searchProfile(@RequestBody @Valid ProfileSearchRequest request) {
-        log.info("[PROFILE-CONTROLLER] Received profile search request. tenant: {}, mobile: {}",
+        log.info("[PROFILE-CONTROLLER] Received profile search request. tenant: {}, mobile: {}, include: {}",
                 request != null ? request.getTenantId() : null,
-                maskMobile(request != null ? request.getMobileNumber() : null));
+                maskMobile(request != null ? request.getMobileNumber() : null),
+                request != null ? request.getInclude() : null);
 
         List<User> users = profileService.searchProfile(request);
+        Set<String> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
+
         List<UserSearchResponseContent> contents = users != null
-                ? users.stream().map(UserSearchResponseContent::new).collect(Collectors.toList())
+                ? users.stream().map(u -> new UserSearchResponseContent(u, normalizedIncludes)).collect(Collectors.toList())
                 : Collections.emptyList();
 
         ProfileResponse response = ProfileResponse.builder()
-                .responseInfo(ResponseInfo.builder().status("SUCCESS").build())
+                .responseInfo(ResponseInfo.builder().status(UserConstants.STATUS_SUCCESS).build())
                 .user(contents)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+
+
 
     /**
      * Dedicated endpoint to re-synchronize citizen profile with Aadhaar e-KYC.

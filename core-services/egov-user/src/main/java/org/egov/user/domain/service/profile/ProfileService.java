@@ -63,6 +63,15 @@ public interface ProfileService {
     List<User> searchProfile(ProfileSearchRequest request);
 
     /**
+     * Resolves and normalizes requested entity inclusion flags (PROFILE, ADDRESS, DOCUMENT).
+     * Defaults to [PROFILE] if omitted or empty.
+     *
+     * @param rawIncludes raw include flags from request
+     * @return set of normalized uppercase include flags
+     */
+    java.util.Set<String> resolveIncludes(List<String> rawIncludes);
+
+    /**
      * Re-synchronizes citizen profile demographics with verified Aadhaar e-KYC.
      *
      * @param request profile re-sync request payload

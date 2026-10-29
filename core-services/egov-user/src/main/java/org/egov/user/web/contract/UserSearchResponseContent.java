@@ -2,6 +2,8 @@ package org.egov.user.web.contract;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
+import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
@@ -53,8 +56,13 @@ public class UserSearchResponseContent {
     private String correspondencePinCode;
     private String alternatemobilenumber;
 
-    @JsonIgnore
+    @JsonProperty("addresses")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<Address> addresses;
+
+    @JsonProperty("documents")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<UserDocument> documents;
 
     private Boolean active;
     private String locale;
@@ -97,49 +105,76 @@ public class UserSearchResponseContent {
     private Date pwdExpiryDate;
 
     public UserSearchResponseContent(User user) {
+        this(user, Collections.singleton("PROFILE"));
+        if (user != null) {
+            if (user.getAddresses() != null && !user.getAddresses().isEmpty()) {
+                this.addresses = user.getAddresses();
+            }
+            if (user.getDocuments() != null && !user.getDocuments().isEmpty()) {
+                this.documents = user.getDocuments();
+            }
+        }
+    }
 
+    public UserSearchResponseContent(User user, Set<String> includes) {
+        if (user == null) return;
+
+        // Core Identity & Audit Fields (always present)
         this.id = user.getId();
+        this.uuid = user.getUuid();
         this.userName = user.getUsername();
-        this.salutation = user.getSalutation();
-        this.name = user.getName();
-        this.gender = user.getGender() != null ? user.getGender().toString() : null;
-        this.mobileNumber = user.getMobileNumber();
-        this.emailId = user.getEmailId();
-        this.altContactNumber = user.getAltContactNumber();
-        this.pan = user.getPan();
-        this.aadhaarNumber = user.getAadhaarNumber();
-        this.active = user.getActive();
-        this.dob = user.getDob();
-        this.pwdExpiryDate = user.getPasswordExpiryDate();
-        this.locale = user.getLocale();
+        this.tenantId = user.getTenantId();
         this.type = user.getType();
-        this.accountLocked = user.getAccountLocked();
-        this.accountLockedDate = user.getAccountLockedDate();
-        this.signature = user.getSignature();
-        this.bloodGroup = user.getBloodGroup() != null ? user.getBloodGroup().getValue() : null;
-        this.photo = user.getPhoto();
-        this.identificationMark = user.getIdentificationMark();
+        this.active = user.getActive();
         this.createdBy = user.getCreatedBy();
         this.createdDate = user.getCreatedDate();
         this.lastModifiedBy = user.getLastModifiedBy();
         this.lastModifiedDate = user.getLastModifiedDate();
-        this.tenantId = user.getTenantId();
-        this.roles = convertDomainRolesToContract(user.getRoles());
-        log.info("UserSearchResponseContent - User {} (UUID: {}) converted {} roles to contract",
-                 user.getId(), user.getUuid(), this.roles != null ? this.roles.size() : 0);
-        this.fatherOrHusbandName = user.getGuardian();
-        this.relationship = user.getGuardianRelation();
-        this.uuid = user.getUuid();
-        this.digilockerid = user.getDigilockerid();
-        this.alternatemobilenumber=user.getAlternateMobileNumber();
-        this.fatherName = user.getFatherName();
-        this.motherName = user.getMotherName();
-        this.spouseName = user.getSpouseName();
-        this.isIdentityVerified = user.getIsIdentityVerified();
-        this.identityVerifiedDate = user.getIdentityVerifiedDate();
-        this.lastResyncDate = user.getLastResyncDate();
-        this.edittedCount = user.getEdittedCount();
-        this.lastLoginMethod = user.getLastLoginMethod();
+
+        boolean includeProfile = includes != null && includes.contains("PROFILE");
+
+        if (includeProfile) {
+            this.salutation = user.getSalutation();
+            this.name = user.getName();
+            this.gender = user.getGender() != null ? user.getGender().toString() : null;
+            this.mobileNumber = user.getMobileNumber();
+            this.emailId = user.getEmailId();
+            this.altContactNumber = user.getAltContactNumber();
+            this.pan = user.getPan();
+            this.aadhaarNumber = user.getAadhaarNumber();
+            this.dob = user.getDob();
+            this.pwdExpiryDate = user.getPasswordExpiryDate();
+            this.locale = user.getLocale();
+            this.accountLocked = user.getAccountLocked();
+            this.accountLockedDate = user.getAccountLockedDate();
+            this.signature = user.getSignature();
+            this.bloodGroup = user.getBloodGroup() != null ? user.getBloodGroup().getValue() : null;
+            this.photo = user.getPhoto();
+            this.identificationMark = user.getIdentificationMark();
+            this.roles = convertDomainRolesToContract(user.getRoles());
+            log.info("UserSearchResponseContent - User {} (UUID: {}) converted {} roles to contract",
+                    user.getId(), user.getUuid(), this.roles != null ? this.roles.size() : 0);
+            this.fatherOrHusbandName = user.getGuardian();
+            this.relationship = user.getGuardianRelation();
+            this.digilockerid = user.getDigilockerid();
+            this.alternatemobilenumber = user.getAlternateMobileNumber();
+            this.fatherName = user.getFatherName();
+            this.motherName = user.getMotherName();
+            this.spouseName = user.getSpouseName();
+            this.isIdentityVerified = user.getIsIdentityVerified();
+            this.identityVerifiedDate = user.getIdentityVerifiedDate();
+            this.lastResyncDate = user.getLastResyncDate();
+            this.edittedCount = user.getEdittedCount();
+            this.lastLoginMethod = user.getLastLoginMethod();
+        }
+
+        if (includes != null && includes.contains("ADDRESS")) {
+            this.addresses = user.getAddresses();
+        }
+
+        if (includes != null && includes.contains("DOCUMENT")) {
+            this.documents = user.getDocuments();
+        }
     }
 
     private void mapCorrespondenceAddress(User user) {
@@ -249,6 +284,7 @@ public class UserSearchResponseContent {
         }
  
         user.setAddresses(this.addresses);
+        user.setDocuments(this.documents);
  
         // Roles conversion
         if (this.roles != null) {

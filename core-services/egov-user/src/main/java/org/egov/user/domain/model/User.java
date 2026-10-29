@@ -75,6 +75,7 @@ public class User {
     private Address permanentAddress;
     private Address correspondenceAddress;
     private Set<Address> addresses;
+    private List<UserDocument> documents;
     private Boolean active;
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
