@@ -363,6 +363,15 @@ public class UserService {
      * @return
      */
     public User createUser(User user, RequestInfo requestInfo) {
+        String mobileNumber = resolveMobileNumber(user);
+        User existingUser = findExistingUserByMobile(mobileNumber, user.getTenantId(), user.getType());
+        if (existingUser != null) {
+            log.info("[USER-SERVICE] User already exists with mobile number: {} (UUID: {}, username: {}). Updating null/empty fields instead of creating new user.",
+                    maskMobile(mobileNumber), existingUser.getUuid(), existingUser.getUsername());
+            conditionallyValidateOtp(user);
+            return updateExistingUserFields(existingUser, user, requestInfo, false);
+        }
+
         user.setUuid(UUID.randomUUID().toString());
         user.validateNewUser(createUserValidateName);
         conditionallyValidateOtp(user);
@@ -1014,6 +1023,14 @@ public class UserService {
      * @return the created and decrypted User object
      */
     public User createUserWithAddressV2(User user, RequestInfo requestInfo) {
+        String mobileNumber = resolveMobileNumber(user);
+        User existingUser = findExistingUserByMobile(mobileNumber, user.getTenantId(), user.getType());
+        if (existingUser != null) {
+            log.info("[USER-SERVICE-V2] User already exists with mobile number: {} (UUID: {}, username: {}). Updating null/empty fields instead of creating new user.",
+                    maskMobile(mobileNumber), existingUser.getUuid(), existingUser.getUsername());
+            conditionallyValidateOtp(user);
+            return updateExistingUserFields(existingUser, user, requestInfo, true);
+        }
 
         user.setUuid(UUID.randomUUID().toString());
 
@@ -1136,5 +1153,273 @@ public class UserService {
 
         setFileStoreUrlsByFileStoreIds(list);
         return list;
+    }
+
+    private User findExistingUserByMobile(String mobileNumber, String tenantId, UserType userType) {
+        if (StringUtils.isBlank(mobileNumber)) {
+            return null;
+        }
+        String stateTenant = getStateLevelTenantForCitizen(tenantId, userType);
+        UserType targetType = userType != null ? userType : UserType.CITIZEN;
+
+        Map<String, User> userMap = new LinkedHashMap<>();
+
+        // 1. Search by encrypted mobileNumber
+        UserSearchCriteria mobileCriteria = UserSearchCriteria.builder()
+                .mobileNumber(mobileNumber)
+                .tenantId(stateTenant)
+                .type(targetType)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(mobileCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class);
+            List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : mobileCriteria);
+            if (!CollectionUtils.isEmpty(users)) {
+                for (User u : users) {
+                    if (u != null && u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Error querying existing user by mobileNumber {}: {}", maskMobile(mobileNumber), e.getMessage());
+        }
+
+        // 2. Search by encrypted userName
+        try {
+            UserSearchCriteria userCriteria = UserSearchCriteria.builder()
+                    .userName(mobileNumber)
+                    .tenantId(stateTenant)
+                    .type(targetType)
+                    .build();
+            UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(userCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class);
+            List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : userCriteria);
+            if (!CollectionUtils.isEmpty(users)) {
+                for (User u : users) {
+                    if (u != null && u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Error querying existing user by userName {}: {}", maskMobile(mobileNumber), e.getMessage());
+        }
+
+        if (userMap.isEmpty()) {
+            return null;
+        }
+
+        // Prefer account whose username equals mobileNumber if present, else first
+        for (User u : userMap.values()) {
+            if (mobileNumber.equals(u.getUsername())) {
+                return u;
+            }
+        }
+        return userMap.values().iterator().next();
+    }
+
+    private User updateExistingUserFields(User rawExistingUser, User incoming, RequestInfo requestInfo, boolean isV2) {
+        User decryptedExisting = null;
+        try {
+            decryptedExisting = encryptionDecryptionUtil.decryptObject(rawExistingUser, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Could not decrypt existing user {}: {}", rawExistingUser.getUuid(), e.getMessage());
+        }
+        if (decryptedExisting == null) {
+            decryptedExisting = rawExistingUser;
+        }
+
+        boolean modified = false;
+
+        // Name: if blank or default "Citizen", and incoming is not blank
+        if (StringUtils.isBlank(decryptedExisting.getName()) || "Citizen".equalsIgnoreCase(StringUtils.trim(decryptedExisting.getName()))) {
+            if (StringUtils.isNotBlank(incoming.getName())) {
+                decryptedExisting.setName(incoming.getName().trim());
+                modified = true;
+            }
+        }
+
+        // Email
+        if (StringUtils.isBlank(decryptedExisting.getEmailId()) && StringUtils.isNotBlank(incoming.getEmailId())) {
+            decryptedExisting.setEmailId(incoming.getEmailId().trim());
+            modified = true;
+        }
+
+        // Gender
+        if (decryptedExisting.getGender() == null && incoming.getGender() != null) {
+            decryptedExisting.setGender(incoming.getGender());
+            modified = true;
+        }
+
+        // DOB
+        if (decryptedExisting.getDob() == null && incoming.getDob() != null) {
+            decryptedExisting.setDob(incoming.getDob());
+            modified = true;
+        }
+
+        // Father's Name
+        if (StringUtils.isBlank(decryptedExisting.getFatherName()) && StringUtils.isNotBlank(incoming.getFatherName())) {
+            decryptedExisting.setFatherName(incoming.getFatherName().trim());
+            modified = true;
+        }
+
+        // Mother's Name
+        if (StringUtils.isBlank(decryptedExisting.getMotherName()) && StringUtils.isNotBlank(incoming.getMotherName())) {
+            decryptedExisting.setMotherName(incoming.getMotherName().trim());
+            modified = true;
+        }
+
+        // Spouse's Name
+        if (StringUtils.isBlank(decryptedExisting.getSpouseName()) && StringUtils.isNotBlank(incoming.getSpouseName())) {
+            decryptedExisting.setSpouseName(incoming.getSpouseName().trim());
+            modified = true;
+        }
+
+        // Guardian
+        if (StringUtils.isBlank(decryptedExisting.getGuardian()) && StringUtils.isNotBlank(incoming.getGuardian())) {
+            decryptedExisting.setGuardian(incoming.getGuardian().trim());
+            modified = true;
+        }
+
+        // Guardian Relation
+        if (decryptedExisting.getGuardianRelation() == null && incoming.getGuardianRelation() != null) {
+            decryptedExisting.setGuardianRelation(incoming.getGuardianRelation());
+            modified = true;
+        }
+
+        // PAN
+        if (StringUtils.isBlank(decryptedExisting.getPan()) && StringUtils.isNotBlank(incoming.getPan())) {
+            decryptedExisting.setPan(incoming.getPan().trim());
+            modified = true;
+        }
+
+        // Aadhaar Number
+        if (StringUtils.isBlank(decryptedExisting.getAadhaarNumber()) && StringUtils.isNotBlank(incoming.getAadhaarNumber())) {
+            decryptedExisting.setAadhaarNumber(incoming.getAadhaarNumber().trim());
+            modified = true;
+        }
+
+        // Alt Contact Number
+        if (StringUtils.isBlank(decryptedExisting.getAltContactNumber()) && StringUtils.isNotBlank(incoming.getAltContactNumber())) {
+            decryptedExisting.setAltContactNumber(incoming.getAltContactNumber().trim());
+            modified = true;
+        }
+
+        // Alternate Mobile Number
+        if (StringUtils.isBlank(decryptedExisting.getAlternateMobileNumber()) && StringUtils.isNotBlank(incoming.getAlternateMobileNumber())) {
+            decryptedExisting.setAlternateMobileNumber(incoming.getAlternateMobileNumber().trim());
+            modified = true;
+        }
+
+        // Photo
+        if (StringUtils.isBlank(decryptedExisting.getPhoto()) && StringUtils.isNotBlank(incoming.getPhoto())) {
+            decryptedExisting.setPhoto(incoming.getPhoto().trim());
+            modified = true;
+        }
+
+        // Blood Group
+        if (decryptedExisting.getBloodGroup() == null && incoming.getBloodGroup() != null) {
+            decryptedExisting.setBloodGroup(incoming.getBloodGroup());
+            modified = true;
+        }
+
+        // Salutation
+        if (StringUtils.isBlank(decryptedExisting.getSalutation()) && StringUtils.isNotBlank(incoming.getSalutation())) {
+            decryptedExisting.setSalutation(incoming.getSalutation().trim());
+            modified = true;
+        }
+
+        // Title
+        if (StringUtils.isBlank(decryptedExisting.getTitle()) && StringUtils.isNotBlank(incoming.getTitle())) {
+            decryptedExisting.setTitle(incoming.getTitle().trim());
+            modified = true;
+        }
+
+        // Identification Mark
+        if (StringUtils.isBlank(decryptedExisting.getIdentificationMark()) && StringUtils.isNotBlank(incoming.getIdentificationMark())) {
+            decryptedExisting.setIdentificationMark(incoming.getIdentificationMark().trim());
+            modified = true;
+        }
+
+        // Signature
+        if (StringUtils.isBlank(decryptedExisting.getSignature()) && StringUtils.isNotBlank(incoming.getSignature())) {
+            decryptedExisting.setSignature(incoming.getSignature().trim());
+            modified = true;
+        }
+
+        // Locale
+        if (StringUtils.isBlank(decryptedExisting.getLocale()) && StringUtils.isNotBlank(incoming.getLocale())) {
+            decryptedExisting.setLocale(incoming.getLocale().trim());
+            modified = true;
+        }
+
+        // Digilocker ID
+        if (StringUtils.isBlank(decryptedExisting.getDigilockerid()) && StringUtils.isNotBlank(incoming.getDigilockerid())) {
+            decryptedExisting.setDigilockerid(incoming.getDigilockerid().trim());
+            modified = true;
+        }
+
+        // Active state
+        if ((decryptedExisting.getActive() == null || !decryptedExisting.getActive()) && Boolean.TRUE.equals(incoming.getActive())) {
+            decryptedExisting.setActive(true);
+            modified = true;
+        }
+
+        Long updaterId = (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getId() != null)
+                ? requestInfo.getUserInfo().getId()
+                : (rawExistingUser.getId() != null ? rawExistingUser.getId() : 0L);
+        String updaterUuid = (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getUuid() != null)
+                ? requestInfo.getUserInfo().getUuid()
+                : (rawExistingUser.getUuid() != null ? rawExistingUser.getUuid() : "");
+
+        if (modified) {
+            User encryptedMerged = encryptionDecryptionUtil.encryptObject(decryptedExisting, UserConstants.USER_ENCRYPTION_KEY, User.class);
+            if (encryptedMerged != null) {
+                if (encryptedMerged.getId() == null) encryptedMerged.setId(rawExistingUser.getId());
+                if (encryptedMerged.getUuid() == null) encryptedMerged.setUuid(rawExistingUser.getUuid());
+                if (encryptedMerged.getUsername() == null) encryptedMerged.setUsername(rawExistingUser.getUsername());
+                if (encryptedMerged.getTenantId() == null) encryptedMerged.setTenantId(rawExistingUser.getTenantId());
+                if (encryptedMerged.getType() == null) encryptedMerged.setType(rawExistingUser.getType());
+            }
+            if (isV2) {
+                userRepository.updateV2(encryptedMerged != null ? encryptedMerged : decryptedExisting, rawExistingUser, updaterId, updaterUuid);
+            } else {
+                userRepository.update(encryptedMerged != null ? encryptedMerged : decryptedExisting, rawExistingUser, updaterId, updaterUuid);
+            }
+        }
+
+        try {
+            User refreshedEncrypted = getUserByUuid(rawExistingUser.getUuid());
+            User refreshedDecrypted = encryptionDecryptionUtil.decryptObject(refreshedEncrypted, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
+            if (refreshedDecrypted != null) {
+                return refreshedDecrypted;
+            }
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Error refreshing updated user {}: {}", rawExistingUser.getUuid(), e.getMessage());
+        }
+
+        return decryptedExisting;
+    }
+
+    private String resolveMobileNumber(User user) {
+        if (user == null) {
+            return null;
+        }
+        if (StringUtils.isNotBlank(user.getMobileNumber())) {
+            return user.getMobileNumber().trim();
+        }
+        if (StringUtils.isNotBlank(user.getUsername()) && StringUtils.isNumeric(user.getUsername().trim())) {
+            return user.getUsername().trim();
+        }
+        return null;
+    }
+
+    private String maskMobile(String mobile) {
+        if (StringUtils.isBlank(mobile)) {
+            return "null";
+        }
+        if (mobile.length() <= 4) {
+            return "****";
+        }
+        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
     }
 }
