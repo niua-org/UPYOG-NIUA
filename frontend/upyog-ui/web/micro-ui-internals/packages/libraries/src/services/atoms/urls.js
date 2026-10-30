@@ -378,6 +378,19 @@ const Urls = {
     create: "/gc-services/garbage-accounts/_create",
     search: "/gc-services/garbage-accounts/_search",
     update: "/gc-services/garbage-accounts/_update",
+  },
+
+  loginV2: {
+    userLogin: "/user/users/v2/_login",
+    aadharSendOtp: "/requester-services-dx/aadhaar/v1/_sendOtp"
+  },
+
+  profile: {
+    createAddress: "/user/address/_create",
+    updateAddress: "/user/address/_update",
+    createDocument: "/user/document/_create",
+    searchAddress: "/user/address/_search",
+    userSearch: "/user/profile/_search"
   }
 };
 

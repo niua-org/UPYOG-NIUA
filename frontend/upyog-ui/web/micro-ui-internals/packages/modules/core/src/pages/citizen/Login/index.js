@@ -8,6 +8,7 @@ import SelectOtp from "./SelectOtp";
 import SelectName from "./SelectName";
 import { subYears, format } from "date-fns";
 import LoginLayout from "../../../components/LoginLayout";
+import SelectLoginPage from "./SelectLoginPage";
 const TYPE_REGISTER = { type: "register" };
 const TYPE_LOGIN = { type: "login" };
 const DEFAULT_USER = "digit-user";
@@ -108,6 +109,18 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
     setParmas({ ...params, mobileNumber: value });
   };
 
+  // for aadhar card
+  const handleAadharChange = (event) => {
+    const { value } = event.target;
+    setParmas({ ...params, aadharNumber: value });
+  };
+
+  // for family id
+  const handleFamilyIdChange = (event) => {
+    const { value } = event.target;
+    setParmas({ ...params, familyId: value });
+  };
+
   const selectMobileNumber = async (formData) => {
     setCanSubmitNo(false);
     const mobileNumber = params.mobileNumber || formData?.mobileNumber;
@@ -146,6 +159,29 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
       }
       setCanSubmitNo(true);
     }
+  };
+
+  // fucntion to hit aadhar card api 
+  const selectAadharNumber = async (formData) => {
+    const aadharNumber = params.aadharNumber || formData?.aadharNumber;
+    const requestData = {
+      aadhaarNumber: aadharNumber
+    }
+    const [res, err] = await sendAadhaarOtp(requestData);
+    if (!err) {
+      // txnId response mein aayega — save karo params mein
+      setParmas({ ...params, aadharNumber, txnId: res?.txnId });
+      navigate(`${path}/otp`, { state: { from: getFromLocation(location.state, searchParams), role: location.state?.role, authType: "AADHAAR" } });  // ← authType pass karo
+    } else {
+      setError(t("AADHAAR_OTP_SEND_FAILED"));
+    }
+  };
+
+  // function to hit family id apis
+  const selectFamilyId = async (formData) => {
+    const familyId = params.familyId || formData?.familyId;
+    // TODO: Family ID flow logic (different payload / API)
+    console.log("Family ID submit", familyId);
   };
   function selectCommencementDate(value) {
     const appDate = new Date();
@@ -186,8 +222,26 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
     try {
       setIsOtpValid(true);
       setCanSubmitOtp(false);
-      const { mobileNumber, otp, name } = params;
-      if (isUserRegistered) {
+      const { mobileNumber, otp, name, aadharNumber, txnId } = params;
+      const authType = location.state?.authType;
+      console.log("authType", authType)
+      if (authType === "AADHAAR") {
+        // Aadhaar login flow
+        const requestData = {
+          authType: "AADHAAR",
+          tenantId: stateCode,
+          aadhaarNumber: aadharNumber,
+          otp: otp,
+          txnId: txnId,
+          scope: "read write",
+        };
+        const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.UserService.newAuthenticate(requestData);
+        if (window?.globalConfigs?.getConfig("ENABLE_SINGLEINSTANCE")) {
+          info.tenantId = Digit.ULBService.getStateId();
+        }
+        setUser({ info, ...tokens });
+      }
+      else if (isUserRegistered) {
         const requestData = {
           username: mobileNumber ? mobileNumber : sessionStorage.getItem("userName"),
           password: otp,
@@ -254,6 +308,15 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
     }
   };
 
+  const sendAadhaarOtp = async (data) => {
+    try {
+      const res = await Digit.UserService.sendAadhaarOtp(data);
+      return [res, null];
+    } catch (err) {
+      return [null, err];
+    }
+  };
+
   const footer = error && <Toast error={true} label={error} onClose={() => setError(null)} />;
 
   return (
@@ -262,7 +325,19 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
         <Route
           index
           element={
-            <SelectMobileNumber
+            // <SelectMobileNumber
+            //   onSelect={selectMobileNumber}
+            //   config={stepItems[0]}
+            //   mobileNumber={params.mobileNumber || ""}
+            //   onMobileChange={handleMobileChange}
+            //   canSubmit={canSubmitNo}
+            //   showRegisterLink={isUserRegistered && !location.state?.role}
+            //   t={t}
+            //   onAadharSelect={selectAadharNumber}
+            //   aadharNumber={params.aadharNumber || ""}
+            //   onAadharChange={handleAadharChange}
+            // />
+            <SelectLoginPage
               onSelect={selectMobileNumber}
               config={stepItems[0]}
               mobileNumber={params.mobileNumber || ""}
@@ -270,6 +345,12 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
               canSubmit={canSubmitNo}
               showRegisterLink={isUserRegistered && !location.state?.role}
               t={t}
+              onAadharSelect={selectAadharNumber}
+              aadharNumber={params.aadharNumber || ""}
+              onAadharChange={handleAadharChange}
+              familyId={params.familyId || ""}
+              onFamilyIdChange={handleFamilyIdChange}
+              onFamilyIdSelect={selectFamilyId}
             />
           }
         />
