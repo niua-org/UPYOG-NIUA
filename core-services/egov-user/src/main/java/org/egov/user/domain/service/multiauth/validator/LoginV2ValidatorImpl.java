@@ -54,19 +54,19 @@ public class LoginV2ValidatorImpl implements LoginV2Validator {
 
     private void validateChannelSpecificRequirements(LoginV2Request request, AuthType authType) {
         switch (authType) {
-            case MOBILE:
+            case MOBILE_NUMBER:
                 if (StringUtils.isBlank(request.getMobileNumber())) {
-                    log.error("[LOGIN-V2-VALIDATOR] Validation failed: mobileNumber required for MOBILE auth");
+                    log.error("[LOGIN-V2-VALIDATOR] Validation failed: mobileNumber required for MOBILE_NUMBER auth");
                     throw new CustomException(UserConstants.ERROR_INVALID_MOBILE_NUMBER, UserConstants.MSG_MOBILE_AUTH_MOBILE_REQUIRED);
                 }
                 break;
 
-            case AADHAAR:
+            case AADHAAR_NUMBER:
                 boolean hasAadhaarIdentifier = StringUtils.isNotBlank(request.getAadhaarNumber())
                         || StringUtils.isNotBlank(request.getTxnId())
                         || StringUtils.isNotBlank(request.getReferenceId());
                 if (!hasAadhaarIdentifier) {
-                    log.error("[LOGIN-V2-VALIDATOR] Validation failed: Aadhaar identifier required for AADHAAR auth");
+                    log.error("[LOGIN-V2-VALIDATOR] Validation failed: Aadhaar identifier required for AADHAAR_NUMBER auth");
                     throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_IDENTIFIER,
                             UserConstants.MSG_AADHAAR_IDENTIFIER_REQUIRED);
                 }

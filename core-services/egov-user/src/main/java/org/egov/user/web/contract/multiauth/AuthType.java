@@ -8,8 +8,8 @@ import org.apache.commons.lang3.StringUtils;
  * Supported authentication types for the loginv2 multi-auth endpoint.
  *
  * <ul>
- *   <li>{@link #MOBILE}: Standard OTP-based login via citizen mobile number</li>
- *   <li>{@link #AADHAAR}: e-KYC identity verification via UIDAI Aadhaar gateway OTP</li>
+ *   <li>{@link #MOBILE_NUMBER}: Standard OTP-based login via citizen mobile number</li>
+ *   <li>{@link #AADHAAR_NUMBER}: e-KYC identity verification via UIDAI Aadhaar gateway OTP</li>
  *   <li>{@link #FAMILY_ID}: Household relationship-based login via Family ID & member OTP</li>
  * </ul>
  *
@@ -17,8 +17,8 @@ import org.apache.commons.lang3.StringUtils;
  * @since 1.0.0
  */
 public enum AuthType {
-    MOBILE("MOBILE"),
-    AADHAAR("AADHAAR"),
+    MOBILE_NUMBER("MOBILE_NUMBER"),
+    AADHAAR_NUMBER("AADHAAR_NUMBER"),
     FAMILY_ID("FAMILY_ID");
 
     private final String value;
@@ -57,10 +57,15 @@ public enum AuthType {
         if (text.equalsIgnoreCase("family") || text.equalsIgnoreCase("familyId") || text.equalsIgnoreCase("state_family") || text.equalsIgnoreCase("stateFamily")) {
             return FAMILY_ID;
         }
-        if (text.equalsIgnoreCase("phone")) {
-            return MOBILE;
+        if (text.equalsIgnoreCase("phone") || text.equalsIgnoreCase("mobile") || text.equalsIgnoreCase("mobileNumber")) {
+            return MOBILE_NUMBER;
         }
-        throw new IllegalArgumentException("Unsupported AuthType: " + text + ". Expected MOBILE, AADHAAR, or FAMILY_ID.");
+        if (text.equalsIgnoreCase("aadhaar") || text.equalsIgnoreCase("aadhar")
+                || text.equalsIgnoreCase("aadhaarNumber") || text.equalsIgnoreCase("aadharNumber")
+                || text.equalsIgnoreCase("aadhar_number")) {
+            return AADHAAR_NUMBER;
+        }
+        throw new IllegalArgumentException("Unsupported AuthType: " + text + ". Expected MOBILE_NUMBER, AADHAAR_NUMBER, or FAMILY_ID.");
     }
 
     /**

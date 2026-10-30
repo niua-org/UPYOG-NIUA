@@ -7,6 +7,7 @@ import org.egov.user.domain.service.multiauth.strategy.AuthenticatedUserResult;
 import org.egov.user.domain.service.multiauth.strategy.MultiAuthStrategy;
 import org.egov.user.domain.service.multiauth.validator.LoginV2Validator;
 import org.egov.user.persistence.repository.UserRepository;
+import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Request;
 import org.egov.user.web.contract.multiauth.LoginV2Response;
 import org.egov.user.web.contract.multiauth.UserAccountSummary;
@@ -109,7 +110,7 @@ public class LoginV2Service {
                 authResult.getUser().getId(), authResult.isNewUser(), authResult.getAuthType());
 
         // 3.5 Update and persist last login method
-        String loginMethod = authResult.getAuthType() != null ? authResult.getAuthType().name() : "MOBILE";
+        String loginMethod = authResult.getAuthType() != null ? authResult.getAuthType().name() : AuthType.MOBILE_NUMBER.name();
         authResult.getUser().setLastLoginMethod(loginMethod);
         if (authResult.getUser().getId() != null) {
             userRepository.updateLastLoginMethod(authResult.getUser().getId(), loginMethod);

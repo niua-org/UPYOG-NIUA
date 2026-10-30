@@ -44,6 +44,18 @@ public class CommonUtils {
     }
 
 
+    public static boolean isCustomAsyncUri(String requestPath, List<String> configuredUris) {
+        if (requestPath == null || configuredUris == null || configuredUris.isEmpty()) {
+            return false;
+        }
+        for (String configuredUri : configuredUris) {
+            if (configuredUri != null && requestPath.equals(configuredUri.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static String getRequestContentType(ServerHttpRequest serverHttpRequest) {
         List<String> contentTypeHeaders = serverHttpRequest.getHeaders().get(HttpHeaders.CONTENT_TYPE);
 
