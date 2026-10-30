@@ -398,6 +398,22 @@ export const resolveTlFinancialYear = (fydata) => {
   return computed;
 };
 
+/**
+ * First trade-license financial year that starts after `validTo`.
+ * Renewal is rejected when validFrom is not later than the previous
+ * license's validTo, so the next year cannot be derived from the
+ * financial-year label alone.
+ */
+export const nextFinancialYearAfter = (validTo, fy = []) => {
+  const end = Number(validTo);
+  if (!Number.isFinite(end)) return null;
+  const years = (fy || [])
+    .filter((year) => year?.code && year.startingDate != null && year.endingDate != null)
+    .slice()
+    .sort((a, b) => Number(a.startingDate) - Number(b.startingDate));
+  return years.find((year) => Number(year.startingDate) > end) || null;
+};
+
 const localityCodeOf = (value) => {
   if (value == null || value === "") return null;
   if (typeof value === "string") return value;
@@ -583,6 +599,56 @@ export const getwfdocuments = (data) => {
   return wfdoc;
 };
 
+const PROOF_TYPES = ["OWNERPHOTO", "OWNERIDPROOF", "OWNERSHIPPROOF"];
+
+const proofTypeOf = (documentType) => {
+  const type = String(documentType || "").toUpperCase();
+  return PROOF_TYPES.find((token) => type.includes(token)) || "";
+};
+
+/**
+ * One active file per proof. A renewal license can already hold the original
+ * three documents plus a replaced copy of each; the application only accepts
+ * the three current attachments.
+ */
+const oneActiveProofEach = (docs) => {
+  const chosen = [];
+  const seen = new Set();
+  (Array.isArray(docs) ? docs : []).forEach((doc) => {
+    if (!doc || doc.active === false || doc.active === "false") return;
+    const documentType = proofTypeOf(doc.documentType);
+    const fileStoreId = uploadFileId(doc);
+    if (!documentType || !fileStoreId || seen.has(documentType)) return;
+    seen.add(documentType);
+    chosen.push({
+      fileName: doc.fileName || doc.name || documentType,
+      fileStoreId,
+      documentType,
+      tenantId: doc.tenantId,
+      active: true,
+    });
+  });
+  return chosen;
+};
+
+/**
+ * Renewal carries the three proofs the citizen confirmed. It must not also
+ * resend the previous license's copies, or the update stores six documents.
+ */
+const renewalProofDocuments = (datafromflow) => {
+  const uploaded = getwfdocuments(datafromflow);
+  if (uploaded.length) return uploaded;
+  return oneActiveProofEach(datafromflow?.tradeLicenseDetail?.applicationDocuments);
+};
+
+const ownersWithoutDocuments = (owners) =>
+  (Array.isArray(owners) ? owners : []).map((owner) => {
+    if (!owner || typeof owner !== "object") return owner;
+    const rest = { ...owner };
+    delete rest.documents;
+    return rest;
+  });
+
 export const getEditTradeDocumentUpdate = (data) => {
   let updateddocuments=[];
   let doc = data ? data.owners.documents : [];
@@ -702,12 +768,16 @@ export const convertToUpdateTrade = (data = {}, datafromflow, tenantId) => {
   const savedWfDocs = formdata1.Licenses[0].wfDocuments;
   const savedHaveFiles =
     Array.isArray(savedDocs) && savedDocs.some((doc) => uploadFileId(doc));
-  formdata1.Licenses[0].wfDocuments = hasDocs(savedWfDocs) ? savedWfDocs : uploadedDocs;
-  formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments = !isEdit
-    ? savedHaveFiles
+  if (isEdit) {
+    const proofs = renewalProofDocuments(datafromflow);
+    formdata1.Licenses[0].wfDocuments = proofs;
+    formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments = proofs;
+  } else {
+    formdata1.Licenses[0].wfDocuments = hasDocs(savedWfDocs) ? savedWfDocs : uploadedDocs;
+    formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments = savedHaveFiles
       ? savedDocs
-      : uploadedDocs
-    : getEditRenewTradeDocumentUpdate(data?.Licenses[0], datafromflow);
+      : uploadedDocs;
+  }
   return formdata1;
 }
 
@@ -755,10 +825,19 @@ export const stringToBoolean = (value) => {
 export const convertToEditTrade = (data, fy = []) => {
  
  // const nextFinancialYearForRenewal = fy?.filter(item => item?.startingDate === currrentFYending)?.[0]?.code;
+  const knownEnds = [Number(data?.validTo), Number(data?.renewalValidTo)].filter(
+    (end) => Number.isFinite(end) && end > 0
+  );
+  const previousValidTo = knownEnds.length ? Math.max(...knownEnds) : null;
+  const nextYear = nextFinancialYearAfter(previousValidTo, fy);
   let financialYear = data?.financialYear;
   const financialYearDate = financialYear?.split('-')[1];
-  const finalFinancialYear = `20${Number(financialYearDate)}-${Number(financialYearDate)+1}`
-  const currrentFYending = fy?.filter(item => item?.code === finalFinancialYear);
+  const incrementedYear = financialYearDate
+    ? `20${Number(financialYearDate)}-${Number(financialYearDate) + 1}`
+    : "";
+  const finalFinancialYear = nextYear?.code || incrementedYear || "2022-23";
+  const matchedYear =
+    nextYear || (fy || []).find((year) => year?.code === finalFinancialYear);
   let isDirectrenewal = stringToBoolean(sessionStorage.getItem("isDirectRenewal"));
   let isSameAsPropertyOwner = sessionStorage.getItem("isSameAsPropertyOwner"); 
   let formdata = {
@@ -776,19 +855,23 @@ export const convertToEditTrade = (data, fy = []) => {
         applicationDate: data?.applicationDate,
         commencementDate: data?.commencementDate,
         issuedDate: data?.issuedDate,
-        financialYear: finalFinancialYear || "2022-23",
-        validFrom: currrentFYending[0].startingDate ||data?.validFrom,
-        validTo: currrentFYending[0].endingDate || data?.validTo,
+        financialYear: finalFinancialYear,
+        validFrom: matchedYear?.startingDate || data?.validFrom,
+        validTo: matchedYear?.endingDate || data?.validTo,
         action: "INITIATE",
-        wfDocuments: data?.wfDocuments,
+        // Documents are attached on APPLY. Sending the previous license's
+        // files here inserts them, and APPLY then inserts the three uploads.
+        wfDocuments: null,
         status: data?.status,
         tradeLicenseDetail: {
           address: data.tradeLicenseDetail.address,
-          applicationDocuments: data.tradeLicenseDetail.applicationDocuments,
+          applicationDocuments: null,
           noOfEmployees: data?.TradeDetails?.NumberOfEmployees || null,
           operationalArea : data?.TradeDetails?.OperationalSqFtArea || null,
           accessories: isDirectrenewal ? data.tradeLicenseDetail.accessories : gettradeupdateaccessories(data)?.filter((ob) => ob?.active !== false),
-          owners: isDirectrenewal ? data.tradeLicenseDetail.owners : gettradeownerarray(data),
+          owners: ownersWithoutDocuments(
+            isDirectrenewal ? data.tradeLicenseDetail.owners : gettradeownerarray(data)
+          ),
           structureType: isDirectrenewal ? data.tradeLicenseDetail.structureType : (data?.TradeDetails?.VehicleType ? data?.TradeDetails?.VehicleType.code : data?.TradeDetails?.BuildingType.code),
           subOwnerShipCategory: data?.ownershipCategory?.code.includes("INSTITUTIONAL") ? data?.owners?.owners?.[0]?.subOwnerShipCategory.code : data?.ownershipCategory?.code,
           tradeUnits: gettradeupdateunits(data),
@@ -934,20 +1017,39 @@ export const isPropertyPartiallyrented = (value = "") => {
 export const ispropertyunoccupied = (value = "") => {
   return checkForNotNull(value) && value.includes("YES") ? true : false;
 };
+const pickFullSizeFileUrl = (downloadLink = "") => {
+  const differentFormats = String(downloadLink || "")
+    .split(",")
+    .map((link) => link.trim())
+    .filter(Boolean);
+  const fullSize = differentFormats.find(
+    (link) => !link.includes("large") && !link.includes("medium") && !link.includes("small")
+  );
+  return fullSize || differentFormats[0] || "";
+};
+
 /*   method to get required format from fielstore url*/
 export const pdfDownloadLink = (documents = {}, fileStoreId = "", format = "") => {
-  /* Need to enhance this util to return required format*/
+  if (!fileStoreId || documents == null) return "";
+  const source =
+    documents?.data &&
+    typeof documents.data === "object" &&
+    (documents.data.fileStoreIds || documents.data[fileStoreId])
+      ? documents.data
+      : documents;
 
-  let downloadLink = documents[fileStoreId] || "";
-  let differentFormats = downloadLink?.split(",") || [];
-  let fileURL = "";
-  differentFormats.length > 0 &&
-    differentFormats?.map((link) => {
-      if (!link.includes("large") && !link.includes("medium") && !link.includes("small")) {
-        fileURL = link;
-      }
-    });
-  return fileURL;
+  const mapped = source?.[fileStoreId];
+  if (typeof mapped === "string" && mapped) return pickFullSizeFileUrl(mapped);
+
+  // /filestore/v1/files/url returns { fileStoreIds: [{ id, url }] }, not a map.
+  const list = Array.isArray(source)
+    ? source
+    : source?.fileStoreIds || source?.files || [];
+  if (!Array.isArray(list)) return "";
+  const match = list.find(
+    (item) => (item?.id || item?.fileStoreId || item?.filestoreId) === fileStoreId
+  );
+  return pickFullSizeFileUrl(match?.url || "");
 };
 
 /*   method to get filename  from fielstore url*/

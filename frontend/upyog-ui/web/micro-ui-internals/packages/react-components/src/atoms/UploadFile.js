@@ -174,6 +174,9 @@ const UploadFile = (props) => {
   };
 
   const handleEmpty = () => {
+    // A confirmed upload lives on props.file. Clearing the input must not
+    // delete that stored file when the dialog is reopened or the node remounts.
+    if (props.file || !inpRef.current) return;
     if(inpRef.current.files.length <= 0 && prevSate !== null)
     { inpRef.current.value = "";
       props.onDelete();

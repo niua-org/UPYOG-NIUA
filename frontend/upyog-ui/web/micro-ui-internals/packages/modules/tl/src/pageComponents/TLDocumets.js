@@ -13,7 +13,7 @@ const PDFSvg = ({
 
 const fileId = (doc) => doc?.fileStoreId || doc?.filestoreId || doc?.documentuuid || "";
 
-const collectDocuments = (value = {}) => {
+const collectInto = () => {
   const documents = [];
   const seen = new Set();
   const push = (doc, fallbackType) => {
@@ -27,27 +27,53 @@ const collectDocuments = (value = {}) => {
         : { ...doc, fileStoreId: id, documentType: doc.documentType || fallbackType || "" }
     );
   };
+  return { documents, push };
+};
 
-  const applicationDocs = value?.tradeLicenseDetail?.applicationDocuments;
-  if (Array.isArray(applicationDocs)) applicationDocs.forEach((doc) => push(doc));
-  if (Array.isArray(value?.workflowDocs)) value.workflowDocs.forEach((doc) => push(doc));
-
+const collectProofUploads = (value = {}) => {
+  const { documents, push } = collectInto();
   const sessionDocs = value?.owners?.documents;
   if (sessionDocs && typeof sessionDocs === "object" && !Array.isArray(sessionDocs)) {
     push(sessionDocs.ProofOfIdentity, "OWNERIDPROOF");
     push(sessionDocs.ProofOfOwnership, "OWNERSHIPPROOF");
     push(sessionDocs.OwnerPhotoProof, "OWNERPHOTO");
   }
+  // Accordion uploads live on the flat form until the check-page adapter runs.
+  [value, value?.newApplication?.Licenses?.[0], value?.apply?.Licenses?.[0]].forEach(
+    (flat) => {
+      if (!flat || typeof flat !== "object") return;
+      push(flat.proofOfIdentity || flat.ProofOfIdentity, "OWNERIDPROOF");
+      push(flat.proofOfOwnership || flat.ProofOfOwnership, "OWNERSHIPPROOF");
+      push(flat.ownerPhotoProof || flat.OwnerPhotoProof, "OWNERPHOTO");
+    }
+  );
+  return documents;
+};
 
-  const owners = value?.tradeLicenseDetail?.owners;
-  if (Array.isArray(owners)) {
-    owners.forEach((owner) => {
-      if (Array.isArray(owner?.documents)) owner.documents.forEach((doc) => push(doc));
-    });
+const collectDocuments = (value = {}) => {
+  // Renewal keeps the previous license's three documents on the session and
+  // also the three attachments just confirmed. Show the attachments only.
+  const proofs = collectProofUploads(value);
+  if (proofs.length) return proofs;
+
+  const { documents, push } = collectInto();
+  const applicationDocs = value?.tradeLicenseDetail?.applicationDocuments;
+  if (Array.isArray(applicationDocs)) applicationDocs.forEach((doc) => push(doc));
+  if (Array.isArray(value?.workflowDocs)) value.workflowDocs.forEach((doc) => push(doc));
+
+  if (!documents.length) {
+    const owners = value?.tradeLicenseDetail?.owners;
+    if (Array.isArray(owners)) {
+      owners.forEach((owner) => {
+        if (Array.isArray(owner?.documents)) owner.documents.forEach((doc) => push(doc));
+      });
+    }
   }
 
   return documents;
 };
+
+export const hasUploadedTlDocuments = (value) => collectDocuments(value).length > 0;
 
 const documentLabel = (document, t, isWorkflow) => {
   const type = document?.documentType || "";

@@ -34,6 +34,13 @@ const isEmptyValue = (value, type) => {
     if (value && typeof value === "object") return !optionCode(value);
     return value === undefined || value === null || String(value).trim() === "";
   }
+  // A chosen file is attached only after filestore returns an id.
+  // An empty object or a File that never uploaded must stay required.
+  if (type === "file") {
+    if (value == null || value === "") return true;
+    if (typeof value === "string") return value.trim() === "";
+    return !(value.fileStoreId || value.filestoreId || value.documentuuid);
+  }
   return value === undefined || value === null || String(value).trim() === "";
 };
 

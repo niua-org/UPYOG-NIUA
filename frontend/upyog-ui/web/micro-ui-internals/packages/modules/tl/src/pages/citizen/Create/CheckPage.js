@@ -18,7 +18,7 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams, useLocation } from "react-router-dom";
-import TLDocument from "../../../pageComponents/TLDocumets";
+import TLDocument, { hasUploadedTlDocuments } from "../../../pageComponents/TLDocumets";
 import Timeline from "../../../components/TLTimeline";
 
 const getPath = (path, params) => {
@@ -240,7 +240,7 @@ const WrapCheckPage = ({
         }}>{t("TL_COMMON_DOCS")}</CardHeader>
         <LinkButton label={<EditIcon className="tl-check-page-btn-relative-mt-neg" />} onClick={() => goEdit("proof-of-identity")} className="tl-check-page-btn" />
         <div>
-          {owners?.documents?.["OwnerPhotoProof"] || owners?.documents?.["ProofOfIdentity"] || owners?.documents?.["ProofOfOwnership"] ? <TLDocument value={value}></TLDocument> : <StatusTable>
+          {hasUploadedTlDocuments(value) ? <TLDocument value={value}></TLDocument> : <StatusTable>
             <Row className="border-none" text={t("TL_NO_DOCUMENTS_MSG")} />
           </StatusTable>}
         </div>

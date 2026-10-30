@@ -24,6 +24,15 @@ const collectFileIds = (value = {}) => {
     Object.values(sessionDocs).forEach(push);
   }
 
+  [value, value?.newApplication?.Licenses?.[0], value?.apply?.Licenses?.[0]].forEach(
+    (flat) => {
+      if (!flat || typeof flat !== "object") return;
+      push(flat.proofOfIdentity || flat.ProofOfIdentity);
+      push(flat.proofOfOwnership || flat.ProofOfOwnership);
+      push(flat.ownerPhotoProof || flat.OwnerPhotoProof);
+    }
+  );
+
   const owners = value?.tradeLicenseDetail?.owners;
   if (Array.isArray(owners)) {
     owners.forEach((owner) => {

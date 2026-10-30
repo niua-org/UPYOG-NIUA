@@ -250,8 +250,17 @@ const RenewTrade = ({ parentRoute }) => {
     if (editProperty) loaded.isEditProperty = true;
     sessionStorage.setItem("tradeInitialObject", JSON.stringify({ ...loaded }));
     const tradeEditDetails = getTradeEditDetails(loaded, t);
+    const renewalValidTo = (data?.Licenses || []).reduce((latest, license) => {
+      const end = Number(license?.validTo);
+      return Number.isFinite(end) && end > latest ? end : latest;
+    }, 0);
     setParams((prev) => {
-      const next = { ...(prev || {}), ...tradeEditDetails, __dynamicForm: true };
+      const next = {
+        ...(prev || {}),
+        ...tradeEditDetails,
+        __dynamicForm: true,
+        renewalValidTo: renewalValidTo || loaded.validTo,
+      };
       if (window.location.href.includes("property-details")) {
         next.owners = {
           ...prev?.owners,

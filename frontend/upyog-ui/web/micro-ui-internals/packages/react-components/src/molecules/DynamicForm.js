@@ -1201,9 +1201,12 @@ const DynamicForm = ({
 
   /**
    * Uploads a file via Digit.UploadServices.Filestorage and stores
-   * { filestoreId, documentuuid, documentType, fileName } on the field.
-   * Rejects files ≥ 5MB with a toast. Module defaults to "ESTATE";
-   * override with routeConfig.uploadModule.
+   * { fileStoreId, filestoreId, documentuuid, documentType, fileName } on the field.
+   * Size limit is validation.maxSizeMB, otherwise 5MB.
+   * Module defaults to "ESTATE"; override with routeConfig.uploadModule.
+   * TL files are stored on the state tenant, which is the tenant the summary
+   * page uses when it asks filestore for the download URL. property-upload is
+   * included because the older citizen proof screens still use that module.
    *
    * @param {string} fieldName - File field name.
    * @param {File}   file      - Browser File from UploadFile.
@@ -1212,31 +1215,44 @@ const DynamicForm = ({
   const handleFileUpload = useCallback(
     async (fieldName, file) => {
       if (!file) return;
-      if (file.size >= 5242880) {
+      const fieldConfig = flatFields.find((fc) => fc?.field?.name === fieldName);
+      const maxMb = Number(fieldConfig?.validation?.maxSizeMB);
+      const maxBytes =
+        Number.isFinite(maxMb) && maxMb > 0 ? maxMb * 1024 * 1024 : 5242880;
+      if (file.size >= maxBytes) {
         setToast({ message: t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED"), error: true });
         return;
       }
+      const moduleName = routeConfig.uploadModule || "ESTATE";
+      const stateId = Digit.ULBService.getStateId();
+      const uploadTenant =
+        (moduleName === "TL" || moduleName === "property-upload") && stateId
+          ? stateId
+          : tenantId || stateId;
       try {
         const response = await Digit.UploadServices.Filestorage(
-          routeConfig.uploadModule || "ESTATE",
+          moduleName,
           file,
-          tenantId
+          uploadTenant
         );
         const id = response?.data?.files?.[0]?.fileStoreId;
-        if (id) {
-          handleChange(fieldName, {
-            filestoreId: id,
-            documentuuid: id,
-            documentType: fieldName,
-            fileName: file.name || "",
-          });
+        if (!id) {
+          setToast({ message: t("CS_FILE_UPLOAD_ERROR"), error: true });
+          return;
         }
+        handleChange(fieldName, {
+          fileStoreId: id,
+          filestoreId: id,
+          documentuuid: id,
+          documentType: fieldConfig?.field?.documentType || fieldName,
+          fileName: file.name || "",
+        });
       } catch (err) {
         console.error("File upload failed:", err?.response?.data || err);
         setToast({ message: t("CS_FILE_UPLOAD_ERROR"), error: true });
       }
     },
-    [routeConfig.uploadModule, tenantId, t, handleChange]
+    [flatFields, routeConfig.uploadModule, tenantId, t, handleChange]
   );
 
   /**
