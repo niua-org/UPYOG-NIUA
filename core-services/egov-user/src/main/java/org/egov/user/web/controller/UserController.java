@@ -6,13 +6,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
+import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.*;
 
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDetail;
 import org.egov.user.domain.model.UserSearchCriteria;
+import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.service.DigiLockerService;
 import org.egov.user.domain.service.TokenService;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.UserDetailResponseV2;
 import org.egov.user.web.contract.*;
 import org.egov.user.web.contract.auth.CustomUserDetails;
@@ -27,6 +32,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Date;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,35 +50,39 @@ public class UserController {
 
     private UserService userService;
     private TokenService tokenService;
+    private DigiLockerService digiLockerService;
+    private UserConfiguration userConfiguration;
 
-    @Value("${mobile.number.validation.workaround.enabled}")
-    private String mobileValidationWorkaroundEnabled;
-
-    @Value("${otp.validation.register.mandatory}")
-    private boolean IsValidationMandatory;
-
-    @Value("${citizen.registration.withlogin.enabled}")
-    private boolean isRegWithLoginEnabled;
-
-    @Value("${egov.user.search.default.size}")
-    private Integer defaultSearchSize;
-
-    @Value("${digilocker.register}")
-    private boolean isDigiLockerRegistration;
-
-    @Value("${digilocker.search}")
-    private boolean isDigiLockerSearch;
-
-    @Value("${requester.service.host}")
-    private String requesterServiceHost;
-    
-    @Value("${requester.service.endpoint}")
-    private String requesterServiceEndpoint;
-    
     @Autowired
-    public UserController(UserService userService, TokenService tokenService) {
+    public UserController(UserService userService, TokenService tokenService,
+                          @Autowired(required = false) DigiLockerService digiLockerService,
+                          @Autowired(required = false) UserConfiguration userConfiguration) {
         this.userService = userService;
         this.tokenService = tokenService;
+        this.digiLockerService = digiLockerService;
+        this.userConfiguration = userConfiguration;
+    }
+
+    public UserController(UserService userService, TokenService tokenService) {
+        this(userService, tokenService, null, null);
+    }
+
+    private boolean isValidationMandatory() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getOtpValidationRegisterMandatory());
+    }
+
+    private boolean isRegWithLoginEnabled() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenRegistrationWithLoginEnabled());
+    }
+
+    private int getDefaultSearchSize() {
+        return userConfiguration != null && userConfiguration.getDefaultSearchSize() != null
+                ? userConfiguration.getDefaultSearchSize() : 10;
+    }
+
+    private String getMobileValidationWorkaroundEnabled() {
+        return userConfiguration != null && userConfiguration.getMobileValidationWorkaroundEnabled() != null
+                ? userConfiguration.getMobileValidationWorkaroundEnabled() : "false";
     }
 
     /**
@@ -85,8 +96,8 @@ public class UserController {
     public Object createCitizen(@RequestBody @Valid CreateUserRequest createUserRequest) {
         log.info("Received Citizen Registration Request  " + createUserRequest);
         User user = createUserRequest.toDomain(true);
-        user.setOtpValidationMandatory(IsValidationMandatory);
-        if (isRegWithLoginEnabled) {
+        user.setOtpValidationMandatory(isValidationMandatory());
+        if (isRegWithLoginEnabled()) {
             Object object = userService.registerWithLogin(user, createUserRequest.getRequestInfo());
             return new ResponseEntity<>(object, HttpStatus.OK);
         }
@@ -213,6 +224,17 @@ public class UserController {
     @PostMapping("/users/_updatenovalidate")
     public UpdateResponse updateUserWithoutValidation(@RequestBody final @Valid CreateUserRequest createUserRequest,
                                                       @RequestHeader HttpHeaders headers) {
+        if (createUserRequest != null && userService.isCallerCitizen(createUserRequest.getRequestInfo())) {
+            String callerUuid = (createUserRequest.getRequestInfo() != null && createUserRequest.getRequestInfo().getUserInfo() != null)
+                    ? createUserRequest.getRequestInfo().getUserInfo().getUuid() : "unknown";
+            log.error("[USER-CONTROLLER] Unauthorized access: CITIZEN users cannot call /users/_updatenovalidate: uuid={}", callerUuid);
+            throw new CustomException("UNAUTHORIZED_ACCESS", "CITIZEN users are not allowed to use /users/_updatenovalidate");
+        }
+        if (createUserRequest != null && createUserRequest.getUser() != null
+                && UserType.CITIZEN.equals(createUserRequest.getUser().getType())) {
+            log.error("[USER-CONTROLLER] Invalid update: target user type cannot be CITIZEN in /users/_updatenovalidate");
+            throw new CustomException("INVALID_USER_TYPE", "Cannot update CITIZEN user accounts via /users/_updatenovalidate");
+        }
         User user = createUserRequest.toDomain(false);
         user.setMobileValidationMandatory(isMobileValidationRequired(headers));
         final User updatedUser = userService.updateWithoutOtpValidation(user, createUserRequest.getRequestInfo());
@@ -225,67 +247,16 @@ public class UserController {
     // Legacy endpoint migrated to ProfileController.java to enforce source-based field locking and proper auditing.
 
 
+    /**
+     * Authenticates and registers/updates a citizen profile via DigiLocker access token.
+     *
+     * @param createUserRequest request payload containing DigiLocker access token and citizen attributes
+     * @param headers           HTTP headers from incoming request
+     * @return response containing citizen user details and generated access tokens
+     */
     @PostMapping("/digilocker/oauth/token")
     public Object authDigiLocker(@RequestBody @Valid CreateUserRequest createUserRequest, @RequestHeader HttpHeaders headers) {
-        RestTemplate restTemplate = new RestTemplate();
-       // String url = "http://localhost:8270/requester-services-dx/user/details";
-        
-        UserSearchRequest request = new UserSearchRequest();
-
-        TokenReq tokenReq = TokenReq.builder()
-                .authToken(createUserRequest.getUser().getAccess_token())
-                .build();
-
-        TokenRequest tokenRequest = TokenRequest.builder()
-                .requestInfo(createUserRequest.getRequestInfo())
-                .tokenReq(tokenReq)
-                .build();
-
-        HttpEntity<TokenRequest> entity = new HttpEntity<>(tokenRequest, headers);
-
-        ResponseEntity<String> validationApiResponse;
-        try {
-        	validationApiResponse = restTemplate.exchange(requesterServiceHost + requesterServiceEndpoint , HttpMethod.POST, entity, String.class);
-            //validationApiResponse = restTemplate.exchange(url, HttpMethod.POST, entity, Strings.class);
-        } catch (HttpClientErrorException e) {
-            throw new RuntimeException("Validation failed: " + e.getResponseBodyAsString(), e);
-        }
-
-        String validationApiResponseBody = validationApiResponse.getBody();
-        JSONObject jsonResponse = new JSONObject(validationApiResponseBody);
-        JSONObject userRes = jsonResponse.getJSONObject("UserRes");
-        String validationMobileNumber = userRes.getString("mobile");
-        log.info("validationMobileNumber"+validationMobileNumber);
-        log.info("user Mobile Number is"+(createUserRequest.getUser().getMobileNumber()));
-        
-        
-
-        if (validationMobileNumber.equalsIgnoreCase(createUserRequest.getUser().getMobileNumber())) {
-            log.info("entering IF condition");
-
-            request.setUserName(createUserRequest.getUser().getMobileNumber());
-            request.setTenantId(createUserRequest.getUser().getTenantId());
-
-            List<UserSearchResponseContent> userContracts = searchUsers(request, headers).getUserSearchResponseContent();
-            if (!userContracts.isEmpty()) {
-
-                User existingUser = userContracts.get(0).toUser();
-                User user = new User().toUser(existingUser);
-                user.setDigilockerid(createUserRequest.getUser().getDigilockerid());
-                user.setDigilockerRegistration(isDigiLockerRegistration);
-                Object updatedUser = userService.updateDigilockerID(user, existingUser, createUserRequest.getRequestInfo());
-                return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-
-            } else {
-                User user = createUserRequest.toDomain(true);
-                user.setUsername(user.getMobileNumber());
-                user.setDigilockerRegistration(isDigiLockerRegistration);
-                user.setDigilockerid(createUserRequest.getUser().getDigilockerid());
-                Object createdUser = userService.registerWithLogin(user, createUserRequest.getRequestInfo());
-                return new ResponseEntity<>(createdUser, HttpStatus.OK);
-            }
-        }
-        return new ResponseEntity<>("Mobile number validation failed", HttpStatus.BAD_REQUEST);
+        return digiLockerService.authDigiLocker(createUserRequest, headers);
     }
 
 
@@ -311,9 +282,9 @@ public class UserController {
         log.info("headers"+headers);
 
         if (!isInterServiceCall(headers)) {
-            if ((isEmpty(searchCriteria.getId()) && isEmpty(searchCriteria.getUuid())) && (searchCriteria.getLimit() > defaultSearchSize
+            if ((isEmpty(searchCriteria.getId()) && isEmpty(searchCriteria.getUuid())) && (searchCriteria.getLimit() > getDefaultSearchSize()
                     || searchCriteria.getLimit() == 0))
-                searchCriteria.setLimit(defaultSearchSize);
+                searchCriteria.setLimit(getDefaultSearchSize());
         }
 
         List<User> userModels = userService.searchUsers(searchCriteria, isInterServiceCall(headers), request.getRequestInfo());
@@ -325,7 +296,8 @@ public class UserController {
 
     private boolean isMobileValidationRequired(HttpHeaders headers) {
         boolean x_pass_through_gateway = !isInterServiceCall(headers);
-        if (mobileValidationWorkaroundEnabled != null && Boolean.valueOf(mobileValidationWorkaroundEnabled)
+        String workaroundEnabled = getMobileValidationWorkaroundEnabled();
+        if (workaroundEnabled != null && Boolean.valueOf(workaroundEnabled)
                 && !x_pass_through_gateway) {
             return false;
         }
@@ -462,8 +434,8 @@ public class UserController {
 
         if (!isInterServiceCall(headers)) {
             if ((isEmpty(searchCriteria.getId()) && isEmpty(searchCriteria.getUuid())) &&
-                    (searchCriteria.getLimit() > defaultSearchSize || searchCriteria.getLimit() == 0)) {
-                searchCriteria.setLimit(defaultSearchSize);
+                    (searchCriteria.getLimit() > getDefaultSearchSize() || searchCriteria.getLimit() == 0)) {
+                searchCriteria.setLimit(getDefaultSearchSize());
             }
         }
 

@@ -160,6 +160,7 @@ public class AuditRepository {
         auditInputs.put("spouse_name", oldUser.getSpouseName());
         auditInputs.put("is_identity_verified", oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false);
         auditInputs.put("identity_verified_date", oldUser.getIdentityVerifiedDate());
+        auditInputs.put("identity_verified_source", oldUser.getIdentityVerifiedSource());
         auditInputs.put("last_resync_date", oldUser.getLastResyncDate());
         auditInputs.put("editted_count", oldUser.getEdittedCount() != null ? oldUser.getEdittedCount() : 0);
         auditInputs.put("last_login_method", oldUser.getLastLoginMethod());

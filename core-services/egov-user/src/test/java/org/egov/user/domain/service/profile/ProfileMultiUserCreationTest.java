@@ -120,7 +120,8 @@ public class ProfileMultiUserCreationTest {
                 .dob(fatherDob)
                 .aadhaarNumber("XXXXXXXX1111")
                 .gender(Gender.MALE)
-                .tenantId("pb")
+                .tenantId("pg")
+                .isIdentityVerified(true)
                 .build();
 
         ProfileCreateRequest sonRequest = buildCreateRequest("Aarav Kumar", "9876543210", sonDob, "XXXXXXXX2222");
@@ -138,7 +139,7 @@ public class ProfileMultiUserCreationTest {
                 .thenReturn(Collections.singletonList(existingFather));
 
         // Mobile is already taken as a username by father
-        when(userRepository.isUserPresent(eq("9876543210"), eq("pb"), eq(UserType.CITIZEN))).thenReturn(true);
+        when(userRepository.isUserPresent(eq("9876543210"), any(), eq(UserType.CITIZEN))).thenReturn(true);
 
         when(encryptionDecryptionUtil.encryptObject(any(User.class), eq("User"), eq(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -207,5 +208,120 @@ public class ProfileMultiUserCreationTest {
         CustomException ex = assertThrows(CustomException.class, () -> profileService.createProfile(duplicateAadhaarRequest));
         assertEquals(UserConstants.ERROR_AADHAAR_ALREADY_LINKED, ex.getCode());
         assertTrue(ex.getMessage().contains("Aadhaar number"));
+    }
+
+    @Test
+    @DisplayName("Should throw UNVERIFIED_CITIZEN_EXISTS when creating an unverified citizen on a mobile that already has an unverified citizen")
+    public void testCreateProfile_WhenSameMobileExistingCitizenUnverified_ThrowsUnverifiedCitizenExists() {
+        Date fatherDob = createDate(1965, 5, 20);
+        Date sonDob = createDate(1995, 10, 15);
+
+        User existingUnverifiedFather = User.builder()
+                .id(101L)
+                .uuid("uuid-father")
+                .username("9876543210")
+                .mobileNumber("9876543210")
+                .name("Ravi Kumar")
+                .dob(fatherDob)
+                .aadhaarNumber("XXXXXXXX1111")
+                .gender(Gender.MALE)
+                .tenantId("pg")
+                .active(true)
+                .isIdentityVerified(false)
+                .build();
+
+        ProfileCreateRequest sonRequest = buildCreateRequest("Aarav Kumar", "9876543210", sonDob, "XXXXXXXX2222");
+        sonRequest.setIsIdentityVerified(false);
+
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq("User"), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenAnswer(invocation -> {
+            UserSearchCriteria crit = invocation.getArgument(0);
+            if (crit.getAadhaarNumber() != null) {
+                return Collections.emptyList();
+            }
+            return Collections.singletonList(existingUnverifiedFather);
+        });
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(Collections.singletonList(existingUnverifiedFather));
+
+        CustomException ex = assertThrows(CustomException.class, () -> profileService.createProfile(sonRequest));
+        assertEquals(UserConstants.ERROR_UNVERIFIED_CITIZEN_EXISTS, ex.getCode());
+        assertTrue(ex.getMessage().contains("unverified identity"));
+    }
+
+    @Test
+    @DisplayName("Should succeed when creating a verified citizen even if an unverified citizen already exists on the same mobile")
+    public void testCreateProfile_WhenSameMobileExistingCitizenUnverified_IncomingVerified_Succeeds() {
+        Date fatherDob = createDate(1965, 5, 20);
+        Date sonDob = createDate(1995, 10, 15);
+
+        User existingUnverifiedFather = User.builder()
+                .id(101L)
+                .uuid("uuid-father")
+                .username("9876543210")
+                .mobileNumber("9876543210")
+                .name("Ravi Kumar")
+                .dob(fatherDob)
+                .aadhaarNumber("XXXXXXXX1111")
+                .gender(Gender.MALE)
+                .tenantId("pg")
+                .active(true)
+                .isIdentityVerified(false)
+                .build();
+
+        ProfileCreateRequest sonRequest = buildCreateRequest("Aarav Kumar", "9876543210", sonDob, "XXXXXXXX2222");
+        sonRequest.setIsIdentityVerified(true);
+
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq("User"), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenAnswer(invocation -> {
+            UserSearchCriteria crit = invocation.getArgument(0);
+            if (crit.getAadhaarNumber() != null) {
+                return Collections.emptyList();
+            }
+            return Collections.singletonList(existingUnverifiedFather);
+        });
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(Collections.singletonList(existingUnverifiedFather));
+
+        when(userRepository.isUserPresent(eq("9876543210"), any(), eq(UserType.CITIZEN))).thenReturn(true);
+        when(encryptionDecryptionUtil.encryptObject(any(User.class), eq("User"), eq(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.create(userCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User created = profileService.createProfile(sonRequest);
+        assertNotNull(created);
+        User captured = userCaptor.getValue();
+        assertEquals(Boolean.TRUE, captured.getIsIdentityVerified());
+    }
+
+    @Test
+    @DisplayName("Should succeed when creating a citizen profile on same mobile where an employee profile exists")
+    public void testCreateProfile_WhenSameMobileEmployeeExists_CitizenCreationSucceeds() {
+        Date sonDob = createDate(1995, 10, 15);
+        ProfileCreateRequest sonRequest = buildCreateRequest("Aarav Kumar", "8011111000", sonDob, "XXXXXXXX2222");
+
+        // When searching for citizens, userRepository.findAll returns empty because only an employee exists in DB
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq("User"), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.emptyList());
+
+        when(userRepository.isUserPresent(eq("8011111000"), any(), eq(UserType.CITIZEN))).thenReturn(false);
+        when(encryptionDecryptionUtil.encryptObject(any(User.class), eq("User"), eq(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.create(userCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User created = profileService.createProfile(sonRequest);
+        assertNotNull(created);
+        User captured = userCaptor.getValue();
+        assertEquals("8011111000", captured.getUsername(), "Username can be the raw mobile since no CITIZEN exists with this username");
+        assertEquals("8011111000", captured.getMobileNumber());
+        assertEquals(UserType.CITIZEN, captured.getType());
+        assertEquals(Boolean.FALSE, captured.getIsIdentityVerified());
     }
 }

@@ -54,6 +54,15 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
     private final UserConfiguration userConfiguration;
     private final Map<String, Integer> invalidOtpAttempts = new ConcurrentHashMap<>();
 
+    /**
+     * Primary constructor injecting repositories, encryption utility, and configuration.
+     *
+     * @param userService              user domain service for provisioning
+     * @param userRepository           user repository for persistence lookups
+     * @param otpRepository            OTP repository for OTP validation
+     * @param encryptionDecryptionUtil utility for encrypted criteria and decryption
+     * @param userConfiguration        application configuration properties
+     */
     @Autowired
     public MobileAuthStrategy(UserService userService,
                               UserRepository userRepository,
@@ -67,6 +76,14 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Constructor for unit tests without configuration properties.
+     *
+     * @param userService              user domain service for provisioning
+     * @param userRepository           user repository for persistence lookups
+     * @param otpRepository            OTP repository for OTP validation
+     * @param encryptionDecryptionUtil utility for encrypted criteria and decryption
+     */
     public MobileAuthStrategy(UserService userService,
                               UserRepository userRepository,
                               OtpRepository otpRepository,
@@ -76,6 +93,76 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
 
     private boolean isFixedOTPEnabled() {
         return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpFixedEnabled());
+    }
+
+    private boolean isMultiAccountSelectionEnabled() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenMultiAccountSelectionEnabled());
+    }
+
+    private User selectPrimaryCitizenUser(List<User> matchedUsers, String mobileNumber) {
+        if (CollectionUtils.isEmpty(matchedUsers)) {
+            return null;
+        }
+        log.info("[MOBILE-AUTH-STRATEGY] Selecting primary citizen user for mobile: {} from {} candidates",
+                maskMobile(mobileNumber), matchedUsers.size());
+
+        // 1. Prioritize active user whose username matches the login mobile number
+        for (User u : matchedUsers) {
+            if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && !Boolean.FALSE.equals(u.getActive())) {
+                log.info("[MOBILE-AUTH-STRATEGY] Selected primary citizen user with matching username: {} (UUID: {})",
+                        u.getUsername(), u.getUuid());
+                return u;
+            }
+        }
+
+        // 2. If user whose username matches mobile number exists but is inactive, enforce inactive error
+        for (User u : matchedUsers) {
+            if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && Boolean.FALSE.equals(u.getActive())) {
+                log.error("[MOBILE-AUTH-STRATEGY] Primary citizen profile (username={}) for mobile {} is inactive",
+                        u.getUsername(), maskMobile(mobileNumber));
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
+        }
+
+        // 3. Fallback: if no user has username == mobileNumber, pick the first active user
+        for (User u : matchedUsers) {
+            if (!Boolean.FALSE.equals(u.getActive())) {
+                log.warn("[MOBILE-AUTH-STRATEGY] No candidate has username matching mobile {}. Falling back to active candidate: {} (UUID: {})",
+                        maskMobile(mobileNumber), u.getUsername(), u.getUuid());
+                return u;
+            }
+        }
+
+        log.error("[MOBILE-AUTH-STRATEGY] All matching citizen accounts for mobile {} are inactive", maskMobile(mobileNumber));
+        throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+    }
+
+    private boolean isUsernameMatchingMobile(String username, String mobileNumber) {
+        if (StringUtils.isBlank(username) || StringUtils.isBlank(mobileNumber)) {
+            return false;
+        }
+        String uTrim = username.trim();
+        String mTrim = mobileNumber.trim();
+        if (uTrim.equalsIgnoreCase(mTrim)) {
+            return true;
+        }
+        String stdMobile = extractStandard10DigitMobile(mTrim);
+        String stdUser = extractStandard10DigitMobile(uTrim);
+        return stdMobile != null && stdUser != null && stdMobile.equals(stdUser) && uTrim.matches("^[0-9+ ]+$");
+    }
+
+    private String extractStandard10DigitMobile(String input) {
+        if (StringUtils.isBlank(input)) {
+            return null;
+        }
+        String digits = input.replaceAll("[^0-9]", "");
+        if (digits.length() == 10) {
+            return digits;
+        }
+        if (digits.length() > 10 && (digits.startsWith("91") || digits.startsWith("0"))) {
+            return digits.substring(digits.length() - 10);
+        }
+        return digits;
     }
 
     private String getFixedOTPPassword() {
@@ -94,11 +181,23 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                 : 3;
     }
 
+    /**
+     * Checks if this strategy supports the given authentication channel type.
+     *
+     * @param authType the authentication channel type
+     * @return true if authType is MOBILE_NUMBER, false otherwise
+     */
     @Override
     public boolean supports(AuthType authType) {
         return AuthType.MOBILE_NUMBER.equals(authType);
     }
 
+    /**
+     * Determines whether this strategy can handle the incoming login request based on presence of mobileNumber alone.
+     *
+     * @param request the login request payload
+     * @return true if request has mobileNumber and no third-party identifiers (Aadhaar/Family)
+     */
     @Override
     public boolean canHandle(LoginV2Request request) {
         return request != null
@@ -109,6 +208,14 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                 && StringUtils.isBlank(request.getReferenceId());
     }
 
+    /**
+     * Authenticates the citizen via mobile OTP, handles multi-account selection,
+     * auto-provisions new profiles, and strictly blocks inactive user accounts.
+     *
+     * @param request the login request payload
+     * @return result containing authenticated domain user or candidate list
+     * @throws CustomException if validation fails or account is inactive
+     */
     @Override
     public AuthenticatedUserResult authenticateAndResolveUser(LoginV2Request request) {
         String mobileNumber = request.getMobileNumber();
@@ -149,6 +256,10 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                 log.error("[MOBILE-AUTH-STRATEGY] Selected citizen profile not found or does not belong to verified mobile: {}", request.getSelectedUserUuid());
                 throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, UserConstants.MSG_SELECTED_USER_NOT_FOUND);
             }
+            if (Boolean.FALSE.equals(selectedUser.getActive())) {
+                log.error("[MOBILE-AUTH-STRATEGY] Selected citizen profile {} is inactive", selectedUser.getUuid());
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
             selectedUser.setLastLoginMethod(AuthType.MOBILE_NUMBER.name());
             return AuthenticatedUserResult.builder()
                     .user(selectedUser)
@@ -157,20 +268,41 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                     .build();
         }
 
-        // 2c. Edge Case: If 2 or more users are linked to same mobile number, return list for user selection
+        // 2c. Edge Case: If 2 or more users are linked to same mobile number
         if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() > 1) {
-            log.info("[MOBILE-AUTH-STRATEGY] Found {} citizen profiles linked to mobile: {}. Returning list for selection.",
-                    matchedUsers.size(), maskMobile(mobileNumber));
-            return AuthenticatedUserResult.builder()
-                    .multipleUsersFound(true)
-                    .matchedUsers(matchedUsers)
-                    .authType(AuthType.MOBILE_NUMBER)
-                    .build();
+            boolean allInactive = matchedUsers.stream().allMatch(u -> !Boolean.TRUE.equals(u.getActive()));
+            if (allInactive) {
+                log.error("[MOBILE-AUTH-STRATEGY] All matching citizen accounts for mobile {} are inactive", maskMobile(mobileNumber));
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
+            if (isMultiAccountSelectionEnabled()) {
+                log.info("[MOBILE-AUTH-STRATEGY] Found {} citizen profiles linked to mobile: {}. Returning list for selection.",
+                        matchedUsers.size(), maskMobile(mobileNumber));
+                return AuthenticatedUserResult.builder()
+                        .multipleUsersFound(true)
+                        .matchedUsers(matchedUsers)
+                        .authType(AuthType.MOBILE_NUMBER)
+                        .build();
+            } else {
+                log.info("[MOBILE-AUTH-STRATEGY] Found {} citizen profiles linked to mobile: {}. Multi-account selection disabled, returning single user.",
+                        matchedUsers.size(), maskMobile(mobileNumber));
+                User user = selectPrimaryCitizenUser(matchedUsers, mobileNumber);
+                user.setLastLoginMethod(AuthType.MOBILE_NUMBER.name());
+                return AuthenticatedUserResult.builder()
+                        .user(user)
+                        .isNewUser(false)
+                        .authType(AuthType.MOBILE_NUMBER)
+                        .build();
+            }
         }
 
         // 2d. If exactly 1 user found, proceed with login
         if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() == 1) {
             User user = matchedUsers.get(0);
+            if (!Boolean.TRUE.equals(user.getActive())) {
+                log.error("[MOBILE-AUTH-STRATEGY] Citizen profile ID {} for mobile {} is inactive", user.getId(), maskMobile(mobileNumber));
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
             log.info("[MOBILE-AUTH-STRATEGY] Matched single citizen ID: {}, UUID: {} for mobile: {}",
                     user.getId(), user.getUuid(), maskMobile(mobileNumber));
             user.setLastLoginMethod(AuthType.MOBILE_NUMBER.name());
@@ -205,6 +337,11 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         User createdUser = userService.createUser(newUser, request.getRequestInfo());
         log.info("[MOBILE-AUTH-STRATEGY] Successfully provisioned new citizen ID: {}, UUID: {}",
                 createdUser.getId(), createdUser.getUuid());
+
+        if (!Boolean.TRUE.equals(createdUser.getActive())) {
+            log.error("[MOBILE-AUTH-STRATEGY] Existing citizen account ID {} is inactive", createdUser.getId());
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
 
         return AuthenticatedUserResult.builder()
                 .user(createdUser)

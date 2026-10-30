@@ -14,6 +14,7 @@ import org.egov.user.domain.service.profile.ProfileService;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
+import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
 import org.egov.user.web.contract.profile.ProfileResyncRequest;
 import org.egov.user.web.contract.profile.ProfileResponse;
@@ -62,6 +63,11 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
+    /**
+     * Constructs the profile controller with the citizen profile orchestrator service.
+     *
+     * @param profileService citizen profile domain service
+     */
     @Autowired
     public ProfileController(ProfileService profileService) {
         this.profileService = profileService;
@@ -154,18 +160,28 @@ public class ProfileController {
 
     /**
      * Searches citizen profiles based on criteria.
+     * <p>
+     * Supports modular entity inclusion via the {@code include} parameter:
+     * <ul>
+     *   <li>Allowed values: {@code PROFILE}, {@code ADDRESS}, {@code DOCUMENT}</li>
+     *   <li>Default value: {@code [PROFILE]} if {@code include} is omitted or empty</li>
+     *   <li>{@code ADDRESS}: Enriches response with active postal addresses of matched citizens</li>
+     *   <li>{@code DOCUMENT}: Enriches response with active uploaded KYC and identity proof documents</li>
+     * </ul>
      *
-     * @param request profile search request payload
+     * @param request profile search request payload containing filter criteria and optional include sections
      * @return response containing list of matched decrypted profiles
      */
     @Operation(
             summary = "Search Profile",
-            description = "Searches citizen profiles by UUID, tenant ID, or mobile number, with automated PII decryption for authorized consumers."
+            description = "Searches citizen profiles by UUID, tenant ID, or mobile number, with automated PII decryption for authorized consumers. " +
+                    "The optional 'include' parameter controls which entity sections are returned (allowed values: PROFILE, ADDRESS, DOCUMENT; default: [PROFILE]). " +
+                    "Specifying ADDRESS enriches the response with citizen address details, while DOCUMENT enriches with uploaded KYC document proofs."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profiles retrieved successfully",
                     content = @Content(schema = @Schema(implementation = ProfileResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid search criteria"),
+            @ApiResponse(responseCode = "400", description = "Invalid search criteria or invalid include entity"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/_search")
@@ -175,8 +191,8 @@ public class ProfileController {
                 maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getInclude() : null);
 
-        List<User> users = profileService.searchProfile(request);
-        Set<String> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
+        Set<ProfileIncludeEntity> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
+        List<User> users = profileService.searchProfile(request, normalizedIncludes);
 
         List<UserSearchResponseContent> contents = users != null
                 ? users.stream().map(u -> new UserSearchResponseContent(u, normalizedIncludes)).collect(Collectors.toList())

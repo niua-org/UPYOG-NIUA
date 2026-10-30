@@ -117,6 +117,9 @@ public class UserResultSetExtractor implements ResultSetExtractor<List<User>> {
                 if (hasColumn(rs, "identity_verified_date")) {
                     user.setIdentityVerifiedDate(rs.getTimestamp("identity_verified_date"));
                 }
+                if (hasColumn(rs, "identity_verified_source")) {
+                    user.setIdentityVerifiedSource(rs.getString("identity_verified_source"));
+                }
                 if (hasColumn(rs, "last_resync_date")) {
                     user.setLastResyncDate(rs.getTimestamp("last_resync_date"));
                 }

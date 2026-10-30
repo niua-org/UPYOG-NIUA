@@ -38,7 +38,7 @@ public class AddressControllerTest {
         when(addressMasterDataService.refreshCache(any(RequestInfo.class), eq("pb.amritsar")))
                 .thenReturn(expectedTypes);
         when(addressMasterDataService.getCachedAddressTypes())
-                .thenReturn(Collections.singletonMap("pb", expectedTypes));
+                .thenReturn(Collections.singletonMap("pg", expectedTypes));
 
         AddressCacheRefreshRequest request = AddressCacheRefreshRequest.builder()
                 .requestInfo(new RequestInfo())

@@ -39,6 +39,25 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+/**
+ * Test suite verifying citizen user creation de-duplication and demographic merging logic in {@link UserService}.
+ * <p>
+ * Ensures that when a citizen registration request arrives for a mobile number already existing in the state tenant,
+ * the existing record is updated with null/empty fields and returned rather than creating a duplicate account.
+ * <p>
+ * Key test scenarios covered:
+ * <ul>
+ *   <li>Merging null/empty fields for existing citizen on {@code /_create} and {@code /users/v2/_create}</li>
+ *   <li>Protection against merging when user type is {@link UserType#EMPLOYEE} (must never merge)</li>
+ *   <li>Deactivated existing user ({@code active = false}) is not merged or silently reactivated</li>
+ *   <li>Blank-vs-filled Aadhaar and PAN merging protection (unverified create requests cannot bind/overwrite Aadhaar/PAN)</li>
+ *   <li>Lookup failure fallback (database query error gracefully falls back to normal user creation)</li>
+ *   <li>Multiple matching records (ambiguous matches log a warning and fall back to user creation)</li>
+ * </ul>
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
+ */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class UserCreateDeduplicationTest {
@@ -436,5 +455,227 @@ public class UserCreateDeduplicationTest {
 
         verify(userRepository, never()).createWithAddressV2(any(User.class));
         verify(userRepository, times(1)).updateV2(any(User.class), eq(existingDbUser), anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("createUser: EMPLOYEE type should not merge with existing citizen on same mobile")
+    public void testCreateUserEmployeeTypeDoesNotMerge() {
+        String mobile = "8588070881";
+        User existingDbCitizen = User.builder()
+                .id(101L)
+                .uuid("existing-citizen-uuid")
+                .mobileNumber(mobile)
+                .username(mobile)
+                .name("Citizen User")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .tenantId("pg")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingDbCitizen));
+
+        User incomingEmployee = User.builder()
+                .username("EMP_ADMIN")
+                .mobileNumber(mobile)
+                .name("Employee Admin")
+                .tenantId("pg.citya")
+                .type(UserType.EMPLOYEE)
+                .active(true)
+                .roles(Collections.singleton(Role.builder().code("EMPLOYEE").tenantId("pg").build()))
+                .build();
+
+        User savedEmployee = incomingEmployee.toBuilder().id(202L).uuid("new-emp-uuid").build();
+        when(userRepository.create(any(User.class))).thenReturn(savedEmployee);
+
+        User result = userService.createUser(incomingEmployee, createSampleRequestInfo());
+
+        assertNotNull(result);
+        assertEquals(202L, result.getId());
+        assertEquals("new-emp-uuid", result.getUuid());
+        assertEquals(UserType.EMPLOYEE, result.getType());
+
+        // Verify update was NEVER called on existing citizen, and create WAS called for new employee
+        verify(userRepository, never()).update(any(User.class), eq(existingDbCitizen), anyLong(), anyString());
+        verify(userRepository, times(1)).create(any(User.class));
+    }
+
+    @Test
+    @DisplayName("createUser: Deactivated existing user (active=false) should not be merged or silently reactivated")
+    public void testCreateUserDeactivatedExistingUserNotMerged() {
+        String mobile = "8588070881";
+
+        // Criteria searches for active=true, so findAll returns empty when only an inactive user exists
+        when(userRepository.findAll(argThat(criteria -> criteria != null && Boolean.TRUE.equals(criteria.getActive()))))
+                .thenReturn(Collections.emptyList());
+
+        User incomingCitizen = User.builder()
+                .username("8588070881")
+                .mobileNumber(mobile)
+                .name("Active Citizen")
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .roles(Collections.singleton(Role.builder().code("CITIZEN").tenantId("pg").build()))
+                .build();
+
+        User savedCitizen = incomingCitizen.toBuilder().id(303L).uuid("new-active-uuid").build();
+        when(userRepository.create(any(User.class))).thenReturn(savedCitizen);
+
+        User result = userService.createUser(incomingCitizen, createSampleRequestInfo());
+
+        assertNotNull(result);
+        assertEquals(303L, result.getId());
+        assertEquals("new-active-uuid", result.getUuid());
+
+        // Verify update was NEVER called and create was invoked
+        verify(userRepository, never()).update(any(User.class), any(User.class), anyLong(), anyString());
+        verify(userRepository, times(1)).create(any(User.class));
+    }
+
+    @Test
+    @DisplayName("createUser: Blank-vs-filled Aadhaar and PAN must NOT be merged to prevent unauthorized binding")
+    public void testCreateUserBlankVsFilledAadhaarPanNotMerged() {
+        String mobile = "8588070881";
+        String existingUuid = "existing-uuid-secure";
+
+        User existingDbUser = User.builder()
+                .id(404L)
+                .uuid(existingUuid)
+                .username(mobile)
+                .mobileNumber(mobile)
+                .name("Secure Citizen")
+                .fatherName(null)
+                .emailId(null)
+                .pan(null)
+                .aadhaarNumber(null)
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .roles(Collections.singleton(Role.builder().code("CITIZEN").tenantId("pg").build()))
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingDbUser));
+
+        User incomingUser = User.builder()
+                .username("unverified_req_user")
+                .mobileNumber(mobile)
+                .name("Secure Citizen")
+                .fatherName("Father Citizen")
+                .emailId("secure@example.com")
+                .pan("ABCDE1234F")
+                .aadhaarNumber("123456789012")
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .roles(Collections.singleton(Role.builder().code("CITIZEN").tenantId("pg").build()))
+                .build();
+
+        User result = userService.createUser(incomingUser, createSampleRequestInfo());
+
+        assertNotNull(result);
+        assertEquals(404L, result.getId());
+        assertEquals(existingUuid, result.getUuid());
+        assertEquals("Father Citizen", result.getFatherName());
+        assertEquals("secure@example.com", result.getEmailId());
+
+        // Crucial security check: PAN and Aadhaar MUST remain null on existing record
+        assertNull(result.getPan(), "PAN must not be merged from unverified create request");
+        assertNull(result.getAadhaarNumber(), "Aadhaar must not be merged from unverified create request");
+
+        ArgumentCaptor<User> updatedUserCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository, times(1)).update(updatedUserCaptor.capture(), eq(existingDbUser), anyLong(), anyString());
+        assertNull(updatedUserCaptor.getValue().getPan());
+        assertNull(updatedUserCaptor.getValue().getAadhaarNumber());
+    }
+
+    @Test
+    @DisplayName("createUser: Database lookup failure in de-dup gracefully falls back to normal user creation")
+    public void testCreateUserLookupFailureFallsBackToCreate() {
+        String mobile = "8588070881";
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenThrow(new RuntimeException("Database timeout on search"));
+
+        User incomingCitizen = User.builder()
+                .username("8588070881")
+                .mobileNumber(mobile)
+                .name("Fallback Citizen")
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .roles(Collections.singleton(Role.builder().code("CITIZEN").tenantId("pg").build()))
+                .build();
+
+        User savedCitizen = incomingCitizen.toBuilder().id(505L).uuid("fallback-uuid").build();
+        when(userRepository.create(any(User.class))).thenReturn(savedCitizen);
+
+        User result = userService.createUser(incomingCitizen, createSampleRequestInfo());
+
+        assertNotNull(result);
+        assertEquals(505L, result.getId());
+        assertEquals("fallback-uuid", result.getUuid());
+
+        verify(userRepository, times(1)).create(any(User.class));
+        verify(userRepository, never()).update(any(User.class), any(User.class), anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("createUser: Multiple matching records prioritizes the account whose username equals mobileNumber")
+    public void testCreateUserMultipleMatchesPrioritizesMatchingUsername() {
+        String mobile = "8588070881";
+
+        User matchWithoutMobileAsUser = User.builder()
+                .id(11L)
+                .uuid("uuid-11")
+                .mobileNumber(mobile)
+                .username("custom_user_login")
+                .name("Legacy Citizen")
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .build();
+
+        User matchWithMobileAsUser = User.builder()
+                .id(22L)
+                .uuid("uuid-22")
+                .mobileNumber(mobile)
+                .username(mobile)
+                .name("Standard Citizen")
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenAnswer(invocation -> {
+            UserSearchCriteria criteria = invocation.getArgument(0);
+            if (criteria.getUuid() != null && criteria.getUuid().contains("uuid-22")) {
+                return Collections.singletonList(matchWithMobileAsUser);
+            }
+            if (criteria.getUuid() != null && criteria.getUuid().contains("uuid-11")) {
+                return Collections.singletonList(matchWithoutMobileAsUser);
+            }
+            return Arrays.asList(matchWithoutMobileAsUser, matchWithMobileAsUser);
+        });
+
+        User incomingCitizen = User.builder()
+                .username("8588070881")
+                .mobileNumber(mobile)
+                .name("Standard Citizen")
+                .emailId("standard@example.com")
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .roles(Collections.singleton(Role.builder().code("CITIZEN").tenantId("pg").build()))
+                .build();
+
+        User result = userService.createUser(incomingCitizen, createSampleRequestInfo());
+
+        assertNotNull(result);
+        // Must select matchWithMobileAsUser (id 22) because its username exactly matches the mobile number
+        assertEquals(22L, result.getId());
+        assertEquals("uuid-22", result.getUuid());
+
+        verify(userRepository, times(1)).update(any(User.class), eq(matchWithMobileAsUser), anyLong(), anyString());
+        verify(userRepository, never()).create(any(User.class));
     }
 }

@@ -117,6 +117,7 @@ public class User {
 
     private Boolean isIdentityVerified;
     private Date identityVerifiedDate;
+    private String identityVerifiedSource;
     private Date lastResyncDate;
     private Integer edittedCount;
     private String lastLoginMethod;
@@ -423,6 +424,12 @@ public class User {
         active = isActive;
     }
 
+    /**
+     * Copies all user attributes, demographic details, and verification metadata from the source into a new {@link User} instance.
+     *
+     * @param u source domain user entity
+     * @return new {@link User} populated with copied fields
+     */
     public User toUser(User u) {
    	 
         User user = new User();
@@ -479,6 +486,7 @@ public class User {
         user.setSpouseName(u.spouseName);
         user.setIsIdentityVerified(u.isIdentityVerified);
         user.setIdentityVerifiedDate(u.identityVerifiedDate);
+        user.setIdentityVerifiedSource(u.identityVerifiedSource);
         user.setLastResyncDate(u.lastResyncDate);
         user.setEdittedCount(u.edittedCount);
         user.setLastLoginMethod(u.lastLoginMethod);

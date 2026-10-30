@@ -14,10 +14,12 @@ import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Request;
+import org.egov.common.contract.request.RequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -25,6 +27,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
@@ -46,32 +49,74 @@ import org.egov.user.config.UserConfiguration;
 @Slf4j
 public class AadhaarAuthStrategy implements MultiAuthStrategy {
 
+    public static final String IDENTITY_SOURCE_AADHAAR = UserConstants.IDENTITY_SOURCE_AADHAAR;
+    public static final String AADHAAR_USERNAME_PREFIX = UserConstants.AADHAAR_USERNAME_PREFIX;
+    public static final String DEFAULT_AADHAAR_CITIZEN_NAME = UserConstants.DEFAULT_AADHAAR_CITIZEN_NAME;
+
     private final UserService userService;
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final EncryptionDecryptionUtil encryptionDecryptionUtil;
 
     private final UserConfiguration userConfiguration;
     private final Map<String, Integer> otpAttemptsByRefId = new ConcurrentHashMap<>();
 
+    /**
+     * Primary constructor injecting required services, HTTP client, and encryption utilities.
+     *
+     * @param userService              core user service for provisioning
+     * @param userRepository           user repository for persistence lookups
+     * @param restTemplate             HTTP client for invoking identity verification adapter
+     * @param objectMapper             JSON mapper for response parsing
+     * @param encryptionDecryptionUtil utility for encrypted search and decryption
+     * @param userConfiguration        application properties
+     */
     @Autowired
     public AadhaarAuthStrategy(UserService userService,
                                UserRepository userRepository,
                                RestTemplate restTemplate,
                                ObjectMapper objectMapper,
+                               @Autowired(required = false) EncryptionDecryptionUtil encryptionDecryptionUtil,
                                @Autowired(required = false) UserConfiguration userConfiguration) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Constructor without encryption utility (falls back to plain criteria).
+     *
+     * @param userService       core user service for provisioning
+     * @param userRepository    user repository for persistence lookups
+     * @param restTemplate      HTTP client for invoking identity verification adapter
+     * @param objectMapper      JSON mapper for response parsing
+     * @param userConfiguration application properties
+     */
+    public AadhaarAuthStrategy(UserService userService,
+                               UserRepository userRepository,
+                               RestTemplate restTemplate,
+                               ObjectMapper objectMapper,
+                               UserConfiguration userConfiguration) {
+        this(userService, userRepository, restTemplate, objectMapper, null, userConfiguration);
+    }
+
+    /**
+     * Testing constructor with minimal dependencies.
+     *
+     * @param userService    core user service for provisioning
+     * @param userRepository user repository for persistence lookups
+     * @param restTemplate   HTTP client for invoking identity verification adapter
+     * @param objectMapper   JSON mapper for response parsing
+     */
     public AadhaarAuthStrategy(UserService userService,
                                UserRepository userRepository,
                                RestTemplate restTemplate,
                                ObjectMapper objectMapper) {
-        this(userService, userRepository, restTemplate, objectMapper, null);
+        this(userService, userRepository, restTemplate, objectMapper, null, null);
     }
 
     private String getRequesterServiceHost() {
@@ -83,7 +128,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
     private String getRequesterVerifyEndpoint() {
         return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint()))
                 ? userConfiguration.getRequesterAadhaarVerifyEndpoint()
-                : "requester-services-dx/aadhaar/v1/_verifyOtp";
+                : UserConstants.DEFAULT_REQUESTER_AADHAAR_VERIFY_ENDPOINT;
     }
 
     private boolean isFixedOTPEnabled() {
@@ -106,11 +151,23 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 : 3;
     }
 
+    /**
+     * Checks if this strategy supports the given authentication channel type.
+     *
+     * @param authType the authentication channel type
+     * @return true if authType is AADHAAR_NUMBER, false otherwise
+     */
     @Override
     public boolean supports(AuthType authType) {
         return AuthType.AADHAAR_NUMBER.equals(authType);
     }
 
+    /**
+     * Determines whether this strategy can handle the incoming login request based on presence of Aadhaar attributes.
+     *
+     * @param request the login request payload
+     * @return true if request contains aadhaarNumber, txnId, or referenceId
+     */
     @Override
     public boolean canHandle(LoginV2Request request) {
         return request != null
@@ -119,6 +176,14 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 || StringUtils.isNotBlank(request.getReferenceId()));
     }
 
+    /**
+     * Authenticates the citizen via Aadhaar OTP, resolves or auto-provisions verified profile,
+     * and strictly blocks inactive user accounts.
+     *
+     * @param request the login request payload
+     * @return result containing authenticated domain user
+     * @throws CustomException if verification fails or account is inactive
+     */
     @Override
     public AuthenticatedUserResult authenticateAndResolveUser(LoginV2Request request) {
         String otp = request.getOtp();
@@ -150,15 +215,22 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 ? request.getMobileNumber().trim()
                 : eKyc.getMobileNumber();
 
-        User existingUser = findExistingUser(searchAadhaar, mobileNumber, stateTenant, request.getSelectedUserUuid());
+        User existingUser = findExistingUser(searchAadhaar, mobileNumber, stateTenant, request.getSelectedUserUuid(), request.getRequestInfo());
 
         if (existingUser != null) {
             log.info("[AADHAAR-AUTH-STRATEGY] Matched existing citizen ID: {}, UUID: {} for Aadhaar: {}",
                     existingUser.getId(), existingUser.getUuid(), searchAadhaar);
 
+            if (!Boolean.TRUE.equals(existingUser.getActive())) {
+                log.error("[AADHAAR-AUTH-STRATEGY] Citizen account {} is inactive for Aadhaar: {}",
+                        existingUser.getUuid(), searchAadhaar);
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
+
             // Enrich verification status
             existingUser.setIsIdentityVerified(true);
             existingUser.setIdentityVerifiedDate(new Date());
+            existingUser.setIdentityVerifiedSource(IDENTITY_SOURCE_AADHAAR);
             existingUser.setLastResyncDate(new Date());
             existingUser.setLastLoginMethod(AuthType.AADHAAR_NUMBER.name());
             if (StringUtils.isNotBlank(searchAadhaar)) {
@@ -195,7 +267,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         boolean hasMobile = StringUtils.isNotBlank(mobileNumber);
         String baseUsername = hasMobile
                 ? mobileNumber
-                : ("AADHAAR_" + (searchAadhaar != null ? searchAadhaar.replaceAll("[^0-9]", "") : UUID.randomUUID().toString().substring(0, 8)));
+                : (AADHAAR_USERNAME_PREFIX + (searchAadhaar != null ? searchAadhaar.replaceAll("[^0-9]", "") : UUID.randomUUID().toString().substring(0, 8)));
         String username = !userRepository.isUserPresent(baseUsername, stateTenant, UserType.CITIZEN)
                 ? baseUsername
                 : baseUsername + "_" + UUID.randomUUID().toString().substring(0, 8);
@@ -213,6 +285,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 .aadhaarNumber(searchAadhaar)
                 .isIdentityVerified(true)
                 .identityVerifiedDate(new Date())
+                .identityVerifiedSource(IDENTITY_SOURCE_AADHAAR)
                 .lastResyncDate(new Date())
                 .lastLoginMethod(AuthType.AADHAAR_NUMBER.name())
                 .edittedCount(0)
@@ -227,6 +300,11 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         User createdUser = userService.createUser(newUser, request.getRequestInfo());
         log.info("[AADHAAR-AUTH-STRATEGY] Successfully provisioned Aadhaar-verified citizen ID: {}, UUID: {}",
                 createdUser.getId(), createdUser.getUuid());
+
+        if (!Boolean.TRUE.equals(createdUser.getActive())) {
+            log.error("[AADHAAR-AUTH-STRATEGY] Existing citizen account ID {} is inactive", createdUser.getId());
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
 
         return AuthenticatedUserResult.builder()
                 .user(createdUser)
@@ -297,7 +375,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                     otpAttemptsByRefId.remove(refId);
                 }
 
-                String maskedAadhaar = root.path("maskedAadhaar").asText(maskAadhaar(rawAadhaar));
+                String maskedAadhaar = root.path(UserConstants.JSON_KEY_MASKED_AADHAAR).asText(maskAadhaar(rawAadhaar));
                 JsonNode demoNode = root.path("demographics");
                 String name = demoNode.hasNonNull("name") ? demoNode.path("name").asText() : root.path("name").asText(null);
                 String genderStr = demoNode.hasNonNull("gender") ? demoNode.path("gender").asText() : root.path("gender").asText(null);
@@ -365,7 +443,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 : "9999999999";
         return VerifiedAadhaarDemographics.builder()
                 .maskedAadhaar(masked)
-                .name("Aadhaar Verified Citizen")
+                .name(DEFAULT_AADHAAR_CITIZEN_NAME)
                 .gender(Gender.MALE)
                 .dob(parseDob("1990-01-01"))
                 .mobileNumber(mockMobile)
@@ -381,57 +459,167 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
      * @param mobileNumber     citizen 10-digit mobile number
      * @param stateTenant      state-level tenant ID
      * @param selectedUserUuid optional UUID selected by citizen during multi-account flow
+     * @param requestInfo      request info for decryption
      * @return matched {@link User} entity or null to trigger new profile auto-creation
      */
-    private User findExistingUser(String maskedAadhaar, String mobileNumber, String stateTenant, String selectedUserUuid) {
-        // 1. Direct match by Aadhaar AND verified mobile number together to ensure collision-free identity resolution
-        if (StringUtils.isNotBlank(maskedAadhaar) && StringUtils.isNotBlank(mobileNumber)) {
-            UserSearchCriteria criteria = UserSearchCriteria.builder()
-                    .aadhaarNumber(maskedAadhaar)
-                    .mobileNumber(mobileNumber)
-                    .tenantId(stateTenant)
-                    .type(UserType.CITIZEN)
-                    .build();
-
-            List<User> users = userRepository.findAll(criteria);
-            if (!users.isEmpty()) {
-                return users.get(0);
+    private User findExistingUser(String maskedAadhaar, String mobileNumber, String stateTenant, String selectedUserUuid, RequestInfo requestInfo) {
+        // 1. If selectedUserUuid is explicitly provided, match that user
+        if (StringUtils.isNotBlank(selectedUserUuid)) {
+            User candidate = userService.getUserByUuid(selectedUserUuid);
+            if (candidate != null) {
+                if (!Boolean.TRUE.equals(candidate.getActive())) {
+                    log.error("[AADHAAR-AUTH-STRATEGY] Selected citizen profile {} is inactive", candidate.getUuid());
+                    throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+                }
+                return candidate;
             }
         }
 
-        // 2. If selectedUserUuid is explicitly provided from verified candidate list, match that user
-        if (StringUtils.isNotBlank(selectedUserUuid)) {
-            UserSearchCriteria criteria = UserSearchCriteria.builder()
-                    .uuid(Collections.singletonList(selectedUserUuid))
-                    .tenantId(stateTenant)
-                    .type(UserType.CITIZEN)
-                    .build();
-            List<User> users = userRepository.findAll(criteria);
-            if (!users.isEmpty()) {
-                User candidate = users.get(0);
-                if (maskedAadhaar.equalsIgnoreCase(candidate.getAadhaarNumber())
-                        && (StringUtils.isBlank(candidate.getMobileNumber()) || candidate.getMobileNumber().equals(mobileNumber))) {
-                    return candidate;
+        // 2. Query citizen accounts associated with verified mobile number
+        if (StringUtils.isNotBlank(mobileNumber)) {
+            List<User> matchedUsers = findUsersByMobile(mobileNumber, stateTenant, requestInfo);
+            if (!CollectionUtils.isEmpty(matchedUsers)) {
+                // If any matched account has matching Aadhaar, prioritize it
+                for (User u : matchedUsers) {
+                    if (StringUtils.isNotBlank(u.getAadhaarNumber()) && (u.getAadhaarNumber().equalsIgnoreCase(maskedAadhaar)
+                            || maskAadhaar(u.getAadhaarNumber()).equalsIgnoreCase(maskedAadhaar))) {
+                        if (!Boolean.TRUE.equals(u.getActive())) {
+                            log.error("[AADHAAR-AUTH-STRATEGY] Matched Aadhaar citizen account {} is inactive", u.getUuid());
+                            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+                        }
+                        return u;
+                    }
+                }
+
+                // If all matched accounts on this mobile are inactive, reject immediately
+                boolean allInactive = matchedUsers.stream().allMatch(u -> !Boolean.TRUE.equals(u.getActive()));
+                if (allInactive) {
+                    log.error("[AADHAAR-AUTH-STRATEGY] All citizen accounts for mobile {} are inactive", maskMobile(mobileNumber));
+                    throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+                }
+
+                // If exactly 1 account exists on this mobile, return it
+                if (matchedUsers.size() == 1) {
+                    User singleUser = matchedUsers.get(0);
+                    if (!Boolean.TRUE.equals(singleUser.getActive())) {
+                        log.error("[AADHAAR-AUTH-STRATEGY] Citizen account {} for mobile {} is inactive", singleUser.getUuid(), maskMobile(mobileNumber));
+                        throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+                    }
+                    return singleUser;
                 }
             }
         }
 
-        // 3. Fallback: Check if there is an account with this exact Aadhaar already bound
+        // 3. Match by Aadhaar across state tenant
         if (StringUtils.isNotBlank(maskedAadhaar)) {
             UserSearchCriteria criteria = UserSearchCriteria.builder()
                     .aadhaarNumber(maskedAadhaar)
                     .tenantId(stateTenant)
                     .type(UserType.CITIZEN)
                     .build();
-
-            List<User> users = userRepository.findAll(criteria);
-            if (users.size() == 1) {
-                return users.get(0);
+            try {
+                UserSearchCriteria encCriteria = (encryptionDecryptionUtil != null)
+                        ? encryptionDecryptionUtil.encryptObject(criteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class)
+                        : criteria;
+                List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : criteria);
+                if (!CollectionUtils.isEmpty(users)) {
+                    List<User> decrypted = (encryptionDecryptionUtil != null)
+                            ? encryptionDecryptionUtil.decryptObject(users, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo)
+                            : users;
+                    List<User> resultList = !CollectionUtils.isEmpty(decrypted) ? decrypted : users;
+                    for (User u : resultList) {
+                        if (!Boolean.TRUE.equals(u.getActive())) {
+                            log.error("[AADHAAR-AUTH-STRATEGY] Citizen account {} with Aadhaar is inactive", u.getUuid());
+                            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+                        }
+                    }
+                    if (resultList.size() == 1) {
+                        return resultList.get(0);
+                    }
+                }
+            } catch (CustomException ce) {
+                throw ce;
+            } catch (Exception e) {
+                log.warn("[AADHAAR-AUTH-STRATEGY] Error querying by Aadhaar: {}", e.getMessage());
             }
         }
 
-        // 4. Return null to safely auto-provision a new individual profile for this verified Aadhaar citizen
         return null;
+    }
+
+    private List<User> findUsersByMobile(String mobileNumber, String stateTenant, RequestInfo requestInfo) {
+        Map<String, User> userMap = new LinkedHashMap<>();
+
+        // 1. Search by mobileNumber
+        UserSearchCriteria mobileCriteria = UserSearchCriteria.builder()
+                .mobileNumber(mobileNumber)
+                .tenantId(stateTenant)
+                .type(UserType.CITIZEN)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = (encryptionDecryptionUtil != null)
+                    ? encryptionDecryptionUtil.encryptObject(mobileCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class)
+                    : mobileCriteria;
+            List<User> usersByMobile = userRepository.findAll(encCriteria != null ? encCriteria : mobileCriteria);
+            if (!CollectionUtils.isEmpty(usersByMobile)) {
+                for (User u : usersByMobile) {
+                    if (u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[AADHAAR-AUTH-STRATEGY] Error querying by mobile: {}", e.getMessage());
+        }
+
+        // 2. Search by userName (in case first profile used mobileNumber as username)
+        UserSearchCriteria userCriteria = UserSearchCriteria.builder()
+                .userName(mobileNumber)
+                .tenantId(stateTenant)
+                .type(UserType.CITIZEN)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = (encryptionDecryptionUtil != null)
+                    ? encryptionDecryptionUtil.encryptObject(userCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class)
+                    : userCriteria;
+            List<User> usersByUserName = userRepository.findAll(encCriteria != null ? encCriteria : userCriteria);
+            if (!CollectionUtils.isEmpty(usersByUserName)) {
+                for (User u : usersByUserName) {
+                    if (u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[AADHAAR-AUTH-STRATEGY] Error querying by userName: {}", e.getMessage());
+        }
+
+        if (userMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<User> encryptedList = new ArrayList<>(userMap.values());
+        try {
+            if (encryptionDecryptionUtil != null) {
+                List<User> decryptedList = encryptionDecryptionUtil.decryptObject(encryptedList, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
+                if (!CollectionUtils.isEmpty(decryptedList)) {
+                    return decryptedList;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[AADHAAR-AUTH-STRATEGY] Decryption failed, using raw models: {}", e.getMessage());
+        }
+        return encryptedList;
+    }
+
+    private String maskMobile(String mobile) {
+        if (StringUtils.isBlank(mobile)) {
+            return "null";
+        }
+        if (mobile.length() <= 4) {
+            return "****";
+        }
+        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
     }
 
     /**

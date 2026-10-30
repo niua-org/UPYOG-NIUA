@@ -18,6 +18,8 @@ import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
 
+import org.egov.user.web.contract.profile.ProfileIncludeEntity;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -33,7 +35,6 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Slf4j
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserSearchResponseContent {
 
     private Long id;
@@ -94,6 +95,8 @@ public class UserSearchResponseContent {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date identityVerifiedDate;
 
+    private String identityVerifiedSource;
+
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date lastResyncDate;
 
@@ -109,19 +112,66 @@ public class UserSearchResponseContent {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date pwdExpiryDate;
 
+    /**
+     * Legacy constructor for core search endpoints ({@code /_search}, {@code /v1/_search}, {@code /users/v2/_search}).
+     * <p>
+     * Populates core identity, audit, and demographic profile fields.
+     * Crucially, {@code addresses} and {@code documents} collections are <b>NOT</b> populated and remain {@code null}
+     * to preserve contract compatibility and prevent PII exposure for legacy and v2 callers
+     * (e.g. PT, TL, PGR, HRMS, and UI).
+     *
+     * @param user the domain {@link User} entity to copy fields from
+     */
+    /**
+     * Legacy constructor used by existing user search callers (e.g. {@code /_search},
+     * {@code /v1/_search}, and {@code /users/v2/_search} consumed by PT, TL, PGR, and HRMS).
+     * <p>
+     * Maps core identity, audit, and demographic profile fields while omitting nested addresses
+     * and documents to prevent PII exposure and preserve contract compatibility.
+     *
+     * @param user the domain {@link User} entity to convert
+     */
     public UserSearchResponseContent(User user) {
-        this(user, Collections.singleton("PROFILE"));
-        if (user != null) {
-            if (user.getAddresses() != null && !user.getAddresses().isEmpty()) {
-                this.addresses = user.getAddresses();
-            }
-            if (user.getDocuments() != null && !user.getDocuments().isEmpty()) {
-                this.documents = user.getDocuments();
-            }
-        }
+        this(user, Collections.singleton(ProfileIncludeEntity.PROFILE));
     }
 
-    public UserSearchResponseContent(User user, Set<String> includes) {
+    /**
+     * Modular constructor supporting section-based inclusion for citizen profile searches ({@code /profile/_search}).
+     * <p>
+     * <b>Included field mappings by section:</b>
+     * <ul>
+     *   <li><b>Core Identity & Audit (Always Mapped regardless of includes):</b>
+     *     <ul>
+     *       <li>Identity: {@code id}, {@code uuid}, {@code userName}, {@code tenantId}, {@code type}, {@code active}</li>
+     *       <li>Audit: {@code createdBy}, {@code createdDate}, {@code lastModifiedBy}, {@code lastModifiedDate}</li>
+     *     </ul>
+     *   </li>
+     *   <li><b>{@link ProfileIncludeEntity#PROFILE}:</b>
+     *     Maps citizen personal details, demographics, roles, and verification status:
+     *     {@code salutation}, {@code name}, {@code gender}, {@code mobileNumber}, {@code emailId},
+     *     {@code altContactNumber}, {@code pan}, {@code aadhaarNumber}, {@code dob}, {@code pwdExpiryDate},
+     *     {@code locale}, {@code accountLocked}, {@code accountLockedDate}, {@code signature}, {@code bloodGroup},
+     *     {@code photo}, {@code identificationMark}, {@code roles}, {@code fatherOrHusbandName}, {@code relationship},
+     *     {@code digilockerid}, {@code alternatemobilenumber}, {@code fatherName}, {@code motherName}, {@code spouseName},
+     *     {@code isIdentityVerified}, {@code identityVerifiedDate}, {@code identityVerifiedSource}, {@code lastResyncDate},
+     *     {@code edittedCount}, and {@code lastLoginMethod}.
+     *   </li>
+     *   <li><b>{@link ProfileIncludeEntity#ADDRESS}:</b>
+     *     Maps the collection of active address objects:
+     *     {@code addresses} ({@link Address} sets including address lines, city, pincode, type, status, and filestore IDs).
+     *     Omitted (null) if {@link ProfileIncludeEntity#ADDRESS} is not requested.
+     *   </li>
+     *   <li><b>{@link ProfileIncludeEntity#DOCUMENT}:</b>
+     *     Maps the collection of active user documents:
+     *     {@code documents} ({@link UserDocument} list including document type, filestore ID, file download URL, and verification status).
+     *     Omitted (null) if {@link ProfileIncludeEntity#DOCUMENT} is not requested.
+     *   </li>
+     * </ul>
+     *
+     * @param user the domain {@link User} entity
+     * @param includes set of {@link ProfileIncludeEntity} sections specifying which entity blocks to include
+     */
+    public UserSearchResponseContent(User user, Set<ProfileIncludeEntity> includes) {
         if (user == null) return;
 
         // Core Identity & Audit Fields (always present)
@@ -136,7 +186,7 @@ public class UserSearchResponseContent {
         this.lastModifiedBy = user.getLastModifiedBy();
         this.lastModifiedDate = user.getLastModifiedDate();
 
-        boolean includeProfile = includes != null && includes.contains("PROFILE");
+        boolean includeProfile = includes != null && includes.contains(ProfileIncludeEntity.PROFILE);
 
         if (includeProfile) {
             this.salutation = user.getSalutation();
@@ -168,16 +218,17 @@ public class UserSearchResponseContent {
             this.spouseName = user.getSpouseName();
             this.isIdentityVerified = user.getIsIdentityVerified();
             this.identityVerifiedDate = user.getIdentityVerifiedDate();
+            this.identityVerifiedSource = user.getIdentityVerifiedSource();
             this.lastResyncDate = user.getLastResyncDate();
             this.edittedCount = user.getEdittedCount();
             this.lastLoginMethod = user.getLastLoginMethod();
         }
 
-        if (includes != null && includes.contains("ADDRESS")) {
+        if (includes != null && includes.contains(ProfileIncludeEntity.ADDRESS)) {
             this.addresses = user.getAddresses();
         }
 
-        if (includes != null && includes.contains("DOCUMENT")) {
+        if (includes != null && includes.contains(ProfileIncludeEntity.DOCUMENT)) {
             this.documents = user.getDocuments();
         }
     }
@@ -267,6 +318,7 @@ public class UserSearchResponseContent {
         user.setSpouseName(this.spouseName);
         user.setIsIdentityVerified(this.isIdentityVerified);
         user.setIdentityVerifiedDate(this.identityVerifiedDate);
+        user.setIdentityVerifiedSource(this.identityVerifiedSource);
         user.setLastResyncDate(this.lastResyncDate);
         user.setEdittedCount(this.edittedCount);
         user.setLastLoginMethod(this.lastLoginMethod);
