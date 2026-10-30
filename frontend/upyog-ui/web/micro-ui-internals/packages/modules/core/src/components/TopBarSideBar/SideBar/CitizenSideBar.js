@@ -98,7 +98,7 @@ export const CitizenSideBar = ({ isOpen, isMobile = false, toggleSidebar, onLogo
   const { isLoading, data } = Digit.Hooks.useAccessControl();
   const tenantId = Digit.ULBService.getCitizenCurrentTenant();
   const showProfilePage = () => {
-    const redirectUrl = isEmployee ? `${APPLICATION_PATH}/employee/user/profile` : `${APPLICATION_PATH}/citizen/user/profile`;
+    const redirectUrl = isEmployee ? `${APPLICATION_PATH}/employee/user/profile` : `${APPLICATION_PATH}/citizen/profile/profile-details`;
     navigate(redirectUrl);
     closeSidebar();
   };

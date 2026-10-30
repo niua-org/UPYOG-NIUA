@@ -13,7 +13,7 @@ export const UserService = {
       url: Urls.Authenticate,
       data,
       headers: {
-        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN")||"ZWdvdi11c2VyLWNsaWVudDo="}`,
+        authorization: `Basic ${window?.globalConfigs?.getConfig("JWT_TOKEN") || "ZWdvdi11c2VyLWNsaWVudDo="}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
@@ -46,7 +46,7 @@ export const UserService = {
       await UserService.logoutUser();
     } catch (e) {
     }
-    finally{
+    finally {
       window.localStorage.clear();
       window.sessionStorage.clear();
       if (userType === "citizen") {
@@ -93,19 +93,7 @@ export const UserService = {
       },
       params: { tenantId: stateCode },
     }),
-   
-    //create address for user
-      createAddressV2: async (details, stateCode, userUuid) =>
-        ServiceRequest({
-          serviceName: "createAddress",
-          url: Urls.UserCreateAddressV2,
-          auth: true,
-          data: {
-            address: details,
-            userUuid: userUuid,
-          },
-          params: { tenantId: stateCode },
-        }),
+
   hasAccess: (accessTo) => {
     const user = Digit.UserService.getUser();
     if (!user || !user.info) return false;
@@ -133,7 +121,8 @@ export const UserService = {
   },
   userSearch: async (tenantId, data, filters) => {
     return Request({
-      url: Urls.UserSearch,
+      // url: Urls.UserSearch,
+      url: Urls.profile.userSearch,
       params: { ...filters },
       method: "POST",
       auth: true,
@@ -148,7 +137,7 @@ export const UserService = {
       method: "POST",
       auth: false,
       userService: false,
-      data: { user: {tenantId, ...user} } ,
+      data: { user: { tenantId, ...user } },
     });
   },
   // user search for user profile
@@ -162,15 +151,61 @@ export const UserService = {
       data: data.pageSize ? { tenantId, ...data } : { tenantId, ...data, pageSize: "100" },
     });
   },
+
+  //create address for user
+  createAddressV2: async (details, stateCode, userUuid) =>
+    ServiceRequest({
+      serviceName: "createAddress",
+      url: Urls.profile.createAddress,
+      auth: true,
+      userService: true,
+      data: {
+        address: details,
+        userUuid: userUuid,
+      },
+      params: { tenantId: stateCode },
+    }),
+
   //update address for user
   updateAddressV2: async (details, stateCode) =>
     ServiceRequest({
       serviceName: "updateAddress",
-      url: Urls.UserUpdateAddressV2,
+      url: Urls.profile.updateAddress,
       auth: true,
+      userService: true,
       data: {
         address: details
       },
       params: { tenantId: stateCode },
-    })
+    }),
+
+  searchAddress: async (userUuid, tenantId) =>
+    ServiceRequest({
+      serviceName: "searchAddress",
+      url: Urls.profile.searchAddress,
+      auth: true,
+      userService: true,
+      data: {
+        userUuid: userUuid,
+        tenantId: tenantId,
+      },
+      params: { tenantId: stateCode },
+    }),
+
+  sendAadhaarOtp: (details) =>
+    ServiceRequest({
+      url: Urls.loginV2.aadharSendOtp,
+      data: details,
+      auth: true,
+      method: "POST",
+    }),
+
+  newAuthenticate: (details) =>
+    ServiceRequest({
+      url: Urls.loginV2.userLogin,
+      data: details,
+      auth: false,
+      method: "POST",
+    }),
+
 };

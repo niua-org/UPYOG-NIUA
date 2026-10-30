@@ -1,5 +1,5 @@
 const Urls = {
-  MDMS: `/egov-mdms-service/v1/_search`,
+  MDMS: `http://localhost:8095/egov-mdms-service/v1/_search`,
   MDMSV2: `/mdms-v2/v1/_search`,
   WorkFlow: `/egov-workflow-v2/egov-wf/businessservice/_search`,
   WorkFlowProcessSearch: `/egov-workflow-v2/egov-wf/process/_search`,
@@ -378,6 +378,19 @@ const Urls = {
     create: "/gc-services/garbage-accounts/_create",
     search: "/gc-services/garbage-accounts/_search",
     update: "/gc-services/garbage-accounts/_update",
+  },
+
+  loginV2: {
+    userLogin: "/user/users/v2/_login",
+    aadharSendOtp: "/requester-services-dx/aadhaar/v1/_sendOtp"
+  },
+
+  profile: {
+    createAddress: "/user/address/_create",
+    updateAddress: "/user/address/_update",
+    createDocument: "/user/document/_create",
+    searchAddress: "/user/address/_search",
+    userSearch: "/user/profile/_search"
   }
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { CardLabel, TextInput,TextArea,Dropdown,FormStep } from "../index";  //imported all from our common library
+import { CardLabel, TextInput,TextArea,Dropdown,FormStep, UploadFile } from "../index";  //imported all from our common library
 import { useLocation } from "react-router-dom";
 
 
@@ -68,6 +68,9 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
     return allOptions.filter(opt => !usedAddressTypes.includes(opt.code));
   }, [usedAddressTypes]);
 
+  const [addressProof, setAddressProof] = useState(formData?.addressProof || null);
+  const [fileError, setFileError] = useState("");
+
   const { data: fetchedLocalities, isLoading: isLoadingLocalities } = Digit.Hooks.useBoundaryLocalities(
     city?.code,
     "revenue",
@@ -76,6 +79,24 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
     },
     t
   );
+
+  // Handle the uploading of Address Details
+  const handleProofUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      setFileError(t("PROFILE_ADDRESS_PROOF_INVALID_TYPE"));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError(t("PROFILE_ADDRESS_PROOF_SIZE_EXCEEDED"));
+      return;
+    }
+    setFileError("");
+    setAddressProof(file);
+    onSelect((prev) => ({ ...prev, addressProof: file }));
+  };
 
   let structuredLocality = [];
   fetchedLocalities &&
@@ -87,21 +108,14 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
     let ownerAddress = formData.address;
     let addressStep = { ...ownerAddress, pincode, city, locality, houseNo, landmark, addressLine1, addressLine2, streetName, addressType };
     onSelect(config.key, { ...formData[config.key], ...addressStep }, false);
-    // Checks if the `config` is undefined, and if so, calls the `onSelect` function with the `addressStep` object.
-   // This ensures that the address step is selected when no specific configuration is provided.
-    if(config===undefined){
-      onSelect(addressStep);
-    }
   };
   /* If `config` is undefined and all required address fields are filled, it creates an `addressStep` object
     containing the address details and calls the `onSelect` function with it.
    **/
   useEffect(() => {
-    if (config === undefined && houseNo && city && locality && pincode && pincode.length === 6 && addressLine1 && streetName && addressLine2) {
-      let addressStep = { pincode, city, locality, houseNo, landmark, addressLine1, addressLine2, streetName, addressType };
-      onSelect(addressStep);
-    }
-  }, [pincode, city, locality, houseNo, landmark, addressLine1, addressLine2, streetName, addressType]);
+    onSelect((prev) => ({...prev, addressType, houseNo, streetName, addressLine1, addressLine2, landmark, city, locality, pincode}));
+  }, [addressType, houseNo, streetName, addressLine1, addressLine2, landmark, city, locality, pincode]);
+
   return (
     <React.Fragment>
         <FormStep
@@ -292,6 +306,15 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
           }}
           minlength={6}
           maxLength={6}
+      />
+      <CardLabel>{t("PROFILE_ADDRESS_PROOF")}</CardLabel>
+      <UploadFile
+        accept=".jpg,.jpeg,.png,.pdf"
+        onUpload={handleProofUpload}
+        onDelete={() => { setAddressProof(null); onSelect((prev) => ({ ...prev, addressProof: null })); }}
+        file={addressProof}
+        message={t("PROFILE_NO_FILE_SELECTED")}
+        iserror={fileError}
       />
     </div>
     </FormStep>

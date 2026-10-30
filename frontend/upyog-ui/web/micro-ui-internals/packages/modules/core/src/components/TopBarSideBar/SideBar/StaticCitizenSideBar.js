@@ -172,7 +172,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed,
   };
   const showProfilePage = () => {
     if (closeMobileSidebar) closeMobileSidebar();
-    navigate(`${APPLICATION_PATH}/citizen/user/profile`);
+    navigate(`${APPLICATION_PATH}/citizen/profile/profile-details`);
   };
   //const tenantId = Digit.ULBService.getCitizenCurrentTenant();
   const filteredTenantContact = storeData?.tenants.filter((e) => e.code === tenantId)[0]?.contactNumber || storeData?.tenants[0]?.contactNumber;
