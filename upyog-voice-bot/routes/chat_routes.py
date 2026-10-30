@@ -25,14 +25,7 @@ groq_client = None
 # Import modular handlers from chat_handlers
 from services.chat_handlers import (
     resolve_auth_and_profile,
-    handle_login_intent,
-    detect_special_intents,
-    handle_pending_multi_draft,
-    resolve_active_and_target_plugin,
-    handle_workflow_interruption_or_faq,
-    handle_draft_management,
-    execute_workflow_plugin,
-    execute_rag_fallback,
+    dispatch_chat_request,
     build_chat_error_response
 )
 
@@ -97,10 +90,9 @@ def chat():
     from services.rag_service import is_hard_blocked
     from services.voice_service import text_to_speech
     from services.intent_service import (
-        detect_language, classify_intent, _SERVICES_REGISTRY,
-        build_greeting_response, workflows
+        detect_language, _SERVICES_REGISTRY, _SYSTEM_CONFIG, workflows
     )
-    from storage.redis_manager import save_user_profile_name, get_chat_history
+    from storage.redis_manager import get_chat_history
 
     try:
         # 1. Warm-up wait for RAG models
@@ -130,7 +122,7 @@ def chat():
             if isinstance(raw_hist, list):
                 history = [h for h in raw_hist if isinstance(h, dict) and "role" in h and "content" in h]
 
-        # 4. Handle Document Uploads if attached
+        # 4. Handle Document Uploads if attached 
         if file_name and file_data and token:
             from mcp_tools import upload_to_filestore
             file_store_id = upload_to_filestore(file_name, file_data, token)
@@ -144,103 +136,40 @@ def chat():
         if not user_input and not file_name:
             return jsonify({"response": "", "lang": "en", "audio": ""})
 
-        # 5. Capture Citizen Profile Introductions ("I am Rahul" / "My name is Priya")
-        name_match = re.search(r'\bi\s+am\s+([A-Za-z]+)\b|\bmy\s+name\s+is\s+([A-Za-z]+)\b', user_input, re.IGNORECASE)
-        if name_match:
-            detected_name = name_match.group(1) or name_match.group(2)
-            save_user_profile_name(history_key, detected_name.strip().capitalize())
-
-        # 6. Script-aware language detection
+        # 5. Language detection
         lang_info = detect_language(user_input)
-        user_language = lang_info['lang']
+        user_language = lang_info['lang'] 
         detected_script = lang_info['script']
-        search_lang = lang_info['search_lang']
 
         logger.info(f"━━━ REQUEST [Session: {session_id}] ━━━")
         logger.info(f"Query: '{user_input}' | Lang: {user_language} | Script: {detected_script}")
         logger.info(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-        # 7. Hard-block check for out-of-domain topics
+        # 6. Hard-block check for out-of-domain topics
         if is_hard_blocked(user_input):
             logger.info(f"[CHAT FLOW] Query hard-blocked for out-of-domain topic.")
-            msg = ("मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।"
+            sys_blocked = _SYSTEM_CONFIG.get("system_messages", {}).get("blocked", {})
+            msg = (sys_blocked.get("response_hi", "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।")
                    if user_language == 'hi' else
-                   "I can only help with UPYOG and urban government services.")
+                   sys_blocked.get("response_en", "I can only help with UPYOG and urban government services."))
             audio_output = text_to_speech(msg, user_language)
             return jsonify({"response": msg, "lang": user_language, "audio": audio_output, "mode": "blocked"})
 
-        # 8. Pure greeting pre-check
-        _greet_cfg = next((s for s in _SERVICES_REGISTRY if s.get("key") == "greeting"), {})
-        _greet_kws = [w.lower() for w in _greet_cfg.get("keywords", [
-            "hello", "hi", "hey", "namaste", "good morning", "good afternoon",
-            "good evening", "hola", "howdy", "greetings", "नमस्ते", "हेलो"
-        ])]
-        _is_pure_greeting = (
-            user_input.lower().strip() in _greet_kws or
-            (len(user_input.split()) <= 2 and
-             any(re.search(rf'\b{re.escape(w)}\b', user_input.lower()) for w in _greet_kws) and
-             not any(l in user_input.lower() for l in ["hindi", "hinglish", "english", "translate", "karo", "batao", "status", "bill"]))
+        # 7. Unified Intent & Workflow Execution Dispatcher
+        chat_resp = dispatch_chat_request(
+            user_input=user_input,
+            user_language=user_language,
+            detected_script=detected_script,
+            history=history,
+            session_id=session_id,
+            phone_anchor=phone_anchor,
+            is_authenticated=is_authenticated,
+            cached_info=cached_info,
+            workflows=workflows,
+            services_registry=_SERVICES_REGISTRY,
+            system_config=_SYSTEM_CONFIG
         )
-        if _is_pure_greeting:
-            greet_msg = build_greeting_response(user_language, workflows)
-            audio_output = text_to_speech(greet_msg, user_language)
-            return jsonify({"response": greet_msg, "lang": user_language, "mode": "greeting", "audio": audio_output})
-
-        # 9. Login guidance & login claim verification
-        is_login_handled, login_resp = handle_login_intent(user_input, user_language, is_authenticated, cached_info)
-        if is_login_handled:
-            return jsonify(login_resp)
-
-        # 10. Multi-Draft Selection Menu Interception
-        phone = phone_anchor if phone_anchor != "default" else session_id
-        is_multi_handled, multi_resp = handle_pending_multi_draft(user_input, user_language, phone, session_id, workflows)
-        if is_multi_handled:
-            return jsonify(multi_resp)
-
-        # 11. Intent Classification & Pattern Matching
-        special_intent = detect_special_intents(user_input)
-        if special_intent:
-            intent_data = special_intent
-        else:
-            intent_data = classify_intent(user_input, history, user_language)
-
-        intent = intent_data['intent']
-        logger.info(f"INTENT: {intent}, SERVICE: {intent_data.get('service')}, EMOTION: {intent_data.get('emotion')}")
-
-        # 12. Active Module & Target Plugin Resolution
-        thread_key = phone if (phone and phone != "default") else session_id
-        config = {"configurable": {"thread_id": thread_key}}
-        active_plugin, plugin_intent, target_wf = resolve_active_and_target_plugin(
-            user_input, intent, phone, session_id, workflows, _SERVICES_REGISTRY, config
-        )
-
-        # 13. Mid-Workflow Interruption / FAQ
-        ui_lower = user_input.strip().lower()
-        is_ui_payload = (ui_lower.startswith("[") and ui_lower.endswith("]")) or (ui_lower.startswith("{") and ui_lower.endswith("}"))
-        is_interrupted, faq_resp = handle_workflow_interruption_or_faq(
-            user_input, user_language, history, session_id, phone, active_plugin, workflows, config, is_ui_payload
-        )
-        if is_interrupted:
-            return jsonify(faq_resp)
-
-        # 14. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
-        is_draft_op, draft_resp = handle_draft_management(
-            intent, user_input, user_language, phone, session_id, active_plugin, workflows, config
-        )
-        if is_draft_op:
-            return jsonify(draft_resp)
-
-        # 15. Transactional Workflow Execution (LangGraph Plugins) 
-        if target_wf and target_wf in workflows:
-            logger.info(f"Routing to dynamic plugin: {target_wf}")
-            wf_resp = execute_workflow_plugin(
-                target_wf, user_input, user_language, phone, session_id, is_authenticated
-            )
-            return jsonify(wf_resp)
-
-        # 16. Knowledge Base RAG / FAQ Retrieval Fallback
-        rag_resp = execute_rag_fallback(user_input, user_language, detected_script, history, session_id)
-        return jsonify(rag_resp), 200
+        return jsonify(chat_resp), 200
 
     except Exception as e:
         logger.error(f"[ENDPOINT /chat ERROR] Exception: {e}", exc_info=True)

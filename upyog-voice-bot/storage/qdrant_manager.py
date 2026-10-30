@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import uuid
 import os
 import yaml
+import yaml
 from dotenv import load_dotenv
 
 # We will use Qdrant for both vector-based RAG and persistent sliding window memory.
@@ -116,7 +117,10 @@ def get_memory_retention_days() -> int:
             logger.warning(f"Invalid integer in MEMORY_RETENTION_DAYS env variable: {env_days}")
 
     try:
-        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yml")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config_path = os.path.join(base_dir, "config.yml")
+        if not os.path.exists(config_path):
+            config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yml")
         if os.path.exists(config_path):
             with open(config_path, "r", encoding="utf-8") as f:
                 cfg = yaml.safe_load(f) or {}
@@ -142,35 +146,20 @@ class MemoryManager:
     def _enforce_sliding_window(phone_number: str):
         retention_days = get_memory_retention_days()
         cutoff_date = datetime.now() - timedelta(days=retention_days)
+        retention_days = get_memory_retention_days()
+        cutoff_date = datetime.now() - timedelta(days=retention_days)
         cutoff_timestamp = int(cutoff_date.timestamp())
 
         try:
             # NOTE: Deletes ALL chat history older than cutoff_date for the current user (This code to be used when qdrant database is set up)
-            # client.delete(
-            #     collection_name=LONG_TERM_MEMORY_COLLECTION,
-            #     points_selector=Filter(
-            #         must=[
-            #             FieldCondition(
-            #                 key="phone_number",
-            #                 match=MatchValue(value=phone_number)
-            #             ),
-            #             FieldCondition(
-            #                 key="timestamp",
-            #                 range=Range(lt=cutoff_timestamp)
-            #             )
-            #         ]
-            #     )
-            # )
-            # logger.info(f"Enforced sliding window. Deleted records older than {cutoff_date} ({retention_days} days) for {phone_number}.")
-
-
-            # --- Global Pod Storage Cleanup ---
-            # NOTE: Deletes ALL chat history older than configured retention_days across all users
-            # (Fixes memory filling issue in voice-bot pod in sandbox / containerized environments)
             client.delete(
                 collection_name=LONG_TERM_MEMORY_COLLECTION,
                 points_selector=Filter(
                     must=[
+                        FieldCondition(
+                            key="phone_number",
+                            match=MatchValue(value=phone_number)
+                        ),
                         FieldCondition(
                             key="timestamp",
                             range=Range(lt=cutoff_timestamp)
@@ -178,7 +167,24 @@ class MemoryManager:
                     ]
                 )
             )
-            logger.info(f"Enforced global sliding window. Deleted all records older than {cutoff_date} ({retention_days} days retention).")
+            logger.info(f"Enforced sliding window. Deleted records older than {cutoff_date} ({retention_days} days) for {phone_number}.")
+
+
+            # --- Global Pod Storage Cleanup ---
+            # NOTE: Deletes ALL chat history older than configured retention_days across all users
+            # (Fixes memory filling issue in voice-bot pod in sandbox / containerized environments)
+            # client.delete(
+            #     collection_name=LONG_TERM_MEMORY_COLLECTION,
+            #     points_selector=Filter(
+            #         must=[
+            #             FieldCondition(
+            #                 key="timestamp",
+            #                 range=Range(lt=cutoff_timestamp)
+            #             )
+            #         ]
+            #     )
+            # )
+            # logger.info(f"Enforced global sliding window. Deleted all records older than {cutoff_date} ({retention_days} days retention).")
         except Exception as e:
             logger.error(f"Error enforcing sliding window: {e}")
 

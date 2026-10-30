@@ -7,7 +7,6 @@ Prompts Package for UPYOG Voice Bot:
 """
 
 from prompts.system_prompt import (
-    SYSTEM_PROMPT,
     OUT_OF_DOMAIN_KEYWORDS,
     UPYOG_KEYWORDS,
     HARD_BLOCK_TOPICS,
@@ -35,7 +34,6 @@ from prompts.memory_prompts import (
 )
 
 __all__ = [
-    "SYSTEM_PROMPT",
     "OUT_OF_DOMAIN_KEYWORDS",
     "UPYOG_KEYWORDS",
     "HARD_BLOCK_TOPICS",

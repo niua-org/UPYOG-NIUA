@@ -78,7 +78,8 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
         logger.info(f"[INTENT CLASSIFIER] Groq parsed response: {result}")
 
         valid_intents = [
-            "greeting", "faq", "profile", "grievance_candidate", "grievance_confirm", "grievance_cancel", "grievance_status_candidate",
+            "greeting", "faq", "profile", "out_of_domain", "login_query", "login_claim",
+            "grievance_candidate", "grievance_confirm", "grievance_cancel", "grievance_status_candidate",
             "booking_candidate", "booking_confirm", "booking_cancel",
             "adv_candidate", "adv_confirm", "adv_cancel", "adv_status_candidate",
             "draft_resume", "draft_delete", "draft_save", "draft_continue_application", "end_conversation"
@@ -88,61 +89,48 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
             logger.warning(f"[INTENT CLASSIFIER] Invalid intent '{result.get('intent')}' returned — resetting to 'faq'")
             result["intent"] = "faq"
 
+        if "extracted_name" not in result:
+            result["extracted_name"] = None
+
+        if "is_question" not in result:
+            result["is_question"] = result.get("intent") in ["faq", "login_query"]
+        else:
+            result["is_question"] = bool(result["is_question"])
+
         return result
 
     except Exception as e:
         logger.error(f"[INTENT CLASSIFIER] Classifier exception: {e}")
-        return {"intent": "faq", "reasoning": "classifier failed", "service": None, "emotion": "neutral"}
+        return {"intent": "faq", "reasoning": "classifier failed", "service": None, "emotion": "neutral", "extracted_name": None, "is_question": True}
 
 
-# ─── Config-driven greeting builder ────────────────────────────────────────────
+# ─── Config-driven services and system messages loader ─────────────────────────
 
-def _load_services_registry() -> list:
-    """Load the services list from config.yml once at startup."""
+def _load_system_config() -> dict:
+    """Load configuration dictionary from config.yml once at startup."""
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cfg_path = os.path.join(base_dir, "config.yml")
     if not os.path.exists(cfg_path):
         cfg_path = os.path.join(base_dir, "workflow", "config.yml")
     try:
-        with open(cfg_path, "r") as f:
-            return yaml.safe_load(f).get("services", [])
+        with open(cfg_path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
     except Exception as e:
-        logger.error(f"Failed to load config.yml in _load_services_registry: {e}")
-        return []
+        logger.error(f"Failed to load config.yml in _load_system_config: {e}")
+        return {}
 
-_SERVICES_REGISTRY: list = _load_services_registry()
+_SYSTEM_CONFIG: dict = _load_system_config()
+_SERVICES_REGISTRY: list = _SYSTEM_CONFIG.get("services", [])
 
 
-def build_greeting_response(lang: str, active_workflows: dict) -> str:
+def build_greeting_response(lang: str, active_workflows: dict = None) -> str:
     """
-    Returns a short, polite, professional greeting using LLM.
-    No service list — just a professional hello.
+    Returns a short, polite, professional greeting loaded from config.yml.
     """
-    rand_seed = random.randint(1, 9999)
-
-    prompt = build_greeting_prompt(lang=lang, rand_seed=rand_seed)
-
-    try:
-        global groq_client
-        if not groq_client and Groq:
-            groq_client = Groq(api_key=GROQ_API_KEY)
-        if groq_client:
-            resp = groq_client.chat.completions.create(
-                model=GROQ_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=400,
-                temperature=0.2,
-            )
-            content = resp.choices[0].message.content.strip()
-            if content:
-                return content
-        if lang == "hi":
-            return "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?"
-        return "Hello! I'm UPYOG AI. How can I help you today?"
-    except Exception:
-        if lang == "hi":
-            return "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?"
-        return "Hello! I'm UPYOG AI. How can I help you today?"
+    greet_cfg = _SYSTEM_CONFIG.get("system_messages", {}).get("greeting", {})
+    if lang == "hi":
+        return greet_cfg.get("response_hi", "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?")
+    return greet_cfg.get("response_en", "Hello! I'm UPYOG AI. How can I help you today?")
 
 
 # ==========================================
