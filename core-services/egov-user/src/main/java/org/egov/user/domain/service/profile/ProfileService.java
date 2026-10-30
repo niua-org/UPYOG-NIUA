@@ -1,17 +1,21 @@
 package org.egov.user.domain.service.profile;
 
+import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.User;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
+import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
 import org.egov.user.web.contract.profile.ProfileResyncRequest;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service contract for citizen profile lifecycle management, supporting full profile creation,
- * lightweight onboarding, demographic updates with non-editable restrictions, and Aadhaar profile re-sync.
+ * lightweight onboarding, demographic updates with non-editable restrictions, search with entity enrichment,
+ * and Aadhaar profile re-sync.
  *
  * <p>Strictly adheres to SOLID principles:</p>
  * <ul>
@@ -54,13 +58,34 @@ public interface ProfileService {
     User updateProfile(ProfileUpdateRequest request);
 
     /**
-     * Searches citizen profiles by criteria with decrypted PII attributes.
+     * Searches citizen profiles by criteria with decrypted PII attributes, resolving requested entity sections.
      *
      * @param request profile search request payload
      * @return list of matching decrypted citizen profiles
      * @throws org.egov.tracer.model.CustomException if search criteria are empty or malformed
      */
     List<User> searchProfile(ProfileSearchRequest request);
+
+    /**
+     * Searches citizen profiles by criteria with decrypted PII attributes using pre-resolved entity inclusion flags.
+     *
+     * @param request  profile search request payload
+     * @param includes pre-resolved set of {@link ProfileIncludeEntity} sections to enrich
+     * @return list of matching decrypted citizen profiles
+     * @throws org.egov.tracer.model.CustomException if search criteria are empty or malformed
+     */
+    List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes);
+
+    /**
+     * Resolves and normalizes requested entity inclusion flags (PROFILE, ADDRESS, DOCUMENT).
+     * Validates each section using {@link ProfileIncludeEntity#fromString(String)} and rejects unknown
+     * sections with an HTTP 400 {@link CustomException}. Defaults to [PROFILE] if omitted or empty.
+     *
+     * @param rawIncludes raw include flag strings from request (e.g. "PROFILE", "ADDRESS", "DOCUMENT")
+     * @return set of validated {@link ProfileIncludeEntity} include flags
+     * @throws org.egov.tracer.model.CustomException if an unknown include entity string is provided
+     */
+    Set<ProfileIncludeEntity> resolveIncludes(List<String> rawIncludes);
 
     /**
      * Re-synchronizes citizen profile demographics with verified Aadhaar e-KYC.

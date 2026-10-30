@@ -142,6 +142,16 @@ public class ProfileCreateRequest {
     @Schema(description = "Upload D.O.B. Proof filestore ID (Mandatory if not in documents list)", example = "filestore-dob-1234")
     private String dobProofFileStoreId;
 
+    @Schema(description = "Identity verification status flag", example = "false")
+    @JsonProperty("isIdentityVerified")
+    @JsonAlias({"isVerified", "identityVerified"})
+    private Boolean isIdentityVerified;
+
+    @Schema(description = "User type (CITIZEN, EMPLOYEE, etc.)", example = "CITIZEN")
+    @JsonProperty("type")
+    @JsonAlias({"userType"})
+    private String type;
+
     @Schema(description = "Nested citizen profile payload supporting standard UPYOG request contracts")
     @JsonProperty("user")
     @JsonAlias({"profile", "User"})
@@ -182,12 +192,20 @@ public class ProfileCreateRequest {
     }
 
     @JsonSetter("user")
+    /**
+     * Deserializes and unrolls legacy nested {@code user} or {@code profile} payload maps into top-level attributes.
+     *
+     * @param userMap raw key-value map representing nested user properties
+     */
     @JsonAlias({"profile", "User"})
     public void setUser(Map<String, Object> userMap) {
         this.user = userMap;
         unpackUserIfPresent();
     }
 
+    /**
+     * Unpacks nested user map entries into top-level fields for backwards compatibility with legacy wrapper payloads.
+     */
     public void unpackUserIfPresent() {
         if (this.user == null) return;
         Map<String, Object> userMap = this.user;
@@ -237,6 +255,18 @@ public class ProfileCreateRequest {
         }
         if (this.dob == null && userMap.get("dob") != null) {
             this.dob = parseDateHelper(userMap.get("dob"));
+        }
+        if (this.isIdentityVerified == null) {
+            if (userMap.get("isIdentityVerified") != null) {
+                this.isIdentityVerified = Boolean.valueOf(String.valueOf(userMap.get("isIdentityVerified")));
+            } else if (userMap.get("isVerified") != null) {
+                this.isIdentityVerified = Boolean.valueOf(String.valueOf(userMap.get("isVerified")));
+            }
+        }
+        if ((this.type == null || this.type.trim().isEmpty()) && userMap.get("type") != null) {
+            this.type = String.valueOf(userMap.get("type"));
+        } else if ((this.type == null || this.type.trim().isEmpty()) && userMap.get("userType") != null) {
+            this.type = String.valueOf(userMap.get("userType"));
         }
         ObjectMapper mapper = new ObjectMapper();
         if (this.address == null && userMap.containsKey("address")) {

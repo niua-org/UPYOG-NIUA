@@ -72,6 +72,13 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
     private final Map<String, CacheEntry> tenantAddressTypeCache = new ConcurrentHashMap<>();
 
     @Autowired
+    /**
+     * Constructs the address master data service with required REST client and configuration.
+     *
+     * @param restTemplate      HTTP client for invoking MDMS service
+     * @param objectMapper      Jackson object mapper for parsing MDMS JSON payloads
+     * @param userConfiguration application properties including cache TTL and endpoint URLs
+     */
     public AddressMasterDataServiceImpl(RestTemplate restTemplate,
                                       ObjectMapper objectMapper,
                                       UserConfiguration userConfiguration) {
@@ -266,16 +273,20 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
     }
 
     /**
-     * Derives the state-level tenant ID from a given tenant (e.g. "pb.amritsar" -> "pb").
+     * Derives the state-level tenant ID from a given tenant (e.g. "pb.amritsar" -> stateTenant).
+     * If tenantId is blank, retrieves state-level tenant ID from userConfiguration.
+     * Throws CustomException if getStateLevelTenantId() is null or blank.
      *
      * @param tenantId input tenant
      * @return state-level tenant string
      */
     private String getStateLevelTenant(String tenantId) {
         if (StringUtils.isBlank(tenantId)) {
-            return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getStateLevelTenantId()))
-                    ? userConfiguration.getStateLevelTenantId()
-                    : "pb";
+            if (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getStateLevelTenantId())) {
+                return userConfiguration.getStateLevelTenantId().trim();
+            }
+            log.error("[ADDRESS-MDMS-SERVICE] Tenant ID is blank and state-level tenant ID is not configured");
+            throw new CustomException(UserConstants.ERROR_TENANT_ID_REQUIRED, "Tenant ID cannot be determined: state-level tenant ID is not configured");
         }
         return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
     }

@@ -61,6 +61,15 @@ public class CustomAuthenticationController {
     @Value("${oauth2.token.format}")
     private String tokenFormat;
 
+    /**
+     * Constructs the custom authentication controller with required managers, services, and token stores.
+     *
+     * @param authenticationManager Spring authentication manager
+     * @param jwtEncoder            JWT encoder for signing tokens
+     * @param userService           core user service
+     * @param userRepository        user persistence repository
+     * @param redisTemplate         Redis template for caching OAuth tokens
+     */
     @Autowired
     public CustomAuthenticationController(AuthenticationManager authenticationManager,
                                           JwtEncoder jwtEncoder,
@@ -74,6 +83,20 @@ public class CustomAuthenticationController {
         this.redisTemplate = redisTemplate;
     }
 
+    /**
+     * OAuth2 token endpoint handling password and client_credentials grants.
+     * Authenticates credentials, validates account active status, and issues access/refresh tokens.
+     *
+     * @param grantType  OAuth2 grant type ("password" or "client_credentials")
+     * @param username   username or mobile number for login
+     * @param password   password or OTP string
+     * @param tenantId   tenant identifier
+     * @param userType   user type (CITIZEN or EMPLOYEE)
+     * @param scope      token scope
+     * @param isInternal internal service call flag
+     * @param request    HttpServletRequest containing additional parameters
+     * @return response entity containing OAuth2 token payload or error description
+     */
     @PostMapping("/token")
     public ResponseEntity<?> authenticate(@RequestParam("grant_type") String grantType,
                                         @RequestParam(value = "username", required = false) String username,
@@ -97,8 +120,11 @@ public class CustomAuthenticationController {
             }
         } catch (BadCredentialsException e) {
             log.error("Authentication failed for user: {}", username, e);
+            String message = (e.getMessage() != null && e.getMessage().toLowerCase().contains("inactive"))
+                    ? "Citizen account is inactive. Please contact support."
+                    : "Invalid username or password";
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(createErrorResponse("invalid_grant", "Invalid username or password"));
+                .body(createErrorResponse("invalid_grant", message));
         } catch (Exception e) {
             log.error("Token generation failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -226,7 +252,11 @@ public class CustomAuthenticationController {
             return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
             log.warn("Authentication failed for user: {} - {}", username, e.getMessage());
-            
+
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("inactive")) {
+                throw e;
+            }
+
             // Handle failed login using existing service
             try {
                 RequestInfo requestInfo = RequestInfo.builder()
@@ -591,6 +621,7 @@ public class CustomAuthenticationController {
             .spouseName(contractUser.getSpouseName())
             .isIdentityVerified(contractUser.getIsIdentityVerified())
             .identityVerifiedDate(contractUser.getIdentityVerifiedDate() != null ? new Date(contractUser.getIdentityVerifiedDate()) : null)
+            .identityVerifiedSource(contractUser.getIdentityVerifiedSource())
             .lastResyncDate(contractUser.getLastResyncDate() != null ? new Date(contractUser.getLastResyncDate()) : null)
             .edittedCount(contractUser.getEdittedCount())
             .lastLoginMethod(contractUser.getLastLoginMethod())
@@ -629,6 +660,7 @@ public class CustomAuthenticationController {
             .spouseName(domainUser.getSpouseName())
             .isIdentityVerified(domainUser.getIsIdentityVerified())
             .identityVerifiedDate(domainUser.getIdentityVerifiedDate() != null ? domainUser.getIdentityVerifiedDate().getTime() : null)
+            .identityVerifiedSource(domainUser.getIdentityVerifiedSource())
             .lastResyncDate(domainUser.getLastResyncDate() != null ? domainUser.getLastResyncDate().getTime() : null)
             .edittedCount(domainUser.getEdittedCount())
             .lastLoginMethod(domainUser.getLastLoginMethod())

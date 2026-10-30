@@ -65,7 +65,7 @@ public class LoginV2ServiceTest {
                 .gender(Gender.MALE)
                 .dob(new Date())
                 .type(UserType.CITIZEN)
-                .tenantId("pb")
+                .tenantId("pg")
                 .active(true)
                 .build();
     }
