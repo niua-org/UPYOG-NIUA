@@ -4355,14 +4355,18 @@
   padding-right: 16px;
 }
 
-.tl-check-page-btn {
-  width: 100px;
-  display: inline;
+.card .tl-check-page-btn.card-link,
+.employeeCard .tl-check-page-btn.card-link {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 0;
+  text-align: right;
 }
 
 .tl-check-page-btn-relative-mt-neg {
   margin-top: -10px;
-  float: right;
+  float: none;
   position: relative;
   bottom: 32px;
 }
