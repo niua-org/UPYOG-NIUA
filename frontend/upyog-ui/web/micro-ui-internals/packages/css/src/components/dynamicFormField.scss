@@ -1,4 +1,55 @@
 /* DynamicFormField — per-field label/error/unit and lookup styles. */
+
+/* Inline label + control (works for citizen Card and employeeCard).
+ * Accordion layout overrides these widths in dynamicFormAccordion.scss —
+ * keep that file's selectors more specific (doubled class) so import order
+ * cannot reintroduce 30%/50% side-by-side widths inside dense grid cells.
+ */
+.dynamic-form-container:not(.dynamic-form-container--accordion) {
+  .label-field-pair {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 0;
+
+    > .card-label,
+    > .card-label-smaller {
+      width: 30%;
+      flex-shrink: 0;
+      margin-bottom: 0;
+      padding-top: 8px;
+    }
+
+    > .field {
+      width: 50%;
+      margin-right: 20%;
+      min-width: 0;
+    }
+
+    .dynamic-form-field__radio-group {
+      margin-bottom: 0;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+@media (max-width: 780px) {
+  .dynamic-form-container:not(.dynamic-form-container--accordion) {
+    .label-field-pair {
+      flex-direction: column;
+      align-items: stretch;
+
+      > .card-label,
+      > .card-label-smaller,
+      > .field {
+        width: 100%;
+        margin-right: 0;
+        padding-top: 0;
+      }
+    }
+  }
+}
+
 .dynamic-form-field {
   &__label {
     &--error {
@@ -24,6 +75,76 @@
     color: #333;
   }
 
+  &__field-array {
+    margin-bottom: 16px;
+  }
+
+  &__field-array-card {
+    border: 1px solid #b1b4b6;
+    padding: 16px 20px 8px;
+    margin-bottom: 16px;
+    background: #fff;
+  }
+
+  &__field-array-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__field-array-card-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0b0c0c;
+  }
+
+  &__field-array-card-body {
+    /* Children already use LabelFieldPair for inline label/field */
+  }
+
+  &__field-array-remove {
+    border: none;
+    background: transparent;
+    color: #d4351c;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+    text-decoration: underline;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__field-array-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 20px;
+    border: 1px solid #0b0c0c;
+    background: #fff;
+    color: #0b0c0c;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 8px;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      background: #f3f2f1;
+    }
+  }
+
   &__group {
     margin-bottom: 16px;
   }
@@ -43,8 +164,60 @@
 
   &__radio-group {
     display: flex;
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 12px 24px;
     margin-bottom: 16px;
+
+    /* The selected class draws the dot. The input stays enabled so :checked still matches. */
+    .radio-btn {
+      opacity: 0 !important;
+    }
+
+    .radio-btn-wrap--disabled {
+      pointer-events: none;
+    }
+
+    .radio-btn-checkmark {
+      position: relative;
+    }
+
+    .radio-btn-checkmark:after,
+    .radio-btn-wrap--selected .radio-btn-checkmark:after,
+    .radio-btn-wrap input:checked ~ .radio-btn-checkmark:after {
+      content: none !important;
+      display: none !important;
+    }
+
+    .radio-btn-dot {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      width: 8px;
+      height: 8px;
+      margin: auto;
+      transform: none;
+      border-radius: 50%;
+      background: #a82227;
+      pointer-events: none;
+    }
+
+    .radio-btn-wrap--selected .radio-btn-checkmark {
+      position: relative;
+      border-color: #a82227;
+    }
+
+    &.radio-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      margin-bottom: 0;
+
+      > div {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0;
+      }
+    }
   }
 
   &__radio-label {
@@ -64,15 +237,46 @@
   &__lookup {
     position: relative;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 
     input {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
       padding-right: 44px !important;
+    }
+
+    &-input-container {
+      /* Grow beside Search button; text-input + suggest-box share this width. */
+      flex: 1 1 0;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+
+      .text-input,
+      .text-input-width,
+      .dynamic-form-field__suggest-box,
+      .dynamic-form-field__result-card,
+      .dynamic-form-field__not-found {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
     }
 
     &--with-button {
       display: flex;
       align-items: flex-start;
       gap: 12px;
+      width: 100%;
+      max-width: 100%;
+
+      .dynamic-form-field__lookup-input-container {
+        flex: 1 1 0;
+        min-width: 0;
+      }
 
       input {
         padding-right: 8px !important;
@@ -127,18 +331,21 @@
   &__suggest-box {
     margin-top: 8px;
     border: 1px solid #0b0c0c;
-    max-width: 720px;
+    width: 100%;
+    max-width: 100%;
     max-height: 240px;
+    overflow-x: hidden;
     overflow-y: auto;
     background: #fff;
+    box-sizing: border-box;
   }
 
   &__suggest-item {
     width: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
     padding: 12px 16px;
     border: none;
     border-bottom: 1px solid #b1b4b6;
@@ -147,6 +354,7 @@
     cursor: pointer;
     font-size: 16px;
     color: #0b0c0c;
+    box-sizing: border-box;
 
     &:last-child {
       border-bottom: none;
@@ -159,11 +367,14 @@
 
   &__suggest-no {
     font-weight: 600;
+    word-break: break-word;
   }
 
   &__suggest-sub {
     color: #505a5f;
     font-size: 14px;
+    word-break: break-word;
+    white-space: normal;
   }
 
   &__result-card {

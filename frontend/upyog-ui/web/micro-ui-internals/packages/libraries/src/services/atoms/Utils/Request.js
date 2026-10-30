@@ -13,20 +13,21 @@ Axios.interceptors.response.use(
     const isEmployee = window.location.pathname.split("/").includes("employee");
     if (err?.response?.data?.Errors) {
       for (const error of err.response.data.Errors) {
-        if (error.message.includes("InvalidAccessTokenException")) {
+        const message = String(error?.message || "");
+        if (message.includes("InvalidAccessTokenException")) {
           localStorage.clear();
           sessionStorage.clear();
           window.location.href =
             (isEmployee ? "/upyog-ui/employee/user/login" : "/upyog-ui/citizen/login") +
             `?from=${encodeURIComponent(window.location.pathname + window.location.search)}`;
         } else if (
-          error?.message?.toLowerCase()?.includes("internal server error") ||
-          error?.message?.toLowerCase()?.includes("some error occured")
+          message.toLowerCase().includes("internal server error") ||
+          message.toLowerCase().includes("some error occured")
         ) {
           window.location.href =
             (isEmployee ? "/upyog-ui/employee/user/error" : "/upyog-ui/citizen/error") +
             `?type=maintenance&from=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-        } else if (error.message.includes("ZuulRuntimeException")) {
+        } else if (message.includes("ZuulRuntimeException")) {
           window.location.href =
             (isEmployee ? "/upyog-ui/employee/user/error" : "/upyog-ui/citizen/error") +
             `?type=notfound&from=${encodeURIComponent(window.location.pathname + window.location.search)}`;

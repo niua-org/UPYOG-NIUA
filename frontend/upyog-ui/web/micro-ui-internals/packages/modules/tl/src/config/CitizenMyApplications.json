@@ -1,0 +1,112 @@
+{
+  "_readme": {
+    "_comment": "Citizen My Applications. The screen reads this file. MDMS TradeLicense.CitizenMyApplicationsConfig replaces these values when that master is present. Keys starting with _ are notes.",
+    "filters": "text matches matchFields on the license. dropdown matches filter.name exactly.",
+    "resultFields": "Card rows. format owner | workflowStatus | epochDate. Omit format for plain text.",
+    "cardActions": "viewDetails always. makePayment only when visibleWhen matches."
+  },
+  "header": "TL_MY_APPLICATIONS_HEADER",
+  "resultMode": "cards",
+  "autoSearch": true,
+  "businessService": "TL",
+  "listRoute": "/upyog-ui/citizen/tl/tradelicence/my-application",
+  "emptyValue": "CS_NA",
+  "emptyState": {
+    "message": "PT_NO_APPLICATION_FOUND_MSG"
+  },
+  "messages": {
+    "error": "CS_SOMETHING_WENT_WRONG",
+    "loadMore": "PT_LOAD_MORE_MSG"
+  },
+  "searchDefaults": {
+    "offset": 0,
+    "limit": 100
+  },
+  "paginationDefaults": {
+    "offset": 0,
+    "limit": 50,
+    "sortBy": "applicationDate",
+    "sortOrder": "DESC"
+  },
+  "filters": [
+    {
+      "order": 1,
+      "key": "TL_HOME_SEARCH_RESULTS_APP_NO_LABEL",
+      "name": "applicationNumber",
+      "type": "text",
+      "placeholder": "TL_HOME_SEARCH_RESULTS_APP_NO_LABEL",
+      "matchFields": ["applicationNumber", "licenseNumber"]
+    },
+    {
+      "order": 2,
+      "key": "TL_COMMON_TABLE_COL_STATUS",
+      "name": "status",
+      "type": "dropdown",
+      "placeholder": "TL_HOME_SEARCH_RESULTS_APP_STATUS_LABEL",
+      "options": [
+        { "code": "INITIATED", "i18nKey": "WF_NEWTL_INITIATED" },
+        { "code": "APPLIED", "i18nKey": "WF_NEWTL_APPLIED" },
+        { "code": "FIELDINSPECTION", "i18nKey": "WF_NEWTL_FIELDINSPECTION" },
+        { "code": "PENDINGAPPROVAL", "i18nKey": "WF_NEWTL_PENDINGAPPROVAL" },
+        { "code": "PENDINGPAYMENT", "i18nKey": "WF_NEWTL_PENDINGPAYMENT" },
+        { "code": "CITIZENACTIONREQUIRED", "i18nKey": "WF_NEWTL_CITIZENACTIONREQUIRED" },
+        { "code": "APPROVED", "i18nKey": "WF_NEWTL_APPROVED" },
+        { "code": "REJECTED", "i18nKey": "WF_NEWTL_REJECTED" },
+        { "code": "CANCELLED", "i18nKey": "WF_NEWTL_CANCELLED" },
+        { "code": "EXPIRED", "i18nKey": "WF_NEWTL_EXPIRED" }
+      ]
+    }
+  ],
+  "resultFields": [
+    {
+      "order": 1,
+      "key": "TL_COMMON_TABLE_COL_APP_NO",
+      "accessor": "applicationNumber"
+    },
+    {
+      "order": 2,
+      "key": "TL_COMMON_TABLE_COL_LICENSE_NO",
+      "accessor": "licenseNumber"
+    },
+    {
+      "order": 3,
+      "key": "TL_COMMON_TABLE_COL_TRD_NAME",
+      "accessor": "tradeName"
+    },
+    {
+      "order": 4,
+      "key": "TL_COMMON_TABLE_COL_OWN_NAME",
+      "accessor": "ownerName",
+      "format": "owner"
+    },
+    {
+      "order": 5,
+      "key": "TL_COMMON_TABLE_COL_STATUS",
+      "accessor": "status",
+      "format": "workflowStatus",
+      "i18nPrefix": "WF_NEWTL_"
+    },
+    {
+      "order": 6,
+      "key": "TL_COMMON_TABLE_COL_APP_DATE",
+      "accessor": "applicationDate",
+      "format": "epochDate"
+    }
+  ],
+  "cardActions": [
+    {
+      "name": "viewDetails",
+      "label": "TL_VIEW_DETAILS"
+    },
+    {
+      "name": "makePayment",
+      "label": "COMMON_MAKE_PAYMENT",
+      "businessService": "TL",
+      "visibleWhen": { "field": "status", "equals": "PENDINGPAYMENT" }
+    }
+  ],
+  "actionButton": {
+    "search": "ES_COMMON_SEARCH",
+    "clear": "ES_COMMON_CLEAR_ALL"
+  }
+}

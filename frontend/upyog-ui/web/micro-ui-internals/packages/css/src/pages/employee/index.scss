@@ -18,10 +18,10 @@
 
   .card-home {
     font-size: 16px;
-    padding: 0 0 16px 0;
-    width: 92vw;
+    padding: 0;
+    width: 100%;
     display: inline-block;
-    margin: 8px auto;
+    margin: 0;
   }
 
   .home-action-cards {
@@ -43,8 +43,8 @@
 
       &.city {
         margin-right: 8px;
-        height: 48px;
-        width: 48px;
+        height: 32px;
+        width: 69px;
       }
 
       &.state {
@@ -56,6 +56,7 @@
 
     .ulb {
       font-weight: bold;
+      font-size: 14px;
     }
 
     .right {
@@ -558,9 +559,9 @@
     }
 
     .card-home {
-      width: 270px;
-      margin-right: 10px;
-      margin-bottom: 10px;
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 0;
     }
 
     .card-home-hrms {
@@ -1699,13 +1700,26 @@
     user-select: none;
   }
 }
-
 .tl-breadcrumb-bar {
   margin-left: 10px;
   margin-bottom: 16px;
 
   &.tl-breadcrumb-bar--active {
     margin-left: 12px;
+  }
+}
+
+@media only screen and (min-width: 300px) {
+  .employee .card-home {
+    min-height: 200px;
+    height: auto;
+    box-shadow: none;
+    border-radius: 10px;
+  }
+
+  .employee .card-home.full-width-card,
+  .employee .card-home.home-action-cards {
+    box-shadow: #32325d14 0px 50px 100px -20px, rgb(0 0 0 / 18%) 0px 30px 60px -30px, #0a254038 0px -2px 6px 0px inset;
   }
 }
 

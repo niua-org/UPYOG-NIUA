@@ -174,6 +174,9 @@ const UploadFile = (props) => {
   };
 
   const handleEmpty = () => {
+    // A confirmed upload lives on props.file. Clearing the input must not
+    // delete that stored file when the dialog is reopened or the node remounts.
+    if (props.file || !inpRef.current) return;
     if(inpRef.current.files.length <= 0 && prevSate !== null)
     { inpRef.current.value = "";
       props.onDelete();
@@ -248,6 +251,8 @@ const UploadFile = (props) => {
           accept={props.accept}
           disabled={props.disabled}
           onChange={(e) => props.onUpload(e)}
+          // DynamicForm validates the upload when focus leaves the file input.
+          onBlur={props.onBlur}
           onClick ={ event => {
             const { target = {} } = event || {};
             target.value = "";

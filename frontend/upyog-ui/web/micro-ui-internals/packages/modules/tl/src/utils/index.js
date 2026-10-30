@@ -111,18 +111,39 @@ export const setAddressDetails = (data) => {
 
 
 export const getownerarray = (data) => {
-  const ownersData = data?.owners?.owners
-  const res = ownersData?.map((ob, index) => ({
-    additionalDetails: {ownerSequence: index, name: ob.name},
-    mobileNumber: ob.mobilenumber,
-    name: ob.name,
-    fatherOrHusbandName: ob?.fatherOrHusbandName,
-    relationship: ob?.relationship?.code,
-    dob: null,
-    gender: ob?.gender?.code,
-    permanentAddress: data?.owners?.permanentAddress,
-    emailId: ob?.emailId,
-  }));
+  const ownersData = data?.owners?.owners || [];
+  const codeOf = (v) =>
+    v && typeof v === "object" ? v.code : v != null && v !== "" ? v : null;
+  // egov-user validateNewUser rejects address length > 300 with InvalidUserCreateException.
+  const clipAddress = (value) => {
+    if (value == null || value === "") return null;
+    const text = String(value);
+    return text.length > 300 ? text.slice(0, 300) : text;
+  };
+  const res = ownersData
+    .map((ob, index) => {
+      const name =
+        ob?.name && typeof ob.name === "object"
+          ? ob.name.name || ob.name.code
+          : ob?.name;
+      const mobileNumber = ob?.mobilenumber || ob?.mobileNumber || null;
+      return {
+        additionalDetails: { ownerSequence: index, name },
+        mobileNumber,
+        name: name || null,
+        fatherOrHusbandName: ob?.fatherOrHusbandName || null,
+        relationship: codeOf(ob?.relationship),
+        dob: null,
+        gender: codeOf(ob?.gender)
+          ? String(codeOf(ob?.gender)).trim().toUpperCase()
+          : null,
+        permanentAddress: clipAddress(
+          ob?.permanentAddress || data?.owners?.permanentAddress
+        ),
+        emailId: ob?.emailId || null,
+      };
+    })
+    .filter((ob) => ob.name && ob.mobileNumber);
   return res;
 };
 
@@ -191,7 +212,7 @@ export const gettradeownerarray = (data) => {
               dob: null,
               gender: ob?.gender?.code || null,
               permanentAddress: data?.owners?.permanentAddress,
-              ...(data?.ownershipCategory?.code.includes("INSTITUTIONAL")) && {uuid : data?.tradeLicenseDetail?.owners?.[0]?.uuid } ,
+              ...(data?.ownershipCategory?.code?.includes("INSTITUTIONAL")) && {uuid : data?.tradeLicenseDetail?.owners?.[0]?.uuid } ,
             });
     }
   })
@@ -201,7 +222,23 @@ export const gettradeownerarray = (data) => {
 export const gettradeunits = (data) => {
   let tradeunits = [];
   data?.TradeDetails?.units?.map((ob) => {
-    tradeunits.push({ tradeType: ob.tradesubtype.code, uom: ob.unit, uomValue: ob.uom });
+    const tradeType =
+      ob?.tradesubtype?.code ||
+      (typeof ob?.tradesubtype === "string" ? ob.tradesubtype : null);
+    if (!tradeType) return;
+    const uom =
+      (typeof ob?.unit === "object" ? ob?.unit?.code : ob?.unit) || null;
+    const rawUomValue = ob?.uom;
+    const uomValue =
+      rawUomValue != null && rawUomValue !== ""
+        ? String(rawUomValue)
+        : null;
+    tradeunits.push({
+      tradeType,
+      uom: uom || null,
+      uomValue,
+      active: true,
+    });
   });
   return tradeunits;
 };
@@ -250,7 +287,31 @@ export const gettradeupdateunits = (data) => {
 export const getaccessories = (data) => {
   let tradeaccessories = [];
   data?.TradeDetails?.accessories?.map((ob) => {
-    tradeaccessories.push({ uom: ob.unit, accessoryCategory: ob.accessory.code, uomValue: ob.uom ? ob.uom : null, count: ob.accessorycount });
+    const accessoryCategory =
+      ob?.accessory?.code ||
+      (typeof ob?.accessory === "string" ? ob.accessory : null);
+    if (!accessoryCategory) return;
+    const uom =
+      (typeof ob?.unit === "object" ? ob?.unit?.code : ob?.unit) || null;
+    const rawCount = ob?.accessorycount;
+    const count =
+      rawCount != null && rawCount !== ""
+        ? Number.isNaN(Number(rawCount))
+          ? rawCount
+          : Number(rawCount)
+        : null;
+    const rawUomValue = ob?.uom;
+    const uomValue =
+      rawUomValue != null && rawUomValue !== ""
+        ? String(rawUomValue)
+        : null;
+    tradeaccessories.push({
+      uom: uom || null,
+      accessoryCategory,
+      uomValue,
+      count,
+      active: true,
+    });
   });
   return tradeaccessories;
 };
@@ -258,7 +319,7 @@ export const getaccessories = (data) => {
 export const gettradeupdateaccessories = (data) => {
   let TLaccessories = [];
   const isEditRenew = window.location.href.includes("renew-trade");
-  if(data?.TradeDetails?.isAccessories?.i18nKey.includes("NO"))
+  if(data?.TradeDetails?.isAccessories?.i18nKey?.includes("NO"))
   {
     data?.tradeLicenseDetail?.accessories && data?.tradeLicenseDetail?.accessories?.map((oldunit) => {
       TLaccessories.push({...oldunit,active:false});
@@ -315,57 +376,178 @@ export const currentFinancialYear = () => {
   return currentFinancialYear;
 }
 
-export const convertToTrade = (data = {}) => {
+/**
+ * Financial year for a citizen trade-license application.
+ * Citizens have no year picker, so this is the year that covers today.
+ * A closed master-data year (for example 2025-26 after April 2026) is not used.
+ */
+export const resolveTlFinancialYear = (fydata) => {
+  const computed = currentFinancialYear();
+  const years = (fydata?.["egf-master"]?.FinancialYear || []).filter(
+    (year) => year?.module === "TL" && year?.code && year?.active !== false
+  );
+  const now = Date.now();
+  const covering = years.find((year) => {
+    const start = Number(year.startingDate);
+    const end = Number(year.endingDate);
+    return Number.isFinite(start) && Number.isFinite(end) && start <= now && end >= now;
+  });
+  if (covering?.code) return covering.code;
+  const named = years.find((year) => year.code === computed);
+  if (named?.code) return named.code;
+  return computed;
+};
+
+/**
+ * First trade-license financial year that starts after `validTo`.
+ * Renewal is rejected when validFrom is not later than the previous
+ * license's validTo, so the next year cannot be derived from the
+ * financial-year label alone.
+ */
+export const nextFinancialYearAfter = (validTo, fy = []) => {
+  const end = Number(validTo);
+  if (!Number.isFinite(end)) return null;
+  const years = (fy || [])
+    .filter((year) => year?.code && year.startingDate != null && year.endingDate != null)
+    .slice()
+    .sort((a, b) => Number(a.startingDate) - Number(b.startingDate));
+  return years.find((year) => Number(year.startingDate) > end) || null;
+};
+
+const localityCodeOf = (value) => {
+  if (value == null || value === "") return null;
+  if (typeof value === "string") return value;
+  return value.code || value.boundaryCode || null;
+};
+
+const numberOrNull = (value) => {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+export const convertToTrade = (data = {}, options = {}) => {
   let Financialyear = sessionStorage.getItem("CurrentFinancialYear");
   let isSameAsPropertyOwner = sessionStorage.getItem("isSameAsPropertyOwner");
+  const resolveCityCode = () => {
+    const fromAddress =
+      data?.address?.city?.code ||
+      (typeof data?.address?.city === "string" ? data.address.city : null);
+    const fromCpt =
+      data?.cpt?.details?.address?.city?.code ||
+      (typeof data?.cpt?.details?.address?.city === "string"
+        ? data.cpt.details.address.city
+        : null) ||
+      data?.cpt?.details?.tenantId;
+    return (
+      fromAddress ||
+      fromCpt ||
+      data?.tenantId ||
+      Digit.ULBService.getCurrentTenantId()
+    );
+  };
+  const resolveCode = (val) => {
+    if (val == null || val === "") return null;
+    if (typeof val === "object") return val.code || val.name || null;
+    return String(val);
+  };
+  const resolveFinancialYear = () => {
+    // MDMS year (passed by the acknowledgement page) wins over a stale
+    // session value such as a locally computed year that is not in egf-master.
+    if (options.financialYear) return options.financialYear;
+    if (Financialyear && Financialyear !== "[object Object]") return Financialyear;
+    const fy = data?.financialYear;
+    const fromData = resolveCode(fy);
+    if (fromData) return fromData;
+    // Fee calc / enrichment need a FY; never send null for citizen create
+    return currentFinancialYear();
+  };
+  const cityCode = resolveCityCode();
+  // Citizen-confirmed address first. Property locality is only a fallback —
+  // a linked property often has no locality.code, which used to drop the
+  // ward the citizen selected and fail create before the API call.
+  const propertyAddress = data?.cpt?.details?.address;
+  const localityCode =
+    localityCodeOf(data?.address?.locality) ||
+    localityCodeOf(propertyAddress?.locality);
+  const ownershipCode =
+    resolveCode(data?.ownershipCategory) ||
+    resolveCode(data?.owners?.owners?.[0]?.subOwnerShipCategory) ||
+    "";
+  const structureRaw =
+    resolveCode(data?.TradeDetails?.StructureType) !== "IMMOVABLE"
+      ? data?.TradeDetails?.VehicleType
+      : data?.TradeDetails?.BuildingType;
+  const structureType = resolveCode(structureRaw);
+  const commencementRaw = data?.TradeDetails?.CommencementDate;
+  let commencementDate = Date.parse(commencementRaw);
+  if (Number.isNaN(commencementDate) && typeof commencementRaw === "string") {
+    // Support dd-MM-yyyy / dd/MM/yyyy from legacy configs
+    const m = commencementRaw.trim().match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (m) {
+      commencementDate = Date.parse(`${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`);
+    }
+  }
+  const financialYear = resolveFinancialYear();
+  if (financialYear) {
+    try {
+      sessionStorage.setItem("CurrentFinancialYear", financialYear);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+  const propertyId = data?.cpt?.details?.propertyId || data?.cptId?.id || "";
+  // Citizen create: always PERMANENT so payload matches NEW/PERMANENT billing slabs
+  // (TEMPORARY has no slabs → tl-calculator fails → CalculationRes NPE on server).
+  const licenseType = "PERMANENT";
   const formdata = {
     Licenses: [
       {
         action: "INITIATE",
         applicationType: "NEW",
-        commencementDate: Date.parse(data?.TradeDetails?.CommencementDate),
-        financialYear: Financialyear ? Financialyear : "2021-22",
-        licenseType: "PERMANENT",
-        tenantId: data?.address?.city?.code,
+        businessService: "TL",
+        commencementDate: Number.isNaN(commencementDate) ? null : commencementDate,
+        financialYear: financialYear,
+        licenseType: licenseType,
+        tenantId: cityCode,
+        ...(propertyId ? { propertyId } : {}),
         tradeLicenseDetail: {
           channel:"CITIZEN",
           address: {
-            city:  !data?.cpt ? (data?.address?.city?.code ? data?.address?.city?.code : data?.address?.city) : (data?.cpt?.details?.address?.city?.code ? data?.cpt?.details?.address?.city?.code : data?.cpt?.details?.address?.city),
-            locality: {
-              code: !data?.cpt ? data?.address?.locality?.code : data?.cpt?.details?.address?.locality?.code,
-            },
-            tenantId: data?.tenantId,
-            pincode: !data?.cpt ? data?.address?.pincode :  data?.cpt?.details?.address?.pincode,
-            doorNo: !data?.cpt ? data?.address?.doorNo : data?.cpt?.details?.address?.doorNo,
-            street: !data?.cpt ? data?.address?.street : data?.cpt?.details?.address?.street,
-            landmark: !data?.cpt ? data?.address?.landmark : data?.cpt?.details?.address?.landmark,
+            city: cityCode,
+            locality: localityCode ? { code: localityCode } : undefined,
+            tenantId: data?.tenantId || cityCode,
+            pincode: propertyAddress?.pincode || data?.address?.pincode || null,
+            doorNo: propertyAddress?.doorNo || data?.address?.doorNo || null,
+            street: propertyAddress?.street || data?.address?.street || null,
+            landmark: propertyAddress?.landmark || data?.address?.landmark || null,
           },
-          noOfEmployees: data?.TradeDetails?.NumberOfEmployees || null,
-          operationalArea : data?.TradeDetails?.OperationalSqFtArea || null,
+          noOfEmployees: numberOrNull(data?.TradeDetails?.NumberOfEmployees),
+          operationalArea: numberOrNull(data?.TradeDetails?.OperationalSqFtArea),
+          // INITIATE must not carry application documents. tl-services rejects
+          // INITIATE when this list is present; convertToUpdateTrade attaches
+          // them on the following APPLY call.
           applicationDocuments: null,
           accessories: data?.TradeDetails?.accessories && data?.TradeDetails?.isAccessories?.i18nKey?.includes("YES") ? getaccessories(data) : null,
           owners: getownerarray(data),
-          ...(data?.ownershipCategory?.code.includes("INSTITUTIONAL") && {institution: {
+          ...(ownershipCode.includes("INSTITUTIONAL") && {institution: {
             designation: data?.owners?.owners?.[0]?.designation,
             ContactNo: data?.owners?.owners?.[0]?.altContactNumber,
             mobileNumber: data?.owners?.owners?.[0]?.mobilenumber,
             instituionName: data?.owners?.owners?.[0]?.institutionName,
             name: data?.owners?.owners?.[0]?.name,
            }}),
-          // ...data?.owners.owners?.[0]?.designation && data?.owners.owners?.[0]?.designation !== "" ? { institution: {
-          //   designation: data?.owners.owners?.[0]?.designation
-          // }} : {},
-          structureType: data?.TradeDetails?.StructureType?.code !=="IMMOVABLE" ? data?.TradeDetails?.VehicleType?.code : data?.TradeDetails?.BuildingType?.code,
-          subOwnerShipCategory: data?.owners.owners?.[0]?.subOwnerShipCategory?.code ? data?.owners.owners?.[0]?.subOwnerShipCategory?.code : data?.ownershipCategory?.code,
+          structureType: structureType,
+          subOwnerShipCategory: data?.owners?.owners?.[0]?.subOwnerShipCategory?.code ? data?.owners.owners?.[0]?.subOwnerShipCategory?.code : ownershipCode,
           tradeUnits: gettradeunits(data),
           additionalDetail: {
-            propertyId: !data?.cpt ? "" :data?.cpt?.details?.propertyId,
+            propertyId: propertyId || (!data?.cpt ? "" : data?.cpt?.details?.propertyId),
             isSameAsPropertyOwner: isSameAsPropertyOwner,
             tradeGstNo: data?.TradeDetails?.TradeGSTNumber || null,
           }
         },
         tradeName: data?.TradeDetails?.TradeName,
-        wfDocuments: [],
+        wfDocuments: getwfdocuments(data),
         applicationDocuments: [],
         workflowCode: "NewTL",
       },
@@ -374,29 +556,98 @@ export const convertToTrade = (data = {}) => {
   return formdata;
 };
 
+const uploadFileId = (file) => {
+  if (file == null || file === "") return "";
+  if (typeof file === "string") return file;
+  return file.fileStoreId || file.filestoreId || file.documentuuid || "";
+};
+
+/**
+ * Citizen uploads live on the accordion as proofOfIdentity / proofOfOwnership /
+ * ownerPhotoProof, and on the check-page session as owners.documents.*.
+ * Accept either shape, including a bare fileStoreId string.
+ */
 export const getwfdocuments = (data) => {
-  let wfdoc = [];
-  let doc = data ? data.owners.documents : [];
-  doc["OwnerPhotoProof"] && wfdoc.push({
-    fileName: doc["OwnerPhotoProof"].name,
-    fileStoreId: doc["OwnerPhotoProof"].fileStoreId,
-    documentType: "OWNERPHOTO",
-    tenantId: data?.tenantId,
-  });
-  doc["ProofOfIdentity"] && wfdoc.push({
-    fileName: doc["ProofOfIdentity"].name,
-    fileStoreId: doc["ProofOfIdentity"].fileStoreId,
-    documentType: "OWNERIDPROOF",
-    tenantId: data?.tenantId,
-  });
-  doc["ProofOfOwnership"] && wfdoc.push({
-    fileName: doc["ProofOfOwnership"].name,
-    fileStoreId: doc["ProofOfOwnership"].fileStoreId,
-    documentType: "OWNERSHIPPROOF",
-    tenantId: data?.tenantId,
-  });
+  const flat =
+    data?.newApplication?.Licenses?.[0] ||
+    data?.apply?.Licenses?.[0] ||
+    {};
+  const doc = data?.owners?.documents || {};
+  const tenantId =
+    data?.tenantId ||
+    flat?.tenantId ||
+    data?.address?.city?.code ||
+    data?.cpt?.details?.address?.tenantId;
+  const wfdoc = [];
+  const seen = new Set();
+  const push = (file, documentType) => {
+    const fileStoreId = uploadFileId(file);
+    if (!fileStoreId || seen.has(fileStoreId)) return;
+    seen.add(fileStoreId);
+    wfdoc.push({
+      fileName:
+        (typeof file === "object" && (file.fileName || file.name)) || documentType,
+      fileStoreId,
+      documentType,
+      tenantId,
+      active: true,
+    });
+  };
+  push(doc.OwnerPhotoProof || flat.ownerPhotoProof, "OWNERPHOTO");
+  push(doc.ProofOfIdentity || flat.proofOfIdentity, "OWNERIDPROOF");
+  push(doc.ProofOfOwnership || flat.proofOfOwnership, "OWNERSHIPPROOF");
   return wfdoc;
-}
+};
+
+const PROOF_TYPES = ["OWNERPHOTO", "OWNERIDPROOF", "OWNERSHIPPROOF"];
+
+const proofTypeOf = (documentType) => {
+  const type = String(documentType || "").toUpperCase();
+  return PROOF_TYPES.find((token) => type.includes(token)) || "";
+};
+
+/**
+ * One active file per proof. A renewal license can already hold the original
+ * three documents plus a replaced copy of each; the application only accepts
+ * the three current attachments.
+ */
+const oneActiveProofEach = (docs) => {
+  const chosen = [];
+  const seen = new Set();
+  (Array.isArray(docs) ? docs : []).forEach((doc) => {
+    if (!doc || doc.active === false || doc.active === "false") return;
+    const documentType = proofTypeOf(doc.documentType);
+    const fileStoreId = uploadFileId(doc);
+    if (!documentType || !fileStoreId || seen.has(documentType)) return;
+    seen.add(documentType);
+    chosen.push({
+      fileName: doc.fileName || doc.name || documentType,
+      fileStoreId,
+      documentType,
+      tenantId: doc.tenantId,
+      active: true,
+    });
+  });
+  return chosen;
+};
+
+/**
+ * Renewal carries the three proofs the citizen confirmed. It must not also
+ * resend the previous license's copies, or the update stores six documents.
+ */
+const renewalProofDocuments = (datafromflow) => {
+  const uploaded = getwfdocuments(datafromflow);
+  if (uploaded.length) return uploaded;
+  return oneActiveProofEach(datafromflow?.tradeLicenseDetail?.applicationDocuments);
+};
+
+const ownersWithoutDocuments = (owners) =>
+  (Array.isArray(owners) ? owners : []).map((owner) => {
+    if (!owner || typeof owner !== "object") return owner;
+    const rest = { ...owner };
+    delete rest.documents;
+    return rest;
+  });
 
 export const getEditTradeDocumentUpdate = (data) => {
   let updateddocuments=[];
@@ -496,6 +747,8 @@ export const getEditRenewTradeDocumentUpdate = (data,datafromflow) => {
 
 export const convertToUpdateTrade = (data = {}, datafromflow, tenantId) => {
   const isEdit = window.location.href.includes("renew-trade");
+  const hasDocs = (docs) =>
+    Array.isArray(docs) ? docs.length > 0 : Boolean(docs);
   let formdata1 = {
     Licenses: [
     ]
@@ -504,8 +757,27 @@ export const convertToUpdateTrade = (data = {}, datafromflow, tenantId) => {
     ...data.Licenses[0],
   }
   formdata1.Licenses[0].action = "APPLY";
-  formdata1.Licenses[0].wfDocuments = formdata1.Licenses[0].wfDocuments ? formdata1.Licenses[0].wfDocuments : getwfdocuments(datafromflow);
-  formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments = !isEdit ? (formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments ? formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments : getwfdocuments(datafromflow)):getEditRenewTradeDocumentUpdate(data?.Licenses[0],datafromflow);
+  // Keep PERMANENT on APPLY so fee calculation finds matching billing slabs
+  if (!isEdit) {
+    formdata1.Licenses[0].licenseType = "PERMANENT";
+    formdata1.Licenses[0].applicationType =
+      formdata1.Licenses[0].applicationType || "NEW";
+  }
+  const uploadedDocs = getwfdocuments(datafromflow);
+  const savedDocs = formdata1.Licenses[0].tradeLicenseDetail?.applicationDocuments;
+  const savedWfDocs = formdata1.Licenses[0].wfDocuments;
+  const savedHaveFiles =
+    Array.isArray(savedDocs) && savedDocs.some((doc) => uploadFileId(doc));
+  if (isEdit) {
+    const proofs = renewalProofDocuments(datafromflow);
+    formdata1.Licenses[0].wfDocuments = proofs;
+    formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments = proofs;
+  } else {
+    formdata1.Licenses[0].wfDocuments = hasDocs(savedWfDocs) ? savedWfDocs : uploadedDocs;
+    formdata1.Licenses[0].tradeLicenseDetail.applicationDocuments = savedHaveFiles
+      ? savedDocs
+      : uploadedDocs;
+  }
   return formdata1;
 }
 
@@ -553,10 +825,19 @@ export const stringToBoolean = (value) => {
 export const convertToEditTrade = (data, fy = []) => {
  
  // const nextFinancialYearForRenewal = fy?.filter(item => item?.startingDate === currrentFYending)?.[0]?.code;
+  const knownEnds = [Number(data?.validTo), Number(data?.renewalValidTo)].filter(
+    (end) => Number.isFinite(end) && end > 0
+  );
+  const previousValidTo = knownEnds.length ? Math.max(...knownEnds) : null;
+  const nextYear = nextFinancialYearAfter(previousValidTo, fy);
   let financialYear = data?.financialYear;
   const financialYearDate = financialYear?.split('-')[1];
-  const finalFinancialYear = `20${Number(financialYearDate)}-${Number(financialYearDate)+1}`
-  const currrentFYending = fy?.filter(item => item?.code === finalFinancialYear);
+  const incrementedYear = financialYearDate
+    ? `20${Number(financialYearDate)}-${Number(financialYearDate) + 1}`
+    : "";
+  const finalFinancialYear = nextYear?.code || incrementedYear || "2022-23";
+  const matchedYear =
+    nextYear || (fy || []).find((year) => year?.code === finalFinancialYear);
   let isDirectrenewal = stringToBoolean(sessionStorage.getItem("isDirectRenewal"));
   let isSameAsPropertyOwner = sessionStorage.getItem("isSameAsPropertyOwner"); 
   let formdata = {
@@ -574,19 +855,23 @@ export const convertToEditTrade = (data, fy = []) => {
         applicationDate: data?.applicationDate,
         commencementDate: data?.commencementDate,
         issuedDate: data?.issuedDate,
-        financialYear: finalFinancialYear || "2022-23",
-        validFrom: currrentFYending[0].startingDate ||data?.validFrom,
-        validTo: currrentFYending[0].endingDate || data?.validTo,
+        financialYear: finalFinancialYear,
+        validFrom: matchedYear?.startingDate || data?.validFrom,
+        validTo: matchedYear?.endingDate || data?.validTo,
         action: "INITIATE",
-        wfDocuments: data?.wfDocuments,
+        // Documents are attached on APPLY. Sending the previous license's
+        // files here inserts them, and APPLY then inserts the three uploads.
+        wfDocuments: null,
         status: data?.status,
         tradeLicenseDetail: {
           address: data.tradeLicenseDetail.address,
-          applicationDocuments: data.tradeLicenseDetail.applicationDocuments,
+          applicationDocuments: null,
           noOfEmployees: data?.TradeDetails?.NumberOfEmployees || null,
           operationalArea : data?.TradeDetails?.OperationalSqFtArea || null,
           accessories: isDirectrenewal ? data.tradeLicenseDetail.accessories : gettradeupdateaccessories(data)?.filter((ob) => ob?.active !== false),
-          owners: isDirectrenewal ? data.tradeLicenseDetail.owners : gettradeownerarray(data),
+          owners: ownersWithoutDocuments(
+            isDirectrenewal ? data.tradeLicenseDetail.owners : gettradeownerarray(data)
+          ),
           structureType: isDirectrenewal ? data.tradeLicenseDetail.structureType : (data?.TradeDetails?.VehicleType ? data?.TradeDetails?.VehicleType.code : data?.TradeDetails?.BuildingType.code),
           subOwnerShipCategory: data?.ownershipCategory?.code.includes("INSTITUTIONAL") ? data?.owners?.owners?.[0]?.subOwnerShipCategory.code : data?.ownershipCategory?.code,
           tradeUnits: gettradeupdateunits(data),
@@ -732,20 +1017,39 @@ export const isPropertyPartiallyrented = (value = "") => {
 export const ispropertyunoccupied = (value = "") => {
   return checkForNotNull(value) && value.includes("YES") ? true : false;
 };
+const pickFullSizeFileUrl = (downloadLink = "") => {
+  const differentFormats = String(downloadLink || "")
+    .split(",")
+    .map((link) => link.trim())
+    .filter(Boolean);
+  const fullSize = differentFormats.find(
+    (link) => !link.includes("large") && !link.includes("medium") && !link.includes("small")
+  );
+  return fullSize || differentFormats[0] || "";
+};
+
 /*   method to get required format from fielstore url*/
 export const pdfDownloadLink = (documents = {}, fileStoreId = "", format = "") => {
-  /* Need to enhance this util to return required format*/
+  if (!fileStoreId || documents == null) return "";
+  const source =
+    documents?.data &&
+    typeof documents.data === "object" &&
+    (documents.data.fileStoreIds || documents.data[fileStoreId])
+      ? documents.data
+      : documents;
 
-  let downloadLink = documents[fileStoreId] || "";
-  let differentFormats = downloadLink?.split(",") || [];
-  let fileURL = "";
-  differentFormats.length > 0 &&
-    differentFormats?.map((link) => {
-      if (!link.includes("large") && !link.includes("medium") && !link.includes("small")) {
-        fileURL = link;
-      }
-    });
-  return fileURL;
+  const mapped = source?.[fileStoreId];
+  if (typeof mapped === "string" && mapped) return pickFullSizeFileUrl(mapped);
+
+  // /filestore/v1/files/url returns { fileStoreIds: [{ id, url }] }, not a map.
+  const list = Array.isArray(source)
+    ? source
+    : source?.fileStoreIds || source?.files || [];
+  if (!Array.isArray(list)) return "";
+  const match = list.find(
+    (item) => (item?.id || item?.fileStoreId || item?.filestoreId) === fileStoreId
+  );
+  return pickFullSizeFileUrl(match?.url || "");
 };
 
 /*   method to get filename  from fielstore url*/

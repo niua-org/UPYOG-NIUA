@@ -1,0 +1,331 @@
+/* DynamicForm accordion layout — JSON body[] panels, design-ref dense grid. */
+.dynamic-form-accordion-pagehead {
+  margin-bottom: 8px;
+
+  h1,
+  .heading-m,
+  header {
+    margin: 0 0 2px;
+  }
+
+  &__sub {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #505a5f;
+  }
+}
+
+.dynamic-form-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+
+  &__intro {
+    margin: 0 0 4px;
+    font-size: 14px;
+    color: #505a5f;
+  }
+
+  &__item {
+    border: 1px solid #d6d5d4;
+    border-radius: 4px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  &__item--open {
+    border-color: #f18f5e;
+    box-shadow: 0 1px 0 rgba(168, 34, 39, 0.06);
+  }
+
+  /* Locked and invalid panels share the error border. */
+  &__item--error,
+  &__item--locked {
+    border-color: #d4351c;
+  }
+
+  /* Shown when a later panel is opened before earlier required fields are done. */
+  &__notice {
+    margin: 0;
+    padding: 10px 16px;
+    border-top: 1px solid #f4c7b8;
+    background: #fff4f0;
+    color: #7a1f1f;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  &__head {
+    /* Keeps the heading clear of the page chrome when it is scrolled into view. */
+    scroll-margin-top: 16px;
+    scroll-margin-bottom: 96px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    margin: 0;
+    border: 0;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid #a82227;
+      outline-offset: -2px;
+    }
+  }
+
+  &__item--open &__head {
+    background: #fdf0e9;
+    border-bottom: 1px solid #eeeeee;
+  }
+
+  &__num {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #d6d5d4;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #505a5f;
+  }
+
+  &__item--open &__num {
+    border-color: #a82227;
+    background: #a82227;
+    color: #fff;
+  }
+
+  &__text {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__title {
+    display: block;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  &__sub {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: #505a5f;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  /* Status text in the panel header: pending (red) or complete (green). */
+  &__hint {
+    max-width: 220px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #505a5f;
+    text-align: right;
+    white-space: normal;
+  }
+
+  &__hint--pending {
+    color: #a82227;
+  }
+
+  &__hint--complete {
+    color: #00703c;
+  }
+
+  &__chevron {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    color: #505a5f;
+    transition: transform 0.15s ease;
+  }
+
+  &__item--open &__chevron {
+    transform: rotate(180deg);
+    color: #a82227;
+  }
+
+  &__body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    padding: 16px;
+    align-content: start;
+
+    /* Author `display: grid` must not override the HTML hidden attribute. */
+    &[hidden] {
+      display: none !important;
+    }
+  }
+
+  &__cell {
+    min-width: 0;
+    max-width: 100%;
+
+    /* Safety net if a field renderer returns null without unmounting the cell. */
+    &:empty {
+      display: none;
+    }
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+
+    &--span-2 {
+      grid-column: span 2;
+    }
+  }
+
+  &__footer {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid #eeeeee;
+
+    /* ButtonSelector wraps its label in h2 — don't inherit card label widths. */
+    h2 {
+      width: auto;
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.25;
+    }
+  }
+
+  @media (max-width: 780px) {
+    &__body {
+      grid-template-columns: 1fr;
+    }
+
+    &__cell--span-2 {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+/*
+ * Doubled class beats `.dynamic-form-container .label-field-pair > .field`
+ * from dynamicFormField.scss (imported later with the same 0,3,0 specificity).
+ * Without this, accordion cells keep 30%/50% side widths inside a column flex
+ * and look overlapping / mis-positioned in the dense grid.
+ */
+.dynamic-form-container.dynamic-form-container--accordion {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  /* Reserve space for sticky ActionBar only when it is actually rendered. */
+  &:has(.action-bar-wrap) {
+    padding-bottom: 88px;
+  }
+
+  .label-field-pair {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 0;
+    gap: 6px;
+    width: 100%;
+    max-width: 100%;
+
+    > .card-label,
+    > .card-label-smaller,
+    > h2.card-label,
+    > h2.card-label-smaller,
+    > .field {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      flex: none;
+      margin-right: 0;
+      margin-bottom: 0;
+      padding-top: 0;
+      box-sizing: border-box;
+    }
+
+    > .card-label,
+    > .card-label-smaller,
+    > h2.card-label,
+    > h2.card-label-smaller {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    > .field {
+      min-width: 0;
+    }
+  }
+
+  .dynamic-form-field__section-header {
+    margin-top: 8px;
+    margin-bottom: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #eeeeee;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #0b0c0c;
+    width: 100%;
+
+    &:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+  }
+
+  .dynamic-form-field__radio-group {
+    width: 100%;
+  }
+
+  /* Citizen TextInput adds .text-input-width (global max-width: 540px). */
+  .dynamic-form-field__lookup,
+  .dynamic-form-field__lookup-input-container,
+  .dynamic-form-field__suggest-box,
+  .dynamic-form-field__result-card,
+  .dynamic-form-field__field-array,
+  .dynamic-form-field__field-array-card,
+  .text-input,
+  .text-input-width,
+  .text-input input,
+  .text-input-width input,
+  .employee-card-input,
+  .citizen-card-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .dynamic-form-field__lookup--with-button > .dynamic-form-field__lookup-input-container {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  .dynamic-form-action {
+    margin-top: 0;
+  }
+}

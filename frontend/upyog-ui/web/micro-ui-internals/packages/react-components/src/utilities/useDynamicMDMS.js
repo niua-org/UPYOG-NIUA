@@ -82,12 +82,16 @@ const tenantI18nKey = (tenantId) =>
   `TENANT_TENANTS_${String(tenantId).replace(".", "_").toUpperCase()}`;
 
 /**
- * Applies a config-driven equality filter to an MDMS master list.
- * Each filter entry is matched case-insensitively against the corresponding item property.
- * Null or empty expected values are treated as "match any" (no constraint on that key).
+ * Applies a config-driven filter to an MDMS master list.
+ *
+ * Supported filter keys:
+ * - `codeIncludes` / `codeExcludes` — substring match on `item.code` (case-insensitive)
+ * - any other key — equality match on that property (case-insensitive)
+ *
+ * Null or empty expected values are treated as "match any".
  *
  * @param {Array<object>} [list]   - Raw MDMS master rows.
- * @param {object}        [filter] - Map of property name → expected value from dataSource.filter.
+ * @param {object}        [filter] - Map from dataSource.filter.
  * @returns {Array<object>} Filtered list; empty array when input is not an array or filter is absent.
  */
 const applyMdmsFilter = (list, filter) => {
@@ -97,7 +101,14 @@ const applyMdmsFilter = (list, filter) => {
   return (Array.isArray(list) ? list : []).filter((item) =>
     Object.entries(filter).every(([key, expected]) => {
       if (expected == null || expected === "") return true;
-      return String(item?.[key] ?? "").toUpperCase() === String(expected).toUpperCase();
+      const needle = String(expected).toUpperCase();
+      if (key === "codeIncludes") {
+        return String(item?.code ?? "").toUpperCase().includes(needle);
+      }
+      if (key === "codeExcludes") {
+        return !String(item?.code ?? "").toUpperCase().includes(needle);
+      }
+      return String(item?.[key] ?? "").toUpperCase() === needle;
     })
   );
 };
@@ -107,20 +118,37 @@ const applyMdmsFilter = (list, filter) => {
  * Inactive rows (`active === false`) are excluded. Each option receives normalized
  * `code`, `name`, and `i18nKey` fields expected by dropdown/radio renderers.
  *
+ * Optional dataSource fields (passed via `meta`):
+ * - `codeFrom` — property to use as `code` when `item.code` is missing (e.g. FinancialYear `name`)
+ * - `i18nKeyPrefix` — builds `PREFIX_${code with dots → underscores}`
+ *
  * @param {Array<object>} [list]      - Raw MDMS master rows (pre- or post-filter).
  * @param {string}        fieldCode   - Form field code; used as i18nKey prefix fallback.
  * @param {object}        [filter]    - Optional dataSource.filter passed to applyMdmsFilter.
+ * @param {object}        [meta]      - Optional dataSource extras (codeFrom, i18nKeyPrefix).
  * @returns {Array<object>} Option objects with code, name, i18nKey, and spread source fields.
  */
-const toOptions = (list, fieldCode, filter) =>
+const toOptions = (list, fieldCode, filter, meta = {}) =>
   applyMdmsFilter(list, filter)
     .filter((item) => item?.active !== false)
-    .map((item) => ({
-      ...item,
-      code: item.code,
-      name: item.name || item.code,
-      i18nKey: item.i18nKey || item.labelKey || item.name || `${fieldCode}_${item.code}`,
-    }));
+    .map((item) => {
+      const codeFrom = meta.codeFrom && item?.[meta.codeFrom] != null ? item[meta.codeFrom] : null;
+      const code = item.code ?? codeFrom ?? item.name;
+      const name = item.name || code;
+      let i18nKey = item.i18nKey || item.labelKey;
+      if (!i18nKey && meta.i18nKeyPrefix && code) {
+        i18nKey = `${meta.i18nKeyPrefix}_${String(code).replace(/\./g, "_")}`;
+      }
+      if (!i18nKey) {
+        i18nKey = name || `${fieldCode}_${code}`;
+      }
+      return {
+        ...item,
+        code,
+        name,
+        i18nKey,
+      };
+    });
 
 /**
  * Resolves the tenant id used for locality boundary lookups from a city field value.
@@ -303,8 +331,11 @@ const useDynamicMDMS = (form = [], stateId, tenantId, t, options = {}) => {
     const result = {};
 
     mdmsFields.forEach((f) => {
-      const { moduleName, masterName, filter } = f.dataSource;
-      result[f.name] = toOptions(mdmsRes?.[moduleName]?.[masterName], f.code, filter);
+      const { moduleName, masterName, filter, codeFrom, i18nKeyPrefix } = f.dataSource;
+      result[f.name] = toOptions(mdmsRes?.[moduleName]?.[masterName], f.code, filter, {
+        codeFrom,
+        i18nKeyPrefix,
+      });
     });
 
     localityFields.forEach((f) => {

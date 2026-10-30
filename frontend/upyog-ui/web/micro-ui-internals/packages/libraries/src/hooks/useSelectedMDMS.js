@@ -17,7 +17,8 @@ import { MdmsServiceV2 } from "../services/elements/MDMSV2";
 const mdmsV2Modules = [
   'Advertisement',
   'PetService',
-  'Ewaste'
+  'Ewaste',
+  'TradeLicense'
 ];
 
 const mdmsV2Enabled = true;

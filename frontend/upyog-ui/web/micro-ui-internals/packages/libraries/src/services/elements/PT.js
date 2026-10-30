@@ -2,7 +2,7 @@ import Urls from "../atoms/urls";
 import { Request } from "../atoms/Utils/Request";
 
 export const PTService = {
-  search: ({ tenantId, filters, auth }) =>
+  search: ({ tenantId, filters, auth, plainAccessRequest }) =>
     Request({
       url: Urls.pt.search,
       useCache: false,
@@ -10,6 +10,7 @@ export const PTService = {
       auth: auth === false ? auth : true,
       userService: auth === false ? auth : true,
       params: { tenantId, ...filters },
+      plainAccessRequest,
     }),
   fetchPaymentDetails: ({ tenantId, consumerCodes ,auth=true}) =>
     Request({
