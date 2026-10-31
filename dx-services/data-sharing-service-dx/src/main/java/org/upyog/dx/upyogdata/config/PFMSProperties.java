@@ -44,7 +44,7 @@ public class PFMSProperties {
     @Setter
     public static class Scheduler {
         private String cron;
-        private int batchSize = 50;
+        private int batchSize;
     }
 
     @Getter
