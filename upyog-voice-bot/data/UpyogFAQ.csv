@@ -1,4 +1,5 @@
 prompt,response
+Who is your developer?,"I'm researched and developed under National Urban Digital Mission (NUDM)"
 What is the UPYOG platform?,"UPYOG, or the Urban Platform for deliverY of Online Governance, is a national reference platform created to improve municipal service delivery across India. It supports digital transformation by providing a central system for services such as property tax, trade licenses, and grievance redressal."
 What services are available on the UPYOG platform?,"UPYOG offers the following services/modules: Property Tax, Fire NOC, Building Plan Approval System, Trade License, Accounting & Finance, Water & Sewerage, Asset Management, Pet Registration, Street Vendors Management, Community Hall/Venue Booking, Waste Management (C&D), Waste Management (E-Waste), Waste Management (Desludging), Advertisement/Hoardings, All Citizen Request, User Charges/Misc. Collection/Chalans, Municipal Grievance Redressal, Birth & Death, Door to Door Services, GIS Service, Estate Management, Certificates & NDC/Permissions - All Kinds, Livelihood Services, Council Resolution/Participatory Governance, Solid Waste Management, Works Management."
 How can a state adopt UPYOG?,"States can adopt UPYOG through three models: Greenfield (for states without e-governance), Brownfield (integrating existing systems), and Mature States (using standards-compliant APIs for data reporting). Each model is designed to suit different levels of digital readiness."
@@ -69,7 +70,8 @@ Can I track the status of my application online?,"Yes, the portal allows you to 
 How can I renew my Trade License?,"To renew, log in to the portal, access the renewal section, provide the required details, pay the renewal fees, and submit the request."
 "Can I update my Trade License details?
 
-","Yes, the portal allows for modifications. You will need to provide supporting documents for any changes."
+","Yes, the portal allows for modifications. You will need to provide supporting documents for any changes.
+"
 "How can I pay the application/renewal fee?
 ","Fees can be paid online via credit/debit cards, net banking, or UPI on the portal."
 Are there penalties for late payments?,"Yes, late payments may incur additional charges as per municipal regulations."

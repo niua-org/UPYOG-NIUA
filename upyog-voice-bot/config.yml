@@ -4,7 +4,27 @@
 memory:
   # Number of days to retain long-term chat history in Qdrant before cleanup
   # Configurable per environment or pod (default: 1 day for sandbox/storage limits)
-  retention_days: 1 # Kept the retention_days as 1 for now as requested, can be changed later as needed
+  retention_days: 30 
+
+# ============================================================
+# System Messages & Intent Responses Configuration
+# ============================================================
+system_messages:
+  greeting:
+    keywords: ["hello", "hi", "hey", "namaste", "good morning", "good afternoon", "good evening", "hola", "howdy", "greetings", "नमस्ते", "हेलो"]
+    response_en: "Hello! I'm UPYOG AI. How can I help you today?"
+    response_hi: "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?"
+  blocked:
+    response_en: "I can only help with UPYOG and urban government services."
+    response_hi: "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।"
+  login:
+    guidance_en: "In the left sidebar, scroll down and click on **Login**. Enter your registered mobile number and then enter the OTP received on your phone. Once logged in, you will be able to create bookings, register complaints, and check your application status."
+    guidance_hi: "बाईं ओर के साइडबार (Left Sidebar) में नीचे जाएं और **Login** विकल्प पर क्लिक करें। अपना पंजीकृत मोबाइल नंबर भरें और फिर प्राप्त OTP दर्ज करें। लॉगिन करने के बाद, आप बुकिंग बना सकते हैं, शिकायत दर्ज कर सकते हैं और अपने आवेदन की स्थिति देख सकते हैं।"
+    verified_en: "Great! Your login session is verified ({name}). You can now proceed to book an advertisement or register a complaint. How would you like to proceed?"
+    verified_hi: "बहुत बढ़िया! आपकी पहचान सत्यापित हो गई है ({name})। अब आप विज्ञापन बुकिंग कर सकते हैं या शिकायत दर्ज कर सकते हैं। आप क्या करना चाहते हैं?"
+    unverified_en: "I do not detect an active logged-in session yet. Please complete the login by clicking **Login** in the left sidebar and entering your mobile number and OTP."
+    unverified_hi: "मुझे अभी आपका सक्रिय लॉगिन सत्र नहीं मिला है। कृपया बाईं ओर के साइडबार में नीचे **Login** विकल्प पर क्लिक करके अपने मोबाइल नंबर और OTP से लॉगिन पूरा करें।"
+
 
 # ============================================================
 # Services Registry
