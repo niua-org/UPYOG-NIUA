@@ -19,7 +19,7 @@ name: SonarQube PR Analysis
 
 on:
   pull_request:
-    branches: [niua-dev-2.0]
+    branches: [niua-dev-3.0]
     types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '0 3 * * 0' # Sundays at 03:00 UTC
