@@ -190,6 +190,16 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             return Collections.emptyList();
         }
 
+        if (Boolean.TRUE.equals(criteria.getActive())) {
+            documents = documents.stream()
+                    .filter(d -> d.getActive() == null || Boolean.TRUE.equals(d.getActive()))
+                    .collect(Collectors.toList());
+        } else if (Boolean.FALSE.equals(criteria.getActive())) {
+            documents = documents.stream()
+                    .filter(d -> Boolean.FALSE.equals(d.getActive()))
+                    .collect(Collectors.toList());
+        }
+
         for (UserDocument d : documents) {
             if (StringUtils.isBlank(d.getUserUuid())) {
                 if (StringUtils.isNotBlank(criteria.getUserUuid())) {

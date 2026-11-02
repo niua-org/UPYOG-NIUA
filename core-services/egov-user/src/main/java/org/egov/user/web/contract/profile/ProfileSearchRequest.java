@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.profile;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -58,6 +57,5 @@ public class ProfileSearchRequest {
 
     @Schema(description = "List of entity sections to include in response (allowed values: PROFILE, ADDRESS, DOCUMENT). Defaults to [PROFILE] if omitted.", example = "[\"PROFILE\", \"ADDRESS\", \"DOCUMENT\"]")
     @JsonProperty("include")
-    // @JsonAlias({"flags", "entities", "requiredFields"})
     private List<ProfileIncludeEntity> include;
 }

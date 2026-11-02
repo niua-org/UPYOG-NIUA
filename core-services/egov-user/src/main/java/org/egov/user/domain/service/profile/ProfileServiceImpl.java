@@ -735,7 +735,8 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         List<User> decryptedUsers = decryptUserList(userList, request.getRequestInfo());
-        enrichRelatedEntities(decryptedUsers, stateTenant, includes, request != null ? request.getRequestInfo() : null, errors);
+        Boolean active = (request != null && request.getActive() != null) ? request.getActive() : Boolean.TRUE;
+        enrichRelatedEntities(decryptedUsers, stateTenant, includes, request != null ? request.getRequestInfo() : null, active, errors);
 
         return decryptedUsers;
     }
@@ -746,6 +747,8 @@ public class ProfileServiceImpl implements ProfileService {
      * <p>
      * Executes at most 1 batch query for addresses and 1 batch query for documents across all users,
      * and maps results back to respective user entities.
+     * If {@code active} is specified (e.g. true), only matching active child records (addresses and documents)
+     * are enriched and returned.
      * If an error occurs while enriching an included section and {@code errors} list is provided,
      * the error is captured into {@code errors} allowing partial degradation. Otherwise, a {@link CustomException} is thrown.
      *
@@ -753,10 +756,11 @@ public class ProfileServiceImpl implements ProfileService {
      * @param stateTenant  resolved state-level tenant identifier
      * @param includes     set of entity sections to include (e.g. ADDRESS, DOCUMENT)
      * @param requestInfo  UPYOG request audit context
+     * @param active       optional active status filter from search request
      * @param errors       optional list to collect partial enrichment errors
      * @throws CustomException if enriching address or document entities fails and errors list is null
      */
-    private void enrichRelatedEntities(List<User> users, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, List<Error> errors) {
+    private void enrichRelatedEntities(List<User> users, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, Boolean active, List<Error> errors) {
         if (CollectionUtils.isEmpty(users) || CollectionUtils.isEmpty(includes)) {
             return;
         }
@@ -785,7 +789,7 @@ public class ProfileServiceImpl implements ProfileService {
                 AddressSearchCriteria addrCriteria = AddressSearchCriteria.builder()
                         .userUuids(userUuids)
                         .userIds(userIds)
-                        .status(UserConstants.ADDRESS_ACTIVE_STATUS)
+                        .status(Boolean.TRUE.equals(active) ? UserConstants.ADDRESS_ACTIVE_STATUS : (Boolean.FALSE.equals(active) ? UserConstants.ADDRESS_INACTIVE_STATUS : null))
                         .build();
 
                 if (userUuids.size() == 1) {
@@ -803,6 +807,16 @@ public class ProfileServiceImpl implements ProfileService {
                 }
 
                 if (!CollectionUtils.isEmpty(addresses)) {
+                    if (Boolean.TRUE.equals(active)) {
+                        addresses = addresses.stream()
+                                .filter(a -> a.getStatus() == null || UserConstants.ADDRESS_ACTIVE_STATUS.equalsIgnoreCase(a.getStatus()))
+                                .collect(Collectors.toList());
+                    } else if (Boolean.FALSE.equals(active)) {
+                        addresses = addresses.stream()
+                                .filter(a -> UserConstants.ADDRESS_INACTIVE_STATUS.equalsIgnoreCase(a.getStatus()))
+                                .collect(Collectors.toList());
+                    }
+
                     if (users.size() == 1) {
                         User singleUser = users.get(0);
                         for (Address addr : addresses) {
@@ -855,7 +869,8 @@ public class ProfileServiceImpl implements ProfileService {
                 UserDocumentSearchCriteria docCriteria = UserDocumentSearchCriteria.builder()
                         .userUuids(userUuids)
                         .userIds(userIds)
-                        .active(true)
+                        .tenantId(stateTenant)
+                        .active(active)
                         .build();
 
                 if (userUuids.size() == 1) {
@@ -873,6 +888,16 @@ public class ProfileServiceImpl implements ProfileService {
                 }
 
                 if (!CollectionUtils.isEmpty(documents)) {
+                    if (Boolean.TRUE.equals(active)) {
+                        documents = documents.stream()
+                                .filter(d -> d.getActive() == null || Boolean.TRUE.equals(d.getActive()))
+                                .collect(Collectors.toList());
+                    } else if (Boolean.FALSE.equals(active)) {
+                        documents = documents.stream()
+                                .filter(d -> Boolean.FALSE.equals(d.getActive()))
+                                .collect(Collectors.toList());
+                    }
+
                     if (users.size() == 1) {
                         User singleUser = users.get(0);
                         for (UserDocument doc : documents) {
