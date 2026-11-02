@@ -61,6 +61,7 @@ const EditAddress = ({ initialAddresses = [] }) => {
                   fieldKey={key}
                   label={t(key)}
                   value={val || t("CS_NA")}
+                  tenantId={tenantId}
                 />
               );
             })}

@@ -161,4 +161,38 @@ export const profileStyles = {
     display: "inline-block",
     marginTop: 4,
   },
+
+  headerActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
+  dropdownWrap: {
+    margin: 0,
+    position: "relative",
+  },
+  dropdownButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    background: "#F4F5F7",
+    color: "#0B0C0C",
+    border: "none",
+    borderRadius: 8,
+    padding: "12px 20px",
+    fontSize: 16,
+    fontWeight: 500,
+    cursor: "pointer",
+  },
+  dropdownMenu: {
+    overflow: "revert",
+    minWidth: 220,
+    right: 0,
+    left: "auto",
+    zIndex: 1000,
+    marginTop: 8,
+    borderRadius: 8,
+    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.12)",
+    border: "1px solid #E8EAED",
+  },
 };

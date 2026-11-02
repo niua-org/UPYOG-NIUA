@@ -136,7 +136,7 @@ export const FormField = ({ label, required, error, t, children }) => (
 //   </div>
 // );
 
-export const InfoField = ({ label, value, fieldKey }) => {
+export const InfoField = ({ label, value, fieldKey, tenantId }) => {
   const isDoc = fieldKey === "COMMON_ADDRESS_PROOF" && value && value !== "CS_NA";
 
   return (
@@ -144,7 +144,7 @@ export const InfoField = ({ label, value, fieldKey }) => {
       <div style={profileStyles.fieldLabel}>{label}</div>
       {isDoc ? (
         <div
-          onClick={() => openDocument(value, "pg")}
+          onClick={() => openDocument(value, tenantId)}
           style={{ cursor: "pointer", display: "inline-block", marginTop: 4 }}
           title="Click to view document"
         >
@@ -158,14 +158,14 @@ export const InfoField = ({ label, value, fieldKey }) => {
 };
 
 
-export const Field = ({ label, value, fieldKey }) => {
+export const Field = ({ label, value, fieldKey, tenantId }) => {
   const isDoc = fieldKey === "COMMON_ADDRESS_PROOF";
   return (
     <div>
       <div style={profileStyles.fieldLabel}>{label}</div>
       {isDoc ? (
         <div
-          onClick={() => openDocument(value, "pg")}
+          onClick={() => openDocument(value, tenantId)}
           style={{ cursor: "pointer", display: "inline-block", marginTop: 4 }}
           title="Click to view document"
         >
@@ -178,10 +178,10 @@ export const Field = ({ label, value, fieldKey }) => {
   );
 };
 
-export const FieldGrid = ({ fields, t }) => (
+export const FieldGrid = ({ fields, t, tenantId }) => (
   <div style={profileStyles.grid}>
     {fields.map(([key, value]) => (
-      <Field key={key} fieldKey={key} label={t(key)} value={value} t={t} />
+      <Field key={key} fieldKey={key} label={t(key)} value={value} t={t} tenantId={tenantId} />
     ))}
   </div>
 );
