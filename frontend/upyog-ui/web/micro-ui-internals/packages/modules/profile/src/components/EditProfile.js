@@ -45,8 +45,8 @@ const EditProfile = ({ stateCode, userType, cityDetails }) => {
     let isActive = true;
     const loadAddressData = async () => {
       try {
-        const res = await Digit.UserService.searchAddress(tenantId, { uuid: [userInfo.uuid] }, {});
-        if (isActive) setAddresses(res?.user?.[0]?.addresses || []);
+        const res = await Digit.UserService.searchAddress(userInfo.uuid, tenantId);
+        if (isActive) setAddresses(res?.address || []);
       } finally {
         if (isActive) setLoading(false);
       }
