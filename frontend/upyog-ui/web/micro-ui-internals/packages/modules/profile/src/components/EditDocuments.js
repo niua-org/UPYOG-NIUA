@@ -30,7 +30,10 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const userInfo = Digit.UserService.getUser()?.info || {};
 
-  const [documents, setDocuments] = useState(userDetails?.documents || []);
+
+  const [documents, setDocuments] = useState(
+  (userDetails?.documents || []).filter((doc) => doc.active === true)
+);
   const [files, setFiles] = useState({ IDENTITY_PROOF: null, DOB_PROOF: null });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -51,7 +54,7 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
       { uuid: [userInfo.uuid], include: ["DOCUMENT"] },
       {}
     );
-    const nextDocs = response?.user?.[0]?.documents || [];
+    const nextDocs = (response?.user?.[0]?.documents || []).filter((doc) => doc.active === true);
     setDocuments(nextDocs);
     onDocumentsUpdate?.({ documents: nextDocs });
   }, [userInfo.uuid, tenantId, onDocumentsUpdate]);
@@ -86,8 +89,7 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
     return res?.data?.files?.[0]?.fileStoreId || null;
   };
 
-  const findExisting = (documentType) =>
-    documents.find((doc) => doc.documentType === documentType);
+  const findExisting = (documentType) =>documents.find((doc) => doc.documentType === documentType && doc.active === true);
 
   const handleSave = async () => {
     const toUpload = DOC_TYPES.filter(({ key }) => files[key]);

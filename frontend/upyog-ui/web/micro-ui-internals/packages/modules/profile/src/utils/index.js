@@ -188,7 +188,7 @@ export const PDFSvg = ({ width = 36, height = 36 }) => (
 
 export const getDocumentBlocks = (documents = []) => {
   return (documents || [])
-    .filter((doc) => doc.active !== false && (doc.fileStoreUrl || doc.filestoreId))
+    .filter((doc) => doc.active !== false)
     .map((doc) => {
       // to get the url
       const url = doc.fileStoreUrl?.split(",")?.[0] || doc.fileStoreUrl || doc.fileUrl;
