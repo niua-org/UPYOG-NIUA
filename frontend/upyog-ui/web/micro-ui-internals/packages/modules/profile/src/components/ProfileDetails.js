@@ -148,7 +148,7 @@ const ProfileDetails = () => {
       )}
       {/* Document Details Section */}
       {documentBlocks.length > 0 && (
-        <Section title={t("CORE_COMMON_PROFILE_DOCUMENTS") || "Document Details"}>
+        <Section title={t("CORE_COMMON_PROFILE_DOCUMENTS")}>
           <div style={profileStyles.card}>
             <div style={profileStyles.documentGrid}>
               {documentBlocks.map((doc, index) => (

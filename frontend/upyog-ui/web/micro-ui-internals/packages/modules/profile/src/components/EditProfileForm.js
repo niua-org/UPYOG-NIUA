@@ -125,7 +125,7 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
             <MobileNumber value={form.altContactNumber} name="altContactNumber" onChange={(v) => setField("altContactNumber", v)} />
           </FormField>
           <FormField label={t("CORE_COMMON_PROFILE_EMAIL")} error={errors.emailId} t={t}>
-            <TextInput t={t} type="emailId" name="emailId" value={form.emailId} onChange={(e) => setField("emailId", e.target.value)} disable={userDetails.emailId?true:false} />
+            <TextInput t={t} type="email" name="emailId" value={form.emailId} onChange={(e) => setField("emailId", e.target.value)} disable={userDetails.emailId?true:false} />
           </FormField>
           <FormField label={t("CORE_COMMON_FATHER_NAME")} error={errors.fatherName} t={t}>
             <TextInput t={t} type="text" name="fatherName" value={form.fatherName} onChange={(e) => setField("fatherName", e.target.value)} disable={userDetails?.fatherName ? true:false} />

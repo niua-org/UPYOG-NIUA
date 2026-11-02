@@ -35,7 +35,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
     landmark: address?.landmark || "",
     addressLine1: address?.address || "",
     addressLine2: address?.address2 || "",
-    addressProof: existingProof ? { name: "1 already uploaded", filestoreId: existingProof } : null
+    addressProof: existingProof ? { name: t("ALREADY_UPLOADED"), filestoreId: existingProof } : null
   });
 
   /*
@@ -109,7 +109,6 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
     try {
       const stateCode = Digit.ULBService.getStateId();
       const addressProofId = await uploadProofIfNeeded(formData.addressProof);
-      tenantId
       const requestUpdatedData = {
         tenantId: tenantId,
         address: formData.addressLine1,

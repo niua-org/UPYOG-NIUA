@@ -207,7 +207,7 @@ export const UserService = {
       method: "POST",
     }),
 
-  createUserDocument: async (documents, stateCode) =>
+  createUserDocument: async (documents, tenantId) =>
     ServiceRequest({
       serviceName: "createUserDocument",
       url: Urls.profile.createDocument,
@@ -216,7 +216,7 @@ export const UserService = {
       data: {
         documents: documents,
       },
-      params: { tenantId: stateCode },
+      params: { tenantId: tenantId },
     }),
 
   // update a single user document
