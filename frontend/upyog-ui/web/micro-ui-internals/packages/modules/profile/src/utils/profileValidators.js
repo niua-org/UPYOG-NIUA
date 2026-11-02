@@ -24,8 +24,8 @@ export const validators = {
 export const validateProfile = (form, isEmployee) => {
   const errors = {
     name: validators.name(form.name),
-    email: validators.email(form.emailId),
-    altMobileNumber: validators.altMobileNumber(form.altContactNumber),
+    emailId: validators.email(form.emailId),
+    altContactNumber: validators.altMobileNumber(form.altContactNumber),
   };
   if (isEmployee) {
     errors.gender = form.gender?.value ? null : "CORE_COMMON_PROFILE_GENDER_REQUIRED";
