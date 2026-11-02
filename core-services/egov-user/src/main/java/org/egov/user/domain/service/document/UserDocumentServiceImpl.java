@@ -175,7 +175,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, UserConstants.MSG_DOCUMENT_SEARCH_CRITERIA_NULL);
         }
 
-        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null) {
+        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null && CollectionUtils.isEmpty(criteria.getUserUuids())) {
             Long userId = userRepository.getUserIdByUuid(criteria.getUserUuid());
             if (userId != null) {
                 criteria.setUserId(userId);

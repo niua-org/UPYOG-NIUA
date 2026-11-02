@@ -1,6 +1,7 @@
 package org.egov.user.domain.service.profile;
 
 import org.egov.tracer.model.CustomException;
+import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
@@ -75,6 +76,19 @@ public interface ProfileService {
      * @throws org.egov.tracer.model.CustomException if search criteria are empty or malformed
      */
     List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes);
+
+    /**
+     * Searches citizen profiles by criteria with decrypted PII attributes using pre-resolved entity inclusion flags,
+     * collecting any partial enrichment errors (e.g. address or document retrieval failure) into the provided list
+     * to support graceful degradation and partial responses.
+     *
+     * @param request          profile search request payload containing filter criteria
+     * @param includes         pre-resolved set of {@link ProfileIncludeEntity} sections to enrich
+     * @param enrichmentErrors mutable list to accumulate partial enrichment errors encountered during address/document retrieval
+     * @return list of matching decrypted citizen profiles
+     * @throws org.egov.tracer.model.CustomException if search criteria are empty or malformed
+     */
+    List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes, List<Error> enrichmentErrors);
 
     /**
      * Resolves and normalizes requested entity inclusion flags (PROFILE, ADDRESS, DOCUMENT).

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.tracer.model.Error;
 import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.AddressSearchCriteria;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -675,7 +677,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public List<User> searchProfile(ProfileSearchRequest request) {
         Set<ProfileIncludeEntity> includes = resolveIncludes(request != null ? request.getInclude() : null);
-        return searchProfile(request, includes);
+        return searchProfile(request, includes, null);
     }
 
     /**
@@ -685,10 +687,26 @@ public class ProfileServiceImpl implements ProfileService {
      * @param request  profile search request payload
      * @param includes pre-resolved entity sections to enrich
      * @return list of decrypted citizen domain {@link User} profiles matching the criteria
-     * @throws CustomException if search criteria are invalid or empty
+     * @throws CustomException if search criteria are invalid, empty, or if an enrichment error occurs
      */
     @Override
     public List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes) {
+        return searchProfile(request, includes, null);
+    }
+
+    /**
+     * Searches citizen profiles based on supplied criteria filters using pre-resolved inclusion sections,
+     * collecting any partial enrichment errors (such as address or document service failures) into
+     * {@code errors} so that a partial response with demographic profiles can be returned.
+     *
+     * @param request  profile search request payload
+     * @param includes pre-resolved entity sections to enrich
+     * @param errors   optional list to accumulate enrichment errors; if null, errors throw {@link CustomException}
+     * @return list of decrypted citizen domain {@link User} profiles matching the criteria
+     * @throws CustomException if search criteria are invalid, empty, or if an enrichment error occurs when errors is null
+     */
+    @Override
+    public List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes, List<Error> errors) {
         log.info("[PROFILE-SERVICE] Searching citizen profiles with filters: tenant={}, mobile={}, aadhaar={}, include={}",
                 request != null ? request.getTenantId() : null,
                 maskMobile(request != null ? request.getMobileNumber() : null),
@@ -717,21 +735,28 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         List<User> decryptedUsers = decryptUserList(userList, request.getRequestInfo());
-        enrichRelatedEntities(decryptedUsers, stateTenant, includes, request != null ? request.getRequestInfo() : null);
+        enrichRelatedEntities(decryptedUsers, stateTenant, includes, request != null ? request.getRequestInfo() : null, errors);
 
         return decryptedUsers;
     }
 
     /**
      * Enriches retrieved citizen user records with related entity collections (addresses, documents)
-     * based on requested inclusion flags.
+     * based on requested inclusion flags using batch queries to avoid the N+1 query problem.
+     * <p>
+     * Executes at most 1 batch query for addresses and 1 batch query for documents across all users,
+     * and maps results back to respective user entities.
+     * If an error occurs while enriching an included section and {@code errors} list is provided,
+     * the error is captured into {@code errors} allowing partial degradation. Otherwise, a {@link CustomException} is thrown.
      *
      * @param users        list of decrypted user entities to enrich
      * @param stateTenant  resolved state-level tenant identifier
      * @param includes     set of entity sections to include (e.g. ADDRESS, DOCUMENT)
      * @param requestInfo  UPYOG request audit context
+     * @param errors       optional list to collect partial enrichment errors
+     * @throws CustomException if enriching address or document entities fails and errors list is null
      */
-    private void enrichRelatedEntities(List<User> users, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo) {
+    private void enrichRelatedEntities(List<User> users, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, List<Error> errors) {
         if (CollectionUtils.isEmpty(users) || CollectionUtils.isEmpty(includes)) {
             return;
         }
@@ -743,51 +768,154 @@ public class ProfileServiceImpl implements ProfileService {
             return;
         }
 
-        for (User user : users) {
-            if (StringUtils.isBlank(user.getUuid())) {
-                continue;
-            }
+        List<String> userUuids = users.stream()
+                .map(User::getUuid)
+                .filter(StringUtils::isNotBlank)
+                .distinct()
+                .collect(Collectors.toList());
 
-            if (includeAddresses) {
-                try {
-                    AddressSearchCriteria addrCriteria = AddressSearchCriteria.builder()
-                            .uuid(user.getUuid())
-                            .status(UserConstants.ADDRESS_ACTIVE_STATUS)
-                            .build();
+        List<Long> userIds = users.stream()
+                .map(User::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
 
-                    List<Address> addresses = null;
-                    if (addressService != null) {
-                        addresses = addressService.searchAddress(addrCriteria, requestInfo);
-                    } else if (addressRepository != null) {
-                        addresses = addressRepository.getAddressV2(addrCriteria);
+        if (includeAddresses) {
+            try {
+                AddressSearchCriteria addrCriteria = AddressSearchCriteria.builder()
+                        .userUuids(userUuids)
+                        .userIds(userIds)
+                        .status(UserConstants.ADDRESS_ACTIVE_STATUS)
+                        .build();
+
+                if (userUuids.size() == 1) {
+                    addrCriteria.setUuid(userUuids.get(0));
+                }
+                if (userIds.size() == 1) {
+                    addrCriteria.setUserId(userIds.get(0));
+                }
+
+                List<Address> addresses = null;
+                if (addressService != null) {
+                    addresses = addressService.searchAddress(addrCriteria, requestInfo);
+                } else if (addressRepository != null) {
+                    addresses = addressRepository.getAddressV2(addrCriteria);
+                }
+
+                if (!CollectionUtils.isEmpty(addresses)) {
+                    if (users.size() == 1) {
+                        User singleUser = users.get(0);
+                        for (Address addr : addresses) {
+                            if (StringUtils.isBlank(addr.getUserUuid()) && addr.getUserId() == null) {
+                                addr.setUserUuid(singleUser.getUuid());
+                                addr.setUserId(singleUser.getId());
+                            }
+                        }
                     }
 
-                    if (addresses != null) {
-                        user.setAddresses(new HashSet<>(addresses));
+                    Map<String, Set<Address>> addressMapByUuid = new HashMap<>();
+                    Map<Long, Set<Address>> addressMapById = new HashMap<>();
+                    for (Address addr : addresses) {
+                        if (StringUtils.isNotBlank(addr.getUserUuid())) {
+                            addressMapByUuid.computeIfAbsent(addr.getUserUuid(), k -> new LinkedHashSet<>()).add(addr);
+                        }
+                        if (addr.getUserId() != null) {
+                            addressMapById.computeIfAbsent(addr.getUserId(), k -> new LinkedHashSet<>()).add(addr);
+                        }
                     }
-                } catch (Exception e) {
-                    log.error("[PROFILE-SERVICE] Error fetching addresses for user UUID: {}", user.getUuid(), e);
+                    for (User user : users) {
+                        Set<Address> userAddrs = addressMapByUuid.get(user.getUuid());
+                        if (userAddrs == null && user.getId() != null) {
+                            userAddrs = addressMapById.get(user.getId());
+                        }
+                        if (userAddrs != null) {
+                            user.setAddresses(userAddrs);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error enriching addresses for profile search: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("ADDRESS_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich address details for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) {
+                        throw (CustomException) e;
+                    }
+                    throw new CustomException("ADDRESS_ENRICHMENT_FAILED", "Failed to enrich address details for citizen profile search: " + e.getMessage());
                 }
             }
+        }
 
-            if (includeDocuments) {
-                try {
-                    UserDocumentSearchCriteria docCriteria = UserDocumentSearchCriteria.builder()
-                            .uuid(user.getUuid())
-                            .build();
+        if (includeDocuments) {
+            try {
+                UserDocumentSearchCriteria docCriteria = UserDocumentSearchCriteria.builder()
+                        .userUuids(userUuids)
+                        .userIds(userIds)
+                        .active(true)
+                        .build();
 
-                    List<UserDocument> documents = null;
-                    if (userDocumentService != null) {
-                        documents = userDocumentService.searchDocuments(docCriteria, requestInfo);
-                    } else if (userDocumentRepository != null) {
-                        documents = userDocumentRepository.search(docCriteria);
+                if (userUuids.size() == 1) {
+                    docCriteria.setUuid(userUuids.get(0));
+                }
+                if (userIds.size() == 1) {
+                    docCriteria.setUserId(userIds.get(0));
+                }
+
+                List<UserDocument> documents = null;
+                if (userDocumentService != null) {
+                    documents = userDocumentService.searchDocuments(docCriteria, requestInfo);
+                } else if (userDocumentRepository != null) {
+                    documents = userDocumentRepository.search(docCriteria);
+                }
+
+                if (!CollectionUtils.isEmpty(documents)) {
+                    if (users.size() == 1) {
+                        User singleUser = users.get(0);
+                        for (UserDocument doc : documents) {
+                            if (StringUtils.isBlank(doc.getUserUuid()) && doc.getUserId() == null) {
+                                doc.setUserUuid(singleUser.getUuid());
+                                doc.setUserId(singleUser.getId());
+                            }
+                        }
                     }
 
-                    if (documents != null) {
-                        user.setDocuments(documents);
+                    Map<String, List<UserDocument>> docMapByUuid = new HashMap<>();
+                    Map<Long, List<UserDocument>> docMapById = new HashMap<>();
+                    for (UserDocument doc : documents) {
+                        if (StringUtils.isNotBlank(doc.getUserUuid())) {
+                            docMapByUuid.computeIfAbsent(doc.getUserUuid(), k -> new ArrayList<>()).add(doc);
+                        }
+                        if (doc.getUserId() != null) {
+                            docMapById.computeIfAbsent(doc.getUserId(), k -> new ArrayList<>()).add(doc);
+                        }
                     }
-                } catch (Exception e) {
-                    log.error("[PROFILE-SERVICE] Error fetching documents for user UUID: {}", user.getUuid(), e);
+                    for (User user : users) {
+                        List<UserDocument> userDocs = docMapByUuid.get(user.getUuid());
+                        if (userDocs == null && user.getId() != null) {
+                            userDocs = docMapById.get(user.getId());
+                        }
+                        if (userDocs != null) {
+                            user.setDocuments(userDocs);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error enriching documents for profile search: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("DOCUMENT_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich document proofs for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) {
+                        throw (CustomException) e;
+                    }
+                    throw new CustomException("DOCUMENT_ENRICHMENT_FAILED", "Failed to enrich document proofs for citizen profile search: " + e.getMessage());
                 }
             }
         }

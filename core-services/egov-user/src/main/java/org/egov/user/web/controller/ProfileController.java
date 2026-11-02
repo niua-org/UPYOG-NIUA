@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
+import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.service.profile.ProfileService;
 import org.egov.user.domain.service.utils.UserConstants;
@@ -23,11 +24,13 @@ import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -168,18 +171,23 @@ public class ProfileController {
      *   <li>{@code ADDRESS}: Enriches response with active postal addresses of matched citizens</li>
      *   <li>{@code DOCUMENT}: Enriches response with active uploaded KYC and identity proof documents</li>
      * </ul>
+     * <p>
+     * Supports graceful degradation: if enrichment of an included section fails (such as address or document service
+     * encountering an error), the partial user profile response is returned along with diagnostic error details
+     * under {@code errors} and status {@code PARTIAL_SUCCESS}.
      *
      * @param request profile search request payload containing filter criteria and optional include sections
-     * @return response containing list of matched decrypted profiles
+     * @return response containing list of matched decrypted profiles and any partial enrichment errors
      */
     @Operation(
             summary = "Search Profile",
             description = "Searches citizen profiles by UUID, tenant ID, or mobile number, with automated PII decryption for authorized consumers. " +
                     "The optional 'include' parameter controls which entity sections are returned (allowed values: PROFILE, ADDRESS, DOCUMENT; default: [PROFILE]). " +
-                    "Specifying ADDRESS enriches the response with citizen address details, while DOCUMENT enriches with uploaded KYC document proofs."
+                    "Specifying ADDRESS enriches the response with citizen address details, while DOCUMENT enriches with uploaded KYC document proofs. " +
+                    "If enrichment of any included section fails, a partial response is returned with status PARTIAL_SUCCESS and diagnostic error details."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Profiles retrieved successfully",
+            @ApiResponse(responseCode = "200", description = "Profiles retrieved successfully (including partial success with enrichment errors)",
                     content = @Content(schema = @Schema(implementation = ProfileResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid search criteria or invalid include entity"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -192,15 +200,19 @@ public class ProfileController {
                 request != null ? request.getInclude() : null);
 
         Set<ProfileIncludeEntity> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
-        List<User> users = profileService.searchProfile(request, normalizedIncludes);
+        List<Error> enrichmentErrors = new ArrayList<>();
+        List<User> users = profileService.searchProfile(request, normalizedIncludes, enrichmentErrors);
 
         List<UserSearchResponseContent> contents = users != null
                 ? users.stream().map(u -> new UserSearchResponseContent(u, normalizedIncludes)).collect(Collectors.toList())
                 : Collections.emptyList();
 
+        String status = !CollectionUtils.isEmpty(enrichmentErrors) ? "PARTIAL_SUCCESS" : UserConstants.STATUS_SUCCESS;
+
         ProfileResponse response = ProfileResponse.builder()
-                .responseInfo(ResponseInfo.builder().status(UserConstants.STATUS_SUCCESS).build())
+                .responseInfo(ResponseInfo.builder().status(status).build())
                 .user(contents)
+                .errors(!CollectionUtils.isEmpty(enrichmentErrors) ? enrichmentErrors : null)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);

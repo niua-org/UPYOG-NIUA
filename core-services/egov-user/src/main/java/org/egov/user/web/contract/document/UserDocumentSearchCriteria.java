@@ -41,6 +41,16 @@ public class UserDocumentSearchCriteria {
     @JsonAlias({"userUuid", "user_uuid"})
     private String uuid;
 
+    @Schema(description = "List of Citizen UUIDs")
+    @JsonProperty("userUuids")
+    @JsonAlias({"user_uuids", "uuids"})
+    private List<String> userUuids;
+
+    @Schema(description = "List of internal user numeric IDs")
+    @JsonProperty("userIds")
+    @JsonAlias({"user_ids"})
+    private List<Long> userIds;
+
     @Schema(description = "Tenant identifier", example = "pg.citya")
     private String tenantId;
 
