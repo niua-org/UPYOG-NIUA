@@ -93,7 +93,7 @@ jobs:
         id: scan
         if: steps.detect.outputs.services != ''
         env:
-          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SERVICES: ${{ steps.detect.outputs.services }}
           PR: ${{ github.event.pull_request.number }}
