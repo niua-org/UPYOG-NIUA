@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { EditIcon, LinkButton, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import AddressTranformer from "./AddressTranformer";
-import { ADDRESS_FIELDS, InfoField, PDFSvg } from "../utils";
+import { ADDRESS_FIELDS, Field } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 
 /*
@@ -56,7 +56,7 @@ const EditAddress = ({ initialAddresses = [] }) => {
             {ADDRESS_FIELDS.map(([key, prop]) => {
               const val = prop === "addressProof" ? (address.filestoreId) : address[prop];
               return (
-                <InfoField
+                <Field
                   key={key}
                   fieldKey={key}
                   label={t(key)}

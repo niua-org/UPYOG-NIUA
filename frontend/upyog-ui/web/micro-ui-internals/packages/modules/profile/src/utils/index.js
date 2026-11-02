@@ -128,35 +128,6 @@ export const FormField = ({ label, required, error, t, children }) => (
   </div>
 );
 
-// Read-only label + value — used in address cards
-// export const InfoField = ({ label, value }) => (
-//   <div>
-//     <div style={profileStyles.fieldLabel}>{label}</div>
-//     <div style={profileStyles.fieldValue}>{value}</div>
-//   </div>
-// );
-
-export const InfoField = ({ label, value, fieldKey, tenantId }) => {
-  const isDoc = fieldKey === "COMMON_ADDRESS_PROOF" && value && value !== "CS_NA";
-
-  return (
-    <div>
-      <div style={profileStyles.fieldLabel}>{label}</div>
-      {isDoc ? (
-        <div
-          onClick={() => openDocument(value, tenantId)}
-          style={{ cursor: "pointer", display: "inline-block", marginTop: 4 }}
-          title="Click to view document"
-        >
-          <PDFSvg width={24} height={24} />
-        </div>
-      ) : (
-        <div style={profileStyles.fieldValue}>{value}</div>
-      )}
-    </div>
-  );
-};
-
 
 export const Field = ({ label, value, fieldKey, tenantId }) => {
   const isDoc = fieldKey === "COMMON_ADDRESS_PROOF";
