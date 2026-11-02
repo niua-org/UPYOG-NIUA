@@ -1,0 +1,190 @@
+name: SonarQube PR Analysis
+
+# Change-based SonarQube scan for the UPYOG monorepo, in one file.
+#
+#   pull_request -> sonar   (detect the touched service, build + scan it, comment)
+#   schedule     -> cleanup (delete stale *-pr-* projects)
+#
+# Setup (Settings -> Secrets and variables -> Actions):
+#   variable SONAR_HOST_URL             self-hosted SonarQube base URL
+#   secret   SONAR_TOKEN                analysis token (needs Create Projects)
+#   variable SONAR_CLEANUP_DRY_RUN      'false' to enable real cleanup (default true)
+#   variable SONAR_CLEANUP_MAX_AGE_DAYS default 14
+#
+# Required branch-protection check: "SonarQube PR Analysis / sonar".
+#
+# Community Edition has no native PR analysis, so each PR is scanned under an
+# isolated <key>-pr-<n> project, and the Quality Gate is enforced by the scanner
+# itself (-Dsonar.qualitygate.wait=true) rather than by polling the API.
+
+on:
+  pull_request:
+    branches: [niua-dev-2.0]
+    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: '0 3 * * 0' # Sundays at 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: sonar-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  # ------------------------------------------------------------------------ #
+  # Detect the one service this PR touches, build and scan it, then comment.
+  # Maven roots are discovered from pom.xml files, so every Maven service is
+  # eligible for scanning. A nested path resolves to its deepest Maven root.
+  # ------------------------------------------------------------------------ #
+  sonar:
+    name: sonar
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Detect the service
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          # Every Maven module is a candidate (longest matching path wins).
+          # Exclude build output to avoid discovering generated POM files.
+          find . -name pom.xml -not -path '*/target/*' -print \
+            | sed 's#^./##; s#/pom.xml$##' | sort -u > "$RUNNER_TEMP/roots.txt"
+
+          services=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
+            --jq '.[].filename' | awk '
+              NR == FNR { root[++n] = $0; next }
+              {
+                best = ""
+                for (i = 1; i <= n; i++)
+                  if (index($0, root[i] "/") == 1 && length(root[i]) > length(best)) best = root[i]
+                if (best != "") print best
+              }
+            ' "$RUNNER_TEMP/roots.txt" - | sort -u)
+
+          {
+            echo "services<<EOF"
+            echo "$services"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Affected services: $(echo "$services" | tr '\n' ' ')" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+
+      - name: Build and scan
+        id: scan
+        if: steps.detect.outputs.services != ''
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SERVICES: ${{ steps.detect.outputs.services }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          MVN=(-B -ntp)
+
+          while read -r service; do
+            [ -n "$service" ] || continue
+            echo "::group::scan $service"
+            (
+              cd "$service"
+              project_key=$(printf '%s' "$service" | tr '/_' '-' | tr -cd '[:alnum:]-')
+              mvn "${MVN[@]}" clean package -Dmaven.test.skip=true
+              mvn "${MVN[@]}" org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
+                -Dsonar.projectKey="upyog_${project_key}-pr-$PR" \
+                -Dsonar.projectName="$service" \
+                -Dsonar.qualitygate.wait=true
+            )
+            echo "::endgroup::"
+          done <<< "$SERVICES"
+
+      - name: Comment on the pull request
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          OUTCOME: ${{ steps.scan.outcome }}
+          SERVICES: ${{ steps.detect.outputs.services }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const marker = '<!-- sonarqube-pr-analysis -->';
+            const state = { success: 'PASSED', failure: 'FAILED', skipped: 'SKIPPED' }[process.env.OUTCOME] || 'UNKNOWN';
+            const body = [
+              marker,
+              '## SonarQube PR Analysis',
+              '',
+              `**Result: ${state}**`,
+              '',
+              process.env.SERVICES ? `Service: \`${process.env.SERVICES.trim().replace(/\n/g, '`, `')}\`` : 'No Maven service affected.',
+              '',
+              `[View the job run and logs](${process.env.RUN_URL})`,
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+  # ------------------------------------------------------------------------ #
+  # Weekly housekeeping: remove the ephemeral <key>-pr-<n> projects.
+  # ------------------------------------------------------------------------ #
+  cleanup:
+    name: cleanup
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Delete stale ephemeral projects
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          MAX_AGE_DAYS: ${{ vars.SONAR_CLEANUP_MAX_AGE_DAYS || '14' }}
+          DRY_RUN: ${{ vars.SONAR_CLEANUP_DRY_RUN || 'true' }}
+        run: |
+          set -euo pipefail
+          cutoff=$(date -u -d "-${MAX_AGE_DAYS} days" +%Y-%m-%dT%H:%M:%S%z)
+          page=1
+          while :; do
+            body=$(curl -fsS -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/projects/search?ps=100&p=$page")
+            stale=$(printf '%s' "$body" | jq -r --arg c "$cutoff" '
+              .components[]?
+              | select(.key | test("-pr-[0-9]+$"))
+              | select((.lastAnalysisDate // "1970-01-01T00:00:00+0000") < $c)
+              | .key')
+            for key in $stale; do
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "[dry-run] would delete $key"
+              else
+                curl -fsS -X POST -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/projects/delete" \
+                  --data-urlencode "project=$key" > /dev/null && echo "deleted $key"
+              fi
+            done
+            total=$(printf '%s' "$body" | jq -r '.paging.total')
+            [ $((page * 100)) -ge "$total" ] && break
+            page=$((page + 1))
+          done
