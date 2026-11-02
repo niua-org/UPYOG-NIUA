@@ -2,6 +2,19 @@ import React, { useState } from "react";
 import { CameraIcon, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import { profileStyles } from "./profileStyles";
 
+/**
+ * All the Utilities Fucntions for Profile Module are defined here.
+ * These are shared across EditProfile, EditAddress, EditDocuments and ProfileDetails.
+ * Includes:
+ * - getPersonalFields, getAddressBlocks, getDocumentBlocks
+ * - toGenderOption, extractThumb, fetchThumbnail
+ * - ProfilePhoto, AvatarUpload, FormField, InfoField, FieldGrid, Section
+ * - openDocument
+ * 
+ * 
+ * TODO: Move some of the component to React-Component-Library, as many are upgraded and many are not developed yet.
+ */
+
 export const ADDRESS_TYPE_LABEL = {
   PERMANENT: "CORE_PERMANENT",
   CORRESPONDENCE: "CORE_CORRESPONDENCE",

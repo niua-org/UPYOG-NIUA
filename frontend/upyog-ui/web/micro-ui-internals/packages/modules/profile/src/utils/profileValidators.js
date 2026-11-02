@@ -1,3 +1,12 @@
+/**
+ * All the Validation Fucntions for Profile Module are defined here.
+ * These are shared across EditProfile, EditAddress, EditDocuments and ProfileDetails.
+ * Includes:
+ * - validators, validateProfile, hasErrors
+ * 
+ */
+
+
 const NAME_REGEX = /^[a-zA-Z ]+$/;
 const MOBILE_REGEX = /^[6-9]{1}[0-9]{9}$/;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/;
