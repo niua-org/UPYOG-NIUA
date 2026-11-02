@@ -14,6 +14,7 @@ const EmployeeApp = ({ path }) => {
   const employeeHome = path?.replace(/\/est\/?$/, "") || "/upyog-ui/employee";
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const ESTApplicationDetails = Digit?.ComponentRegistryService?.getComponent("ESTApplicationDetails");
+  const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -55,15 +56,9 @@ const EmployeeApp = ({ path }) => {
     <AppContainer>
       <div className={layoutStyles.estEmployeeLayout}>
         {!hideNav ? (
-          <div
-            style={{
-              marginLeft: isMobile ? "0" : "-4px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+          <div className={`est-employee-nav ${isMobile ? "margin-0" : "margin-minus-4"}`}>
             <BackButton location={location} />
-            <span style={{ margin: "0 5px 16px", display: "inline-block" }}>|</span>
+            <span className="est-index-spacing">|</span>
             <BreadCrumb
               style={
                 isMobile
@@ -81,6 +76,7 @@ const EmployeeApp = ({ path }) => {
           <Route path="create-asset/*" element={<PrivateRoute><ESTRegCreate parentRoute={path} /></PrivateRoute>} />
           <Route path="assignassets/*" element={<PrivateRoute><ESTAssignAssetCreate parentRoute={path} /></PrivateRoute>} />
           <Route path="application-details/:assetNo" element={<PrivateRoute><ESTApplicationDetails /></PrivateRoute>} />
+          <Route path="EstateApplicationReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-em" reportName="EstateApplicationReport" /></PrivateRoute>} />
         </Routes>
       </div>
     </AppContainer>

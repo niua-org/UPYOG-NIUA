@@ -1,4 +1,12 @@
 # ============================================================
+# Chat Memory & Retention Policy
+# ============================================================
+memory:
+  # Number of days to retain long-term chat history in Qdrant before cleanup
+  # Configurable per environment or pod (default: 1 day for sandbox/storage limits)
+  retention_days: 1 # Kept the retention_days as 1 for now as requested, can be changed later as needed
+
+# ============================================================
 # Services Registry
 # The bot reads this at runtime to build its greeting message.
 # Add, remove or rename entries here — no Python code changes needed.
@@ -192,42 +200,55 @@ forms:
         type: "dropdown"
         label: "Advertisement Type"
         mdms: ["Advertisement", "AdType"]
+        extractable: true
       - id: "location"
         type: "dropdown"
         label: "Advertisement Location"
         mdms: ["Advertisement", "Location"]
+        extractable: true
       - id: "faceArea"
         type: "dropdown"
         label: "Face Area"
         mdms: ["Advertisement", "FaceArea"]
+        extractable: true
       - id: "start_date"
         type: "date"
         label: "From Date"
+        extractable: true
       - id: "end_date"
         type: "date"
         label: "To Date"
+        extractable: true
       - id: "nightLight"
         type: "dropdown"
         label: "Night Light Required"
         mdms: ["Advertisement", "NightLight"]
+        extractable: true
       - id: "selected_slots"
         type: "slots"
         label: "Selected Booking Slot"
+        extractable: false
       - id: "applicant_details"
         type: "hidden"
         label: "Applicant Details"
+        extractable: true
+        extract_fields: ["name", "mobile", "email"]
       - id: "address"
         type: "text"
         label: "Address"
+        extractable: true
       - id: "doc_sample"
         type: "file"
         label: "Sample Document"
+        extractable: false
       - id: "doc_address"
         type: "file"
         label: "Address Proof"
+        extractable: false
       - id: "doc_identity"
         type: "file"
         label: "Identity Proof"
+        extractable: false
 
   # ── Grievance / PGR Form ──────────────────────────────────────────────────────
   grievance:
@@ -237,18 +258,22 @@ forms:
       - id: "category"
         type: "dropdown"
         label: "Grievance Category"
+        extractable: true
 
       # Step 2: Specific complaint type within the chosen category
       - id: "sub_category"
         type: "dropdown"
         label: "Complaint Type"
+        extractable: true
 
       # Step 3: Free-text problem description
       - id: "description"
         type: "text"
         label: "Problem Description"
+        extractable: true
 
       # Step 4: Area/locality (fetched live from egov-location API)
       - id: "locality"
         type: "dropdown"
         label: "Your Area / Locality"
+        extractable: true

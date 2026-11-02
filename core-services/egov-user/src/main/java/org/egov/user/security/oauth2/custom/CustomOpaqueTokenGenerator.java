@@ -151,7 +151,7 @@ public class CustomOpaqueTokenGenerator implements OAuth2TokenGenerator<OAuth2Ac
         // Store in Redis with expiration - using access_token: prefix to match RedisOAuth2AuthorizationService
         String key = "access_token:" + tokenValue;
         redisTemplate.opsForValue().set(key, tokenMetadata, 604800, TimeUnit.MINUTES);
-        System.out.println("REDIS STORE: Token metadata stored in Redis with key: " + key);
+        log.debug("REDIS STORE: Token metadata stored in Redis with key: {}", key);
     }
 
     public Map<String, Object> getTokenMetadata(String tokenValue) {

@@ -20,6 +20,7 @@
     <joda-time-version>2.9.9</joda-time-version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lombok.version>1.18.32</lombok.version>
+    <commons-lang-version>2.6</commons-lang-version>
     <Export-Package>org.egov.dx.web.models.*,!org.egov.dx.web.models.PullURIRequestPOJO</Export-Package>
   </properties>
   <dependencies>
@@ -38,6 +39,16 @@
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>2.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-core</artifactId>
+      <version>1.5.18</version>
+    </dependency>
+    <dependency>
+      <groupId>org.egov.services</groupId>
+      <artifactId>services-common</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -66,6 +77,15 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>jaxb2-maven-plugin</artifactId>
+      <version>2.5.0</version>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>

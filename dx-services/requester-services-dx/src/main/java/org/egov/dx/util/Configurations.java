@@ -60,8 +60,6 @@ public class Configurations {
 	@Value("${dl.flow}")
 	private String dlFlow;
 
-	@Value("${esign.democontent}")
-	private String demoContent;
 	
 	@Value("${esign.responseurl}")
 	private String responseUrl;
@@ -99,14 +97,6 @@ public class Configurations {
 	@Value("${persister.update.tl.esign.txns}")
 	private String updateTLEsignTxnTopic;
 	
-//	@Value("${esign.tlredirecturl}")
-//	private String tlRedirectUrl;
-	
-//	@Value("${eSign.s3bucket}")
-//	private String s3Bucket;
-//	
-//	@Value("${api.documenthost}")
-//	private String documentHost;
 	
 	@Value("${egov.idgen.host}")
 	private String IdGenHost;
@@ -134,5 +124,58 @@ public class Configurations {
 	
 	@Value("${egov.user.endpoint}")
 	private String userEndpoint;
+	
+	
+	@Value("${esign.aspId}")
+	private String AspId;
+	
+	@Value("${esign.v1.url}")
+	private String EsignV1Url;
+	
+	@Value("${esign.v2.url}")
+	private String EsignV2Url;
+	
+	@Value("${esign.signature.content.size}")
+	private int SignatureContentSize;
 
+	// ---------------- Aadhaar Gateway Configurations ----------------
+	@Value("${aadhaar.gateway.mock.enabled}")
+	private Boolean aadhaarGatewayMockEnabled;
+
+	@Value("${aadhaar.gateway.base.url}")
+	private String aadhaarGatewayBaseUrl;
+
+	@Value("${aadhaar.gateway.send.otp.path}")
+	private String aadhaarGatewaySendOtpPath;
+
+	@Value("${aadhaar.gateway.verify.otp.path}")
+	private String aadhaarGatewayVerifyOtpPath;
+
+	@Value("${aadhaar.gateway.api.key}")
+	private String aadhaarGatewayApiKey;
+
+	@Value("${aadhaar.gateway.api.secret}")
+	private String aadhaarGatewayApiSecret;
+
+	@Value("${aadhaar.gateway.api.version}")
+	private String aadhaarGatewayApiVersion;
+
+	@Value("${aadhaar.gateway.connect.timeout}")
+	private Integer aadhaarGatewayConnectTimeout;
+
+	@Value("${aadhaar.gateway.read.timeout}")
+	private Integer aadhaarGatewayReadTimeout;
+
+	@Value("${aadhaar.otp.max.attempts}")
+	private Integer aadhaarOtpMaxAttempts;
+  
+	@Value("${esign.gateway.url}")
+	private String gatewayUrl;
+
+	@Value("${filestore.host}")
+	private String fileStoreUrl;
+	
+	@Value("${filestore.post.endpoint}")
+	private String fileStorePostUrl;
+	
 }

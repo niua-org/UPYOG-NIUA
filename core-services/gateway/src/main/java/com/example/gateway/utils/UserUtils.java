@@ -29,24 +29,26 @@ public class UserUtils {
 
     private MultiStateInstanceUtil multiStateInstanceUtil;
 
-    public UserUtils (RestTemplate restTemplate, ApplicationProperties applicationProperties) {
+    private UserAuthCache userAuthCache;
+
+    public UserUtils(RestTemplate restTemplate, ApplicationProperties applicationProperties, UserAuthCache userAuthCache) {
         this.restTemplate = restTemplate;
         this.applicationProperties = applicationProperties;
+        this.userAuthCache = userAuthCache;
     }
 
     public User getUser(String authToken) {
+        return userAuthCache.get(authToken, this::fetchUserFromAuthService);
+    }
+
+    private User fetchUserFromAuthService(String authToken) {
         String authURL = String.format("%s%s%s", applicationProperties.getAuthServiceHost(), applicationProperties.getAuthUri(), authToken);
 
-        User user;
-
         try {
-            user = restTemplate.postForObject(authURL, null, User.class);
+            return restTemplate.postForObject(authURL, null, User.class);
         } catch (Exception e) {
             throw new CustomException("Exception occurred while fetching user: ", e.getMessage());
-//          throw new CustomException("Exception occurred while fetching user: ", "Error while authenticating the auth token");
         }
-
-        return user;
     }
 
     @Cacheable(value = "systemUser" , sync = true)

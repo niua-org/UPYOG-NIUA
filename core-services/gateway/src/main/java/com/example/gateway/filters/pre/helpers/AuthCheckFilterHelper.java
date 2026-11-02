@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @Component
@@ -35,47 +36,45 @@ public class AuthCheckFilterHelper implements RewriteFunction<Map, Map> {
 
     @Override
     public Publisher<Map> apply(ServerWebExchange serverWebExchange, Map body) {
-    	String authToken=null;
-    	 RequestInfo requestInfo= new RequestInfo();
-    	
+        // RestTemplate in enrichWithAuthenticatedUser is blocking; must not run on reactor-http-epoll.
+        return Mono.fromCallable(() -> enrichWithAuthenticatedUser(serverWebExchange, body))
+                .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private Map enrichWithAuthenticatedUser(ServerWebExchange serverWebExchange, Map body) {
+        String authToken = null;
+        RequestInfo requestInfo = new RequestInfo();
+
         try {
-        	if(body!=null)
-        	{
-           
-            requestInfo = objectMapper.convertValue(body.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class);
-            authToken = requestInfo.getAuthToken();
-        	}
-        	else
-        	{
-        		HttpHeaders httpHeader=serverWebExchange.getRequest().getHeaders();
-                authToken=httpHeader.get("Auth-Token").get(0);
-        	}
+            if (body != null) {
+                requestInfo = objectMapper.convertValue(body.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class);
+                authToken = requestInfo.getAuthToken();
+            } else {
+                HttpHeaders httpHeader = serverWebExchange.getRequest().getHeaders();
+                authToken = httpHeader.get("Auth-Token").get(0);
+            }
             User user = userUtils.getUser(authToken);
 
-            // Log user info received from /_details endpoint
-            log.info("AUTH CHECK: Received user from /_details - UUID: {}, userName: {}, roles: {}",
+            log.debug("AUTH CHECK: user uuid={}, userName={}, roleCount={}",
                     user.getUuid(), user.getUserName(), user.getRoles() != null ? user.getRoles().size() : 0);
-            if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            if (user.getRoles() != null && log.isDebugEnabled()) {
                 user.getRoles().forEach(role ->
-                    log.info("  AUTH CHECK: User role - code: {}, name: {}, tenantId: {}",
-                            role.getCode(), role.getName(), role.getTenantId())
+                        log.debug("AUTH CHECK: role code={}, tenantId={}", role.getCode(), role.getTenantId())
                 );
-            } else {
-                log.warn("AUTH CHECK: WARNING - User {} has NO ROLES! This will cause RBAC failures!", user.getUuid());
+            } else if (user.getRoles() == null || user.getRoles().isEmpty()) {
+                log.warn("AUTH CHECK: user {} has no roles", user.getUuid());
             }
 
             requestInfo.setUserInfo(user);
-            
-            if(body==null) {
-            	body= new HashMap<>();
+
+            if (body == null) {
+                body = new HashMap<>();
             }
 
             body.put(REQUEST_INFO_FIELD_NAME_PASCAL_CASE, requestInfo);
-            return Mono.just(body);
+            return body;
         } catch (Exception ex) {
-            log.error("An error occured while transforming the request body in class RequestBodyRewrite. {}", ex);
-
-            // Throw a custom exception
+            log.error("An error occured while transforming the request body in class RequestBodyRewrite.", ex);
             throw new CustomException("AUTHENTICATION_ERROR", ex.getMessage());
         }
     }

@@ -16,8 +16,10 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.Collectors;
+import org.egov.user.web.contract.auth.Role;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
@@ -33,24 +35,23 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TokenService {
 
-    // CHANGED: TokenStore -> OAuth2AuthorizationService
-    private OAuth2AuthorizationService authorizationService;
-    private ActionRestRepository actionRestRepository;
-    private UserService userService;
-
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private final OAuth2AuthorizationService authorizationService;
+    private final ActionRestRepository actionRestRepository;
+    private final UserService userService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${roles.state.level.enabled}")
     private boolean isRoleStateLevel;
 
-    // UPDATED CONSTRUCTOR
-    private TokenService(OAuth2AuthorizationService authorizationService,
+    @Autowired
+    public TokenService(OAuth2AuthorizationService authorizationService,
                         ActionRestRepository actionRestRepository,
-                        UserService userService) {
+                        UserService userService,
+                        @Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
         this.authorizationService = authorizationService;
         this.actionRestRepository = actionRestRepository;
         this.userService = userService;
+        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -253,7 +254,7 @@ public class TokenService {
      * Handles both Set and List formats from Redis deserialization
      */
     @SuppressWarnings("unchecked")
-    private HashSet<org.egov.user.web.contract.auth.Role> extractRolesFromUserRequest(Map<String, Object> userRequest) {
+    private HashSet<Role> extractRolesFromUserRequest(Map<String, Object> userRequest) {
         Object rolesObj = userRequest.get("roles");
 
         if (rolesObj == null) {
@@ -265,12 +266,12 @@ public class TokenService {
 
         try {
             // Handle Collection (Set or List) of role objects
-            if (rolesObj instanceof java.util.Collection) {
-                java.util.Collection<?> rolesCollection = (java.util.Collection<?>) rolesObj;
+            if (rolesObj instanceof Collection) {
+                Collection<?> rolesCollection = (Collection<?>) rolesObj;
 
                 log.info("ROLE EXTRACTION: Found {} roles in token metadata", rolesCollection.size());
 
-                HashSet<org.egov.user.web.contract.auth.Role> roles = rolesCollection.stream()
+                HashSet<Role> roles = rolesCollection.stream()
                     .map(roleItem -> {
                         try {
                             if (roleItem instanceof Map) {
@@ -278,7 +279,7 @@ public class TokenService {
                                 Map<String, Object> roleMap = (Map<String, Object>) roleItem;
                                 // CRITICAL FIX: Constructor parameter order is (name, code, tenantId)
                                 // NOT (code, name, tenantId) - this was causing role codes and names to be swapped!
-                                return new org.egov.user.web.contract.auth.Role(
+                                return new Role(
                                     (String) roleMap.get("name"),     // First param = name
                                     (String) roleMap.get("code"),     // Second param = code
                                     (String) roleMap.get("tenantId")

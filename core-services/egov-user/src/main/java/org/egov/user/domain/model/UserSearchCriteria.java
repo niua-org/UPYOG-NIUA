@@ -9,6 +9,9 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+/**
+ * Criteria DTO for querying user records based on identifiers, demographics, tenant, and pagination params.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -34,10 +37,17 @@ public class UserSearchCriteria {
     private String alternatemobilenumber;
     //private boolean digilockersearch;
 
+    @Builder.Default
     private Boolean excludeAddressDetails = false; // This fields is added to exclude address details from user search response V2
     private String addressId; // This field is added to search user with particular address using addressId
     private String addressStatus; // This field is used to search address with particular status
+    private String aadhaarNumber;
 
+    /**
+     * Validates that at least one search parameter and required tenant identifiers are provided.
+     *
+     * @param isInterServiceCall true if the call originates internally from another trusted microservice
+     */
     public void validate(boolean isInterServiceCall) {
         if (validateIfEmptySearch(isInterServiceCall) || validateIfTenantIdExists(isInterServiceCall)) {
             throw new InvalidUserSearchCriteriaException(this);
@@ -54,10 +64,10 @@ public class UserSearchCriteria {
          */
         if (isInterServiceCall)
             return isEmpty(userName) && isEmpty(name) && isEmpty(mobileNumber) && isEmpty(emailId) &&
-                    CollectionUtils.isEmpty(uuid) && CollectionUtils.isEmpty(id) && CollectionUtils.isEmpty(roleCodes);
+                    CollectionUtils.isEmpty(uuid) && CollectionUtils.isEmpty(id) && CollectionUtils.isEmpty(roleCodes) && isEmpty(aadhaarNumber);
         else
             return isEmpty(userName) && isEmpty(name) && isEmpty(mobileNumber) && isEmpty(emailId) &&
-                    CollectionUtils.isEmpty(uuid);
+                    CollectionUtils.isEmpty(uuid) && isEmpty(aadhaarNumber);
     }
 
     private boolean validateIfTenantIdExists(boolean isInterServiceCall) {

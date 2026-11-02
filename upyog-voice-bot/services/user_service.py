@@ -45,7 +45,7 @@ def save_user_profile_info(phone_anchor: str, user_info: dict) -> bool:
     """
     try:
         _USER_PROFILE_CACHE[str(phone_anchor)] = dict(user_info)
-        from database import r_client
+        from storage.redis_manager import r_client
         r_client.set(f"user_profile_info:{phone_anchor}", json.dumps(user_info))
         return True
     except Exception as e:
@@ -60,7 +60,7 @@ def get_user_profile_info(phone_anchor: str) -> dict:
     if str(phone_anchor) in _USER_PROFILE_CACHE:
         return _USER_PROFILE_CACHE[str(phone_anchor)]
     try:
-        from database import r_client
+        from storage.redis_manager import r_client
         data = r_client.get(f"user_profile_info:{phone_anchor}")
         if data:
             parsed = json.loads(data.decode('utf-8') if isinstance(data, bytes) else data)

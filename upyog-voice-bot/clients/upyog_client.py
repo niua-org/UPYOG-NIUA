@@ -149,6 +149,9 @@ def resolve_environment(request_obj=None, base_url_or_env: Optional[str] = None)
 
         # 6. If it looks like a valid http/https URL (passed explicitly or via header/payload), use it directly
         if val_clean.startswith("http://") or val_clean.startswith("https://"):
+            # If the URL is the bot's own port/dev server (8090), do not treat it as a UPYOG backend
+            if any(p in val_clean for p in (":8090", "localhost:8090", "127.0.0.1:8090")):
+                return None
             default_tenant = _cfg.get("tenant_id", "pg.citya")
             default_state = _cfg.get("state_tenant", "pg")
             is_loc = any(loc in val_clean for loc in ("localhost", "127.0.0.1"))
@@ -441,7 +444,7 @@ class UpyogAPI:
         # Fallback 2: scan Redis/memory for any authenticated citizen profile
         if not user_info or not auth_token:
             try:
-                from database import r_client
+                from storage.redis_manager import r_client
                 for k in r_client.scan_iter("user_profile_info:*"):
                     raw = r_client.get(k)
                     if raw:
@@ -993,17 +996,8 @@ def create_booking(booking_details_json: str, base_url: Optional[str] = None) ->
     if address_str and llm:
         try:
             from langchain_core.messages import SystemMessage
-            prompt = f"""You are a strict data parser for UPYOG addresses.
-Given this full address: "{address_str}"
-Extract these fields as a JSON object:
-- "pincode": 6-digit postal code (e.g. "110001", "180091")
-- "city": city name
-- "locality": locality name
-- "streetName": street name
-- "houseNo": house number or building number (e.g. "E-56", "23")
-- "landmark": landmark if present, else null
-
-Reply with ONLY the valid JSON object (no markdown, no other text)."""
+            from prompts.workflow_prompts import build_address_parser_prompt
+            prompt = build_address_parser_prompt(address_str=address_str)
             res = llm.invoke([SystemMessage(content=prompt)])
             import re
             m = re.search(r'\{.*\}', res.content.strip(), re.DOTALL)
