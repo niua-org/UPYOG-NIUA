@@ -78,14 +78,12 @@ public interface ProfileService {
 
     /**
      * Resolves and normalizes requested entity inclusion flags (PROFILE, ADDRESS, DOCUMENT).
-     * Validates each section using {@link ProfileIncludeEntity#fromString(String)} and rejects unknown
-     * sections with an HTTP 400 {@link CustomException}. Defaults to [PROFILE] if omitted or empty.
+     * Defaults to [PROFILE] if omitted or empty.
      *
-     * @param rawIncludes raw include flag strings from request (e.g. "PROFILE", "ADDRESS", "DOCUMENT")
-     * @return set of validated {@link ProfileIncludeEntity} include flags
-     * @throws org.egov.tracer.model.CustomException if an unknown include entity string is provided
+     * @param rawIncludes list of {@link ProfileIncludeEntity} sections requested
+     * @return set of normalized {@link ProfileIncludeEntity} include flags
      */
-    Set<ProfileIncludeEntity> resolveIncludes(List<String> rawIncludes);
+    Set<ProfileIncludeEntity> resolveIncludes(List<ProfileIncludeEntity> rawIncludes);
 
     /**
      * Re-synchronizes citizen profile demographics with verified Aadhaar e-KYC.

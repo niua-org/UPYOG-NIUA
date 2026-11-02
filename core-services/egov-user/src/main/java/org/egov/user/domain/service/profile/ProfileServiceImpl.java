@@ -647,29 +647,19 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * Resolves and normalizes requested entity inclusion flags (PROFILE, ADDRESS, DOCUMENT).
-     * Validates each raw section string using {@link ProfileIncludeEntity#fromString(String)}.
-     * Unknown values are rejected immediately with an HTTP 400 {@link CustomException}.
-     * Defaults to [PROFILE] if the input list is null or empty.
+     * Filters nulls and defaults to [PROFILE] if the input list is null or empty.
      *
-     * @param rawIncludes raw include flag strings from request (e.g. "PROFILE", "ADDRESS", "DOCUMENT")
-     * @return set of validated {@link ProfileIncludeEntity} constants
-     * @throws CustomException if an unknown include section is supplied
+     * @param rawIncludes list of {@link ProfileIncludeEntity} sections requested
+     * @return set of normalized {@link ProfileIncludeEntity} constants
      */
     @Override
-    public Set<ProfileIncludeEntity> resolveIncludes(List<String> rawIncludes) {
+    public Set<ProfileIncludeEntity> resolveIncludes(List<ProfileIncludeEntity> rawIncludes) {
         if (CollectionUtils.isEmpty(rawIncludes)) {
             return Collections.singleton(ProfileIncludeEntity.PROFILE);
         }
-        Set<ProfileIncludeEntity> resolved = new LinkedHashSet<>();
-        for (String raw : rawIncludes) {
-            if (StringUtils.isBlank(raw)) {
-                continue;
-            }
-            ProfileIncludeEntity entity = ProfileIncludeEntity.fromString(raw);
-            if (entity != null) {
-                resolved.add(entity);
-            }
-        }
+        Set<ProfileIncludeEntity> resolved = rawIncludes.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         return resolved.isEmpty() ? Collections.singleton(ProfileIncludeEntity.PROFILE) : resolved;
     }
 

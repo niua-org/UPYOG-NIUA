@@ -145,7 +145,7 @@ public class ProfileSearchIncludeFlagsTest {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("uuid-123"))
-                .include(Arrays.asList("PROFILE", "ADDRESS", "DOCUMENT"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
                 .build();
 
         User user = createSampleUser("uuid-123");
@@ -231,8 +231,8 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(req.getInclude());
         assertEquals(2, req.getInclude().size());
-        assertTrue(req.getInclude().contains("PROFILE"));
-        assertTrue(req.getInclude().contains("ADDRESS"));
+        assertTrue(req.getInclude().contains(ProfileIncludeEntity.PROFILE));
+        assertTrue(req.getInclude().contains(ProfileIncludeEntity.ADDRESS));
 
         Set<ProfileIncludeEntity> resolved = profileService.resolveIncludes(req.getInclude());
         assertEquals(2, resolved.size());
@@ -241,30 +241,23 @@ public class ProfileSearchIncludeFlagsTest {
     }
 
     @Test
-    @DisplayName("Should reject unknown include value with HTTP 400 CustomException")
-    public void testResolveIncludesWithUnknownValueThrowsCustomException() {
-        List<String> rawIncludes = Arrays.asList("PROFILE", "FOO");
-
-        CustomException exception = assertThrows(CustomException.class, () -> profileService.resolveIncludes(rawIncludes));
+    @DisplayName("Should reject unknown include value in fromString with HTTP 400 CustomException")
+    public void testFromStringWithUnknownValueThrowsCustomException() {
+        CustomException exception = assertThrows(CustomException.class, () -> ProfileIncludeEntity.fromString("FOO"));
         assertEquals("INVALID_INCLUDE_ENTITY", exception.getCode());
         assertTrue(exception.getMessage().contains("FOO"));
     }
 
     @Test
-    @DisplayName("Should reject invalid include entities when resolving ProfileSearchRequest include")
-    public void testSearchWithInvalidIncludeEntity_ThrowsCustomException() throws Exception {
+    @DisplayName("Should reject invalid include entities during JSON deserialization")
+    public void testDeserializationWithInvalidIncludeEntity_ThrowsException() {
         String json = "{\n" +
                 "  \"tenantId\": \"pg.citya\",\n" +
                 "  \"uuid\": [\"uuid-123\"],\n" +
                 "  \"include\": [\"PROFILE\", \"INVALID_SECTION\"]\n" +
                 "}";
 
-        ProfileSearchRequest req = objectMapper.readValue(json, ProfileSearchRequest.class);
-        assertNotNull(req.getInclude());
-
-        CustomException ex = assertThrows(CustomException.class, () -> profileService.resolveIncludes(req.getInclude()));
-        assertEquals("INVALID_INCLUDE_ENTITY", ex.getCode());
-        assertTrue(ex.getMessage().contains("INVALID_SECTION"));
+        assertThrows(Exception.class, () -> objectMapper.readValue(json, ProfileSearchRequest.class));
     }
 
     @Test
@@ -273,7 +266,7 @@ public class ProfileSearchIncludeFlagsTest {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("another-citizen-uuid"))
-                .include(Arrays.asList("PROFILE", "ADDRESS", "DOCUMENT"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
                 .requestInfo(RequestInfo.builder()
                         .userInfo(org.egov.common.contract.request.User.builder()
                                 .uuid("logged-in-citizen-uuid")
