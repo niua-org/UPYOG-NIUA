@@ -188,8 +188,7 @@ export const UserService = {
       data: {
         userUuid: userUuid,
         tenantId: tenantId,
-      },
-      params: { tenantId: stateCode },
+      }
     }),
 
   sendAadhaarOtp: (details) =>
@@ -206,6 +205,33 @@ export const UserService = {
       data: details,
       auth: false,
       method: "POST",
+    }),
+
+  createUserDocument: async (documents, stateCode) =>
+    ServiceRequest({
+      serviceName: "createUserDocument",
+      url: Urls.profile.createDocument,
+      auth: true,
+      userService: true,
+      data: {
+        documents: documents,
+      },
+      params: { tenantId: stateCode },
+    }),
+
+  // update a single user document
+  updateUserDocument: async (document, tenantId, userUuid) =>
+    ServiceRequest({
+      serviceName: "updateUserDocument",
+      url: Urls.profile.updateDocument,
+      auth: true,
+      userService: true,
+      data: {
+        tenantId,
+        uuid: userUuid,
+        document,
+      },
+      params: { tenantId },
     }),
 
 };

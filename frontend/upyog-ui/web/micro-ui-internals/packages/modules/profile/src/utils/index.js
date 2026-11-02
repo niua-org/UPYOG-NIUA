@@ -38,10 +38,15 @@ export const getPersonalFields = (user) =>
   ]);
 
 export const getAddressBlocks = (addresses = []) => {
+  const getProp = (a, prop) => {
+    if (prop === "addressProof") return a.filestoreId;
+    return a[prop];
+  };
+
   const blocks = addresses
     .map((a) => ({
       type: a.type || a.addressType,
-      fields: withValues(ADDRESS_FIELDS.map(([key, prop]) => [key, a[prop]])),
+      fields: withValues(ADDRESS_FIELDS.map(([key, prop]) => [key, getProp(a, prop)])),
     }))
     .filter((block) => block.fields.length > 0);
 
@@ -111,24 +116,59 @@ export const FormField = ({ label, required, error, t, children }) => (
 );
 
 // Read-only label + value — used in address cards
-export const InfoField = ({ label, value }) => (
-  <div>
-    <div style={profileStyles.fieldLabel}>{label}</div>
-    <div style={profileStyles.fieldValue}>{value}</div>
-  </div>
-);
+// export const InfoField = ({ label, value }) => (
+//   <div>
+//     <div style={profileStyles.fieldLabel}>{label}</div>
+//     <div style={profileStyles.fieldValue}>{value}</div>
+//   </div>
+// );
 
-const Field = ({ label, value }) => (
-  <div>
-    <div style={profileStyles.fieldLabel}>{label}</div>
-    <div style={profileStyles.fieldValue}>{value}</div>
-  </div>
-);
+export const InfoField = ({ label, value, fieldKey }) => {
+  const isDoc = fieldKey === "COMMON_ADDRESS_PROOF" && value && value !== "CS_NA";
+
+  return (
+    <div>
+      <div style={profileStyles.fieldLabel}>{label}</div>
+      {isDoc ? (
+        <div
+          onClick={() => openDocument(value, "pg")}
+          style={{ cursor: "pointer", display: "inline-block", marginTop: 4 }}
+          title="Click to view document"
+        >
+          <PDFSvg width={24} height={24} />
+        </div>
+      ) : (
+        <div style={profileStyles.fieldValue}>{value}</div>
+      )}
+    </div>
+  );
+};
+
+
+export const Field = ({ label, value, fieldKey }) => {
+  const isDoc = fieldKey === "COMMON_ADDRESS_PROOF";
+  return (
+    <div>
+      <div style={profileStyles.fieldLabel}>{label}</div>
+      {isDoc ? (
+        <div
+          onClick={() => openDocument(value, "pg")}
+          style={{ cursor: "pointer", display: "inline-block", marginTop: 4 }}
+          title="Click to view document"
+        >
+          <PDFSvg width={28} height={28} />
+        </div>
+      ) : (
+        <div style={profileStyles.fieldValue}>{value}</div>
+      )}
+    </div>
+  );
+};
 
 export const FieldGrid = ({ fields, t }) => (
   <div style={profileStyles.grid}>
     {fields.map(([key, value]) => (
-      <Field key={key} label={t(key)} value={value} />
+      <Field key={key} fieldKey={key} label={t(key)} value={value} t={t} />
     ))}
   </div>
 );
@@ -139,3 +179,40 @@ export const Section = ({ title, children }) => (
     {children}
   </div>
 );
+
+export const PDFSvg = ({ width = 36, height = 36 }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 24 24" fill="#D4351C">
+    <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z" />
+  </svg>
+);
+
+export const getDocumentBlocks = (documents = []) => {
+  return (documents || [])
+    .filter((doc) => doc.active !== false && (doc.fileStoreUrl || doc.filestoreId))
+    .map((doc) => {
+      // to get the url
+      const url = doc.fileStoreUrl?.split(",")?.[0] || doc.fileStoreUrl || doc.fileUrl;
+      return {
+        id: doc.id || doc.uuid,
+        documentType: doc.documentType,
+        filestoreId: doc.filestoreId,
+        fileUrl: url,
+        title: `PROFILE_${doc.documentType}`,
+      };
+    });
+};
+
+
+export const openDocument = async (fileOrId, stateId) => {
+  if (!fileOrId) return;
+  // agar filestoreId hai to URL fetch karke open karo
+  try {
+    const res = await Digit.UploadServices.Filefetch([fileOrId], stateId);
+    const url = res?.data?.fileStoreIds?.[0]?.url?.split(",")?.[0];
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  } catch (err) {
+    console.error("Error opening document:", err);
+  }
+};

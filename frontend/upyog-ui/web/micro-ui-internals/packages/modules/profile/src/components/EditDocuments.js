@@ -1,19 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { UploadFile, Toast, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { profileStyles } from "../utils/profileStyles";
+import { PDFSvg, openDocument } from "../utils";
+import { buildCreateDocumentPayload, buildUpdateDocumentPayload } from "../utils/payloads";
 
 /*
  * EditDocuments
  *
  * Handles Identity Proof and DOB Proof upload for the user profile.
- * If user already has documents (from userDetails.documents), shows them with re-upload option.
- * If no documents exist, shows upload fields directly.
- * On save — uploads files to filestore first, then:
- *   - If existing docs: calls updateUser with documents array in payload
- *   - If new docs: calls createUserDocument API
+ * Existing docs are shown with a re-upload option; otherwise empty upload fields.
+ * Create → Digit.UserService.createUserDocument (/user/document/_create)
+ * Update → Digit.UserService.updateUserDocument (/user/document/_update)
+ * After either call, refreshDocuments re-fetches the user (include DOCUMENT)
+ * so the list updates immediately — same pattern as EditAddress.refreshAddresses.
  */
-
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const ACCEPTED = ".jpg,.jpeg,.png,.pdf";
@@ -21,39 +22,50 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg", "application/pdf"
 
 const DOC_TYPES = [
   { key: "IDENTITY_PROOF", label: "PROFILE_IDENTITY_PROOF" },
-  { key: "DOB_PROOF",      label: "PROFILE_DOB_PROOF"      },
+  { key: "DOB_PROOF", label: "PROFILE_DOB_PROOF" },
 ];
 
-const EditDocuments = ({ stateCode, userDetails }) => {
+const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   const { t } = useTranslation();
-  const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const userInfo = Digit.UserService.getUser()?.info || {};
 
-  const existingDocs = userDetails?.documents || [];
-  const hasExisting = existingDocs.length > 0;
-
-  // file state per doc type: { IDENTITY_PROOF: File|null, DOB_PROOF: File|null }
+  const [documents, setDocuments] = useState(userDetails?.documents || []);
   const [files, setFiles] = useState({ IDENTITY_PROOF: null, DOB_PROOF: null });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+
+  const hasExisting = documents.length > 0;
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 5000);
   };
 
+  // callback to re-fetch documents after create/update — same idea as refreshAddresses
+  const refreshDocuments = useCallback(async () => {
+    if (!userInfo.uuid) return;
+    const response = await Digit.UserService.userSearch(
+      tenantId,
+      { uuid: [userInfo.uuid], include: ["DOCUMENT"] },
+      {}
+    );
+    const nextDocs = response?.user?.[0]?.documents || [];
+    setDocuments(nextDocs);
+    onDocumentsUpdate?.({ documents: nextDocs });
+  }, [userInfo.uuid, tenantId, onDocumentsUpdate]);
+
   const validateFile = (file, key) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setErrors(prev => ({ ...prev, [key]: t("PROFILE_DOC_INVALID_TYPE") }));
+      setErrors((prev) => ({ ...prev, [key]: t("PROFILE_DOC_INVALID_TYPE") }));
       return false;
     }
     if (file.size > MAX_SIZE) {
-      setErrors(prev => ({ ...prev, [key]: t("PROFILE_DOC_SIZE_EXCEEDED") }));
+      setErrors((prev) => ({ ...prev, [key]: t("PROFILE_DOC_SIZE_EXCEEDED") }));
       return false;
     }
-    setErrors(prev => ({ ...prev, [key]: null }));
+    setErrors((prev) => ({ ...prev, [key]: null }));
     return true;
   };
 
@@ -61,18 +73,21 @@ const EditDocuments = ({ stateCode, userDetails }) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!validateFile(file, key)) return;
-    setFiles(prev => ({ ...prev, [key]: file }));
+    setFiles((prev) => ({ ...prev, [key]: file }));
   };
 
   const handleDelete = (key) => {
-    setFiles(prev => ({ ...prev, [key]: null }));
-    setErrors(prev => ({ ...prev, [key]: null }));
+    setFiles((prev) => ({ ...prev, [key]: null }));
+    setErrors((prev) => ({ ...prev, [key]: null }));
   };
 
   const uploadToFilestore = async (file) => {
-    const res = await Digit.UploadServices.Filestorage("profile", file, stateId);
+    const res = await Digit.UploadServices.Filestorage("profile", file, tenantId);
     return res?.data?.files?.[0]?.fileStoreId || null;
   };
+
+  const findExisting = (documentType) =>
+    documents.find((doc) => doc.documentType === documentType);
 
   const handleSave = async () => {
     const toUpload = DOC_TYPES.filter(({ key }) => files[key]);
@@ -82,35 +97,45 @@ const EditDocuments = ({ stateCode, userDetails }) => {
     }
     setSaving(true);
     try {
-      // upload all selected files to filestore
       const uploaded = await Promise.all(
         toUpload.map(async ({ key }) => ({
           documentType: key,
           filestoreId: await uploadToFilestore(files[key]),
+          fileName: files[key]?.name,
         }))
       );
 
-      if (hasExisting) {
-        // update flow — send documents in updateUser payload
-        const sessionUser = Digit.UserService.getUser();
-        const payload = {
-          ...userInfo,
-          documents: uploaded,
-        };
-        const { responseInfo } = await Digit.UserService.updateUser(payload, stateCode);
-        if (responseInfo?.status === "200") showToast("success", t("PROFILE_DOCS_SAVED"));
-      } else {
-        // create flow — new document create API
-        const documents = uploaded.map(({ documentType, filestoreId }) => ({
-          userUuid: userInfo.uuid,
-          tenantId,
-          documentType,
-          filestoreId,
-          active: true,
-        }));
-        await Digit.UserService.createUserDocument(documents, stateId);
-        showToast("success", t("PROFILE_DOCS_SAVED"));
+      const toCreate = [];
+      for (const item of uploaded) {
+        const existing = findExisting(item.documentType);
+        if (existing?.id) {
+          const document = buildUpdateDocumentPayload({
+            existingDoc: existing,
+            tenantId,
+            filestoreId: item.filestoreId,
+            fileName: item.fileName,
+          });
+          await Digit.UserService.updateUserDocument(document, tenantId, userInfo.uuid);
+        } else {
+          toCreate.push(
+            buildCreateDocumentPayload({
+              userUuid: userInfo.uuid,
+              tenantId,
+              documentType: item.documentType,
+              filestoreId: item.filestoreId,
+              fileName: item.fileName,
+            })
+          );
+        }
       }
+
+      if (toCreate.length) {
+        await Digit.UserService.createUserDocument(toCreate, tenantId);
+      }
+
+      await refreshDocuments();
+      setFiles({ IDENTITY_PROOF: null, DOB_PROOF: null });
+      showToast("success", t("PROFILE_DOCS_SAVED"));
     } catch (err) {
       showToast("error", t("CORE_COMMON_PROFILE_UPDATE_ERROR"));
     } finally {
@@ -121,15 +146,21 @@ const EditDocuments = ({ stateCode, userDetails }) => {
   return (
     <>
       {hasExisting ? (
-        // show existing docs with re-upload option
         <div style={profileStyles.card}>
-          {existingDocs.map((doc, i) => (
-            <div key={i} style={{ width: "100%" }}>
+          {documents.map((doc, i) => (
+            <div key={doc.id || i} style={{ width: "100%" }}>
               <div style={profileStyles.cardHeader}>
                 <div style={profileStyles.cardLabel}>{t(`PROFILE_${doc.documentType}`)}</div>
-                <a href={doc.fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: 13 }}>
-                  {t("PROFILE_VIEW_DOC")} 📄
-                </a>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}
+                  onClick={() => openDocument(doc.filestoreId, tenantId)}
+                  title="Click to view document"
+                >
+                  <PDFSvg width={100} height={100} />
+                  <span style={{ fontSize: 13, color: "#1D70B8", textDecoration: "underline" }}>
+                    {t("PROFILE_VIEW_DOC")}
+                  </span>
+                </div>
               </div>
               <UploadFile
                 accept={ACCEPTED}
@@ -143,13 +174,14 @@ const EditDocuments = ({ stateCode, userDetails }) => {
           ))}
         </div>
       ) : (
-        // no existing docs — show upload fields
         <>
           <p style={{ color: "#505A5F", marginBottom: 16 }}>{t("PROFILE_NO_DOCS_YET")}</p>
           <div style={profileStyles.card}>
             {DOC_TYPES.map(({ key, label }) => (
               <div key={key} style={{ width: "100%" }}>
-                <div style={profileStyles.cardLabel}>{t(label)} <span style={profileStyles.required}>*</span></div>
+                <div style={profileStyles.cardLabel}>
+                  {t(label)} <span style={profileStyles.required}>*</span>
+                </div>
                 <UploadFile
                   accept={ACCEPTED}
                   onUpload={(e) => handleUpload(e, key)}
@@ -165,20 +197,12 @@ const EditDocuments = ({ stateCode, userDetails }) => {
       )}
 
       <div style={profileStyles.actions}>
-        <SubmitBar
-          label={t("CORE_COMMON_SAVE")}
-          onSubmit={handleSave}
-          disabled={saving}
-        />
+        <SubmitBar label={t("CORE_COMMON_SAVE")} onSubmit={handleSave} disabled={saving} />
       </div>
 
       {toast && (
         <div className="profile-toast-container">
-          <Toast
-            error={toast.type === "error"}
-            label={toast.msg}
-            onClose={() => setToast(null)}
-          />
+          <Toast error={toast.type === "error"} label={toast.msg} onClose={() => setToast(null)} />
         </div>
       )}
     </>

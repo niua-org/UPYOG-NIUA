@@ -21,17 +21,16 @@ import { profileStyles } from "../utils/profileStyles";
 
 
 
-const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails }) => {
+const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProfileUpdate }) => {
   const { t } = useTranslation();
   const isEmployee = userType === "employee";
   const stateId = Digit.ULBService.getStateId();
-  const tenantId = Digit.ULBService.getCurrentTenantId();
   const userInfo = Digit.UserService.getUser()?.info || {};
   const [form, setForm] = useState({
     name: userInfo.name || "",
-    email: userDetails.emailId || "",
+    emailId: userDetails.emailId || "",
     mobileNumber: userInfo.mobileNumber || "",
-    altMobileNumber: userDetails.altContactNumber || "",
+    altContactNumber: userDetails.altContactNumber || "",
     city: userInfo.permanentCity || cityDetails?.name || "",
     dob: userDetails?.dob || "",
     gender: toGenderOption(userDetails?.gender),
@@ -90,6 +89,12 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails }) => {
       if (responseInfo?.status === "SUCCESS") {
         const sessionUser = Digit.UserService.getUser();
         if (sessionUser) Digit.UserService.setUser(buildSessionUser({ sessionUser, form, photoThumb }));
+        const updatedUser = {
+          ...userDetails,
+          ...form,
+          photo: photoId
+        };
+        onProfileUpdate && onProfileUpdate(updatedUser);
         showToast("success", t("CORE_COMMON_PROFILE_UPDATE_SUCCESS"));
       }
     } catch (error) {
@@ -111,22 +116,22 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails }) => {
             <Dropdown selected={form.gender} select={(v) => setField("gender", v)} option={genderOptions} optionKey="i18nKey" t={t} name="gender" disable={true} />
           </FormField>
           <FormField label={t("CORE_COMMON_PROFILE_DOB")} required t={t}>
-            <DatePicker date={form.dob} onChange={(v) => setField("dob", v)} disabled={true} />
+            <DatePicker date={form.dob} onChange={(v) => setField("dob", v)} disabled={userDetails?.dob ? true:false} />
           </FormField>
           <FormField label={t("CORE_COMMON_PROFILE_MOBILE_NUMBER")} required error={errors.mobileNumber} t={t}>
             <MobileNumber value={form.mobileNumber} name="mobileNumber" onChange={(v) => setField("mobileNumber", v)} disable={true} />
           </FormField>
-          <FormField label={t("CORE_COMMON_PROFILE_ALT_MOBILE_NUMBER")} required error={errors.altMobileNumber} t={t}>
-            <MobileNumber value={form.altMobileNumber} name="altMobileNumber" onChange={(v) => setField("altMobileNumber", v)} />
+          <FormField label={t("CORE_COMMON_PROFILE_ALT_MOBILE_NUMBER")} required error={errors.altContactNumber} t={t}>
+            <MobileNumber value={form.altContactNumber} name="altContactNumber" onChange={(v) => setField("altContactNumber", v)} />
           </FormField>
-          <FormField label={t("CORE_COMMON_PROFILE_EMAIL")} error={errors.email} t={t}>
-            <TextInput t={t} type="email" name="email" value={form.email} onChange={(e) => setField("email", e.target.value)} disable={true} />
+          <FormField label={t("CORE_COMMON_PROFILE_EMAIL")} error={errors.emailId} t={t}>
+            <TextInput t={t} type="emailId" name="emailId" value={form.emailId} onChange={(e) => setField("emailId", e.target.value)} disable={userDetails.emailId?true:false} />
           </FormField>
           <FormField label={t("CORE_COMMON_FATHER_NAME")} error={errors.fatherName} t={t}>
-            <TextInput t={t} type="text" name="email" value={form.fatherName} onChange={(e) => setField("fatherName", e.target.value)} disable={true} />
+            <TextInput t={t} type="text" name="fatherName" value={form.fatherName} onChange={(e) => setField("fatherName", e.target.value)} disable={userDetails?.fatherName ? true:false} />
           </FormField>
           <FormField label={t("CORE_COMMON_MOTHER_NAME")} error={errors.motherName} t={t}>
-            <TextInput t={t} type="text" name="motherName" value={form.motherName} onChange={(e) => setField("motherName", e.target.value)} disable={true} />
+            <TextInput t={t} type="text" name="motherName" value={form.motherName} onChange={(e) => setField("motherName", e.target.value)} disable={userDetails?.motherName ? true:false} />
           </FormField>
           <FormField label={t("CORE_COMMON_SPOUSENAME")} error={errors.spouseName} t={t}>
             <TextInput t={t} type="text" name="spouseName" value={form.spouseName} onChange={(e) => setField("spouseName", e.target.value)} />

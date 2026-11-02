@@ -390,7 +390,8 @@ const Urls = {
     updateAddress: "/user/address/_update",
     createDocument: "/user/document/_create",
     searchAddress: "/user/address/_search",
-    userSearch: "/user/profile/_search"
+    userSearch: "/user/profile/_search",
+    updateDocument: "/user/document/_update"
   }
 };
 
