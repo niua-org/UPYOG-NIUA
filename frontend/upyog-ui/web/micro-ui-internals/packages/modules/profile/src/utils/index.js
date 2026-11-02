@@ -218,7 +218,7 @@ export const getDocumentBlocks = (documents = []) => {
 
 export const openDocument = async (fileOrId, stateId) => {
   if (!fileOrId) return;
-  // agar filestoreId hai to URL fetch karke open karo
+  // to fetch the url from filestoreid
   try {
     const res = await Digit.UploadServices.Filefetch([fileOrId], stateId);
     const url = res?.data?.fileStoreIds?.[0]?.url?.split(",")?.[0];
