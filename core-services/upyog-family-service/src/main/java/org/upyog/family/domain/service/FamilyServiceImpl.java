@@ -13,6 +13,7 @@ import org.upyog.family.persistence.repository.IdGenRepository;
 import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.KafkaProducer;
+import org.upyog.family.util.MaskUtils;
 import org.upyog.family.web.contract.AuditDetails;
 import org.upyog.family.web.contract.CitizenProfile;
 import org.upyog.family.web.contract.Family;
@@ -173,7 +174,7 @@ public class FamilyServiceImpl implements FamilyService {
             if (matchedProfiles != null && !matchedProfiles.isEmpty()) {
                 criteria.setMemberUserUuid(matchedProfiles.get(0).getUuid());
             } else {
-                log.info("[UPYOG-FAMILY-SERVICE] No citizen found for mobile: {}. Returning empty.", criteria.getMobileNumber());
+                log.info("[UPYOG-FAMILY-SERVICE] No citizen found for mobile: {}. Returning empty.", MaskUtils.maskMobile(criteria.getMobileNumber()));
                 return Collections.emptyList();
             }
         }

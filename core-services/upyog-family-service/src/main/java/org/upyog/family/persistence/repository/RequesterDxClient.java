@@ -41,6 +41,17 @@ public interface RequesterDxClient {
      * @param familyId     the family identifier
      */
     default void registerConsentToken(String consentToken, String familyId) {
+        registerConsentToken(consentToken, familyId, null);
+    }
+
+    /**
+     * Registers a verified Head of Family consent token bound to target family and applicant UUID.
+     *
+     * @param consentToken  the verified consent token
+     * @param familyId      the family identifier
+     * @param applicantUuid citizen UUID of the applicant permitted to join
+     */
+    default void registerConsentToken(String consentToken, String familyId, String applicantUuid) {
         // Default no-op for backward compatibility
     }
 }

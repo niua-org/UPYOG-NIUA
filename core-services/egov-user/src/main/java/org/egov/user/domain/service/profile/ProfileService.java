@@ -121,4 +121,16 @@ public interface ProfileService {
      * @return AadhaarCitizenVerifyResponse containing resolved citizen demographics, familyId, and isNewUser flag
      */
     AadhaarCitizenVerifyResponse verifyAndResolveAadhaarCitizen(AadhaarCitizenVerifyRequest request);
+
+    /**
+     * Verifies Aadhaar OTP for an authenticated citizen who logged in with their mobile number,
+     * ensuring that the mobile number registered with Aadhaar matches the logged-in user's mobile number.
+     * On match, marks the citizen's profile as identity-verified with Aadhaar, updates e-KYC demographics,
+     * links the masked Aadhaar number, persists changes to the database, and returns the verified profile response.
+     *
+     * @param request Aadhaar citizen verification request containing referenceId and OTP
+     * @return AadhaarCitizenVerifyResponse containing verified citizen profile details and identity verification status
+     * @throws org.egov.tracer.model.CustomException if mobile numbers do not match or Aadhaar is already linked to another account
+     */
+    AadhaarCitizenVerifyResponse verifyLoggedInCitizenProfile(AadhaarCitizenVerifyRequest request);
 }

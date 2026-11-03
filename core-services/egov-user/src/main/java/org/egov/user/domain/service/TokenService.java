@@ -9,6 +9,7 @@ import org.egov.user.domain.model.SecureUser;
 import org.egov.user.domain.model.UserDetail;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.persistence.repository.ActionRestRepository;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.auth.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -158,7 +159,7 @@ public class TokenService {
         // Decrypt user data using the same logic as /user/oauth/token and /user/_search
         try {
             log.info("Starting user decryption for opaque token. User: {}, encrypted userName: {}",
-                user.getId(), user.getUserName());
+                user.getId(), MaskUtils.maskIdentifier(user.getUserName()));
 
             // Convert contract user to domain user for decryption
             org.egov.user.domain.model.User domainUser = convertContractToDomainUser(user);
@@ -179,7 +180,7 @@ public class TokenService {
 
             secureUser = new SecureUser(decryptedUser);
             log.info("Opaque token using decrypted user data. Decrypted userName: {}, roles: {}",
-                decryptedUser.getUserName(), decryptedUser.getRoles() != null ? decryptedUser.getRoles().size() : "NULL");
+                MaskUtils.maskIdentifier(decryptedUser.getUserName()), decryptedUser.getRoles() != null ? decryptedUser.getRoles().size() : "NULL");
         } catch (Exception e) {
             log.error("Failed to decrypt user for opaque token: {}", e.getMessage(), e);
             log.info("Falling back to encrypted user data for opaque token");
@@ -187,7 +188,7 @@ public class TokenService {
         }
 
         log.info("FINAL: Successfully retrieved user from opaque token: userId={}, userName={}, roles={}",
-            user.getId(), user.getUserName(),
+            user.getId(), MaskUtils.maskIdentifier(user.getUserName()),
             secureUser.getUser().getRoles() != null ? secureUser.getUser().getRoles().size() : "NULL");
         return new UserDetail(secureUser, null);
     }

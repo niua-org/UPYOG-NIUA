@@ -66,6 +66,15 @@ public class FamilyConfiguration {
     @Value("${family.consent.mock.enabled:false}")
     private Boolean mockConsentEnabled;
 
+    @Value("${family.consent.mock.fixed.otp:}")
+    private String mockFixedOtp;
+
+    @Value("${family.consent.token.ttl.minutes:15}")
+    private Long consentTokenTtlMinutes;
+
+    @Value("${family.sms.otp.message.template:Your OTP to authorize joining your family in UPYOG is %s.}")
+    private String smsOtpMessageTemplate;
+
     @Value("${egov.otp.host}")
     private String otpHost;
 
@@ -119,4 +128,11 @@ public class FamilyConfiguration {
 
     @Value("${family.max.limit}")
     private Integer maxLimit;
+
+    public long getConsentTokenTtlMs() {
+        long minutes = (consentTokenTtlMinutes != null && consentTokenTtlMinutes > 0)
+                ? consentTokenTtlMinutes
+                : 15L;
+        return minutes * 60L * 1000L;
+    }
 }

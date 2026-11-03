@@ -107,12 +107,32 @@ class OtpClientImplTest {
     }
 
     @Test
-    @DisplayName("validateOtp in mock mode with 123456 returns true")
+    @DisplayName("validateOtp in mock mode with configured fixed OTP returns true")
     void validateOtp_MockMode_ReturnsTrue() {
         when(configuration.getMockConsentEnabled()).thenReturn(true);
+        when(configuration.getMockFixedOtp()).thenReturn("123456");
 
         boolean result = otpClient.validateOtp("9876543210", "123456", "pg.citya", requestInfo);
         assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("sendOtp when egov-otp returns blank OTP value should throw CustomException")
+    void sendOtp_BlankOtpVal_ThrowsCustomException() {
+        when(configuration.getOtpHost()).thenReturn("http://localhost:8089");
+        when(configuration.getOtpCreatePath()).thenReturn("/otp/v1/_create");
+
+        Map<String, Object> innerOtp = new HashMap<>();
+        innerOtp.put("UUID", "uuid-token-blank");
+        innerOtp.put("otp", "");
+
+        Map<String, Object> otpResponse = new HashMap<>();
+        otpResponse.put("otp", innerOtp);
+
+        when(restTemplate.postForObject(eq("http://localhost:8089/otp/v1/_create"), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(otpResponse);
+
+        assertThrows(CustomException.class, () -> otpClient.sendOtp("9876543210", "pg.citya", requestInfo));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.egov.user.web.contract.profile;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,6 +22,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProfileResyncRequest {
 
     @Schema(description = "Standard UPYOG RequestInfo contract")
@@ -60,6 +62,20 @@ public class ProfileResyncRequest {
     @Schema(description = "Nested citizen profile payload supporting standard UPYOG request contracts")
     @JsonProperty("user")
     private Map<String, Object> user;
+
+    @JsonProperty("userUuid")
+    public void setUserUuid(String userUuid) {
+        if (StringUtils.isNotBlank(userUuid)) {
+            this.uuid = userUuid;
+        }
+    }
+
+    @JsonProperty("referenceId")
+    public void setReferenceId(String referenceId) {
+        if (StringUtils.isNotBlank(referenceId)) {
+            this.txnId = referenceId;
+        }
+    }
 
     @JsonSetter("user")
     public void setUser(Map<String, Object> userMap) {

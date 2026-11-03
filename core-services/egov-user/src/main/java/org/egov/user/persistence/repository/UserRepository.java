@@ -12,6 +12,7 @@ import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.persistence.dto.FailedLoginAttempt;
 import org.egov.user.repository.builder.RoleQueryBuilder;
 import org.egov.user.repository.builder.UserTypeQueryBuilder;
@@ -158,7 +159,7 @@ public class UserRepository {
         }
         String queryStr = userTypeQueryBuilder.getQuery(userSearch, preparedStatementValues);
         log.info("User search Query : {}", queryStr);
-        log.info("User search Parameters: {}", preparedStatementValues);
+        log.debug("User search Parameters: {}", preparedStatementValues);
         log.info("User search Criteria - UUID: {}, tenantId: {}, active: {}",
                  userSearch.getUuid(), userSearch.getTenantId(), userSearch.getActive());
 
@@ -414,7 +415,7 @@ public class UserRepository {
             int rowsUpdated = namedParameterJdbcTemplate.update(UPDATE_USER_SQL, updateuserInputs);
             log.info("[USER-REPO] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
             if (rowsUpdated == 0) {
-                log.warn("[USER-REPO] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
+                log.warn("[USER-REPO] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? MaskUtils.maskIdentifier(oldUser.getUsername()) : null);
                 throw new CustomException("DATA_MISMATCH", "Data mismatch: User with id " + targetId + " or uuid " + targetUuid + " does not exist in the database");
             }
             if (user.getRoles() != null && !CollectionUtils.isEmpty(user.getRoles()) && !oldUser.getRoles().equals(user.getRoles())) {
@@ -980,7 +981,7 @@ public class UserRepository {
         int rowsUpdated = namedParameterJdbcTemplate.update(UPDATE_USER_SQL, updateuserInputs);
         log.info("[USER-REPO-V2] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
         if (rowsUpdated == 0) {
-            log.warn("[USER-REPO-V2] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
+            log.warn("[USER-REPO-V2] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? MaskUtils.maskIdentifier(oldUser.getUsername()) : null);
             throw new CustomException("DATA_MISMATCH", "Data mismatch: User with id " + targetId + " or uuid " + targetUuid + " does not exist in the database");
         }
         if (user.getRoles() != null && !CollectionUtils.isEmpty(user.getRoles()) && !oldUser.getRoles().equals(user.getRoles())) {
@@ -1139,7 +1140,7 @@ public class UserRepository {
      */
     private void saveAddressIfValid(Address address, User savedUser, String addressType) {
         if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
-            log.info("Saving {} address for user: {}", addressType, savedUser.getUsername());
+            log.info("Saving {} address for user: {}", addressType, MaskUtils.maskIdentifier(savedUser.getUsername()));
             Address savedAddress = saveAddress(address, savedUser.getId(), savedUser.getTenantId());
             if ("correspondence".equals(addressType)) {
                 savedUser.setCorrespondenceAddress(savedAddress);
@@ -1148,7 +1149,7 @@ public class UserRepository {
             }
         } else {
             log.info("Skipping {} address persistence - missing required fields (city, pincode, or address) for user: {}", 
-                    addressType, savedUser.getUsername());
+                    addressType, MaskUtils.maskIdentifier(savedUser.getUsername()));
         }
     }
 
@@ -1160,12 +1161,12 @@ public class UserRepository {
      */
     private void saveAddressV2IfValid(Address address, User savedUser) {
         if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
-            log.info("Saving address with type: {} for user: {}", address.getType(), savedUser.getUsername());
+            log.info("Saving address with type: {} for user: {}", address.getType(), MaskUtils.maskIdentifier(savedUser.getUsername()));
             Address responseAddress = saveAddressV2(address, savedUser.getId(), savedUser.getTenantId());
             savedUser.addAddressItem(responseAddress);
         } else {
             log.info("Skipping address persistence for type: {} - missing required fields (city, pincode, or address) for user: {}", 
-                    address != null ? address.getType() : "null", savedUser.getUsername());
+                    address != null ? address.getType() : "null", MaskUtils.maskIdentifier(savedUser.getUsername()));
         }
     }
 

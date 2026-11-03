@@ -32,6 +32,7 @@ import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -66,7 +67,10 @@ class FamilyControllerTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
 
-        requestInfo = RequestInfo.builder().apiId("org.upyog.family").build();
+        requestInfo = RequestInfo.builder()
+                .apiId("org.upyog.family")
+                .userInfo(org.egov.common.contract.request.User.builder().uuid("caller-uuid").build())
+                .build();
 
         FamilyMember head = FamilyMember.builder()
                 .userUuid("user-uuid-head")
@@ -88,7 +92,7 @@ class FamilyControllerTest {
                 .family(family)
                 .build();
 
-        when(responseInfoFactory.createResponseInfoFromRequestInfo(any(), eq(true)))
+        lenient().when(responseInfoFactory.createResponseInfoFromRequestInfo(any(), eq(true)))
                 .thenReturn(ResponseInfo.builder().status("successful").build());
     }
 

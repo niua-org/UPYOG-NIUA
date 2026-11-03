@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.user.domain.model.User;
+import org.egov.user.util.MaskUtils;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -102,7 +103,7 @@ public class UserAccountSummary implements Serializable {
                 .name(user.getName())
                 .userName(user.getUsername())
                 .mobileNumber(user.getMobileNumber())
-                .aadhaarNumber(maskAadhaar(user.getAadhaarNumber()))
+                .aadhaarNumber(MaskUtils.maskAadhaar(user.getAadhaarNumber()))
                 .gender(user.getGender() != null ? user.getGender().name() : null)
                 .dob(user.getDob())
                 .photo(user.getPhoto())

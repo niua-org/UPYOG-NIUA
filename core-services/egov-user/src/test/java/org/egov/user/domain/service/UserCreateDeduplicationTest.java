@@ -306,6 +306,56 @@ public class UserCreateDeduplicationTest {
     }
 
     @Test
+    @DisplayName("Citizen creation: Rejected when incoming citizen has duplicate Aadhaar linked to another citizen on a different mobile")
+    void testCreateCitizen_ThrowsExceptionWhenIncomingCitizenHasDuplicateAadhaarAcrossDifferentMobile() {
+        String existingMobile = "9876543210";
+        String incomingMobile = "9123456789";
+        String sharedAadhaar = "XXXXXXXX9876";
+
+        User existingCitizenOnOtherMobile = User.builder()
+                .id(102L)
+                .uuid("other-mobile-user-uuid")
+                .username(existingMobile)
+                .mobileNumber(existingMobile)
+                .name("Citizen Other Mobile")
+                .aadhaarNumber(sharedAadhaar)
+                .type(UserType.CITIZEN)
+                .isIdentityVerified(true)
+                .active(true)
+                .tenantId("pg")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenAnswer(invocation -> {
+            UserSearchCriteria criteria = invocation.getArgument(0);
+            if (sharedAadhaar.equalsIgnoreCase(criteria.getAadhaarNumber())) {
+                return Collections.singletonList(existingCitizenOnOtherMobile);
+            }
+            return Collections.emptyList();
+        });
+
+        User incomingCitizen = User.builder()
+                .username("new_applicant")
+                .mobileNumber(incomingMobile)
+                .name("New Applicant")
+                .aadhaarNumber(sharedAadhaar)
+                .isIdentityVerified(true)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .roles(Collections.singleton(Role.builder().code("CITIZEN").tenantId("pg").build()))
+                .build();
+
+        RequestInfo requestInfo = createSampleRequestInfo();
+        CustomException exception = assertThrows(CustomException.class, () ->
+                userService.createUser(incomingCitizen, requestInfo)
+        );
+
+        assertEquals(UserConstants.ERROR_USER_ALREADY_EXISTS, exception.getCode());
+        assertEquals(UserConstants.MSG_USER_ALREADY_EXISTS_AADHAAR, exception.getMessage());
+        verify(userRepository, never()).create(any(User.class));
+    }
+
+    @Test
     @DisplayName("createUser: When no user exists with same mobile, proceed with standard creation")
     public void testCreateUserWhenMobileDoesNotExist() {
         String mobile = "9999999999";

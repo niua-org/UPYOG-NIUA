@@ -76,6 +76,8 @@ public final class UserConstants {
     public static final String ERROR_INVALID_DOCUMENT_REQUEST = "INVALID_DOCUMENT_REQUEST";
     public static final String ERROR_INVALID_DOCUMENTS_REQUEST = "INVALID_DOCUMENTS_REQUEST";
     public static final String ERROR_DOCUMENT_NOT_FOUND = "DOCUMENT_NOT_FOUND";
+    public static final String ERROR_UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS";
+    public static final String ERROR_AADHAAR_MOBILE_MISMATCH = "AADHAAR_MOBILE_MISMATCH";
     public static final String ERROR_DOCUMENT_ID_REQUIRED = "DOCUMENT_ID_REQUIRED";
     public static final String ERROR_DOCUMENT_TYPE_REQUIRED = "DOCUMENT_TYPE_REQUIRED";
     public static final String ERROR_FILESTORE_ID_REQUIRED = "FILESTORE_ID_REQUIRED";
@@ -256,6 +258,7 @@ public final class UserConstants {
     public static final String MSG_FIXED_OTP_NOT_CONFIGURED = "Citizen login fixed OTP value is not configured";
     public static final String MSG_ACCOUNT_INACTIVE = "Citizen account is inactive. Please contact support.";
     public static final String MSG_UNAUTHORIZED_CITIZEN_SEARCH = "Access denied: Citizens are only permitted to search for their own profile. UUID or mobile number must match the authenticated user.";
+    public static final String MSG_AADHAAR_MOBILE_MISMATCH = "Mobile number registered with Aadhaar does not match your logged-in mobile number.";
 
     // =========================================================================
     // 5. API Identifiers & Response Message Constants
@@ -296,6 +299,9 @@ public final class UserConstants {
     public static final String JSON_KEY_DOB = "dob";
     public static final String JSON_KEY_PHOTO = "photo";
     public static final String JSON_KEY_MASKED_AADHAAR = "maskedAadhaar";
+    public static final String JSON_KEY_MOBILE = "mobile";
+    public static final String JSON_KEY_MOBILE_NUMBER = "mobileNumber";
+    public static final String JSON_KEY_PHONE = "phone";
 
     // =========================================================================
     // 8. Identity Verification Sources & Multi-Auth Constants
@@ -307,4 +313,21 @@ public final class UserConstants {
     public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
     public static final String DEFAULT_AADHAAR_CITIZEN_NAME = "Aadhaar Verified Citizen";
     public static final String DEFAULT_REQUESTER_AADHAAR_VERIFY_ENDPOINT = "requester-services-dx/aadhaar/v1/_verifyOtp";
+
+    // =========================================================================
+    // 9. Family Service Integration Constants
+    // =========================================================================
+    public static final String FAMILY_PARAM_STATUS = "status";
+    public static final String FAMILY_STATUS_ACTIVE = "ACTIVE";
+    public static final String FIELD_FAMILY_ID = "familyId";
+    public static final String FIELD_FAMILY_STATUS = "status";
+    public static final String DEFAULT_FAMILY_SEARCH_ENDPOINT = "family/v1/family/_search";
+    public static final String FAMILY_PARAM_MEMBER_USER_UUID = "memberUserUuid";
+    public static final String FAMILY_PARAM_MEMBER_USER_UUIDS = "memberUserUuids";
+    public static final String PARAM_TENANT_ID = "tenantId";
+    public static final String JSON_KEY_FAMILIES_UPPER = "Families";
+    public static final String JSON_KEY_FAMILIES_LOWER = "families";
+    public static final String JSON_KEY_MEMBERS = "members";
+    public static final String JSON_KEY_ACTIVE = "active";
+    public static final String JSON_KEY_USER_UUID = "userUuid";
 }

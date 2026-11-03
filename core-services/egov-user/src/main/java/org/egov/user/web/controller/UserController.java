@@ -18,6 +18,7 @@ import org.egov.user.domain.service.DigiLockerService;
 import org.egov.user.domain.service.TokenService;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserDetailResponseV2;
 import org.egov.user.web.contract.*;
 import org.egov.user.web.contract.auth.CustomUserDetails;
@@ -129,7 +130,7 @@ public class UserController {
      */
     @PostMapping("/citizen/_create")
     public Object createCitizen(@RequestBody @Valid CreateUserRequest createUserRequest) {
-        log.info("Received Citizen Registration Request  " + createUserRequest);
+        log.info("Received Citizen Registration Request for mobile: {}", createUserRequest != null && createUserRequest.getUser() != null ? MaskUtils.maskMobile(createUserRequest.getUser().getMobileNumber()) : null);
         User user = createUserRequest.toDomain(true);
         user.setOtpValidationMandatory(isValidationMandatory());
         if (isRegWithLoginEnabled()) {
@@ -175,7 +176,7 @@ public class UserController {
     @PostMapping("/_search")
     public UserSearchResponse get(@RequestBody @Valid UserSearchRequest request, @RequestHeader HttpHeaders headers) {
 
-        log.info("Received User search Request  " + request);
+        log.info("Received User search Request for tenant: {}, mobile: {}", request != null ? request.getTenantId() : null, request != null ? MaskUtils.maskMobile(request.getMobileNumber()) : null);
         if (request.getActive() == null) {
             request.setActive(true);
         }
@@ -217,7 +218,7 @@ public class UserController {
         // CRITICAL FIX: Return common contract User instead of CustomUserDetails for proper gateway deserialization
         org.egov.user.web.contract.auth.User authUser = userDetail.getSecureUser().getUser();
         log.info("AuthUser extracted from userDetail - id: {}, uuid: {}, userName: {}",
-            authUser.getId(), authUser.getUuid(), authUser.getUserName());
+            authUser.getId(), authUser.getUuid(), MaskUtils.maskIdentifier(authUser.getUserName()));
         log.info("AuthUser roles: {} (size: {})",
             authUser.getRoles(), authUser.getRoles() != null ? authUser.getRoles().size() : "NULL");
 
@@ -335,7 +336,7 @@ public class UserController {
     private UserSearchResponse searchUsers(@RequestBody UserSearchRequest request, HttpHeaders headers) {
 
         UserSearchCriteria searchCriteria = request.toDomain();
-        log.info("searchCriteria_in controller"+searchCriteria);
+        log.info("searchCriteria in controller for tenant: {}, mobile: {}", searchCriteria.getTenantId(), MaskUtils.maskMobile(searchCriteria.getMobileNumber()));
         log.info("headers"+headers);
 
         if (!isInterServiceCall(headers)) {
@@ -427,7 +428,7 @@ public class UserController {
     @PostMapping("/users/v2/_create")
     public Object createUserWithAddress(@RequestBody @Valid CreateUserRequestV2 createUserRequest,
                                         @RequestHeader HttpHeaders headers) {
-        log.info("Received User Registration Request " + createUserRequest);
+        log.info("Received User Registration Request for mobile: {}", createUserRequest != null && createUserRequest.getUser() != null ? MaskUtils.maskMobile(createUserRequest.getUser().getMobileNumber()) : null);
 
         User user = createUserRequest.toDomain(true);
         user.setMobileValidationMandatory(isMobileValidationRequired(headers));

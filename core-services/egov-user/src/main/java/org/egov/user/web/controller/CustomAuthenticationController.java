@@ -8,6 +8,7 @@ import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.persistence.repository.UserRepository;
+import org.egov.user.util.MaskUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -119,7 +120,7 @@ public class CustomAuthenticationController {
                     .body(createErrorResponse("unsupported_grant_type", "Grant type not supported: " + grantType));
             }
         } catch (BadCredentialsException e) {
-            log.error("Authentication failed for user: {}", username, e);
+            log.error("Authentication failed for user: {}", MaskUtils.maskIdentifier(username), e);
             String message = (e.getMessage() != null && e.getMessage().toLowerCase().contains("inactive"))
                     ? "Citizen account is inactive. Please contact support."
                     : "Invalid username or password";
@@ -162,7 +163,7 @@ public class CustomAuthenticationController {
             scope = request.getParameter("scope");
         }
 
-        log.info("Handling password grant for user: {} in tenant: {} with userType: {}", username, tenantId, userType);
+        log.info("Handling password grant for user: {} in tenant: {} with userType: {}", MaskUtils.maskIdentifier(username), tenantId, userType);
 
         if (username == null || password == null || tenantId == null || userType == null) {
             log.error("Missing required parameters after fallback - username: {}, password: {}, tenantId: {}, userType: {}",
@@ -211,7 +212,7 @@ public class CustomAuthenticationController {
                         // SecureUser.getUser() already returns the contract User type
                         userService.resetFailedLoginAttempts(secureUser.getUser());
                     } catch (Exception e) {
-                        log.warn("Could not reset failed login attempts for user: {} - {}", username, e.getMessage());
+                        log.warn("Could not reset failed login attempts for user: {} - {}", MaskUtils.maskIdentifier(username), e.getMessage());
                     }
                 }
 
@@ -225,7 +226,7 @@ public class CustomAuthenticationController {
                         userRepository.updateLastLoginMethod(secureUser.getUser().getId(), loginMethod);
                         secureUser.getUser().setLastLoginMethod(loginMethod);
                     } catch (Exception e) {
-                        log.warn("Could not update last login method for user: {} - {}", username, e.getMessage());
+                        log.warn("Could not update last login method for user: {} - {}", MaskUtils.maskIdentifier(username), e.getMessage());
                     }
                 }
                 
@@ -235,7 +236,7 @@ public class CustomAuthenticationController {
 
                 Map<String, Object> response = createSuccessResponse(accessToken, refreshToken, scope, secureUser);
                 
-                log.info("Successfully generated tokens for user: {}", username);
+                log.info("Successfully generated tokens for user: {}", MaskUtils.maskIdentifier(username));
                 return ResponseEntity.ok(response);
             } else {
                 throw new BadCredentialsException("Authentication failed - invalid user type");
@@ -244,14 +245,14 @@ public class CustomAuthenticationController {
         } catch (MultipleUsersFoundException e) {
             // Edge case: In India, multiple Aadhaar/citizen accounts can be linked to a single mobile number.
             // When multiple accounts match, return the account list with masked PII so the citizen can select which account to proceed with.
-            log.info("Multiple user accounts found for mobile: {}. Returning account list for selection.", e.getMobileNumber());
+            log.info("Multiple user accounts found for mobile: {}. Returning account list for selection.", MaskUtils.maskMobile(e.getMobileNumber()));
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("multipleUsersFound", true);
             response.put("userAccounts", e.getUserAccounts());
             response.put("ResponseInfo", createResponseInfo("Multiple user accounts found. Please select an account to proceed."));
             return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
-            log.warn("Authentication failed for user: {} - {}", username, e.getMessage());
+            log.warn("Authentication failed for user: {} - {}", MaskUtils.maskIdentifier(username), e.getMessage());
 
             if (e.getMessage() != null && e.getMessage().toLowerCase().contains("inactive")) {
                 throw e;
@@ -268,7 +269,7 @@ public class CustomAuthenticationController {
                     userService.handleFailedLogin(user, getClientIpAddress(request), requestInfo);
                 }
             } catch (Exception ex) {
-                log.warn("Could not handle failed login for user: {} - {}", username, ex.getMessage());
+                log.warn("Could not handle failed login for user: {} - {}", MaskUtils.maskIdentifier(username), ex.getMessage());
             }
             
             throw new BadCredentialsException("Invalid username or password");
@@ -349,7 +350,7 @@ public class CustomAuthenticationController {
             }
 
             // Log roles before storing
-            log.info("REDIS STORE: User {} has {} roles", userToStore.getUserName(),
+            log.info("REDIS STORE: User {} has {} roles", MaskUtils.maskIdentifier(userToStore.getUserName()),
                      userToStore.getRoles() != null ? userToStore.getRoles().size() : "null");
 
             // Store minimal user data (now decrypted if decryption succeeded)

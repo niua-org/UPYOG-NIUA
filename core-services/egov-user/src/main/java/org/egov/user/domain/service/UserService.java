@@ -17,6 +17,7 @@ import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.NotificationUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.persistence.dto.FailedLoginAttempt;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FileStoreRepository;
@@ -228,9 +229,9 @@ public class UserService {
         /* encrypt here */
 
         userSearchCriteria = encryptionDecryptionUtil.encryptObject(userSearchCriteria, "User", UserSearchCriteria.class);
-        log.info("userSearchCriteria"+ userSearchCriteria);
+        log.debug("Encrypted userSearchCriteria for user lookup");
         List<User> users = userRepository.findAll(userSearchCriteria);
-        log.info("users"+users);
+        log.debug("Found {} user(s) matching criteria", users != null ? users.size() : 0);
 
         if (users.isEmpty())
             throw new UserNotFoundException(userSearchCriteria);
@@ -250,7 +251,7 @@ public class UserService {
 
         try {
             User decryptedUser = encryptionDecryptionUtil.decryptObject(user, "User", User.class, requestInfo);
-            log.info("decrypted user: {}", decryptedUser);
+            log.debug("User decryption completed for user ID: {}", decryptedUser != null ? decryptedUser.getId() : null);
             return decryptedUser;
         } catch (Exception e) {
             log.warn("Failed to decrypt user, returning encrypted user: {}", e.getMessage());
@@ -318,7 +319,7 @@ public class UserService {
                 log.info("Attempting decryption with null key using List<User> (same as searchUsers)");
                 List<User> decryptedUserList = encryptionDecryptionUtil.decryptObject(userList, "User", User.class, requestInfo);
                 User decryptedUser = decryptedUserList.get(0);
-                log.info("Successfully decrypted user with \"User\" key: {}", decryptedUser.getUsername());
+                log.info("Successfully decrypted user with \"User\" key: {}", MaskUtils.maskIdentifier(decryptedUser.getUsername()));
                 return decryptedUser;
             } catch (Exception e1) {
                 log.warn("Decryption with null key failed, trying with \"User\" key: {}", e1.getMessage());
@@ -569,7 +570,7 @@ public class UserService {
         User createdUser = createCitizen(user, requestInfo);
         User targetUser = createdUser != null ? createdUser : user;
         if (targetUser != null && !Boolean.TRUE.equals(targetUser.getActive())) {
-            log.warn("[USER-SERVICE] Account is inactive for user: {}", targetUser.getUsername());
+            log.warn("[USER-SERVICE] Account is inactive for user: {}", MaskUtils.maskIdentifier(targetUser.getUsername()));
             throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
         }
         if (StringUtils.isNotBlank(user.getScope()) && StringUtils.isBlank(targetUser.getScope())) {
@@ -581,7 +582,7 @@ public class UserService {
     private Object getAccess(User user, String password) {
         log.info("Fetch access token for register with login flow");
         if (user == null || !Boolean.TRUE.equals(user.getActive())) {
-            log.warn("[USER-SERVICE] Account is inactive for user: {}", user != null ? user.getUsername() : "null");
+            log.warn("[USER-SERVICE] Account is inactive for user: {}", user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null");
             throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
         }
         try {
@@ -653,7 +654,7 @@ public class UserService {
         // Bypass egov-otp validation in non-production/test environments if fixed OTP is enabled
         // This allows registration with configured fixed OTP (e.g., 123456) without prior OTP generation
         if (fixedOTPEnabled && StringUtils.isNotBlank(fixedOTPPassword) && fixedOTPPassword.equals(user.getOtpReference())) {
-            log.info("Fixed OTP matched successfully for user: {}", user.getMobileNumber());
+            log.info("Fixed OTP matched successfully for user: {}", MaskUtils.maskMobile(user.getMobileNumber()));
             return true;
         }
         Otp otp = Otp.builder().otp(user.getOtpReference()).identity(user.getMobileNumber()).tenantId(user.getTenantId())
@@ -760,7 +761,7 @@ public class UserService {
      * @param user the domain {@link User} whose tokens should be retired
      */
     public void removeTokensByUser(User user) {
-        log.info("Token removal requested for user: {} - tokens will expire naturally", user.getUsername());
+        log.info("Token removal requested for user: {} - tokens will expire naturally", user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null");
     }
 
     /**
@@ -1491,11 +1492,33 @@ public class UserService {
             User existingEmployee = findExistingEmployeeByMobile(mobileNumber);
             if (existingEmployee != null && (existingEmployee.getActive() == null || Boolean.TRUE.equals(existingEmployee.getActive()))) {
                 log.error("[USER-SERVICE] Employee creation rejected: Mobile {} is already linked to active employee UUID: {}",
-                        maskMobile(mobileNumber), existingEmployee.getUuid());
+                        MaskUtils.maskMobile(mobileNumber), existingEmployee.getUuid());
                 throw new CustomException(UserConstants.ERROR_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE,
                         UserConstants.MSG_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE);
             }
         } else if (UserType.CITIZEN.equals(userType)) {
+            // 1. Cross-mobile Aadhaar uniqueness check: An Aadhaar number can only be linked to one active citizen across the tenant
+            if (StringUtils.isNotBlank(user.getAadhaarNumber())) {
+                String stateTenant = getStateLevelTenantForCitizen(user.getTenantId(), user.getType());
+                UserSearchCriteria aadhaarCriteria = UserSearchCriteria.builder()
+                        .aadhaarNumber(user.getAadhaarNumber().trim())
+                        .tenantId(stateTenant)
+                        .type(UserType.CITIZEN)
+                        .active(true)
+                        .build();
+                List<User> matchingAadhaarUsers = userRepository.findAll(aadhaarCriteria);
+                if (!CollectionUtils.isEmpty(matchingAadhaarUsers)) {
+                    for (User existing : matchingAadhaarUsers) {
+                        if (existing != null && StringUtils.isNotBlank(existing.getAadhaarNumber())
+                                && existing.getAadhaarNumber().trim().equalsIgnoreCase(user.getAadhaarNumber().trim())
+                                && (user.getUuid() == null || !existing.getUuid().equalsIgnoreCase(user.getUuid()))) {
+                            log.error("[USER-SERVICE] Citizen creation rejected: Citizen already exists with Aadhaar number across system in tenant: {}", stateTenant);
+                            throw new CustomException(UserConstants.ERROR_USER_ALREADY_EXISTS, UserConstants.MSG_USER_ALREADY_EXISTS_AADHAAR);
+                        }
+                    }
+                }
+            }
+
             List<User> existingCitizens = findCitizensByMobile(mobileNumber);
 
             boolean isIncomingVerified = Boolean.TRUE.equals(user.getIsIdentityVerified());
@@ -1519,7 +1542,7 @@ public class UserService {
             // Constraint: Only one unverified citizen profile is allowed per mobile number
             if (!isIncomingVerified && unverifiedCount > 0) {
                 log.error("[USER-SERVICE] Cannot create unverified citizen: An unverified citizen account already exists for mobile: {}",
-                        maskMobile(mobileNumber));
+                        MaskUtils.maskMobile(mobileNumber));
                 throw new CustomException(UserConstants.ERROR_UNVERIFIED_CITIZEN_EXISTS,
                         UserConstants.MSG_UNVERIFIED_CITIZEN_EXISTS);
             }
@@ -1552,7 +1575,7 @@ public class UserService {
                 }
             }
         } catch (Exception e) {
-            log.warn("[USER-SERVICE] Error querying existing employee by mobile {}: {}", maskMobile(mobileNumber), e.getMessage());
+            log.warn("[USER-SERVICE] Error querying existing employee by mobile {}: {}", MaskUtils.maskMobile(mobileNumber), e.getMessage());
         }
         return null;
     }
@@ -1586,7 +1609,7 @@ public class UserService {
                 }
             }
         } catch (Exception e) {
-            log.warn("[USER-SERVICE] Error querying existing citizens by mobile {}: {}", maskMobile(mobileNumber), e.getMessage());
+            log.warn("[USER-SERVICE] Error querying existing citizens by mobile {}: {}", MaskUtils.maskMobile(mobileNumber), e.getMessage());
         }
 
         // 2. Search by encrypted userName
@@ -1606,7 +1629,7 @@ public class UserService {
                 }
             }
         } catch (Exception e) {
-            log.warn("[USER-SERVICE] Error querying existing citizens by userName {}: {}", maskMobile(mobileNumber), e.getMessage());
+            log.warn("[USER-SERVICE] Error querying existing citizens by userName {}: {}", MaskUtils.maskMobile(mobileNumber), e.getMessage());
         }
 
         if (userMap.isEmpty()) {
@@ -1637,22 +1660,6 @@ public class UserService {
             return user.getUsername().trim();
         }
         return null;
-    }
-
-    /**
-     * Masks a mobile number for secure log output, revealing only the first two and last two digits.
-     *
-     * @param mobile plain text mobile number
-     * @return masked mobile string (e.g. 98******10) or placeholder
-     */
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) {
-            return "null";
-        }
-        if (mobile.length() <= 4) {
-            return "****";
-        }
-        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
     }
 
     /**
@@ -1771,7 +1778,7 @@ public class UserService {
                     || (dbCaller != null && dbCaller.getUsername() != null && trimmedMobile.equalsIgnoreCase(dbCaller.getUsername().trim()))
                     || (dbCaller != null && dbCaller.getMobileNumber() != null && trimmedMobile.equals(dbCaller.getMobileNumber().trim()));
             if (!matchesCaller) {
-                log.error("[USER-SERVICE] Unauthorized search: Citizen caller {} attempted to search for mobile: {}", callerUuid, trimmedMobile);
+                log.error("[USER-SERVICE] Unauthorized search: Citizen caller {} attempted to search for mobile: {}", callerUuid, MaskUtils.maskMobile(trimmedMobile));
                 throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
             }
         }
@@ -1784,7 +1791,7 @@ public class UserService {
                     || (dbCaller != null && dbCaller.getUsername() != null && trimmedUserName.equalsIgnoreCase(dbCaller.getUsername().trim()))
                     || (dbCaller != null && dbCaller.getMobileNumber() != null && trimmedUserName.equals(dbCaller.getMobileNumber().trim()));
             if (!matchesCaller) {
-                log.error("[USER-SERVICE] Unauthorized search: Citizen caller {} attempted to search for username: {}", callerUuid, trimmedUserName);
+                log.error("[USER-SERVICE] Unauthorized search: Citizen caller {} attempted to search for username: {}", callerUuid, MaskUtils.maskIdentifier(trimmedUserName));
                 throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
             }
         }

@@ -13,6 +13,7 @@ import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.service.profile.ProfileService;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
@@ -101,7 +102,7 @@ public class ProfileController {
             request.unpackUserIfPresent();
         }
         log.info("[PROFILE-CONTROLLER] Received profile create request for mobile: {}, tenant: {}",
-                maskMobile(request != null ? request.getMobileNumber() : null),
+                MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getTenantId() : null);
 
         User user = profileService.createProfile(request);
@@ -130,7 +131,7 @@ public class ProfileController {
             request.unpackUserIfPresent();
         }
         log.info("[PROFILE-CONTROLLER] Received profile init request for mobile: {}, tenant: {}",
-                maskMobile(request != null ? request.getMobileNumber() : null),
+                MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getTenantId() : null);
 
         User user = profileService.initProfile(request);
@@ -198,7 +199,7 @@ public class ProfileController {
     public ResponseEntity<ProfileResponse> searchProfile(@RequestBody @Valid ProfileSearchRequest request) {
         log.info("[PROFILE-CONTROLLER] Received profile search request. tenant: {}, mobile: {}, include: {}",
                 request != null ? request.getTenantId() : null,
-                maskMobile(request != null ? request.getMobileNumber() : null),
+                MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getInclude() : null);
 
         Set<ProfileIncludeEntity> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
@@ -273,10 +274,39 @@ public class ProfileController {
     @PostMapping("/aadhaar/_verify")
     public ResponseEntity<AadhaarCitizenVerifyResponse> verifyAadhaarCitizen(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
         log.info("[PROFILE-CONTROLLER] Received Aadhaar citizen verify request. refId: {}, aadhaar: {}",
-                request != null ? request.getReferenceId() : null,
-                maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+                request != null ? MaskUtils.maskIdentifier(request.getReferenceId()) : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
 
         AadhaarCitizenVerifyResponse response = profileService.verifyAndResolveAadhaarCitizen(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Verifies Aadhaar OTP and links Aadhaar to the currently logged-in citizen's profile.
+     * Enforces strict validation that the mobile number registered with Aadhaar matches the logged-in mobile number.
+     * On successful verification, updates the citizen's profile in the database with verified status and e-KYC demographics.
+     *
+     * @param request Aadhaar citizen verification request containing referenceId, OTP, and RequestInfo
+     * @return response containing verified citizen profile details and identity verification status
+     */
+    @Operation(
+            summary = "Verify Logged-in Citizen Profile with Aadhaar",
+            description = "Verifies Aadhaar OTP for an authenticated citizen who logged in with mobile number. Validates that the Aadhaar-registered mobile matches the logged-in mobile before linking Aadhaar and updating profile in the database."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profile verified with Aadhaar and updated successfully",
+                    content = @Content(schema = @Schema(implementation = AadhaarCitizenVerifyResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Aadhaar mobile mismatch, invalid OTP, or verification failure"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/aadhaar/_verifyProfile")
+    public ResponseEntity<AadhaarCitizenVerifyResponse> verifyProfileWithAadhaar(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
+        log.info("[PROFILE-CONTROLLER] Received profile Aadhaar verification request. refId: {}, aadhaar: {}",
+                request != null ? MaskUtils.maskIdentifier(request.getReferenceId()) : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        AadhaarCitizenVerifyResponse response = profileService.verifyLoggedInCitizenProfile(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -291,15 +321,5 @@ public class ProfileController {
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String maskMobile(String mobile) {
-        if (mobile == null || mobile.length() < 4) return "****";
-        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-    }
-
-    private String maskAadhaar(String aadhaar) {
-        if (aadhaar == null || aadhaar.length() < 4) return "XXXXXXXX****";
-        return "XXXXXXXX" + aadhaar.substring(aadhaar.length() - 4);
     }
 }

@@ -5,10 +5,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
+import org.egov.tracer.model.CustomException;
 import org.upyog.family.domain.service.FamilyOtpService;
 import org.upyog.family.domain.service.FamilyService;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMergeRequest;
@@ -226,18 +229,16 @@ public class FamilyController {
     @Operation(summary = "Send OTP to Head of Family mobile number for joining verification in UPYOG")
     public ResponseEntity<FamilyOtpResponse> sendFamilyOtp(@Valid @RequestBody FamilyOtpRequest request) {
         log.info("[UPYOG-FAMILY-CONTROLLER] Received /_sendOtp request for family: {}", request.getFamilyId());
+        validateCallerUserInfo(request.getRequestInfo());
         FamilyOtpResponse response = familyOtpService.sendFamilyOtp(request);
-        if (response.getResponseInfo() == null) {
-            response.setResponseInfo(responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true));
-        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**
      * Verifies the OTP sent to the Head of Family and returns enriched family details with a verified consent token.
      *
-     * <p>Validates the OTP code against the HoF's mobile number. Upon successful verification, generates an HMAC
-     * consent token (prefixed with {@code CONSENT-VERIFIED-}) valid for completing the member join action.</p>
+     * <p>Validates the OTP code against the HoF's mobile number. Upon successful verification, generates a secure 128-bit
+     * consent token (prefixed with {@code CONSENT-VERIFIED-}) bound to the family and applicant, valid for completing the member join action.</p>
      *
      * @param request the family OTP verification request envelope containing {@code familyId}, {@code tenantId}, and {@code otp};
      *                must not be {@code null}.
@@ -249,10 +250,15 @@ public class FamilyController {
     @Operation(summary = "Verify OTP sent to Head of Family and retrieve family details in UPYOG")
     public ResponseEntity<FamilyOtpVerifyResponse> verifyFamilyOtp(@Valid @RequestBody FamilyOtpVerifyRequest request) {
         log.info("[UPYOG-FAMILY-CONTROLLER] Received /_verifyOtp request for family: {}", request.getFamilyId());
+        validateCallerUserInfo(request.getRequestInfo());
         FamilyOtpVerifyResponse response = familyOtpService.verifyFamilyOtp(request);
-        if (response.getResponseInfo() == null) {
-            response.setResponseInfo(responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true));
-        }
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private void validateCallerUserInfo(RequestInfo requestInfo) {
+        if (requestInfo == null || requestInfo.getUserInfo() == null || StringUtils.isBlank(requestInfo.getUserInfo().getUuid())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "Authenticated caller information (RequestInfo.userInfo.uuid) is required.");
+        }
     }
 }

@@ -186,7 +186,7 @@ class FamilyOtpFlowTest {
         assertNotNull(response.getConsentToken());
         assertTrue(response.getConsentToken().startsWith("CONSENT-VERIFIED-"));
 
-        verify(requesterDxClient).registerConsentToken(eq(response.getConsentToken()), eq("FAM-2026-0001"));
+        verify(requesterDxClient).registerConsentToken(eq(response.getConsentToken()), eq("FAM-2026-0001"), eq("applicant-uuid"));
     }
 
     @Test
@@ -204,6 +204,7 @@ class FamilyOtpFlowTest {
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .otp("000000")
+                .referenceId("REF-OTP-9988")
                 .build();
 
         CustomException ex = assertThrows(CustomException.class, () -> familyOtpService.verifyFamilyOtp(request));

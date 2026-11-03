@@ -1,6 +1,7 @@
 package org.egov.user.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +23,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"id"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Address {
     private String pinCode;
     private String city;
@@ -64,6 +66,24 @@ public class Address {
             } else if (map.containsKey("fileStoreId")) {
                 this.filestoreId = String.valueOf(map.get("fileStoreId"));
             }
+        }
+    }
+
+    @JsonProperty("addressProofFileStoreId")
+        if (StringUtils.isNotBlank(fileStoreId)) {
+            this.filestoreId = fileStoreId;
+        }
+    }
+
+    @JsonProperty("filestoreId")
+    public void setFilestoreId(String filestoreId) {
+        this.filestoreId = filestoreId;
+    }
+
+    @JsonProperty("fileStoreId")
+    public void setFileStoreId(String fileStoreId) {
+        if (StringUtils.isNotBlank(fileStoreId)) {
+            this.filestoreId = fileStoreId;
         }
     }
 

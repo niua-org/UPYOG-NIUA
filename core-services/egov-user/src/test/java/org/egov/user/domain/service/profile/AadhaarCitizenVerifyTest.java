@@ -1,6 +1,5 @@
 package org.egov.user.domain.service.profile;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.User;
@@ -43,7 +42,7 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class AadhaarCitizenVerifyTest {
+class AadhaarCitizenVerifyTest {
 
     @Mock
     private UserRepository userRepository;
@@ -67,10 +66,9 @@ public class AadhaarCitizenVerifyTest {
     private FamilyRestRepository familyRestRepository;
 
     private ProfileServiceImpl profileService;
-    private ObjectMapper objectMapper;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         profileService = new ProfileServiceImpl(
                 userRepository,
                 profileValidator,
@@ -84,7 +82,6 @@ public class AadhaarCitizenVerifyTest {
                 null,
                 familyRestRepository
         );
-        objectMapper = new ObjectMapper();
         when(encryptionDecryptionUtil.encryptObject(any(), any(), any())).thenAnswer(i -> i.getArgument(0));
         when(encryptionDecryptionUtil.decryptObject(any(), any(), any(), any())).thenAnswer(i -> i.getArgument(0));
     }
@@ -93,13 +90,13 @@ public class AadhaarCitizenVerifyTest {
         try {
             return new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
         } catch (Exception e) {
-            return new Date();
+            return new Date(1700000000000L);
         }
     }
 
     @Test
     @DisplayName("Scenario 1: Existing citizen with matching Aadhaar should return full info, familyId and isNewUser=false")
-    public void testVerifyAadhaarExistingUser_Success() {
+    void testVerifyAadhaarExistingUser_Success() {
         String refId = "298662";
         String otp = "123456";
         String aadhaar = "123456789012";
@@ -165,7 +162,7 @@ public class AadhaarCitizenVerifyTest {
 
     @Test
     @DisplayName("Scenario 1b: Existing citizen found via mobile lookup should link Aadhaar and return isNewUser=false")
-    public void testVerifyAadhaarExistingUser_FoundByMobile() {
+    void testVerifyAadhaarExistingUser_FoundByMobile() {
         String refId = "ref-8822";
         String otp = "123456";
         String maskedAadhaar = "XXXXXXXX5544";
@@ -223,8 +220,83 @@ public class AadhaarCitizenVerifyTest {
     }
 
     @Test
+    @DisplayName("Scenario 1c: Existing verified citizen exists on mobile -> Shared mobile family member auto-provisions as new citizen")
+    void testVerifyAadhaarSharedMobile_ExistingCitizenVerified_AutoProvisionsNewUser() {
+        String refId = "ref-family-member";
+        String otp = "123456";
+        String newMemberAadhaar = "XXXXXXXX9999";
+        String sharedMobile = "9876543210";
+
+        // Incoming eKYC for new family member
+        VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .maskedAadhaar(newMemberAadhaar)
+                .name("Son Sharma")
+                .gender(Gender.MALE)
+                .dob(parseDate("2005-06-15"))
+                .mobileNumber(sharedMobile)
+                .verified(true)
+                .build();
+
+        when(identityVerificationService.verifyAadhaarOtp(any(), eq("pg"), eq(refId), isNull(), eq(otp), eq(false)))
+                .thenReturn(eKyc);
+
+        // Father already exists on the same mobile and is verified with his own Aadhaar
+        User fatherUser = User.builder()
+                .id(101L)
+                .uuid("father-uuid")
+                .username("9876543210")
+                .name("Father Sharma")
+                .mobileNumber(sharedMobile)
+                .gender(Gender.MALE)
+                .dob(parseDate("1970-01-01"))
+                .aadhaarNumber("XXXXXXXX1111")
+                .isIdentityVerified(true)
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenAnswer(invocation -> {
+            UserSearchCriteria criteria = invocation.getArgument(0);
+            if (newMemberAadhaar.equalsIgnoreCase(criteria.getAadhaarNumber())) {
+                return Collections.emptyList(); // Son doesn't exist yet
+            }
+            if (sharedMobile.equals(criteria.getMobileNumber()) || sharedMobile.equals(criteria.getUserName())) {
+                return Collections.singletonList(fatherUser); // Father found on this mobile
+            }
+            return Collections.emptyList();
+        });
+
+        when(userRepository.isUserPresent(anyString(), anyString(), any())).thenReturn(false);
+        when(userRepository.create(any(User.class))).thenAnswer(invocation -> {
+            User passed = invocation.getArgument(0);
+            passed.setId(909L);
+            return passed;
+        });
+
+        AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
+                .requestInfo(RequestInfo.builder().apiId("org.upyog.dx").build())
+                .referenceId(refId)
+                .otp(otp)
+                .mobileNumber(sharedMobile)
+                .tenantId("pg")
+                .build();
+
+        AadhaarCitizenVerifyResponse response = profileService.verifyAndResolveAadhaarCitizen(request);
+
+        assertNotNull(response);
+        assertEquals(Boolean.TRUE, response.getIsNewUser(), "Must auto-provision new citizen without overwriting father's account");
+        assertNotNull(response.getUser());
+        assertEquals("Son Sharma", response.getUser().getName());
+        assertEquals(sharedMobile, response.getUser().getMobileNumber());
+        assertEquals(newMemberAadhaar, response.getUser().getAadhaarNumber());
+        assertTrue(response.getUser().getIsIdentityVerified());
+        verify(userRepository, times(1)).create(any(User.class));
+    }
+
+    @Test
     @DisplayName("Scenario 2: Citizen does not exist in eg_user -> Auto-provision new account and return info with isNewUser=true")
-    public void testVerifyAadhaarNewUser_AutoProvision() {
+    void testVerifyAadhaarNewUser_AutoProvision() {
         String refId = "298662";
         String otp = "123456";
         String maskedAadhaar = "XXXXXXXX1234";
@@ -276,7 +348,7 @@ public class AadhaarCitizenVerifyTest {
 
     @Test
     @DisplayName("Should throw CustomException when OTP is missing")
-    public void testVerifyAadhaar_MissingOtp_ThrowsException() {
+    void testVerifyAadhaar_MissingOtp_ThrowsException() {
         AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
                 .requestInfo(RequestInfo.builder().build())
                 .referenceId("298662")
@@ -288,7 +360,7 @@ public class AadhaarCitizenVerifyTest {
 
     @Test
     @DisplayName("Should throw CustomException when both referenceId and aadhaarNumber are missing")
-    public void testVerifyAadhaar_MissingIdentifiers_ThrowsException() {
+    void testVerifyAadhaar_MissingIdentifiers_ThrowsException() {
         AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
                 .requestInfo(RequestInfo.builder().build())
                 .otp("123456")
@@ -300,7 +372,7 @@ public class AadhaarCitizenVerifyTest {
 
     @Test
     @DisplayName("ProfileController endpoint /profile/aadhaar/_verify should delegate to profileService")
-    public void testProfileControllerEndpoint() {
+    void testProfileControllerEndpoint() {
         ProfileController controller = new ProfileController(profileService);
 
         AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
@@ -314,7 +386,7 @@ public class AadhaarCitizenVerifyTest {
                 .maskedAadhaar("XXXXXXXX7788")
                 .name("Controller Test User")
                 .gender(Gender.MALE)
-                .dob(new Date())
+                .dob(parseDate("1990-01-01"))
                 .verified(true)
                 .build();
 
@@ -333,5 +405,259 @@ public class AadhaarCitizenVerifyTest {
         assertEquals(HttpStatus.OK, respEntity.getStatusCode());
         assertNotNull(respEntity.getBody());
         assertEquals("Controller Test User", respEntity.getBody().getUser().getName());
+    }
+
+    @Test
+    @DisplayName("Should successfully verify logged-in citizen profile when Aadhaar mobile matches logged-in mobile")
+    void testVerifyLoggedInCitizenProfile_Success_MatchingMobile() {
+        String citizenUuid = "citizen-uuid-001";
+        String mobile = "9876543210";
+
+        org.egov.common.contract.request.User callerUser = org.egov.common.contract.request.User.builder()
+                .uuid(citizenUuid)
+                .userName(mobile)
+                .mobileNumber(mobile)
+                .tenantId("pg.citya")
+                .id(101L)
+                .build();
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(callerUser)
+                .build();
+
+        AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
+                .requestInfo(requestInfo)
+                .referenceId("ref-kyc-001")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .isSelfVerification(true)
+                .build();
+
+        User existingDbUser = User.builder()
+                .id(101L)
+                .uuid(citizenUuid)
+                .username(mobile)
+                .mobileNumber(mobile)
+                .name("Unverified Citizen")
+                .active(true)
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .isIdentityVerified(false)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingDbUser));
+
+        VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .maskedAadhaar("XXXXXXXX9988")
+                .name("Aadhaar Verified Citizen")
+                .gender(Gender.MALE)
+                .dob(parseDate("1992-05-15"))
+                .mobileNumber("+919876543210")
+                .verified(true)
+                .build();
+
+        when(identityVerificationService.verifyAadhaarOtp(any(), any(), eq("ref-kyc-001"), any(), eq("123456"), eq(false)))
+                .thenReturn(eKyc);
+
+        AadhaarCitizenVerifyResponse response = profileService.verifyLoggedInCitizenProfile(request);
+
+        assertNotNull(response);
+        assertFalse(response.getIsNewUser());
+        assertNotNull(response.getUser());
+        assertEquals("Aadhaar Verified Citizen", response.getUser().getName());
+        assertEquals(Boolean.TRUE, response.getUser().getIsIdentityVerified());
+        assertEquals("AADHAAR", response.getUser().getIdentityVerifiedSource());
+        assertEquals("XXXXXXXX9988", response.getUser().getAadhaarNumber());
+
+        verify(userRepository, times(1)).update(any(User.class), any(User.class), eq(101L), eq(citizenUuid));
+    }
+
+    @Test
+    @DisplayName("Should throw AADHAAR_MOBILE_MISMATCH when Aadhaar registered mobile differs from logged-in mobile")
+    void testVerifyLoggedInCitizenProfile_MismatchMobile_ThrowsException() {
+        String citizenUuid = "citizen-uuid-002";
+        String mobile = "9876543210";
+
+        org.egov.common.contract.request.User callerUser = org.egov.common.contract.request.User.builder()
+                .uuid(citizenUuid)
+                .userName(mobile)
+                .mobileNumber(mobile)
+                .tenantId("pg.citya")
+                .id(102L)
+                .build();
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(callerUser)
+                .build();
+
+        AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
+                .requestInfo(requestInfo)
+                .referenceId("ref-kyc-002")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .build();
+
+        User existingDbUser = User.builder()
+                .id(102L)
+                .uuid(citizenUuid)
+                .username(mobile)
+                .mobileNumber(mobile)
+                .name("Mobile Citizen")
+                .active(true)
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .isIdentityVerified(false)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingDbUser));
+
+        // Aadhaar has a completely different mobile number
+        VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .maskedAadhaar("XXXXXXXX4321")
+                .name("Other Citizen")
+                .gender(Gender.FEMALE)
+                .dob(parseDate("1985-08-20"))
+                .mobileNumber("9111223344")
+                .verified(true)
+                .build();
+
+        when(identityVerificationService.verifyAadhaarOtp(any(), any(), eq("ref-kyc-002"), any(), eq("123456"), eq(false)))
+                .thenReturn(eKyc);
+
+        CustomException ce = assertThrows(CustomException.class, () -> profileService.verifyLoggedInCitizenProfile(request));
+        assertEquals("AADHAAR_MOBILE_MISMATCH", ce.getCode());
+        verify(userRepository, never()).update(any(), any(), anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("Should throw AADHAAR_MOBILE_MISMATCH when Aadhaar identity provider returns null mobileNumber")
+    void testVerifyLoggedInCitizenProfile_MissingAadhaarMobile_ThrowsException() {
+        String citizenUuid = "citizen-uuid-003";
+        String mobile = "9876543210";
+
+        org.egov.common.contract.request.User callerUser = org.egov.common.contract.request.User.builder()
+                .uuid(citizenUuid)
+                .userName(mobile)
+                .mobileNumber(mobile)
+                .tenantId("pg.citya")
+                .id(103L)
+                .build();
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(callerUser)
+                .build();
+
+        AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
+                .requestInfo(requestInfo)
+                .referenceId("ref-kyc-003")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .build();
+
+        User existingDbUser = User.builder()
+                .id(103L)
+                .uuid(citizenUuid)
+                .username(mobile)
+                .mobileNumber(mobile)
+                .name("Mobile Citizen 3")
+                .active(true)
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingDbUser));
+
+        VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .maskedAadhaar("XXXXXXXX4321")
+                .name("Citizen Without Mobile In Demographics")
+                .verified(true)
+                .mobileNumber(null)
+                .build();
+
+        when(identityVerificationService.verifyAadhaarOtp(any(), any(), eq("ref-kyc-003"), any(), eq("123456"), eq(false)))
+                .thenReturn(eKyc);
+
+        CustomException ce = assertThrows(CustomException.class, () -> profileService.verifyLoggedInCitizenProfile(request));
+        assertEquals("AADHAAR_MOBILE_MISMATCH", ce.getCode());
+        verify(userRepository, never()).update(any(), any(), anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("Should throw UNAUTHORIZED_ACCESS when caller UserInfo is missing")
+    void testVerifyLoggedInCitizenProfile_Unauthenticated_ThrowsException() {
+        AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
+                .requestInfo(RequestInfo.builder().build())
+                .referenceId("ref-kyc-004")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .build();
+
+        CustomException ce = assertThrows(CustomException.class, () -> profileService.verifyLoggedInCitizenProfile(request));
+        assertEquals("UNAUTHORIZED_ACCESS", ce.getCode());
+    }
+
+    @Test
+    @DisplayName("ProfileController endpoint /profile/aadhaar/_verifyProfile should call verifyLoggedInCitizenProfile")
+    void testProfileControllerVerifyProfileEndpoint() {
+        ProfileController controller = new ProfileController(profileService);
+
+        String citizenUuid = "citizen-uuid-ctrl";
+        String mobile = "9876543210";
+
+        org.egov.common.contract.request.User callerUser = org.egov.common.contract.request.User.builder()
+                .uuid(citizenUuid)
+                .userName(mobile)
+                .mobileNumber(mobile)
+                .tenantId("pg.citya")
+                .id(105L)
+                .build();
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(callerUser)
+                .build();
+
+        AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
+                .requestInfo(requestInfo)
+                .referenceId("ref-ctrl-001")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .build();
+
+        User existingDbUser = User.builder()
+                .id(105L)
+                .uuid(citizenUuid)
+                .username(mobile)
+                .mobileNumber(mobile)
+                .name("Controller Citizen")
+                .active(true)
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingDbUser));
+
+        VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .maskedAadhaar("XXXXXXXX8888")
+                .name("Controller Verified User")
+                .mobileNumber(mobile)
+                .gender(Gender.MALE)
+                .dob(parseDate("1992-05-15"))
+                .verified(true)
+                .build();
+
+        when(identityVerificationService.verifyAadhaarOtp(any(), any(), any(), any(), any(), eq(false)))
+                .thenReturn(eKyc);
+
+        ResponseEntity<AadhaarCitizenVerifyResponse> respEntity = controller.verifyProfileWithAadhaar(request);
+
+        assertNotNull(respEntity);
+        assertEquals(HttpStatus.OK, respEntity.getStatusCode());
+        assertNotNull(respEntity.getBody());
+        assertEquals("Controller Verified User", respEntity.getBody().getUser().getName());
+        assertEquals(Boolean.TRUE, respEntity.getBody().getUser().getIsIdentityVerified());
     }
 }

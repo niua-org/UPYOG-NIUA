@@ -26,7 +26,7 @@ public class AadhaarCitizenVerifyRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "Standard UPYOG RequestInfo contract", required = true)
+    @Schema(description = "Standard UPYOG RequestInfo contract", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty("RequestInfo")
     @NotNull(message = "RequestInfo cannot be null")
     private RequestInfo requestInfo;
@@ -35,7 +35,7 @@ public class AadhaarCitizenVerifyRequest implements Serializable {
     @JsonProperty("referenceId")
     private String referenceId;
 
-    @Schema(description = "One-time password (OTP) received on citizen's Aadhaar-linked mobile", example = "123456", required = true)
+    @Schema(description = "One-time password (OTP) received on citizen's Aadhaar-linked mobile", example = "123456", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty("otp")
     private String otp;
 
@@ -54,6 +54,10 @@ public class AadhaarCitizenVerifyRequest implements Serializable {
     @Schema(description = "Citizen name if available prior to verification", example = "Jane Doe")
     @JsonProperty("name")
     private String name;
+
+    @Schema(description = "Flag indicating self-verification by logged-in citizen", example = "true")
+    @JsonProperty("isSelfVerification")
+    private Boolean isSelfVerification;
 
     /**
      * Resolves effective referenceId.

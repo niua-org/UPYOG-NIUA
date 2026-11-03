@@ -10,7 +10,7 @@ import org.upyog.family.web.contract.FamilyOtpVerifyResponse;
  *
  * <p>Enables the Family Join verification workflow: when an applicant citizen seeks to join an existing household,
  * this service dispatches an OTP to the current HoF's registered mobile number to obtain verifiable consent.
- * Once verified, an HMAC-signed consent token is issued to permit direct entry into the household unit.</p>
+ * Once verified, a secure 128-bit consent token bound to the family and applicant is issued to permit direct entry into the household unit.</p>
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -42,7 +42,7 @@ public interface FamilyOtpService {
      * <ol>
      *   <li>Locates the target household and resolves the HoF's registered mobile number.</li>
      *   <li>Validates the submitted OTP against {@code egov-otp} (or fixed development passwords if enabled).</li>
-     *   <li>Upon successful validation, constructs an HMAC consent token prefixed with {@code CONSENT-VERIFIED-}.</li>
+     *   <li>Upon successful validation, constructs a secure 128-bit consent token prefixed with {@code CONSENT-VERIFIED-}, bound to family and applicant.</li>
      *   <li>Enriches the family aggregate with member demographics for UI display.</li>
      *   <li>Returns the verified consent token alongside the complete family aggregate.</li>
      * </ol>

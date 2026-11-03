@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 import org.upyog.family.domain.model.FamilyStatus;
 
 import java.util.List;
@@ -56,6 +58,9 @@ public class FamilySearchCriteria {
     @JsonProperty("memberUserUuid")
     private String memberUserUuid;
 
+    @JsonProperty("memberUserUuids")
+    private List<String> memberUserUuids;
+
     /**
      * Filter households by citizen registered mobile number (resolved via {@code egov-user}).
      */
@@ -92,13 +97,9 @@ public class FamilySearchCriteria {
      * @return true if no query filters are specified; false otherwise
      */
     public boolean isEmpty() {
-        return (familyId == null || familyId.trim().isEmpty())
-                && (familyIds == null || familyIds.isEmpty())
-                && (tenantId == null || tenantId.trim().isEmpty())
-                && (headUserUuid == null || headUserUuid.trim().isEmpty())
-                && (memberUserUuid == null || memberUserUuid.trim().isEmpty())
-                && (mobileNumber == null || mobileNumber.trim().isEmpty())
-                && (category == null || category.trim().isEmpty())
-                && status == null;
+        boolean hasIdent = StringUtils.isNotBlank(familyId) || !CollectionUtils.isEmpty(familyIds) || StringUtils.isNotBlank(tenantId);
+        boolean hasMembers = StringUtils.isNotBlank(headUserUuid) || StringUtils.isNotBlank(memberUserUuid)
+                || !CollectionUtils.isEmpty(memberUserUuids) || StringUtils.isNotBlank(mobileNumber);
+        return !hasIdent && !hasMembers && StringUtils.isBlank(category) && status == null;
     }
 }
