@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Card, CardHeader, CardLabel, Dropdown, SubmitBar, Loader,Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { FieldGrid, Section, withValues, getFamilyHeadFields, getPersonalFields } from "../utils";
-import PROFILE_ROUTES from "../utils/constants";
+import { PROFILE_ROUTES } from "../utils/constants";
 
 // Function to get user Details
 const useProfileUser = () => {
