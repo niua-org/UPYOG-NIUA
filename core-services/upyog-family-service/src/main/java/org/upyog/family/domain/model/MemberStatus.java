@@ -15,7 +15,8 @@ import org.upyog.family.util.FamilyConstants;
 public enum MemberStatus {
     ACTIVE(FamilyConstants.STATUS_ACTIVE),
     EXITED(FamilyConstants.STATUS_EXITED),
-    PENDING_APPROVAL(FamilyConstants.STATUS_PENDING_APPROVAL);
+    PENDING_APPROVAL(FamilyConstants.STATUS_PENDING_APPROVAL),
+    JOINED(FamilyConstants.STATUS_JOINED);
 
     private final String value;
 

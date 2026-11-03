@@ -109,7 +109,10 @@ class FamilyMemberControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.Families[0].familyId").value("FAM-2026-0001"));
+                .andExpect(jsonPath("$.JoinRequest.familyId").value("FAM-2026-0001"))
+                .andExpect(jsonPath("$.JoinRequest.userUuid").value("applicant-uuid-3"))
+                .andExpect(jsonPath("$.JoinRequest.status").value("JOINED"))
+                .andExpect(jsonPath("$.JoinRequest.requestedOn").isNumber());
     }
 
     @Test

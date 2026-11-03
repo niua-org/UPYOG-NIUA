@@ -29,6 +29,7 @@ public final class FamilyConstants {
     public static final String STATUS_STAGED = "STAGED";
     public static final String STATUS_FOUND = "FOUND";
     public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
+    public static final String STATUS_JOINED = "JOINED";
     public static final String STATUS_READY_FOR_JIT = "READY_FOR_JIT_PROVISION";
 
     // ==========================================

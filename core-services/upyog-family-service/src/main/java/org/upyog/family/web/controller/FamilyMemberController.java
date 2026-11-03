@@ -6,11 +6,14 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
 import org.upyog.family.domain.service.FamilyMemberService;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AddMemberRequest;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyResponse;
 import org.upyog.family.web.contract.JoinFamilyRequest;
+import org.upyog.family.web.contract.JoinFamilyResponse;
+import org.upyog.family.web.contract.JoinRequestResult;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -75,16 +78,26 @@ public class FamilyMemberController {
      */
     @PostMapping("/_join")
     @Operation(summary = "Citizen requests to join an existing Family Unit with HoF authorization in UPYOG")
-    public ResponseEntity<FamilyResponse> joinFamily(@Valid @RequestBody JoinFamilyRequest request) {
+    public ResponseEntity<JoinFamilyResponse> joinFamily(@Valid @RequestBody JoinFamilyRequest request) {
         log.info("[UPYOG-MEMBER-CONTROLLER] Received /_join request for family: {} by applicant: {}",
                 request.getFamilyId(), request.getApplicantUserUuid());
         Family updatedFamily = memberService.joinFamily(request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
 
-        FamilyResponse response = FamilyResponse.builder()
+        Long requestedOn = (request.getRequestInfo() != null && request.getRequestInfo().getTs() != null)
+                ? request.getRequestInfo().getTs()
+                : System.currentTimeMillis();
+
+        JoinRequestResult joinResult = JoinRequestResult.builder()
+                .familyId(request.getFamilyId())
+                .userUuid(request.getApplicantUserUuid())
+                .status(FamilyConstants.STATUS_JOINED)
+                .requestedOn(requestedOn)
+                .build();
+
+        JoinFamilyResponse response = JoinFamilyResponse.builder()
                 .responseInfo(responseInfo)
-                .families(Collections.singletonList(updatedFamily))
-                .totalCount(1)
+                .joinRequest(joinResult)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);

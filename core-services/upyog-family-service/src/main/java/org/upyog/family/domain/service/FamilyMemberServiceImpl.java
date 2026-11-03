@@ -196,7 +196,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 .isHead(false)
                 .isVerified(StringUtils.isNotBlank(request.getHofConsentOtp()))
                 .active(true)
-                .status(MemberStatus.ACTIVE)
+                .status(MemberStatus.JOINED)
                 .consentToken(maskOrHashConsentToken(request.getHofConsentOtp()))
                 .consentDate(now)
                 .effectiveFrom(now)
