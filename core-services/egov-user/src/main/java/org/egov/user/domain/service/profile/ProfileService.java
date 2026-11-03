@@ -3,6 +3,8 @@ package org.egov.user.domain.service.profile;
 import org.egov.tracer.model.CustomException;
 import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -107,4 +109,16 @@ public interface ProfileService {
      * @throws org.egov.tracer.model.CustomException if OTP verification fails or target citizen does not exist
      */
     User resyncProfile(ProfileResyncRequest request);
+
+    /**
+     * Verifies Aadhaar OTP via identity provider adapter and resolves citizen identity:
+     * - If matching citizen profile exists in the system: enriches identity verification status,
+     *   active familyId from family service, and returns full citizen demographic details (isNewUser=false).
+     * - If no matching citizen profile exists: auto-provisions a new verified citizen account in eg_user
+     *   from Aadhaar e-KYC demographics and returns full citizen details (isNewUser=true).
+     *
+     * @param request Aadhaar citizen verification request containing referenceId, OTP, and optional Aadhaar/mobile
+     * @return AadhaarCitizenVerifyResponse containing resolved citizen demographics, familyId, and isNewUser flag
+     */
+    AadhaarCitizenVerifyResponse verifyAndResolveAadhaarCitizen(AadhaarCitizenVerifyRequest request);
 }

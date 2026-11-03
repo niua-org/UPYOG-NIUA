@@ -4,6 +4,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.tracer.model.Error;
 import org.egov.user.config.UserConfiguration;
@@ -31,7 +32,11 @@ import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.UserRequest;
+import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
+import org.egov.user.web.contract.multiauth.AuthType;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -1661,5 +1666,284 @@ public class ProfileServiceImpl implements ProfileService {
                 }
             }
         }
+    }
+
+    /**
+     * Verifies Aadhaar OTP via identity provider adapter and resolves citizen identity.
+     * <p>
+     * - If matching citizen exists: returns full profile details (name, mobileNumber, uuid, dob, gender,
+     *   aadhaarNumber, active familyId) with isNewUser=false.
+     * - If matching citizen does NOT exist: auto-provisions a new verified citizen account in eg_user
+     *   from Aadhaar e-KYC demographics and returns full profile details with isNewUser=true.
+     *
+     * @param request Aadhaar citizen verification request containing referenceId, OTP, and optional Aadhaar/mobile
+     * @return AadhaarCitizenVerifyResponse containing resolved citizen demographics, familyId, and isNewUser flag
+     */
+    @Override
+    public AadhaarCitizenVerifyResponse verifyAndResolveAadhaarCitizen(AadhaarCitizenVerifyRequest request) {
+        if (request == null) {
+            log.error("[PROFILE-SERVICE] Aadhaar verification failed: request is null");
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "Aadhaar verification request cannot be null");
+        }
+
+        String refId = request.getEffectiveReferenceId();
+        String rawAadhaar = request.getAadhaarNumber();
+        String otp = request.getOtp();
+        String tenantId = request.getTenantId();
+
+        if (StringUtils.isBlank(otp)) {
+            log.error("[PROFILE-SERVICE] Validation failed: OTP is missing");
+            throw new CustomException(UserConstants.ERROR_INVALID_OTP, "OTP is required for Aadhaar verification");
+        }
+
+        if (StringUtils.isBlank(refId) && StringUtils.isBlank(rawAadhaar)) {
+            log.error("[PROFILE-SERVICE] Validation failed: Neither referenceId nor aadhaarNumber provided");
+            throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_IDENTIFIER, "Either referenceId or aadhaarNumber must be provided");
+        }
+
+        String stateTenant = resolveStateTenant(tenantId);
+        log.info("[PROFILE-SERVICE] Verifying Aadhaar OTP for refId: {}, rawAadhaar: {}, stateTenant: {}",
+                refId, maskAadhaar(rawAadhaar), stateTenant);
+
+        // 1. Verify Aadhaar OTP with identity provider
+        VerifiedAadhaarDemographics eKyc = identityVerificationService.verifyAadhaarOtp(
+                request.getRequestInfo(),
+                stateTenant,
+                refId,
+                rawAadhaar,
+                otp,
+                false
+        );
+
+        if (eKyc == null || !eKyc.isVerified()) {
+            log.error("[PROFILE-SERVICE] Aadhaar verification unsuccessful from identity provider");
+            throw new CustomException(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, "Aadhaar OTP verification failed");
+        }
+
+        String searchAadhaar = StringUtils.isNotBlank(eKyc.getMaskedAadhaar())
+                ? eKyc.getMaskedAadhaar()
+                : maskAadhaar(rawAadhaar);
+        String mobileNumber = StringUtils.isNotBlank(request.getMobileNumber())
+                ? request.getMobileNumber().trim()
+                : eKyc.getMobileNumber();
+
+        log.info("[PROFILE-SERVICE] e-KYC verified: maskedAadhaar={}, name={}, gender={}, dob={}",
+                searchAadhaar, eKyc.getName(), eKyc.getGender(), eKyc.getDob());
+
+        // 2. Search for existing citizen
+        User existingUser = findExistingCitizen(searchAadhaar, rawAadhaar, mobileNumber, stateTenant, request.getRequestInfo());
+
+        if (existingUser != null) {
+            log.info("[PROFILE-SERVICE] Found existing citizen ID: {}, UUID: {} for Aadhaar: {}",
+                    existingUser.getId(), existingUser.getUuid(), searchAadhaar);
+
+            if (!Boolean.TRUE.equals(existingUser.getActive())) {
+                log.error("[PROFILE-SERVICE] Citizen account {} is inactive for Aadhaar: {}",
+                        existingUser.getUuid(), searchAadhaar);
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, "Citizen account is inactive");
+            }
+
+            // Update verification status & demographics if necessary
+            existingUser.setIsIdentityVerified(true);
+            existingUser.setIdentityVerifiedDate(new Date());
+            existingUser.setIdentityVerifiedSource(UserConstants.IDENTITY_SOURCE_AADHAAR);
+            existingUser.setLastResyncDate(new Date());
+            existingUser.setLastLoginMethod(AuthType.AADHAAR_NUMBER.name());
+
+            if (StringUtils.isNotBlank(searchAadhaar)) {
+                existingUser.setAadhaarNumber(searchAadhaar);
+            }
+            if (StringUtils.isNotBlank(eKyc.getName()) && ("Citizen".equalsIgnoreCase(existingUser.getName()) || StringUtils.isBlank(existingUser.getName()))) {
+                existingUser.setName(eKyc.getName());
+            }
+            if (existingUser.getDob() == null && eKyc.getDob() != null) {
+                existingUser.setDob(eKyc.getDob());
+            }
+            if (existingUser.getGender() == null && eKyc.getGender() != null) {
+                existingUser.setGender(eKyc.getGender());
+            }
+
+            try {
+                User encryptedToUpdate = encryptUser(existingUser);
+                userRepository.update(encryptedToUpdate, existingUser, existingUser.getId(), existingUser.getUuid());
+                log.info("[PROFILE-SERVICE] Updated identity verification attributes for citizen UUID: {}", existingUser.getUuid());
+            } catch (Exception e) {
+                log.warn("[PROFILE-SERVICE] Non-blocking: Could not persist updated verification fields for user {}: {}",
+                        existingUser.getUuid(), e.getMessage());
+            }
+
+            User decryptedUser = decryptUser(existingUser, request.getRequestInfo());
+            enrichFamilyId(decryptedUser, stateTenant, request.getRequestInfo());
+
+            UserSearchResponseContent content = new UserSearchResponseContent(decryptedUser);
+            return AadhaarCitizenVerifyResponse.builder()
+                    .responseInfo(createResponseInfo(request.getRequestInfo(), UserConstants.STATUS_SUCCESS))
+                    .user(content)
+                    .isNewUser(false)
+                    .build();
+        }
+
+        // 3. User does not exist -> Auto-provision new verified citizen profile
+        log.info("[PROFILE-SERVICE] Citizen not found for Aadhaar: {}. Auto-provisioning new citizen profile.", searchAadhaar);
+
+        boolean hasMobile = StringUtils.isNotBlank(mobileNumber);
+        String baseUsername = hasMobile
+                ? mobileNumber
+                : ("AADHAAR_" + (searchAadhaar != null ? searchAadhaar.replaceAll("[^0-9]", "") : UUID.randomUUID().toString().substring(0, 8)));
+        String username = !userRepository.isUserPresent(baseUsername, stateTenant, UserType.CITIZEN)
+                ? baseUsername
+                : baseUsername + "_" + UUID.randomUUID().toString().substring(0, 8);
+
+        String citizenName = StringUtils.isNotBlank(eKyc.getName())
+                ? eKyc.getName()
+                : (StringUtils.isNotBlank(request.getName()) ? request.getName() : "Citizen");
+
+        Long loggedInUserId = resolveLoggedInUserId(request.getRequestInfo(), 0L);
+
+        User newCitizen = User.builder()
+                .username(username)
+                .name(citizenName)
+                .mobileNumber(hasMobile ? mobileNumber : null)
+                .gender(eKyc.getGender())
+                .dob(eKyc.getDob())
+                .aadhaarNumber(searchAadhaar)
+                .photo(eKyc.getPhoto())
+                .isIdentityVerified(true)
+                .identityVerifiedDate(new Date())
+                .identityVerifiedSource(UserConstants.IDENTITY_SOURCE_AADHAAR)
+                .lastResyncDate(new Date())
+                .lastLoginMethod(AuthType.AADHAAR_NUMBER.name())
+                .edittedCount(0)
+                .tenantId(stateTenant)
+                .type(UserType.CITIZEN)
+                .active(true)
+                .roles(Collections.singleton(Role.getCitizenRole()))
+                .mobileValidationMandatory(hasMobile)
+                .otpValidationMandatory(false)
+                .password(UUID.randomUUID().toString())
+                .uuid(UUID.randomUUID().toString())
+                .createdBy(loggedInUserId)
+                .lastModifiedBy(loggedInUserId)
+                .createdDate(new Date())
+                .lastModifiedDate(new Date())
+                .build();
+
+        User encryptedUser = encryptUser(newCitizen);
+        User savedUser = userRepository.create(encryptedUser);
+        log.info("[PROFILE-SERVICE] Successfully auto-provisioned Aadhaar citizen ID: {}, UUID: {}",
+                savedUser.getId(), savedUser.getUuid());
+
+        User decryptedUser = decryptUser(savedUser, request.getRequestInfo());
+        enrichFamilyId(decryptedUser, stateTenant, request.getRequestInfo());
+
+        UserSearchResponseContent content = new UserSearchResponseContent(decryptedUser);
+        return AadhaarCitizenVerifyResponse.builder()
+                .responseInfo(createResponseInfo(request.getRequestInfo(), UserConstants.STATUS_SUCCESS))
+                .user(content)
+                .isNewUser(true)
+                .build();
+    }
+
+    /**
+     * Searches for an existing citizen profile matching the verified Aadhaar or mobile number.
+     *
+     * @param maskedAadhaar masked 12-digit Aadhaar number
+     * @param rawAadhaar    raw Aadhaar number if provided
+     * @param mobileNumber  mobile number if provided
+     * @param stateTenant   state-level tenant ID
+     * @param requestInfo   request context for decryption
+     * @return matched {@link User} entity or null if not found
+     */
+    private User findExistingCitizen(String maskedAadhaar, String rawAadhaar, String mobileNumber, String stateTenant, RequestInfo requestInfo) {
+        // 1. Match by maskedAadhaar
+        if (StringUtils.isNotBlank(maskedAadhaar)) {
+            User found = findCitizenByAadhaar(maskedAadhaar, stateTenant, requestInfo);
+            if (found != null) {
+                return found;
+            }
+        }
+
+        // 2. Match by rawAadhaar if distinct
+        if (StringUtils.isNotBlank(rawAadhaar) && !rawAadhaar.equalsIgnoreCase(maskedAadhaar)) {
+            User found = findCitizenByAadhaar(rawAadhaar, stateTenant, requestInfo);
+            if (found != null) {
+                return found;
+            }
+        }
+
+        // 3. Match by mobileNumber
+        if (StringUtils.isNotBlank(mobileNumber)) {
+            List<User> matchedUsers = findCitizensByMobile(mobileNumber, stateTenant, requestInfo);
+            if (!CollectionUtils.isEmpty(matchedUsers)) {
+                // If any matched account has matching Aadhaar, prioritize it
+                for (User u : matchedUsers) {
+                    if (StringUtils.isNotBlank(u.getAadhaarNumber()) &&
+                            (u.getAadhaarNumber().equalsIgnoreCase(maskedAadhaar)
+                             || maskAadhaar(u.getAadhaarNumber()).equalsIgnoreCase(maskedAadhaar)
+                             || (StringUtils.isNotBlank(rawAadhaar) && u.getAadhaarNumber().equalsIgnoreCase(rawAadhaar)))) {
+                        return u;
+                    }
+                }
+                // If exactly 1 account exists on this mobile
+                if (matchedUsers.size() == 1) {
+                    return matchedUsers.get(0);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Queries citizen profiles by Aadhaar number across the state tenant.
+     *
+     * @param aadhaar     raw or masked Aadhaar number
+     * @param stateTenant state-level tenant identifier
+     * @param requestInfo request context for decryption
+     * @return matching active citizen {@link User} entity or null
+     */
+    private User findCitizenByAadhaar(String aadhaar, String stateTenant, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(aadhaar)) {
+            return null;
+        }
+        UserSearchCriteria criteria = UserSearchCriteria.builder()
+                .aadhaarNumber(aadhaar)
+                .tenantId(stateTenant)
+                .type(UserType.CITIZEN)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = encryptSearchCriteria(criteria);
+            List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : criteria);
+            if (!CollectionUtils.isEmpty(users)) {
+                List<User> decrypted = decryptUserList(users, requestInfo);
+                List<User> resultList = !CollectionUtils.isEmpty(decrypted) ? decrypted : users;
+                for (User u : resultList) {
+                    if (Boolean.TRUE.equals(u.getActive())) {
+                        return u;
+                    }
+                }
+                return resultList.get(0);
+            }
+        } catch (Exception e) {
+            log.warn("[PROFILE-SERVICE] Error searching citizen by Aadhaar: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Builds standard ResponseInfo envelope.
+     */
+    private ResponseInfo createResponseInfo(RequestInfo requestInfo, String status) {
+        Long ts = (requestInfo != null && requestInfo.getTs() != null)
+                ? requestInfo.getTs()
+                : System.currentTimeMillis();
+        return ResponseInfo.builder()
+                .apiId(requestInfo != null ? requestInfo.getApiId() : null)
+                .ver(requestInfo != null ? requestInfo.getVer() : null)
+                .ts(ts)
+                .resMsgId(UUID.randomUUID().toString())
+                .msgId(requestInfo != null ? requestInfo.getMsgId() : null)
+                .status(status)
+                .build();
     }
 }

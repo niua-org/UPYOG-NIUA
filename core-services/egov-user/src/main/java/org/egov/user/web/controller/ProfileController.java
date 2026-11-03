@@ -14,6 +14,8 @@ import org.egov.user.domain.model.User;
 import org.egov.user.domain.service.profile.ProfileService;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.UserSearchResponseContent;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -250,6 +252,34 @@ public class ProfileController {
         return buildSingleUserResponse(user);
     }
 
+    /**
+     * Verifies Aadhaar OTP and resolves citizen identity during Head of Family (HOF) member addition or verification.
+     * If the citizen profile exists, returns their full profile details including active familyId (isNewUser=false).
+     * If no citizen profile exists, auto-provisions a new verified citizen profile and returns their details (isNewUser=true).
+     *
+     * @param request Aadhaar citizen verification request containing referenceId, OTP, and optional Aadhaar/mobile
+     * @return response containing verified citizen profile details and isNewUser flag
+     */
+    @Operation(
+            summary = "Verify Aadhaar OTP and Resolve Citizen Profile",
+            description = "Verifies Aadhaar OTP via identity gateway. Returns full citizen demographics and active familyId. Auto-provisions user if not found."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Aadhaar OTP verified and citizen profile resolved",
+                    content = @Content(schema = @Schema(implementation = AadhaarCitizenVerifyResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid OTP, missing referenceId, or verification failed"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/aadhaar/_verify")
+    public ResponseEntity<AadhaarCitizenVerifyResponse> verifyAadhaarCitizen(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
+        log.info("[PROFILE-CONTROLLER] Received Aadhaar citizen verify request. refId: {}, aadhaar: {}",
+                request != null ? request.getReferenceId() : null,
+                maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        AadhaarCitizenVerifyResponse response = profileService.verifyAndResolveAadhaarCitizen(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     private ResponseEntity<ProfileResponse> buildSingleUserResponse(User user) {
         List<UserSearchResponseContent> contents = user != null
                 ? Collections.singletonList(new UserSearchResponseContent(user))
@@ -266,5 +296,10 @@ public class ProfileController {
     private String maskMobile(String mobile) {
         if (mobile == null || mobile.length() < 4) return "****";
         return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
+    }
+
+    private String maskAadhaar(String aadhaar) {
+        if (aadhaar == null || aadhaar.length() < 4) return "XXXXXXXX****";
+        return "XXXXXXXX" + aadhaar.substring(aadhaar.length() - 4);
     }
 }
