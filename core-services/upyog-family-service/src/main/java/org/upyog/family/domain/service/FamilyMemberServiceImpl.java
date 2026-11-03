@@ -278,16 +278,9 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     }
 
     private Family getFamilyByIdAndTenant(String familyId, String tenantId) {
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(familyId)
-                .tenantId(tenantId)
-                .build();
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                    "Family with ID " + familyId + " not found.");
-        }
-        return families.get(0);
+        return familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
+                        "Family with ID " + familyId + " not found."));
     }
 
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {

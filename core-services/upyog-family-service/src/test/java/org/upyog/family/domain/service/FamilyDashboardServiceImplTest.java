@@ -23,6 +23,7 @@ import org.upyog.family.web.contract.FamilySearchCriteria;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -85,7 +86,7 @@ class FamilyDashboardServiceImplTest {
                 .actionType(LineageActionType.SPLIT)
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
         when(familyRepository.findLineageByFamilyId("FAM-2026-0001")).thenReturn(Collections.singletonList(lineage));
         when(responseInfoFactory.createResponseInfoFromRequestInfo(any(), any(Boolean.class))).thenReturn(new ResponseInfo());
 

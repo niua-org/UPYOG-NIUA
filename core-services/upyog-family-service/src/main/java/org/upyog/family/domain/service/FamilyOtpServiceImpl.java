@@ -54,18 +54,10 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         log.info("[UPYOG-FAMILY-OTP-SERVICE] Processing send OTP request for family: {}, tenant: {}",
                 request.getFamilyId(), request.getTenantId());
 
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(request.getFamilyId())
-                .tenantId(request.getTenantId())
-                .build();
+        Family family = familyRepository.findByFamilyIdAndTenantId(request.getFamilyId(), request.getTenantId())
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
+                        "Family with ID " + request.getFamilyId() + " not found."));
 
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                    "Family with ID " + request.getFamilyId() + " not found.");
-        }
-
-        Family family = families.get(0);
         if (family.getStatus() != FamilyStatus.ACTIVE) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
                     "Cannot send OTP for inactive or closed family: " + family.getStatus());
@@ -109,18 +101,9 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         log.info("[UPYOG-FAMILY-OTP-SERVICE] Processing verify OTP request for family: {}, tenant: {}",
                 request.getFamilyId(), request.getTenantId());
 
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(request.getFamilyId())
-                .tenantId(request.getTenantId())
-                .build();
-
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                    "Family with ID " + request.getFamilyId() + " not found.");
-        }
-
-        Family family = families.get(0);
+        Family family = familyRepository.findByFamilyIdAndTenantId(request.getFamilyId(), request.getTenantId())
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
+                        "Family with ID " + request.getFamilyId() + " not found."));
         if (family.getStatus() != FamilyStatus.ACTIVE) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
                     "Cannot verify OTP for inactive family: " + family.getStatus());

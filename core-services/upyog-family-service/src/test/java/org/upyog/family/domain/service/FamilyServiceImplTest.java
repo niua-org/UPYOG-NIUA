@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -150,7 +151,7 @@ class FamilyServiceImplTest {
         family.setFamilyId("FAM-PARENT-001");
         family.setAuditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).build());
 
-        when(familyRepository.search(any())).thenReturn(Collections.singletonList(family));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-PARENT-001", "pg.citya")).thenReturn(Optional.of(family));
         when(idGenRepository.generateFamilyId(any(), eq("pg.citya"))).thenReturn("FAM-CHILD-002");
         when(configuration.getSplitFamilyTopic()).thenReturn("split-ug-family");
 
@@ -204,8 +205,8 @@ class FamilyServiceImplTest {
                 .auditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).build())
                 .build();
 
-        when(familyRepository.search(any())).thenReturn(Collections.singletonList(surviving))
-                .thenReturn(Collections.singletonList(merging));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-001", "pg.citya")).thenReturn(Optional.of(surviving));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-002", "pg.citya")).thenReturn(Optional.of(merging));
         when(configuration.getMergeFamilyTopic()).thenReturn("merge-ug-family");
 
         FamilyMergeRequest mergeRequest = FamilyMergeRequest.builder()

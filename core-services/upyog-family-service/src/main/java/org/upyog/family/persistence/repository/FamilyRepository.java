@@ -1,10 +1,12 @@
 package org.upyog.family.persistence.repository;
 
+import org.apache.commons.lang3.StringUtils;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyLineage;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Data access abstraction interface for Family unit aggregates and lineage history in UPYOG.
@@ -37,6 +39,27 @@ public interface FamilyRepository {
      * @return list of matching Family aggregates
      */
     List<Family> search(FamilySearchCriteria criteria);
+
+    /**
+     * Looks up an individual Family aggregate by its unique familyId and tenantId.
+     *
+     * @param familyId unique family identifier
+     * @param tenantId tenant identifier
+     * @return Optional containing the Family aggregate if found, or empty Optional otherwise
+     */
+    default Optional<Family> findByFamilyIdAndTenantId(String familyId, String tenantId) {
+        if (StringUtils.isBlank(familyId) || StringUtils.isBlank(tenantId)) {
+            return Optional.empty();
+        }
+        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
+                .familyId(familyId)
+                .tenantId(tenantId)
+                .limit(1)
+                .offset(0)
+                .build();
+        List<Family> families = search(criteria);
+        return (families != null && !families.isEmpty()) ? Optional.of(families.get(0)) : Optional.empty();
+    }
 
     /**
      * Finds active Family IDs where the specified citizen UUID is registered as an active member in UPYOG.

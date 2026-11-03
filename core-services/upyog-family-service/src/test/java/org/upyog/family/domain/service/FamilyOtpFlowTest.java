@@ -32,6 +32,7 @@ import org.upyog.family.web.contract.FamilySearchCriteria;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -102,8 +103,8 @@ class FamilyOtpFlowTest {
     @Test
     @DisplayName("sendFamilyOtp should resolve HOF mobile, mask it, and send OTP successfully")
     void sendFamilyOtp_Success() {
-        when(familyRepository.search(any(FamilySearchCriteria.class)))
-                .thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya"))
+                .thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByUuids(eq(Collections.singletonList("head-uuid-1")), any()))
                 .thenReturn(Collections.singletonMap("head-uuid-1", headProfile));
         when(otpClient.sendOtp(eq("9876543210"), eq("pg.citya"), any()))
@@ -128,8 +129,8 @@ class FamilyOtpFlowTest {
     @Test
     @DisplayName("sendFamilyOtp should throw FAMILY_NOT_FOUND when family does not exist")
     void sendFamilyOtp_FamilyNotFound_ThrowsException() {
-        when(familyRepository.search(any(FamilySearchCriteria.class)))
-                .thenReturn(Collections.emptyList());
+        when(familyRepository.findByFamilyIdAndTenantId("NON-EXISTENT-FAM", "pg.citya"))
+                .thenReturn(Optional.empty());
 
         FamilyOtpRequest request = FamilyOtpRequest.builder()
                 .requestInfo(requestInfo)
@@ -145,8 +146,8 @@ class FamilyOtpFlowTest {
     @DisplayName("sendFamilyOtp should throw INVALID_REQUEST when family is not active")
     void sendFamilyOtp_InactiveFamily_ThrowsException() {
         activeFamily.setStatus(FamilyStatus.INACTIVE);
-        when(familyRepository.search(any(FamilySearchCriteria.class)))
-                .thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya"))
+                .thenReturn(Optional.of(activeFamily));
 
         FamilyOtpRequest request = FamilyOtpRequest.builder()
                 .requestInfo(requestInfo)
@@ -161,8 +162,8 @@ class FamilyOtpFlowTest {
     @Test
     @DisplayName("verifyFamilyOtp should validate OTP, enrich family details, register consent token, and return details")
     void verifyFamilyOtp_Success() {
-        when(familyRepository.search(any(FamilySearchCriteria.class)))
-                .thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya"))
+                .thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByUuids(eq(Collections.singletonList("head-uuid-1")), any()))
                 .thenReturn(Collections.singletonMap("head-uuid-1", headProfile));
         when(otpClient.validateOtp(eq("9876543210"), eq("123456"), eq("pg.citya"), any()))
@@ -191,8 +192,8 @@ class FamilyOtpFlowTest {
     @Test
     @DisplayName("verifyFamilyOtp should throw INVALID_AADHAAR_CONSENT when OTP is invalid")
     void verifyFamilyOtp_InvalidOtp_ThrowsException() {
-        when(familyRepository.search(any(FamilySearchCriteria.class)))
-                .thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya"))
+                .thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByUuids(eq(Collections.singletonList("head-uuid-1")), any()))
                 .thenReturn(Collections.singletonMap("head-uuid-1", headProfile));
         when(otpClient.validateOtp(eq("9876543210"), eq("000000"), eq("pg.citya"), any()))

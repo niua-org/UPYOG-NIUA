@@ -256,17 +256,8 @@ public class FamilyServiceImpl implements FamilyService {
     public Family splitFamily(FamilySplitRequest request) {
         log.info("[UPYOG-FAMILY-SERVICE] Splitting family: parent={}", request.getParentFamilyId());
 
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(request.getParentFamilyId())
-                .tenantId(request.getTenantId())
-                .build();
-
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Parent family not found: " + request.getParentFamilyId());
-        }
-
-        Family parentFamily = families.get(0);
+        Family parentFamily = familyRepository.findByFamilyIdAndTenantId(request.getParentFamilyId(), request.getTenantId())
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Parent family not found: " + request.getParentFamilyId()));
         familyValidator.validateSplit(request, parentFamily);
 
         RequestInfo requestInfo = request.getRequestInfo();
@@ -363,20 +354,8 @@ public class FamilyServiceImpl implements FamilyService {
         log.info("[UPYOG-FAMILY-SERVICE] Merging family: merging={} into surviving={}",
                 request.getMergingFamilyId(), request.getSurvivingFamilyId());
 
-        FamilySearchCriteria survivingCriteria = FamilySearchCriteria.builder()
-                .familyId(request.getSurvivingFamilyId())
-                .tenantId(request.getTenantId())
-                .build();
-        FamilySearchCriteria mergingCriteria = FamilySearchCriteria.builder()
-                .familyId(request.getMergingFamilyId())
-                .tenantId(request.getTenantId())
-                .build();
-
-        List<Family> survivingList = familyRepository.search(survivingCriteria);
-        List<Family> mergingList = familyRepository.search(mergingCriteria);
-
-        Family survivingFamily = survivingList.isEmpty() ? null : survivingList.get(0);
-        Family mergingFamily = mergingList.isEmpty() ? null : mergingList.get(0);
+        Family survivingFamily = familyRepository.findByFamilyIdAndTenantId(request.getSurvivingFamilyId(), request.getTenantId()).orElse(null);
+        Family mergingFamily = familyRepository.findByFamilyIdAndTenantId(request.getMergingFamilyId(), request.getTenantId()).orElse(null);
 
         familyValidator.validateMerge(request, survivingFamily, mergingFamily);
 

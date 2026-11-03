@@ -60,18 +60,9 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
     public FamilyDashboardResponse getFamilyDashboard(String familyId, String tenantId, RequestInfo requestInfo) {
         log.info("[UPYOG-DASHBOARD-SERVICE] Aggregating dashboard for family: {}, tenant: {}", familyId, tenantId);
 
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(familyId)
-                .tenantId(tenantId)
-                .build();
-
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                    "Family with ID " + familyId + " not found.");
-        }
-
-        Family family = families.get(0);
+        Family family = familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
+                        "Family with ID " + familyId + " not found."));
         enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
 
         List<FamilyMember> members = family.getMembers() != null ? family.getMembers() : Collections.emptyList();
