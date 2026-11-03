@@ -49,6 +49,17 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
     private final RequesterDxClient requesterDxClient;
     private final ResponseInfoFactory responseInfoFactory;
 
+    /**
+     * Initiates SMS OTP dispatch to the Head of Family's registered mobile number for join verification.
+     *
+     * <p>Finds the family unit by ID and tenant, looks up the active HoF's profile from {@code egov-user},
+     * masks the mobile number (e.g. {@code ******3210}), issues an OTP via {@link OtpClient#sendOtp},
+     * and returns the tracking reference ID.</p>
+     *
+     * @param request the family OTP request containing family ID and tenant ID; must not be {@code null}.
+     * @return {@link FamilyOtpResponse} containing masked mobile, reference ID, and dispatch status.
+     * @throws CustomException if family is not found, status is inactive, or HoF mobile cannot be resolved.
+     */
     @Override
     public FamilyOtpResponse sendFamilyOtp(FamilyOtpRequest request) {
         log.info("[UPYOG-FAMILY-OTP-SERVICE] Processing send OTP request for family: {}, tenant: {}",
@@ -96,6 +107,17 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 .build();
     }
 
+    /**
+     * Verifies the OTP entered by citizen against Head of Family's phone and returns family details with consent token.
+     *
+     * <p>Validates the OTP code via {@link OtpClient#validateOtp}, decorates member demographics via
+     * {@link #enrichCitizenDemographics}, generates a unique consent token ({@code CONSENT-VERIFIED-...}),
+     * registers the consent with {@link RequesterDxClient#registerConsentToken}, and returns the verified aggregate.</p>
+     *
+     * @param request the verification request envelope containing family ID, tenant ID, and OTP code; must not be {@code null}.
+     * @return {@link FamilyOtpVerifyResponse} containing verified family aggregate, consent token, and verification state.
+     * @throws CustomException if family is not found, status is inactive, or the entered OTP is invalid/expired.
+     */
     @Override
     public FamilyOtpVerifyResponse verifyFamilyOtp(FamilyOtpVerifyRequest request) {
         log.info("[UPYOG-FAMILY-OTP-SERVICE] Processing verify OTP request for family: {}, tenant: {}",

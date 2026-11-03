@@ -28,6 +28,11 @@ import java.util.stream.Collectors;
 /**
  * Domain service implementation orchestrating Head of Family succession and transfer flows in UPYOG.
  *
+ * <p>Implements {@link FamilyHeadService} managing leadership transfer between active family members.
+ * Validates succession business rules via {@link AssignHofValidator}, revokes head status from the incumbent,
+ * promotes the designated successor, enqueues persistence commands to Kafka persister, and decorates the
+ * aggregate with fresh citizen demographic attributes.</p>
+ *
  * @author UPYOG Team
  * @since 1.0.0
  */
@@ -41,6 +46,15 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
     private final KafkaProducer kafkaProducer;
     private final FamilyConfiguration configuration;
 
+    /**
+     * Constructs {@link FamilyHeadServiceImpl} with required dependencies.
+     *
+     * @param familyRepository data repository for family lookups and queries
+     * @param assignHofValidator validator validating caller authorization and member status
+     * @param userClient client querying {@code egov-user} for demographic enrichment
+     * @param kafkaProducer messaging client for Kafka persistence
+     * @param configuration service configuration properties
+     */
     @Autowired
     public FamilyHeadServiceImpl(FamilyRepository familyRepository,
                                  AssignHofValidator assignHofValidator,
@@ -56,10 +70,14 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
 
     /**
      * Transfers or assigns the Head of Family (HoF) role to an existing active member of the family unit in UPYOG.
-     * Validates that the target member is active, revokes head status from the current head, and updates family metadata.
      *
-     * @param request HoF assignment payload containing family ID, new head UUID, and optional justification
-     * @return updated Family aggregate
+     * <p>Enforces that the caller is the current HoF, the target member is active in the family, and the family
+     * is {@code ACTIVE}. Revokes head status from the current head, assigns {@code isHead = true} and
+     * {@code relationshipWithHead = "HEAD"} to the successor, updates audit details, and pushes the event to Kafka.</p>
+     *
+     * @param request HoF assignment payload containing family ID, new head UUID, and optional justification; must not be {@code null}.
+     * @return the updated {@link Family} aggregate reflecting the succession.
+     * @throws CustomException if family is not found, caller is unauthorized, or candidate is invalid.
      */
     @Override
     @Transactional

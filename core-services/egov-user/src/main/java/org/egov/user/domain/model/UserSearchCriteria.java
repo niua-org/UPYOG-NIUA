@@ -10,7 +10,11 @@ import java.util.List;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 /**
- * Criteria DTO for querying user records based on identifiers, demographics, tenant, and pagination params.
+ * Criteria DTO encapsulating multi-attribute filter parameters for querying user records.
+ * <p>
+ * Supports querying by primary identifiers (IDs, UUIDs), account attributes (username, userType, active),
+ * communication coordinates (mobileNumber, emailId, alternatemobilenumber), demographic data (name, Aadhaar),
+ * role assignments (roleCodes), tenant boundary, and address parameters for V2 searches.
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -44,9 +48,19 @@ public class UserSearchCriteria {
     private String aadhaarNumber;
 
     /**
-     * Validates that at least one search parameter and required tenant identifiers are provided.
+     * Validates that the search criteria conforms to service security rules and contains necessary criteria.
+     * <p>
+     * <b>Validation Rules:</b>
+     * <ul>
+     *   <li><b>External Requests:</b> At least one identifying criterion ({@code userName}, {@code name},
+     *       {@code mobileNumber}, {@code emailId}, {@code uuid}, or {@code aadhaarNumber}) must be specified.
+     *       Furthermore, {@code tenantId} is mandatory if searching by {@code userName}, {@code name}, or {@code mobileNumber}.</li>
+     *   <li><b>Inter-Service Requests:</b> Additional criteria such as {@code id} or {@code roleCodes} are permitted
+     *       as primary filters. Tenant ID is mandatory if searching by {@code roleCodes}.</li>
+     * </ul>
      *
-     * @param isInterServiceCall true if the call originates internally from another trusted microservice
+     * @param isInterServiceCall flag indicating whether the search request originates internally from another trusted microservice
+     * @throws InvalidUserSearchCriteriaException if required search parameters or tenant identifiers are absent
      */
     public void validate(boolean isInterServiceCall) {
         if (validateIfEmptySearch(isInterServiceCall) || validateIfTenantIdExists(isInterServiceCall)) {

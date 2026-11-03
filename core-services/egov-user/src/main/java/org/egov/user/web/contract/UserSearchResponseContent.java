@@ -114,16 +114,6 @@ public class UserSearchResponseContent {
     private Date pwdExpiryDate;
 
     /**
-     * Legacy constructor for core search endpoints ({@code /_search}, {@code /v1/_search}, {@code /users/v2/_search}).
-     * <p>
-     * Populates core identity, audit, and demographic profile fields.
-     * Crucially, {@code addresses} and {@code documents} collections are <b>NOT</b> populated and remain {@code null}
-     * to preserve contract compatibility and prevent PII exposure for legacy and v2 callers
-     * (e.g. PT, TL, PGR, HRMS, and UI).
-     *
-     * @param user the domain {@link User} entity to copy fields from
-     */
-    /**
      * Legacy constructor used by existing user search callers (e.g. {@code /_search},
      * {@code /v1/_search}, and {@code /users/v2/_search} consumed by PT, TL, PGR, and HRMS).
      * <p>

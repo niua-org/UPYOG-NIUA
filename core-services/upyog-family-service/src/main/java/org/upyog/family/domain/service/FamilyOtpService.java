@@ -6,7 +6,11 @@ import org.upyog.family.web.contract.FamilyOtpVerifyRequest;
 import org.upyog.family.web.contract.FamilyOtpVerifyResponse;
 
 /**
- * Domain service contract for Head of Family OTP dispatch, verification, and consent issuance in UPYOG.
+ * Domain service contract governing Head of Family (HoF) SMS OTP dispatch, verification, and consent issuance in UPYOG.
+ *
+ * <p>Enables the Family Join verification workflow: when an applicant citizen seeks to join an existing household,
+ * this service dispatches an OTP to the current HoF's registered mobile number to obtain verifiable consent.
+ * Once verified, an HMAC-signed consent token is issued to permit direct entry into the household unit.</p>
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -14,18 +18,39 @@ import org.upyog.family.web.contract.FamilyOtpVerifyResponse;
 public interface FamilyOtpService {
 
     /**
-     * Initiates OTP dispatch to the Head of Family's mobile number for a citizen seeking to join the family.
+     * Initiates SMS OTP dispatch to the Head of Family's registered mobile number for join verification.
      *
-     * @param request the family OTP request containing family ID and tenant ID
-     * @return response containing masked mobile number, reference ID, and dispatch status
+     * <p><b>Execution Workflow:</b></p>
+     * <ol>
+     *   <li>Retrieves the family unit matching {@code request.getFamilyId()} and {@code request.getTenantId()}.</li>
+     *   <li>Queries {@code egov-user} to resolve the registered mobile number of the designated HoF.</li>
+     *   <li>Masks the mobile number for display privacy (e.g. {@code ******3210}).</li>
+     *   <li>Dispatches an OTP generation command to the platform SMS/OTP service (or fixed OTP in test profiles).</li>
+     *   <li>Returns the masked mobile number and tracking {@code referenceId}.</li>
+     * </ol>
+     *
+     * @param request the family OTP request containing target {@code familyId} and {@code tenantId}; must not be {@code null}.
+     * @return {@link FamilyOtpResponse} containing masked mobile number, reference ID, and dispatch status.
+     * @throws org.egov.tracer.model.CustomException if family is not found, HoF has no mobile registered, or OTP generation fails.
      */
     FamilyOtpResponse sendFamilyOtp(FamilyOtpRequest request);
 
     /**
-     * Verifies the OTP entered by citizen against Head of Family's phone and returns family details with consent token.
+     * Verifies the OTP entered by an applicant against the Head of Family's registered credentials.
      *
-     * @param request the family OTP verification request containing family ID, tenant ID, and OTP
-     * @return response containing enriched family details, consent token, and verification status
+     * <p><b>Execution Workflow:</b></p>
+     * <ol>
+     *   <li>Locates the target household and resolves the HoF's registered mobile number.</li>
+     *   <li>Validates the submitted OTP against {@code egov-otp} (or fixed development passwords if enabled).</li>
+     *   <li>Upon successful validation, constructs an HMAC consent token prefixed with {@code CONSENT-VERIFIED-}.</li>
+     *   <li>Enriches the family aggregate with member demographics for UI display.</li>
+     *   <li>Returns the verified consent token alongside the complete family aggregate.</li>
+     * </ol>
+     *
+     * @param request the family OTP verification request containing {@code familyId}, {@code tenantId}, and {@code otp};
+     *                must not be {@code null}.
+     * @return {@link FamilyOtpVerifyResponse} containing the enriched family details, consent token, and success status.
+     * @throws org.egov.tracer.model.CustomException if the OTP is invalid or expired (Code: {@code INVALID_OTP}), or family is not found.
      */
     FamilyOtpVerifyResponse verifyFamilyOtp(FamilyOtpVerifyRequest request);
 }

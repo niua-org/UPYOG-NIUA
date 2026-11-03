@@ -22,8 +22,17 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Domain validator enforcing business rules, unique Head of Family, multi-family exclusivity,
- * and dynamic UPYOG MDMS relationship validation.
+ * Domain validator enforcing business rules, statutory invariants, and security policies for UPYOG Family management.
+ *
+ * <p>Validates:</p>
+ * <ul>
+ *   <li>Single active Head of Family per unit across creation and updates.</li>
+ *   <li>Dynamic MDMS relationship validation against state taxonomy (e.g. {@code HEAD}, {@code SPOUSE}, {@code SON}).</li>
+ *   <li>Multi-family exclusivity preventing duplicate active household memberships.</li>
+ *   <li>FileStore accessibility for attached verification document IDs.</li>
+ *   <li>Genealogical integrity for split operations (preserving at least one resident in parent).</li>
+ *   <li>Distinctness and active state for household consolidation (merges).</li>
+ * </ul>
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -36,6 +45,13 @@ public class FamilyValidator {
     private final FileStoreClient fileStoreClient;
     private final FamilyMasterDataService familyMasterDataService;
 
+    /**
+     * Constructs {@link FamilyValidator} with repository, filestore, and master data dependencies.
+     *
+     * @param familyRepository data repository for family lookups and exclusivity queries
+     * @param fileStoreClient client verifying document existence in FileStore
+     * @param familyMasterDataService service providing MDMS relationship master data
+     */
     @Autowired
     public FamilyValidator(FamilyRepository familyRepository,
                            FileStoreClient fileStoreClient,
@@ -46,12 +62,20 @@ public class FamilyValidator {
     }
 
     /**
-     * Validates a family creation request against UPYOG business rules.
-     * Enforces single active Head of Family, member UUID uniqueness, MDMS relationship codes,
-     * document proofs in filestore, and multi-family exclusivity.
+     * Validates a family creation request against UPYOG business rules and integrity constraints.
      *
-     * @param request family creation request containing family metadata and members
-     * @throws CustomException if validation constraints fail
+     * <p>Enforces:</p>
+     * <ul>
+     *   <li>Presence of non-blank {@code tenantId}.</li>
+     *   <li>Exactly one member with {@code isHead = true} and aligns {@code family.headUserUuid}.</li>
+     *   <li>Member user UUID uniqueness within the payload.</li>
+     *   <li>Dynamic MDMS relationship codes.</li>
+     *   <li>Multi-family exclusivity ensuring no member is already active in another family.</li>
+     *   <li>FileStore accessibility for attached document IDs.</li>
+     * </ul>
+     *
+     * @param request family creation request containing family metadata and members; must not be {@code null}.
+     * @throws CustomException if any business invariant or structural validation check fails.
      */
     public void validateCreate(FamilyRequest request) {
         if (request == null || request.getFamily() == null) {
@@ -132,11 +156,19 @@ public class FamilyValidator {
 
     /**
      * Validates an update request against an existing active Family aggregate in UPYOG.
-     * Verifies immutable family ID, ensures at least one Head of Family remains, and validates new members.
      *
-     * @param request family update request containing modified attributes
-     * @param existingFamily existing Family aggregate retrieved from the database
-     * @throws CustomException if update validation constraints fail
+     * <p>Ensures:</p>
+     * <ul>
+     *   <li>Target family exists and is {@link FamilyStatus#ACTIVE}.</li>
+     *   <li>Caller is the current Head of Family (or system user).</li>
+     *   <li>Resulting member roster retains exactly one active HoF.</li>
+     *   <li>Member relationships conform to MDMS taxonomy.</li>
+     *   <li>Members are not active in any other family unit.</li>
+     * </ul>
+     *
+     * @param request family update request containing modified attributes and caller identity; must not be {@code null}.
+     * @param existingFamily existing Family aggregate retrieved from the database; must not be {@code null}.
+     * @throws CustomException if target family is missing/inactive, caller is unauthorized, or business rules are violated.
      */
     public void validateUpdate(FamilyRequest request, Family existingFamily) {
         if (existingFamily == null) {
@@ -189,12 +221,19 @@ public class FamilyValidator {
 
     /**
      * Validates a family split operation in UPYOG.
-     * Ensures parent family is active, splitting members are currently active in the parent family,
-     * and designated child family head is part of the splitting members.
      *
-     * @param request split request payload
-     * @param parentFamily existing parent Family aggregate
-     * @throws CustomException if split constraints fail
+     * <p>Enforces:</p>
+     * <ul>
+     *   <li>Parent family exists and is in {@link FamilyStatus#ACTIVE} status.</li>
+     *   <li>Caller is the authorized Head of Family of the parent family unit.</li>
+     *   <li>All splitting member UUIDs belong to active residents of the parent unit.</li>
+     *   <li>The designated new child unit head is among the splitting members.</li>
+     *   <li>At least one member remains behind in the parent family unit.</li>
+     * </ul>
+     *
+     * @param request split request payload containing parent ID, splitting members, and new head UUID; must not be {@code null}.
+     * @param parentFamily existing parent {@link Family} aggregate; must not be {@code null}.
+     * @throws CustomException if parent family is inactive, caller unauthorized, or splitting member rosters violate invariants.
      */
     public void validateSplit(FamilySplitRequest request, Family parentFamily) {
         if (parentFamily == null) {
@@ -241,13 +280,19 @@ public class FamilyValidator {
 
     /**
      * Validates a family merge operation in UPYOG.
-     * Verifies that both surviving and merging families exist and are distinct, both are ACTIVE,
-     * and the designated common head exists in the surviving family.
      *
-     * @param request merge request payload
-     * @param survivingFamily target surviving Family aggregate
-     * @param mergingFamily source merging Family aggregate
-     * @throws CustomException if merge constraints fail
+     * <p>Enforces:</p>
+     * <ul>
+     *   <li>Both surviving and merging family aggregates exist and are distinct.</li>
+     *   <li>Both families are in {@link FamilyStatus#ACTIVE} status.</li>
+     *   <li>Caller holds HoF authority over at least one of the participating families.</li>
+     *   <li>The designated common Head of Family exists as an active member within the combined rosters.</li>
+     * </ul>
+     *
+     * @param request merge request payload containing participating family IDs and common HoF UUID; must not be {@code null}.
+     * @param survivingFamily target surviving {@link Family} aggregate; must not be {@code null}.
+     * @param mergingFamily source merging {@link Family} aggregate; must not be {@code null}.
+     * @throws CustomException if either family is missing or inactive, families are identical, or common HoF is invalid.
      */
     public void validateMerge(FamilyMergeRequest request, Family survivingFamily, Family mergingFamily) {
         if (survivingFamily == null) {

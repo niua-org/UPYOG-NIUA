@@ -15,6 +15,12 @@ import org.egov.user.domain.model.enums.UserType;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Contract request payload for searching users in the legacy (V1) user API.
+ * <p>
+ * Binds web query parameters and request metadata, providing {@link #toDomain()} to construct
+ * a validated {@link UserSearchCriteria} query object.
+ */
 @Getter
 @Setter
 @ToString
@@ -84,6 +90,11 @@ public class UserSearchRequest {
 //    @JsonProperty("digilockerSearch")
 //    private boolean digilockerSearch;
 
+    /**
+     * Converts this web search request into a domain {@link UserSearchCriteria} instance.
+     *
+     * @return populated {@link UserSearchCriteria} query object
+     */
     public UserSearchCriteria toDomain() {
         return UserSearchCriteria.builder()
                 .id(id)
