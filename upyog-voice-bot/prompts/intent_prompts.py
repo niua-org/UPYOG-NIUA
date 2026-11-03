@@ -63,10 +63,27 @@ Examples: "save draft", "save my application", "draft save karo"
 "draft_continue_application" — User wants to CONTINUE or RESUME filling their pending form/draft.
 Examples: "continue my application", "resume complaint", "continue"
 
+"login_query" — User is asking HOW to log in, WHERE to find the login button, or asking for the login procedure/OTP steps.
+Examples: "how to login", "login kaise kare", "where is login button", "sign in kaise kare", "login process"
+
+"login_claim" — User is stating that they have finished logging in, already logged in, or verified their session.
+Examples: "login done", "logged in", "maine login kar liya", "login complete", "signed in", "done login"
+
+"out_of_domain" — User is asking about topics completely outside municipal/UPYOG citizen services, such as general entertainment, movies, actors, sports/cricket, cooking recipes, personal relationships, non-ULB finance (crypto/stocks), fitness routines, or general trivia.
+Examples:
+→ "who won the cricket match yesterday"
+→ "how to make biryani"
+→ "tell me about bitcoin"
+→ "best bollywood movies"
+→ "mujhe chai ki recipe batao"
+
 ━━━ IMPORTANT RULES ━━━
 1. Look at the last message and context. If the user says "yes" or "haan":
    - If the previous turn offered an advertisement -> "adv_confirm"
 2. Pure social openers (hello/hi/namaste) with NO service content = "greeting".
+3. If the user introduces themselves or states their name in any language (e.g. "I am Rahul", "My name is Priya", "mera naam Rohan hai", "Amit here", "main Kavita bol rahi hoon"), extract their clean name into "extracted_name". Otherwise set "extracted_name": null.
+4. Set "is_question": true if the user is asking an informational question, explanation, help, rules, meaning, charges, or asking "what/how/where/why/fees/charges/procedure/kya/kaise/kahan/kyun/batao" (e.g. seeking information or asking an FAQ). Set to false if the user is answering a form prompt, selecting an option, providing a name/locality/category, or answering a workflow question.
+5. If the query is asking about movies, sports, recipes, crypto, or other non-urban topics with NO municipal context, classify as "out_of_domain". NOTE: If a place or business type is mentioned in a municipal context (e.g. "trade license for my restaurant" or "waterlogging near cricket ground"), classify into the appropriate municipal service, NOT out_of_domain.
 
 ━━━ CONVERSATION CONTEXT (last 3 turns) ━━━
 {history_text}
@@ -77,7 +94,9 @@ Language: {lang}
 
 Respond ONLY with this JSON, no other text:
 {{
-  "intent": "greeting" | "faq" | "profile" | "grievance_candidate" | "grievance_confirm" | "grievance_cancel" | "grievance_status_candidate" | "booking_candidate" | "booking_confirm" | "booking_cancel" | "adv_candidate" | "adv_confirm" | "adv_cancel" | "adv_status_candidate" | "draft_resume" | "draft_delete" | "draft_save" | "draft_continue_application" | "end_conversation",
+  "intent": "greeting" | "faq" | "profile" | "out_of_domain" | "login_query" | "login_claim" | "grievance_candidate" | "grievance_confirm" | "grievance_cancel" | "grievance_status_candidate" | "booking_candidate" | "booking_confirm" | "booking_cancel" | "adv_candidate" | "adv_confirm" | "adv_cancel" | "adv_status_candidate" | "draft_resume" | "draft_delete" | "draft_save" | "draft_continue_application" | "end_conversation",
+  "is_question": true | false,
+  "extracted_name": "string or null",
   "reasoning": "one sentence why",
   "service": "specific UPYOG service name or null",
   "emotion": "neutral" | "frustrated" | "stuck" | "urgent"

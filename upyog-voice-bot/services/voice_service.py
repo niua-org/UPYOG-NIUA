@@ -32,31 +32,6 @@ TTS_SERVICE_ID = "ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4"
 TTS_SERVICE_ID_DRAVIDIAN = "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"
 TTS_SERVICE_ID_MISC = "ai4bharat/indic-tts-coqui-misc-gpu--t4"
 
-
-# ============== DYNAMIC PER-TURN LANGUAGE DETECTION ==============
-
-# Phonetic Hindi words in Roman script
-HINDI_PHONETIC_WORDS = {
-    'kya', 'kaise', 'kahan', 'kab', 'kyun', 'kaun', 'kitna', 'kitne', 'kitni',
-    'hai', 'hain', 'tha', 'thi', 'the', 'hoga', 'hogi', 'hoge', 'honge', 'ho', 'hai',
-    'mujhe', 'aapko', 'humko', 'tumhe', 'unhe', 'apna', 'mera', 'meri', 'mere', 'tera', 'teri', 'tere',
-    'aur', 'ya', 'lekin', 'toh', 'ki', 'ke', 'ka', 'ko', 'se', 'par', 'mein', 'me', 'mai',
-    'nahi', 'nahin', 'mat', 'bilkul', 'haan', 'theek', 'accha', 'sahi', 'galat', 'kuch', 'kuchh',
-    'batao', 'bataye', 'bataiye', 'samjhao', 'dikhao', 'chahiye', 'milega', 'milegi',
-    'karo', 'karein', 'karega', 'karegi', 'dijiye', 'lijiye', 'dekhiye', 'suniye',
-    'paisa', 'paise', 'rupaye', 'mahina', 'saal', 'din', 'ghanta', 'minute',
-    'ghar', 'daftar', 'office', 'kaam', 'kam',
-    'naam', 'number', 'document', 'form', 'form mein', 'apply', 'karein', 'karna',
-    'bhai', 'yaar', 'sir', 'madam', 'dada', 'babu',
-    'aap', 'tum', 'hum', 'woh', 'yeh', 'ye', 'vo', 'unka', 'iska', 'uska',
-    'abhi', 'phir', 'fir', 'kabhi', 'hamesha', 'kal', 'aaj', 'raat', 'din',
-    'ek', 'do', 'teen', 'char', 'paanch', 'chalo', 'chal', 'jao', 'aao',
-    'dekh', 'sun', 'bolo', 'likh', 'padh', 'samajh',
-    'sirf', 'bas', 'hi', 'bhi', 'to', 'hi', 'to',
-    'kaafi', 'zyada', 'kam', 'chotu', 'bada', 'chhota',
-    'ke', 'ka', 'ki', 'ko', 'se', 'me', 'mein', 'pe', 'ka'
-}
-
 # English words commonly transliterated into Devanagari
 ENGLISH_IN_DEVANAGARI = [
     'व्हाट', 'वॉट', 'हाउ', 'व्हेन', 'व्हेयर', 'वेयर', 'व्हाई', 'हू', 'विच',
