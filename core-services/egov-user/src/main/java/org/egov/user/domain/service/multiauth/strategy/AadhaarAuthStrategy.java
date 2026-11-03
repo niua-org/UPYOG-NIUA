@@ -16,6 +16,7 @@ import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Request;
@@ -60,6 +61,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
     private final EncryptionDecryptionUtil encryptionDecryptionUtil;
 
     private final UserConfiguration userConfiguration;
+    private final FamilyRestRepository familyRestRepository;
     private final Map<String, Integer> otpAttemptsByRefId = new ConcurrentHashMap<>();
 
     /**
@@ -71,6 +73,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
      * @param objectMapper             JSON mapper for response parsing
      * @param encryptionDecryptionUtil utility for encrypted search and decryption
      * @param userConfiguration        application properties
+     * @param familyRestRepository     repository for resolving familyId from family-service
      */
     @Autowired
     public AadhaarAuthStrategy(UserService userService,
@@ -78,13 +81,24 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                                RestTemplate restTemplate,
                                ObjectMapper objectMapper,
                                @Autowired(required = false) EncryptionDecryptionUtil encryptionDecryptionUtil,
-                               @Autowired(required = false) UserConfiguration userConfiguration) {
+                               @Autowired(required = false) UserConfiguration userConfiguration,
+                               @Autowired(required = false) FamilyRestRepository familyRestRepository) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.userConfiguration = userConfiguration;
+        this.familyRestRepository = familyRestRepository;
+    }
+
+    public AadhaarAuthStrategy(UserService userService,
+                               UserRepository userRepository,
+                               RestTemplate restTemplate,
+                               ObjectMapper objectMapper,
+                               EncryptionDecryptionUtil encryptionDecryptionUtil,
+                               UserConfiguration userConfiguration) {
+        this(userService, userRepository, restTemplate, objectMapper, encryptionDecryptionUtil, userConfiguration, null);
     }
 
     /**
@@ -254,6 +268,11 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                         existingUser.getId(), e.getMessage());
             }
 
+            if (familyRestRepository != null && StringUtils.isNotBlank(existingUser.getUuid())) {
+                String familyId = familyRestRepository.getActiveFamilyIdByUserUuid(existingUser.getUuid(), stateTenant, request.getRequestInfo());
+                existingUser.setFamilyId(familyId);
+            }
+
             return AuthenticatedUserResult.builder()
                     .user(existingUser)
                     .isNewUser(false)
@@ -304,6 +323,11 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         if (!Boolean.TRUE.equals(createdUser.getActive())) {
             log.error("[AADHAAR-AUTH-STRATEGY] Existing citizen account ID {} is inactive", createdUser.getId());
             throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
+
+        if (familyRestRepository != null && StringUtils.isNotBlank(createdUser.getUuid())) {
+            String familyId = familyRestRepository.getActiveFamilyIdByUserUuid(createdUser.getUuid(), stateTenant, request.getRequestInfo());
+            createdUser.setFamilyId(familyId);
         }
 
         return AuthenticatedUserResult.builder()

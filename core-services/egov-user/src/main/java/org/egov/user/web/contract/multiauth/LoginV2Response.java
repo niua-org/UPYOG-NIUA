@@ -79,4 +79,8 @@ public class LoginV2Response implements Serializable {
     @Schema(description = "List of citizen user accounts linked to this mobile number, returned when multipleUsersFound is true")
     @JsonProperty("userAccounts")
     private List<UserAccountSummary> userAccounts;
+
+    @Schema(description = "Citizen family identifier if user belongs to an active family in DB", example = "UPYOG-FAMILY-789012")
+    @JsonProperty("familyId")
+    private String familyId;
 }

@@ -82,6 +82,9 @@ public class ProfileSearchIncludeFlagsTest {
     @Mock
     private UserDocumentService userDocumentService;
 
+    @Mock
+    private org.egov.user.persistence.repository.FamilyRestRepository familyRestRepository;
+
     private ProfileServiceImpl profileService;
     private ObjectMapper objectMapper;
 
@@ -96,7 +99,9 @@ public class ProfileSearchIncludeFlagsTest {
                 userDocumentRepository,
                 null,
                 addressService,
-                userDocumentService
+                userDocumentService,
+                null,
+                familyRestRepository
         );
         objectMapper = new ObjectMapper();
         when(encryptionDecryptionUtil.encryptObject(any(), any(), any())).thenAnswer(i -> i.getArgument(0));
@@ -595,5 +600,30 @@ public class ProfileSearchIncludeFlagsTest {
         UserDocument resultDoc = results.get(0).getDocuments().get(0);
         assertEquals("1", resultDoc.getId());
         assertEquals(Boolean.TRUE, resultDoc.getActive());
+    }
+
+    @Test
+    @DisplayName("Should enrich familyId dynamically from FamilyRestRepository when available")
+    public void testProfileSearch_EnrichesFamilyIdFromFamilyService() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Collections.singletonList(ProfileIncludeEntity.PROFILE))
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+        when(familyRestRepository.getActiveFamilyIdsByUserUuids(anyList(), anyString(), any()))
+                .thenReturn(Collections.singletonMap("uuid-123", "FAM-2024-00123"));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals("FAM-2024-00123", results.get(0).getFamilyId());
+
+        // Verify mapping into UserSearchResponseContent
+        UserSearchResponseContent content = new UserSearchResponseContent(results.get(0), Collections.singleton(ProfileIncludeEntity.PROFILE));
+        assertEquals("FAM-2024-00123", content.getFamilyId());
     }
 }

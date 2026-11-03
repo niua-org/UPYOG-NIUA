@@ -116,6 +116,9 @@ public class UserConfiguration {
     @Value("${family.service.state.jit.endpoint}")
     private String familyServiceStateJitEndpoint;
 
+    @Value("${family.service.search.endpoint}")
+    private String familyServiceSearchEndpoint;
+
     // DigiLocker Configuration
     @Value("${digilocker.register}")
     private Boolean digilockerRegister;

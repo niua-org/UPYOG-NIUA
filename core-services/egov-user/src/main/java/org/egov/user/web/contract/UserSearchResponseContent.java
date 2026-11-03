@@ -102,6 +102,7 @@ public class UserSearchResponseContent {
 
     private Integer edittedCount;
     private String lastLoginMethod;
+    private String familyId;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
@@ -222,6 +223,7 @@ public class UserSearchResponseContent {
             this.lastResyncDate = user.getLastResyncDate();
             this.edittedCount = user.getEdittedCount();
             this.lastLoginMethod = user.getLastLoginMethod();
+            this.familyId = user.getFamilyId();
         }
 
         if (includes != null && includes.contains(ProfileIncludeEntity.ADDRESS)) {
@@ -322,6 +324,7 @@ public class UserSearchResponseContent {
         user.setLastResyncDate(this.lastResyncDate);
         user.setEdittedCount(this.edittedCount);
         user.setLastLoginMethod(this.lastLoginMethod);
+        user.setFamilyId(this.familyId);
  
         // Address mappings
         if (this.permanentAddress != null || this.permanentCity != null || this.permanentPinCode != null) {

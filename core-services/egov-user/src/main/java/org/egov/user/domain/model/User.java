@@ -121,6 +121,7 @@ public class User {
     private Date lastResyncDate;
     private Integer edittedCount;
     private String lastLoginMethod;
+    private String familyId;
 
     /**
      * Appends an {@link Address} to this user's address collection.

@@ -82,6 +82,10 @@ public class UserAccountSummary implements Serializable {
     @JsonProperty("motherName")
     private String motherName;
 
+    @Schema(description = "Citizen family identifier if user belongs to an active family", example = "UPYOG-FAMILY-789012")
+    @JsonProperty("familyId")
+    private String familyId;
+
     /**
      * Factory method creating a {@link UserAccountSummary} from a domain {@link User}.
      *
@@ -106,6 +110,7 @@ public class UserAccountSummary implements Serializable {
                 .identityVerifiedSource(user.getIdentityVerifiedSource())
                 .fatherName(user.getFatherName())
                 .motherName(user.getMotherName())
+                .familyId(user.getFamilyId())
                 .build();
     }
 

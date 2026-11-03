@@ -27,6 +27,7 @@ import org.egov.user.domain.service.profile.validator.ProfileValidator;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.AddressRepository;
+import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.UserRequest;
@@ -98,12 +99,14 @@ public class ProfileServiceImpl implements ProfileService {
     private final AddressMasterDataService addressMasterDataService;
     private final AddressService addressService;
     private final UserDocumentService userDocumentService;
+    private final FamilyRestRepository familyRestRepository;
     @Autowired(required = false)
     @Setter
     private UserConfiguration userConfiguration;
 
     /**
-     * Primary Spring-managed constructor injecting core repositories, validators, and modular address/document services.
+     * Primary Spring-managed constructor injecting core repositories, validators, modular address/document services,
+     * and optional family REST repository for SSOT familyId enrichment.
      *
      * @param userRepository              repository for user persistence
      * @param profileValidator            validator for profile request lifecycle rules
@@ -114,6 +117,7 @@ public class ProfileServiceImpl implements ProfileService {
      * @param addressMasterDataService    service for MDMS address boundary resolution
      * @param addressService              service for address lifecycle management
      * @param userDocumentService         service for document proof lifecycle management
+     * @param familyRestRepository        repository for family service lookups
      */
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository,
@@ -124,23 +128,28 @@ public class ProfileServiceImpl implements ProfileService {
                               UserDocumentRepository userDocumentRepository,
                               @Autowired(required = false) AddressMasterDataService addressMasterDataService,
                               @Autowired(required = false) AddressService addressService,
-                              @Autowired(required = false) UserDocumentService userDocumentService) {
-        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, null);
+                              @Autowired(required = false) UserDocumentService userDocumentService,
+                              @Autowired(required = false) FamilyRestRepository familyRestRepository) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, null, familyRestRepository);
     }
 
     /**
-     * Full constructor including optional userConfiguration for configurable state tenant resolution.
-     *
-     * @param userRepository              repository for user persistence
-     * @param profileValidator            validator for profile request lifecycle rules
-     * @param identityVerificationService adapter service for UIDAI Aadhaar verification
-     * @param encryptionDecryptionUtil    utility for PII encryption/decryption
-     * @param addressRepository           repository for address persistence
-     * @param userDocumentRepository      repository for document proof persistence
-     * @param addressMasterDataService    service for MDMS address boundary resolution
-     * @param addressService              service for address lifecycle management
-     * @param userDocumentService         service for document proof lifecycle management
-     * @param userConfiguration           application configuration properties
+     * Constructor for backward compatibility with 9 arguments.
+     */
+    public ProfileServiceImpl(UserRepository userRepository,
+                              ProfileValidator profileValidator,
+                              IdentityVerificationService identityVerificationService,
+                              EncryptionDecryptionUtil encryptionDecryptionUtil,
+                              AddressRepository addressRepository,
+                              UserDocumentRepository userDocumentRepository,
+                              AddressMasterDataService addressMasterDataService,
+                              AddressService addressService,
+                              UserDocumentService userDocumentService) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, null, null);
+    }
+
+    /**
+     * Constructor including optional userConfiguration for configurable state tenant resolution.
      */
     public ProfileServiceImpl(UserRepository userRepository,
                               ProfileValidator profileValidator,
@@ -152,6 +161,23 @@ public class ProfileServiceImpl implements ProfileService {
                               AddressService addressService,
                               UserDocumentService userDocumentService,
                               UserConfiguration userConfiguration) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, userConfiguration, null);
+    }
+
+    /**
+     * Full constructor including all dependencies.
+     */
+    public ProfileServiceImpl(UserRepository userRepository,
+                              ProfileValidator profileValidator,
+                              IdentityVerificationService identityVerificationService,
+                              EncryptionDecryptionUtil encryptionDecryptionUtil,
+                              AddressRepository addressRepository,
+                              UserDocumentRepository userDocumentRepository,
+                              AddressMasterDataService addressMasterDataService,
+                              AddressService addressService,
+                              UserDocumentService userDocumentService,
+                              UserConfiguration userConfiguration,
+                              FamilyRestRepository familyRestRepository) {
         this.userRepository = userRepository;
         this.profileValidator = profileValidator;
         this.identityVerificationService = identityVerificationService;
@@ -162,6 +188,7 @@ public class ProfileServiceImpl implements ProfileService {
         this.addressService = addressService;
         this.userDocumentService = userDocumentService;
         this.userConfiguration = userConfiguration;
+        this.familyRestRepository = familyRestRepository;
     }
 
     /**
@@ -454,6 +481,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (savedUser.getAddresses() != null) {
             decryptedUser.setAddresses(savedUser.getAddresses());
         }
+        enrichFamilyId(decryptedUser, stateTenant, request.getRequestInfo());
         return decryptedUser;
     }
 
@@ -499,7 +527,9 @@ public class ProfileServiceImpl implements ProfileService {
         if (existingUser != null) {
             log.info("[PROFILE-SERVICE] Matched existing citizen ID: {}, UUID: {} for mobile: {}",
                     existingUser.getId(), existingUser.getUuid(), maskMobile(mobile));
-            return decryptUser(existingUser, request.getRequestInfo());
+            User decrypted = decryptUser(existingUser, request.getRequestInfo());
+            enrichFamilyId(decrypted, stateTenant, request.getRequestInfo());
+            return decrypted;
         }
 
         // 2. Provision lightweight citizen profile
@@ -644,7 +674,9 @@ public class ProfileServiceImpl implements ProfileService {
                 rawExistingUser.getId(), rawExistingUser.getUuid(), userToUpdate.getEdittedCount());
 
         User refreshedUser = findTargetUser(rawExistingUser.getUuid(), rawExistingUser.getId(), null, rawExistingUser.getTenantId());
-        return decryptUser(refreshedUser, request.getRequestInfo());
+        User decryptedUser = decryptUser(refreshedUser, request.getRequestInfo());
+        enrichFamilyId(decryptedUser, rawExistingUser.getTenantId(), request.getRequestInfo());
+        return decryptedUser;
     }
 
     /**
@@ -761,7 +793,14 @@ public class ProfileServiceImpl implements ProfileService {
      * @throws CustomException if enriching address or document entities fails and errors list is null
      */
     private void enrichRelatedEntities(List<User> users, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, Boolean active, List<Error> errors) {
-        if (CollectionUtils.isEmpty(users) || CollectionUtils.isEmpty(includes)) {
+        if (CollectionUtils.isEmpty(users)) {
+            return;
+        }
+
+        // Dynamically enrich familyId for citizens from upyog-family-service (Single Source of Truth)
+        enrichFamilyIds(users, stateTenant, requestInfo);
+
+        if (CollectionUtils.isEmpty(includes)) {
             return;
         }
 
@@ -947,6 +986,57 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     /**
+     * Resolves and enriches active familyId from upyog-family-service for a batch of citizen users.
+     * Enforces fail-open resilience so any lookup failure never affects profile retrieval.
+     */
+    private void enrichFamilyIds(List<User> users, String stateTenant, RequestInfo requestInfo) {
+        if (familyRestRepository == null || CollectionUtils.isEmpty(users)) {
+            return;
+        }
+        try {
+            List<String> userUuids = users.stream()
+                    .map(User::getUuid)
+                    .filter(StringUtils::isNotBlank)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (!userUuids.isEmpty()) {
+                Map<String, String> familyIdMap = familyRestRepository.getActiveFamilyIdsByUserUuids(userUuids, stateTenant, requestInfo);
+                if (familyIdMap != null && !familyIdMap.isEmpty()) {
+                    for (User user : users) {
+                        if (user != null && StringUtils.isNotBlank(user.getUuid())) {
+                            String familyId = familyIdMap.get(user.getUuid());
+                            if (StringUtils.isNotBlank(familyId)) {
+                                user.setFamilyId(familyId);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[PROFILE-SERVICE] Non-blocking: Failed to enrich familyIds from family service: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Resolves and enriches active familyId from upyog-family-service for a single citizen user.
+     */
+    private void enrichFamilyId(User user, String tenantId, RequestInfo requestInfo) {
+        if (familyRestRepository == null || user == null || StringUtils.isBlank(user.getUuid())) {
+            return;
+        }
+        try {
+            String familyId = familyRestRepository.getActiveFamilyIdByUserUuid(user.getUuid(), tenantId, requestInfo);
+            if (StringUtils.isNotBlank(familyId)) {
+                user.setFamilyId(familyId);
+            }
+        } catch (Exception e) {
+            log.warn("[PROFILE-SERVICE] Non-blocking: Failed to enrich familyId from family service for user {}: {}",
+                    user.getUuid(), e.getMessage());
+        }
+    }
+
+    /**
      * Re-synchronizes citizen demographics with Aadhaar e-KYC using OTP authentication.
      * Overwrites verified name, DOB, gender, and masked Aadhaar directly from the identity verification provider.
      * Increments profile edit count and records the resync timestamp.
@@ -1021,7 +1111,9 @@ public class ProfileServiceImpl implements ProfileService {
                 rawExistingUser.getUuid(), userToUpdate.getLastResyncDate());
 
         User refreshedUser = findTargetUser(rawExistingUser.getUuid(), rawExistingUser.getId(), null, rawExistingUser.getTenantId());
-        return decryptUser(refreshedUser, request.getRequestInfo());
+        User decryptedUser = decryptUser(refreshedUser, request.getRequestInfo());
+        enrichFamilyId(decryptedUser, rawExistingUser.getTenantId(), request.getRequestInfo());
+        return decryptedUser;
     }
 
     /**
