@@ -223,50 +223,100 @@ forms:
         label: "Advertisement Type"
         mdms: ["Advertisement", "AdType"]
         extractable: true
+        validation:
+          required: true
+          
       - id: "location"
         type: "dropdown"
         label: "Advertisement Location"
         mdms: ["Advertisement", "Location"]
         extractable: true
+        validation:
+          required: true
+
       - id: "faceArea"
         type: "dropdown"
         label: "Face Area"
         mdms: ["Advertisement", "FaceArea"]
         extractable: true
+        validation:
+          required: true
+
       - id: "start_date"
         type: "date"
         label: "From Date"
         extractable: true
+        validation:
+          required: true
+          after_today: true
+
       - id: "end_date"
         type: "date"
         label: "To Date"
         extractable: true
+        validation:
+          required: true
+          on_or_after: "start_date"
+          
       - id: "nightLight"
         type: "dropdown"
         label: "Night Light Required"
         mdms: ["Advertisement", "NightLight"]
         extractable: true
+        validation:
+          required: true
+
       - id: "selected_slots"
         type: "slots"
         label: "Selected Booking Slot"
         extractable: false
-      - id: "applicant_details"
-        type: "hidden"
-        label: "Applicant Details"
+        validation:
+          required: true
+
+      - id: "applicantName"
+        type: "text"
+        label: "Applicant Name"
         extractable: true
-        extract_fields: ["name", "mobile", "email"]
+        validation:
+          required: true
+          min_length: 2
+          max_length: 50
+          pattern: "^[a-zA-Z ]+$"
+      
+      - id: "mobileNumber"
+        type: "text"
+        label: "Mobile Number"
+        extractable: true
+        validation:
+          required: true
+          pattern: "^[6-9][0-9]{9}$"
+
+      - id: "emailId"
+        type: "text"
+        label: "Email Address"
+        extractable: true
+        validation:
+          required: true
+          pattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9.-]+$"
+
       - id: "address"
         type: "text"
         label: "Address"
         extractable: true
+        validation:
+          required: true
+          min_length: 5
+
       - id: "doc_sample"
         type: "file"
         label: "Sample Document"
         extractable: false
+
       - id: "doc_address"
         type: "file"
         label: "Address Proof"
         extractable: false
+
       - id: "doc_identity"
         type: "file"
         label: "Identity Proof"
@@ -281,21 +331,33 @@ forms:
         type: "dropdown"
         label: "Grievance Category"
         extractable: true
+        validation:
+          required: true
 
       # Step 2: Specific complaint type within the chosen category
       - id: "sub_category"
         type: "dropdown"
         label: "Complaint Type"
         extractable: true
+        validation:
+          required: true
+
 
       # Step 3: Free-text problem description
       - id: "description"
         type: "text"
         label: "Problem Description"
         extractable: true
+        validation:
+          required: true
+          min_length: 10
+
 
       # Step 4: Area/locality (fetched live from egov-location API)
       - id: "locality"
         type: "dropdown"
         label: "Your Area / Locality"
         extractable: true
+        validation:
+          required: true
+
