@@ -10,6 +10,10 @@ import org.upyog.family.web.advice.GlobalExceptionHandler;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
 import org.upyog.family.web.contract.FamilyMergeRequest;
+import org.upyog.family.web.contract.FamilyOtpRequest;
+import org.upyog.family.web.contract.FamilyOtpResponse;
+import org.upyog.family.web.contract.FamilyOtpVerifyRequest;
+import org.upyog.family.web.contract.FamilyOtpVerifyResponse;
 import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySplitRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -168,5 +172,61 @@ class FamilyControllerTest {
                         .content(objectMapper.writeValueAsString(mergeRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.Families[0].familyId").value("FAM-2026-0001"));
+    }
+
+    @Test
+    @DisplayName("POST /v1/family/_sendOtp should return 200 OK with masked mobile")
+    void sendFamilyOtp_Endpoint_Success() throws Exception {
+        FamilyOtpRequest otpReq = FamilyOtpRequest.builder()
+                .requestInfo(requestInfo)
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .build();
+
+        FamilyOtpResponse otpRes = FamilyOtpResponse.builder()
+                .familyId("FAM-2026-0001")
+                .maskedMobileNumber("******3210")
+                .referenceId("REF-12345")
+                .isSent(true)
+                .build();
+
+        when(familyService.sendFamilyOtp(any())).thenReturn(otpRes);
+
+        mockMvc.perform(post("/v1/family/_sendOtp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(otpReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.familyId").value("FAM-2026-0001"))
+                .andExpect(jsonPath("$.maskedMobileNumber").value("******3210"))
+                .andExpect(jsonPath("$.referenceId").value("REF-12345"))
+                .andExpect(jsonPath("$.isSent").value(true));
+    }
+
+    @Test
+    @DisplayName("POST /v1/family/_verifyOtp should return 200 OK with family details and consent token")
+    void verifyFamilyOtp_Endpoint_Success() throws Exception {
+        FamilyOtpVerifyRequest verifyReq = FamilyOtpVerifyRequest.builder()
+                .requestInfo(requestInfo)
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .otp("123456")
+                .referenceId("REF-12345")
+                .build();
+
+        FamilyOtpVerifyResponse verifyRes = FamilyOtpVerifyResponse.builder()
+                .family(family)
+                .consentToken("CONSENT-VERIFIED-ABC1234")
+                .isVerified(true)
+                .build();
+
+        when(familyService.verifyFamilyOtp(any())).thenReturn(verifyRes);
+
+        mockMvc.perform(post("/v1/family/_verifyOtp")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(verifyReq)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.family.familyId").value("FAM-2026-0001"))
+                .andExpect(jsonPath("$.consentToken").value("CONSENT-VERIFIED-ABC1234"))
+                .andExpect(jsonPath("$.isVerified").value(true));
     }
 }

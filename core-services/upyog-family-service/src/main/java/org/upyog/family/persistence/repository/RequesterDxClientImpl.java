@@ -47,6 +47,11 @@ public class RequesterDxClientImpl implements RequesterDxClient {
      */
     private final Map<String, TokenBinding> consumedTokens = new ConcurrentHashMap<>();
 
+    /**
+     * In-memory cache of verified HoF consent tokens issued through family OTP verification.
+     */
+    private final Map<String, TokenBinding> registeredFamilyConsentTokens = new ConcurrentHashMap<>();
+
     private static class TokenBinding {
         private final String memberId;
         private final String familyId;
@@ -66,6 +71,16 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         this.restTemplate = restTemplate;
         this.configuration = configuration;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    }
+
+    @Override
+    public void registerConsentToken(String consentToken, String familyId) {
+        if (StringUtils.isNotBlank(consentToken)) {
+            registeredFamilyConsentTokens.put(consentToken.trim(),
+                    new TokenBinding(null, familyId, System.currentTimeMillis()));
+            log.info("[UPYOG-DX-CLIENT] Registered verified HoF consent token '{}' for family '{}'",
+                    consentToken, familyId);
+        }
     }
 
     /**
@@ -100,6 +115,21 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         }
 
         String trimmedToken = consentToken.trim();
+
+        // 0. Registered HoF consent token check: Issued during verified family OTP workflow
+        TokenBinding registeredBinding = registeredFamilyConsentTokens.get(trimmedToken);
+        if (registeredBinding != null) {
+            if (StringUtils.isNotBlank(familyId) && StringUtils.isNotBlank(registeredBinding.familyId)
+                    && !registeredBinding.familyId.equals(familyId)) {
+                log.warn("[UPYOG-DX-CLIENT] Registered consent token family mismatch: token bound to '{}', requested family '{}'",
+                        registeredBinding.familyId, familyId);
+                return false;
+            }
+            log.info("[UPYOG-DX-CLIENT] Token '{}' matched verified HoF consent token for family '{}'",
+                    trimmedToken, familyId);
+            recordTokenBinding(trimmedToken, memberUuidOrAadhaar, familyId);
+            return true;
+        }
 
         // 1. Mock Prefix Handling: Strictly gated behind family.consent.mock.enabled flag
         if (trimmedToken.startsWith("CONSENT-VERIFIED-") || trimmedToken.startsWith("MOCK-OTP-")) {

@@ -66,6 +66,18 @@ public class FamilyConfiguration {
     @Value("${family.consent.mock.enabled:false}")
     private Boolean mockConsentEnabled;
 
+    @Value("${egov.otp.host}")
+    private String otpHost;
+
+    @Value("${egov.otp.create.path}")
+    private String otpCreatePath;
+
+    @Value("${egov.otp.validate.path}")
+    private String otpValidatePath;
+
+    @Value("${kafka.topics.notification.sms:egov.core.notification.sms}")
+    private String smsNotifTopic;
+
     @Value("${family.mdms.module}")
     private String mdmsFamilyModule;
 

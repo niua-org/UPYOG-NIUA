@@ -33,4 +33,14 @@ public interface RequesterDxClient {
     default boolean verifyConsentToken(String consentToken, String tenantId, RequestInfo requestInfo) {
         return verifyConsentToken(consentToken, null, null, tenantId, requestInfo);
     }
+
+    /**
+     * Registers a verified Head of Family consent token for a family to allow subsequent member join operations.
+     *
+     * @param consentToken the verified consent token
+     * @param familyId     the family identifier
+     */
+    default void registerConsentToken(String consentToken, String familyId) {
+        // Default no-op for backward compatibility
+    }
 }

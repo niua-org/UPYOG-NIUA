@@ -3,6 +3,7 @@ package org.upyog.family.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
@@ -10,6 +11,10 @@ import org.upyog.family.domain.service.FamilyService;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMergeRequest;
+import org.upyog.family.web.contract.FamilyOtpRequest;
+import org.upyog.family.web.contract.FamilyOtpResponse;
+import org.upyog.family.web.contract.FamilyOtpVerifyRequest;
+import org.upyog.family.web.contract.FamilyOtpVerifyResponse;
 import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilyResponse;
 import org.upyog.family.web.contract.FamilySearchCriteria;
@@ -35,17 +40,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/family")
 @Slf4j
+@RequiredArgsConstructor
 @Tag(name = "UPYOG Family Registry", description = "Endpoints for registering, searching, updating, splitting and merging household units in UPYOG")
 public class FamilyController {
 
     private final FamilyService familyService;
     private final ResponseInfoFactory responseInfoFactory;
-
-    @Autowired
-    public FamilyController(FamilyService familyService, ResponseInfoFactory responseInfoFactory) {
-        this.familyService = familyService;
-        this.responseInfoFactory = responseInfoFactory;
-    }
 
     /**
      * Registers a new Family Unit with an assigned Head of Family and initial members in UPYOG.
@@ -164,6 +164,40 @@ public class FamilyController {
                 .totalCount(1)
                 .build();
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Initiates OTP dispatch to the Head of Family's registered mobile number for joining verification.
+     *
+     * @param request the family OTP request envelope containing family ID and tenant ID
+     * @return response entity containing masked mobile number and reference identifier
+     */
+    @PostMapping("/_sendOtp")
+    @Operation(summary = "Send OTP to Head of Family mobile number for joining verification in UPYOG")
+    public ResponseEntity<FamilyOtpResponse> sendFamilyOtp(@Valid @RequestBody FamilyOtpRequest request) {
+        log.info("[UPYOG-FAMILY-CONTROLLER] Received /_sendOtp request for family: {}", request.getFamilyId());
+        FamilyOtpResponse response = familyService.sendFamilyOtp(request);
+        if (response.getResponseInfo() == null) {
+            response.setResponseInfo(responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true));
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Verifies the OTP sent to the Head of Family and returns enriched family details and consent token.
+     *
+     * @param request the family OTP verification request envelope containing family ID, tenant ID, and OTP
+     * @return response entity containing enriched family details and verified consent token
+     */
+    @PostMapping("/_verifyOtp")
+    @Operation(summary = "Verify OTP sent to Head of Family and retrieve family details in UPYOG")
+    public ResponseEntity<FamilyOtpVerifyResponse> verifyFamilyOtp(@Valid @RequestBody FamilyOtpVerifyRequest request) {
+        log.info("[UPYOG-FAMILY-CONTROLLER] Received /_verifyOtp request for family: {}", request.getFamilyId());
+        FamilyOtpVerifyResponse response = familyService.verifyFamilyOtp(request);
+        if (response.getResponseInfo() == null) {
+            response.setResponseInfo(responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true));
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

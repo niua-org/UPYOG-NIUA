@@ -7,8 +7,11 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.validator.FamilyValidator;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.IdGenRepository;
+import org.upyog.family.persistence.repository.OtpClient;
+import org.upyog.family.persistence.repository.RequesterDxClient;
 import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.KafkaProducer;
+import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AuditDetails;
 import org.upyog.family.web.contract.CitizenProfile;
 import org.upyog.family.web.contract.Family;
@@ -60,6 +63,15 @@ class FamilyServiceImplTest {
 
     @Mock
     private FamilyConfiguration configuration;
+
+    @Mock
+    private OtpClient otpClient;
+
+    @Mock
+    private RequesterDxClient requesterDxClient;
+
+    @Mock
+    private ResponseInfoFactory responseInfoFactory;
 
     @InjectMocks
     private FamilyServiceImpl familyService;
