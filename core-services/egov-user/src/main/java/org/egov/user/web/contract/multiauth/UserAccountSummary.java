@@ -70,6 +70,10 @@ public class UserAccountSummary implements Serializable {
     @JsonProperty("isIdentityVerified")
     private Boolean isIdentityVerified;
 
+    @Schema(description = "Identity verification source (e.g. AADHAAR, DIGILOCKER, FAMILY_ID)")
+    @JsonProperty("identityVerifiedSource")
+    private String identityVerifiedSource;
+
     @Schema(description = "Father's name")
     @JsonProperty("fatherName")
     private String fatherName;
@@ -99,6 +103,7 @@ public class UserAccountSummary implements Serializable {
                 .dob(user.getDob())
                 .photo(user.getPhoto())
                 .isIdentityVerified(user.getIsIdentityVerified())
+                .identityVerifiedSource(user.getIdentityVerifiedSource())
                 .fatherName(user.getFatherName())
                 .motherName(user.getMotherName())
                 .build();

@@ -72,7 +72,7 @@ public class ProfileResyncAndScdSecurityTest {
             org.egov.user.domain.model.User existingUser = org.egov.user.domain.model.User.builder()
                     .uuid("citizen-uuid-1")
                     .aadhaarNumber("XXXXXXXX1234")
-                    .tenantId("pb")
+                    .tenantId("pg")
                     .build();
 
             assertDoesNotThrow(() -> validator.validateResync(request, existingUser));
@@ -94,7 +94,7 @@ public class ProfileResyncAndScdSecurityTest {
 
             org.egov.user.domain.model.User citizenB = org.egov.user.domain.model.User.builder()
                     .uuid("citizen-B-uuid")
-                    .tenantId("pb")
+                    .tenantId("pg")
                     .build();
 
             CustomException ex = assertThrows(CustomException.class, () -> validator.validateResync(request, citizenB));
@@ -119,7 +119,7 @@ public class ProfileResyncAndScdSecurityTest {
             org.egov.user.domain.model.User existingUser = org.egov.user.domain.model.User.builder()
                     .uuid("citizen-uuid-1")
                     .aadhaarNumber("XXXXXXXX1234") // Ends in 1234
-                    .tenantId("pb")
+                    .tenantId("pg")
                     .build();
 
             CustomException ex = assertThrows(CustomException.class, () -> validator.validateResync(request, existingUser));

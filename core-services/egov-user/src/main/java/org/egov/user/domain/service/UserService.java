@@ -316,6 +316,7 @@ public class UserService {
                                                              boolean isInterServiceCall, RequestInfo requestInfo) {
     	log.info("searchCriteria"+searchCriteria);
         searchCriteria.validate(isInterServiceCall);
+        validateCitizenSearch(searchCriteria, isInterServiceCall, requestInfo);
 
         searchCriteria.setTenantId(getStateLevelTenantForCitizen(searchCriteria.getTenantId(), searchCriteria.getType()));
 
@@ -357,12 +358,44 @@ public class UserService {
     }
 
     /**
-     * api will create the user based on some validations
+     * Creates a new user profile or enriches an existing citizen account if one already exists for the mobile number.
+     * <p>
+     * <b>Lifecycle & Execution Flow:</b>
+     * <ol>
+     *   <li><b>Mobile Resolution & De-duplication:</b> Resolves mobile number from incoming {@link User}. If {@code user.getType() == UserType.CITIZEN}, queries existing citizens on this mobile number in the state tenant. Employee accounts are never merged on mobile collisions.</li>
+     *   <li><b>Citizen Merge Path:</b> If an existing citizen record is found, validates OTP conditionally and merges non-null demographic fields into empty fields of the existing record via {@link #updateExistingUserFields}. Sensitive identity fields (Aadhaar, PAN, Active status) are never overwritten. Returns the refreshed, decrypted existing user entity.</li>
+     *   <li><b>New User Creation Path:</b> If no existing citizen matches:
+     *     <ul>
+     *       <li>Generates a new UUID.</li>
+     *       <li>Validates required user attributes via {@link User#validateNewUser}.</li>
+     *       <li>Validates OTP conditionally.</li>
+     *       <li>Encrypts sensitive fields (name, mobile, email, etc.) via {@link EncryptionDecryptionUtil}.</li>
+     *       <li>Validates username uniqueness in the state tenant.</li>
+     *       <li>Hashes and encrypts password.</li>
+     *       <li>Persists user to {@code eg_user} via {@link #persistNewUser}.</li>
+     *       <li>Decrypts and returns the persisted domain user.</li>
+     *     </ul>
+     *   </li>
+     * </ol>
      *
-     * @param user
-     * @return
+     * @param user        incoming domain {@link User} entity to create or merge
+     * @param requestInfo request metadata and context for auditing and encryption/decryption
+     * @return created new domain user or merged existing user with decrypted details
+     * @throws DuplicateUserNameException if username already exists in tenant
+     * @throws CustomException            if validation fails or account is inactive
      */
     public User createUser(User user, RequestInfo requestInfo) {
+        String mobileNumber = resolveMobileNumber(user);
+        User existingUser = (user.getType() == null || UserType.CITIZEN.equals(user.getType()))
+                ? findExistingUserByMobile(mobileNumber, user.getTenantId(), user.getType())
+                : null;
+        if (existingUser != null) {
+            log.info("[USER-SERVICE] User already exists with mobile number: {} (UUID: {}). Updating null/empty fields instead of creating new user.",
+                    maskMobile(mobileNumber), existingUser.getUuid());
+            conditionallyValidateOtp(user);
+            return updateExistingUserFields(existingUser, user, requestInfo, false);
+        }
+
         user.setUuid(UUID.randomUUID().toString());
         user.validateNewUser(createUserValidateName);
         conditionallyValidateOtp(user);
@@ -435,6 +468,10 @@ public class UserService {
         user.setActive(true);
         User createdUser = createCitizen(user, requestInfo);
         User targetUser = createdUser != null ? createdUser : user;
+        if (targetUser != null && !Boolean.TRUE.equals(targetUser.getActive())) {
+            log.warn("[USER-SERVICE] Account is inactive for user: {}", targetUser.getUsername());
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
         if (StringUtils.isNotBlank(user.getScope()) && StringUtils.isBlank(targetUser.getScope())) {
             targetUser.setScope(user.getScope());
         }
@@ -443,6 +480,10 @@ public class UserService {
 
     private Object getAccess(User user, String password) {
         log.info("Fetch access token for register with login flow");
+        if (user == null || !Boolean.TRUE.equals(user.getActive())) {
+            log.warn("[USER-SERVICE] Account is inactive for user: {}", user != null ? user.getUsername() : "null");
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
         try {
             String effectiveScope = StringUtils.isNotBlank(user.getScope()) ? user.getScope() : "read write";
 
@@ -531,18 +572,33 @@ public class UserService {
         if (user == null) {
             throw new CustomException(UserConstants.ERROR_INVALID_UPDATE_REQUEST, "User payload cannot be null");
         }
+        if (isCallerCitizen(requestInfo)) {
+            log.error("[USER-SERVICE] Access denied: CITIZEN caller is not permitted to use updateWithoutOtpValidation: uuid={}",
+                    (requestInfo != null && requestInfo.getUserInfo() != null) ? requestInfo.getUserInfo().getUuid() : null);
+            throw new CustomException("UNAUTHORIZED_ACCESS", "CITIZEN users are not allowed to update user via /users/_updatenovalidate");
+        }
         User existingUser = getUserByUuid(user.getUuid());
+        if (existingUser != null && UserType.CITIZEN.equals(existingUser.getType())) {
+            log.error("[USER-SERVICE] Invalid update: target user record in DB is CITIZEN: uuid={}", existingUser.getUuid());
+            throw new CustomException("INVALID_USER_TYPE", "Cannot update CITIZEN user accounts via /users/_updatenovalidate");
+        }
         if (user.getId() != null && existingUser.getId() != null && !user.getId().equals(existingUser.getId())) {
             log.error("[USER-SERVICE] Data mismatch: provided id {} does not match database id {}", user.getId(), existingUser.getId());
             throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());
         }
+        // Identity verification status cannot be updated via updateWithoutOtpValidation
+        user.setIsIdentityVerified(existingUser.getIsIdentityVerified());
+        user.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate());
+        user.setIdentityVerifiedSource(existingUser.getIdentityVerifiedSource());
         user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
             validateUserRoles(user);
             user.validateUserModification();
             validatePassword(user.getPassword());
             user.setPassword(encryptPwd(user.getPassword()));
             user = encryptionDecryptionUtil.encryptObject(user, "User", User.class);
-            userRepository.update(user, existingUser,requestInfo.getUserInfo().getId(), requestInfo.getUserInfo().getUuid() );
+            Long updaterId = (requestInfo != null && requestInfo.getUserInfo() != null) ? requestInfo.getUserInfo().getId() : null;
+            String updaterUuid = (requestInfo != null && requestInfo.getUserInfo() != null) ? requestInfo.getUserInfo().getUuid() : null;
+            userRepository.update(user, existingUser, updaterId, updaterUuid);
         /* encrypt */
 
 
@@ -605,7 +661,25 @@ public class UserService {
 
         User existingUser = getUserByUuid(user.getUuid());
         validateProfileUpdateIsDoneByTheSameLoggedInUser(user);
+        if (isCallerCitizen(requestInfo)) {
+            org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
+            String callerUuid = caller.getUuid();
+            Long callerId = caller.getId();
+            boolean uuidMismatch = StringUtils.isNotBlank(callerUuid) && StringUtils.isNotBlank(existingUser.getUuid())
+                    && !callerUuid.equalsIgnoreCase(existingUser.getUuid());
+            boolean idMismatch = callerId != null && existingUser.getId() != null
+                    && !callerId.equals(existingUser.getId());
+            if (uuidMismatch || idMismatch) {
+                log.error("[USER-SERVICE] Unauthorized update: Citizen caller {} attempted to update user {}",
+                        callerUuid, existingUser.getUuid());
+                throw new CustomException("UNAUTHORIZED_ACCESS", "Citizen users are only permitted to update their own profile");
+            }
+        }
         user.nullifySensitiveFields();
+        // Identity verification status cannot be updated via partialUpdate
+        user.setIsIdentityVerified(existingUser.getIsIdentityVerified());
+        user.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate());
+        user.setIdentityVerifiedSource(existingUser.getIdentityVerifiedSource());
         validatePassword(user.getPassword());
         userRepository.update(user, existingUser,requestInfo.getUserInfo().getId(), requestInfo.getUserInfo().getUuid() );
         User updatedUser = getUserByUuid(user.getUuid());
@@ -869,8 +943,14 @@ public class UserService {
             throw new IllegalArgumentException("Digilocker Id provided does not match the Digilocker Id in the database for the user");
         }
     	else if (existingUser.getDigilockerid()!=null) {
+            if (!Boolean.TRUE.equals(existingUser.getIsIdentityVerified())) {
+                existingUser.setIsIdentityVerified(true);
+                existingUser.setIdentityVerifiedDate(new Date());
+                existingUser.setIdentityVerifiedSource(UserConstants.IDENTITY_SOURCE_DIGILOCKER);
+                userRepository.update(existingUser, existingUser, existingUser.getId(), existingUser.getUuid());
+            }
         	return getAccess(user, user.getOtpReference());
-        	}
+        }
     	else {
     	user = encryptionDecryptionUtil.encryptObject(user, "User", User.class);        
     	userRepository.update(user, existingUser, existingUser.getId(), existingUser.getUuid()); 
@@ -1014,6 +1094,14 @@ public class UserService {
      * @return the created and decrypted User object
      */
     public User createUserWithAddressV2(User user, RequestInfo requestInfo) {
+        String mobileNumber = resolveMobileNumber(user);
+        User existingUser = findExistingUserByMobile(mobileNumber, user.getTenantId(), user.getType());
+        if (existingUser != null) {
+            log.info("[USER-SERVICE-V2] User already exists with mobile number: {} (UUID: {}, username: {}). Updating null/empty fields instead of creating new user.",
+                    maskMobile(mobileNumber), existingUser.getUuid(), existingUser.getUsername());
+            conditionallyValidateOtp(user);
+            return updateExistingUserFields(existingUser, user, requestInfo, true);
+        }
 
         user.setUuid(UUID.randomUUID().toString());
 
@@ -1073,6 +1161,24 @@ public class UserService {
             log.error("[USER-SERVICE-V2] Data mismatch: provided id {} does not match database id {}", user.getId(), existingUser.getId());
             throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());
         }
+        if (isCallerCitizen(requestInfo)) {
+            org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
+            String callerUuid = caller.getUuid();
+            Long callerId = caller.getId();
+            boolean uuidMismatch = StringUtils.isNotBlank(callerUuid) && StringUtils.isNotBlank(existingUser.getUuid())
+                    && !callerUuid.equalsIgnoreCase(existingUser.getUuid());
+            boolean idMismatch = callerId != null && existingUser.getId() != null
+                    && !callerId.equals(existingUser.getId());
+            if (uuidMismatch || idMismatch) {
+                log.error("[USER-SERVICE-V2] Unauthorized update: Citizen caller {} attempted to update user {}",
+                        callerUuid, existingUser.getUuid());
+                throw new CustomException("UNAUTHORIZED_ACCESS", "Citizen users are only permitted to update their own profile");
+            }
+        }
+        // Identity verification status cannot be updated via updateUserV2
+        user.setIsIdentityVerified(existingUser.getIsIdentityVerified());
+        user.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate());
+        user.setIdentityVerifiedSource(existingUser.getIdentityVerifiedSource());
         User decryptedExistingUser = encryptionDecryptionUtil.decryptObject(existingUser, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
         user.validateNonEditableProfileFields(decryptedExistingUser != null ? decryptedExistingUser : existingUser, false);
         user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
@@ -1110,6 +1216,7 @@ public class UserService {
                                                                boolean isInterServiceCall, RequestInfo requestInfo) {
 
         searchCriteria.validate(isInterServiceCall);
+        validateCitizenSearch(searchCriteria, isInterServiceCall, requestInfo);
 
         searchCriteria.setTenantId(getStateLevelTenantForCitizen(searchCriteria.getTenantId(), searchCriteria.getType()));
         String altmobnumber = null;
@@ -1136,5 +1243,461 @@ public class UserService {
 
         setFileStoreUrlsByFileStoreIds(list);
         return list;
+    }
+
+    /**
+     * Looks up existing user records matching the specified mobile number within the state-level tenant.
+     * <p>
+     * <b>Matching Rules:</b>
+     * <ol>
+     *   <li>Searches by encrypted {@code mobileNumber} column in {@code eg_user}.</li>
+     *   <li>Searches by encrypted {@code userName} column in {@code eg_user} (supporting accounts where the 10-digit mobile number was used as username).</li>
+     *   <li>Deduplicates candidate accounts into a map keyed by user UUID.</li>
+     *   <li>If multiple matching profiles exist, prioritizes the account whose {@code username} exactly matches the mobile number; otherwise falls back to the first candidate.</li>
+     * </ol>
+     * <p>
+     * <b>Failure & Edge-Case Behavior:</b> Returns {@code null} if the input mobile number is blank or if no candidate records match.
+     *
+     * @param mobileNumber 10-digit citizen mobile number
+     * @param tenantId     tenant identifier (resolved to state tenant for citizens)
+     * @param userType     target user type (e.g. CITIZEN)
+     * @return matching domain {@link User} entity, or {@code null} if no match is found
+     */
+    private User findExistingUserByMobile(String mobileNumber, String tenantId, UserType userType) {
+        if (StringUtils.isBlank(mobileNumber)) {
+            return null;
+        }
+        String stateTenant = getStateLevelTenantForCitizen(tenantId, userType);
+        UserType targetType = userType != null ? userType : UserType.CITIZEN;
+
+        Map<String, User> userMap = new LinkedHashMap<>();
+
+        // 1. Search by encrypted mobileNumber
+        UserSearchCriteria mobileCriteria = UserSearchCriteria.builder()
+                .mobileNumber(mobileNumber)
+                .tenantId(stateTenant)
+                .type(targetType)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(mobileCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class);
+            List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : mobileCriteria);
+            if (!CollectionUtils.isEmpty(users)) {
+                for (User u : users) {
+                    if (u != null && u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Error querying existing user by mobileNumber {}: {}", maskMobile(mobileNumber), e.getMessage());
+        }
+
+        // 2. Search by encrypted userName
+        try {
+            UserSearchCriteria userCriteria = UserSearchCriteria.builder()
+                    .userName(mobileNumber)
+                    .tenantId(stateTenant)
+                    .type(targetType)
+                    .build();
+            UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(userCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class);
+            List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : userCriteria);
+            if (!CollectionUtils.isEmpty(users)) {
+                for (User u : users) {
+                    if (u != null && u.getUuid() != null) {
+                        userMap.put(u.getUuid(), u);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Error querying existing user by userName {}: {}", maskMobile(mobileNumber), e.getMessage());
+        }
+
+        if (userMap.isEmpty()) {
+            return null;
+        }
+
+        // Prefer account whose username equals mobileNumber if present, else first
+        for (User u : userMap.values()) {
+            if (mobileNumber.equals(u.getUsername())) {
+                return u;
+            }
+        }
+        return userMap.values().iterator().next();
+    }
+
+    /**
+     * Merges non-blank incoming demographic attributes into unpopulated fields of an existing user record.
+     * <p>
+     * <b>Merge & Non-Overwriting Rules:</b>
+     * <ul>
+     *   <li>Merges non-blank demographic fields only if currently blank or null on the existing user:
+     *       {@code name} (also updates if existing is default "Citizen"), {@code emailId}, {@code gender},
+     *       {@code dob}, {@code fatherName}, {@code motherName}, {@code spouseName}, {@code guardian},
+     *       {@code guardianRelation}, {@code altContactNumber}, {@code alternateMobileNumber}, {@code photo},
+     *       {@code bloodGroup}, {@code salutation}, {@code title}, {@code identificationMark}, {@code signature},
+     *       {@code locale}, and {@code digilockerid}.</li>
+     *   <li><b>Security Protection:</b> Sensitive financial / identity identifiers (Aadhaar, PAN) and
+     *       account active status are <i>never</i> populated or overwritten during unverified create requests.</li>
+     * </ul>
+     * <p>
+     * <b>Persistence & Failure Behavior:</b>
+     * If any fields were modified, encrypts the merged record and persists updates via {@link UserRepository}.
+     * Refreshes the updated entity from DB with decrypted PII and returns it; if refresh fails, returns the in-memory merged object.
+     *
+     * @param rawExistingUser existing domain user entity from database
+     * @param incoming        incoming user request containing new demographic attributes
+     * @param requestInfo     request metadata for auditing and decryption
+     * @param isV2            whether update is invoked from v2 endpoints
+     * @return updated and decrypted existing domain user entity
+     */
+    private User updateExistingUserFields(User rawExistingUser, User incoming, RequestInfo requestInfo, boolean isV2) {
+        User decryptedExisting = null;
+        try {
+            decryptedExisting = encryptionDecryptionUtil.decryptObject(rawExistingUser, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Could not decrypt existing user {}: {}", rawExistingUser.getUuid(), e.getMessage());
+        }
+        if (decryptedExisting == null) {
+            decryptedExisting = rawExistingUser;
+        }
+
+        boolean modified = false;
+
+        // Name: if blank or default "Citizen", and incoming is not blank
+        if (StringUtils.isBlank(decryptedExisting.getName()) || "Citizen".equalsIgnoreCase(StringUtils.trim(decryptedExisting.getName()))) {
+            if (StringUtils.isNotBlank(incoming.getName())) {
+                decryptedExisting.setName(incoming.getName().trim());
+                modified = true;
+            }
+        }
+
+        // Email
+        if (StringUtils.isBlank(decryptedExisting.getEmailId()) && StringUtils.isNotBlank(incoming.getEmailId())) {
+            decryptedExisting.setEmailId(incoming.getEmailId().trim());
+            modified = true;
+        }
+
+        // Gender
+        if (decryptedExisting.getGender() == null && incoming.getGender() != null) {
+            decryptedExisting.setGender(incoming.getGender());
+            modified = true;
+        }
+
+        // DOB
+        if (decryptedExisting.getDob() == null && incoming.getDob() != null) {
+            decryptedExisting.setDob(incoming.getDob());
+            modified = true;
+        }
+
+        // Father's Name
+        if (StringUtils.isBlank(decryptedExisting.getFatherName()) && StringUtils.isNotBlank(incoming.getFatherName())) {
+            decryptedExisting.setFatherName(incoming.getFatherName().trim());
+            modified = true;
+        }
+
+        // Mother's Name
+        if (StringUtils.isBlank(decryptedExisting.getMotherName()) && StringUtils.isNotBlank(incoming.getMotherName())) {
+            decryptedExisting.setMotherName(incoming.getMotherName().trim());
+            modified = true;
+        }
+
+        // Spouse's Name
+        if (StringUtils.isBlank(decryptedExisting.getSpouseName()) && StringUtils.isNotBlank(incoming.getSpouseName())) {
+            decryptedExisting.setSpouseName(incoming.getSpouseName().trim());
+            modified = true;
+        }
+
+        // Guardian
+        if (StringUtils.isBlank(decryptedExisting.getGuardian()) && StringUtils.isNotBlank(incoming.getGuardian())) {
+            decryptedExisting.setGuardian(incoming.getGuardian().trim());
+            modified = true;
+        }
+
+        // Guardian Relation
+        if (decryptedExisting.getGuardianRelation() == null && incoming.getGuardianRelation() != null) {
+            decryptedExisting.setGuardianRelation(incoming.getGuardianRelation());
+            modified = true;
+        }
+
+        // Alt Contact Number
+        if (StringUtils.isBlank(decryptedExisting.getAltContactNumber()) && StringUtils.isNotBlank(incoming.getAltContactNumber())) {
+            decryptedExisting.setAltContactNumber(incoming.getAltContactNumber().trim());
+            modified = true;
+        }
+
+        // Alternate Mobile Number
+        if (StringUtils.isBlank(decryptedExisting.getAlternateMobileNumber()) && StringUtils.isNotBlank(incoming.getAlternateMobileNumber())) {
+            decryptedExisting.setAlternateMobileNumber(incoming.getAlternateMobileNumber().trim());
+            modified = true;
+        }
+
+        // Photo
+        if (StringUtils.isBlank(decryptedExisting.getPhoto()) && StringUtils.isNotBlank(incoming.getPhoto())) {
+            decryptedExisting.setPhoto(incoming.getPhoto().trim());
+            modified = true;
+        }
+
+        // Blood Group
+        if (decryptedExisting.getBloodGroup() == null && incoming.getBloodGroup() != null) {
+            decryptedExisting.setBloodGroup(incoming.getBloodGroup());
+            modified = true;
+        }
+
+        // Salutation
+        if (StringUtils.isBlank(decryptedExisting.getSalutation()) && StringUtils.isNotBlank(incoming.getSalutation())) {
+            decryptedExisting.setSalutation(incoming.getSalutation().trim());
+            modified = true;
+        }
+
+        // Title
+        if (StringUtils.isBlank(decryptedExisting.getTitle()) && StringUtils.isNotBlank(incoming.getTitle())) {
+            decryptedExisting.setTitle(incoming.getTitle().trim());
+            modified = true;
+        }
+
+        // Identification Mark
+        if (StringUtils.isBlank(decryptedExisting.getIdentificationMark()) && StringUtils.isNotBlank(incoming.getIdentificationMark())) {
+            decryptedExisting.setIdentificationMark(incoming.getIdentificationMark().trim());
+            modified = true;
+        }
+
+        // Signature
+        if (StringUtils.isBlank(decryptedExisting.getSignature()) && StringUtils.isNotBlank(incoming.getSignature())) {
+            decryptedExisting.setSignature(incoming.getSignature().trim());
+            modified = true;
+        }
+
+        // Locale
+        if (StringUtils.isBlank(decryptedExisting.getLocale()) && StringUtils.isNotBlank(incoming.getLocale())) {
+            decryptedExisting.setLocale(incoming.getLocale().trim());
+            modified = true;
+        }
+
+        // Digilocker ID
+        if (StringUtils.isBlank(decryptedExisting.getDigilockerid()) && StringUtils.isNotBlank(incoming.getDigilockerid())) {
+            decryptedExisting.setDigilockerid(incoming.getDigilockerid().trim());
+            modified = true;
+        }
+
+        Long updaterId = (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getId() != null)
+                ? requestInfo.getUserInfo().getId()
+                : (rawExistingUser.getId() != null ? rawExistingUser.getId() : 0L);
+        String updaterUuid = (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getUuid() != null)
+                ? requestInfo.getUserInfo().getUuid()
+                : (rawExistingUser.getUuid() != null ? rawExistingUser.getUuid() : "");
+
+        if (modified) {
+            User encryptedMerged = encryptionDecryptionUtil.encryptObject(decryptedExisting, UserConstants.USER_ENCRYPTION_KEY, User.class);
+            if (encryptedMerged != null) {
+                if (encryptedMerged.getId() == null) encryptedMerged.setId(rawExistingUser.getId());
+                if (encryptedMerged.getUuid() == null) encryptedMerged.setUuid(rawExistingUser.getUuid());
+                if (encryptedMerged.getUsername() == null) encryptedMerged.setUsername(rawExistingUser.getUsername());
+                if (encryptedMerged.getTenantId() == null) encryptedMerged.setTenantId(rawExistingUser.getTenantId());
+                if (encryptedMerged.getType() == null) encryptedMerged.setType(rawExistingUser.getType());
+            }
+            if (isV2) {
+                userRepository.updateV2(encryptedMerged != null ? encryptedMerged : decryptedExisting, rawExistingUser, updaterId, updaterUuid);
+            } else {
+                userRepository.update(encryptedMerged != null ? encryptedMerged : decryptedExisting, rawExistingUser, updaterId, updaterUuid);
+            }
+        }
+
+        try {
+            User refreshedEncrypted = getUserByUuid(rawExistingUser.getUuid());
+            User refreshedDecrypted = encryptionDecryptionUtil.decryptObject(refreshedEncrypted, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
+            if (refreshedDecrypted != null) {
+                return refreshedDecrypted;
+            }
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Error refreshing updated user {}: {}", rawExistingUser.getUuid(), e.getMessage());
+        }
+
+        return decryptedExisting;
+    }
+
+    /**
+     * Resolves the primary 10-digit mobile number from the user model.
+     * Evaluates {@code user.getMobileNumber()}, falling back to numeric {@code user.getUsername()}.
+     *
+     * @param user domain user entity
+     * @return trimmed mobile number string, or {@code null} if absent or non-numeric
+     */
+    private String resolveMobileNumber(User user) {
+        if (user == null) {
+            return null;
+        }
+        if (StringUtils.isNotBlank(user.getMobileNumber())) {
+            return user.getMobileNumber().trim();
+        }
+        if (StringUtils.isNotBlank(user.getUsername()) && StringUtils.isNumeric(user.getUsername().trim())) {
+            return user.getUsername().trim();
+        }
+        return null;
+    }
+
+    /**
+     * Masks a mobile number for secure log output, revealing only the first two and last two digits.
+     *
+     * @param mobile plain text mobile number
+     * @return masked mobile string (e.g. 98******10) or placeholder
+     */
+    private String maskMobile(String mobile) {
+        if (StringUtils.isBlank(mobile)) {
+            return "null";
+        }
+        if (mobile.length() <= 4) {
+            return "****";
+        }
+        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
+    }
+
+    /**
+     * Determines whether the caller is a CITIZEN based on database ground truth.
+     * Falls back to requestInfo token type if user is not found in DB.
+     *
+     * @param requestInfo request context containing userInfo
+     * @return true if caller is a CITIZEN, false otherwise
+     */
+    public boolean isCallerCitizen(RequestInfo requestInfo) {
+        if (requestInfo == null || requestInfo.getUserInfo() == null) {
+            return false;
+        }
+        org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
+        User dbUser = getCallerDbUser(caller);
+        if (dbUser != null && dbUser.getType() != null) {
+            return UserType.CITIZEN.equals(dbUser.getType());
+        }
+        return UserType.CITIZEN.name().equalsIgnoreCase(caller.getType());
+    }
+
+    /**
+     * Looks up the authenticated caller's domain user record from the database by UUID or ID.
+     *
+     * @param caller user contract from requestInfo
+     * @return database domain {@link User} entity or null if not found
+     */
+    public User getCallerDbUser(org.egov.common.contract.request.User caller) {
+        if (caller == null) {
+            return null;
+        }
+        if (StringUtils.isNotBlank(caller.getUuid())) {
+            try {
+                return getUserByUuid(caller.getUuid().trim());
+            } catch (Exception e) {
+                log.debug("[USER-SERVICE] Error looking up caller in DB by uuid: {}", e.getMessage());
+            }
+        }
+        if (caller.getId() != null) {
+            try {
+                UserSearchCriteria criteria = UserSearchCriteria.builder()
+                        .id(Collections.singletonList(caller.getId()))
+                        .excludeAddressDetails(true)
+                        .build();
+                List<User> list = userRepository.findAll(criteria);
+                if (!CollectionUtils.isEmpty(list)) {
+                    return list.get(0);
+                }
+            } catch (Exception e) {
+                log.debug("[USER-SERVICE] Error looking up caller in DB by id: {}", e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    private void validateCitizenSearch(UserSearchCriteria searchCriteria, boolean isInterServiceCall, RequestInfo requestInfo) {
+        if (isInterServiceCall || requestInfo == null || requestInfo.getUserInfo() == null) {
+            return;
+        }
+        if (!isCallerCitizen(requestInfo)) {
+            return;
+        }
+
+        org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
+        User dbCaller = getCallerDbUser(caller);
+
+        String callerUuid = (dbCaller != null && StringUtils.isNotBlank(dbCaller.getUuid()))
+                ? dbCaller.getUuid().trim()
+                : (caller.getUuid() != null ? caller.getUuid().trim() : null);
+
+        String callerMobile = (dbCaller != null && StringUtils.isNotBlank(dbCaller.getMobileNumber()))
+                ? dbCaller.getMobileNumber().trim()
+                : (StringUtils.isNotBlank(caller.getMobileNumber())
+                ? caller.getMobileNumber().trim()
+                : (StringUtils.isNotBlank(caller.getUserName()) && StringUtils.isNumeric(caller.getUserName().trim())
+                ? caller.getUserName().trim() : null));
+
+        Long callerId = (dbCaller != null && dbCaller.getId() != null)
+                ? dbCaller.getId() : caller.getId();
+
+        String callerUserName = (dbCaller != null && StringUtils.isNotBlank(dbCaller.getUsername()))
+                ? dbCaller.getUsername().trim()
+                : (caller.getUserName() != null ? caller.getUserName().trim() : null);
+
+        boolean hasUuid = !CollectionUtils.isEmpty(searchCriteria.getUuid());
+        boolean hasMobile = StringUtils.isNotBlank(searchCriteria.getMobileNumber());
+        boolean hasUserName = StringUtils.isNotBlank(searchCriteria.getUserName());
+        boolean hasId = !CollectionUtils.isEmpty(searchCriteria.getId());
+
+        // A citizen caller must specify at least one identifying criterion
+        if (!hasUuid && !hasMobile && !hasUserName && !hasId) {
+            log.error("[USER-SERVICE] Unauthorized search: Citizen caller must search using their own UUID or mobile number.");
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
+        }
+
+        // Validate UUIDs
+        if (hasUuid) {
+            if (StringUtils.isBlank(callerUuid)) {
+                log.error("[USER-SERVICE] Unauthorized search: Calling citizen has no UUID in request context.");
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
+            }
+            boolean anyMismatch = searchCriteria.getUuid().stream()
+                    .filter(StringUtils::isNotBlank)
+                    .anyMatch(u -> !u.trim().equalsIgnoreCase(callerUuid));
+            if (anyMismatch) {
+                log.error("[USER-SERVICE] Unauthorized search: Citizen caller {} attempted to search for uuid(s): {}", callerUuid, searchCriteria.getUuid());
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
+            }
+        }
+
+        // Validate Mobile Number
+        if (hasMobile) {
+            String trimmedMobile = searchCriteria.getMobileNumber().trim();
+            boolean matchesCaller = (callerMobile != null && trimmedMobile.equals(callerMobile))
+                    || (callerUserName != null && trimmedMobile.equalsIgnoreCase(callerUserName))
+                    || (dbCaller != null && dbCaller.getUsername() != null && trimmedMobile.equalsIgnoreCase(dbCaller.getUsername().trim()))
+                    || (dbCaller != null && dbCaller.getMobileNumber() != null && trimmedMobile.equals(dbCaller.getMobileNumber().trim()));
+            if (!matchesCaller) {
+                log.error("[USER-SERVICE] Unauthorized search: Citizen caller {} attempted to search for mobile: {}", callerUuid, trimmedMobile);
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
+            }
+        }
+
+        // Validate User Name
+        if (hasUserName) {
+            String trimmedUserName = searchCriteria.getUserName().trim();
+            boolean matchesCaller = (callerUserName != null && trimmedUserName.equalsIgnoreCase(callerUserName))
+                    || (callerMobile != null && trimmedUserName.equals(callerMobile))
+                    || (dbCaller != null && dbCaller.getUsername() != null && trimmedUserName.equalsIgnoreCase(dbCaller.getUsername().trim()))
+                    || (dbCaller != null && dbCaller.getMobileNumber() != null && trimmedUserName.equals(dbCaller.getMobileNumber().trim()));
+            if (!matchesCaller) {
+                log.error("[USER-SERVICE] Unauthorized search: Citizen caller {} attempted to search for username: {}", callerUuid, trimmedUserName);
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
+            }
+        }
+
+        // Validate IDs
+        if (hasId) {
+            if (callerId == null) {
+                log.error("[USER-SERVICE] Unauthorized search: Calling citizen has no ID in request context.");
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
+            }
+            boolean anyMismatch = searchCriteria.getId().stream()
+                    .filter(Objects::nonNull)
+                    .anyMatch(id -> !id.equals(callerId));
+            if (anyMismatch) {
+                log.error("[USER-SERVICE] Unauthorized search: Citizen caller ID {} attempted to search for id(s): {}", callerId, searchCriteria.getId());
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
+            }
+        }
     }
 }

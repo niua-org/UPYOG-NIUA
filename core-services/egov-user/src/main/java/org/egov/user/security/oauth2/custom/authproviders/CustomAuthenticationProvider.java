@@ -1,9 +1,11 @@
 package org.egov.user.security.oauth2.custom.authproviders;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.tracer.model.ServiceCallException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.exception.DuplicateUserNameException;
 import org.egov.user.domain.exception.MultipleUsersFoundException;
 import org.egov.user.domain.exception.UserNotFoundException;
@@ -13,11 +15,11 @@ import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.auth.Role;
 import org.egov.user.web.contract.multiauth.UserAccountSummary;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -48,32 +50,65 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     private final EncryptionDecryptionUtil encryptionDecryptionUtil;
     private final UserRepository userRepository;
     private final HttpServletRequest request;
+    private final UserConfiguration userConfiguration;
 
-    @Value("${citizen.login.password.otp.enabled}")
-    private boolean citizenLoginPasswordOtpEnabled;
-
-    @Value("${employee.login.password.otp.enabled}")
-    private boolean employeeLoginPasswordOtpEnabled;
-
-    @Value("${citizen.login.password.otp.fixed.value}")
-    private String fixedOTPPassword;
-
-    @Value("${citizen.login.password.otp.fixed.enabled}")
-    private boolean fixedOTPEnabled;
-
+    /**
+     * Primary constructor injecting user services, encoders, repositories, and configurations.
+     *
+     * @param userService              user domain service
+     * @param passwordEncoder          password hashing and validation encoder
+     * @param encryptionDecryptionUtil utility for PII decryption
+     * @param userRepository           user persistence repository
+     * @param request                  incoming HTTP servlet request
+     * @param userConfiguration        application properties
+     */
     @Autowired
     public CustomAuthenticationProvider(UserService userService,
                                         PasswordEncoder passwordEncoder,
                                         EncryptionDecryptionUtil encryptionDecryptionUtil,
                                         UserRepository userRepository,
-                                        @Autowired(required = false) HttpServletRequest request) {
+                                        @Autowired(required = false) HttpServletRequest request,
+                                        @Autowired(required = false) UserConfiguration userConfiguration) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.userRepository = userRepository;
         this.request = request;
+        this.userConfiguration = userConfiguration;
     }
 
+    private boolean isCitizenLoginPasswordOtpEnabled() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpEnabled());
+    }
+
+    private boolean isEmployeeLoginPasswordOtpEnabled() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getEmployeeLoginPasswordOtpEnabled());
+    }
+
+    private boolean isFixedOTPEnabled() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpFixedEnabled());
+    }
+
+    private String getFixedOTPPassword() {
+        if (userConfiguration == null || userConfiguration.getCitizenLoginPasswordOtpFixedValue() == null || userConfiguration.getCitizenLoginPasswordOtpFixedValue().trim().isEmpty()) {
+            log.error("Citizen login fixed OTP is enabled, but citizen.login.password.otp.fixed.value is not configured");
+            throw new CustomException(UserConstants.ERROR_FIXED_OTP_NOT_CONFIGURED, UserConstants.MSG_FIXED_OTP_NOT_CONFIGURED);
+        }
+        return userConfiguration.getCitizenLoginPasswordOtpFixedValue();
+    }
+
+    private boolean isMultiAccountSelectionEnabled() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenMultiAccountSelectionEnabled());
+    }
+
+    /**
+     * Authenticates the user against database credentials, verifies account active status,
+     * validates password or OTP, and constructs authenticated principal {@link org.egov.user.security.oauth2.custom.models.SecureUser}.
+     *
+     * @param authentication authentication token containing username, credentials, and details
+     * @return fully authenticated {@link UsernamePasswordAuthenticationToken}
+     * @throws AuthenticationException if authentication fails, account is locked, or account is inactive
+     */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
@@ -120,47 +155,60 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                     log.error("Selected user account not found for uuid: {}", selectedUserUuid);
                     throw new BadCredentialsException("Selected user account not found");
                 }
-            } else if (userTypeEnum == UserType.CITIZEN && citizenLoginPasswordOtpEnabled) {
+            } else if (userTypeEnum == UserType.CITIZEN && isCitizenLoginPasswordOtpEnabled()) {
                 String stateTenant = tenantId != null && tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
                 List<User> matchedUsers = findCitizenUsersByMobile(username, stateTenant);
 
-                if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() > 1) {
-                    log.info("Multiple ({}) citizen accounts found for mobile: {}. Validating OTP before returning selector.",
-                            matchedUsers.size(), username);
-
-                    boolean isOtpValid = false;
-                    if (fixedOTPEnabled && fixedOTPPassword != null && fixedOTPPassword.equals(password)) {
-                        isOtpValid = true;
-                    } else {
-                        User tempUser = User.builder()
-                                .username(username)
-                                .mobileNumber(username)
-                                .tenantId(tenantId)
-                                .otpReference(password)
-                                .build();
-                        try {
-                            isOtpValid = userService.validateOtp(tempUser);
-                        } catch (Exception e) {
-                            log.error("OTP validation error during multi-user check for mobile {}: {}", username, e.getMessage());
-                            isOtpValid = false;
+                if (!CollectionUtils.isEmpty(matchedUsers)) {
+                    if (matchedUsers.size() > 1) {
+                        boolean allInactive = matchedUsers.stream().allMatch(u -> !Boolean.TRUE.equals(u.getActive()));
+                        if (allInactive) {
+                            log.error("All citizen accounts for mobile {} are inactive", username);
+                            throw new BadCredentialsException("Account inactive");
                         }
+                        if (isMultiAccountSelectionEnabled()) {
+                            log.info("Multiple ({}) citizen accounts found for mobile: {}. Validating OTP before returning selector.",
+                                    matchedUsers.size(), username);
+
+                            boolean isOtpValid = false;
+                            if (isFixedOTPEnabled() && getFixedOTPPassword() != null && getFixedOTPPassword().equals(password)) {
+                                isOtpValid = true;
+                            } else {
+                                User tempUser = User.builder()
+                                        .username(username)
+                                        .mobileNumber(username)
+                                        .tenantId(tenantId)
+                                        .otpReference(password)
+                                        .build();
+                                try {
+                                    isOtpValid = userService.validateOtp(tempUser);
+                                } catch (Exception e) {
+                                    log.error("OTP validation error during multi-user check for mobile {}: {}", username, e.getMessage());
+                                    isOtpValid = false;
+                                }
+                            }
+
+                            if (!isOtpValid) {
+                                log.error("Invalid OTP entered for multi-user mobile: {}", username);
+                                throw new BadCredentialsException("Invalid password");
+                            }
+
+                            List<User> decryptedUsers = decryptUserList(matchedUsers, requestInfo);
+                            List<UserAccountSummary> summaries = (decryptedUsers != null ? decryptedUsers : matchedUsers)
+                                    .stream()
+                                    .map(UserAccountSummary::fromUser)
+                                    .collect(Collectors.toList());
+
+                            log.info("Prompting user to select from {} accounts linked to mobile: {}", summaries.size(), username);
+                            throw new MultipleUsersFoundException(username, summaries);
+                        } else {
+                            log.info("Multiple ({}) citizen accounts found for mobile: {}. Multi-account selection disabled, selecting single user.",
+                                    matchedUsers.size(), username);
+                            user = selectPrimaryCitizenUser(matchedUsers, username);
+                        }
+                    } else {
+                        user = matchedUsers.get(0);
                     }
-
-                    if (!isOtpValid) {
-                        log.error("Invalid OTP entered for multi-user mobile: {}", username);
-                        throw new BadCredentialsException("Invalid password");
-                    }
-
-                    List<User> decryptedUsers = decryptUserList(matchedUsers, requestInfo);
-                    List<UserAccountSummary> summaries = (decryptedUsers != null ? decryptedUsers : matchedUsers)
-                            .stream()
-                            .map(UserAccountSummary::fromUser)
-                            .collect(Collectors.toList());
-
-                    log.info("Prompting user to select from {} accounts linked to mobile: {}", summaries.size(), username);
-                    throw new MultipleUsersFoundException(username, summaries);
-                } else if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() == 1) {
-                    user = matchedUsers.get(0);
                 } else {
                     user = userService.getUniqueUser(username, tenantId, userTypeEnum, requestInfo);
                 }
@@ -176,6 +224,11 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             log.info("User found - ID: {}, UUID: {}, Active: {}", user.getId(), user.getUuid(), user.getActive());
 
             // Check account status
+            if (!Boolean.TRUE.equals(user.getActive())) {
+                log.warn("Account is inactive for user: {}", username);
+                throw new BadCredentialsException("Account inactive");
+            }
+
             if (user.getAccountLocked() != null && user.getAccountLocked()) {
                 log.warn("Account is locked for user: {}", username);
                 if (!userService.isAccountUnlockAble(user)) {
@@ -191,8 +244,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             }
 
             // Validate password
-            boolean isOtpBased = (userTypeEnum == UserType.CITIZEN && citizenLoginPasswordOtpEnabled) ||
-                               (userTypeEnum == UserType.EMPLOYEE && employeeLoginPasswordOtpEnabled);
+            boolean isOtpBased = (userTypeEnum == UserType.CITIZEN && isCitizenLoginPasswordOtpEnabled()) ||
+                               (userTypeEnum == UserType.EMPLOYEE && isEmployeeLoginPasswordOtpEnabled());
 
             log.info("Password validation - OTP based: {}, UserType: {}", isOtpBased, userTypeEnum);
 
@@ -200,7 +253,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             // This allows citizen login with fixed OTP for testing/automation without calling external OTP service
             boolean isPasswordMatched;
             if (userTypeEnum == UserType.CITIZEN && isOtpBased) {
-                if (fixedOTPEnabled && fixedOTPPassword != null && !fixedOTPPassword.isEmpty() && fixedOTPPassword.equals(password)) {
+                if (isFixedOTPEnabled() && getFixedOTPPassword() != null && !getFixedOTPPassword().isEmpty() && getFixedOTPPassword().equals(password)) {
                     log.info("Fixed OTP validation successful for citizen user: {}", username);
                     isPasswordMatched = true;  // Skip external OTP service call
                 } else {
@@ -547,5 +600,80 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 return users;
             }
         }
+    }
+
+    /**
+     * Selects a single primary user when multiple citizen accounts exist for a mobile number.
+     * When citizen.multi.account.selection.enabled=false, prioritizes the account whose username
+     * equals the mobile number.
+     *
+     * @param matchedUsers list of matched citizen users
+     * @param mobileNumber the login mobile number / username
+     * @return the primary citizen user
+     */
+    private User selectPrimaryCitizenUser(List<User> matchedUsers, String mobileNumber) {
+        if (CollectionUtils.isEmpty(matchedUsers)) {
+            return null;
+        }
+        log.info("Selecting primary citizen user for mobile: {} from {} candidates",
+                mobileNumber, matchedUsers.size());
+
+        // 1. Look for active user whose username matches the mobile number
+        for (User u : matchedUsers) {
+            if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && !Boolean.FALSE.equals(u.getActive())) {
+                log.info("Selected primary citizen user with matching username: {} (UUID: {})",
+                        u.getUsername(), u.getUuid());
+                return u;
+            }
+        }
+
+        // 2. If user whose username matches mobile number exists but is inactive, reject with account inactive
+        for (User u : matchedUsers) {
+            if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && Boolean.FALSE.equals(u.getActive())) {
+                log.error("Primary citizen account with username {} for mobile {} is inactive",
+                        u.getUsername(), mobileNumber);
+                throw new BadCredentialsException("Account inactive");
+            }
+        }
+
+        // 3. Fallback: if no user has username == mobileNumber, pick the first active user
+        for (User u : matchedUsers) {
+            if (!Boolean.FALSE.equals(u.getActive())) {
+                log.warn("No citizen account found with username == mobile {}. Falling back to active candidate: {} (UUID: {})",
+                        mobileNumber, u.getUsername(), u.getUuid());
+                return u;
+            }
+        }
+
+        log.error("All matched citizen accounts for mobile {} are inactive", mobileNumber);
+        throw new BadCredentialsException("Account inactive");
+    }
+
+    private boolean isUsernameMatchingMobile(String username, String mobileNumber) {
+        if (StringUtils.isBlank(username) || StringUtils.isBlank(mobileNumber)) {
+            return false;
+        }
+        String uTrim = username.trim();
+        String mTrim = mobileNumber.trim();
+        if (uTrim.equalsIgnoreCase(mTrim)) {
+            return true;
+        }
+        String stdMobile = extractStandard10DigitMobile(mTrim);
+        String stdUser = extractStandard10DigitMobile(uTrim);
+        return stdMobile != null && stdUser != null && stdMobile.equals(stdUser) && uTrim.matches("^[0-9+ ]+$");
+    }
+
+    private String extractStandard10DigitMobile(String input) {
+        if (StringUtils.isBlank(input)) {
+            return null;
+        }
+        String digits = input.replaceAll("[^0-9]", "");
+        if (digits.length() == 10) {
+            return digits;
+        }
+        if (digits.length() > 10 && (digits.startsWith("91") || digits.startsWith("0"))) {
+            return digits.substring(digits.length() - 10);
+        }
+        return digits;
     }
 }

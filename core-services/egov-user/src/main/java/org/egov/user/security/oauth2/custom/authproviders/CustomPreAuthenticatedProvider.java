@@ -39,12 +39,26 @@ public class CustomPreAuthenticatedProvider implements AuthenticationProvider {
     private final UserService userService;
     private final EncryptionDecryptionUtil encryptionDecryptionUtil;
 
+    /**
+     * Primary constructor injecting user service and decryption utility.
+     *
+     * @param userService              user domain service
+     * @param encryptionDecryptionUtil utility for decrypting user PII
+     */
     @Autowired
     public CustomPreAuthenticatedProvider(UserService userService, EncryptionDecryptionUtil encryptionDecryptionUtil) {
         this.userService = userService;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
     }
 
+    /**
+     * Authenticates pre-authenticated principal, verifies tenant and active account status,
+     * and constructs a granted {@link PreAuthenticatedAuthenticationToken}.
+     *
+     * @param authentication incoming pre-authenticated authentication token
+     * @return fully authorized {@link PreAuthenticatedAuthenticationToken}
+     * @throws AuthenticationException if user is locked, inactive, or not found
+     */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
@@ -81,6 +95,11 @@ public class CustomPreAuthenticatedProvider implements AuthenticationProvider {
             throw new BadCredentialsException("Invalid login credentials");
         }
 
+        if (!Boolean.TRUE.equals(user.getActive())) {
+            log.warn("Account is inactive for user: {}", userName);
+            throw new BadCredentialsException("Account inactive");
+        }
+
         if (user.getAccountLocked() == null || user.getAccountLocked()) {
             // CHANGED: OAuth2Exception -> BadCredentialsException
             throw new BadCredentialsException("Account locked");
@@ -92,6 +111,12 @@ public class CustomPreAuthenticatedProvider implements AuthenticationProvider {
         return new PreAuthenticatedAuthenticationToken(finalUser, null, grantedAuths);
     }
 
+    /**
+     * Checks if this provider supports the given authentication token class.
+     *
+     * @param authentication class of the authentication token
+     * @return true if token is assignable from PreAuthenticatedAuthenticationToken
+     */
     @Override
     public boolean supports(Class<?> authentication) {
         return PreAuthenticatedAuthenticationToken.class.isAssignableFrom(authentication);

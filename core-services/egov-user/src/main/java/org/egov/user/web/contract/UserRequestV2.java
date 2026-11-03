@@ -125,6 +125,8 @@ public class UserRequestV2 {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date identityVerifiedDate;
 
+    private String identityVerifiedSource;
+
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date lastResyncDate;
 
@@ -141,6 +143,11 @@ public class UserRequestV2 {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date pwdExpiryDate;
 
+    /**
+     * Converts a domain {@link User} entity into a {@link UserRequestV2} contract DTO.
+     *
+     * @param user source domain user entity
+     */
     public UserRequestV2(User user) {
 
         this.id = user.getId();
@@ -179,6 +186,7 @@ public class UserRequestV2 {
         this.spouseName = user.getSpouseName();
         this.isIdentityVerified = user.getIsIdentityVerified();
         this.identityVerifiedDate = user.getIdentityVerifiedDate();
+        this.identityVerifiedSource = user.getIdentityVerifiedSource();
         this.lastResyncDate = user.getLastResyncDate();
         this.edittedCount = user.getEdittedCount();
         this.lastLoginMethod = user.getLastLoginMethod();
@@ -199,6 +207,14 @@ public class UserRequestV2 {
      * @return populated {@link User} domain entity
      */
     @JsonIgnore
+    /**
+     * Converts this contract DTO to a domain {@link User} model with operator audit metadata.
+     *
+     * @param loggedInUserId   ID of the operating user
+     * @param loggedInUserUuid UUID of the operating user
+     * @param isCreate         flag indicating if this is for a new user creation
+     * @return populated domain {@link User} entity
+     */
     public User toDomain(Long loggedInUserId, String loggedInUserUuid, boolean isCreate) {
         BloodGroup bloodGroup = null;
         try {
@@ -244,8 +260,9 @@ public class UserRequestV2 {
                 .fatherName(this.fatherName)
                 .motherName(this.motherName)
                 .spouseName(this.spouseName)
-                .isIdentityVerified(this.isIdentityVerified)
-                .identityVerifiedDate(this.identityVerifiedDate)
+                .isIdentityVerified(isCreate ? Boolean.FALSE : null)
+                .identityVerifiedDate(null)
+                .identityVerifiedSource(null)
                 .lastResyncDate(this.lastResyncDate)
                 .edittedCount(this.edittedCount)
                 .lastLoginMethod(this.lastLoginMethod)

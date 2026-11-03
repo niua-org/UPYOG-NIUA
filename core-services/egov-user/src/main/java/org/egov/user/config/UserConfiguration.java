@@ -68,8 +68,17 @@ public class UserConfiguration {
     private String oauth2TokenFormat;
 
     // Multi-Auth & Verification Configuration
+    @Value("${citizen.login.password.otp.enabled}")
+    private Boolean citizenLoginPasswordOtpEnabled;
+
+    @Value("${employee.login.password.otp.enabled}")
+    private Boolean employeeLoginPasswordOtpEnabled;
+
     @Value("${citizen.login.password.otp.fixed.enabled}")
     private Boolean citizenLoginPasswordOtpFixedEnabled;
+
+    @Value("${citizen.multi.account.selection.enabled}")
+    private Boolean citizenMultiAccountSelectionEnabled;
 
     @Value("${citizen.login.password.otp.fixed.value}")
     private String citizenLoginPasswordOtpFixedValue;
@@ -101,9 +110,32 @@ public class UserConfiguration {
     @Value("${filestore.validation.enabled}")
     private Boolean filestoreValidationEnabled;
 
-    @Value("${family.service.host:http://upyog-family-service.egov:8080/}")
+    @Value("${family.service.host}")
     private String familyServiceHost;
 
-    @Value("${family.service.state.jit.endpoint:family/v1/state/_jitProvision}")
+    @Value("${family.service.state.jit.endpoint}")
     private String familyServiceStateJitEndpoint;
+
+    // DigiLocker Configuration
+    @Value("${digilocker.register}")
+    private Boolean digilockerRegister;
+
+    @Value("${digilocker.search}")
+    private Boolean digilockerSearch;
+
+    @Value("${requester.service.endpoint}")
+    private String requesterServiceEndpoint;
+
+    // User Search & Registration Configuration
+    @Value("${egov.user.search.default.size}")
+    private Integer defaultSearchSize;
+
+    @Value("${mobile.number.validation.workaround.enabled}")
+    private String mobileValidationWorkaroundEnabled;
+
+    @Value("${otp.validation.register.mandatory}")
+    private Boolean otpValidationRegisterMandatory;
+
+    @Value("${citizen.registration.withlogin.enabled}")
+    private Boolean citizenRegistrationWithLoginEnabled;
 }

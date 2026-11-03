@@ -11,6 +11,7 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.dto.FailedLoginAttempt;
 import org.egov.user.repository.builder.RoleQueryBuilder;
 import org.egov.user.repository.builder.UserTypeQueryBuilder;
@@ -32,8 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
-import static org.egov.user.repository.builder.UserTypeQueryBuilder.SELECT_FAILED_ATTEMPTS_BY_USER_SQL;
-import static org.egov.user.repository.builder.UserTypeQueryBuilder.SELECT_NEXT_SEQUENCE_USER;
+import static org.egov.user.repository.builder.UserTypeQueryBuilder.*;
 import static org.springframework.util.StringUtils.isEmpty;
 
 /**
@@ -157,7 +157,7 @@ public class UserRepository {
      */
     public boolean isUserPresent(String userName, String tenantId, UserType userType) {
 
-        String query = userTypeQueryBuilder.getUserPresentByUserNameAndTenant();
+        String query = USER_PRESENT_BY_USERNAME_AND_TENANT_SQL;
 
         final Map<String, Object> parametersMap = new HashMap<String, Object>();
         parametersMap.put("userName", userName);
@@ -325,8 +325,26 @@ public class UserRepository {
         updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
         updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
         updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
-        updateuserInputs.put("IsIdentityVerified", user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : (oldUser != null && oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false));
-        updateuserInputs.put("IdentityVerifiedDate", user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : (oldUser != null ? oldUser.getIdentityVerifiedDate() : null));
+        boolean isIdentityAuthSource = user.getIdentityVerifiedSource() != null &&
+                (UserConstants.IDENTITY_SOURCE_AADHAAR.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_DIGILOCKER.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_FAMILY_ID.equalsIgnoreCase(user.getIdentityVerifiedSource()));
+
+        Boolean effectiveVerified = (oldUser != null && oldUser.getIsIdentityVerified() != null)
+                ? (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : oldUser.getIsIdentityVerified())
+                : (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : false);
+
+        Date effectiveVerifiedDate = (oldUser != null && oldUser.getIdentityVerifiedDate() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : oldUser.getIdentityVerifiedDate())
+                : (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : null);
+
+        String effectiveVerifiedSource = (oldUser != null && oldUser.getIdentityVerifiedSource() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : oldUser.getIdentityVerifiedSource())
+                : (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : null);
+
+        updateuserInputs.put("IsIdentityVerified", effectiveVerified);
+        updateuserInputs.put("IdentityVerifiedDate", effectiveVerifiedDate);
+        updateuserInputs.put("IdentityVerifiedSource", effectiveVerifiedSource);
         updateuserInputs.put("LastResyncDate", user.getLastResyncDate() != null ? user.getLastResyncDate() : (oldUser != null ? oldUser.getLastResyncDate() : null));
 
         int currentEditCount = (oldUser != null && oldUser.getEdittedCount() != null) ? oldUser.getEdittedCount() : 0;
@@ -337,10 +355,10 @@ public class UserRepository {
         updateuserInputs.put("LastModifiedDate", new Date());
         updateuserInputs.put("LastModifiedBy", userId );
         if(user.isDigilockerRegistration()) {
-            namedParameterJdbcTemplate.update(userTypeQueryBuilder.getDigilockerUpdateQuery(), updateuserInputs);
+            namedParameterJdbcTemplate.update(UPDATE_DIGILOCKER_ID_SQL, updateuserInputs);
         }else {
             updateAuditDetails(oldUser, userId, uuid);
-            int rowsUpdated = namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);
+            int rowsUpdated = namedParameterJdbcTemplate.update(UPDATE_USER_SQL, updateuserInputs);
             log.info("[USER-REPO] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
             if (rowsUpdated == 0) {
                 log.warn("[USER-REPO] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
@@ -609,11 +627,12 @@ public class UserRepository {
         userInputs.put("spouse_name", entityUser.getSpouseName());
         userInputs.put("is_identity_verified", entityUser.getIsIdentityVerified() != null ? entityUser.getIsIdentityVerified() : false);
         userInputs.put("identity_verified_date", entityUser.getIdentityVerifiedDate());
+        userInputs.put("identity_verified_source", entityUser.getIdentityVerifiedSource());
         userInputs.put("last_resync_date", entityUser.getLastResyncDate());
         userInputs.put("editted_count", entityUser.getEdittedCount() != null ? entityUser.getEdittedCount() : 0);
         userInputs.put("last_login_method", entityUser.getLastLoginMethod());
 
-        namedParameterJdbcTemplate.update(userTypeQueryBuilder.getInsertUserQuery(), userInputs);
+        namedParameterJdbcTemplate.update(INSERT_USER_SQL, userInputs);
         return entityUser;
     }
 
@@ -836,8 +855,26 @@ public class UserRepository {
         updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
         updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
         updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
-        updateuserInputs.put("IsIdentityVerified", user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : (oldUser != null && oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false));
-        updateuserInputs.put("IdentityVerifiedDate", user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : (oldUser != null ? oldUser.getIdentityVerifiedDate() : null));
+        boolean isIdentityAuthSource = user.getIdentityVerifiedSource() != null &&
+                (UserConstants.IDENTITY_SOURCE_AADHAAR.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_DIGILOCKER.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_FAMILY_ID.equalsIgnoreCase(user.getIdentityVerifiedSource()));
+
+        Boolean effectiveVerified = (oldUser != null && oldUser.getIsIdentityVerified() != null)
+                ? (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : oldUser.getIsIdentityVerified())
+                : (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : false);
+
+        Date effectiveVerifiedDate = (oldUser != null && oldUser.getIdentityVerifiedDate() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : oldUser.getIdentityVerifiedDate())
+                : (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : null);
+
+        String effectiveVerifiedSource = (oldUser != null && oldUser.getIdentityVerifiedSource() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : oldUser.getIdentityVerifiedSource())
+                : (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : null);
+
+        updateuserInputs.put("IsIdentityVerified", effectiveVerified);
+        updateuserInputs.put("IdentityVerifiedDate", effectiveVerifiedDate);
+        updateuserInputs.put("IdentityVerifiedSource", effectiveVerifiedSource);
         updateuserInputs.put("LastResyncDate", user.getLastResyncDate() != null ? user.getLastResyncDate() : (oldUser != null ? oldUser.getLastResyncDate() : null));
 
         int currentEditCountV2 = (oldUser != null && oldUser.getEdittedCount() != null) ? oldUser.getEdittedCount() : 0;
@@ -850,7 +887,7 @@ public class UserRepository {
 
         updateAuditDetails(oldUser, userId, uuid);
 
-        int rowsUpdated = namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);
+        int rowsUpdated = namedParameterJdbcTemplate.update(UPDATE_USER_SQL, updateuserInputs);
         log.info("[USER-REPO-V2] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
         if (rowsUpdated == 0) {
             log.warn("[USER-REPO-V2] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
@@ -917,7 +954,7 @@ public class UserRepository {
             return null;
         }
         try {
-            String query = userTypeQueryBuilder.getUserIdByUuid();
+            String query = SELECT_USER_ID_BY_UUID_SQL;
             MapSqlParameterSource params = new MapSqlParameterSource("uuid", userUuid);
             return namedParameterJdbcTemplate.queryForObject(query, params, Long.class);
         } catch (EmptyResultDataAccessException e) {
@@ -941,7 +978,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    userTypeQueryBuilder.getTenantIdByUserIdQuery(),
+                    SELECT_TENANT_ID_BY_USER_ID_SQL,
                     Collections.singletonMap("id", userId),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -964,7 +1001,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    userTypeQueryBuilder.getTenantIdByUuidQuery(),
+                    SELECT_TENANT_ID_BY_UUID_SQL,
                     Collections.singletonMap("uuid", uuid),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -987,7 +1024,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    userTypeQueryBuilder.getUuidByUserIdQuery(),
+                    SELECT_UUID_BY_USER_ID_SQL,
                     Collections.singletonMap("id", userId),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -1051,7 +1088,7 @@ public class UserRepository {
             Map<String, Object> params = new HashMap<>();
             params.put("id", userId);
             params.put("lastLoginMethod", loginMethod);
-            namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateLastLoginMethodQuery(), params);
+            namedParameterJdbcTemplate.update(UPDATE_LAST_LOGIN_METHOD_SQL, params);
             log.info("[USER-REPO] Updated last_login_method to '{}' for user ID: {}", loginMethod, userId);
         } catch (Exception e) {
             log.warn("[USER-REPO] Failed to update last_login_method for user ID {}: {}", userId, e.getMessage());

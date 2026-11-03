@@ -31,7 +31,7 @@ public class AddressMasterDataServiceTest {
                 .allowedAddressTypes("PERMANENT,CORRESPONDENCE,OTHER,OFFICE")
                 .addressTypeCacheTtlMillis(86400000L) // 24 hours
                 .addressTypeCacheCron("0 0 0 * * *")
-                .stateLevelTenantId("pb")
+                .stateLevelTenantId("pg")
                 .build();
 
         addressMasterDataService = new AddressMasterDataServiceImpl(restTemplate, objectMapper, userConfiguration);
@@ -119,5 +119,22 @@ public class AddressMasterDataServiceTest {
                 addressMasterDataService.validateAddressType(new RequestInfo(), "pb.amritsar", "")
         );
         assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should throw CustomException when tenantId is blank and stateLevelTenantId is null")
+    public void testGetAllowedAddressTypes_NullTenantAndNullConfig_ThrowsException() {
+        UserConfiguration emptyConfig = UserConfiguration.builder()
+                .mdmsAddressTypeEnabled(false)
+                .allowedAddressTypes("PERMANENT,CORRESPONDENCE")
+                .stateLevelTenantId(null)
+                .build();
+        AddressMasterDataServiceImpl serviceWithNullConfig = new AddressMasterDataServiceImpl(restTemplate, objectMapper, emptyConfig);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                serviceWithNullConfig.getAllowedAddressTypes(new RequestInfo(), null)
+        );
+        assertEquals("TENANT_ID_REQUIRED", ex.getCode());
+        assertTrue(ex.getMessage().contains("state-level tenant ID is not configured"));
     }
 }

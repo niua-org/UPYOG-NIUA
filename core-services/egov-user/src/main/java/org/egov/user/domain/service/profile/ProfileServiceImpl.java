@@ -1,9 +1,11 @@
 package org.egov.user.domain.service.profile;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.AddressSearchCriteria;
 import org.egov.user.domain.model.Role;
@@ -16,6 +18,8 @@ import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.service.address.AddressMasterDataService;
+import org.egov.user.domain.service.address.AddressService;
+import org.egov.user.domain.service.document.UserDocumentService;
 import org.egov.user.domain.service.identity.IdentityVerificationService;
 import org.egov.user.domain.service.identity.VerifiedAadhaarDemographics;
 import org.egov.user.domain.service.profile.validator.ProfileValidator;
@@ -25,7 +29,9 @@ import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.UserRequest;
+import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
+import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
 import org.egov.user.web.contract.profile.ProfileResyncRequest;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
@@ -34,8 +40,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 /**
  * Core implementation of {@link ProfileService} orchestrating citizen profile onboarding,
  * demographic updates with source-based field protection, and real-time Aadhaar profile re-sync.
@@ -76,7 +94,25 @@ public class ProfileServiceImpl implements ProfileService {
     private final AddressRepository addressRepository;
     private final UserDocumentRepository userDocumentRepository;
     private final AddressMasterDataService addressMasterDataService;
+    private final AddressService addressService;
+    private final UserDocumentService userDocumentService;
+    @Autowired(required = false)
+    @Setter
+    private UserConfiguration userConfiguration;
 
+    /**
+     * Primary Spring-managed constructor injecting core repositories, validators, and modular address/document services.
+     *
+     * @param userRepository              repository for user persistence
+     * @param profileValidator            validator for profile request lifecycle rules
+     * @param identityVerificationService adapter service for UIDAI Aadhaar verification
+     * @param encryptionDecryptionUtil    utility for PII encryption/decryption
+     * @param addressRepository           repository for address persistence
+     * @param userDocumentRepository      repository for document proof persistence
+     * @param addressMasterDataService    service for MDMS address boundary resolution
+     * @param addressService              service for address lifecycle management
+     * @param userDocumentService         service for document proof lifecycle management
+     */
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository,
                               ProfileValidator profileValidator,
@@ -84,7 +120,36 @@ public class ProfileServiceImpl implements ProfileService {
                               EncryptionDecryptionUtil encryptionDecryptionUtil,
                               AddressRepository addressRepository,
                               UserDocumentRepository userDocumentRepository,
-                              @Autowired(required = false) AddressMasterDataService addressMasterDataService) {
+                              @Autowired(required = false) AddressMasterDataService addressMasterDataService,
+                              @Autowired(required = false) AddressService addressService,
+                              @Autowired(required = false) UserDocumentService userDocumentService) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, null);
+    }
+
+    /**
+     * Full constructor including optional userConfiguration for configurable state tenant resolution.
+     *
+     * @param userRepository              repository for user persistence
+     * @param profileValidator            validator for profile request lifecycle rules
+     * @param identityVerificationService adapter service for UIDAI Aadhaar verification
+     * @param encryptionDecryptionUtil    utility for PII encryption/decryption
+     * @param addressRepository           repository for address persistence
+     * @param userDocumentRepository      repository for document proof persistence
+     * @param addressMasterDataService    service for MDMS address boundary resolution
+     * @param addressService              service for address lifecycle management
+     * @param userDocumentService         service for document proof lifecycle management
+     * @param userConfiguration           application configuration properties
+     */
+    public ProfileServiceImpl(UserRepository userRepository,
+                              ProfileValidator profileValidator,
+                              IdentityVerificationService identityVerificationService,
+                              EncryptionDecryptionUtil encryptionDecryptionUtil,
+                              AddressRepository addressRepository,
+                              UserDocumentRepository userDocumentRepository,
+                              AddressMasterDataService addressMasterDataService,
+                              AddressService addressService,
+                              UserDocumentService userDocumentService,
+                              UserConfiguration userConfiguration) {
         this.userRepository = userRepository;
         this.profileValidator = profileValidator;
         this.identityVerificationService = identityVerificationService;
@@ -92,15 +157,49 @@ public class ProfileServiceImpl implements ProfileService {
         this.addressRepository = addressRepository;
         this.userDocumentRepository = userDocumentRepository;
         this.addressMasterDataService = addressMasterDataService;
+        this.addressService = addressService;
+        this.userDocumentService = userDocumentService;
+        this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Test constructor with addressMasterDataService.
+     *
+     * @param userRepository              repository for user persistence
+     * @param profileValidator            validator for profile request lifecycle rules
+     * @param identityVerificationService adapter service for UIDAI Aadhaar verification
+     * @param encryptionDecryptionUtil    utility for PII encryption/decryption
+     * @param addressRepository           repository for address persistence
+     * @param userDocumentRepository      repository for document proof persistence
+     * @param addressMasterDataService    service for MDMS address boundary resolution
+     */
+    public ProfileServiceImpl(UserRepository userRepository,
+                              ProfileValidator profileValidator,
+                              IdentityVerificationService identityVerificationService,
+                              EncryptionDecryptionUtil encryptionDecryptionUtil,
+                              AddressRepository addressRepository,
+                              UserDocumentRepository userDocumentRepository,
+                              AddressMasterDataService addressMasterDataService) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, null, null);
+    }
+
+    /**
+     * Minimal test constructor.
+     *
+     * @param userRepository              repository for user persistence
+     * @param profileValidator            validator for profile request lifecycle rules
+     * @param identityVerificationService adapter service for UIDAI Aadhaar verification
+     * @param encryptionDecryptionUtil    utility for PII encryption/decryption
+     * @param addressRepository           repository for address persistence
+     * @param userDocumentRepository      repository for document proof persistence
+     */
     public ProfileServiceImpl(UserRepository userRepository,
                               ProfileValidator profileValidator,
                               IdentityVerificationService identityVerificationService,
                               EncryptionDecryptionUtil encryptionDecryptionUtil,
                               AddressRepository addressRepository,
                               UserDocumentRepository userDocumentRepository) {
-        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, null);
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, null, null, null);
     }
 
     /**
@@ -125,27 +224,63 @@ public class ProfileServiceImpl implements ProfileService {
         String stateTenant = resolveStateTenant(request.getTenantId());
         String mobile = request.getMobileNumber().trim();
 
-        // 1. Check if user already exists or if Aadhaar is linked to another citizen
-        validateAadhaarUniqueness(request.getAadhaarNumber(), null, stateTenant);
-
-        List<User> existingCitizens = findCitizensByMobile(mobile, stateTenant, request.getRequestInfo());
-        for (User u : existingCitizens) {
-            if (StringUtils.isNotBlank(request.getAadhaarNumber()) && StringUtils.isNotBlank(u.getAadhaarNumber())
-                    && request.getAadhaarNumber().trim().equals(u.getAadhaarNumber().trim())) {
-                log.error("[PROFILE-SERVICE] Citizen already exists with Aadhaar number in tenant: {}", stateTenant);
-                throw new CustomException(UserConstants.ERROR_USER_ALREADY_EXISTS, UserConstants.MSG_USER_ALREADY_EXISTS_AADHAAR);
+        UserType userType = UserType.CITIZEN;
+        if (StringUtils.isNotBlank(request.getType())) {
+            try {
+                userType = UserType.valueOf(request.getType().trim().toUpperCase());
+            } catch (Exception ignored) {
+                userType = UserType.CITIZEN;
             }
-            if (StringUtils.equalsIgnoreCase(StringUtils.trim(request.getName()), StringUtils.trim(u.getName()))
-                    && request.getDob() != null && u.getDob() != null
-                    && isSameDate(request.getDob(), u.getDob())) {
-                log.error("[PROFILE-SERVICE] Citizen already exists with same name and DOB for mobile: {}", maskMobile(mobile));
-                throw new CustomException(UserConstants.ERROR_USER_ALREADY_EXISTS, UserConstants.MSG_USER_ALREADY_EXISTS_DEMO);
+        }
+
+        Boolean incomingIsVerified = request.getIsIdentityVerified() != null
+                ? request.getIsIdentityVerified()
+                : false;
+
+        if (userType == UserType.CITIZEN) {
+            // 1. Check if user already exists or if Aadhaar is linked to another citizen
+            validateAadhaarUniqueness(request.getAadhaarNumber(), null, stateTenant);
+
+            List<User> existingCitizens = findCitizensByMobile(mobile, stateTenant, request.getRequestInfo());
+            long existingUnverifiedCount = 0;
+            for (User u : existingCitizens) {
+                if (StringUtils.isNotBlank(request.getAadhaarNumber()) && StringUtils.isNotBlank(u.getAadhaarNumber())
+                        && request.getAadhaarNumber().trim().equals(u.getAadhaarNumber().trim())) {
+                    log.error("[PROFILE-SERVICE] Citizen already exists with Aadhaar number in tenant: {}", stateTenant);
+                    throw new CustomException(UserConstants.ERROR_USER_ALREADY_EXISTS, UserConstants.MSG_USER_ALREADY_EXISTS_AADHAAR);
+                }
+                if (StringUtils.equalsIgnoreCase(StringUtils.trim(request.getName()), StringUtils.trim(u.getName()))
+                        && request.getDob() != null && u.getDob() != null
+                        && isSameDate(request.getDob(), u.getDob())) {
+                    log.error("[PROFILE-SERVICE] Citizen already exists with same name and DOB for mobile: {}", maskMobile(mobile));
+                    throw new CustomException(UserConstants.ERROR_USER_ALREADY_EXISTS, UserConstants.MSG_USER_ALREADY_EXISTS_DEMO);
+                }
+                if (u != null && (u.getActive() == null || Boolean.TRUE.equals(u.getActive()))
+                        && !Boolean.TRUE.equals(u.getIsIdentityVerified())) {
+                    existingUnverifiedCount++;
+                }
+            }
+
+            // Enforce constraint: Only one citizen account with isVerified == false is permitted per mobile number.
+            // All other citizen accounts under this mobile number must have isVerified == true.
+            if (!Boolean.TRUE.equals(incomingIsVerified)) {
+                if (existingUnverifiedCount > 0) {
+                    log.error("[PROFILE-SERVICE] Cannot create unverified citizen: An unverified citizen account already exists for mobile: {}", maskMobile(mobile));
+                    throw new CustomException(UserConstants.ERROR_UNVERIFIED_CITIZEN_EXISTS,
+                            UserConstants.MSG_UNVERIFIED_CITIZEN_EXISTS);
+                }
+            } else {
+                if (existingUnverifiedCount > 1) {
+                    log.error("[PROFILE-SERVICE] Cannot create citizen: Multiple unverified citizens already exist for mobile: {}", maskMobile(mobile));
+                    throw new CustomException(UserConstants.ERROR_UNVERIFIED_CITIZEN_EXISTS,
+                            UserConstants.MSG_UNVERIFIED_CITIZEN_EXISTS);
+                }
             }
         }
 
         // 2. Build Citizen User entity with all Section 8 fields
         Long loggedInUserId = resolveLoggedInUserId(request.getRequestInfo(), 0L);
-        String username = !userRepository.isUserPresent(mobile, stateTenant, UserType.CITIZEN)
+        String username = !userRepository.isUserPresent(mobile, stateTenant, userType)
                 ? mobile
                 : mobile + "_" + UUID.randomUUID().toString().substring(0, 8);
 
@@ -165,11 +300,13 @@ public class ProfileServiceImpl implements ProfileService {
                 .aadhaarNumber(request.getAadhaarNumber() != null ? request.getAadhaarNumber().trim() : null)
                 .photo(request.getPhoto())
                 .tenantId(stateTenant)
-                .type(UserType.CITIZEN)
+                .type(userType)
                 .active(true)
-                .isIdentityVerified(false)
+                .isIdentityVerified(incomingIsVerified)
+                .identityVerifiedDate(Boolean.TRUE.equals(incomingIsVerified) ? new Date() : null)
+                .identityVerifiedSource(Boolean.TRUE.equals(incomingIsVerified) ? UserConstants.IDENTITY_SOURCE_SYSTEM : null)
                 .edittedCount(0)
-                .roles(Collections.singleton(Role.getCitizenRole()))
+                .roles(userType == UserType.CITIZEN ? Collections.singleton(Role.getCitizenRole()) : Collections.emptySet())
                 .password(UUID.randomUUID().toString())
                 .uuid(UUID.randomUUID().toString())
                 .createdBy(loggedInUserId)
@@ -459,12 +596,17 @@ public class ProfileServiceImpl implements ProfileService {
             if (StringUtils.isNotBlank(eKyc.getMaskedAadhaar())) {
                 userToUpdate.setAadhaarNumber(eKyc.getMaskedAadhaar());
             }
-            userToUpdate.setIsIdentityVerified(true);
-            userToUpdate.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate() != null
-                    ? existingUser.getIdentityVerifiedDate() : new Date());
+            userToUpdate.setIsIdentityVerified(existingUser.getIsIdentityVerified());
+            userToUpdate.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate());
+            userToUpdate.setIdentityVerifiedSource(existingUser.getIdentityVerifiedSource());
             userToUpdate.setLastResyncDate(new Date());
         } else {
-            // Standard update: allow updating name, dob, gender if unverified OR if demographic field was not set
+            // Standard update: identity verification fields MUST NOT be modified
+            userToUpdate.setIsIdentityVerified(existingUser.getIsIdentityVerified());
+            userToUpdate.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate());
+            userToUpdate.setIdentityVerifiedSource(existingUser.getIdentityVerifiedSource());
+
+            // allow updating name, dob, gender if unverified OR if demographic field was not set
             if (!Boolean.TRUE.equals(existingUser.getIsIdentityVerified())) {
                 if (StringUtils.isNotBlank(incoming.getName())) {
                     userToUpdate.setName(incoming.getName());
@@ -504,9 +646,37 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     /**
+     * Resolves and normalizes requested entity inclusion flags (PROFILE, ADDRESS, DOCUMENT).
+     * Validates each raw section string using {@link ProfileIncludeEntity#fromString(String)}.
+     * Unknown values are rejected immediately with an HTTP 400 {@link CustomException}.
+     * Defaults to [PROFILE] if the input list is null or empty.
+     *
+     * @param rawIncludes raw include flag strings from request (e.g. "PROFILE", "ADDRESS", "DOCUMENT")
+     * @return set of validated {@link ProfileIncludeEntity} constants
+     * @throws CustomException if an unknown include section is supplied
+     */
+    @Override
+    public Set<ProfileIncludeEntity> resolveIncludes(List<String> rawIncludes) {
+        if (CollectionUtils.isEmpty(rawIncludes)) {
+            return Collections.singleton(ProfileIncludeEntity.PROFILE);
+        }
+        Set<ProfileIncludeEntity> resolved = new LinkedHashSet<>();
+        for (String raw : rawIncludes) {
+            if (StringUtils.isBlank(raw)) {
+                continue;
+            }
+            ProfileIncludeEntity entity = ProfileIncludeEntity.fromString(raw);
+            if (entity != null) {
+                resolved.add(entity);
+            }
+        }
+        return resolved.isEmpty() ? Collections.singleton(ProfileIncludeEntity.PROFILE) : resolved;
+    }
+
+    /**
      * Searches citizen profiles based on supplied criteria filters (UUID, ID, mobile, Aadhaar, name).
-     * Automatically encrypts search criteria to query secure database indexes, and decrypts the resulting
-     * user records before returning.
+     * Automatically encrypts search criteria to query secure database indexes, decrypts the resulting
+     * user records, and enriches related entities based on requested inclusion flags.
      *
      * @param request profile search request payload
      * @return list of decrypted citizen domain {@link User} profiles matching the criteria
@@ -514,10 +684,26 @@ public class ProfileServiceImpl implements ProfileService {
      */
     @Override
     public List<User> searchProfile(ProfileSearchRequest request) {
-        log.info("[PROFILE-SERVICE] Searching citizen profiles with filters: tenant={}, mobile={}, aadhaar={}",
+        Set<ProfileIncludeEntity> includes = resolveIncludes(request != null ? request.getInclude() : null);
+        return searchProfile(request, includes);
+    }
+
+    /**
+     * Searches citizen profiles based on supplied criteria filters using pre-resolved inclusion sections,
+     * avoiding duplicate resolution between controller and service layers.
+     *
+     * @param request  profile search request payload
+     * @param includes pre-resolved entity sections to enrich
+     * @return list of decrypted citizen domain {@link User} profiles matching the criteria
+     * @throws CustomException if search criteria are invalid or empty
+     */
+    @Override
+    public List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes) {
+        log.info("[PROFILE-SERVICE] Searching citizen profiles with filters: tenant={}, mobile={}, aadhaar={}, include={}",
                 request != null ? request.getTenantId() : null,
                 maskMobile(request != null ? request.getMobileNumber() : null),
-                maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+                maskAadhaar(request != null ? request.getAadhaarNumber() : null),
+                includes);
 
         profileValidator.validateSearch(request);
 
@@ -540,7 +726,81 @@ public class ProfileServiceImpl implements ProfileService {
             return Collections.emptyList();
         }
 
-        return decryptUserList(userList, request.getRequestInfo());
+        List<User> decryptedUsers = decryptUserList(userList, request.getRequestInfo());
+        enrichRelatedEntities(decryptedUsers, stateTenant, includes, request != null ? request.getRequestInfo() : null);
+
+        return decryptedUsers;
+    }
+
+    /**
+     * Enriches retrieved citizen user records with related entity collections (addresses, documents)
+     * based on requested inclusion flags.
+     *
+     * @param users        list of decrypted user entities to enrich
+     * @param stateTenant  resolved state-level tenant identifier
+     * @param includes     set of entity sections to include (e.g. ADDRESS, DOCUMENT)
+     * @param requestInfo  UPYOG request audit context
+     */
+    private void enrichRelatedEntities(List<User> users, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo) {
+        if (CollectionUtils.isEmpty(users) || CollectionUtils.isEmpty(includes)) {
+            return;
+        }
+
+        boolean includeAddresses = includes.contains(ProfileIncludeEntity.ADDRESS);
+        boolean includeDocuments = includes.contains(ProfileIncludeEntity.DOCUMENT);
+
+        if (!includeAddresses && !includeDocuments) {
+            return;
+        }
+
+        for (User user : users) {
+            if (StringUtils.isBlank(user.getUuid())) {
+                continue;
+            }
+
+            if (includeAddresses) {
+                try {
+                    AddressSearchCriteria addrCriteria = AddressSearchCriteria.builder()
+                            .uuid(user.getUuid())
+                            .status(UserConstants.ADDRESS_ACTIVE_STATUS)
+                            .build();
+
+                    List<Address> addresses = null;
+                    if (addressService != null) {
+                        addresses = addressService.searchAddress(addrCriteria, requestInfo);
+                    } else if (addressRepository != null) {
+                        addresses = addressRepository.getAddressV2(addrCriteria);
+                    }
+
+                    if (addresses != null) {
+                        user.setAddresses(new HashSet<>(addresses));
+                    }
+                } catch (Exception e) {
+                    log.error("[PROFILE-SERVICE] Error fetching addresses for user UUID: {}", user.getUuid(), e);
+                }
+            }
+
+            if (includeDocuments) {
+                try {
+                    UserDocumentSearchCriteria docCriteria = UserDocumentSearchCriteria.builder()
+                            .uuid(user.getUuid())
+                            .build();
+
+                    List<UserDocument> documents = null;
+                    if (userDocumentService != null) {
+                        documents = userDocumentService.searchDocuments(docCriteria, requestInfo);
+                    } else if (userDocumentRepository != null) {
+                        documents = userDocumentRepository.search(docCriteria);
+                    }
+
+                    if (documents != null) {
+                        user.setDocuments(documents);
+                    }
+                } catch (Exception e) {
+                    log.error("[PROFILE-SERVICE] Error fetching documents for user UUID: {}", user.getUuid(), e);
+                }
+            }
+        }
     }
 
     /**
@@ -603,6 +863,7 @@ public class ProfileServiceImpl implements ProfileService {
         userToUpdate.setIsIdentityVerified(true);
         userToUpdate.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate() != null
                 ? existingUser.getIdentityVerifiedDate() : new Date());
+        userToUpdate.setIdentityVerifiedSource(UserConstants.IDENTITY_SOURCE_AADHAAR);
         userToUpdate.setLastResyncDate(new Date());
 
         int currentEdits = existingUser.getEdittedCount() != null ? existingUser.getEdittedCount() : 0;
@@ -722,6 +983,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .spouseName(source.getSpouseName())
                 .isIdentityVerified(source.getIsIdentityVerified())
                 .identityVerifiedDate(source.getIdentityVerifiedDate())
+                .identityVerifiedSource(source.getIdentityVerifiedSource())
                 .lastResyncDate(source.getLastResyncDate())
                 .edittedCount(source.getEdittedCount())
                 .lastLoginMethod(source.getLastLoginMethod())
@@ -1020,12 +1282,20 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * Normalizes tenant identifier to state-level tenant code (e.g. "pb.amritsar" -> "pb").
+     * If tenantId is blank, retrieves state-level tenant ID from userConfiguration.
+     * Throws CustomException if getStateLevelTenantId() is null or blank.
      *
      * @param tenantId city or state tenant ID
      * @return state-level tenant identifier
      */
     private String resolveStateTenant(String tenantId) {
-        if (StringUtils.isBlank(tenantId)) return "pb";
+        if (StringUtils.isBlank(tenantId)) {
+            if (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getStateLevelTenantId())) {
+                return userConfiguration.getStateLevelTenantId().trim();
+            }
+            log.error("[PROFILE-SERVICE] Tenant ID cannot be determined: state-level tenant ID is not configured");
+            throw new CustomException(UserConstants.ERROR_TENANT_ID_REQUIRED, "Tenant ID cannot be determined: state-level tenant ID is not configured");
+        }
         return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
     }
 

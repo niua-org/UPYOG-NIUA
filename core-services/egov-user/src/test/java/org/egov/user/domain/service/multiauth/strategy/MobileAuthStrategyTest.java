@@ -73,7 +73,7 @@ public class MobileAuthStrategyTest {
                 .gender(Gender.MALE)
                 .dob(new Date())
                 .type(UserType.CITIZEN)
-                .tenantId("pb")
+                .tenantId("pg")
                 .active(true)
                 .build();
     }
@@ -108,8 +108,8 @@ public class MobileAuthStrategyTest {
     }
 
     @Test
-    @DisplayName("Should flag multipleUsersFound and return list when 2 or more accounts share the same mobile")
-    public void testAuthenticate_WhenMultipleUsersFound_ReturnsMultipleUsersResult() {
+    @DisplayName("Should return primary user when multiple accounts share mobile and multi-account selection is disabled")
+    public void testAuthenticate_WhenMultipleUsersFound_SelectionDisabled_ReturnsPrimaryUser() {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
@@ -129,6 +129,102 @@ public class MobileAuthStrategyTest {
                 .thenReturn(userList);
 
         AuthenticatedUserResult result = mobileAuthStrategy.authenticateAndResolveUser(request);
+
+        assertNotNull(result);
+        assertFalse(result.isMultipleUsersFound());
+        assertNotNull(result.getUser());
+        assertEquals("uuid-father", result.getUser().getUuid());
+        assertEquals(AuthType.MOBILE_NUMBER, result.getAuthType());
+    }
+
+    @Test
+    @DisplayName("Should return user with username matching mobile even when other account is first in candidate list")
+    public void testAuthenticate_WhenSecondaryUserFirstInList_ReturnsUserWithMatchingUsername() {
+        LoginV2Request request = LoginV2Request.builder()
+                .mobileNumber("9876543210")
+                .otp("123456")
+                .tenantId("pb.amritsar")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        // Son (username != mobileNumber) is at index 0; Father (username == mobileNumber) is at index 1
+        User son = buildUser(102L, "uuid-son", "9876543210_sub1", "9876543210", "Aarav Kumar (Son)", "XXXXXXXX2222");
+        User father = buildUser(101L, "uuid-father", "9876543210", "9876543210", "Ravi Kumar (Father)", "XXXXXXXX1111");
+        List<User> userList = Arrays.asList(son, father);
+
+        when(otpRepository.validateOtp(any(OtpValidateRequest.class))).thenReturn(true);
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq(UserConstants.USER_ENCRYPTION_KEY), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(userList);
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(userList);
+
+        AuthenticatedUserResult result = mobileAuthStrategy.authenticateAndResolveUser(request);
+
+        assertNotNull(result);
+        assertFalse(result.isMultipleUsersFound());
+        assertNotNull(result.getUser());
+        assertEquals("uuid-father", result.getUser().getUuid(), "Must return Father whose username equals the mobile number");
+        assertEquals("9876543210", result.getUser().getUsername());
+    }
+
+    @Test
+    @DisplayName("Should throw CustomException when user whose username equals mobile number is inactive")
+    public void testAuthenticate_WhenUserWithMatchingUsernameIsInactive_ThrowsAccountInactive() {
+        LoginV2Request request = LoginV2Request.builder()
+                .mobileNumber("9876543210")
+                .otp("123456")
+                .tenantId("pb.amritsar")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        User son = buildUser(102L, "uuid-son", "9876543210_sub1", "9876543210", "Aarav Kumar (Son)", "XXXXXXXX2222");
+        User father = buildUser(101L, "uuid-father", "9876543210", "9876543210", "Ravi Kumar (Father)", "XXXXXXXX1111");
+        father.setActive(false);
+        List<User> userList = Arrays.asList(son, father);
+
+        when(otpRepository.validateOtp(any(OtpValidateRequest.class))).thenReturn(true);
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq(UserConstants.USER_ENCRYPTION_KEY), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(userList);
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(userList);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                mobileAuthStrategy.authenticateAndResolveUser(request)
+        );
+        assertEquals(UserConstants.ERROR_ACCOUNT_INACTIVE, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should flag multipleUsersFound and return list when multi-account selection is enabled")
+    public void testAuthenticate_WhenMultipleUsersFound_SelectionEnabled_ReturnsMultipleUsersResult() {
+        org.egov.user.config.UserConfiguration config = new org.egov.user.config.UserConfiguration();
+        config.setCitizenLoginPasswordOtpFixedEnabled(false);
+        config.setRolesStateLevelEnabled(true);
+        config.setOtpMaxInvalidAttempts(3);
+        config.setCitizenMultiAccountSelectionEnabled(true);
+        MobileAuthStrategy strategyWithSelection = new MobileAuthStrategy(userService, userRepository, otpRepository, encryptionDecryptionUtil, config);
+
+        LoginV2Request request = LoginV2Request.builder()
+                .mobileNumber("9876543210")
+                .otp("123456")
+                .tenantId("pb.amritsar")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        User father = buildUser(101L, "uuid-father", "9876543210", "9876543210", "Ravi Kumar (Father)", "XXXXXXXX1111");
+        User son = buildUser(102L, "uuid-son", "9876543210_sub1", "9876543210", "Aarav Kumar (Son)", "XXXXXXXX2222");
+        List<User> userList = Arrays.asList(father, son);
+
+        when(otpRepository.validateOtp(any(OtpValidateRequest.class))).thenReturn(true);
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq(UserConstants.USER_ENCRYPTION_KEY), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(userList);
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(userList);
+
+        AuthenticatedUserResult result = strategyWithSelection.authenticateAndResolveUser(request);
 
         assertNotNull(result);
         assertTrue(result.isMultipleUsersFound());
@@ -184,7 +280,7 @@ public class MobileAuthStrategyTest {
         when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq(UserConstants.USER_ENCRYPTION_KEY), eq(UserSearchCriteria.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.emptyList());
-        when(userRepository.isUserPresent(eq("9876543210"), eq("pb"), eq(UserType.CITIZEN))).thenReturn(false);
+        when(userRepository.isUserPresent(any(), any(), any())).thenReturn(false);
         when(userService.createUser(any(User.class), any(RequestInfo.class))).thenReturn(newlyCreated);
 
         AuthenticatedUserResult result = mobileAuthStrategy.authenticateAndResolveUser(request);
@@ -195,5 +291,92 @@ public class MobileAuthStrategyTest {
         assertNotNull(result.getUser());
         assertEquals("uuid-new-citizen", result.getUser().getUuid());
         verify(userService, times(1)).createUser(any(User.class), any(RequestInfo.class));
+    }
+
+    @Test
+    @DisplayName("Should throw ACCOUNT_INACTIVE when multiple accounts share mobile, selection disabled, and all accounts are inactive")
+    public void testAuthenticate_WhenMultipleUsersFound_AllInactive_ThrowsAccountInactive() {
+        LoginV2Request request = LoginV2Request.builder()
+                .mobileNumber("9876543210")
+                .otp("123456")
+                .tenantId("pb.amritsar")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        User user1 = buildUser(101L, "uuid-1", "9876543210", "9876543210", "Citizen 1", null);
+        user1.setActive(false);
+        User user2 = buildUser(102L, "uuid-2", "9876543210_sub1", "9876543210", "Citizen 2", null);
+        user2.setActive(false);
+        List<User> userList = Arrays.asList(user1, user2);
+
+        when(otpRepository.validateOtp(any(OtpValidateRequest.class))).thenReturn(true);
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq(UserConstants.USER_ENCRYPTION_KEY), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(userList);
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(userList);
+
+        org.egov.tracer.model.CustomException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                org.egov.tracer.model.CustomException.class,
+                () -> mobileAuthStrategy.authenticateAndResolveUser(request)
+        );
+
+        assertEquals(UserConstants.ERROR_ACCOUNT_INACTIVE, ex.getCode());
+        assertEquals(UserConstants.MSG_ACCOUNT_INACTIVE, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should throw ACCOUNT_INACTIVE when single matched user is inactive")
+    public void testAuthenticate_WhenSingleUserFound_Inactive_ThrowsAccountInactive() {
+        LoginV2Request request = LoginV2Request.builder()
+                .mobileNumber("9876543210")
+                .otp("123456")
+                .tenantId("pb.amritsar")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        User user1 = buildUser(101L, "uuid-1", "9876543210", "9876543210", "Citizen 1", null);
+        user1.setActive(false);
+
+        when(otpRepository.validateOtp(any(OtpValidateRequest.class))).thenReturn(true);
+        when(encryptionDecryptionUtil.encryptObject(any(UserSearchCriteria.class), eq(UserConstants.USER_ENCRYPTION_KEY), eq(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user1));
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(Collections.singletonList(user1));
+
+        org.egov.tracer.model.CustomException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                org.egov.tracer.model.CustomException.class,
+                () -> mobileAuthStrategy.authenticateAndResolveUser(request)
+        );
+
+        assertEquals(UserConstants.ERROR_ACCOUNT_INACTIVE, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should throw ACCOUNT_INACTIVE when explicitly selected profile is inactive")
+    public void testAuthenticate_WhenSelectedUser_Inactive_ThrowsAccountInactive() {
+        LoginV2Request request = LoginV2Request.builder()
+                .mobileNumber("9876543210")
+                .otp("123456")
+                .tenantId("pb.amritsar")
+                .selectedUserUuid("uuid-inactive")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        User inactiveUser = buildUser(103L, "uuid-inactive", "9876543210_sub2", "9876543210", "Inactive Citizen", null);
+        inactiveUser.setActive(false);
+
+        when(otpRepository.validateOtp(any(OtpValidateRequest.class))).thenReturn(true);
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(inactiveUser));
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
+                .thenReturn(Collections.singletonList(inactiveUser));
+
+        org.egov.tracer.model.CustomException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                org.egov.tracer.model.CustomException.class,
+                () -> mobileAuthStrategy.authenticateAndResolveUser(request)
+        );
+
+        assertEquals(UserConstants.ERROR_ACCOUNT_INACTIVE, ex.getCode());
     }
 }

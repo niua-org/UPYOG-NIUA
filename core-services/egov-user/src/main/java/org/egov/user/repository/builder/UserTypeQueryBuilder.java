@@ -67,7 +67,7 @@ public class UserTypeQueryBuilder {
             ".lastmodifieddate,  userdata.createdby,userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber, " +
-            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
+            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
             "addr.id as addr_id, addr.type as " +
             "addr_type, addr .address as addr_address,  addr.city as addr_city, addr.pincode as addr_pincode, addr" +
             ".tenantid as " +
@@ -93,6 +93,34 @@ public class UserTypeQueryBuilder {
     public static final String UPDATE_FAILED_ATTEMPTS_SQL = " UPDATE eg_user_login_failed_attempts SET active = " +
             "'false' WHERE user_uuid = :user_uuid";
 
+    public static final String INSERT_USER_SQL = "insert into eg_user (id,uuid,digilockerid,tenantid,salutation,dob,locale,username,password,pwdexpirydate,mobilenumber,altcontactnumber,emailid,active,name,gender,pan,aadhaarnumber,"
+            + "type,guardian,guardianrelation,signature,accountlocked,bloodgroup,photo,identificationmark,createddate,lastmodifieddate,createdby,lastmodifiedby,alternatemobilenumber,"
+            + "father_name,mother_name,spouse_name,is_identity_verified,identity_verified_date,identity_verified_source,last_resync_date,editted_count,last_login_method) values (:id,:uuid,:digilockerid,:tenantid,:salutation,"
+            + ":dob,:locale,:username,:password,:pwdexpirydate,:mobilenumber,:altcontactnumber,:emailid,:active,:name,:gender,:pan,:aadhaarnumber,:type,:guardian,:guardianrelation,:signature,"
+            + ":accountlocked,:bloodgroup,:photo,:identificationmark,:createddate,:lastmodifieddate,:createdby,:lastmodifiedby,:alternatemobilenumber,"
+            + ":father_name,:mother_name,:spouse_name,:is_identity_verified,:identity_verified_date,:identity_verified_source,:last_resync_date,:editted_count,:last_login_method) ";
+
+    public static final String UPDATE_DIGILOCKER_ID_SQL = "update eg_user set digilockerid=:DigilockerID, is_identity_verified=:IsIdentityVerified, identity_verified_date=:IdentityVerifiedDate, identity_verified_source=:IdentityVerifiedSource where id=:id";
+
+    public static final String UPDATE_LAST_LOGIN_METHOD_SQL = "update eg_user set last_login_method=:lastLoginMethod where id=:id";
+
+    public static final String UPDATE_USER_SQL = "update eg_user set salutation=:Salutation,dob=:Dob,locale=:Locale,password=:Password,pwdexpirydate=:PasswordExpiryDate,mobilenumber=:MobileNumber,altcontactnumber=:AltContactNumber,emailid=:EmailId,active=:Active,name=:Name,gender=:Gender,pan=:Pan,aadhaarnumber=:AadhaarNumber,"
+            + "type=:Type,guardian=:Guardian,guardianrelation=:GuardianRelation,signature=:Signature,"
+            + "accountlocked=:AccountLocked, accountlockeddate=:AccountLockedDate, bloodgroup=:BloodGroup,"
+            + "photo=:Photo, identificationmark=:IdentificationMark,lastmodifieddate=:LastModifiedDate,"
+            + "lastmodifiedby=:LastModifiedBy, alternatemobilenumber=:alternatemobilenumber, digilockerid=:DigilockerID,"
+            + "father_name=:FatherName, mother_name=:MotherName, spouse_name=:SpouseName, is_identity_verified=:IsIdentityVerified, identity_verified_date=:IdentityVerifiedDate, identity_verified_source=:IdentityVerifiedSource, last_resync_date=:LastResyncDate, editted_count=:EdittedCount, last_login_method=:LastLoginMethod where id = :id or uuid = :uuid or (username=:username and tenantid=:tenantid and type=:type)";
+
+    public static final String USER_PRESENT_BY_USERNAME_AND_TENANT_SQL = "select count(*) from eg_user where username =:userName and tenantId =:tenantId and type = :userType ";
+
+    public static final String SELECT_USER_ID_BY_UUID_SQL = "select id from eg_user where uuid = :uuid";
+
+    public static final String SELECT_TENANT_ID_BY_USER_ID_SQL = "select tenantid from eg_user where id = :id";
+
+    public static final String SELECT_TENANT_ID_BY_UUID_SQL = "select tenantid from eg_user where uuid = :uuid";
+
+    public static final String SELECT_UUID_BY_USER_ID_SQL = "select uuid from eg_user where id = :id";
+
     private static final String SELECT_USER_ROLE_QUERY = "SELECT distinct(user_id) from eg_userrole_v1 ur";
 
     // Below is the query to bring the user details along with the addresses and roles part of V2 api endpoints
@@ -101,7 +129,7 @@ public class UserTypeQueryBuilder {
             ".lastmodifieddate,  userdata.createdby, userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber, " +
-            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
+            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
             "addr.id as addr_id, addr.type as " +
             "addr_type, addr .address as addr_address,  addr.city as addr_city, addr.pincode as addr_pincode, addr" +
             ".tenantid as " +
@@ -116,7 +144,7 @@ public class UserTypeQueryBuilder {
             ".lastmodifieddate,  userdata.createdby, userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber," +
-            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
+            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
             " ur.role_code as role_code, ur.role_tenantid as role_tenantid \n" +
             "\tFROM eg_user userdata LEFT OUTER JOIN eg_userrole_v1 ur ON userdata.id = ur.user_id AND userdata.tenantid = ur.user_tenantid  ";
     @SuppressWarnings("rawtypes")
@@ -311,55 +339,6 @@ public class UserTypeQueryBuilder {
         return true;
     }
 
-    public String getInsertUserQuery() {
-        return "insert into eg_user (id,uuid,digilockerid,tenantid,salutation,dob,locale,username,password,pwdexpirydate,mobilenumber,altcontactnumber,emailid,active,name,gender,pan,aadhaarnumber,"
-                + "type,guardian,guardianrelation,signature,accountlocked,bloodgroup,photo,identificationmark,createddate,lastmodifieddate,createdby,lastmodifiedby,alternatemobilenumber,"
-                + "father_name,mother_name,spouse_name,is_identity_verified,identity_verified_date,last_resync_date,editted_count,last_login_method) values (:id,:uuid,:digilockerid,:tenantid,:salutation,"
-                + ":dob,:locale,:username,:password,:pwdexpirydate,:mobilenumber,:altcontactnumber,:emailid,:active,:name,:gender,:pan,:aadhaarnumber,:type,:guardian,:guardianrelation,:signature,"
-                + ":accountlocked,:bloodgroup,:photo,:identificationmark,:createddate,:lastmodifieddate,:createdby,:lastmodifiedby,:alternatemobilenumber,"
-                + ":father_name,:mother_name,:spouse_name,:is_identity_verified,:identity_verified_date,:last_resync_date,:editted_count,:last_login_method) ";
-    }
-    /**
-     * Returns the SQL query to update the DigiLocker ID for a given user ID.
-     *
-     * @return SQL update query string
-     */
-    public String getDigilockerUpdateQuery(){
-        return "update eg_user set digilockerid=:DigilockerID where id=:id";
-    }
-
-    /**
-     * Returns the SQL query to update the last login method for a given user ID.
-     *
-     * @return SQL update query string
-     */
-    public String getUpdateLastLoginMethodQuery(){
-        return "update eg_user set last_login_method=:lastLoginMethod where id=:id";
-    }
-
-    /**
-     * Returns the SQL query to update a user entity including demographic and verification columns.
-     *
-     * @return SQL update query string
-     */
-    public String getUpdateUserQuery() {
-        return "update eg_user set salutation=:Salutation,dob=:Dob,locale=:Locale,password=:Password,pwdexpirydate=:PasswordExpiryDate,mobilenumber=:MobileNumber,altcontactnumber=:AltContactNumber,emailid=:EmailId,active=:Active,name=:Name,gender=:Gender,pan=:Pan,aadhaarnumber=:AadhaarNumber,"
-                + "type=:Type,guardian=:Guardian,guardianrelation=:GuardianRelation,signature=:Signature," +
-                "accountlocked=:AccountLocked, accountlockeddate=:AccountLockedDate, bloodgroup=:BloodGroup," +
-                "photo=:Photo, identificationmark=:IdentificationMark,lastmodifieddate=:LastModifiedDate," +
-                "lastmodifiedby=:LastModifiedBy, alternatemobilenumber=:alternatemobilenumber, digilockerid=:DigilockerID," +
-                "father_name=:FatherName, mother_name=:MotherName, spouse_name=:SpouseName, is_identity_verified=:IsIdentityVerified, identity_verified_date=:IdentityVerifiedDate, last_resync_date=:LastResyncDate, editted_count=:EdittedCount, last_login_method=:LastLoginMethod where id = :id or uuid = :uuid or (username=:username and tenantid=:tenantid and type=:type)";
-    }
-
-    /**
-     * Returns the SQL query to check existence of a user matching username, tenant, and type.
-     *
-     * @return SQL select count query string
-     */
-    public String getUserPresentByUserNameAndTenant() {
-        return "select count(*) from eg_user where username =:userName and tenantId =:tenantId and type = :userType ";
-    }
-
     /**
      * Constructs a SQL query to fetch user details based on the provided search criteria.
      *
@@ -377,41 +356,5 @@ public class UserTypeQueryBuilder {
 
         addOrderByClause(selectQuery, userSearchCriteria);
         return addPagingClause(selectQuery, preparedStatementValues, userSearchCriteria);
-    }
-
-    /**
-     * Returns the SQL query to find user ID by UUID string.
-     *
-     * @return SQL select query string
-     */
-    public String getUserIdByUuid() {
-        return "select id from eg_user where uuid = :uuid";
-    }
-
-    /**
-     * Returns the SQL query to get tenant ID for a user by id.
-     *
-     * @return SQL select query string
-     */
-    public String getTenantIdByUserIdQuery() {
-        return "select tenantid from eg_user where id = :id";
-    }
-
-    /**
-     * Returns the SQL query to get tenant ID for a user by uuid.
-     *
-     * @return SQL select query string
-     */
-    public String getTenantIdByUuidQuery() {
-        return "select tenantid from eg_user where uuid = :uuid";
-    }
-
-    /**
-     * Returns the SQL query to get uuid for a user by id.
-     *
-     * @return SQL select query string
-     */
-    public String getUuidByUserIdQuery() {
-        return "select uuid from eg_user where id = :id";
     }
 }

@@ -36,6 +36,7 @@ public class User implements Serializable {
     private String spouseName;
     private Boolean isIdentityVerified;
     private Long identityVerifiedDate;
+    private String identityVerifiedSource;
     private Long lastResyncDate;
     private Integer edittedCount;
     private String lastLoginMethod;
