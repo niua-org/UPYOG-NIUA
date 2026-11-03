@@ -19,6 +19,7 @@ import re
 import json
 import time
 import logging
+import yaml
 from typing import Dict, Any, Optional, Tuple, List
 from dotenv import load_dotenv
 
@@ -27,6 +28,29 @@ logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
+
+
+def _load_system_messages() -> dict:
+    """Loads system message responses and configurations from config.yml.
+
+    Lookup Order:
+        1. Project root configuration: `<project_root>/config.yml`
+        2. Workflow directory fallback: `<project_root>/workflow/config.yml`
+        3. Hardcoded empty dictionary `{}` if neither exists or parsing fails.
+
+    Returns:
+        dict: The 'system_messages' mapping containing greeting, blocked, and login responses.
+    """
+    try:
+        from services.intent_service import _load_system_config
+        cfg = _load_system_config()
+        if isinstance(cfg, dict):
+            return cfg.get("system_messages", {})
+    except Exception as e:
+        logger.warning(f"Could not load system_messages via _load_system_config: {e}")
+    return {}
+
+_SYSTEM_MESSAGES: dict = _load_system_messages()
 
 
 # ====================================================================
@@ -200,34 +224,53 @@ def resolve_auth_and_profile(session_id: str, request_info: dict, user_data: dic
 # 3. SPECIAL INTENT DETECTOR & LOGIN GUIDANCE
 # ====================================================================
 
-def handle_login_intent(user_input: str, user_language: str, is_authenticated: bool, cached_info: Optional[dict]) -> Tuple[bool, Optional[dict]]:
-    """Handles login guidance and login claim queries."""
+def handle_login_intent(
+    user_input: str,
+    user_language: str,
+    is_authenticated: bool,
+    cached_info: Optional[dict],
+    detected_intent: Optional[str] = None
+) -> Tuple[bool, Optional[dict]]:
+    """Handles login guidance and login claim queries using config messages and detected intent.
+
+    Args:
+        user_input (str): The raw text message entered by the citizen.
+        user_language (str): Target language code ('en' or 'hi').
+        is_authenticated (bool): Whether citizen currently holds an authenticated session.
+        cached_info (dict | None): User profile info (e.g. name, phone number) if logged in.
+        detected_intent (str | None, optional): Explicit intent passed from unified classifier
+            or fast-path matcher ('login_query' or 'login_claim'). If None, keyword matching is performed.
+
+    Returns:
+        Tuple[bool, Optional[dict]]:
+            - bool: True if handled as a login action/query, False otherwise.
+            - dict | None: Response payload dict ({response, lang, mode, audio}) if handled, else None.
+    """
     from services.voice_service import text_to_speech
 
-    ui_clean = user_input.lower().strip()
-    login_kws = [
-        "how to login", "how to log in", "how do i login", "how can i login",
-        "login kaise kare", "login kaise karte hain", "login process",
-        "login process kya hai", "can you login", "log me in", "where is login",
-        "login option", "login button", "login kaise hoga", "login kahan hai",
-        "login kaise karein", "login kaise karey", "login steps", "login karna",
-        "login kaise kiya jata hai", "login karna hai", "can i login without clicking",
-        "login without clicking", "how to sign in", "sign in kaise kare"
-    ]
-    is_login_query = (
-        any(kw in ui_clean for kw in login_kws) or
-        (("login" in ui_clean or "log in" in ui_clean or "sign in" in ui_clean) and
-         any(w in ui_clean for w in ["how", "kaise", "where", "kahan", "procedure", "karna", "process", "steps", "help", "batao", "bataiye", "can you", "without", "bina"]))
-    )
-    if is_login_query:
+    sys_login = _SYSTEM_MESSAGES.get("login", {})
+
+    # Fallback keyword match if detected_intent is not yet set
+    if not detected_intent:
+        ui_clean = user_input.lower().strip()
+        login_kws = sys_login.get("keywords_query", ["how to login", "how do i login", "login kaise kare"])
+        login_claim_kws = sys_login.get("keywords_claim", ["login done", "logged in", "login ho gaya"])
+        if any(kw in ui_clean for kw in login_kws):
+            detected_intent = "login_query"
+        elif any(ui_clean == kw or ui_clean.startswith(kw) for kw in login_claim_kws):
+            detected_intent = "login_claim"
+
+    if detected_intent == "login_query":
         if user_language == "hi":
-            login_msg = (
+            login_msg = sys_login.get(
+                "guidance_hi",
                 "बाईं ओर के साइडबार (Left Sidebar) में नीचे जाएं और **Login** विकल्प पर क्लिक करें। "
                 "अपना पंजीकृत मोबाइल नंबर भरें और फिर प्राप्त OTP दर्ज करें। "
                 "लॉगिन करने के बाद, आप बुकिंग बना सकते हैं, शिकायत दर्ज कर सकते हैं और अपने आवेदन की स्थिति देख सकते हैं।"
             )
         else:
-            login_msg = (
+            login_msg = sys_login.get(
+                "guidance_en",
                 "In the left sidebar, scroll down and click on **Login**. "
                 "Enter your registered mobile number and then enter the OTP received on your phone. "
                 "Once logged in, you will be able to create bookings, register complaints, and check your application status."
@@ -235,26 +278,31 @@ def handle_login_intent(user_input: str, user_language: str, is_authenticated: b
         audio_output = text_to_speech(login_msg, user_language)
         return True, {"response": login_msg, "lang": user_language, "mode": "faq", "audio": audio_output}
 
-    login_claim_kws = [
-        "logging done", "login done", "logged in", "i have logged in",
-        "i logged in", "done", "login ho gaya", "maine login kar liya",
-        "login complete", "login kar liya", "login hogaya", "signed in",
-        "i have signed in", "now logged in", "login completed", "done login",
-        "login kar chuka hu", "login ho chuka hai"
-    ]
-    is_login_claim = any(ui_clean == kw or ui_clean.startswith(kw) for kw in login_claim_kws)
-    if is_login_claim:
+    if detected_intent == "login_claim":
         if is_authenticated:
             user_name = (cached_info.get("name") if cached_info else None) or "Citizen"
             if user_language == "hi":
-                resp_msg = f"बहुत बढ़िया! आपकी पहचान सत्यापित हो गई है ({user_name})। अब आप विज्ञापन बुकिंग कर सकते हैं या शिकायत दर्ज कर सकते हैं। आप क्या करना चाहते हैं?"
+                resp_template = sys_login.get(
+                    "verified_hi",
+                    "बहुत बढ़िया! आपकी पहचान सत्यापित हो गई है ({name})। अब आप विज्ञापन बुकिंग कर सकते हैं या शिकायत दर्ज कर सकते हैं। आप क्या करना चाहते हैं?"
+                )
             else:
-                resp_msg = f"Great! Your login session is verified ({user_name}). You can now proceed to book an advertisement or register a complaint. How would you like to proceed?"
+                resp_template = sys_login.get(
+                    "verified_en",
+                    "Great! Your login session is verified ({name}). You can now proceed to book an advertisement or register a complaint. How would you like to proceed?"
+                )
+            resp_msg = resp_template.replace("{name}", str(user_name))
         else:
             if user_language == "hi":
-                resp_msg = "मुझे अभी आपका सक्रिय लॉगिन सत्र नहीं मिला है। कृपया बाईं ओर के साइडबार में नीचे **Login** विकल्प पर क्लिक करके अपने मोबाइल नंबर और OTP से लॉगिन पूरा करें।"
+                resp_msg = sys_login.get(
+                    "unverified_hi",
+                    "मुझे अभी आपका सक्रिय लॉगिन सत्र नहीं मिला है। कृपया बाईं ओर के साइडबार में नीचे **Login** विकल्प पर क्लिक करके अपने मोबाइल नंबर और OTP से लॉगिन पूरा करें।"
+                )
             else:
-                resp_msg = "I do not detect an active logged-in session yet. Please complete the login by clicking **Login** in the left sidebar and entering your mobile number and OTP."
+                resp_msg = sys_login.get(
+                    "unverified_en",
+                    "I do not detect an active logged-in session yet. Please complete the login by clicking **Login** in the left sidebar and entering your mobile number and OTP."
+                )
         audio_output = text_to_speech(resp_msg, user_language)
         return True, {"response": resp_msg, "lang": user_language, "mode": "faq", "audio": audio_output}
 
@@ -262,73 +310,10 @@ def handle_login_intent(user_input: str, user_language: str, is_authenticated: b
 
 
 def detect_special_intents(user_input: str) -> Optional[dict]:
-    """Detects draft operations and profile queries before LLM intent classifier."""
+    """Bypasses LLM classification for structured UI JSON payloads."""
     ui_lower = user_input.strip().lower()
-
     if (ui_lower.startswith("[") and ui_lower.endswith("]")) or (ui_lower.startswith("{") and ui_lower.endswith("}")):
         return {"intent": "none", "service": "None", "emotion": "neutral"}
-
-    profile_triggers = [
-        "profile", "my profile", "profile details", "who am i", "what is my name",
-        "show my details", "my details", "account details", "my account",
-        "user details", "mera profile", "meri profile", "mera naam", "meri details",
-        "profile info", "my info", "account info"
-    ]
-    if any(re.search(rf'\b{re.escape(w)}\b', ui_lower) for w in profile_triggers):
-        return {"intent": "profile", "service": "None", "emotion": "neutral"}
-
-    draft_delete_patterns = [
-        r"\b(delete|remove|clear|discard|cancel|erase|drop)\s+(all\s+)?(my\s+)?(saved\s+)?(drafts?|applications?)\b",
-        r"\b(my\s+)?(saved\s+)?(drafts?|applications?)\s+(ko\s+)?(delete|cancel|clear|discard|remove|hatao|hata\s*do|hataiye|mitado)\b",
-        r"\b(delete|remove|clear|discard|cancel)\s+(the\s+)?drafts?\b",
-        r"\b(delete|remove|clear|discard|cancel)\s+(draft\s*\d+|option\s*\d+|\d+)\b",
-        r"\b(delete|remove|clear|discard|cancel)\s+(grievance|complaint|booking|advertisement|adv)\s+draft\b",
-        r"\bdraft(s)?\s+(delete|cancel|clear|discard|remove|hatao|hata\s*do|hataiye|khatam)\b",
-        r"\b(mere|mera|sab|saare)\s+draft(s)?\s+(delete|cancel|clear|hatao|hata\s*do|hataiye)\b",
-        r"\bdelete\s+(all\s+)?drafts?\b",
-        r"\bcancel\s+(all\s+)?drafts?\b",
-        r"\bclear\s+(all\s+)?drafts?\b",
-        r"\bdiscard\s+(all\s+)?drafts?\b",
-        r"\bcancel\s+application\b",
-        r"\bcancel\s+my\s+application\b",
-        r"\bdelete\s+my\s+application\b",
-        r"\bdelete\s+application\b"
-    ]
-    if any(re.search(p, ui_lower) for p in draft_delete_patterns):
-        return {"intent": "draft_delete", "service": "None", "emotion": "neutral"}
-
-    draft_continue_patterns = [
-        r"\b(continue|resume)\s+(my\s+)?(application|booking|complaint|draft|grievance)\b",
-        r"\b(aage\s+badhao|jaari\s+rakhein|continue\s+karo)\b",
-        r"^continue$",
-        r"^resume$"
-    ]
-    if any(re.search(p, ui_lower) for p in draft_continue_patterns):
-        return {"intent": "draft_continue_application", "service": "None", "emotion": "neutral"}
-
-    draft_save_patterns = [
-        r"\bsave\s+(the\s+|my\s+)?(draft|application)\b",
-        r"\bdraft\s+save\s*(karo|kar\s*do|karein)?\b"
-    ]
-    if any(re.search(p, ui_lower) for p in draft_save_patterns):
-        return {"intent": "draft_save", "service": "None", "emotion": "neutral"}
-
-    draft_view_patterns = [
-        r"\b(show|view|list|check|see|get|fetch|display|open|dikhao|batao|bataiye)\s+(all\s+)?(my\s+)?(saved\s+)?(drafts?)\b",
-        r"\b(my\s+|saved\s+|all\s+|mere\s+|mera\s+)?drafts?\s+(list|dikhao|batao|bataiye|dekho|dekhein)\b",
-        r"^(show\s+)?(my\s+)?drafts?$",
-        r"^(saved\s+)?drafts?$",
-        r"^(mere\s+|mera\s+)?drafts?(\s+dikhao)?$",
-        r"\b(show|view|list|open)\s+drafts?\b"
-    ]
-    if any(re.search(p, ui_lower) for p in draft_view_patterns) or (
-        "draft" in ui_lower and any(w in ui_lower for w in ["show", "resume", "continue", "open", "list", "view", "check", "dikhao", "batao"])
-    ):
-        return {"intent": "draft_resume", "service": "None", "emotion": "neutral"}
-
-    if "end conversation" in ui_lower:
-        return {"intent": "end_conversation", "service": "None", "emotion": "neutral"}
-
     return None
 
 
@@ -467,21 +452,50 @@ def resolve_active_and_target_plugin(user_input: str, intent: str, phone: str, s
 # 6. WORKFLOW INTERRUPTION & MID-FLOW FAQ
 # ====================================================================
 
-def handle_workflow_interruption_or_faq(user_input: str, user_language: str, history: list, session_id: str, phone: str, active_plugin: Optional[str], workflows: dict, config: dict, is_ui_payload: bool) -> Tuple[bool, Optional[dict]]:
-    """Detects mid-workflow questions, auto-saves active draft, and responds with FAQ."""
+def handle_workflow_interruption_or_faq(
+    user_input: str,
+    user_language: str,
+    history: list,
+    session_id: str,
+    phone: str,
+    active_plugin: Optional[str],
+    workflows: dict,
+    config: dict,
+    is_ui_payload: bool,
+    intent_data: Optional[dict] = None
+) -> Tuple[bool, Optional[dict]]:
+    """Detects mid-workflow questions via LLM intent classification, auto-saves active draft, and responds with FAQ.
+
+    Args:
+        user_input (str): The current user query or response.
+        user_language (str): Language code of the user ('en', 'hi').
+        history (list): Recent conversation turns.
+        session_id (str): Chat session identifier.
+        phone (str): User phone number.
+        active_plugin (str | None): Currently active LangGraph workflow plugin (e.g. 'grievance', 'adv_booking').
+        workflows (dict): Registry of loaded workflow plugin graphs.
+        config (dict): LangGraph runtime config with thread_id.
+        is_ui_payload (bool): True if the input was generated from a UI button/selection rather than free text.
+        intent_data (dict | None, optional): Unified intent classification payload from classify_intent,
+            containing 'intent', 'is_question', 'classifier_failed', and 'reasoning'.
+
+    Returns:
+        Tuple[bool, Optional[dict]]:
+            - bool: True if the input was handled as a mid-workflow question/FAQ, False otherwise.
+            - dict | None: Response dictionary containing FAQ response and draft save note if interrupted.
+    """
     if not active_plugin or active_plugin not in workflows or is_ui_payload:
         return False, None
 
-    question_triggers = [
-        "?", "what is", "what does", "explain", "meaning", "kya hai", "kaise", "kyun",
-        "tell me about", "rules for", "how to", "who is", "help with", "information about",
-        "where can", "details of", "procedure for", "charges for", "fees for", "kya hota",
-        "kaun", "kahan", "batao", "bataiye", "jaankari", "information"
-    ]
-    is_explicit_question = any(q in user_input.lower() for q in question_triggers)
-
+    # 1. Option selection guard: check if user_input matches active workflow options or numbers
     is_option_selection = False
-    if not is_explicit_question:
+    clean_in = re.sub(r'[\s_]+', '', user_input.strip().lower())
+    is_digit_choice = bool(re.match(r'^(?:option\s*)?\d+$', user_input.strip().lower()))
+    generic_responses = {"yes", "no", "yeah", "yup", "ya", "ok", "okay", "sure", "confirm", "cancel", "haan", "nahi", "nahin", "1", "2", "option 1", "option 2"}
+
+    if is_digit_choice or user_input.strip().lower() in generic_responses:
+        is_option_selection = True
+    else:
         state = workflows[active_plugin].get_state(config)
         if state and state.values:
             draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
@@ -501,13 +515,22 @@ def handle_workflow_interruption_or_faq(user_input: str, user_language: str, his
             slots = [s.get("name", "") if isinstance(s, dict) else str(s) for s in (draft.get("_slot_options") or [])]
 
             all_opts = [re.sub(r'[\s_]+', '', str(o).lower()) for o in (cats + subs + locs + slots) if o]
-            clean_in = re.sub(r'[\s_]+', '', user_input.strip().lower())
-            is_digit_choice = bool(re.match(r'^(?:option\s*)?\d+$', user_input.strip().lower()))
-
-            if is_digit_choice or clean_in in all_opts or any(clean_in == o or (o in clean_in and len(user_input.split()) <= 3) for o in all_opts):
+            if clean_in in all_opts or any(clean_in == o or (o in clean_in and len(user_input.split()) <= 3) for o in all_opts):
                 is_option_selection = True
 
-    if is_explicit_question and not is_option_selection:
+    if is_option_selection:
+        return False, None
+
+    # 2. Never interrupt if classifier failed, was unconfigured, or reasoning indicates failure
+    if (intent_data or {}).get("classifier_failed") or (intent_data or {}).get("reasoning") in ["classifier failed", "Groq client unconfigured"]:
+        return False, None
+
+    # 3. Determine if this message is an informational question or FAQ
+    intent = (intent_data or {}).get("intent", "")
+    is_question = bool((intent_data or {}).get("is_question", False))
+    is_explicit_question = is_question or (intent == "faq" and "?" in user_input)
+
+    if is_explicit_question:
         from services.rag_service import retrieve_document
         from services.voice_service import text_to_speech
         from storage.qdrant_manager import MemoryManager
@@ -884,3 +907,223 @@ def build_chat_error_response(error: Exception, user_language: str = "en") -> di
         "mode": mode,
         "audio": audio_output
     }
+
+
+def validate_and_sanitize_name(name: Any) -> Optional[str]:
+    """Validates and sanitizes citizen name extracted by LLM.
+
+    Security & Safety Rules:
+        - Must be a string with length between 2 and 40 characters.
+        - Must only contain English letters, Devanagari characters, spaces, hyphens, or apostrophes.
+        - Rejects prompt injection keywords, commands, instruction markers, and code punctuation.
+        - Preserves mixed-case names (e.g. 'McDonald') without destructive .capitalize().
+
+    Args:
+        name (Any): The raw candidate name extracted from the user's message.
+
+    Returns:
+        str | None: Cleaned and formatted name if valid, otherwise None.
+    """
+    if not isinstance(name, str):
+        return None
+    clean = name.strip()
+    if len(clean) < 2 or len(clean) > 40:
+        return None
+
+    # Reject instruction-like or prompt injection patterns
+    suspicious_patterns = [
+        r'\bignore\b', r'\binstructions?\b', r'\bsystem\b', r'\bprompt\b',
+        r'\bassistant\b', r'\bdelete\b', r'\bdrop\b', r'\bexec\b', r'\bselect\b',
+        r'\badmin\b', r'\broot\b', r'\bpassword\b', r'\btoken\b', r'\bcurl\b',
+        r'[\{\}\<\>\[\]\(\);\\\/\|\*\&\^\%\$\#\@\!]'
+    ]
+    for pattern in suspicious_patterns:
+        if re.search(pattern, clean, re.IGNORECASE):
+            logger.warning(f"[Security] Rejected suspicious extracted citizen name: '{clean}'")
+            return None
+
+    # Only allow letters (English + Devanagari), space, hyphen, and apostrophe
+    if not re.match(r'^[\sa-zA-Z\u0900-\u097F\'.\-]+$', clean):
+        logger.warning(f"[Security] Name contains disallowed characters: '{clean}'")
+        return None
+
+    # Preserve casing for mixed-case names (e.g. McDonald, O'Connor), title-case lowercase
+    words = [w.strip() for w in clean.split() if w.strip()]
+    formatted = []
+    for w in words:
+        if w.islower():
+            formatted.append(w.capitalize())
+        else:
+            formatted.append(w)
+    return " ".join(formatted)
+
+
+# ====================================================================
+# 11. UNIFIED INTENT DISPATCHER (Strategy Pattern)
+# ====================================================================
+
+def dispatch_chat_request(
+    user_input: str,
+    user_language: str,
+    detected_script: str,
+    history: list,
+    session_id: str,
+    phone_anchor: str,
+    is_authenticated: bool,
+    cached_info: Optional[dict],
+    workflows: dict,
+    services_registry: list,
+    system_config: dict
+) -> dict:
+    """Centralized dispatcher that processes citizen intent, resolves active workflows,
+    handles interruptions, and executes either workflow plugins or knowledge base RAG.
+
+    Args:
+        user_input (str): The raw text message entered by the citizen.
+        user_language (str): Target language code ('en' or 'hi').
+        detected_script (str): Script detection ('devanagari', 'latin', etc.).
+        history (list): Recent conversation turn history as list of dicts.
+        session_id (str): Chat session UUID.
+        phone_anchor (str): Phone number or user identifier anchoring the session.
+        is_authenticated (bool): Whether the user is verified/authenticated.
+        cached_info (dict | None): User profile data (name, phone) if available.
+        workflows (dict): Mapping of registered LangGraph plugin workflows.
+        services_registry (list): Registry of configured municipal service plugins.
+        system_config (dict): Global configuration parsed from config.yml.
+
+    Returns:
+        dict: Standardized chat response object:
+            {
+                "response": str,      # Text response to be displayed to user
+                "lang": str,          # Language code of response ('en', 'hi')
+                "mode": str,          # Response mode: 'greeting', 'blocked', 'faq',
+                                      # 'workflow', 'auth_required', 'rate_limit',
+                                      # 'context_limit', or 'error'
+                "audio": str | None   # Base64 encoded audio bytes for voice playback
+            }
+
+    Side Effects:
+        - Redis User Profile: Updates citizen's preferred name when introduced and validated.
+        - Redis Pending Interruption: Manages mid-workflow interruption states.
+        - Draft Auto-Save: Automatically saves active draft to Qdrant memory when citizen asks an FAQ.
+        - LangGraph Checkpointer: Updates workflow checkpoint state for transactional dialogs.
+    """
+    from services.voice_service import text_to_speech
+    from services.intent_service import classify_intent, build_greeting_response
+    from storage.redis_manager import save_user_profile_name
+
+    phone = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
+    history_key = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
+
+    # 1. Multi-Draft Selection Menu Interception (if citizen is selecting an option)
+    is_multi_handled, multi_resp = handle_pending_multi_draft(user_input, user_language, phone, session_id, workflows)
+    if is_multi_handled:
+        return multi_resp
+
+    # 2. Fast-Path Keyword Matching (bypass expensive LLM call for exact greetings & login queries)
+    clean_in = re.sub(r'[\s_]+', ' ', user_input.strip().lower())
+    greeting_kws = [k.lower() for k in system_config.get("system_messages", {}).get("greeting", {}).get("keywords", [])]
+    if not greeting_kws:
+        greeting_kws = ["hello", "hi", "hey", "namaste", "नमस्ते", "हेलो"]
+
+    login_cfg = system_config.get("system_messages", {}).get("login", {})
+    login_query_kws = [k.lower() for k in login_cfg.get("keywords_query", ["how to login", "how do i login", "login kaise kare", "login help"])]
+    login_claim_kws = [k.lower() for k in login_cfg.get("keywords_claim", ["login done", "logged in", "login ho gaya", "maine login kar liya"])]
+
+    special_intent = detect_special_intents(user_input)
+    if special_intent:
+        intent_data = special_intent
+    elif clean_in in greeting_kws:
+        intent_data = {
+            "intent": "greeting",
+            "service": None,
+            "emotion": "neutral",
+            "extracted_name": None,
+            "is_question": False,
+            "reasoning": "fast-path greeting keyword match"
+        }
+    elif any(clean_in == kw or clean_in == f"how to {kw}" for kw in login_query_kws):
+        intent_data = {
+            "intent": "login_query",
+            "service": None,
+            "emotion": "neutral",
+            "extracted_name": None,
+            "is_question": True,
+            "reasoning": "fast-path login query keyword match"
+        }
+    elif any(clean_in == kw for kw in login_claim_kws):
+        intent_data = {
+            "intent": "login_claim",
+            "service": None,
+            "emotion": "neutral",
+            "extracted_name": None,
+            "is_question": False,
+            "reasoning": "fast-path login claim keyword match"
+        }
+    else:
+        intent_data = classify_intent(user_input, history, user_language)
+
+    # 3. Save citizen name if introduction was extracted and passes security validation
+    extracted_name = intent_data.get("extracted_name")
+    validated_name = validate_and_sanitize_name(extracted_name)
+    if validated_name:
+        save_user_profile_name(history_key, validated_name)
+
+    intent = intent_data.get("intent", "faq")
+    logger.info(f"INTENT: {intent}, SERVICE: {intent_data.get('service')}, EMOTION: {intent_data.get('emotion')}")
+
+    # 4. Pure greeting intent
+    if intent == "greeting":
+        greet_msg = build_greeting_response(user_language, workflows)
+        audio_output = text_to_speech(greet_msg, user_language)
+        return {"response": greet_msg, "lang": user_language, "mode": "greeting", "audio": audio_output}
+
+    # 5. Out-of-domain conversational queries (Semantic Domain Filter)
+    if intent == "out_of_domain":
+        from services.rag_service import get_rejection_message
+        sys_blocked = system_config.get("system_messages", {}).get("blocked", {})
+        if user_language == 'hi':
+            blocked_msg = sys_blocked.get("response_hi") or get_rejection_message("out_of_domain", "hi")
+        else:
+            blocked_msg = sys_blocked.get("response_en") or get_rejection_message("out_of_domain", "en")
+        audio_output = text_to_speech(blocked_msg, user_language)
+        return {"response": blocked_msg, "lang": user_language, "audio": audio_output, "mode": "blocked"}
+
+    # 6. Login guidance & claim verification
+    if intent in ["login_query", "login_claim"]:
+        is_login_handled, login_resp = handle_login_intent(user_input, user_language, is_authenticated, cached_info, detected_intent=intent)
+        if is_login_handled:
+            return login_resp
+
+    # 7. Active Module & Target Plugin Resolution
+    config = {"configurable": {"thread_id": phone}}
+    active_plugin, plugin_intent, target_wf = resolve_active_and_target_plugin(
+        user_input, intent, phone, session_id, workflows, services_registry, config
+    )
+
+    # 8. Mid-Workflow Interruption / FAQ
+    ui_lower = user_input.strip().lower()
+    is_ui_payload = (ui_lower.startswith("[") and ui_lower.endswith("]")) or (ui_lower.startswith("{") and ui_lower.endswith("}"))
+    is_interrupted, faq_resp = handle_workflow_interruption_or_faq(
+        user_input, user_language, history, session_id, phone, active_plugin, workflows, config, is_ui_payload, intent_data=intent_data
+    )
+    if is_interrupted:
+        return faq_resp
+
+    # 9. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
+    is_draft_op, draft_resp = handle_draft_management(
+        intent, user_input, user_language, phone, session_id, active_plugin, workflows, config
+    )
+    if is_draft_op:
+        return draft_resp
+
+    # 10. Transactional Workflow Execution (LangGraph Plugins)
+    if target_wf and target_wf in workflows:
+        logger.info(f"Routing to dynamic plugin: {target_wf}")
+        return execute_workflow_plugin(
+            target_wf, user_input, user_language, phone, session_id, is_authenticated
+        )
+
+    # 11. Knowledge Base RAG / FAQ Retrieval Fallback
+    return execute_rag_fallback(user_input, user_language, detected_script, history, session_id)
+
