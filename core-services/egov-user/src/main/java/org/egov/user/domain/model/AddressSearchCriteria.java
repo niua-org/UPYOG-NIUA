@@ -1,6 +1,5 @@
 package org.egov.user.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -27,15 +26,12 @@ public class AddressSearchCriteria {
     private String status;
 
     @JsonProperty("uuid")
-    @JsonAlias({"userUuid", "user_uuid"})
     private String uuid; // Search address with particular user using uuid
 
     @JsonProperty("userUuids")
-    @JsonAlias({"user_uuids", "uuids"})
     private List<String> userUuids;
 
     @JsonProperty("userIds")
-    @JsonAlias({"user_ids"})
     private List<Long> userIds;
 
     /**

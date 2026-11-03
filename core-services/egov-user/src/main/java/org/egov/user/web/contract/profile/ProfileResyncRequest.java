@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.profile;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,33 +29,27 @@ public class ProfileResyncRequest {
 
     @Schema(description = "Tenant identifier", example = "pg.citya", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty("tenantId")
-    @JsonAlias({"tenant_id"})
     @NotBlank(message = "tenantId is mandatory for profile re-sync")
     private String tenantId;
 
     @Schema(description = "Citizen UUID", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
     @JsonProperty("uuid")
-    @JsonAlias({"userUuid", "user_uuid", "citizenUuid"})
     private String uuid;
 
     @Schema(description = "Internal user numeric ID", example = "1024")
     @JsonProperty("id")
-    @JsonAlias({"userId", "user_id"})
     private Long id;
 
     @Schema(description = "Citizen mobile number", example = "9876543210")
     @JsonProperty("mobileNumber")
-    @JsonAlias({"mobile", "mobile_number", "phone"})
     private String mobileNumber;
 
     @Schema(description = "Citizen Aadhaar number", example = "XXXXXXXX1234")
     @JsonProperty("aadhaarNumber")
-    @JsonAlias({"aadhaar", "aadhaar_number", "aadhaarNo"})
     private String aadhaarNumber;
 
     @Schema(description = "UIDAI OTP transaction ID", example = "txn-1234-abcd")
     @JsonProperty("txnId")
-    @JsonAlias({"referenceId", "refId", "transactionId", "txn_id"})
     private String txnId;
 
     @Schema(description = "UIDAI OTP submitted by citizen for e-KYC consent", example = "123456", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -66,11 +59,9 @@ public class ProfileResyncRequest {
 
     @Schema(description = "Nested citizen profile payload supporting standard UPYOG request contracts")
     @JsonProperty("user")
-    @JsonAlias({"profile", "User"})
     private Map<String, Object> user;
 
     @JsonSetter("user")
-    @JsonAlias({"profile", "User"})
     public void setUser(Map<String, Object> userMap) {
         this.user = userMap;
         unpackUserIfPresent();

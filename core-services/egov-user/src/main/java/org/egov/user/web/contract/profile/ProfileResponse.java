@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.profile;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,7 +33,6 @@ public class ProfileResponse {
 
     @Schema(description = "List of error or warning details encountered during partial profile enrichment")
     @JsonProperty("errors")
-    @JsonAlias({"Errors"})
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Error> errors;
 }
