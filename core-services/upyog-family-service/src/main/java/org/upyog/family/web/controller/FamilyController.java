@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
+import org.upyog.family.domain.service.FamilyOtpService;
 import org.upyog.family.domain.service.FamilyService;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.Family;
@@ -45,6 +46,7 @@ import java.util.List;
 public class FamilyController {
 
     private final FamilyService familyService;
+    private final FamilyOtpService familyOtpService;
     private final ResponseInfoFactory responseInfoFactory;
 
     /**
@@ -177,7 +179,7 @@ public class FamilyController {
     @Operation(summary = "Send OTP to Head of Family mobile number for joining verification in UPYOG")
     public ResponseEntity<FamilyOtpResponse> sendFamilyOtp(@Valid @RequestBody FamilyOtpRequest request) {
         log.info("[UPYOG-FAMILY-CONTROLLER] Received /_sendOtp request for family: {}", request.getFamilyId());
-        FamilyOtpResponse response = familyService.sendFamilyOtp(request);
+        FamilyOtpResponse response = familyOtpService.sendFamilyOtp(request);
         if (response.getResponseInfo() == null) {
             response.setResponseInfo(responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true));
         }
@@ -194,7 +196,7 @@ public class FamilyController {
     @Operation(summary = "Verify OTP sent to Head of Family and retrieve family details in UPYOG")
     public ResponseEntity<FamilyOtpVerifyResponse> verifyFamilyOtp(@Valid @RequestBody FamilyOtpVerifyRequest request) {
         log.info("[UPYOG-FAMILY-CONTROLLER] Received /_verifyOtp request for family: {}", request.getFamilyId());
-        FamilyOtpVerifyResponse response = familyService.verifyFamilyOtp(request);
+        FamilyOtpVerifyResponse response = familyOtpService.verifyFamilyOtp(request);
         if (response.getResponseInfo() == null) {
             response.setResponseInfo(responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true));
         }

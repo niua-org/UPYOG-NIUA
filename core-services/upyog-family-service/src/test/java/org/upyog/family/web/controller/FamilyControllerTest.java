@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
 import org.upyog.family.domain.model.FamilyStatus;
+import org.upyog.family.domain.service.FamilyOtpService;
 import org.upyog.family.domain.service.FamilyService;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.advice.GlobalExceptionHandler;
@@ -45,6 +46,9 @@ class FamilyControllerTest {
 
     @Mock
     private FamilyService familyService;
+
+    @Mock
+    private FamilyOtpService familyOtpService;
 
     @Mock
     private ResponseInfoFactory responseInfoFactory;
@@ -190,7 +194,7 @@ class FamilyControllerTest {
                 .isSent(true)
                 .build();
 
-        when(familyService.sendFamilyOtp(any())).thenReturn(otpRes);
+        when(familyOtpService.sendFamilyOtp(any())).thenReturn(otpRes);
 
         mockMvc.perform(post("/v1/family/_sendOtp")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -219,7 +223,7 @@ class FamilyControllerTest {
                 .isVerified(true)
                 .build();
 
-        when(familyService.verifyFamilyOtp(any())).thenReturn(verifyRes);
+        when(familyOtpService.verifyFamilyOtp(any())).thenReturn(verifyRes);
 
         mockMvc.perform(post("/v1/family/_verifyOtp")
                         .contentType(MediaType.APPLICATION_JSON)

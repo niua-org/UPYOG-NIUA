@@ -64,15 +64,6 @@ class FamilyServiceImplTest {
     @Mock
     private FamilyConfiguration configuration;
 
-    @Mock
-    private OtpClient otpClient;
-
-    @Mock
-    private RequesterDxClient requesterDxClient;
-
-    @Mock
-    private ResponseInfoFactory responseInfoFactory;
-
     @InjectMocks
     private FamilyServiceImpl familyService;
 
