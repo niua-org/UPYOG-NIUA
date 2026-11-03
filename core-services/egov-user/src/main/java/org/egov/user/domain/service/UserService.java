@@ -358,43 +358,25 @@ public class UserService {
     }
 
     /**
-     * Creates a new user profile or enriches an existing citizen account if one already exists for the mobile number.
+     * Creates a new user profile after validating enterprise account rules, uniqueness, and security constraints.
      * <p>
-     * <b>Lifecycle & Execution Flow:</b>
-     * <ol>
-     *   <li><b>Mobile Resolution & De-duplication:</b> Resolves mobile number from incoming {@link User}. If {@code user.getType() == UserType.CITIZEN}, queries existing citizens on this mobile number in the state tenant. Employee accounts are never merged on mobile collisions.</li>
-     *   <li><b>Citizen Merge Path:</b> If an existing citizen record is found, validates OTP conditionally and merges non-null demographic fields into empty fields of the existing record via {@link #updateExistingUserFields}. Sensitive identity fields (Aadhaar, PAN, Active status) are never overwritten. Returns the refreshed, decrypted existing user entity.</li>
-     *   <li><b>New User Creation Path:</b> If no existing citizen matches:
-     *     <ul>
-     *       <li>Generates a new UUID.</li>
-     *       <li>Validates required user attributes via {@link User#validateNewUser}.</li>
-     *       <li>Validates OTP conditionally.</li>
-     *       <li>Encrypts sensitive fields (name, mobile, email, etc.) via {@link EncryptionDecryptionUtil}.</li>
-     *       <li>Validates username uniqueness in the state tenant.</li>
-     *       <li>Hashes and encrypts password.</li>
-     *       <li>Persists user to {@code eg_user} via {@link #persistNewUser}.</li>
-     *       <li>Decrypts and returns the persisted domain user.</li>
-     *     </ul>
-     *   </li>
-     * </ol>
+     * <b>Account & Mobile Validation Rules:</b>
+     * <ul>
+     *   <li><b>EMPLOYEE Accounts:</b> Allowed to share a mobile number with citizen accounts (isolated user types).
+     *       At most ONE active employee account can exist per mobile number in a tenant.</li>
+     *   <li><b>CITIZEN Accounts:</b> Multiple family members can share a mobile number.
+     *       At most ONE unverified citizen account is allowed per mobile number.
+     *       Verified family members must each have a unique Aadhaar number.</li>
+     * </ul>
      *
-     * @param user        incoming domain {@link User} entity to create or merge
+     * @param user        incoming domain {@link User} entity to create
      * @param requestInfo request metadata and context for auditing and encryption/decryption
-     * @return created new domain user or merged existing user with decrypted details
+     * @return created new domain user with decrypted details
      * @throws DuplicateUserNameException if username already exists in tenant
-     * @throws CustomException            if validation fails or account is inactive
+     * @throws CustomException            if validation fails or account limit rules are violated
      */
     public User createUser(User user, RequestInfo requestInfo) {
-        String mobileNumber = resolveMobileNumber(user);
-        User existingUser = (user.getType() == null || UserType.CITIZEN.equals(user.getType()))
-                ? findExistingUserByMobile(mobileNumber, user.getTenantId(), user.getType())
-                : null;
-        if (existingUser != null) {
-            log.info("[USER-SERVICE] User already exists with mobile number: {} (UUID: {}). Updating null/empty fields instead of creating new user.",
-                    maskMobile(mobileNumber), existingUser.getUuid());
-            conditionallyValidateOtp(user);
-            return updateExistingUserFields(existingUser, user, requestInfo, false);
-        }
+        validateMobileAndAccountRules(user);
 
         user.setUuid(UUID.randomUUID().toString());
         user.validateNewUser(createUserValidateName);
@@ -1094,14 +1076,7 @@ public class UserService {
      * @return the created and decrypted User object
      */
     public User createUserWithAddressV2(User user, RequestInfo requestInfo) {
-        String mobileNumber = resolveMobileNumber(user);
-        User existingUser = findExistingUserByMobile(mobileNumber, user.getTenantId(), user.getType());
-        if (existingUser != null) {
-            log.info("[USER-SERVICE-V2] User already exists with mobile number: {} (UUID: {}, username: {}). Updating null/empty fields instead of creating new user.",
-                    maskMobile(mobileNumber), existingUser.getUuid(), existingUser.getUsername());
-            conditionallyValidateOtp(user);
-            return updateExistingUserFields(existingUser, user, requestInfo, true);
-        }
+        validateMobileAndAccountRules(user);
 
         user.setUuid(UUID.randomUUID().toString());
 
@@ -1246,274 +1221,168 @@ public class UserService {
     }
 
     /**
-     * Looks up existing user records matching the specified mobile number within the state-level tenant.
-     * <p>
-     * <b>Matching Rules:</b>
-     * <ol>
-     *   <li>Searches by encrypted {@code mobileNumber} column in {@code eg_user}.</li>
-     *   <li>Searches by encrypted {@code userName} column in {@code eg_user} (supporting accounts where the 10-digit mobile number was used as username).</li>
-     *   <li>Deduplicates candidate accounts into a map keyed by user UUID.</li>
-     *   <li>If multiple matching profiles exist, prioritizes the account whose {@code username} exactly matches the mobile number; otherwise falls back to the first candidate.</li>
-     * </ol>
-     * <p>
-     * <b>Failure & Edge-Case Behavior:</b> Returns {@code null} if the input mobile number is blank or if no candidate records match.
+     * Enforces enterprise user creation rules for mobile number across user types:
+     * <ul>
+     *   <li><b>EMPLOYEE Accounts:</b>
+     *     <ul>
+     *       <li>An employee CAN have the same mobile number as a citizen (user types are completely isolated).</li>
+     *       <li>At most ONE employee can have this mobile number. Rejects if another active employee already exists with this mobile.</li>
+     *     </ul>
+     *   </li>
+     *   <li><b>CITIZEN Accounts:</b>
+     *     <ul>
+     *       <li>Multiple citizens CAN share a mobile number (family multi-account).</li>
+     *       <li>At most ONE unverified citizen account (identity unverified) is permitted per mobile number. Rejects if an unverified citizen already exists.</li>
+     *       <li>Multiple verified citizen accounts (e.g. Aadhaar verified) can share the mobile number, provided each has a unique Aadhaar number.</li>
+     *     </ul>
+     *   </li>
+     * </ul>
      *
-     * @param mobileNumber 10-digit citizen mobile number
-     * @param tenantId     tenant identifier (resolved to state tenant for citizens)
-     * @param userType     target user type (e.g. CITIZEN)
-     * @return matching domain {@link User} entity, or {@code null} if no match is found
+     * @param user incoming user to validate
+     * @throws CustomException if validation fails
      */
-    private User findExistingUserByMobile(String mobileNumber, String tenantId, UserType userType) {
+    private void validateMobileAndAccountRules(User user) {
+        if (user == null) {
+            return;
+        }
+        String mobileNumber = resolveMobileNumber(user);
+        if (StringUtils.isBlank(mobileNumber)) {
+            return;
+        }
+
+        UserType userType = user.getType() != null ? user.getType() : UserType.CITIZEN;
+
+        if (UserType.EMPLOYEE.equals(userType)) {
+            User existingEmployee = findExistingEmployeeByMobile(mobileNumber);
+            if (existingEmployee != null && (existingEmployee.getActive() == null || Boolean.TRUE.equals(existingEmployee.getActive()))) {
+                log.error("[USER-SERVICE] Employee creation rejected: Mobile {} is already linked to active employee UUID: {}",
+                        maskMobile(mobileNumber), existingEmployee.getUuid());
+                throw new CustomException(UserConstants.ERROR_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE,
+                        UserConstants.MSG_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE);
+            }
+        } else if (UserType.CITIZEN.equals(userType)) {
+            List<User> existingCitizens = findCitizensByMobile(mobileNumber);
+
+            boolean isIncomingVerified = Boolean.TRUE.equals(user.getIsIdentityVerified());
+
+            long unverifiedCount = 0;
+            for (User existingCitizen : existingCitizens) {
+                if (existingCitizen != null && (existingCitizen.getActive() == null || Boolean.TRUE.equals(existingCitizen.getActive()))) {
+                    // Check Aadhaar duplicate among citizens on this mobile
+                    if (StringUtils.isNotBlank(user.getAadhaarNumber()) && StringUtils.isNotBlank(existingCitizen.getAadhaarNumber())
+                            && user.getAadhaarNumber().trim().equalsIgnoreCase(existingCitizen.getAadhaarNumber().trim())) {
+                        log.error("[USER-SERVICE] Citizen already exists with Aadhaar number across system");
+                        throw new CustomException(UserConstants.ERROR_USER_ALREADY_EXISTS, UserConstants.MSG_USER_ALREADY_EXISTS_AADHAAR);
+                    }
+
+                    if (!Boolean.TRUE.equals(existingCitizen.getIsIdentityVerified())) {
+                        unverifiedCount++;
+                    }
+                }
+            }
+
+            // Constraint: Only one unverified citizen profile is allowed per mobile number
+            if (!isIncomingVerified && unverifiedCount > 0) {
+                log.error("[USER-SERVICE] Cannot create unverified citizen: An unverified citizen account already exists for mobile: {}",
+                        maskMobile(mobileNumber));
+                throw new CustomException(UserConstants.ERROR_UNVERIFIED_CITIZEN_EXISTS,
+                        UserConstants.MSG_UNVERIFIED_CITIZEN_EXISTS);
+            }
+        }
+    }
+
+    /**
+     * Finds an existing active employee by mobile number across all tenants.
+     *
+     * @param mobileNumber 10-digit mobile number
+     * @return matching active employee {@link User}, or {@code null} if none found
+     */
+    private User findExistingEmployeeByMobile(String mobileNumber) {
         if (StringUtils.isBlank(mobileNumber)) {
             return null;
         }
-        String stateTenant = getStateLevelTenantForCitizen(tenantId, userType);
-        UserType targetType = userType != null ? userType : UserType.CITIZEN;
+        UserSearchCriteria criteria = UserSearchCriteria.builder()
+                .mobileNumber(mobileNumber)
+                .tenantId(null)
+                .type(UserType.EMPLOYEE)
+                .build();
+        try {
+            UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(criteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class);
+            List<User> employeeCandidates = userRepository.findAll(encCriteria != null ? encCriteria : criteria);
+            if (!CollectionUtils.isEmpty(employeeCandidates)) {
+                for (User employeeCandidate : employeeCandidates) {
+                    if (employeeCandidate != null && (employeeCandidate.getActive() == null || Boolean.TRUE.equals(employeeCandidate.getActive()))) {
+                        return employeeCandidate;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[USER-SERVICE] Error querying existing employee by mobile {}: {}", maskMobile(mobileNumber), e.getMessage());
+        }
+        return null;
+    }
 
+    /**
+     * Finds existing citizen accounts associated with the given mobile number across all tenants.
+     *
+     * @param mobileNumber 10-digit citizen mobile number
+     * @return list of decrypted domain {@link User} entities
+     */
+    private List<User> findCitizensByMobile(String mobileNumber) {
+        if (StringUtils.isBlank(mobileNumber)) {
+            return Collections.emptyList();
+        }
         Map<String, User> userMap = new LinkedHashMap<>();
 
         // 1. Search by encrypted mobileNumber
         UserSearchCriteria mobileCriteria = UserSearchCriteria.builder()
                 .mobileNumber(mobileNumber)
-                .tenantId(stateTenant)
-                .type(targetType)
+                .tenantId(null)
+                .type(UserType.CITIZEN)
                 .build();
         try {
             UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(mobileCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class);
-            List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : mobileCriteria);
-            if (!CollectionUtils.isEmpty(users)) {
-                for (User u : users) {
-                    if (u != null && u.getUuid() != null) {
-                        userMap.put(u.getUuid(), u);
+            List<User> mobileMatchedCitizens = userRepository.findAll(encCriteria != null ? encCriteria : mobileCriteria);
+            if (!CollectionUtils.isEmpty(mobileMatchedCitizens)) {
+                for (User mobileMatchedCitizen : mobileMatchedCitizens) {
+                    if (mobileMatchedCitizen != null && mobileMatchedCitizen.getUuid() != null) {
+                        userMap.put(mobileMatchedCitizen.getUuid(), mobileMatchedCitizen);
                     }
                 }
             }
         } catch (Exception e) {
-            log.warn("[USER-SERVICE] Error querying existing user by mobileNumber {}: {}", maskMobile(mobileNumber), e.getMessage());
+            log.warn("[USER-SERVICE] Error querying existing citizens by mobile {}: {}", maskMobile(mobileNumber), e.getMessage());
         }
 
         // 2. Search by encrypted userName
         try {
             UserSearchCriteria userCriteria = UserSearchCriteria.builder()
                     .userName(mobileNumber)
-                    .tenantId(stateTenant)
-                    .type(targetType)
+                    .tenantId(null)
+                    .type(UserType.CITIZEN)
                     .build();
             UserSearchCriteria encCriteria = encryptionDecryptionUtil.encryptObject(userCriteria, UserConstants.USER_ENCRYPTION_KEY, UserSearchCriteria.class);
-            List<User> users = userRepository.findAll(encCriteria != null ? encCriteria : userCriteria);
-            if (!CollectionUtils.isEmpty(users)) {
-                for (User u : users) {
-                    if (u != null && u.getUuid() != null) {
-                        userMap.put(u.getUuid(), u);
+            List<User> usernameMatchedCitizens = userRepository.findAll(encCriteria != null ? encCriteria : userCriteria);
+            if (!CollectionUtils.isEmpty(usernameMatchedCitizens)) {
+                for (User usernameMatchedCitizen : usernameMatchedCitizens) {
+                    if (usernameMatchedCitizen != null && usernameMatchedCitizen.getUuid() != null) {
+                        userMap.put(usernameMatchedCitizen.getUuid(), usernameMatchedCitizen);
                     }
                 }
             }
         } catch (Exception e) {
-            log.warn("[USER-SERVICE] Error querying existing user by userName {}: {}", maskMobile(mobileNumber), e.getMessage());
+            log.warn("[USER-SERVICE] Error querying existing citizens by userName {}: {}", maskMobile(mobileNumber), e.getMessage());
         }
 
         if (userMap.isEmpty()) {
-            return null;
+            return Collections.emptyList();
         }
 
-        // Prefer account whose username equals mobileNumber if present, else first
-        for (User u : userMap.values()) {
-            if (mobileNumber.equals(u.getUsername())) {
-                return u;
-            }
-        }
-        return userMap.values().iterator().next();
+        List<User> decryptedList = encryptionDecryptionUtil.decryptObject(new ArrayList<>(userMap.values()), UserConstants.USER_ENCRYPTION_KEY, User.class, null);
+        return decryptedList != null ? decryptedList : new ArrayList<>(userMap.values());
     }
 
-    /**
-     * Merges non-blank incoming demographic attributes into unpopulated fields of an existing user record.
-     * <p>
-     * <b>Merge & Non-Overwriting Rules:</b>
-     * <ul>
-     *   <li>Merges non-blank demographic fields only if currently blank or null on the existing user:
-     *       {@code name} (also updates if existing is default "Citizen"), {@code emailId}, {@code gender},
-     *       {@code dob}, {@code fatherName}, {@code motherName}, {@code spouseName}, {@code guardian},
-     *       {@code guardianRelation}, {@code altContactNumber}, {@code alternateMobileNumber}, {@code photo},
-     *       {@code bloodGroup}, {@code salutation}, {@code title}, {@code identificationMark}, {@code signature},
-     *       {@code locale}, and {@code digilockerid}.</li>
-     *   <li><b>Security Protection:</b> Sensitive financial / identity identifiers (Aadhaar, PAN) and
-     *       account active status are <i>never</i> populated or overwritten during unverified create requests.</li>
-     * </ul>
-     * <p>
-     * <b>Persistence & Failure Behavior:</b>
-     * If any fields were modified, encrypts the merged record and persists updates via {@link UserRepository}.
-     * Refreshes the updated entity from DB with decrypted PII and returns it; if refresh fails, returns the in-memory merged object.
-     *
-     * @param rawExistingUser existing domain user entity from database
-     * @param incoming        incoming user request containing new demographic attributes
-     * @param requestInfo     request metadata for auditing and decryption
-     * @param isV2            whether update is invoked from v2 endpoints
-     * @return updated and decrypted existing domain user entity
-     */
-    private User updateExistingUserFields(User rawExistingUser, User incoming, RequestInfo requestInfo, boolean isV2) {
-        User decryptedExisting = null;
-        try {
-            decryptedExisting = encryptionDecryptionUtil.decryptObject(rawExistingUser, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
-        } catch (Exception e) {
-            log.warn("[USER-SERVICE] Could not decrypt existing user {}: {}", rawExistingUser.getUuid(), e.getMessage());
-        }
-        if (decryptedExisting == null) {
-            decryptedExisting = rawExistingUser;
-        }
 
-        boolean modified = false;
-
-        // Name: if blank or default "Citizen", and incoming is not blank
-        if (StringUtils.isBlank(decryptedExisting.getName()) || "Citizen".equalsIgnoreCase(StringUtils.trim(decryptedExisting.getName()))) {
-            if (StringUtils.isNotBlank(incoming.getName())) {
-                decryptedExisting.setName(incoming.getName().trim());
-                modified = true;
-            }
-        }
-
-        // Email
-        if (StringUtils.isBlank(decryptedExisting.getEmailId()) && StringUtils.isNotBlank(incoming.getEmailId())) {
-            decryptedExisting.setEmailId(incoming.getEmailId().trim());
-            modified = true;
-        }
-
-        // Gender
-        if (decryptedExisting.getGender() == null && incoming.getGender() != null) {
-            decryptedExisting.setGender(incoming.getGender());
-            modified = true;
-        }
-
-        // DOB
-        if (decryptedExisting.getDob() == null && incoming.getDob() != null) {
-            decryptedExisting.setDob(incoming.getDob());
-            modified = true;
-        }
-
-        // Father's Name
-        if (StringUtils.isBlank(decryptedExisting.getFatherName()) && StringUtils.isNotBlank(incoming.getFatherName())) {
-            decryptedExisting.setFatherName(incoming.getFatherName().trim());
-            modified = true;
-        }
-
-        // Mother's Name
-        if (StringUtils.isBlank(decryptedExisting.getMotherName()) && StringUtils.isNotBlank(incoming.getMotherName())) {
-            decryptedExisting.setMotherName(incoming.getMotherName().trim());
-            modified = true;
-        }
-
-        // Spouse's Name
-        if (StringUtils.isBlank(decryptedExisting.getSpouseName()) && StringUtils.isNotBlank(incoming.getSpouseName())) {
-            decryptedExisting.setSpouseName(incoming.getSpouseName().trim());
-            modified = true;
-        }
-
-        // Guardian
-        if (StringUtils.isBlank(decryptedExisting.getGuardian()) && StringUtils.isNotBlank(incoming.getGuardian())) {
-            decryptedExisting.setGuardian(incoming.getGuardian().trim());
-            modified = true;
-        }
-
-        // Guardian Relation
-        if (decryptedExisting.getGuardianRelation() == null && incoming.getGuardianRelation() != null) {
-            decryptedExisting.setGuardianRelation(incoming.getGuardianRelation());
-            modified = true;
-        }
-
-        // Alt Contact Number
-        if (StringUtils.isBlank(decryptedExisting.getAltContactNumber()) && StringUtils.isNotBlank(incoming.getAltContactNumber())) {
-            decryptedExisting.setAltContactNumber(incoming.getAltContactNumber().trim());
-            modified = true;
-        }
-
-        // Alternate Mobile Number
-        if (StringUtils.isBlank(decryptedExisting.getAlternateMobileNumber()) && StringUtils.isNotBlank(incoming.getAlternateMobileNumber())) {
-            decryptedExisting.setAlternateMobileNumber(incoming.getAlternateMobileNumber().trim());
-            modified = true;
-        }
-
-        // Photo
-        if (StringUtils.isBlank(decryptedExisting.getPhoto()) && StringUtils.isNotBlank(incoming.getPhoto())) {
-            decryptedExisting.setPhoto(incoming.getPhoto().trim());
-            modified = true;
-        }
-
-        // Blood Group
-        if (decryptedExisting.getBloodGroup() == null && incoming.getBloodGroup() != null) {
-            decryptedExisting.setBloodGroup(incoming.getBloodGroup());
-            modified = true;
-        }
-
-        // Salutation
-        if (StringUtils.isBlank(decryptedExisting.getSalutation()) && StringUtils.isNotBlank(incoming.getSalutation())) {
-            decryptedExisting.setSalutation(incoming.getSalutation().trim());
-            modified = true;
-        }
-
-        // Title
-        if (StringUtils.isBlank(decryptedExisting.getTitle()) && StringUtils.isNotBlank(incoming.getTitle())) {
-            decryptedExisting.setTitle(incoming.getTitle().trim());
-            modified = true;
-        }
-
-        // Identification Mark
-        if (StringUtils.isBlank(decryptedExisting.getIdentificationMark()) && StringUtils.isNotBlank(incoming.getIdentificationMark())) {
-            decryptedExisting.setIdentificationMark(incoming.getIdentificationMark().trim());
-            modified = true;
-        }
-
-        // Signature
-        if (StringUtils.isBlank(decryptedExisting.getSignature()) && StringUtils.isNotBlank(incoming.getSignature())) {
-            decryptedExisting.setSignature(incoming.getSignature().trim());
-            modified = true;
-        }
-
-        // Locale
-        if (StringUtils.isBlank(decryptedExisting.getLocale()) && StringUtils.isNotBlank(incoming.getLocale())) {
-            decryptedExisting.setLocale(incoming.getLocale().trim());
-            modified = true;
-        }
-
-        // Digilocker ID
-        if (StringUtils.isBlank(decryptedExisting.getDigilockerid()) && StringUtils.isNotBlank(incoming.getDigilockerid())) {
-            decryptedExisting.setDigilockerid(incoming.getDigilockerid().trim());
-            modified = true;
-        }
-
-        Long updaterId = (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getId() != null)
-                ? requestInfo.getUserInfo().getId()
-                : (rawExistingUser.getId() != null ? rawExistingUser.getId() : 0L);
-        String updaterUuid = (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getUuid() != null)
-                ? requestInfo.getUserInfo().getUuid()
-                : (rawExistingUser.getUuid() != null ? rawExistingUser.getUuid() : "");
-
-        if (modified) {
-            User encryptedMerged = encryptionDecryptionUtil.encryptObject(decryptedExisting, UserConstants.USER_ENCRYPTION_KEY, User.class);
-            if (encryptedMerged != null) {
-                if (encryptedMerged.getId() == null) encryptedMerged.setId(rawExistingUser.getId());
-                if (encryptedMerged.getUuid() == null) encryptedMerged.setUuid(rawExistingUser.getUuid());
-                if (encryptedMerged.getUsername() == null) encryptedMerged.setUsername(rawExistingUser.getUsername());
-                if (encryptedMerged.getTenantId() == null) encryptedMerged.setTenantId(rawExistingUser.getTenantId());
-                if (encryptedMerged.getType() == null) encryptedMerged.setType(rawExistingUser.getType());
-            }
-            if (isV2) {
-                userRepository.updateV2(encryptedMerged != null ? encryptedMerged : decryptedExisting, rawExistingUser, updaterId, updaterUuid);
-            } else {
-                userRepository.update(encryptedMerged != null ? encryptedMerged : decryptedExisting, rawExistingUser, updaterId, updaterUuid);
-            }
-        }
-
-        try {
-            User refreshedEncrypted = getUserByUuid(rawExistingUser.getUuid());
-            User refreshedDecrypted = encryptionDecryptionUtil.decryptObject(refreshedEncrypted, UserConstants.USER_SELF_ENCRYPTION_KEY, User.class, requestInfo);
-            if (refreshedDecrypted != null) {
-                return refreshedDecrypted;
-            }
-        } catch (Exception e) {
-            log.warn("[USER-SERVICE] Error refreshing updated user {}: {}", rawExistingUser.getUuid(), e.getMessage());
-        }
-
-        return decryptedExisting;
-    }
 
     /**
      * Resolves the primary 10-digit mobile number from the user model.

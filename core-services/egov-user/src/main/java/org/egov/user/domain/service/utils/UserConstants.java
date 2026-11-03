@@ -104,6 +104,8 @@ public final class UserConstants {
     public static final String ERROR_ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE";
     public static final String ERROR_UNAUTHORIZED_CITIZEN_SEARCH = "UNAUTHORIZED_CITIZEN_SEARCH";
     public static final String ERROR_UNVERIFIED_CITIZEN_EXISTS = "UNVERIFIED_CITIZEN_EXISTS";
+    public static final String ERROR_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE = "EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE";
+    public static final String MSG_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE = "An employee account already exists with this mobile number in the system.";
 
     // =========================================================================
     // 3a. Localization Keys (UG_ standard)
