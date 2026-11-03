@@ -53,7 +53,22 @@ HARD_BLOCK_TOPICS = [
     'ignore all previous instructions', 'system prompt override', 'jailbreak', 'dan mode',
     'bypass security', 'drop database', 'delete from users', '<script>',
     # Illegal / harmful activity
-    'hack into', 'buy drugs', 'bomb make', 'weapon manufacture', 'kill yourself'
+    'hack into', 'buy drugs', 'bomb make', 'weapon manufacture', 'kill yourself',
+    # Entertainment
+    'cricket', 'ipl', 'bollywood', 'movie', 'film', 'song', 'actor',
+    'netflix', 'hotstar', 'youtube', 'web series', 'serial',
+    # Food
+    'recipe', 'biryani', 'restaurant', 'zomato', 'swiggy', 'pizza',
+    'dosa', 'samosa', 'chai', 'coffee',
+    # Finance (non-ULB)
+    'stock market', 'share bazaar', 'crypto', 'bitcoin', 'mutual fund',
+    'income tax', 'gst return', 'itr filing', 'nps', 'pf',
+    # Fitness & Health
+    'exercise', 'gym', 'yoga', 'diet', 'weight loss', 'leg raise',
+    'workout', 'fitness',
+    # Other Unrelated
+    'weather forecast', 'horoscope', 'astrology', 'love', 'relationship',
+    'jod', 'pyaar', 'shaadi'
 ]
 
 

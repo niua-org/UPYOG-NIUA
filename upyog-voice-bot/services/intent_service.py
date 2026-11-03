@@ -2,7 +2,6 @@ import os
 import re
 import json
 import logging
-import random
 import glob
 import ast
 import importlib
@@ -11,10 +10,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
-from prompts.intent_prompts import (
-    build_intent_classifier_prompt,
-    build_greeting_prompt,
-)
+from prompts.intent_prompts import build_intent_classifier_prompt
 
 try:
     from groq import Groq
@@ -32,7 +28,6 @@ groq_client = None
 
 # ============== DYNAMIC PER-TURN LANGUAGE DETECTION ==============
 from services.voice_service import (
-    HINDI_PHONETIC_WORDS,
     ENGLISH_IN_DEVANAGARI,
     detect_language,
     detect_language_per_turn
@@ -42,7 +37,25 @@ from services.voice_service import (
 # ============== LLM INTENT CLASSIFIER ==============
 
 def classify_intent(query: str, history: list, lang: str) -> dict:
-    """Classifies user intent using a fast LLM call."""
+    """Classifies user intent, extracts citizen name, and detects explicit questions.
+
+    Args:
+        query (str): The raw text message entered by the user.
+        history (list): List of previous chat message turn dicts (e.g. role, content).
+        lang (str): ISO language code of the user (e.g. 'en', 'hi').
+
+    Returns:
+        dict: Intent classification payload containing:
+            - intent (str): Recognized intent (e.g. 'greeting', 'faq', 'booking_candidate',
+              'login_query', 'login_claim', 'out_of_domain', 'unknown').
+            - service (str | None): Target service plugin key if matched, else None.
+            - emotion (str): Detected user emotion/sentiment (e.g. 'neutral', 'frustrated').
+            - extracted_name (str | None): Citizen name if introduced in query, else None.
+            - is_question (bool): True if the query explicitly asks an informational/FAQ question.
+            - reasoning (str | None): Explanation from LLM or error reason.
+            - classifier_failed (bool, optional): Present and True if classification failed
+              (LLM error, invalid JSON, or Groq unconfigured).
+    """
     global groq_client
     logger.info(f"[INTENT CLASSIFIER] Classifying intent for query='{query}', lang='{lang}'")
 
@@ -59,7 +72,16 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
             groq_client = Groq(api_key=GROQ_API_KEY)
 
         if not groq_client:
-            return {"intent": "faq", "reasoning": "Groq client unconfigured", "service": None, "emotion": "neutral"}
+            logger.warning("[INTENT CLASSIFIER] Groq client unconfigured — defaulting to 'unknown'")
+            return {
+                "intent": "unknown",
+                "reasoning": "Groq client unconfigured",
+                "service": None,
+                "emotion": "neutral",
+                "extracted_name": None,
+                "is_question": False,
+                "classifier_failed": True,
+            }
 
         response = groq_client.chat.completions.create(
             model=GROQ_MODEL,
@@ -86,8 +108,8 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
         ]
        
         if result.get("intent") not in valid_intents:
-            logger.warning(f"[INTENT CLASSIFIER] Invalid intent '{result.get('intent')}' returned — resetting to 'faq'")
-            result["intent"] = "faq"
+            logger.warning(f"[INTENT CLASSIFIER] Invalid intent '{result.get('intent')}' returned — resetting to 'unknown'")
+            result["intent"] = "unknown"
 
         if "extracted_name" not in result:
             result["extracted_name"] = None
@@ -97,17 +119,35 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
         else:
             result["is_question"] = bool(result["is_question"])
 
+        result["classifier_failed"] = False
         return result
 
     except Exception as e:
         logger.error(f"[INTENT CLASSIFIER] Classifier exception: {e}")
-        return {"intent": "faq", "reasoning": "classifier failed", "service": None, "emotion": "neutral", "extracted_name": None, "is_question": True}
+        return {
+            "intent": "unknown",
+            "reasoning": "classifier failed",
+            "service": None,
+            "emotion": "neutral",
+            "extracted_name": None,
+            "is_question": False,
+            "classifier_failed": True,
+        }
 
 
 # ─── Config-driven services and system messages loader ─────────────────────────
 
 def _load_system_config() -> dict:
-    """Load configuration dictionary from config.yml once at startup."""
+    """Loads configuration dictionary from config.yml once at startup.
+
+    Lookup Order:
+        1. Root directory: `<project_root>/config.yml`
+        2. Workflow directory fallback: `<project_root>/workflow/config.yml`
+        3. Hardcoded empty dict `{}` if no config file is found or parsing fails.
+
+    Returns:
+        dict: Parsed YAML dictionary containing system_messages, memory, and services registry.
+    """
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     cfg_path = os.path.join(base_dir, "config.yml")
     if not os.path.exists(cfg_path):

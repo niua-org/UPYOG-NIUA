@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import uuid
 import os
 import yaml
-import yaml
 from dotenv import load_dotenv
 
 # We will use Qdrant for both vector-based RAG and persistent sliding window memory.
@@ -144,8 +143,6 @@ class MemoryManager:
     # Automatically cleans up chat history older than retention_days (configured in config.yml or environment)
     @staticmethod
     def _enforce_sliding_window(phone_number: str):
-        retention_days = get_memory_retention_days()
-        cutoff_date = datetime.now() - timedelta(days=retention_days)
         retention_days = get_memory_retention_days()
         cutoff_date = datetime.now() - timedelta(days=retention_days)
         cutoff_timestamp = int(cutoff_date.timestamp())

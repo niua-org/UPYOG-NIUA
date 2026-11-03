@@ -31,18 +31,23 @@ GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 
 
 def _load_system_messages() -> dict:
-    """Loads system message responses and configurations from config.yml."""
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    cfg_path = os.path.join(base_dir, "config.yml")
-    if not os.path.exists(cfg_path):
-        cfg_path = os.path.join(base_dir, "workflow", "config.yml")
+    """Loads system message responses and configurations from config.yml.
+
+    Lookup Order:
+        1. Project root configuration: `<project_root>/config.yml`
+        2. Workflow directory fallback: `<project_root>/workflow/config.yml`
+        3. Hardcoded empty dictionary `{}` if neither exists or parsing fails.
+
+    Returns:
+        dict: The 'system_messages' mapping containing greeting, blocked, and login responses.
+    """
     try:
-        if os.path.exists(cfg_path):
-            with open(cfg_path, "r", encoding="utf-8") as f:
-                cfg = yaml.safe_load(f) or {}
-                return cfg.get("system_messages", {})
+        from services.intent_service import _load_system_config
+        cfg = _load_system_config()
+        if isinstance(cfg, dict):
+            return cfg.get("system_messages", {})
     except Exception as e:
-        logger.warning(f"Could not load system_messages from config.yml: {e}")
+        logger.warning(f"Could not load system_messages via _load_system_config: {e}")
     return {}
 
 _SYSTEM_MESSAGES: dict = _load_system_messages()
@@ -219,8 +224,28 @@ def resolve_auth_and_profile(session_id: str, request_info: dict, user_data: dic
 # 3. SPECIAL INTENT DETECTOR & LOGIN GUIDANCE
 # ====================================================================
 
-def handle_login_intent(user_input: str, user_language: str, is_authenticated: bool, cached_info: Optional[dict], detected_intent: Optional[str] = None) -> Tuple[bool, Optional[dict]]:
-    """Handles login guidance and login claim queries using config messages and detected intent."""
+def handle_login_intent(
+    user_input: str,
+    user_language: str,
+    is_authenticated: bool,
+    cached_info: Optional[dict],
+    detected_intent: Optional[str] = None
+) -> Tuple[bool, Optional[dict]]:
+    """Handles login guidance and login claim queries using config messages and detected intent.
+
+    Args:
+        user_input (str): The raw text message entered by the citizen.
+        user_language (str): Target language code ('en' or 'hi').
+        is_authenticated (bool): Whether citizen currently holds an authenticated session.
+        cached_info (dict | None): User profile info (e.g. name, phone number) if logged in.
+        detected_intent (str | None, optional): Explicit intent passed from unified classifier
+            or fast-path matcher ('login_query' or 'login_claim'). If None, keyword matching is performed.
+
+    Returns:
+        Tuple[bool, Optional[dict]]:
+            - bool: True if handled as a login action/query, False otherwise.
+            - dict | None: Response payload dict ({response, lang, mode, audio}) if handled, else None.
+    """
     from services.voice_service import text_to_speech
 
     sys_login = _SYSTEM_MESSAGES.get("login", {})
@@ -439,18 +464,71 @@ def handle_workflow_interruption_or_faq(
     is_ui_payload: bool,
     intent_data: Optional[dict] = None
 ) -> Tuple[bool, Optional[dict]]:
-    """Detects mid-workflow questions via LLM intent classification, auto-saves active draft, and responds with FAQ."""
+    """Detects mid-workflow questions via LLM intent classification, auto-saves active draft, and responds with FAQ.
+
+    Args:
+        user_input (str): The current user query or response.
+        user_language (str): Language code of the user ('en', 'hi').
+        history (list): Recent conversation turns.
+        session_id (str): Chat session identifier.
+        phone (str): User phone number.
+        active_plugin (str | None): Currently active LangGraph workflow plugin (e.g. 'grievance', 'adv_booking').
+        workflows (dict): Registry of loaded workflow plugin graphs.
+        config (dict): LangGraph runtime config with thread_id.
+        is_ui_payload (bool): True if the input was generated from a UI button/selection rather than free text.
+        intent_data (dict | None, optional): Unified intent classification payload from classify_intent,
+            containing 'intent', 'is_question', 'classifier_failed', and 'reasoning'.
+
+    Returns:
+        Tuple[bool, Optional[dict]]:
+            - bool: True if the input was handled as a mid-workflow question/FAQ, False otherwise.
+            - dict | None: Response dictionary containing FAQ response and draft save note if interrupted.
+    """
     if not active_plugin or active_plugin not in workflows or is_ui_payload:
         return False, None
 
-    # Never treat a pure digit or direct option choice (e.g. '1', 'option 2') as an interruption
-    if re.match(r'^(?:option\s*)?\d+$', user_input.strip().lower()):
+    # 1. Option selection guard: check if user_input matches active workflow options or numbers
+    is_option_selection = False
+    clean_in = re.sub(r'[\s_]+', '', user_input.strip().lower())
+    is_digit_choice = bool(re.match(r'^(?:option\s*)?\d+$', user_input.strip().lower()))
+    generic_responses = {"yes", "no", "yeah", "yup", "ya", "ok", "okay", "sure", "confirm", "cancel", "haan", "nahi", "nahin", "1", "2", "option 1", "option 2"}
+
+    if is_digit_choice or user_input.strip().lower() in generic_responses:
+        is_option_selection = True
+    else:
+        state = workflows[active_plugin].get_state(config)
+        if state and state.values:
+            draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
+            draft = state.values.get(draft_key) or {}
+
+            if active_plugin == "grievance":
+                from workflow.grievance import _pgr_categories, _pgr_localities
+                pgr_cats = draft.get("_category_options") or _pgr_categories() or {}
+                cats = list(pgr_cats.keys())
+                pgr_locs = draft.get("_locality_options") or _pgr_localities() or []
+                locs = [l.get("name", "") if isinstance(l, dict) else str(l) for l in pgr_locs]
+            else:
+                cats = list((draft.get("_category_options") or {}).keys())
+                locs = [l.get("name", "") if isinstance(l, dict) else str(l) for l in (draft.get("_locality_options") or [])]
+
+            subs = [s.get("name", "") if isinstance(s, dict) else str(s) for s in (draft.get("_sub_options") or [])]
+            slots = [s.get("name", "") if isinstance(s, dict) else str(s) for s in (draft.get("_slot_options") or [])]
+
+            all_opts = [re.sub(r'[\s_]+', '', str(o).lower()) for o in (cats + subs + locs + slots) if o]
+            if clean_in in all_opts or any(clean_in == o or (o in clean_in and len(user_input.split()) <= 3) for o in all_opts):
+                is_option_selection = True
+
+    if is_option_selection:
         return False, None
 
-    # Determine if this message is an informational question or FAQ using the unified LLM intent classification
+    # 2. Never interrupt if classifier failed, was unconfigured, or reasoning indicates failure
+    if (intent_data or {}).get("classifier_failed") or (intent_data or {}).get("reasoning") in ["classifier failed", "Groq client unconfigured"]:
+        return False, None
+
+    # 3. Determine if this message is an informational question or FAQ
     intent = (intent_data or {}).get("intent", "")
     is_question = bool((intent_data or {}).get("is_question", False))
-    is_explicit_question = (intent == "faq") or is_question
+    is_explicit_question = is_question or (intent == "faq" and "?" in user_input)
 
     if is_explicit_question:
         from services.rag_service import retrieve_document
@@ -831,6 +909,55 @@ def build_chat_error_response(error: Exception, user_language: str = "en") -> di
     }
 
 
+def validate_and_sanitize_name(name: Any) -> Optional[str]:
+    """Validates and sanitizes citizen name extracted by LLM.
+
+    Security & Safety Rules:
+        - Must be a string with length between 2 and 40 characters.
+        - Must only contain English letters, Devanagari characters, spaces, hyphens, or apostrophes.
+        - Rejects prompt injection keywords, commands, instruction markers, and code punctuation.
+        - Preserves mixed-case names (e.g. 'McDonald') without destructive .capitalize().
+
+    Args:
+        name (Any): The raw candidate name extracted from the user's message.
+
+    Returns:
+        str | None: Cleaned and formatted name if valid, otherwise None.
+    """
+    if not isinstance(name, str):
+        return None
+    clean = name.strip()
+    if len(clean) < 2 or len(clean) > 40:
+        return None
+
+    # Reject instruction-like or prompt injection patterns
+    suspicious_patterns = [
+        r'\bignore\b', r'\binstructions?\b', r'\bsystem\b', r'\bprompt\b',
+        r'\bassistant\b', r'\bdelete\b', r'\bdrop\b', r'\bexec\b', r'\bselect\b',
+        r'\badmin\b', r'\broot\b', r'\bpassword\b', r'\btoken\b', r'\bcurl\b',
+        r'[\{\}\<\>\[\]\(\);\\\/\|\*\&\^\%\$\#\@\!]'
+    ]
+    for pattern in suspicious_patterns:
+        if re.search(pattern, clean, re.IGNORECASE):
+            logger.warning(f"[Security] Rejected suspicious extracted citizen name: '{clean}'")
+            return None
+
+    # Only allow letters (English + Devanagari), space, hyphen, and apostrophe
+    if not re.match(r'^[\sa-zA-Z\u0900-\u097F\'.\-]+$', clean):
+        logger.warning(f"[Security] Name contains disallowed characters: '{clean}'")
+        return None
+
+    # Preserve casing for mixed-case names (e.g. McDonald, O'Connor), title-case lowercase
+    words = [w.strip() for w in clean.split() if w.strip()]
+    formatted = []
+    for w in words:
+        if w.islower():
+            formatted.append(w.capitalize())
+        else:
+            formatted.append(w)
+    return " ".join(formatted)
+
+
 # ====================================================================
 # 11. UNIFIED INTENT DISPATCHER (Strategy Pattern)
 # ====================================================================
@@ -848,9 +975,38 @@ def dispatch_chat_request(
     services_registry: list,
     system_config: dict
 ) -> dict:
-    """
-    Centralized dispatcher that processes citizen intent, resolves active workflows,
+    """Centralized dispatcher that processes citizen intent, resolves active workflows,
     handles interruptions, and executes either workflow plugins or knowledge base RAG.
+
+    Args:
+        user_input (str): The raw text message entered by the citizen.
+        user_language (str): Target language code ('en' or 'hi').
+        detected_script (str): Script detection ('devanagari', 'latin', etc.).
+        history (list): Recent conversation turn history as list of dicts.
+        session_id (str): Chat session UUID.
+        phone_anchor (str): Phone number or user identifier anchoring the session.
+        is_authenticated (bool): Whether the user is verified/authenticated.
+        cached_info (dict | None): User profile data (name, phone) if available.
+        workflows (dict): Mapping of registered LangGraph plugin workflows.
+        services_registry (list): Registry of configured municipal service plugins.
+        system_config (dict): Global configuration parsed from config.yml.
+
+    Returns:
+        dict: Standardized chat response object:
+            {
+                "response": str,      # Text response to be displayed to user
+                "lang": str,          # Language code of response ('en', 'hi')
+                "mode": str,          # Response mode: 'greeting', 'blocked', 'faq',
+                                      # 'workflow', 'auth_required', 'rate_limit',
+                                      # 'context_limit', or 'error'
+                "audio": str | None   # Base64 encoded audio bytes for voice playback
+            }
+
+    Side Effects:
+        - Redis User Profile: Updates citizen's preferred name when introduced and validated.
+        - Redis Pending Interruption: Manages mid-workflow interruption states.
+        - Draft Auto-Save: Automatically saves active draft to Qdrant memory when citizen asks an FAQ.
+        - LangGraph Checkpointer: Updates workflow checkpoint state for transactional dialogs.
     """
     from services.voice_service import text_to_speech
     from services.intent_service import classify_intent, build_greeting_response
@@ -864,28 +1020,65 @@ def dispatch_chat_request(
     if is_multi_handled:
         return multi_resp
 
-    # 2. Intent Classification & Citizen Profile Information Extraction
+    # 2. Fast-Path Keyword Matching (bypass expensive LLM call for exact greetings & login queries)
+    clean_in = re.sub(r'[\s_]+', ' ', user_input.strip().lower())
+    greeting_kws = [k.lower() for k in system_config.get("system_messages", {}).get("greeting", {}).get("keywords", [])]
+    if not greeting_kws:
+        greeting_kws = ["hello", "hi", "hey", "namaste", "नमस्ते", "हेलो"]
+
+    login_cfg = system_config.get("system_messages", {}).get("login", {})
+    login_query_kws = [k.lower() for k in login_cfg.get("keywords_query", ["how to login", "how do i login", "login kaise kare", "login help"])]
+    login_claim_kws = [k.lower() for k in login_cfg.get("keywords_claim", ["login done", "logged in", "login ho gaya", "maine login kar liya"])]
+
     special_intent = detect_special_intents(user_input)
     if special_intent:
         intent_data = special_intent
+    elif clean_in in greeting_kws:
+        intent_data = {
+            "intent": "greeting",
+            "service": None,
+            "emotion": "neutral",
+            "extracted_name": None,
+            "is_question": False,
+            "reasoning": "fast-path greeting keyword match"
+        }
+    elif any(clean_in == kw or clean_in == f"how to {kw}" for kw in login_query_kws):
+        intent_data = {
+            "intent": "login_query",
+            "service": None,
+            "emotion": "neutral",
+            "extracted_name": None,
+            "is_question": True,
+            "reasoning": "fast-path login query keyword match"
+        }
+    elif any(clean_in == kw for kw in login_claim_kws):
+        intent_data = {
+            "intent": "login_claim",
+            "service": None,
+            "emotion": "neutral",
+            "extracted_name": None,
+            "is_question": False,
+            "reasoning": "fast-path login claim keyword match"
+        }
     else:
         intent_data = classify_intent(user_input, history, user_language)
 
-    # Save citizen name if introduction was extracted by NLU
+    # 3. Save citizen name if introduction was extracted and passes security validation
     extracted_name = intent_data.get("extracted_name")
-    if extracted_name and isinstance(extracted_name, str) and len(extracted_name.strip()) > 1:
-        save_user_profile_name(history_key, extracted_name.strip().capitalize())
+    validated_name = validate_and_sanitize_name(extracted_name)
+    if validated_name:
+        save_user_profile_name(history_key, validated_name)
 
     intent = intent_data.get("intent", "faq")
     logger.info(f"INTENT: {intent}, SERVICE: {intent_data.get('service')}, EMOTION: {intent_data.get('emotion')}")
 
-    # 3. Pure greeting intent
+    # 4. Pure greeting intent
     if intent == "greeting":
         greet_msg = build_greeting_response(user_language, workflows)
         audio_output = text_to_speech(greet_msg, user_language)
         return {"response": greet_msg, "lang": user_language, "mode": "greeting", "audio": audio_output}
 
-    # 4. Out-of-domain conversational queries (Semantic Domain Filter)
+    # 5. Out-of-domain conversational queries (Semantic Domain Filter)
     if intent == "out_of_domain":
         from services.rag_service import get_rejection_message
         sys_blocked = system_config.get("system_messages", {}).get("blocked", {})
@@ -896,19 +1089,19 @@ def dispatch_chat_request(
         audio_output = text_to_speech(blocked_msg, user_language)
         return {"response": blocked_msg, "lang": user_language, "audio": audio_output, "mode": "blocked"}
 
-    # 5. Login guidance & claim verification
+    # 6. Login guidance & claim verification
     if intent in ["login_query", "login_claim"]:
         is_login_handled, login_resp = handle_login_intent(user_input, user_language, is_authenticated, cached_info, detected_intent=intent)
         if is_login_handled:
             return login_resp
 
-    # 5. Active Module & Target Plugin Resolution
+    # 7. Active Module & Target Plugin Resolution
     config = {"configurable": {"thread_id": phone}}
     active_plugin, plugin_intent, target_wf = resolve_active_and_target_plugin(
         user_input, intent, phone, session_id, workflows, services_registry, config
     )
 
-    # 6. Mid-Workflow Interruption / FAQ
+    # 8. Mid-Workflow Interruption / FAQ
     ui_lower = user_input.strip().lower()
     is_ui_payload = (ui_lower.startswith("[") and ui_lower.endswith("]")) or (ui_lower.startswith("{") and ui_lower.endswith("}"))
     is_interrupted, faq_resp = handle_workflow_interruption_or_faq(
@@ -917,20 +1110,20 @@ def dispatch_chat_request(
     if is_interrupted:
         return faq_resp
 
-    # 7. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
+    # 9. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
     is_draft_op, draft_resp = handle_draft_management(
         intent, user_input, user_language, phone, session_id, active_plugin, workflows, config
     )
     if is_draft_op:
         return draft_resp
 
-    # 8. Transactional Workflow Execution (LangGraph Plugins)
+    # 10. Transactional Workflow Execution (LangGraph Plugins)
     if target_wf and target_wf in workflows:
         logger.info(f"Routing to dynamic plugin: {target_wf}")
         return execute_workflow_plugin(
             target_wf, user_input, user_language, phone, session_id, is_authenticated
         )
 
-    # 9. Knowledge Base RAG / FAQ Retrieval Fallback
+    # 11. Knowledge Base RAG / FAQ Retrieval Fallback
     return execute_rag_fallback(user_input, user_language, detected_script, history, session_id)
 

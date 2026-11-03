@@ -4,7 +4,7 @@
 memory:
   # Number of days to retain long-term chat history in Qdrant before cleanup
   # Configurable per environment or pod (default: 1 day for sandbox/storage limits)
-  retention_days: 30 
+  retention_days: 30
 
 # ============================================================
 # System Messages & Intent Responses Configuration
@@ -18,6 +18,8 @@ system_messages:
     response_en: "I can only help with UPYOG and urban government services."
     response_hi: "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।"
   login:
+    keywords_query: ["how to login", "how do i login", "login kaise kare", "login help", "लॉगिन कैसे करें"]
+    keywords_claim: ["login done", "logged in", "login ho gaya", "maine login kar liya", "लॉगिन हो गया"]
     guidance_en: "In the left sidebar, scroll down and click on **Login**. Enter your registered mobile number and then enter the OTP received on your phone. Once logged in, you will be able to create bookings, register complaints, and check your application status."
     guidance_hi: "बाईं ओर के साइडबार (Left Sidebar) में नीचे जाएं और **Login** विकल्प पर क्लिक करें। अपना पंजीकृत मोबाइल नंबर भरें और फिर प्राप्त OTP दर्ज करें। लॉगिन करने के बाद, आप बुकिंग बना सकते हैं, शिकायत दर्ज कर सकते हैं और अपने आवेदन की स्थिति देख सकते हैं।"
     verified_en: "Great! Your login session is verified ({name}). You can now proceed to book an advertisement or register a complaint. How would you like to proceed?"
