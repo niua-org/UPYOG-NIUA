@@ -105,6 +105,8 @@ const ProfileDetails = () => {
           <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
         </div>
         <div style={profileStyles.headerActions} >
+          {user?.isIdentityVerified && (
+          <div>
           <Dropdown
             option={familyOptions}
             optionKey="name"
@@ -118,6 +120,8 @@ const ProfileDetails = () => {
               </div>
             }
           />
+          </div>
+          )}
           <button type="button" onClick={() => navigate(EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
             <EditIcon /> {t("CORE_COMMON_EDIT")}
           </button>
