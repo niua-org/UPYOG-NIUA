@@ -83,21 +83,12 @@ public class FamilyValidator {
                 .findFirst()
                 .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_HEAD_OF_FAMILY_REQUIRED, FamilyConstants.MSG_HEAD_OF_FAMILY_MANDATORY));
 
-        if (StringUtils.isNotBlank(family.getHeadUserUuid()) && !family.getHeadUserUuid().equals(headMember.getUserUuid())) {
+        if (StringUtils.isBlank(family.getHeadUserUuid())) {
+            family.setHeadUserUuid(headMember.getUserUuid());
+        } else if (!family.getHeadUserUuid().equals(headMember.getUserUuid())) {
             log.error("[UPYOG-FAMILY-VALIDATOR] Mismatch between family.headUserUuid ({}) and head member userUuid ({})",
                     family.getHeadUserUuid(), headMember.getUserUuid());
             throw new CustomException(FamilyConstants.ERROR_HEAD_UUID_MISMATCH, "family.headUserUuid must match the userUuid of the member where isHead is true");
-        }
-
-        // Caller ownership check: Caller must be the designated HoF
-        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
-            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
-            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
-                if (!callerUuid.equals(headMember.getUserUuid())) {
-                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
-                            "Only the designated Head of Family can create the family unit.");
-                }
-            }
         }
 
         // 2. Validate member UUID uniqueness, MDMS relationship, and multi-family exclusivity
