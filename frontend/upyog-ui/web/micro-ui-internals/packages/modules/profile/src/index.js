@@ -7,6 +7,9 @@ const App = () => {
   const { path, url } = Digit.Hooks.useModuleBasePath();
   const ProfileDetails = Digit?.ComponentRegistryService?.getComponent("ProfileDetails");
   const EditProfile = Digit?.ComponentRegistryService?.getComponent("EditProfile");
+  const JoinExistingFamily = Digit?.ComponentRegistryService?.getComponent("JoinExistingFamily");
+  const FamilyJoinedResponse = Digit?.ComponentRegistryService?.getComponent("FamilyJoinedResponse");
+  const FoundFamily = Digit?.ComponentRegistryService?.getComponent("FoundFamily");
 
 
 
@@ -18,6 +21,9 @@ const App = () => {
         <Routes>
           <Route path="profile-details" element={<PrivateRoute><ProfileDetails /></PrivateRoute>} />
           <Route path="edit-details" element={<PrivateRoute><EditProfile /></PrivateRoute>} />
+          <Route path="join-family" element={<PrivateRoute><JoinExistingFamily /></PrivateRoute>} />
+          <Route path="family-joined" element={<PrivateRoute><FamilyJoinedResponse /></PrivateRoute>} />
+          <Route path="found-family" element={<PrivateRoute><FoundFamily /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

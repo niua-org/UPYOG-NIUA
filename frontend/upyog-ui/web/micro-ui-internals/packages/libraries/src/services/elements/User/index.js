@@ -234,4 +234,49 @@ export const UserService = {
       params: { tenantId },
     }),
 
+  addFamilyMember: (details) =>
+    ServiceRequest({
+      url: Urls.profile.addFamilyMember,
+      data: details,
+      auth: true,
+      method: "POST",
+      userService: true,
+    }),
+
+  verifyAadhaarOtp: (details) =>
+    ServiceRequest({
+      url: Urls.loginV2.verifyAadharOtp,
+      data: details,
+      auth: true,
+      method: "POST",
+      userService: true,
+    }),
+
+  joinFamily: (details) =>
+    ServiceRequest({
+      serviceName: "joinFamily",
+      url: Urls.profile.joinFamily,
+      data: details,
+      auth: true,
+      method: "POST",
+    }),
+
+  sendFamilyOtp: (details) =>
+    ServiceRequest({
+      serviceName: "sendFamilyOtp",
+      url: Urls.profile.sendFamilyIdOtp,
+      data: details,
+      auth: true,
+      method: "POST",
+    }),
+
+  verifyFamilyOtp: (details) =>
+    ServiceRequest({
+      serviceName: "verifyFamilyOtp",
+      url: Urls.profile.verifyFamilyOtp,
+      data: details,
+      auth: true,
+      method: "POST",
+    }),
+
 };

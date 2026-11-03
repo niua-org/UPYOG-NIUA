@@ -382,7 +382,8 @@ const Urls = {
 
   loginV2: {
     userLogin: "/user/users/v2/_login",
-    aadharSendOtp: "/requester-services-dx/aadhaar/v1/_sendOtp"
+    aadharSendOtp: "/requester-services-dx/aadhaar/v1/_sendOtp",
+    verifyAadharOtp: "/requester-services-dx/aadhaar/v1/_verifyOtp"
   },
 
   profile: {
@@ -391,7 +392,11 @@ const Urls = {
     createDocument: "/user/document/_create",
     searchAddress: "/user/address/_search",
     userSearch: "/user/profile/_search",
-    updateDocument: "/user/document/_update"
+    updateDocument: "/user/document/_update",
+    addFamilyMember: "/family/v1/member/_add",
+    joinFamily: "/family/v1/member/_join",
+    sendFamilyIdOtp : "/family/v1/family/_sendOtp",
+    verifyFamilyOtp : "/family/v1/family/_verifyOtp"
   }
 };
 

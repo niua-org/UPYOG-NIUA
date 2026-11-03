@@ -200,3 +200,22 @@ export const openDocument = async (fileOrId, stateId) => {
     console.error("Error opening document:", err);
   }
 };
+
+
+// when verify from aadhar, will show these details of the family head
+export const getFamilyHeadFields = (verifiedData,t) =>
+  withValues([
+    ["CORE_COMMON_PROFILE_NAME", verifiedData?.demographics?.name],
+    ["CORE_COMMON_PROFILE_GENDER", t(verifiedData?.demographics?.gender)],
+    ["CORE_COMMON_PROFILE_DOB", verifiedData?.demographics?.dob],
+    ["CORE_COMMON_VERIFIED_PROFILE", verifiedData?.isVerified ? t("CORE_COMMON_VERIFIED") : t("CORE_COMMON_NOT_VERIFIED")],
+  ]);
+
+// when verify from family Id, will show these details of the family head
+export const getFamilyFields = (family) =>
+  withValues([
+    ["CORE_COMMON_FAMILY_ID", family?.familyId],
+    ["PROFILE_FAMILY_CATEGORY", family?.category],
+    ["PROFILE_FAMILY_STATUS", family?.status],
+    ["PROFILE_FAMILY_MEMBERS_COUNT", family?.members?.length],
+  ]);
