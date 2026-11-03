@@ -60,17 +60,8 @@ class FamilyOtpFlowTest {
     @Mock
     private ResponseInfoFactory responseInfoFactory;
 
-    @Mock
-    private KafkaProducer kafkaProducer;
-
-    @Mock
-    private IdGenRepository idGenRepository;
-
-    @Mock
-    private FamilyConfiguration configuration;
-
     @InjectMocks
-    private FamilyServiceImpl familyService;
+    private FamilyOtpServiceImpl familyOtpService;
 
     private Family activeFamily;
     private RequestInfo requestInfo;
@@ -124,7 +115,7 @@ class FamilyOtpFlowTest {
                 .tenantId("pg.citya")
                 .build();
 
-        FamilyOtpResponse response = familyService.sendFamilyOtp(request);
+        FamilyOtpResponse response = familyOtpService.sendFamilyOtp(request);
 
         assertNotNull(response);
         assertEquals("FAM-2026-0001", response.getFamilyId());
@@ -146,7 +137,7 @@ class FamilyOtpFlowTest {
                 .tenantId("pg.citya")
                 .build();
 
-        CustomException ex = assertThrows(CustomException.class, () -> familyService.sendFamilyOtp(request));
+        CustomException ex = assertThrows(CustomException.class, () -> familyOtpService.sendFamilyOtp(request));
         assertEquals(FamilyConstants.ERROR_FAMILY_NOT_FOUND, ex.getCode());
     }
 
@@ -163,7 +154,7 @@ class FamilyOtpFlowTest {
                 .tenantId("pg.citya")
                 .build();
 
-        CustomException ex = assertThrows(CustomException.class, () -> familyService.sendFamilyOtp(request));
+        CustomException ex = assertThrows(CustomException.class, () -> familyOtpService.sendFamilyOtp(request));
         assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
     }
 
@@ -185,7 +176,7 @@ class FamilyOtpFlowTest {
                 .referenceId("REF-OTP-9988")
                 .build();
 
-        FamilyOtpVerifyResponse response = familyService.verifyFamilyOtp(request);
+        FamilyOtpVerifyResponse response = familyOtpService.verifyFamilyOtp(request);
 
         assertNotNull(response);
         assertTrue(response.getIsVerified());
@@ -214,7 +205,7 @@ class FamilyOtpFlowTest {
                 .otp("000000")
                 .build();
 
-        CustomException ex = assertThrows(CustomException.class, () -> familyService.verifyFamilyOtp(request));
+        CustomException ex = assertThrows(CustomException.class, () -> familyOtpService.verifyFamilyOtp(request));
         assertEquals(FamilyConstants.ERROR_CONSENT_INVALID, ex.getCode());
     }
 }
