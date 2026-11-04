@@ -46,7 +46,7 @@ const ProfileVerify = () => {
   // Send Aadhaar OTP
   const sendAadhaarOtp = async () => {
     if (aadhaar.length !== 12) {
-      showError("Please enter a valid 12 digit Aadhaar number");
+      showError("PROFILE_AADHAR_INVALID");
       return;
     }
 
