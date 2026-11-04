@@ -29,7 +29,7 @@ const OtpVerify = ({ type, referenceId, userUuid, familyId, onVerified, onError 
       if (!res?.isVerified) throw new Error("OTP_NOT_VERIFIED");
       onVerified(res); // parent navigates away, so no state reset needed
     } catch (err) {
-      onError(err?.Errors?.[0]?.description || t("OTP_VERIFY_FAILED"));
+      onError(err?.response?.data?.Errors?.[0]?.message || t("OTP_VERIFY_FAILED"));
       setOtp("");
       setVerifying(false);
     }

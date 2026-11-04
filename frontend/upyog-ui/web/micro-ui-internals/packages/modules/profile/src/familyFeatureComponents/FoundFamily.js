@@ -91,7 +91,7 @@ const FoundFamily = () => {
       navigate(PROFILE_ROUTES.FAMILY_JOINED, { replace: true, state: { joinData: res.JoinRequest } });
     } catch (err) {
       console.log("error on join family page", err);
-      showError(err?.Errors?.[0]?.message || t("PROFILE_JOIN_FAMILY_FAILED"));
+      showError(err?.response?.data?.Errors?.[0]?.message || t("PROFILE_JOIN_FAMILY_FAILED"));
       setSubmitting(false);
     }
   };
