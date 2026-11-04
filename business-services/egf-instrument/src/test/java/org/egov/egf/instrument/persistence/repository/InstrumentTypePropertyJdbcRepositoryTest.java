@@ -1,7 +1,7 @@
 package org.egov.egf.instrument.persistence.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,21 +11,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.egov.egf.instrument.persistence.entity.InstrumentTypePropertyEntity;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@Ignore
+@Disabled
 public class InstrumentTypePropertyJdbcRepositoryTest {
 
     private InstrumentTypePropertyJdbcRepository instrumentTypePropertyJdbcRepository;
@@ -33,7 +34,7 @@ public class InstrumentTypePropertyJdbcRepositoryTest {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         instrumentTypePropertyJdbcRepository = new InstrumentTypePropertyJdbcRepository(namedParameterJdbcTemplate);
     }
@@ -135,7 +136,7 @@ public class InstrumentTypePropertyJdbcRepositoryTest {
      */
 
     /*
-     * @Test(expected = InvalidDataException.class)
+     * @Test
      * @Sql(scripts = { "/sql/instrumenttypeproperty/clearInstrumentTypeProperty.sql",
      * "/sql/instrumenttypeproperty/insertInstrumentTypePropertyData.sql" }) public void test_search_invalid_sort_option() {
      * InstrumentTypePropertySearch search = getInstrumentTypePropertySearch(); search.setSortBy("desc");

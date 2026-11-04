@@ -57,7 +57,7 @@ default_args = {
 # Maps each service module to its ES query list and empty payload template function.
 # Only PT is active here; uncomment others to enable additional modules.
 module_map = {
-    # 'TL' : (tl_queries, empty_tl_payload),
+    'TL' : (tl_queries, empty_tl_payload),
     # 'PGR' : (pgr_queries, empty_pgr_payload),
     'WS' : (ws_queries, empty_ws_payload),
     'PT' : (pt_queries, empty_pt_payload)
@@ -467,22 +467,22 @@ def transform(**kwargs):
 # Only PT is enabled; other modules are commented out below.
 
 # Disabled TL tasks (kept for reference)
-# extract_tl = PythonOperator(
-#     task_id='elastic_search_extract_tl',
-#     python_callable=dump_kibana,
-#     op_kwargs={ 'module' : 'TL'},
-#     dag=dag)
+extract_tl = PythonOperator(
+    task_id='elastic_search_extract_tl',
+    python_callable=dump_kibana,
+    op_kwargs={ 'module' : 'TL'},
+    dag=dag)
 #
-# transform_tl = PythonOperator(
-#     task_id='nudb_transform_tl',
-#     python_callable=transform,
-#     dag=dag)
+transform_tl = PythonOperator(
+    task_id='nudb_transform_tl',
+    python_callable=transform,
+    dag=dag)
 #
-# load_tl = PythonOperator(
-#     task_id='nudb_ingest_load_tl',
-#     python_callable=load,
-#     op_kwargs={ 'module' : 'TL'},
-#     dag=dag)
+load_tl = PythonOperator(
+    task_id='nudb_ingest_load_tl',
+    python_callable=load,
+    op_kwargs={ 'module' : 'TL'},
+    dag=dag)
 
 
 # Disabled PGR tasks (kept for reference)
@@ -629,7 +629,7 @@ load_pt = PythonOperator(
 
 
 
-# extract_tl >> transform_tl >> load_tl
+extract_tl >> transform_tl >> load_tl
 # extract_pgr >> transform_pgr >> load_pgr
 extract_ws >> transform_ws >> load_ws
 #     python_callable=load,

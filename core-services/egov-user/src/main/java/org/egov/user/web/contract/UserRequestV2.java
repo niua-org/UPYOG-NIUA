@@ -17,6 +17,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * V2 contract payload for creating or updating user records via HTTP requests.
+ * Supports additional demographics, multi-auth metadata, and extended address models.
+ */
 @Setter
 @Getter
 @Builder
@@ -61,6 +65,7 @@ public class UserRequestV2 {
 
     private Boolean active;
 
+    @JsonIgnore
     private Set<Address> addresses;
 
     @Size(max = 16)
@@ -103,6 +108,31 @@ public class UserRequestV2 {
     @Size(max = 36)
     private String uuid;
 
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String fatherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String motherName;
+
+    @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
+    @Size(max = 100)
+    private String spouseName;
+
+    private Boolean isIdentityVerified;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date identityVerifiedDate;
+
+    private String identityVerifiedSource;
+
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private Date lastResyncDate;
+
+    private Integer edittedCount;
+    private String lastLoginMethod;
+
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
@@ -113,6 +143,11 @@ public class UserRequestV2 {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date pwdExpiryDate;
 
+    /**
+     * Converts a domain {@link User} entity into a {@link UserRequestV2} contract DTO.
+     *
+     * @param user source domain user entity
+     */
     public UserRequestV2(User user) {
 
         this.id = user.getId();
@@ -146,7 +181,15 @@ public class UserRequestV2 {
         this.relationship = user.getGuardianRelation();
         this.uuid = user.getUuid();
         this.alternatemobilenumber=user.getAlternateMobileNumber();
-        this.addresses=user.getAddresses();
+        this.fatherName = user.getFatherName();
+        this.motherName = user.getMotherName();
+        this.spouseName = user.getSpouseName();
+        this.isIdentityVerified = user.getIsIdentityVerified();
+        this.identityVerifiedDate = user.getIdentityVerifiedDate();
+        this.identityVerifiedSource = user.getIdentityVerifiedSource();
+        this.lastResyncDate = user.getLastResyncDate();
+        this.edittedCount = user.getEdittedCount();
+        this.lastLoginMethod = user.getLastLoginMethod();
     }
 
 
@@ -155,6 +198,14 @@ public class UserRequestV2 {
         return roleEntities.stream().map(RoleRequest::new).collect(Collectors.toSet());
     }
 
+    /**
+     * Converts this V2 contract DTO to a domain {@link User} entity with operator audit metadata.
+     *
+     * @param loggedInUserId   ID of the operating user
+     * @param loggedInUserUuid UUID of the operating user
+     * @param isCreate         flag indicating if this is for a new user creation
+     * @return populated domain {@link User} entity
+     */
     @JsonIgnore
     public User toDomain(Long loggedInUserId, String loggedInUserUuid, boolean isCreate) {
         BloodGroup bloodGroup = null;
@@ -195,9 +246,18 @@ public class UserRequestV2 {
                 .roles(toDomainRoles())
                 .loggedInUserId(loggedInUserId)
                 .loggedInUserUuid(loggedInUserUuid)
-                .addresses(addresses)
+                .addresses(null)
                 .guardian(fatherOrHusbandName)
                 .guardianRelation(relationship).alternateMobileNumber(this.alternatemobilenumber)
+                .fatherName(this.fatherName)
+                .motherName(this.motherName)
+                .spouseName(this.spouseName)
+                .isIdentityVerified(isCreate ? Boolean.FALSE : null)
+                .identityVerifiedDate(null)
+                .identityVerifiedSource(null)
+                .lastResyncDate(this.lastResyncDate)
+                .edittedCount(this.edittedCount)
+                .lastLoginMethod(this.lastLoginMethod)
                 .build();
     }
 

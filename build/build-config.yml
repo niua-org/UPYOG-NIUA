@@ -223,6 +223,14 @@ config:
       - work-dir: "core-services/egov-user/src/main/resources/db"
         image-name: "egov-user-db"
 
+  - name: "builds/upyog/core-services/upyog-family-service"
+    build:
+      - work-dir: "core-services/upyog-family-service"
+        image-name: "upyog-family-service"
+        dockerfile: "build/maven/Dockerfile"
+      - work-dir: "core-services/upyog-family-service/src/main/resources/db"
+        image-name: "upyog-family-service-db"
+
   - name: "builds/upyog/core-services/egov-workflow-v2"
     build:
       - work-dir: "core-services/egov-workflow-v2"

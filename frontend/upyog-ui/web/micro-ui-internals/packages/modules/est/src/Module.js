@@ -15,6 +15,9 @@ import ESTAssignAssetCreate from "./pages/employee/Create/AssignAssetIndex";
 import ESTAssignAstRequiredDoc from "./PageComponents/ESTAssignAstRequiredDoc";
 import ESTAssignAssets from "./PageComponents/ESTAssignAssets";
 import ESTApplicationDetails from "./pages/citizen/ESTApplicationDetails";
+import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
+
+
 
 const componentsToRegister = {
   MyApplications,
@@ -28,6 +31,8 @@ const componentsToRegister = {
   ESTAssignAstRequiredDoc,
   ESTAssignAssets,
   ESTApplicationDetails,
+  ReportSearchApplication,
+  EnhancedReport
 };
 
 let componentsRegistered = false;

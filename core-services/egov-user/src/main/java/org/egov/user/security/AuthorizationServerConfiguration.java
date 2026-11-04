@@ -37,6 +37,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Refr
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -68,21 +69,10 @@ public class AuthorizationServerConfiguration {
     @Value("${refresh.token.validity.in.minutes}")
     private int refreshTokenValidityInMinutes;
 
-    @Value("${oauth2.token.format:jwt}")
+    @Value("${oauth2.token.format}")
     private String tokenFormat;
 
-    @Autowired
-    @Qualifier("customAuthenticationManager")
-    private AuthenticationManager customAuthenticationManager;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private CustomTokenEnhancer customTokenEnhancer;
-    
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+
 
     @Bean
     @Order(2)
@@ -91,7 +81,7 @@ public class AuthorizationServerConfiguration {
 
         // Only handle standard OAuth2 endpoints, exclude our custom endpoint
         http.securityMatcher(
-            org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/oauth2/**")
+            AntPathRequestMatcher.antMatcher("/oauth2/**")
         );
 
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
@@ -100,7 +90,7 @@ public class AuthorizationServerConfiguration {
         http.exceptionHandling((exceptions) -> exceptions
             .defaultAuthenticationEntryPointFor(
                 new LoginUrlAuthenticationEntryPoint("/login"),
-                org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/oauth2/**")
+                AntPathRequestMatcher.antMatcher("/oauth2/**")
             )
         );
 
@@ -125,7 +115,7 @@ public class AuthorizationServerConfiguration {
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository() {
+    public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
         final int accessTokenValidityInSeconds = accessTokenValidityInMinutes * 60;
         final int refreshTokenValidityInSeconds = refreshTokenValidityInMinutes * 60;
         
@@ -182,7 +172,9 @@ public class AuthorizationServerConfiguration {
     }
 
     @Bean
-    public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder) {
+    public OAuth2TokenGenerator<?> tokenGenerator(JwtEncoder jwtEncoder,
+                                                  CustomTokenEnhancer customTokenEnhancer,
+                                                  @Autowired(required = false) RedisTemplate<String, Object> redisTemplate) {
         if ("opaque".equals(tokenFormat)) {
             // Use opaque UUID-based tokens
             CustomOpaqueTokenGenerator opaqueTokenGenerator = new CustomOpaqueTokenGenerator();
