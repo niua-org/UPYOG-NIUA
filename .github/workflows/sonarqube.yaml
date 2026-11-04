@@ -110,7 +110,7 @@ jobs:
             const serviceLinks = process.env.SERVICES
               ? process.env.SERVICES.trim().split('\n').map(service => {
                   const projectKey = `upyog_${service.replace(/[\/_]/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-pr-${process.env.PR}`;
-                  const url = `${process.env.SONAR_HOST_URL}/dashboard?id=${encodeURIComponent(projectKey)}`;
+                  const url = `${process.env.SONAR_HOST_URL}dashboard?id=${encodeURIComponent(projectKey)}`;
                   return `- **${service}**: [View SonarQube Scan](${url})`;
                 }).join('\n')
               : 'No Maven service affected.';
