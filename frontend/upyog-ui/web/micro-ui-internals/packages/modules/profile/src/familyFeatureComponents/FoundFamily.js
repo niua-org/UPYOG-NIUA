@@ -84,7 +84,7 @@ const FoundFamily = () => {
         tenantId,
         applicantUserUuid: userUuid,
         relationshipWithHead: relationship.code,
-        hofConsentOtp: verifiedData.consentToken || verifiedData.txnId,
+        hofConsentOtp: verifiedData.consentToken,
       });
       // if we get a response with status not equal to JOINED then we will show an error toast
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");
