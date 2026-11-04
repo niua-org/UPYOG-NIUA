@@ -1,22 +1,4 @@
 name: SonarQube PR Analysis
-
-# Change-based SonarQube scan for the UPYOG monorepo, in one file.
-#
-#   pull_request -> sonar   (detect the touched service, build + scan it, comment)
-#   schedule     -> cleanup (delete stale *-pr-* projects)
-#
-# Setup (Settings -> Secrets and variables -> Actions):
-#   variable SONAR_HOST_URL             self-hosted SonarQube base URL
-#   secret   SONAR_TOKEN                analysis token (needs Create Projects)
-#   variable SONAR_CLEANUP_DRY_RUN      'false' to enable real cleanup (default true)
-#   variable SONAR_CLEANUP_MAX_AGE_DAYS default 14
-#
-# Required branch-protection check: "SonarQube PR Analysis / sonar".
-#
-# Community Edition has no native PR analysis, so each PR is scanned under an
-# isolated <key>-pr-<n> project, and the Quality Gate is enforced by the scanner
-# itself (-Dsonar.qualitygate.wait=true) rather than by polling the API.
-
 on:
   pull_request:
     branches: [niua-dev-3.0]
@@ -33,11 +15,6 @@ permissions:
   contents: read
 
 jobs:
-  # ------------------------------------------------------------------------ #
-  # Detect the one service this PR touches, build and scan it, then comment.
-  # Maven roots are discovered from pom.xml files, so every Maven service is
-  # eligible for scanning. A nested path resolves to its deepest Maven root.
-  # ------------------------------------------------------------------------ #
   sonar:
     name: sonar
     if: >-
@@ -124,17 +101,28 @@ jobs:
           OUTCOME: ${{ steps.scan.outcome }}
           SERVICES: ${{ steps.detect.outputs.services }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          PR: ${{ github.event.pull_request.number }}
         with:
           script: |
             const marker = '<!-- sonarqube-pr-analysis -->';
             const state = { success: 'PASSED', failure: 'FAILED', skipped: 'SKIPPED' }[process.env.OUTCOME] || 'UNKNOWN';
+            const serviceLinks = process.env.SERVICES
+              ? process.env.SERVICES.trim().split('\n').map(service => {
+                  const projectKey = `upyog_${service.replace(/[\/_]/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-pr-${process.env.PR}`;
+                  const url = `${process.env.SONAR_HOST_URL}/dashboard?id=${encodeURIComponent(projectKey)}`;
+                  return `- **${service}**: [View SonarQube Scan](${url})`;
+                }).join('\n')
+              : 'No Maven service affected.';
+
             const body = [
               marker,
               '## SonarQube PR Analysis',
               '',
               `**Result: ${state}**`,
               '',
-              process.env.SERVICES ? `Service: \`${process.env.SERVICES.trim().replace(/\n/g, '`, `')}\`` : 'No Maven service affected.',
+              '**Scanned Services:**',
+              serviceLinks,
               '',
               `[View the job run and logs](${process.env.RUN_URL})`,
             ].join('\n');
@@ -151,7 +139,7 @@ jobs:
             }
 
   # ------------------------------------------------------------------------ #
-  # Weekly housekeeping: remove the ephemeral <key>-pr-<n> projects.
+  # Weekly remove the ephemeral <key>-pr-<n> projects.
   # ------------------------------------------------------------------------ #
   cleanup:
     name: cleanup
