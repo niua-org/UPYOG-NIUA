@@ -1,0 +1,313 @@
+/**
+ * Garbage Collection (GC) Module Stylesheet (gc.scss)
+ */
+
+// Button Row
+.gc-btn-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+// Property Location Search & Input
+.gc-property-search-wrapper {
+  position: relative;
+  max-width: 540px;
+  margin-bottom: 16px;
+
+  &.employee {
+    max-width: 50%;
+  }
+
+  input {
+    width: 100% !important;
+    padding-right: 42px !important;
+  }
+
+  .gc-property-search-btn {
+    position: absolute;
+    right: 12px;
+    top: 10px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.gc-property-search-btn {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Property Not Found or Inactive Warning Banner
+.gc-pt-warning-banner {
+  border: 1px solid #d4351c;
+  background-color: #fff5f5;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  max-width: 540px;
+  box-sizing: border-box;
+
+  &.employee {
+    max-width: 50%;
+  }
+
+  .gc-pt-warning-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #d4351c;
+
+    .gc-warning-icon {
+      font-size: 18px;
+      margin-right: 8px;
+    }
+  }
+
+  .gc-pt-warning-desc {
+    margin: 4px 0 0 0;
+    color: #505a5f;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .gc-pt-apply-btn-wrapper {
+    margin-top: 14px;
+  }
+}
+
+// Verified Property Details Card
+.gc-owner-details-card {
+  border: 1px solid #00703c;
+  background-color: #f3fdf5;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  max-width: 540px;
+  box-sizing: border-box;
+
+  &.employee {
+    max-width: 50%;
+  }
+
+  .gc-verified-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #ccebd3;
+    padding-bottom: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .gc-verified-title-group {
+      display: flex;
+      align-items: center;
+
+      .gc-verified-tick {
+        color: #00703c;
+        font-size: 18px;
+        margin-right: 8px;
+        font-weight: bold;
+      }
+
+      .gc-verified-title-text {
+        font-weight: bold;
+        color: #00703c;
+        font-size: 15px;
+      }
+    }
+
+    .gc-verified-badge {
+      background-color: #00703c;
+      color: #ffffff;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  }
+
+  .gc-owner-section {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #ccebd3;
+  }
+
+  .gc-section-header {
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #0b0c0c;
+  }
+
+  .gc-address-runtime-note {
+    margin-top: 14px;
+    padding-top: 8px;
+    border-top: 1px dashed #ccebd3;
+    font-size: 12px;
+    color: #505a5f;
+    font-style: italic;
+  }
+}
+
+// Specifications styling
+.gc-spec-subheader {
+  font-size: 20px;
+  color: #0b0c0c;
+  margin-bottom: 16px;
+}
+
+.gc-inheritance-wrapper {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+// Tenant Section & Add-on
+.gc-tenant-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid #b1b4b6;
+  max-width: 540px;
+
+  &.employee {
+    max-width: 50%;
+  }
+
+  .gc-tenant-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
+  .gc-tenant-header-title {
+    font-size: 20px;
+    color: #0b0c0c;
+    margin: 0;
+  }
+
+  .gc-tenant-floor-info {
+    margin: 4px 0 0 0;
+    color: #505a5f;
+    font-size: 14px;
+  }
+
+  .gc-tenant-add-btn {
+    background-color: #a82227;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 8px;
+
+    &:disabled {
+      background-color: #b1b4b6;
+      cursor: not-allowed;
+    }
+  }
+
+  .gc-tenant-empty-box {
+    background-color: #f8f8f8;
+    padding: 16px;
+    border-radius: 4px;
+    color: #6f777b;
+    font-size: 14px;
+    border: 1px dashed #bfc1c3;
+  }
+}
+
+// Dynamic Tenant Card
+.gc-tenant-card {
+  border: 1px solid #bfc1c3;
+  background-color: #fdfdfd;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  max-width: 100%;
+
+  .gc-tenant-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+
+    .gc-tenant-title {
+      font-weight: bold;
+      font-size: 16px;
+      color: #0b0c0c;
+    }
+
+    .gc-tenant-remove-btn {
+      color: #a82227;
+      font-weight: bold;
+      font-size: 14px;
+    }
+  }
+
+  .gc-tenant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+
+    &.employee {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .gc-tenant-subtext {
+    font-size: 11px;
+    color: #6f777b;
+    display: block;
+    margin-top: 4px;
+  }
+}
+
+.gc-doc-card-owner {
+  border: 1px solid #1d70b8;
+  background-color: #f3f8fc;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+.gc-doc-card-tenant {
+  border: 1px solid #28a197;
+  background-color: #f2f9f8;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+// Status Badges
+.gc-status-active {
+  color: #00703c;
+  font-weight: bold;
+}
+
+.gc-status-disconnected {
+  color: #a82227;
+  font-weight: bold;
+}
+
+.gc-status-perm-disconnected {
+  color: #d4351c;
+  font-weight: bold;
+}

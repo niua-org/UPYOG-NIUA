@@ -65,7 +65,7 @@ const GCEdIt = () => {
     commonConfig.forEach((obj) => {
       c = c.concat(obj.body.filter((a) => !a.hideInCitizen));
     });
-    c.indexRoute = "applicant-details";
+    c.indexRoute = "garbage-propertyLocation";
     return c;
   }, []);
 
@@ -194,6 +194,42 @@ const GCEdIt = () => {
       nextParams = { ...params, owners };
     } else if (key === "units") {
       nextParams = { ...params, units: data };
+    } else if (key === "gcpropertylocdetails") {
+      let ownerUpdate = {};
+      if (data?.ownerInfo) {
+        const o = data.ownerInfo;
+        const currentOwner = params.owner || {};
+        const genderVal = o.gender || currentOwner.gender || "";
+        const relVal = o.relationship || currentOwner.relationShipType || "";
+        ownerUpdate = {
+          applicantName: o.name || currentOwner.applicantName || "",
+          mobileNumber: o.mobileNumber || currentOwner.mobileNumber || "",
+          emailId: o.emailId || currentOwner.emailId || "",
+          gender: genderVal ? (typeof genderVal === "object" ? genderVal : { code: genderVal, i18nKey: genderVal, name: genderVal }) : "",
+          guardianName: o.fatherOrHusbandName || o.guardianName || currentOwner.guardianName || "",
+          alternateNumber: o.altContactNumber || o.alternatemobilenumber || currentOwner.alternateNumber || "",
+          relationShipType: relVal ? (typeof relVal === "object" ? relVal : { name: relVal, code: String(relVal).toUpperCase(), i18nKey: `COMMON_${String(relVal).toUpperCase()}` }) : ""
+        };
+      }
+      const currentAddress = params.address || {};
+      const addressUpdate = {
+        pincode: data?.pincode || currentAddress.pincode || "",
+        city: data?.city || currentAddress.city || "",
+        locality: data?.locality || currentAddress.locality || "",
+        streetName: data?.streetName || currentAddress.streetName || "",
+        houseNo: data?.houseNo || currentAddress.houseNo || "",
+        landmark: data?.landmark || currentAddress.landmark || "",
+        houseName: data?.houseName || currentAddress.houseName || "",
+        addressLine1: data?.addressline1 || data?.addressLine1 || currentAddress.addressLine1 || "",
+        addressLine2: data?.addressline2 || data?.addressLine2 || data?.streetName || data?.landmark || currentAddress.addressLine2 || "N/A",
+        addressType: currentAddress.addressType || { name: "Permanent", code: "PERMANENT", i18nKey: "COMMON_ADDRESS_TYPE_PERMANENT" }
+      };
+      nextParams = {
+        ...params,
+        gcpropertylocdetails: { ...params.gcpropertylocdetails, ...data },
+        address: { ...(params.address || {}), ...addressUpdate },
+        ...(Object.keys(ownerUpdate).length > 0 ? { owner: { ...(params.owner || {}), ...ownerUpdate } } : {})
+      };
     } else {
       nextParams = {
         ...params,
@@ -219,8 +255,8 @@ const GCEdIt = () => {
     <>
       <Timeline config={config} />
       <Routes>
-        {config.map((routeObj, index) => {
-          const { component, texts, inputs, key, additionaFields } = routeObj;
+        {config.filter(r => r.route !== "check").map((routeObj, index) => {
+          const { component, texts, inputs, key, additionaFields, labels, disableFields } = routeObj;
           const Component =
             typeof component === "string"
               ? Digit.ComponentRegistryService.getComponent(component)
@@ -230,7 +266,19 @@ const GCEdIt = () => {
             <Route
               path={`${routeObj.route}`}
               key={index}
-              element={<Component config={{ texts, inputs, key, additionaFields }} onSelect={handleSelect} t={t} formData={params} renewApplication={application} />}
+              element={
+                <Component
+                  config={{ texts, inputs, key, additionaFields }}
+                  onSelect={handleSelect}
+                  t={t}
+                  formData={params}
+                  renewApplication={application}
+                  applicantData={params?.owner}
+                  addressData={params?.address}
+                  labels={labels}
+                  disableFields={disableFields}
+                />
+              }
             />
           );
         })}

@@ -118,9 +118,45 @@ const GCCreate = () => {
       setParams({ ...params, ...{ [key]: [...owners] } });
     } else if (key === "units") {
       let units = params.units || [];
-      // if(index){units[index] = data;}else{
       units = data;
       setParams({ ...params, units });
+    } else if (key === "gcpropertylocdetails") {
+      let ownerUpdate = {};
+      if (data?.ownerInfo) {
+        const o = data.ownerInfo;
+        const currentOwner = params.owner || {};
+        const genderVal = o.gender || currentOwner.gender || "";
+        const relVal = o.relationship || currentOwner.relationShipType || "";
+        ownerUpdate = {
+          applicantName: o.name || "",
+          mobileNumber: o.mobileNumber || "",
+          emailId: o.emailId || "",
+          gender: genderVal ? (typeof genderVal === "object" ? genderVal : { code: genderVal, i18nKey: genderVal, name: genderVal }) : "",
+          guardianName: o.fatherOrHusbandName || "",
+          alternateNumber: o.altContactNumber || "",
+          relationShipType: relVal ? (typeof relVal === "object" ? relVal : { name: relVal, code: String(relVal).toUpperCase(), i18nKey: `COMMON_${String(relVal).toUpperCase()}` }) : "",
+          dateOfBirth: o.dateOfBirth || (o.dob ? new Date(o.dob).toISOString().split("T")[0] : "")
+        };
+      }
+      const currentAddress = params.address || {};
+      const addressUpdate = {
+        pincode: data?.pincode || "",
+        city: data?.city || "",
+        locality: data?.locality || "",
+        streetName: data?.streetName || "",
+        houseNo: data?.houseNo || "",
+        landmark: data?.landmark || "",
+        houseName: data?.houseName || "",
+        addressLine1: data?.addressline1 || "",
+        addressLine2: data?.addressline2 || "",
+        addressType: currentAddress.addressType || { name: "Permanent", code: "PERMANENT", i18nKey: "COMMON_ADDRESS_TYPE_PERMANENT" }
+      };
+      setParams({
+        ...params,
+        gcpropertylocdetails: { ...params.gcpropertylocdetails, ...data },
+        address: { ...(params.address || {}), ...addressUpdate },
+        ...(Object.keys(ownerUpdate).length > 0 ? { owner: { ...(params.owner || {}), ...ownerUpdate } } : {})
+      });
     } else {
       setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
     }
@@ -136,20 +172,31 @@ const GCCreate = () => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });
 
-  config.indexRoute = "applicant-details";
+  config.indexRoute = "garbage-propertyLocation";
 
   return (
     <React.Fragment>
       <Timeline config={config} />
       <Routes>
-      {config.map((routeObj, index) => {
-        const { component, texts, inputs, key, additionaFields } = routeObj;
+      {config.filter(r => r.route !== "check").map((routeObj, index) => {
+        const { component, texts, inputs, key, additionaFields, labels, disableFields } = routeObj;
         const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
         return (
           <Route
               path={`${routeObj.route}`}
             key={index}
-              element={<Component config={{ texts, inputs, key, additionaFields }} onSelect={handleSelect} t={t} formData={params} />}
+              element={
+                <Component
+                  config={{ texts, inputs, key, additionaFields }}
+                  onSelect={handleSelect}
+                  t={t}
+                  formData={params}
+                  applicantData={params?.owner}
+                  addressData={params?.address}
+                  labels={labels}
+                  disableFields={disableFields}
+                />
+              }
           />
         );
       })}
