@@ -5,30 +5,32 @@ import { OTP_LENGTH } from "../utils/constants";
 
 /**
  * Generic OTP entry + verify step.
- * - onVerify(otp): async fn that calls the flow-specific verify API and returns its response
- * - onVerified(response): called when the response has isVerified === true
- * - onError(message): called on any failure
+ * OTP entry + verify step for both flows.
+ * type: "AADHAAR" | "FAMILY_ID" decides which verify API is called.
+ * onVerified(response) is called when the response has isVerified === true.
  */
 
 
-const OtpVerify = ({ referenceId, userUuid, onVerified, onError }) => {
+const OtpVerify = ({ type, referenceId, userUuid, familyId, onVerified, onError }) => {
   const { t } = useTranslation();
+  const tenantId = Digit.ULBService.getCurrentTenantId();
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
+
+  const verifyOtp = () =>
+    type === "FAMILY_ID"
+      ? Digit.UserService.verifyFamilyOtp({familyId, tenantId, otp, referenceId})
+      : Digit.UserService.verifyAadhaarOtp({ referenceId, otp, isResync: false, userUuid });
 
   const handleVerify = async () => {
     setVerifying(true);
     try {
-      const res = await Digit.UserService.verifyAadhaarOtp({
-        referenceId,
-        otp,
-        isResync: false,
-        userUuid,
-      });
-      if (!res?.isVerified) throw new Error("AADHAAR_NOT_VERIFIED");
-      onVerified(res); // parent swaps this component out, so no state reset needed
+      const res = await verifyOtp();
+      if (!res?.isVerified) throw new Error("OTP_NOT_VERIFIED");
+      onVerified(res); // parent navigates away, so no state reset needed
     } catch (err) {
-      onError(t("AADHAAR_OTP_VERIFY_FAILED"));
+      onError(err?.response?.data?.Errors?.[0]?.message || t("OTP_VERIFY_FAILED"));
+      setOtp("");
       setVerifying(false);
     }
   };

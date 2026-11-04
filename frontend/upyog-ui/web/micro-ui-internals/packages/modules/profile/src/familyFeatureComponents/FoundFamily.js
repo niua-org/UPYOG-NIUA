@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Card, CardHeader, CardLabel, Dropdown, SubmitBar, Loader,Toast } from "@nudmcdgnpm/digit-ui-react-components";
-import { FieldGrid, Section, withValues, getFamilyHeadFields, getPersonalFields } from "../utils";
+import { FieldGrid, Section, getFamilyHeadFields, getPersonalFields } from "../utils";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 // Function to get user Details
@@ -91,7 +91,7 @@ const FoundFamily = () => {
       navigate(PROFILE_ROUTES.FAMILY_JOINED, { replace: true, state: { joinData: res.JoinRequest } });
     } catch (err) {
       console.log("error on join family page", err);
-      showError(err?.Errors?.[0]?.message || t("PROFILE_JOIN_FAMILY_FAILED"));
+      showError(err?.response?.data?.Errors?.[0]?.message || t("PROFILE_JOIN_FAMILY_FAILED"));
       setSubmitting(false);
     }
   };

@@ -4,11 +4,6 @@ import { Card, CardHeader, CardText, CardLabel, TextInput, SubmitBar, Toast } fr
 import OtpVerify from "../verifications/OtpVerify";
 import { AADHAAR_LENGTH, FAMILY_ID_LENGTH, PROFILE_ROUTES, getFamilyIdLength } from "../utils/constants";
 
-// TODO: replace with the real API once family search is available
-const searchFamilyById = async (familyId) => {
-  console.log("Search family by id", familyId);
-};
-
 /**
  * JoinExistingFamily allows users to join an existing family using either
  * their Family ID or the Head of Family's Aadhaar number. Aadhaar-based
@@ -24,6 +19,8 @@ const JoinExistingFamily = () => {
   const [referenceId, setReferenceId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const [otpType, setOtpType] = useState(null);
 
   // auto-dismiss toast
   useEffect(() => {
@@ -45,6 +42,7 @@ const JoinExistingFamily = () => {
     const value = e.target.value.toUpperCase();
     if (/^[A-Z0-9-]*$/.test(value) && getFamilyIdLength(value) <= FAMILY_ID_LENGTH) {
       setFamilyId(value);
+      setReferenceId(null);
     }
   };
 
@@ -52,10 +50,9 @@ const JoinExistingFamily = () => {
     setLoading(true);
     try {
       const res = await Digit.UserService.sendAadhaarOtp({ aadhaarNumber: aadhaar });
-      console.log("response from sendAadhaarOtp in Join exiting family page", res);
-      // if (!res?.status==="OTP_SENT") throw new Error("OTP_NOT_SENT");
       if (res?.status !== "OTP_SENT" || !res?.referenceId) throw new Error("OTP_NOT_SENT");
       setReferenceId(res.referenceId);
+      setOtpType("AADHAAR");
     } catch (err) {
       console.log("error on join existing family page", err);
       showError(t("AADHAAR_OTP_SEND_FAILED"));
@@ -64,10 +61,30 @@ const JoinExistingFamily = () => {
     }
   };
 
-  const handleSearch = () => (aadhaar ? sendAadhaarOtp() : searchFamilyById(familyId));
+  const searchFamilyById = async (familyId,tenantId) => {
+    setLoading(true);
+    try {
+      const res = await Digit.UserService.sendFamilyOtp({familyId, tenantId});
+      if (!res?.isSent) throw new Error("FAMILY_NOT_FOUND");
+      setReferenceId(res.referenceId);
+      setOtpType("FAMILY_ID");
+    } catch (err) {
+      console.log("error on join existing family page", err);
+      showError(err?.response?.data?.Errors?.[0]?.message || t("PROFILE_FAMILY_NOT_FOUND"));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleVerified = (verifiedData) =>
+  const handleSearch = () => (aadhaar ? sendAadhaarOtp() : searchFamilyById(familyId, tenantId));
+
+  const handleVerified = (res) => {
+    const verifiedData =
+      otpType === "FAMILY_ID"
+        ? { consentToken: res.consentToken, familyId: res.family?.familyId, family: res.family }
+        : res;
     navigate(PROFILE_ROUTES.FOUND_FAMILY, { state: { verifiedData, familyId } });
+  };
 
   const canSearch = aadhaar.length === AADHAAR_LENGTH || getFamilyIdLength(familyId) === FAMILY_ID_LENGTH;
 
@@ -102,8 +119,10 @@ const JoinExistingFamily = () => {
 
         {referenceId && (
           <OtpVerify
+            type={otpType}
             referenceId={referenceId}
             userUuid={userUuid}
+            familyId={familyId}
             onVerified={handleVerified}
             onError={showError}
           />

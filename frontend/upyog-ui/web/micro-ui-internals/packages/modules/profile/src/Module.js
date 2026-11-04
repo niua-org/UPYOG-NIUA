@@ -8,6 +8,7 @@ import EditDocuments from "./components/EditDocuments";
 import JoinExistingFamily from "./familyFeatureComponents/JoinExistingFamily";
 import FamilyJoinedResponse from "./familyFeatureComponents/FamilyJoinedResponse";
 import FoundFamily from "./familyFeatureComponents/FoundFamily";
+import VerifyProfile from "./verifications/ProfileVerify";
 
 
 
@@ -32,7 +33,8 @@ EditAddress,
 EditDocuments,
 JoinExistingFamily,
 FamilyJoinedResponse,
-FoundFamily
+FoundFamily,
+VerifyProfile
 };
 
 export const initPROFILEComponents = () => {
