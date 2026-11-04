@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.document;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,8 +37,15 @@ public class UserDocumentSearchCriteria {
 
     @Schema(description = "Citizen UUID", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
     @JsonProperty("uuid")
-    @JsonAlias({"userUuid", "user_uuid"})
     private String uuid;
+
+    @Schema(description = "List of Citizen UUIDs")
+    @JsonProperty("userUuids")
+    private List<String> userUuids;
+
+    @Schema(description = "List of internal user numeric IDs")
+    @JsonProperty("userIds")
+    private List<Long> userIds;
 
     @Schema(description = "Tenant identifier", example = "pg.citya")
     private String tenantId;
@@ -93,6 +99,5 @@ public class UserDocumentSearchCriteria {
 
     @Schema(description = "Nested criteria payload (if wrapped)")
     @JsonProperty("criteria")
-    @JsonAlias({"userDocumentSearchCriteria", "UserDocumentSearchCriteria"})
     private UserDocumentSearchCriteria criteria;
 }

@@ -1,0 +1,9 @@
+{
+  "MdmsRes": {
+    "RAINMAKER-PGR": {
+      "ServiceDefs": [
+        { "serviceCode": "NoStreetlight" }
+      ]
+    }
+  }
+}

@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.upyog.family.persistence.builder.StateFamilySyncQueryBuilder;
 import org.upyog.family.util.FamilyConstants;
+import org.upyog.family.util.MaskUtils;
 import org.upyog.family.web.contract.state.StateFamily;
 
 import java.util.Map;
@@ -64,7 +65,7 @@ public class StateFamilySyncRepositoryImpl implements StateFamilySyncRepository 
                     now
             );
             log.info("[STATE-SYNC-REPO] Persisted state family sync to DB: refId={}, stateFamilyId={}",
-                    referenceId, stateFamily.getStateFamilyId());
+                    MaskUtils.maskIdentifier(referenceId), stateFamily.getStateFamilyId());
         } catch (Exception e) {
             log.warn("[STATE-SYNC-REPO] Could not persist state family sync to DB (cache intact): {}", e.getMessage());
         }

@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 import org.upyog.family.config.FamilyConfiguration;
+import org.upyog.family.util.MaskUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +48,11 @@ public class RequesterDxClientImpl implements RequesterDxClient {
      */
     private final Map<String, TokenBinding> consumedTokens = new ConcurrentHashMap<>();
 
+    /**
+     * In-memory cache of verified HoF consent tokens issued through family OTP verification.
+     */
+    private final Map<String, TokenBinding> registeredFamilyConsentTokens = new ConcurrentHashMap<>();
+
     private static class TokenBinding {
         private final String memberId;
         private final String familyId;
@@ -66,6 +72,21 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         this.restTemplate = restTemplate;
         this.configuration = configuration;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    }
+
+    @Override
+    public void registerConsentToken(String consentToken, String familyId) {
+        registerConsentToken(consentToken, familyId, null);
+    }
+
+    @Override
+    public void registerConsentToken(String consentToken, String familyId, String applicantUuid) {
+        if (StringUtils.isNotBlank(consentToken)) {
+            registeredFamilyConsentTokens.put(consentToken.trim(),
+                    new TokenBinding(applicantUuid, familyId, System.currentTimeMillis()));
+            log.info("[UPYOG-DX-CLIENT] Registered verified HoF consent token '{}' for family '{}' and applicant '{}'",
+                    MaskUtils.maskToken(consentToken), familyId, applicantUuid);
+        }
     }
 
     /**
@@ -101,17 +122,55 @@ public class RequesterDxClientImpl implements RequesterDxClient {
 
         String trimmedToken = consentToken.trim();
 
+        // 0. Registered HoF consent token check: Issued during verified family OTP workflow
+        TokenBinding registeredBinding = registeredFamilyConsentTokens.get(trimmedToken);
+        if (registeredBinding != null) {
+            // Check TTL expiration (configurable via family.consent.token.ttl.minutes, defaults to 15 minutes)
+            long ttlMs = (configuration != null && configuration.getConsentTokenTtlMs() > 0)
+                    ? configuration.getConsentTokenTtlMs()
+                    : 15 * 60 * 1000L;
+            long elapsed = System.currentTimeMillis() - registeredBinding.timestamp;
+            if (elapsed > ttlMs) {
+                registeredFamilyConsentTokens.remove(trimmedToken);
+                log.warn("[UPYOG-DX-CLIENT] Registered consent token expired after {} ms (TTL limit: {} ms) for family '{}'",
+                        elapsed, ttlMs, familyId);
+                return false;
+            }
+
+            if (StringUtils.isNotBlank(familyId) && StringUtils.isNotBlank(registeredBinding.familyId)
+                    && !registeredBinding.familyId.equals(familyId)) {
+                log.warn("[UPYOG-DX-CLIENT] Registered consent token family mismatch: token bound to '{}', requested family '{}'",
+                        registeredBinding.familyId, familyId);
+                return false;
+            }
+
+            if (StringUtils.isNotBlank(registeredBinding.memberId) && StringUtils.isNotBlank(memberUuidOrAadhaar)
+                    && !registeredBinding.memberId.equals(memberUuidOrAadhaar)) {
+                log.warn("[UPYOG-DX-CLIENT] Registered consent token applicant mismatch: token bound to applicant '{}', requested member '{}'",
+                        MaskUtils.maskIdentifier(registeredBinding.memberId), MaskUtils.maskIdentifier(memberUuidOrAadhaar));
+                return false;
+            }
+
+            // Evict single-use token to prevent replay attacks
+            registeredFamilyConsentTokens.remove(trimmedToken);
+
+            log.info("[UPYOG-DX-CLIENT] Token '{}' successfully verified and consumed for family '{}'",
+                    MaskUtils.maskToken(trimmedToken), familyId);
+            recordTokenBinding(trimmedToken, memberUuidOrAadhaar, familyId);
+            return true;
+        }
+
         // 1. Mock Prefix Handling: Strictly gated behind family.consent.mock.enabled flag
         if (trimmedToken.startsWith("CONSENT-VERIFIED-") || trimmedToken.startsWith("MOCK-OTP-")) {
             if (Boolean.TRUE.equals(configuration.getMockConsentEnabled())) {
                 log.info("[UPYOG-DX-CLIENT] Mock consent mode enabled (family.consent.mock.enabled=true). "
                         + "Accepting mock consent token: '{}' for member: '{}', family: '{}'",
-                        trimmedToken, memberUuidOrAadhaar, familyId);
+                        MaskUtils.maskToken(trimmedToken), MaskUtils.maskAadhaar(memberUuidOrAadhaar), familyId);
                 recordTokenBinding(trimmedToken, memberUuidOrAadhaar, familyId);
                 return true;
             } else {
                 log.warn("[UPYOG-DX-CLIENT] Security Alert: Mock consent token '{}' rejected. "
-                        + "Mock consent is disabled (family.consent.mock.enabled=false).", trimmedToken);
+                        + "Mock consent is disabled (family.consent.mock.enabled=false).", MaskUtils.maskToken(trimmedToken));
                 return false;
             }
         }
@@ -158,14 +217,15 @@ public class RequesterDxClientImpl implements RequesterDxClient {
             if (memberMismatch || familyMismatch) {
                 log.error("[UPYOG-DX-CLIENT] Replay attack detected! Token '{}' was previously consumed for member: '{}', family: '{}'. "
                         + "Cannot reuse for member: '{}', family: '{}'.",
-                        tokenKey, existingBinding.memberId, existingBinding.familyId, memberUuidOrAadhaar, familyId);
+                        MaskUtils.maskToken(tokenKey), MaskUtils.maskAadhaar(existingBinding.memberId), existingBinding.familyId,
+                        MaskUtils.maskAadhaar(memberUuidOrAadhaar), familyId);
                 return false;
             }
         }
 
         // 4. Construct DX _verifyOtp request body matching AadhaarVerificationRequest
         String url = configuration.getRequesterDxHost() + configuration.getRequesterDxVerifyOtpPath();
-        log.info("[UPYOG-DX-CLIENT] Calling requester-services-dx at: {} for referenceId: {}", url, referenceId);
+        log.info("[UPYOG-DX-CLIENT] Calling requester-services-dx at: {} for referenceId: {}", url, MaskUtils.maskIdentifier(referenceId));
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("RequestInfo", requestInfo);
@@ -187,14 +247,16 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         try {
             Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
             if (response == null || !response.containsKey("isVerified")) {
-                log.warn("[UPYOG-DX-CLIENT] requester-services-dx returned invalid or empty verification response for referenceId: {}", referenceId);
+                log.warn("[UPYOG-DX-CLIENT] requester-services-dx returned invalid or empty verification response for referenceId: {}",
+                        MaskUtils.maskIdentifier(referenceId));
                 return false;
             }
 
             Object isVerifiedObj = response.get("isVerified");
             boolean isVerified = Boolean.TRUE.equals(isVerifiedObj) || "true".equalsIgnoreCase(String.valueOf(isVerifiedObj));
             if (!isVerified) {
-                log.warn("[UPYOG-DX-CLIENT] requester-services-dx reported isVerified=false for referenceId: {}", referenceId);
+                log.warn("[UPYOG-DX-CLIENT] requester-services-dx reported isVerified=false for referenceId: {}",
+                        MaskUtils.maskIdentifier(referenceId));
                 return false;
             }
 
@@ -221,7 +283,7 @@ public class RequesterDxClientImpl implements RequesterDxClient {
             // 6. Record successful consumption to prevent future replay
             recordTokenBinding(tokenKey, memberUuidOrAadhaar, familyId);
             log.info("[UPYOG-DX-CLIENT] Successfully validated consent token for referenceId: {}, member: {}, family: {}",
-                    referenceId, memberUuidOrAadhaar, familyId);
+                    MaskUtils.maskIdentifier(referenceId), MaskUtils.maskAadhaar(memberUuidOrAadhaar), familyId);
             return true;
 
         } catch (Exception e) {

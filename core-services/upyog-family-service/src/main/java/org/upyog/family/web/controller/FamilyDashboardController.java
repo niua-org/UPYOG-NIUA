@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST Controller exposing family analytics, verification statistics, and household dashboard metrics in UPYOG.
  *
+ * <p>Serves municipal analytical dashboards and citizen portal summary screens. Dispatches requests to
+ * {@link FamilyDashboardService} to compile real-time household indicators.</p>
+ *
  * @author UPYOG Team
  * @since 1.0.0
  */
@@ -32,6 +35,11 @@ public class FamilyDashboardController {
 
     private final FamilyDashboardService dashboardService;
 
+    /**
+     * Constructs {@link FamilyDashboardController} with required domain service.
+     *
+     * @param dashboardService service compiling family metrics
+     */
     @Autowired
     public FamilyDashboardController(FamilyDashboardService dashboardService) {
         this.dashboardService = dashboardService;
@@ -39,12 +47,15 @@ public class FamilyDashboardController {
 
     /**
      * Retrieves aggregated household dashboard analytics for a given family unit in UPYOG.
-     * Computes active member counts, identity verification ratio, attached document counts, and lineage events.
      *
-     * @param familyId the unique family identifier
-     * @param tenantId the tenant identifier
-     * @param requestInfo UPYOG request context envelope
-     * @return response entity containing aggregated FamilyDashboardResponse metrics with HTTP 200 OK status
+     * <p>Computes active vs inactive member counts, identity verification ratio, attached document counts,
+     * and historical lineage events (split/merge).</p>
+     *
+     * @param familyId the unique family identifier; must not be blank.
+     * @param tenantId the tenant identifier scoping the query; must not be blank.
+     * @param requestInfo UPYOG request context envelope containing auth token; may be {@code null}.
+     * @return {@link ResponseEntity} wrapping {@link FamilyDashboardResponse} with HTTP 200 OK status.
+     * @throws org.egov.tracer.model.CustomException if the family is not found (Code: {@code FAMILY_NOT_FOUND}).
      */
     @PostMapping("/_search")
     @Operation(summary = "Retrieve aggregated household metrics and verification statistics in UPYOG")

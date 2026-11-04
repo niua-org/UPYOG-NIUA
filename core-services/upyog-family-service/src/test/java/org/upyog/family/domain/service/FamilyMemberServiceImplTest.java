@@ -28,6 +28,7 @@ import org.upyog.family.web.contract.LeaveFamilyRequest;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -105,7 +106,7 @@ class FamilyMemberServiceImplTest {
                 .consentToken("CONSENT-VERIFIED-12345")
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
 
         Family result = memberService.addMember(request);
 
@@ -130,7 +131,7 @@ class FamilyMemberServiceImplTest {
                 .hofConsentOtp("OTP-1234")
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
 
         Family result = memberService.joinFamily(request);
 
@@ -161,7 +162,7 @@ class FamilyMemberServiceImplTest {
                 .exitReason(ExitReason.MARRIAGE)
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
 
         Family result = memberService.leaveFamily(request);
 
@@ -195,7 +196,7 @@ class FamilyMemberServiceImplTest {
                 .consentToken("CONSENT-VERIFIED-999")
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByMobile(any(), any(), any())).thenReturn(Collections.emptyList());
         when(userClient.createCitizenProfile(any(), any())).thenReturn(org.upyog.family.web.contract.CitizenProfile.builder()
                 .uuid("provisioned-uuid-99")

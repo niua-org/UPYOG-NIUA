@@ -8,6 +8,11 @@ import org.egov.common.contract.response.ResponseInfo;
 
 import java.util.List;
 
+/**
+ * Web contract response payload returning user profile details in legacy (V1) format.
+ * <p>
+ * Contains {@link ResponseInfo} status headers along with the list of matching {@link UserRequest} records.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

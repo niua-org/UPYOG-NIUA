@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.upyog.family.domain.service.StateFamilySyncService;
+import org.upyog.family.util.MaskUtils;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyResponse;
@@ -79,7 +80,7 @@ public class StateFamilySyncController {
             @RequestParam(value = "stateFamilyId", required = false) String stateFamilyId,
             @RequestBody(required = false) RequestInfo requestInfo) {
         log.info("[STATE-SYNC-CONTROLLER] Received /v1/state/_search: refId={}, stateFamilyId={}",
-                referenceId, stateFamilyId);
+                MaskUtils.maskIdentifier(referenceId), stateFamilyId);
 
         StateFamilySyncResponse response = stateFamilySyncService.getStateFamily(referenceId, stateFamilyId, requestInfo);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -94,7 +95,7 @@ public class StateFamilySyncController {
             @RequestParam(value = "referenceId", required = false) String referenceId,
             @RequestParam(value = "stateFamilyId", required = false) String stateFamilyId) {
         log.info("[STATE-SYNC-CONTROLLER] Received GET /v1/state/_details: refId={}, stateFamilyId={}",
-                referenceId, stateFamilyId);
+                MaskUtils.maskIdentifier(referenceId), stateFamilyId);
 
         StateFamilySyncResponse response = stateFamilySyncService.getStateFamily(referenceId, stateFamilyId, null);
         return new ResponseEntity<>(response, HttpStatus.OK);

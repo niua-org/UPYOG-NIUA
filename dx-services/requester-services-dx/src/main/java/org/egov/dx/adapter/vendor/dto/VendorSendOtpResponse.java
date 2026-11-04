@@ -1,6 +1,5 @@
 package org.egov.dx.adapter.vendor.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,7 +42,6 @@ public class VendorSendOtpResponse {
      * Unique transaction identifier assigned by the vendor gateway.
      */
     @JsonProperty("transaction_id")
-    @JsonAlias({"transactionId", "txnId"})
     private String transactionId;
 
     /**
@@ -68,7 +66,6 @@ public class VendorSendOtpResponse {
          * This value is mandatory when calling the OTP verification endpoint.
          */
         @JsonProperty("reference_id")
-        @JsonAlias("referenceId")
         private Long referenceId;
 
         /**
@@ -76,7 +73,6 @@ public class VendorSendOtpResponse {
          * Example: "in.co.sandbox.kyc.aadhaar.okyc.otp.response"
          */
         @JsonProperty("@entity")
-        @JsonAlias("entity")
         private String entity;
 
         /**

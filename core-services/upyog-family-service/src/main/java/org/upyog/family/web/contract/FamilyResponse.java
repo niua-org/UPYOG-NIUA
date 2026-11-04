@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Standard UPYOG API response returning family entities.
+ * Standard UPYOG API response envelope returning family aggregates.
+ *
+ * <p>Wraps a list of resolved {@link Family} aggregates alongside platform {@link ResponseInfo} headers
+ * and pagination totals.</p>
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -24,13 +27,22 @@ import java.util.List;
 @AllArgsConstructor
 public class FamilyResponse {
 
+    /**
+     * Platform response status and correlation metadata.
+     */
     @JsonProperty("ResponseInfo")
     private ResponseInfo responseInfo;
 
+    /**
+     * List of family aggregates returned by the query or mutation.
+     */
     @JsonProperty("Families")
     @Builder.Default
     private List<Family> families = new ArrayList<>();
 
+    /**
+     * Total number of family records matching search criteria (useful for pagination).
+     */
     @JsonProperty("totalCount")
     private Integer totalCount;
 }
