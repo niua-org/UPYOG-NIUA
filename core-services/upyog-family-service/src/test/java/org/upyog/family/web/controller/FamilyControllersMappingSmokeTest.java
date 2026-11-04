@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.upyog.family.domain.service.FamilyDashboardService;
 import org.upyog.family.domain.service.FamilyHeadService;
 import org.upyog.family.domain.service.FamilyMemberService;
+import org.upyog.family.domain.service.FamilyOtpService;
 import org.upyog.family.domain.service.FamilyService;
 import org.upyog.family.domain.service.StateFamilySyncService;
 import org.upyog.family.util.ResponseInfoFactory;
@@ -48,6 +49,9 @@ class FamilyControllersMappingSmokeTest {
 
     @MockBean
     private FamilyService familyService;
+
+    @MockBean
+    private FamilyOtpService familyOtpService;
 
     @MockBean
     private FamilyMemberService memberService;

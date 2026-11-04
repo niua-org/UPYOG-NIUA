@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -265,6 +266,21 @@ public class FamilyRepositoryImpl implements FamilyRepository {
         String sql = queryBuilder.getFamilySearchQuery(criteria, preparedStmtList);
         log.debug("[UPYOG-FAMILY-REPO] Executing search SQL: {} with params: {}", sql, preparedStmtList);
         return jdbcTemplate.query(sql, preparedStmtList.toArray(), rowMapper);
+    }
+
+    @Override
+    public Optional<Family> findByFamilyIdAndTenantId(String familyId, String tenantId) {
+        if (StringUtils.isBlank(familyId) || StringUtils.isBlank(tenantId)) {
+            return Optional.empty();
+        }
+        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
+                .familyId(familyId)
+                .tenantId(tenantId)
+                .limit(1)
+                .offset(0)
+                .build();
+        List<Family> families = search(criteria);
+        return (families != null && !families.isEmpty()) ? Optional.of(families.get(0)) : Optional.empty();
     }
 
     /**

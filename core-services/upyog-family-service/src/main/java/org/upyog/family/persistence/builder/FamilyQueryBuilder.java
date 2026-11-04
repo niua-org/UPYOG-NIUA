@@ -155,6 +155,11 @@ public class FamilyQueryBuilder {
             preparedStmtList.add(criteria.getMemberUserUuid());
         }
 
+        if (criteria.getMemberUserUuids() != null && !criteria.getMemberUserUuids().isEmpty()) {
+            addClause(whereClause);
+            addMemberUserUuidsClause(whereClause, criteria.getMemberUserUuids(), preparedStmtList);
+        }
+
         if (whereClause.length() > 0) {
             query.append("WHERE ").append(whereClause);
         }
@@ -194,5 +199,17 @@ public class FamilyQueryBuilder {
         if (whereClause.length() > 0) {
             whereClause.append("AND ");
         }
+    }
+
+    private void addMemberUserUuidsClause(StringBuilder whereClause, List<String> memberUserUuids, List<Object> preparedStmtList) {
+        whereClause.append("f.family_id IN (SELECT family_id FROM ug_family_member WHERE user_uuid IN (");
+        for (int i = 0; i < memberUserUuids.size(); i++) {
+            whereClause.append("?");
+            if (i < memberUserUuids.size() - 1) {
+                whereClause.append(", ");
+            }
+            preparedStmtList.add(memberUserUuids.get(i));
+        }
+        whereClause.append(") AND active = true) ");
     }
 }

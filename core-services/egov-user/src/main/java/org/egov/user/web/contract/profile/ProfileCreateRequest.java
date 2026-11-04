@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.profile;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -81,12 +80,10 @@ public class ProfileCreateRequest {
     private String spouseName;
 
     @Schema(description = "Guardian full name (Mandatory for minors under 18)", example = "Rajesh Sharma")
-    @JsonAlias({"guardianName", "guardian_name"})
     @Size(max = 100)
     private String guardian;
 
     @Schema(description = "Guardian relationship: FATHER, MOTHER, HUSBAND, OTHER (Mandatory for minors under 18)", example = "FATHER")
-    @JsonAlias({"guardianRelationship", "guardian_relation", "guardian_relationship"})
     @Size(max = 32)
     private String guardianRelation;
 
@@ -144,17 +141,14 @@ public class ProfileCreateRequest {
 
     @Schema(description = "Identity verification status flag", example = "false")
     @JsonProperty("isIdentityVerified")
-    @JsonAlias({"isVerified", "identityVerified"})
     private Boolean isIdentityVerified;
 
     @Schema(description = "User type (CITIZEN, EMPLOYEE, etc.)", example = "CITIZEN")
     @JsonProperty("type")
-    @JsonAlias({"userType"})
     private String type;
 
     @Schema(description = "Nested citizen profile payload supporting standard UPYOG request contracts")
     @JsonProperty("user")
-    @JsonAlias({"profile", "User"})
     private Map<String, Object> user;
 
     public String getTenantId() {
@@ -186,7 +180,6 @@ public class ProfileCreateRequest {
     }
 
     @JsonProperty("user")
-    @JsonAlias({"profile", "User"})
     public Map<String, Object> getUser() {
         return this.user;
     }
@@ -197,7 +190,6 @@ public class ProfileCreateRequest {
      *
      * @param userMap raw key-value map representing nested user properties
      */
-    @JsonAlias({"profile", "User"})
     public void setUser(Map<String, Object> userMap) {
         this.user = userMap;
         unpackUserIfPresent();

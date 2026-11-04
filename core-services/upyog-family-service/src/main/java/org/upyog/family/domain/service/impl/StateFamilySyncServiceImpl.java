@@ -18,6 +18,7 @@ import org.upyog.family.domain.service.StateFamilySyncService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.StateFamilySyncRepository;
 import org.upyog.family.util.FamilyConstants;
+import org.upyog.family.util.MaskUtils;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AuditDetails;
 import org.upyog.family.web.contract.Family;
@@ -93,7 +94,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
         // Generate unique reference ID for UPYOG UI ingestion and session binding
         String referenceId = FamilyConstants.PREFIX_REF + UUID.randomUUID().toString();
         log.info("[STATE-FAMILY-SYNC-SVC] Staging state family: stateFamilyId={}, refId={}, membersCount={}",
-                stateFamily.getStateFamilyId(), referenceId, stateFamily.getMembers().size());
+                stateFamily.getStateFamilyId(), MaskUtils.maskIdentifier(referenceId), stateFamily.getMembers().size());
 
         // Assign memberIds if absent
         int memberIndex = 1;
@@ -122,7 +123,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
     @Override
     public StateFamilySyncResponse getStateFamily(String referenceId, String stateFamilyId, RequestInfo requestInfo) {
         log.info("[STATE-FAMILY-SYNC-SVC] Fetching State Family for UI: refId={}, stateFamilyId={}",
-                referenceId, stateFamilyId);
+                MaskUtils.maskIdentifier(referenceId), stateFamilyId);
 
         StateFamily stateFamily = null;
         if (StringUtils.isNotBlank(referenceId)) {
@@ -134,7 +135,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
 
         if (stateFamily == null) {
             log.error("[STATE-FAMILY-SYNC-SVC] State Family not found for refId: {}, stateFamilyId: {}",
-                    referenceId, stateFamilyId);
+                    MaskUtils.maskIdentifier(referenceId), stateFamilyId);
             throw new CustomException(FamilyConstants.ERROR_STATE_FAMILY_NOT_FOUND, "State Family record not found in UPYOG staging");
         }
 
@@ -255,7 +256,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
             if (matchedMember == null && StringUtils.isNotBlank(targetAadhaar)) {
                 matchedMember = placeholderMembers.stream()
                         .filter(m -> targetAadhaar.equals(extractFieldFromAdditionalDetails(m.getAdditionalDetails(), "aadhaarNumber"))
-                                || maskAadhaar(targetAadhaar).equals(extractFieldFromAdditionalDetails(m.getAdditionalDetails(), "maskedAadhaar")))
+                                || MaskUtils.maskAadhaar(targetAadhaar).equals(extractFieldFromAdditionalDetails(m.getAdditionalDetails(), "maskedAadhaar")))
                         .findFirst().orElse(null);
             }
 
@@ -276,7 +277,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 Map<String, Object> memberDetailsMap = getOrConvertToMap(matchedMember.getAdditionalDetails());
                 if (StringUtils.isNotBlank(targetMemberId)) memberDetailsMap.put("memberId", targetMemberId);
                 if (StringUtils.isNotBlank(targetMobile)) memberDetailsMap.put("mobileNumber", targetMobile);
-                if (StringUtils.isNotBlank(targetAadhaar)) memberDetailsMap.put("maskedAadhaar", maskAadhaar(targetAadhaar));
+                if (StringUtils.isNotBlank(targetAadhaar)) memberDetailsMap.put("maskedAadhaar", MaskUtils.maskAadhaar(targetAadhaar));
                 if (stagedMember != null) {
                     if (StringUtils.isNotBlank(stagedMember.getName()) && !memberDetailsMap.containsKey("name")) {
                         memberDetailsMap.put("name", stagedMember.getName());
@@ -298,7 +299,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 Map<String, Object> newMemberDetails = new HashMap<>();
                 if (StringUtils.isNotBlank(targetMemberId)) newMemberDetails.put("memberId", targetMemberId);
                 if (StringUtils.isNotBlank(targetMobile)) newMemberDetails.put("mobileNumber", targetMobile);
-                if (StringUtils.isNotBlank(targetAadhaar)) newMemberDetails.put("maskedAadhaar", maskAadhaar(targetAadhaar));
+                if (StringUtils.isNotBlank(targetAadhaar)) newMemberDetails.put("maskedAadhaar", MaskUtils.maskAadhaar(targetAadhaar));
                 if (stagedMember != null) {
                     if (StringUtils.isNotBlank(stagedMember.getName())) newMemberDetails.put("name", stagedMember.getName());
                     if (StringUtils.isNotBlank(stagedMember.getGender())) newMemberDetails.put("gender", stagedMember.getGender());
@@ -476,8 +477,8 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                         .dob(m.getDob())
                         .isVerified(m.getIsVerified())
                         .userUuid(m.getUserUuid())
-                        .maskedMobile(maskMobile(m.getMobileNumber()))
-                        .maskedAadhaar(maskAadhaar(m.getAadhaarNumber()))
+                        .maskedMobile(MaskUtils.maskMobile(m.getMobileNumber()))
+                        .maskedAadhaar(MaskUtils.maskAadhaar(m.getAadhaarNumber()))
                         .build();
                 maskedMembers.add(copy);
             }
@@ -492,23 +493,6 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .address(original.getAddress())
                 .members(maskedMembers)
                 .build();
-    }
-
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) return null;
-        if (mobile.length() >= 6) {
-            return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-        }
-        return "******";
-    }
-
-    private String maskAadhaar(String aadhaar) {
-        if (StringUtils.isBlank(aadhaar)) return null;
-        String clean = aadhaar.trim().replaceAll("\\s+", "");
-        if (clean.length() == 12) {
-            return "XXXXXXXX" + clean.substring(8);
-        }
-        return "XXXXXXXX" + (clean.length() >= 4 ? clean.substring(clean.length() - 4) : "****");
     }
 
     private String extractFieldFromAdditionalDetails(Object additionalDetails, String fieldName) {

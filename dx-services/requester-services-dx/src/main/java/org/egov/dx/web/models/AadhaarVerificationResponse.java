@@ -1,6 +1,5 @@
 package org.egov.dx.web.models;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,7 +33,6 @@ public class AadhaarVerificationResponse {
      * Standard eGov ResponseInfo block containing request matching metadata and response status.
      */
     @JsonProperty("ResponseInfo")
-    @JsonAlias("responseInfo")
     private ResponseInfo responseInfo;
 
     /**

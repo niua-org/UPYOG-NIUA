@@ -69,13 +69,18 @@ public class UserDocumentQueryBuilder {
             query.append(" AND d.id IN (:ids) ");
             params.put("ids", criteria.getIds());
         }
-        if (criteria.getUserId() != null) {
-            query.append(" AND d.user_id = :userId ");
-            params.put("userId", criteria.getUserId());
-        }
-        if (StringUtils.isNotBlank(criteria.getUserUuid())) {
+        if (!CollectionUtils.isEmpty(criteria.getUserUuids())) {
+            query.append(" AND (d.user_id IN (SELECT id FROM eg_user WHERE uuid IN (:userUuids)) OR u.uuid IN (:userUuids)) ");
+            params.put("userUuids", criteria.getUserUuids());
+        } else if (!CollectionUtils.isEmpty(criteria.getUserIds())) {
+            query.append(" AND d.user_id IN (:userIds) ");
+            params.put("userIds", criteria.getUserIds());
+        } else if (StringUtils.isNotBlank(criteria.getUserUuid())) {
             query.append(" AND d.user_id = (SELECT id FROM eg_user WHERE uuid = :userUuid) ");
             params.put("userUuid", criteria.getUserUuid());
+        } else if (criteria.getUserId() != null) {
+            query.append(" AND d.user_id = :userId ");
+            params.put("userId", criteria.getUserId());
         }
         if (StringUtils.isNotBlank(criteria.getTenantId())) {
             if (criteria.getTenantId().contains(".")) {

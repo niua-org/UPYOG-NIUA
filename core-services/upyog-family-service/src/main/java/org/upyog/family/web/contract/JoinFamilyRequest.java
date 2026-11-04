@@ -37,9 +37,18 @@ public class JoinFamilyRequest {
     @JsonProperty("tenantId")
     private String tenantId;
 
-    @NotBlank(message = "Applicant userUuid is mandatory")
     @JsonProperty("applicantUserUuid")
     private String applicantUserUuid;
+
+    @JsonProperty("userUuid")
+    private String userUuid;
+
+    public String getApplicantUserUuid() {
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(applicantUserUuid)) {
+            return applicantUserUuid;
+        }
+        return userUuid;
+    }
 
     @NotBlank(message = "Relationship with Head is mandatory")
     @JsonProperty("relationshipWithHead")

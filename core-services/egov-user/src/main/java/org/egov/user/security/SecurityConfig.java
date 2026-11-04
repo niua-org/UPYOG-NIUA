@@ -63,6 +63,7 @@ public class SecurityConfig {
                                "/users/v2/_create", "/users/v2/_search", "/users/v2/_update",
                                "/users/v2/_login",
                                "/profile/_create", "/profile/_init", "/profile/_search", "/profile/_resync",
+                               "/profile/**",
                                "/address/**",
                                "/document/**",
                                "/_createAddress", "/_getAddress", "/_updateAddress").permitAll()
