@@ -15,5 +15,5 @@ export const apiPaths = [
   "/tp-services", "/pgr-ai-services", "/gis-dx-service", "/individual",
   "/bpa-calculator", "/request-service", "/challan-generation", "/ndc-services",
   "/estate-management", "/ndc-calculator", "/gc-services", "/services", "/firenoc-calculator", "/firenoc-services", "/requester-services-dx", "/upyog-aggregation-service",
-  "/employee", "/citizen"
+  "/employee", "/citizen", "/family"
 ];

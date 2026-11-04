@@ -71,7 +71,7 @@ export const profileStyles = {
   fieldLabel: { fontSize: 14, color: "#505A5F", marginBottom: 4 },
   fieldValue: { fontSize: 18, fontWeight: 500, wordBreak: "break-word" },
 
-    // Avatar with camera button
+  // Avatar with camera button
   avatarWrap: { position: "relative", width: 160, height: 176 },
   cameraButton: {
     position: "absolute",
@@ -110,26 +110,89 @@ export const profileStyles = {
 
   // Tabs (citizen)
   tabs: { display: "flex", gap: 8, marginBottom: 16 },
-tab: {
-  margin: 0,
-  background: "#F4F5F7",
-  padding: "0 28px",
-  height: 44,
-  color: "#0B0C0C",
-  borderRadius: 22,
-  border: "none",
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: "pointer",
-  flexShrink: 0,
-  transition: "all 0.2s ease",
-},
-tabActive: {
-  background: "var(--app-btn-primary-gradient, linear-gradient(90deg, #6A4A91 0%, #3E285F 100%))",
-  color: "#ffffff",
-},
+  tab: {
+    margin: 0,
+    background: "#F4F5F7",
+    padding: "0 28px",
+    height: 44,
+    color: "#0B0C0C",
+    borderRadius: 22,
+    border: "none",
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    flexShrink: 0,
+    transition: "all 0.2s ease",
+  },
+  tabActive: {
+    background: "var(--app-btn-primary-gradient, linear-gradient(90deg, #6A4A91 0%, #3E285F 100%))",
+    color: "#ffffff",
+  },
 
   // Address tab
   addressActions: { display: "flex", justifyContent: "flex-end", marginBottom: 12 },
   cardHeader: { width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" },
+  documentGrid: {
+    display: "flex",
+    gap: 24,
+    flexWrap: "wrap",
+    width: "100%",
+  },
+  documentCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "12px 16px",
+    border: "1px solid #E8EAED",
+    borderRadius: 8,
+    background: "#FFFFFF",
+    minWidth: 240,
+  },
+  documentTitle: {
+    fontWeight: 600,
+    fontSize: 14,
+    color: "#0B0C0C",
+  },
+  documentLink: {
+    fontSize: 13,
+    color: "#1D70B8",
+    textDecoration: "underline",
+    cursor: "pointer",
+    display: "inline-block",
+    marginTop: 4,
+  },
+
+  headerActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
+  dropdownWrap: {
+    margin: 0,
+    position: "relative",
+  },
+  dropdownButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    background: "#F4F5F7",
+    color: "#0B0C0C",
+    border: "none",
+    borderRadius: 8,
+    padding: "12px 20px",
+    fontSize: 16,
+    fontWeight: 500,
+    cursor: "pointer",
+  },
+  dropdownMenu: {
+    overflow: "revert",
+    minWidth: 220,
+    right: 0,
+    left: "auto",
+    zIndex: 1000,
+    marginTop: 8,
+    borderRadius: 8,
+    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.12)",
+    border: "1px solid #E8EAED",
+  },
 };

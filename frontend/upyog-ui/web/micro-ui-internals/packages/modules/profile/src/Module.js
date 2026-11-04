@@ -5,6 +5,9 @@ import EditProfile from "./components/EditProfile";
 import EditProfileForm from "./components/EditProfileForm";
 import EditAddress from "./components/EditAddress";
 import EditDocuments from "./components/EditDocuments";
+import JoinExistingFamily from "./familyFeatureComponents/JoinExistingFamily";
+import FamilyJoinedResponse from "./familyFeatureComponents/FamilyJoinedResponse";
+import FoundFamily from "./familyFeatureComponents/FoundFamily";
 
 
 
@@ -26,7 +29,10 @@ ProfileDetails,
 EditProfile,
 EditProfileForm,
 EditAddress,
-EditDocuments
+EditDocuments,
+JoinExistingFamily,
+FamilyJoinedResponse,
+FoundFamily
 };
 
 export const initPROFILEComponents = () => {

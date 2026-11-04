@@ -3,7 +3,7 @@ import { Modal, AddressDetails } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 
-const Heading = ({t}) => <h1 className="heading-m">{t("FILL_ADDRESS_DETAILS")}</h1>;
+const Heading = ({ t }) => <h1 className="heading-m">{t("FILL_ADDRESS_DETAILS")}</h1>;
 /**
  * AddressDetailss component renders a  popup for capturing and submitting user address details.
  * It utilizes Upyog's UI components and services to present a form and update the user's profile address.
@@ -18,23 +18,25 @@ const Heading = ({t}) => <h1 className="heading-m">{t("FILL_ADDRESS_DETAILS")}</
  */
 
 
-const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddresses}) => {
+const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddresses }) => {
   const { t } = useTranslation();
   const stateCode = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const { handleSubmit } = useForm();
   const [showToast, setShowToast] = useState(null);
+  const existingProof = address?.filestoreId;
   const [formData, setFormData] = useState({
-    addressType: address?.addressType||"",
-    pincode: address?.pinCode||"",
-    city: address?.city||"",
-    locality: address?.locality||"",
-    streetName: address?.streetName||"",
-    houseNo: address?.houseNumber||"",
-    landmark: address?.landmark||"",
-    addressLine1: address?.address||"",
-    addressLine2: address?.address2||""
-  }); 
+    addressType: address?.addressType || "",
+    pincode: address?.pinCode || "",
+    city: address?.city || "",
+    locality: address?.locality || "",
+    streetName: address?.streetName || "",
+    houseNo: address?.houseNumber || "",
+    landmark: address?.landmark || "",
+    addressLine1: address?.address || "",
+    addressLine2: address?.address2 || "",
+    addressProof: existingProof ? { name: t("ALREADY_UPLOADED"), filestoreId: existingProof } : null
+  });
 
   /*
  * This component renders a modal for capturing and updating user address details.
@@ -55,6 +57,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
 
   const uploadProofIfNeeded = async (file) => {
     if (!file || typeof file === "string") return file || null; // already a fileStoreId string
+    if (file.filestoreId) return file.filestoreId;
     const res = await Digit.UploadServices.Filestorage("profile", file, stateCode);
     return res?.data?.files?.[0]?.fileStoreId || null;
   };
@@ -62,6 +65,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
   const updateProfile = async () => {
     try {
       const tenantId = Digit.ULBService.getCurrentTenantId();
+      const stateCode = Digit.ULBService.getStateId();
       const userUuid = Digit.UserService.getUser()?.info?.uuid || {};
       const addressProofId = await uploadProofIfNeeded(formData.addressProof);
 
@@ -82,18 +86,18 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
       };
 
       const { responseInfo, address } = await Digit.UserService.createAddressV2(requestData, stateCode, userUuid);
-      if (responseInfo?.status === "201") {
+      if (responseInfo?.status === "201 CREATED") {
         await refreshAddresses?.();
         actionCancelOnSubmit();
       }
     } catch (error) {
-      console.log("error",error)
+      console.log("error", error)
       let message = t("CORE_COMMON_PROFILE_UPDATE_ERROR");
       try {
         const errorObj = JSON.parse(error);
         message = errorObj?.message || message;
-      } catch (e) {}
-      setShowToast({ 
+      } catch (e) { }
+      setShowToast({
         error: true,
         label: message
       });
@@ -103,6 +107,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
 
   const updateAddress = async () => {
     try {
+      const stateCode = Digit.ULBService.getStateId();
       const addressProofId = await uploadProofIfNeeded(formData.addressProof);
       const requestUpdatedData = {
         tenantId: tenantId,
@@ -128,23 +133,23 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
         type: formData.addressType?.code,
         id: address?.id,
         userId: address?.userId,
-        // lastModifiedBy: address?.userId,
+        lastModifiedBy: address?.userId,
         // lastModifiedDate: "null"
       };
 
-      const { responseInfo } = await Digit.UserService.updateAddressV2(requestUpdatedData, stateCode,);
+      const { responseInfo } = await Digit.UserService.updateAddressV2(requestUpdatedData, stateCode);
       if (responseInfo?.status === "200") {
         await refreshAddresses?.();
         actionCancelOnSubmit();
       }
     } catch (error) {
       let message = t("CORE_COMMON_PROFILE_UPDATE_ERROR");
-      console.log("error",error)
+      console.log("error", error)
       try {
         const errorObj = JSON.parse(error);
         message = errorObj?.message || message;
-      } catch (e) {}
-      setShowToast({ 
+      } catch (e) { }
+      setShowToast({
         error: true,
         label: message
       });
@@ -160,22 +165,22 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
         maxHeight: "90vh",
         overflowY: "auto",
       }}
-      actionSaveLabel={isEdit ?("CS_COMMON_UPDATE") :t("CS_COMMON_SUBMIT")}
+      actionSaveLabel={isEdit ? t("CS_COMMON_UPDATE") : t("CS_COMMON_SUBMIT")}
       actionCancelLabel={t("BACK")}
       actionCancelOnSubmit={actionCancelOnSubmit}
-      actionSaveOnSubmit={handleSubmit(isEdit?updateAddress:updateProfile)}
+      actionSaveOnSubmit={handleSubmit(isEdit ? updateAddress : updateProfile)}
       formId="modal-action"
       setError={setShowToast}
       error={showToast?.label}
     >
       <div className="core-address-details-wrapper">
-          <AddressDetails
-            t={t} 
-            formData={formData} 
-            onSelect={setFormData} 
-            isEdit={isEdit} 
-            config={{ inputs: [], canDisable: false, key: "address" }}
-           />
+        <AddressDetails
+          t={t}
+          formData={formData}
+          onSelect={setFormData}
+          isEdit={isEdit}
+          config={{ inputs: [], canDisable: false, key: "address" }}
+        />
       </div>
     </Modal>
   );

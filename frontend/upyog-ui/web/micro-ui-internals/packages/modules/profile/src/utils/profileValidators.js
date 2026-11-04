@@ -1,3 +1,12 @@
+/**
+ * All the Validation Fucntions for Profile Module are defined here.
+ * These are shared across EditProfile, EditAddress, EditDocuments and ProfileDetails.
+ * Includes:
+ * - validators, validateProfile, hasErrors
+ * 
+ */
+
+
 const NAME_REGEX = /^[a-zA-Z ]+$/;
 const MOBILE_REGEX = /^[6-9]{1}[0-9]{9}$/;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-z.-]+\.(com|org|in)$/;
@@ -15,12 +24,11 @@ export const validators = {
 export const validateProfile = (form, isEmployee) => {
   const errors = {
     name: validators.name(form.name),
-    email: validators.email(form.email),
-    altMobileNumber: validators.altMobileNumber(form.altMobileNumber),
+    emailId: validators.email(form.emailId),
+    altContactNumber: validators.altMobileNumber(form.altContactNumber),
   };
   if (isEmployee) {
     errors.gender = form.gender?.value ? null : "CORE_COMMON_PROFILE_GENDER_REQUIRED";
-    errors.mobileNumber = mobileError(form.mobileNumber);
   }
   return errors;
 };

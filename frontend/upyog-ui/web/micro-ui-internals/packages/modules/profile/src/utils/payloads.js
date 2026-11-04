@@ -6,8 +6,8 @@ export const buildUpdateUserPayload = ({ userInfo, form, photoId, locale }) => (
   name: form.name,
   dob: form.dob ? form.dob.split("-").reverse().join("/") : "", // yyyy-mm-dd -> dd/mm/yyyy
   gender: form.gender?.value,
-  emailId: form.email,
-  altContactNumber: form.altMobileNumber,
+  emailId: form.emailId,
+  altContactNumber: form.altContactNumber,
   photo: photoId,
   locale,
   fatherName: form?.fatherName,
@@ -23,8 +23,8 @@ export const buildSessionUser = ({ sessionUser, form, photoThumb }) => ({
     ...sessionUser.info,
     name: form.name,
     mobileNumber: form.mobileNumber,
-    altContactNumber: form.altMobileNumber,
-    emailId: form.email,
+    altContactNumber: form.altContactNumber,
+    emailId: form.emailId,
     permanentCity: form.city,
     photo: photoThumb,
     fatherName: form?.fatherName,
@@ -43,4 +43,26 @@ export const buildChangePasswordPayload = ({ currentPassword, newPassword, confi
   tenantId,
   type: "EMPLOYEE",
   username: userName,
+});
+
+// Body for Digit.UserService.updateUserDocument (`document` is singular)
+export const buildUpdateDocumentPayload = ({ existingDoc, tenantId, filestoreId, fileName }) => ({
+  id: existingDoc.id,
+  tenantId,
+  documentType: existingDoc.documentType,
+  documentUid: existingDoc.documentUid || "",
+  filestoreId,
+  fileName: fileName || existingDoc.fileName || "",
+  isVerified: existingDoc.isVerified ?? true,
+  additionalDetails: existingDoc.additionalDetails || {},
+});
+
+// Body item for Digit.UserService.createUserDocument (`documents` is an array)
+export const buildCreateDocumentPayload = ({ userUuid, tenantId, documentType, filestoreId, fileName }) => ({
+  userUuid,
+  tenantId,
+  documentType,
+  filestoreId,
+  ...(fileName && { fileName }),
+  active: true,
 });

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { EditIcon, LinkButton, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import AddressTranformer from "./AddressTranformer";
-import { ADDRESS_FIELDS, InfoField } from "../utils";
+import { ADDRESS_FIELDS, Field } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 
 /*
@@ -24,10 +24,11 @@ const EditAddress = ({ initialAddresses = [] }) => {
   const [addresses, setAddresses] = useState(initialAddresses);
   const [addressModal, setAddressModal] = useState({ open: false, address: null });
 
+  // callback to fetch the new address once updated
   const refreshAddresses = useCallback(async () => {
     if (!userInfo.uuid) return;
-    const res = await Digit.UserService.userSearchNewV2(tenantId, { uuid: [userInfo.uuid] }, {});
-    setAddresses(res?.user?.[0]?.addresses || []);
+    const res = await Digit.UserService.searchAddress(userInfo.uuid, tenantId);
+    setAddresses(res?.address || []);
   }, [userInfo.uuid, tenantId]);
 
   const closeAddressModal = () => setAddressModal({ open: false, address: null });
@@ -52,9 +53,18 @@ const EditAddress = ({ initialAddresses = [] }) => {
             />
           </div>
           <div style={profileStyles.grid}>
-            {ADDRESS_FIELDS.map(([key, prop]) => (
-              <InfoField key={key} label={t(key)} value={address[prop] || t("CS_NA")} />
-            ))}
+            {ADDRESS_FIELDS.map(([key, prop]) => {
+              const val = prop === "addressProof" ? (address.filestoreId) : address[prop];
+              return (
+                <Field
+                  key={key}
+                  fieldKey={key}
+                  label={t(key)}
+                  value={val || t("CS_NA")}
+                  tenantId={tenantId}
+                />
+              );
+            })}
           </div>
         </div>
       ))}

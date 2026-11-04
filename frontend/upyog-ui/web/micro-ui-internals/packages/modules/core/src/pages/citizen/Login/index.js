@@ -161,7 +161,7 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
     }
   };
 
-  // fucntion to hit aadhar card api 
+  // Aadhar Login Integration, send aadhar number in the request 
   const selectAadharNumber = async (formData) => {
     const aadharNumber = params.aadharNumber || formData?.aadharNumber;
     const requestData = {
@@ -169,9 +169,8 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
     }
     const [res, err] = await sendAadhaarOtp(requestData);
     if (!err) {
-      // txnId response mein aayega — save karo params mein
       setParmas({ ...params, aadharNumber, txnId: res?.txnId });
-      navigate(`${path}/otp`, { state: { from: getFromLocation(location.state, searchParams), role: location.state?.role, authType: "AADHAAR" } });  // ← authType pass karo
+      navigate(`${path}/otp`, { state: { from: getFromLocation(location.state, searchParams), role: location.state?.role, authType: "AADHAAR" } });
     } else {
       setError(t("AADHAAR_OTP_SEND_FAILED"));
     }
@@ -224,7 +223,6 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
       setCanSubmitOtp(false);
       const { mobileNumber, otp, name, aadharNumber, txnId } = params;
       const authType = location.state?.authType;
-      console.log("authType", authType)
       if (authType === "AADHAAR") {
         // Aadhaar login flow
         const requestData = {
