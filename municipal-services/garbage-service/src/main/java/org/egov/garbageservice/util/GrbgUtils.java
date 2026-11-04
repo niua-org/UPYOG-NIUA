@@ -1,6 +1,5 @@
 package org.egov.garbageservice.util;
 
-import org.egov.common.contract.request.RequestInfo;
 import org.egov.garbageservice.web.models.AuditDetails;
 import org.springframework.stereotype.Component;
 
@@ -54,27 +53,6 @@ public class GrbgUtils {
                     .build();
         else
             return AuditDetails.builder().lastModifiedBy(by).lastModifiedTime(time).build();
-    }
-
-    /**
-     * Handles REST API request to register a new garbage account.
-     *
-     * <p>The operation performs the following steps:
-     * <ol>
-     *   <li>Validates the incoming request payload and authentication headers.</li>
-     *   <li>Delegates account creation and workflow initialization logic.</li>
-     *   <li>Constructs standardized response headers.</li>
-     *   <li>Returns HTTP response containing created entity details.</li>
-     * </ol>
-     *
-     * @param requestInfo the request information containing user session details
-     * @return the output result
-     */
-
-    public AuditDetails buildCreateAuditDetails(RequestInfo requestInfo) {
-        String uuid = requestInfo.getUserInfo().getUuid();
-        return AuditDetails.builder().createdBy(uuid).createdDate(System.currentTimeMillis()).lastModifiedBy(uuid)
-                .lastModifiedDate(System.currentTimeMillis()).build();
     }
 
 }

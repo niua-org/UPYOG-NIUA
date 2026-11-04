@@ -8,6 +8,7 @@ import org.egov.garbageservice.web.models.GarbageAccount;
 import org.egov.garbageservice.util.MdmsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -44,13 +45,15 @@ public class GarbageCalculationService {
      *   <li>Calculates and returns the final payable amount.</li>
      * </ol>
      *
+     * @param requestInfo the request info containing authentication
      * @param garbageAccount the garbage account for which the billing amount is calculated
      * @return an {@link AmountCalculationResult} containing the monthly amount,
      * rebate amount, and final payable amount
      */
-    public AmountCalculationResult calculateAmount(GarbageAccount garbageAccount) {
-
-        RequestInfo requestInfo = new RequestInfo(); // This should be properly populated
+    public AmountCalculationResult calculateAmount(RequestInfo requestInfo, GarbageAccount garbageAccount) {
+        if (requestInfo == null) {
+            requestInfo = new RequestInfo();
+        }
         Object mdmsResponse = mdmsService.fetchGarbageFeeFromMdms(requestInfo,
                 garbageAccount.getTenantId());
         List<String> errorList = new ArrayList<>();
@@ -59,8 +62,20 @@ public class GarbageCalculationService {
                 mdmsService.fetchGarbageAmountFromMDMSResponse(
                         mdmsResponse, garbageAccount, errorList, calculationBreakdown
                 );
+        if (monthlyAmount == null) {
+            monthlyAmount = BigDecimal.ZERO;
+        }
 
-        BigDecimal rebateRate = mdmsUtil.getRebateRate(requestInfo, garbageAccount.getTenantId(), garbageAccount.getGrbgCollectionUnits().get(0).getSpecialCategory());
+        String specialCategory = null;
+        if (!CollectionUtils.isEmpty(garbageAccount.getGrbgCollectionUnits())
+                && garbageAccount.getGrbgCollectionUnits().get(0) != null) {
+            specialCategory = garbageAccount.getGrbgCollectionUnits().get(0).getSpecialCategory();
+        }
+
+        BigDecimal rebateRate = mdmsUtil.getRebateRate(requestInfo, garbageAccount.getTenantId(), specialCategory);
+        if (rebateRate == null) {
+            rebateRate = BigDecimal.ZERO;
+        }
         BigDecimal rebateAmount = monthlyAmount.multiply(rebateRate);
 
         BigDecimal payableAmount = monthlyAmount.subtract(rebateAmount);

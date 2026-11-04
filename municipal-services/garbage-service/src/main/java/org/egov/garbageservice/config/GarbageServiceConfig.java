@@ -63,6 +63,9 @@ public class GarbageServiceConfig {
     @Value("${egov.mdms.search.endpoint}")
     private String mdmsSearchEndpoint;
 
+    @Value("${kafka.topics.save.grbg.account}")
+    private String saveGarbageAccountTopic;
+
     @Value("${kafka.topics.update.grbg.account}")
     private String updateGarbageAccountTopic;
 
