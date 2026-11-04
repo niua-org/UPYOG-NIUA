@@ -374,7 +374,54 @@ def handle_pending_multi_draft(user_input: str, user_language: str, phone: str, 
 # 5. ACTIVE PLUGIN & TARGET ROUTING RESOLUTION
 # ====================================================================
 
-def resolve_active_and_target_plugin(user_input: str, intent: str, phone: str, session_id: str, workflows: dict, services_registry: list, config: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def _has_valid_tracking_id(text: str, id_prefixes: list) -> bool:
+    """Checks whether the text contains a genuine tracking/application ID (e.g. ADV-1234, PGR-5678, ADV1234),
+    avoiding accidental substring matches like 'adv' in 'advertisement'.
+    """
+    t_lower = text.lower()
+    for p in id_prefixes:
+        clean_p = p.rstrip("-").strip().lower()
+        if not clean_p:
+            continue
+        if re.search(rf'\b{re.escape(clean_p)}[-_\s]?\d+', t_lower):
+            return True
+        if p.endswith("-") and re.search(rf'\b{re.escape(p.lower())}[a-z0-9_-]+', t_lower):
+            return True
+    return False
+
+
+def is_informational_question(
+    user_input: str,
+    intent_data: Optional[dict] = None,
+    system_config: Optional[dict] = None
+) -> bool:
+    """Checks whether the user input is an informational question or FAQ query.
+    Extracts question_starters from system_config (config.yml) under system_messages.faq_question.
+    """
+    if not user_input:
+        return False
+    intent = (intent_data or {}).get("intent", "")
+    is_question = bool((intent_data or {}).get("is_question", False))
+    if intent == "faq" or is_question or "?" in user_input:
+        return True
+
+    sys_msgs = (system_config or {}).get("system_messages") or _SYSTEM_MESSAGES or {}
+    starters = sys_msgs.get("faq_question", {}).get("question_starters")
+
+    clean_in = user_input.strip().lower()
+    return any(clean_in.startswith(q.lower()) for q in starters)
+
+
+def resolve_active_and_target_plugin(
+    user_input: str,
+    intent: str,
+    phone: str,
+    session_id: str,
+    workflows: dict,
+    services_registry: list,
+    config: dict,
+    is_question: bool = False
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """
     Identifies active module and matches incoming message to target plugin.
     Handles service switching with draft auto-save.
@@ -401,29 +448,33 @@ def resolve_active_and_target_plugin(user_input: str, intent: str, phone: str, s
         active_plugin = active_plugins[0][0]
 
     plugin_intent = None
-    ui_lower = user_input.lower()
+    ui_lower = user_input.lower().strip()
 
-    for srv in services_registry:
-        s_key = srv.get("key")
-        if s_key not in workflows:
-            continue
-        keywords = [k.lower() for k in srv.get("keywords", [])]
-        id_prefixes = [p.lower() for p in srv.get("id_prefixes", [])]
+    is_query_question = is_informational_question(user_input, {"intent": intent, "is_question": is_question})
 
-        has_id = any(p in ui_lower for p in id_prefixes)
-        has_kw = any(re.search(rf'\b{re.escape(w)}\b', ui_lower) for w in keywords)
+    # If the user query is an informational question or FAQ, do NOT set any workflow intent
+    if not is_query_question and intent != "faq":
+        for srv in services_registry:
+            s_key = srv.get("key")
+            if s_key not in workflows:
+                continue
+            keywords = [k.lower() for k in srv.get("keywords", [])]
+            id_prefixes = srv.get("id_prefixes", [])
 
-        if has_id or has_kw:
-            plugin_intent = s_key
-            break
+            has_id = _has_valid_tracking_id(ui_lower, id_prefixes)
+            has_kw = any(re.search(rf'\b{re.escape(w)}\b', ui_lower) for w in keywords)
 
-    if not plugin_intent and intent != "profile":
-        if intent in ["grievance_candidate", "grievance_status_candidate"]:
-            plugin_intent = "grievance"
-        elif intent in ["adv_candidate", "adv_status_candidate", "booking_candidate"]:
-            plugin_intent = "adv_booking"
-        elif intent in ["adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel", "grievance_confirm", "grievance_cancel"]:
-            plugin_intent = active_plugin or ("adv_booking" if "adv" in intent or "booking" in intent else "grievance")
+            if has_id or has_kw:
+                plugin_intent = s_key
+                break
+
+        if not plugin_intent and intent != "profile":
+            if intent in ["grievance_candidate", "grievance_status_candidate"]:
+                plugin_intent = "grievance"
+            elif intent in ["adv_candidate", "adv_status_candidate", "booking_candidate"]:
+                plugin_intent = "adv_booking"
+            elif intent in ["adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel", "grievance_confirm", "grievance_cancel"]:
+                plugin_intent = active_plugin or ("adv_booking" if "adv" in intent or "booking" in intent else "grievance")
 
     is_generic_response = ui_lower in ["yes", "no", "yeah", "yup", "ya", "ok", "okay", "sure", "confirm", "cancel", "haan", "nahi", "nahin", "1", "2", "option 1", "option 2"]
     if plugin_intent and active_plugin and plugin_intent != active_plugin and not is_generic_response:
@@ -444,7 +495,10 @@ def resolve_active_and_target_plugin(user_input: str, intent: str, phone: str, s
     elif active_plugin and is_generic_response:
         plugin_intent = active_plugin
 
-    target_wf = plugin_intent or active_plugin
+    if is_query_question or intent == "faq":
+        target_wf = None
+    else:
+        target_wf = plugin_intent or active_plugin
     return active_plugin, plugin_intent, target_wf
 
 
@@ -526,9 +580,7 @@ def handle_workflow_interruption_or_faq(
         return False, None
 
     # 3. Determine if this message is an informational question or FAQ
-    intent = (intent_data or {}).get("intent", "")
-    is_question = bool((intent_data or {}).get("is_question", False))
-    is_explicit_question = is_question or (intent == "faq" and "?" in user_input)
+    is_explicit_question = is_informational_question(user_input, intent_data)
 
     if is_explicit_question:
         from services.rag_service import retrieve_document
@@ -1096,9 +1148,10 @@ def dispatch_chat_request(
             return login_resp
 
     # 7. Active Module & Target Plugin Resolution
+    is_question = bool(intent_data.get("is_question", False)) or (intent == "faq")
     config = {"configurable": {"thread_id": phone}}
     active_plugin, plugin_intent, target_wf = resolve_active_and_target_plugin(
-        user_input, intent, phone, session_id, workflows, services_registry, config
+        user_input, intent, phone, session_id, workflows, services_registry, config, is_question=is_question
     )
 
     # 8. Mid-Workflow Interruption / FAQ
@@ -1118,7 +1171,28 @@ def dispatch_chat_request(
         return draft_resp
 
     # 10. Transactional Workflow Execution (LangGraph Plugins)
-    if target_wf and target_wf in workflows:
+    # Never execute workflow plugins if the intent is FAQ or an informational question,
+    # or if the query is not an explicit grievance or advertisement workflow action.
+    workflow_intents = {
+        "grievance_candidate", "grievance_status_candidate", "grievance_confirm", "grievance_cancel",
+        "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel"
+    }
+
+    is_query_question = is_informational_question(user_input, intent_data, system_config=system_config)
+
+    has_genuine_tracking_id = any(
+        _has_valid_tracking_id(clean_in, srv.get("id_prefixes", []))
+        for srv in services_registry
+    )
+
+    should_execute_wf = bool(target_wf and target_wf in workflows)
+    if is_query_question or intent == "faq":
+        if not has_genuine_tracking_id:
+            should_execute_wf = False
+    elif not active_plugin and intent not in workflow_intents and not has_genuine_tracking_id:
+        should_execute_wf = False
+
+    if should_execute_wf:
         logger.info(f"Routing to dynamic plugin: {target_wf}")
         return execute_workflow_plugin(
             target_wf, user_input, user_language, phone, session_id, is_authenticated
