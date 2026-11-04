@@ -90,6 +90,7 @@ public class AadhaarAuthStrategyTest {
                 .build();
 
         User inactiveCitizen = buildUser(201L, "uuid-inactive", "9999999999", "9999999999", "Aadhaar User", false);
+        inactiveCitizen.setAadhaarNumber("123456789012");
 
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(inactiveCitizen));
 
