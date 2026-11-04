@@ -27,7 +27,7 @@ public class ProfileResponse {
     @JsonProperty("responseInfo")
     private ResponseInfo responseInfo;
 
-    @Schema(description = "List of returned user profiles")
+    @Schema(description = "List of returned citizen profiles")
     @JsonProperty("user")
     private List<UserSearchResponseContent> user;
 

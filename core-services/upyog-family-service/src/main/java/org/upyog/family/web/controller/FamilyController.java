@@ -255,6 +255,12 @@ public class FamilyController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Validates that caller user information is present and contains a valid user UUID in the request context.
+     *
+     * @param requestInfo UPYOG request context holding caller user details
+     * @throws CustomException if requestInfo, userInfo, or user UUID is null or blank
+     */
     private void validateCallerUserInfo(RequestInfo requestInfo) {
         if (requestInfo == null || requestInfo.getUserInfo() == null || StringUtils.isBlank(requestInfo.getUserInfo().getUuid())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,

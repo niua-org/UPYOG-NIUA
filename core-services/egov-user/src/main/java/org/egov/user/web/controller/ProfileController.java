@@ -184,7 +184,8 @@ public class ProfileController {
      */
     @Operation(
             summary = "Search Profile",
-            description = "Searches citizen profiles by UUID, tenant ID, or mobile number, with automated PII decryption for authorized consumers. " +
+            description = "Searches a citizen profile by UUID, tenant ID, or mobile number, with automated PII decryption for authorized consumers. " +
+                    "Only a single user profile can be searched at a time, using UUID (searching by internal userId/id is not supported). " +
                     "The optional 'include' parameter controls which entity sections are returned (allowed values: PROFILE, ADDRESS, DOCUMENT; default: [PROFILE]). " +
                     "Specifying ADDRESS enriches the response with citizen address details, while DOCUMENT enriches with uploaded KYC document proofs. " +
                     "If enrichment of any included section fails, a partial response is returned with status PARTIAL_SUCCESS and diagnostic error details."
@@ -210,7 +211,7 @@ public class ProfileController {
                 ? users.stream().map(u -> new UserSearchResponseContent(u, normalizedIncludes)).collect(Collectors.toList())
                 : Collections.emptyList();
 
-        String status = !CollectionUtils.isEmpty(enrichmentErrors) ? "PARTIAL_SUCCESS" : UserConstants.STATUS_SUCCESS;
+        String status = !CollectionUtils.isEmpty(enrichmentErrors) ? UserConstants.STATUS_PARTIAL_SUCCESS : UserConstants.STATUS_SUCCESS;
 
         ProfileResponse response = ProfileResponse.builder()
                 .responseInfo(ResponseInfo.builder().status(status).build())

@@ -37,6 +37,7 @@ public class AadhaarSessionManagerImpl implements AadhaarSessionManager {
 
     private final Map<String, Integer> otpAttemptsByRefId = new ConcurrentHashMap<>();
     private final Set<String> consumedReferenceIds = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Map<String, String> aadhaarByRefId = new ConcurrentHashMap<>();
 
     @Autowired
     public AadhaarSessionManagerImpl(@Value("${aadhaar.otp.max.attempts}") int maxOtpAttempts,
@@ -136,5 +137,37 @@ public class AadhaarSessionManagerImpl implements AadhaarSessionManager {
     @Override
     public int getMaxOtpAttempts() {
         return maxOtpAttempts;
+    }
+
+    @Override
+    public void storeAadhaarForReferenceId(String refId, String aadhaarNumber) {
+        if (StringUtils.isBlank(refId) || StringUtils.isBlank(aadhaarNumber)) return;
+        if (redisTemplate != null) {
+            try {
+                String key = "aadhaar:otp:aadhaar:" + refId;
+                redisTemplate.opsForValue().set(key, aadhaarNumber, Duration.ofMinutes(15));
+                return;
+            } catch (Exception e) {
+                log.warn("Redis unavailable for storeAadhaarForReferenceId, falling back to in-memory: {}", e.getMessage());
+            }
+        }
+        aadhaarByRefId.put(refId, aadhaarNumber);
+    }
+
+    @Override
+    public String getAadhaarForReferenceId(String refId) {
+        if (StringUtils.isBlank(refId)) return null;
+        if (redisTemplate != null) {
+            try {
+                String key = "aadhaar:otp:aadhaar:" + refId;
+                Object val = redisTemplate.opsForValue().get(key);
+                if (val != null) {
+                    return val.toString();
+                }
+            } catch (Exception e) {
+                log.warn("Redis read failed for getAadhaarForReferenceId, falling back to memory: {}", e.getMessage());
+            }
+        }
+        return aadhaarByRefId.get(refId);
     }
 }

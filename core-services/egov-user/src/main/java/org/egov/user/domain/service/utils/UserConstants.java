@@ -35,6 +35,7 @@ public final class UserConstants {
     public static final String STATUS_ACTIVE = "active";
     public static final String STATUS_INACTIVE = "inactive";
     public static final String STATUS_SUCCESS = "SUCCESS";
+    public static final String STATUS_PARTIAL_SUCCESS = "PARTIAL_SUCCESS";
     public static final String STATUS_FAILED = "FAILED";
     public static final String ADDRESS_ACTIVE_STATUS = "active";
     public static final String ADDRESS_INACTIVE_STATUS = "inactive";
@@ -208,7 +209,9 @@ public final class UserConstants {
     public static final String MSG_NON_EDITABLE_PIN_CODE = "Pin Code is non-editable and cannot be changed for an address.";
 
     public static final String MSG_OTP_MANDATORY_FOR_RESYNC = "OTP is mandatory for Aadhaar re-sync operation";
-    public static final String MSG_EMPTY_SEARCH_CRITERIA = "At least one search filter (tenantId, uuid, id, mobileNumber, or aadhaarNumber) must be provided";
+    public static final String MSG_EMPTY_SEARCH_CRITERIA = "At least one search filter (tenantId, uuid, mobileNumber, or aadhaarNumber) must be provided";
+    public static final String MSG_MULTIPLE_USERS_SEARCH_NOT_SUPPORTED = "Only a single user profile can be searched at a time. Searching for multiple users is not supported.";
+    public static final String MSG_USER_ID_SEARCH_NOT_SUPPORTED = "Searching by userId is not supported. Only uuid can be used to search citizen profiles.";
     public static final String MSG_AADHAAR_MANDATORY_FOR_RESYNC = "12-digit Aadhaar number is mandatory for Aadhaar re-sync";
     public static final String MSG_AADHAAR_MISMATCH = "Cannot re-sync profile with a different Aadhaar number than previously registered";
     public static final String MSG_USER_IDENTIFIER_REQUIRED = "uuid, id, or mobileNumber is required to locate citizen";
@@ -311,6 +314,7 @@ public final class UserConstants {
     public static final String IDENTITY_SOURCE_FAMILY_ID = "FAMILY_ID";
     public static final String IDENTITY_SOURCE_SYSTEM = "SYSTEM";
     public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
+    public static final String CITIZEN_USERNAME_PREFIX = "CITIZEN_";
     public static final String DEFAULT_AADHAAR_CITIZEN_NAME = "Aadhaar Verified Citizen";
     public static final String DEFAULT_REQUESTER_AADHAAR_VERIFY_ENDPOINT = "requester-services-dx/aadhaar/v1/_verifyOtp";
 
@@ -330,4 +334,12 @@ public final class UserConstants {
     public static final String JSON_KEY_MEMBERS = "members";
     public static final String JSON_KEY_ACTIVE = "active";
     public static final String JSON_KEY_USER_UUID = "userUuid";
+
+    // =========================================================================
+    // 10. Date Format & Contract Property Constants
+    // =========================================================================
+    public static final String DATE_FORMAT_DATETIME = "dd-MM-yyyy HH:mm:ss";
+    public static final String DATE_FORMAT_DOB = "dd/MM/yyyy";
+    public static final String JSON_PROPERTY_FATHER_OR_HUSBAND_NAME = "fatherOrHusbandName";
+    public static final String JSON_PROPERTY_RELATIONSHIP = "relationship";
 }

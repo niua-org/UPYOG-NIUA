@@ -38,6 +38,15 @@ public class OtpClientImpl implements OtpClient {
     private final KafkaProducer kafkaProducer;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Dispatches a one-time password (OTP) to the specified citizen mobile number via egov-otp or mock gateway.
+     *
+     * @param mobileNumber recipient's 10-digit mobile number
+     * @param tenantId tenant identifier representing the city/state jurisdiction
+     * @param requestInfo UPYOG request context envelope
+     * @return transaction or reference identifier for the dispatched OTP
+     * @throws CustomException if OTP generation fails
+     */
     @Override
     @SuppressWarnings("unchecked")
     public String sendOtp(String mobileNumber, String tenantId, RequestInfo requestInfo) {
@@ -115,6 +124,15 @@ public class OtpClientImpl implements OtpClient {
         throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Failed to generate OTP via gateway.");
     }
 
+    /**
+     * Validates an OTP entered by the citizen against egov-otp service or mock gateway.
+     *
+     * @param mobileNumber recipient's 10-digit mobile number
+     * @param otp the one-time password code entered by user
+     * @param tenantId tenant identifier
+     * @param requestInfo UPYOG request context envelope
+     * @return true if OTP is valid, false otherwise
+     */
     @Override
     @SuppressWarnings("unchecked")
     public boolean validateOtp(String mobileNumber, String otp, String tenantId, RequestInfo requestInfo) {

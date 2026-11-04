@@ -14,6 +14,7 @@ import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.*;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.deserializer.MultiFormatDateDeserializer;
 
 import java.util.Date;
@@ -138,10 +139,10 @@ public class UserRequest {
 
     @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
     @Size(max = 50)
-    @JsonProperty("fatherOrHusbandName")
+    @JsonProperty(UserServiceConstants.JSON_PROPERTY_FATHER_OR_HUSBAND_NAME)
     private String fatherOrHusbandName;
 
-    @JsonProperty("relationship")
+    @JsonProperty(UserServiceConstants.JSON_PROPERTY_RELATIONSHIP)
     private GuardianRelation relationship;
 
     @Size(max = 300)
@@ -189,26 +190,26 @@ public class UserRequest {
 
     private Boolean isIdentityVerified;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date identityVerifiedDate;
 
     private String identityVerifiedSource;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastResyncDate;
 
     private Integer edittedCount;
     private String lastLoginMethod;
 
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date createdDate;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastModifiedDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DOB)
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date dob;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date pwdExpiryDate;
 
     /**
@@ -349,9 +350,9 @@ public class UserRequest {
                 .fatherName(this.fatherName)
                 .motherName(this.motherName)
                 .spouseName(this.spouseName)
-                .isIdentityVerified(isCreate ? Boolean.FALSE : null)
-                .identityVerifiedDate(null)
-                .identityVerifiedSource(null)
+                .isIdentityVerified(this.isIdentityVerified != null ? this.isIdentityVerified : (isCreate ? Boolean.FALSE : null))
+                .identityVerifiedDate(this.identityVerifiedDate != null ? this.identityVerifiedDate : (Boolean.TRUE.equals(this.isIdentityVerified) ? new Date() : null))
+                .identityVerifiedSource(this.identityVerifiedSource != null ? this.identityVerifiedSource : (Boolean.TRUE.equals(this.isIdentityVerified) ? UserConstants.IDENTITY_SOURCE_AADHAAR : null))
                 .lastResyncDate(this.lastResyncDate)
                 .edittedCount(this.edittedCount)
                 .lastLoginMethod(this.lastLoginMethod)

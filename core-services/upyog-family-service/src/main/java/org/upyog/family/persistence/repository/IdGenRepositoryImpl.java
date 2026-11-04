@@ -32,12 +32,25 @@ public class IdGenRepositoryImpl implements IdGenRepository {
     private final RestTemplate restTemplate;
     private final FamilyConfiguration configuration;
 
+    /**
+     * Constructs an IdGenRepositoryImpl with RestTemplate and FamilyConfiguration dependencies.
+     *
+     * @param restTemplate Spring RestTemplate for making HTTP requests to egovidgen
+     * @param configuration family module configuration for idgen host and format templates
+     */
     @Autowired
     public IdGenRepositoryImpl(RestTemplate restTemplate, FamilyConfiguration configuration) {
         this.restTemplate = restTemplate;
         this.configuration = configuration;
     }
 
+    /**
+     * Generates a unique formatted Family ID via the UPYOG IDGen service, falling back to a timestamped UUID format if unreachable.
+     *
+     * @param requestInfo UPYOG request context envelope
+     * @param tenantId tenant identifier representing the city/state jurisdiction
+     * @return generated unique family identifier string
+     */
     @Override
     @SuppressWarnings("unchecked")
     public String generateFamilyId(RequestInfo requestInfo, String tenantId) {

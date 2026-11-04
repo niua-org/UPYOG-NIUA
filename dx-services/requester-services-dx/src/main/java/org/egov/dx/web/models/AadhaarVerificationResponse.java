@@ -78,6 +78,13 @@ public class AadhaarVerificationResponse {
     private String maskedAadhaar;
 
     /**
+     * Citizen UUID resolved from egov-user service if a citizen already exists with this Aadhaar.
+     * Null if no citizen account is associated with this verified Aadhaar.
+     */
+    @JsonProperty("userUuid")
+    private String userUuid;
+
+    /**
      * Authenticated citizen demographics and residential address obtained from UIDAI e-KYC.
      */
     @JsonProperty("demographics")

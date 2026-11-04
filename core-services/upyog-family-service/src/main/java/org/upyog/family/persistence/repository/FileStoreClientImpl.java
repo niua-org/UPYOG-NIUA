@@ -22,12 +22,25 @@ public class FileStoreClientImpl implements FileStoreClient {
     private final RestTemplate restTemplate;
     private final FamilyConfiguration configuration;
 
+    /**
+     * Constructs a FileStoreClientImpl with RestTemplate and FamilyConfiguration dependencies.
+     *
+     * @param restTemplate Spring RestTemplate for remote HTTP requests to egov-filestore
+     * @param configuration family service configuration for filestore URLs and paths
+     */
     @Autowired
     public FileStoreClientImpl(RestTemplate restTemplate, FamilyConfiguration configuration) {
         this.restTemplate = restTemplate;
         this.configuration = configuration;
     }
 
+    /**
+     * Validates whether a file exists in the UPYOG FileStore for the given tenant and fileStoreId.
+     *
+     * @param tenantId tenant identifier representing the city/state jurisdiction
+     * @param fileStoreId unique identifier of the uploaded document in FileStore
+     * @return true if file exists or filestore service is in offline/mock mode; false otherwise
+     */
     @Override
     @SuppressWarnings("unchecked")
     public boolean validateFileExists(String tenantId, String fileStoreId) {

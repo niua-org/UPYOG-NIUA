@@ -92,6 +92,13 @@ public class UserConfiguration {
     @Value("${aadhaar.otp.max.attempts}")
     private Integer aadhaarOtpMaxAttempts;
 
+    @Value("${aadhaar.mock.enabled:false}")
+    private Boolean aadhaarMockEnabled;
+
+    public Boolean getAadhaarGatewayMockEnabled() {
+        return this.aadhaarMockEnabled;
+    }
+
     @Value("${requester.service.host}")
     private String requesterServiceHost;
 
