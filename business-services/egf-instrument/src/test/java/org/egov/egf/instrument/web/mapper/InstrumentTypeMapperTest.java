@@ -1,5 +1,6 @@
 /*
- * package org.egov.egf.instrument.web.mapper; import static org.junit.Assert.assertEquals; import java.util.ArrayList; import
+ * package org.egov.egf.instrument.web.mapper; import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows; import java.util.ArrayList; import
  * java.util.List; import org.egov.common.contract.request.User; import org.egov.egf.instrument.domain.model.InstrumentType;
  * import org.egov.egf.instrument.domain.model.InstrumentTypeProperty; import
  * org.egov.egf.instrument.domain.model.InstrumentTypeSearch; import org.egov.egf.instrument.domain.model.TransactionType; import
@@ -7,11 +8,11 @@
  * org.egov.egf.instrument.web.contract.InstrumentTypePropertyContract; import
  * org.egov.egf.instrument.web.contract.InstrumentTypeSearchContract; import
  * org.egov.egf.instrument.web.contract.TransactionTypeContract; import org.egov.egf.master.web.contract.FinancialStatusContract;
- * import org.junit.Before; import org.junit.Test; import org.junit.runner.RunWith; import org.mockito.InjectMocks; import
+ * import org.junit.jupiter.api.BeforeEach; import org.junit.jupiter.api.Test;  import org.mockito.InjectMocks; import
  * org.mockito.runners.MockitoJUnitRunner;
- * @RunWith(MockitoJUnitRunner.class) public class InstrumentTypeMapperTest {
+ * @ExtendWith(MockitoExtension.class) public class InstrumentTypeMapperTest {
  * @InjectMocks private InstrumentTypeMapper instrumentTypeMapper;
- * @Before public void setup() { instrumentTypeMapper = new InstrumentTypeMapper(); }
+ * @BeforeEach public void setup() { instrumentTypeMapper = new InstrumentTypeMapper(); }
  * @Test public void test_to_domain() { InstrumentType expectedDomain = instrumentTypeMapper.toDomain(contract());
  * assertEquals(expectedDomain.getId(), domain().getId()); assertEquals(expectedDomain.getActive(), domain().getActive());
  * assertEquals(expectedDomain.getDescription(), domain().getDescription()); assertEquals(expectedDomain.getName(),

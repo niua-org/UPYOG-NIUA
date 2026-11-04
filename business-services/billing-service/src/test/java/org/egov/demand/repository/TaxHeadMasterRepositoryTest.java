@@ -2,6 +2,7 @@ package org.egov.demand.repository;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
@@ -76,7 +77,7 @@ class TaxHeadMasterRepositoryTest {
         verify(this.util).getStringVal((Set<String>) any());
         verify(this.util).prepareMdMsRequest((String) any(), (String) any(), (List<String>) any(), (String) any(),
                 (RequestInfo) any());
-        verify(documentContext).read((String) any(), (com.jayway.jsonpath.Predicate[]) any());
+        verify(documentContext).read(anyString());
         verify(this.objectMapper).convertValue((Object) any(),
                 (com.fasterxml.jackson.core.type.TypeReference<List<TaxHeadMaster>>) any());
         verify(taxHeadMasterCriteria, atLeast(1)).getIsActualDemand();

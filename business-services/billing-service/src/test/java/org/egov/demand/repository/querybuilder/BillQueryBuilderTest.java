@@ -23,7 +23,7 @@ class BillQueryBuilderTest {
                 new HashSet<>(), "42", BillQueryBuilder.BILL_BASE_QUERY, true, 3L, 1L, "jane.doe@example.org",
                 BillV2.BillStatus.ACTIVE, "42");
         ArrayList<Object> objectList = new ArrayList<>();
-        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid, b.payername AS"
+        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid,b.payerid AS b_payerid, b.payername AS"
                 + " b_payername, b.payeraddress AS b_payeraddress, b.payeremail AS b_payeremail,b.filestoreid AS"
                 + " b_fileStoreId, b.isactive AS b_isactive, b.iscancelled AS b_iscancelled, b.createdby AS b_createdby,"
                 + " b.status as b_status, b.createddate AS b_createddate, b.lastmodifiedby AS b_lastmodifiedby,"
@@ -57,7 +57,7 @@ class BillQueryBuilderTest {
         BillSearchCriteria billSearchCriteria = new BillSearchCriteria();
         billSearchCriteria.setTenantId("42");
         ArrayList<Object> objectList = new ArrayList<>();
-        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid, b.payername AS"
+        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid,b.payerid AS b_payerid, b.payername AS"
                 + " b_payername, b.payeraddress AS b_payeraddress, b.payeremail AS b_payeremail,b.filestoreid AS"
                 + " b_fileStoreId, b.isactive AS b_isactive, b.iscancelled AS b_iscancelled, b.createdby AS b_createdby,"
                 + " b.status as b_status, b.createddate AS b_createddate, b.lastmodifiedby AS b_lastmodifiedby,"
@@ -90,7 +90,7 @@ class BillQueryBuilderTest {
                 true, true, true, new HashSet<>(), "42", BillQueryBuilder.BILL_BASE_QUERY, true, 3L, 1L, "jane.doe@example.org",
                 BillV2.BillStatus.ACTIVE, "42");
         ArrayList<Object> objectList = new ArrayList<>();
-        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid, b.payername AS"
+        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid,b.payerid AS b_payerid, b.payername AS"
                 + " b_payername, b.payeraddress AS b_payeraddress, b.payeremail AS b_payeremail,b.filestoreid AS"
                 + " b_fileStoreId, b.isactive AS b_isactive, b.iscancelled AS b_iscancelled, b.createdby AS b_createdby,"
                 + " b.status as b_status, b.createddate AS b_createddate, b.lastmodifiedby AS b_lastmodifiedby,"
@@ -127,7 +127,7 @@ class BillQueryBuilderTest {
                 BillV2.BillStatus.ACTIVE, "42");
 
         ArrayList<Object> objectList = new ArrayList<>();
-        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid, b.payername AS"
+        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid,b.payerid AS b_payerid, b.payername AS"
                 + " b_payername, b.payeraddress AS b_payeraddress, b.payeremail AS b_payeremail,b.filestoreid AS"
                 + " b_fileStoreId, b.isactive AS b_isactive, b.iscancelled AS b_iscancelled, b.createdby AS b_createdby,"
                 + " b.status as b_status, b.createddate AS b_createddate, b.lastmodifiedby AS b_lastmodifiedby,"
@@ -166,7 +166,7 @@ class BillQueryBuilderTest {
                 BillV2.BillStatus.ACTIVE, "42");
 
         ArrayList<Object> objectList = new ArrayList<>();
-        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid, b.payername AS"
+        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid,b.payerid AS b_payerid, b.payername AS"
                 + " b_payername, b.payeraddress AS b_payeraddress, b.payeremail AS b_payeremail,b.filestoreid AS"
                 + " b_fileStoreId, b.isactive AS b_isactive, b.iscancelled AS b_iscancelled, b.createdby AS b_createdby,"
                 + " b.status as b_status, b.createddate AS b_createddate, b.lastmodifiedby AS b_lastmodifiedby,"
@@ -201,7 +201,7 @@ class BillQueryBuilderTest {
                 new HashSet<>(), "42", BillQueryBuilder.BILL_BASE_QUERY, true, 3L, 1L, "jane.doe@example.org",
                 BillV2.BillStatus.ACTIVE, "42");
         ArrayList<Object> objectList = new ArrayList<>();
-        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid, b.payername AS"
+        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid,b.payerid AS b_payerid, b.payername AS"
                 + " b_payername, b.payeraddress AS b_payeraddress, b.payeremail AS b_payeremail,b.filestoreid AS"
                 + " b_fileStoreId, b.isactive AS b_isactive, b.iscancelled AS b_iscancelled, b.createdby AS b_createdby,"
                 + " b.status as b_status, b.createddate AS b_createddate, b.lastmodifiedby AS b_lastmodifiedby,"
@@ -240,7 +240,7 @@ class BillQueryBuilderTest {
                 BillV2.BillStatus.ACTIVE, "42");
 
         ArrayList<Object> objectList = new ArrayList<>();
-        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid, b.payername AS"
+        assertEquals("WITH billresult AS (SELECT b.id AS b_id,b.mobilenumber, b.tenantid AS b_tenantid,b.payerid AS b_payerid, b.payername AS"
                 + " b_payername, b.payeraddress AS b_payeraddress, b.payeremail AS b_payeremail,b.filestoreid AS"
                 + " b_fileStoreId, b.isactive AS b_isactive, b.iscancelled AS b_iscancelled, b.createdby AS b_createdby,"
                 + " b.status as b_status, b.createddate AS b_createddate, b.lastmodifiedby AS b_lastmodifiedby,"
