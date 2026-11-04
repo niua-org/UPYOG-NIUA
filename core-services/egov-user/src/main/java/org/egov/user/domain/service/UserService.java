@@ -684,23 +684,14 @@ public class UserService {
      * @param user        the updated {@link User} payload
      * @param requestInfo request metadata containing the updater's identity and roles
      * @return the updated domain {@link User} with decrypted fields
-     * @throws CustomException if payload is null, caller or target is a CITIZEN, ID mismatches, or roles are missing
+     * @throws CustomException if payload is null, ID mismatches, or roles are missing
      */
     // TODO Fix date formats
     public User updateWithoutOtpValidation(User user, RequestInfo requestInfo) {
         if (user == null) {
             throw new CustomException(UserConstants.ERROR_INVALID_UPDATE_REQUEST, "User payload cannot be null");
         }
-        if (isCallerCitizen(requestInfo)) {
-            log.error("[USER-SERVICE] Access denied: CITIZEN caller is not permitted to use updateWithoutOtpValidation: uuid={}",
-                    (requestInfo != null && requestInfo.getUserInfo() != null) ? requestInfo.getUserInfo().getUuid() : null);
-            throw new CustomException("UNAUTHORIZED_ACCESS", "CITIZEN users are not allowed to update user via /users/_updatenovalidate");
-        }
         User existingUser = getUserByUuid(user.getUuid());
-        if (existingUser != null && UserType.CITIZEN.equals(existingUser.getType())) {
-            log.error("[USER-SERVICE] Invalid update: target user record in DB is CITIZEN: uuid={}", existingUser.getUuid());
-            throw new CustomException("INVALID_USER_TYPE", "Cannot update CITIZEN user accounts via /users/_updatenovalidate");
-        }
         if (user.getId() != null && existingUser.getId() != null && !user.getId().equals(existingUser.getId())) {
             log.error("[USER-SERVICE] Data mismatch: provided id {} does not match database id {}", user.getId(), existingUser.getId());
             throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());

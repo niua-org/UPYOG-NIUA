@@ -264,35 +264,17 @@ public class UserController {
     }
 
     /**
-     * Updates an employee or system user account without requiring SMS OTP verification.
-     *
-     * <p>Enforces strict role-based access control:</p>
-     * <ul>
-     *   <li>Rejects invocations initiated by {@code CITIZEN} callers (throws {@code UNAUTHORIZED_ACCESS}).</li>
-     *   <li>Prohibits modifying accounts of type {@link UserType#CITIZEN} (throws {@code INVALID_USER_TYPE}).</li>
-     * </ul>
-     * <p>Citizen profile updates must instead route through {@code /profile/_update} to enforce
-     * field-level locks and statutory Aadhaar sync constraints.</p>
+     * Updates a user account without requiring SMS OTP verification.
+     * Functions symmetrically to {@code /users/_createnovalidate} for user updates.
      *
      * @param createUserRequest the user update request payload; must not be {@code null}.
      * @param headers HTTP headers from the incoming request.
      * @return an {@link UpdateResponse} containing the updated user account details.
-     * @throws org.egov.tracer.model.CustomException if caller is a citizen, target is a citizen, or update fails.
+     * @throws org.egov.tracer.model.CustomException if update fails.
      */
     @PostMapping("/users/_updatenovalidate")
     public UpdateResponse updateUserWithoutValidation(@RequestBody final @Valid CreateUserRequest createUserRequest,
                                                       @RequestHeader HttpHeaders headers) {
-        if (createUserRequest != null && userService.isCallerCitizen(createUserRequest.getRequestInfo())) {
-            String callerUuid = (createUserRequest.getRequestInfo() != null && createUserRequest.getRequestInfo().getUserInfo() != null)
-                    ? createUserRequest.getRequestInfo().getUserInfo().getUuid() : "unknown";
-            log.error("[USER-CONTROLLER] Unauthorized access: CITIZEN users cannot call /users/_updatenovalidate: uuid={}", callerUuid);
-            throw new CustomException("UNAUTHORIZED_ACCESS", "CITIZEN users are not allowed to use /users/_updatenovalidate");
-        }
-        if (createUserRequest != null && createUserRequest.getUser() != null
-                && UserType.CITIZEN.equals(createUserRequest.getUser().getType())) {
-            log.error("[USER-CONTROLLER] Invalid update: target user type cannot be CITIZEN in /users/_updatenovalidate");
-            throw new CustomException("INVALID_USER_TYPE", "Cannot update CITIZEN user accounts via /users/_updatenovalidate");
-        }
         User user = createUserRequest.toDomain(false);
         user.setMobileValidationMandatory(isMobileValidationRequired(headers));
         final User updatedUser = userService.updateWithoutOtpValidation(user, createUserRequest.getRequestInfo());

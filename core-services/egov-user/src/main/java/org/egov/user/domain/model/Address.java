@@ -70,6 +70,7 @@ public class Address {
     }
 
     @JsonProperty("addressProofFileStoreId")
+    public void setAddressProofFileStoreId(String fileStoreId) {
         if (StringUtils.isNotBlank(fileStoreId)) {
             this.filestoreId = fileStoreId;
         }
