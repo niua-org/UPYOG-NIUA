@@ -1,6 +1,7 @@
-import { CitizenHomeCard,ApplicantDetails, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
+import { CitizenHomeCard, ApplicantDetails, AddressDetails, PTIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import "./css/gc.scss";
 
 import GCCreate from "./pages/citizen/Create";
 import CitizenApp from "./pages/citizen";
@@ -11,7 +12,7 @@ import CheckPage from "./pages/citizen/Create/CheckPage"
 import GCAcknowledgement from "./pages/citizen/Create/GCAcknowledgement";
 import GCDocuments from "./pageComponents/GCDocuments";
 import GCDocumentDetails from "./pageComponents/GCDocumentDetails";
-import GCSpecialCategory from "./pageComponents/GCSpecialCategory";
+import GCTenantDetails, { AddTenant } from "./pageComponents/GCTenantDetails";
 import GCApplicationDetails from "./pages/citizen/GCApplicationDetails";
 import ApplicationDetails from "./pages/employee/ApplicationDetails";
 import EmployeeApp from "./pages/employee";
@@ -26,13 +27,15 @@ const componentsToRegister = {
   GCCreate,
   GCCard,
   ApplicantDetails,
+  AddressDetails,
   GCSpecifications,
   GCPropertyLocDetails,
   CheckPage,
   GCAcknowledgement,
   GCDocuments,
   GCDocumentDetails,
-  GCSpecialCategory,
+  GCTenantDetails,
+  AddTenant,
   GCApplicationDetails,
   GCApplicationDetails_Employee: ApplicationDetails,
   GCInbox: Inbox,

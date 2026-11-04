@@ -77,7 +77,7 @@ const CreateApplication = () => {
     redirectWithHistory(nextPage);
   };
 
-  if (params && Object.keys(params).length > 0 && window.location.href.includes("/applicant-details") && sessionStorage.getItem("docReqScreenByBack") !== "true") {
+  if (params && Object.keys(params).length > 0 && window.location.href.includes("/garbage-propertyLocation") && sessionStorage.getItem("docReqScreenByBack") !== "true") {
     clearParams();
     queryClient.invalidateQueries("GC_Create_Emp");
   }
@@ -141,6 +141,42 @@ const CreateApplication = () => {
       let units = params.units || [];
       units = data;
       setParams({ ...params, units });
+    } else if (key === "gcpropertylocdetails") {
+      let ownerUpdate = {};
+      if (data?.ownerInfo) {
+        const o = data.ownerInfo;
+        const currentOwner = params.owner || {};
+        const genderVal = o.gender || currentOwner.gender || "";
+        const relVal = o.relationship || currentOwner.relationShipType || "";
+        ownerUpdate = {
+          applicantName: o.name || currentOwner.applicantName || "",
+          mobileNumber: o.mobileNumber || currentOwner.mobileNumber || "",
+          emailId: o.emailId || currentOwner.emailId || "",
+          gender: genderVal ? (typeof genderVal === "object" ? genderVal : { code: genderVal, i18nKey: genderVal, name: genderVal }) : "",
+          guardianName: o.fatherOrHusbandName || o.guardianName || currentOwner.guardianName || "",
+          alternateNumber: o.altContactNumber || o.alternatemobilenumber || currentOwner.alternateNumber || "",
+          relationShipType: relVal ? (typeof relVal === "object" ? relVal : { name: relVal, code: String(relVal).toUpperCase(), i18nKey: `COMMON_${String(relVal).toUpperCase()}` }) : ""
+        };
+      }
+      const currentAddress = params.address || {};
+      const addressUpdate = {
+        pincode: data?.pincode || currentAddress.pincode || "",
+        city: data?.city || currentAddress.city || "",
+        locality: data?.locality || currentAddress.locality || "",
+        streetName: data?.streetName || currentAddress.streetName || "",
+        houseNo: data?.houseNo || currentAddress.houseNo || "",
+        landmark: data?.landmark || currentAddress.landmark || "",
+        houseName: data?.houseName || currentAddress.houseName || "",
+        addressLine1: data?.addressline1 || data?.addressLine1 || currentAddress.addressLine1 || "",
+        addressLine2: data?.addressline2 || data?.addressLine2 || data?.streetName || data?.landmark || currentAddress.addressLine2 || "N/A",
+        addressType: currentAddress.addressType || { name: "Permanent", code: "PERMANENT", i18nKey: "COMMON_ADDRESS_TYPE_PERMANENT" }
+      };
+      setParams({
+        ...params,
+        gcpropertylocdetails: { ...params.gcpropertylocdetails, ...data },
+        address: { ...(params.address || {}), ...addressUpdate },
+        ...(Object.keys(ownerUpdate).length > 0 ? { owner: { ...(params.owner || {}), ...ownerUpdate } } : {})
+      });
     } else {
       setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
     }
@@ -156,7 +192,7 @@ const CreateApplication = () => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });
 
-  config.indexRoute = "applicant-details";
+  config.indexRoute = "garbage-propertyLocation";
 
   return (
     <React.Fragment>
@@ -165,15 +201,26 @@ const CreateApplication = () => {
       </div>
       <div className="gc-create-container-padding">
         <Routes>
-          {config.map((routeObj, index) => {
-            const { component, texts, inputs, key, additionaFields } = routeObj;
+          {config.filter(r => r.route !== "check").map((routeObj, index) => {
+            const { component, texts, inputs, key, additionaFields, labels, disableFields } = routeObj;
             const Component = typeof component === "string" ? Digit.ComponentRegistryService.getComponent(component) : component;
             return (
               <Route
                   path={`${routeObj.route}`}
                   key={index}
-                  // Passing userType="employee" so your components know to use 50% width fields instead of 100%
-                  element={<Component config={{ texts, inputs, key, additionaFields }} onSelect={handleSelect} t={t} formData={params} userType="employee" />}
+                  element={
+                    <Component
+                      config={{ texts, inputs, key, additionaFields }}
+                      onSelect={handleSelect}
+                      t={t}
+                      formData={params}
+                      userType="employee"
+                      applicantData={params?.owner}
+                      addressData={params?.address}
+                      labels={labels}
+                      disableFields={disableFields}
+                    />
+                  }
               />
             );
           })}

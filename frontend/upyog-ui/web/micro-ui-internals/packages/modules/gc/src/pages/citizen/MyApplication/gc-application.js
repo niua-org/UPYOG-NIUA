@@ -3,60 +3,119 @@ import { Card, KeyNote, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components"
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-
-// Garbage Collection Application Component
-// This component displays the details of an application and provides options to view the summary or make a payment.
-
 /**
  * GCApplication Component
  * 
- * Displays a summary card for a single GC application in the citizen's "My Applications" list.
- * Shows application number, applicant name, and status. Provides buttons to view details
- * and optionally make a payment if the application status is PENDING_FOR_PAYMENT.
- * 
- * Props:
- * - `application`: The application object containing applicant details, status, etc.
- * - `tenantId`: Current tenant ID for payment navigation
+ * Displays a summary card for a single GC application in the citizen's "My Applications" list
+ * as per UPYOG Garbage Service HLD Section 3:
+ * - Shows Application Number, Applicant Name, Mobile Number, Property ID
+ * - Shows Property Type (Owner or Tenant) and Floor Number (for Tenants)
+ * - Shows Status (ACTIVE, DISCONNECTED, PERMANENTLY_DISCONNECTED, PENDING_FOR_PAYMENT, etc.)
+ * - Provides buttons to view details and make payment
  */
 const GCApplication = ({ application, tenantId }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
 
-  const name = application?.name;
-  const mobileNumber = application?.mobileNumber;
+  const applicant =
+    application?.additionalDetail?.applicantDetails?.[0] ||
+    application?.applicantDetails?.[0] ||
+    application?.tenantDetails ||
+    {};
 
-  const appNo = application?.grbgApplication?.applicationNo || application?.grbgApplicationNumber || application?.applicationNo;
-  const appStatus = application?.grbgApplication?.status || application?.applicationStatus || application?.status;
+  const name = applicant?.name || application?.name || t("CS_NA");
+  const mobileNumber = applicant?.mobileNumber || application?.mobileNumber || t("CS_NA");
+
+  const appNo =
+    application?.applicationNo ||
+    application?.grbgApplication?.applicationNo ||
+    application?.grbgApplicationNumber ||
+    application?.garbageNo ||
+    t("CS_NA");
+
+  const appStatus =
+    application?.status ||
+    application?.grbgApplication?.status ||
+    application?.applicationStatus ||
+    t("CS_NA");
 
   const propertyId = application?.propertyId;
-  const collectionUnit = application?.grbgCollectionUnits?.[0] || {};
+  const collectionUnit = application?.garbageSpecification || application?.grbgCollectionUnits?.[0] || {};
   const category = collectionUnit?.category;
-  const typeOfCollection = collectionUnit?.unitType;
+  const typeOfCollection = collectionUnit?.collectionType || collectionUnit?.unitType;
+  const propertyType = collectionUnit?.propertyType || collectionUnit?.ownerType || "OWNER";
+  const floorNo = collectionUnit?.floorNo;
 
   const handleMakePayment = () => {
     navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
   };
 
   const handleEditApplication = () => {
-    navigate(`/upyog-ui/citizen/gc/edit/${appNo}`);
+    navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`);
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "APPROVED":
+      case "ACTIVE":
+        return "#00703c";
+      case "DISCONNECTED":
+        return "#a82227";
+      case "PERMANENTLY_DISCONNECTED":
+        return "#d4351c";
+      case "REJECTED":
+        return "#d4351c";
+      default:
+        return "#1d70b8";
+    }
   };
 
   return (
-    <Card className="gc-gc-application-card">
-      <KeyNote keyValue={t("GC_APPLICATION_NUMBER_LABEL")} note={appNo || t("CS_NA")} />
-      <KeyNote keyValue={t("GC_NAME")} note={name || t("CS_NA")} />
-      <KeyNote keyValue={t("GC_MOBILE_NUMBER")} note={mobileNumber || t("CS_NA")} />
+    <Card className="gc-gc-application-card" style={{ marginBottom: "16px", padding: "16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+        <KeyNote keyValue={t("GC_APPLICATION_NUMBER_LABEL")} note={appNo} />
+        <span
+          style={{
+            backgroundColor: propertyType === "OWNER" ? "#1d70b8" : "#00703c",
+            color: "#ffffff",
+            padding: "2px 8px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            fontWeight: "bold",
+          }}
+        >
+          {propertyType}
+        </span>
+      </div>
+
+      <KeyNote keyValue={t("GC_APPLICANT_NAME")} note={name} />
+      <KeyNote keyValue={t("GC_MOBILE_NUMBER")} note={mobileNumber} />
       {propertyId && <KeyNote keyValue={t("GC_PROPERTY_ID")} note={propertyId} />}
+      {floorNo && (
+        <KeyNote
+          keyValue={t("GC_FLOOR_UNIT") || "Assigned Floor"}
+          note={floorNo === "0" ? t("GC_FLOOR_GROUND") || "Ground Floor" : `${floorNo} Floor`}
+        />
+      )}
       {category && <KeyNote keyValue={t("GC_CATEGORY")} note={t(category)} />}
       {typeOfCollection && <KeyNote keyValue={t("GC_TYPE_OF_COLLECTION")} note={t(typeOfCollection)} />}
-      <KeyNote keyValue={t("GC_APPLICATION_STATUS_LABEL")} note={appStatus ? t(`GC_STATUS_${appStatus}`) : t("CS_NA")} />
+
+      <KeyNote
+        keyValue={t("GC_APPLICATION_STATUS_LABEL")}
+        note={
+          <span style={{ color: getStatusColor(appStatus), fontWeight: "bold" }}>
+            {t(`GC_STATUS_${appStatus}`) || appStatus}
+          </span>
+        }
+      />
+
       {application?.dueDate && <KeyNote keyValue={t("GC_DUE_DATE")} note={application.dueDate} />}
 
-      <div className="gc-btn-row">
+      <div className="gc-btn-row" style={{ marginTop: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
         <Link to={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(appNo)}`}>
           <SubmitBar label={t("CS_VIEW_DETAILS")} />
         </Link>
-        {appStatus === "PENDING_FOR_PAYMENT" && (
+        {(appStatus === "PENDING_FOR_PAYMENT" || application?.paymentStatus === "PENDING") && (
           <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
         )}
         {appStatus === "EDIT_APPLICATION" && (

@@ -8,46 +8,82 @@ import { useLocation } from "react-router-dom";
  * Common Address Details component so that developer can use it just by importing it accross the UPYOG.
  * all cities data is fetching from common Tenants hook and locality data is fetched in the same way.
  * 
- * Steps to Use it in your Module/Application  :-
- *    1. Import it in your Module.js file of your Application/Module from  @upyog/upyog-ui-react-components-lts library.
- *    2. Insert it inside your componet registry Function in the same Module.js file.
- *    3. Then simply In your Config.js file which is present in your comfig folder inside src, add the component name "AddressDetails" in components and key should be "address"
+ * When using this component, you can customize fields using the following props:
  * 
- *     example :- 
- *              {
-                "route": "add url route here",
-                "component": "AddressDetails",
-                "withoutLabel": true,
-                "key": "address",
-                "type": "component",
-                "nextStep": "add your next to be url route here",
-                "isMandatory": true,
-                "texts": {
-                    "submitBarLabel": "COMMON_SAVE_NEXT",
-                    "header": "ADDRESS_DETAILS",
-                }
-            },
-
-      4. Test it, it will work.
-      
-
-      TODO: Need to check how to use Timeline functioality 
+ * 1. `addressData` (Type: Object):
+ *    - Payload object to pre-fill address fields. Standardized structure:
+ *      {
+ *        houseNo: "...",          // House / Door No
+ *        streetName: "...",       // Street Name
+ *        addressLine1: "...",     // Address Line 1
+ *        addressLine2: "...",     // Address Line 2
+ *        landmark: "...",         // Landmark
+ *        city: "...",             // City code or object { code, name, i18nKey }
+ *        locality: "...",         // Locality code or object { code, name, label, i18nKey }
+ *        pincode: "...",          // 6-digit postal pincode
+ *        addressType: "..."       // Address type code or object { code, name, i18nKey }
+ *      }
+ * 
+ * 2. `labels` (Type: Object):
+ *    - Key-value map of localization keys to dynamically change header or any CardLabel.
+ *    - Available keys: header, addressType, houseNo, streetName, addressLine1, addressLine2, landmark, city, locality, pincode
+ *    - Example: labels={{ header: "ES_ADDRESS_DETAILS", houseNo: "GC_HOUSE_NO" }}
+ * 
+ * 3. `disableFields` (Type: Object):
+ *    - Key-value boolean map to disable specific fields.
+ *    - Available keys: addressType, houseNo, streetName, addressLine1, addressLine2, landmark, city, locality, pincode
+ *    - Example: disableFields={{ city: true, locality: true, pincode: true }}
+ * 
+ * Usage Example:
+ * <AddressDetails
+ *   labels={{
+ *     header: "ES_ADDRESS_DETAILS",
+ *     houseNo: "GC_HOUSE_NO"
+ *   }}
+ *   disableFields={{
+ *     pincode: true,
+ *     city: true
+ *   }}
+ *   addressData={{
+ *     houseNo: "123",
+ *     streetName: "Main Street",
+ *     city: "pb.amritsar",
+ *     pincode: "143001"
+ *   }}
+ * />
+ * 
+ * TODO:- 1. Need to remove extra OR (||) fallback conditions (such as formData?.infodetails?.existingDataSet) across state initializations.
+ *        2. Calling modules across Edit, Renew & Draft flows must pass prefilled data using the standardized `addressData` prop payload documented above.
  */
 
-const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
+const AddressDetails = ({ t, config, onSelect, formData, isEdit, addressData, labels = {}, disableFields = {} }) => {
   const { data: allCities, isLoading } = Digit.Hooks.useTenants();
   let validation = {};
   const convertToObject = (String) => String ? { i18nKey: String, code: String, value: String } : null;
   const user = Digit.UserService.getUser().info;
-  const [pincode, setPincode] = useState(formData?.pincode||formData?.address?.pincode || formData?.infodetails?.existingDataSet?.address?.pincode ||  "");
-  const [city, setCity] = useState( convertToObject(formData?.city) ||formData?.address?.city ||formData?.infodetails?.existingDataSet?.address?.cityValue || "");
-  const [locality, setLocality] = useState( convertToObject(formData?.locality) || formData?.address?.locality || formData?.infodetails?.existingDataSet?.address?.locality || "");
-  const [houseNo, setHouseNo] = useState(formData?.houseNo ||formData?.address?.houseNo || formData?.infodetails?.existingDataSet?.address?.houseNo ||"");
-  const [streetName, setstreetName] = useState(formData?.streetName ||formData?.address?.streetName ||formData?.infodetails?.existingDataSet?.address?.streetName ||"");
-  const [landmark, setLandmark] = useState(formData?.landmark ||formData?.address?.landmark ||formData?.infodetails?.existingDataSet?.address?.landmark || "");
-  const [addressLine1, setAddressLine1] = useState(formData?.addressLine1 ||formData?.address?.addressLine1 || formData?.infodetails?.existingDataSet?.address?.addressline1 || "");
-  const [addressLine2, setAddressLine2] = useState(formData?.addressLine2 ||formData?.address?.addressLine2 || formData?.infodetails?.existingDataSet?.address?.addressline2 || "");
-  const [addressType, setAddressType] = useState( convertToObject(formData?.addressType) ||formData?.address?.addressType || formData?.infodetails?.existingDataSet?.address?.addressType || "");
+  const [pincode, setPincode] = useState(addressData?.pincode ? String(addressData.pincode) : (formData?.pincode || formData?.address?.pincode || formData?.infodetails?.existingDataSet?.address?.pincode || ""));
+  const [city, setCity] = useState(addressData?.city ? (typeof addressData.city === "object" ? addressData.city : convertToObject(addressData.city)) : (convertToObject(formData?.city) || formData?.address?.city || formData?.infodetails?.existingDataSet?.address?.cityValue || ""));
+  const [locality, setLocality] = useState(addressData?.locality ? (typeof addressData.locality === "object" ? addressData.locality : convertToObject(addressData.locality)) : (convertToObject(formData?.locality) || formData?.address?.locality || formData?.infodetails?.existingDataSet?.address?.locality || ""));
+  const [houseNo, setHouseNo] = useState(addressData?.houseNo || formData?.houseNo || formData?.address?.houseNo || formData?.infodetails?.existingDataSet?.address?.houseNo || "");
+  const [streetName, setstreetName] = useState(addressData?.streetName || formData?.streetName || formData?.address?.streetName || formData?.infodetails?.existingDataSet?.address?.streetName || "");
+  const [landmark, setLandmark] = useState(addressData?.landmark || formData?.landmark || formData?.address?.landmark || formData?.infodetails?.existingDataSet?.address?.landmark || "");
+  const [addressLine1, setAddressLine1] = useState(addressData?.addressLine1 || formData?.addressLine1 || formData?.address?.addressLine1 || formData?.infodetails?.existingDataSet?.address?.addressline1 || "");
+  const [addressLine2, setAddressLine2] = useState(addressData?.addressLine2 || formData?.addressLine2 || formData?.address?.addressLine2 || formData?.infodetails?.existingDataSet?.address?.addressline2 || "");
+  const [addressType, setAddressType] = useState(addressData?.addressType ? (typeof addressData.addressType === "object" ? addressData.addressType : convertToObject(addressData.addressType)) : (convertToObject(formData?.addressType) || formData?.address?.addressType || formData?.infodetails?.existingDataSet?.address?.addressType || ""));
+
+  useEffect(() => {
+    if (addressData) {
+      if (addressData.pincode) setPincode(String(addressData.pincode));
+      if (addressData.city) setCity(typeof addressData.city === "object" ? addressData.city : convertToObject(addressData.city));
+      if (addressData.locality) setLocality(typeof addressData.locality === "object" ? addressData.locality : convertToObject(addressData.locality));
+      if (addressData.houseNo) setHouseNo(addressData.houseNo);
+      if (addressData.streetName) setstreetName(addressData.streetName);
+      if (addressData.landmark) setLandmark(addressData.landmark);
+      if (addressData.addressLine1) setAddressLine1(addressData.addressLine1);
+      if (addressData.addressLine2) setAddressLine2(addressData.addressLine2);
+      if (addressData.addressType) setAddressType(typeof addressData.addressType === "object" ? addressData.addressType : convertToObject(addressData.addressType));
+    }
+  }, [addressData]);
   const { control } = useForm();
   const location = useLocation();
   const usedAddressTypes = location.state?.usedAddressTypes || [];
@@ -111,12 +147,12 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         isDisabled={!houseNo || !city || !locality || !pincode || pincode.length !== 6 || !addressLine1||!streetName||!addressLine2}
         >
     <div>
-    <CardLabel>{`${t("COMMON_ADDRESS_TYPE")}`} <span className="check-page-link-button">*</span></CardLabel>
+    <CardLabel>{`${t(labels?.addressType || "COMMON_ADDRESS_TYPE")}`} <span className="check-page-link-button">*</span></CardLabel>
     <Dropdown
       className="form-field"
       selected={addressType}
       select={setAddressType}
-      disable={isEdit}
+      disable={isEdit || disableFields?.addressType}
       option={availableAddressTypeOptions}
       optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
       optionKey="i18nKey"
@@ -124,7 +160,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
       style={inputStyles} 
       placeholder={"Select Address Type"}
     />
-    <CardLabel>{`${t("HOUSE_NO")}`} <span className="check-page-link-button">*</span></CardLabel>
+    <CardLabel>{`${t(labels?.houseNo || "HOUSE_NO")}`} <span className="check-page-link-button">*</span></CardLabel>
       <TextInput
         t={t}
         type={"text"}
@@ -137,6 +173,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         onChange={(e) => {
             setHouseNo(e.target.value);
         }}
+        disable={disableFields?.houseNo}
         ValidationRequired={true}
         validation={{
           isRequired: true,
@@ -145,7 +182,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         }}
       />
 
-      <CardLabel>{`${t("STREET_NAME")}`} <span className="check-page-link-button">*</span></CardLabel>
+      <CardLabel>{`${t(labels?.streetName || "STREET_NAME")}`} <span className="check-page-link-button">*</span></CardLabel>
       <TextInput
         t={t}
         type={"text"}
@@ -158,6 +195,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         onChange={(e) => {
           setstreetName(e.target.value);
         }}
+        disable={disableFields?.streetName}
         ValidationRequired={true}
         validation={{
           pattern: "^[a-zA-Z0-9 ,\\-]+$",
@@ -165,7 +203,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         }}
       />
 
-      <CardLabel>{`${t("ADDRESS_LINE1")}`} <span className="check-page-link-button">*</span></CardLabel>
+      <CardLabel>{`${t(labels?.addressLine1 || "ADDRESS_LINE1")}`} <span className="check-page-link-button">*</span></CardLabel>
       <TextInput
         t={t}
         type={"text"}
@@ -178,6 +216,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         onChange={(e) => {
           setAddressLine1(e.target.value);
         }}
+        disable={disableFields?.addressLine1}
         ValidationRequired={false}
         {...(validation = {
           isRequired: false,
@@ -186,7 +225,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         })}
       />
 
-      <CardLabel>{`${t("ADDRESS_LINE2")}`} <span className="check-page-link-button">*</span></CardLabel>
+      <CardLabel>{`${t(labels?.addressLine2 || "ADDRESS_LINE2")}`} <span className="check-page-link-button">*</span></CardLabel>
       <TextInput
         t={t}
         type={"text"}
@@ -199,6 +238,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         onChange={(e) => {
          setAddressLine2(e.target.value);
         }}
+        disable={disableFields?.addressLine2}
         ValidationRequired={false}
         {...(validation = {
           isRequired: false,
@@ -207,7 +247,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         })}
       />
 
-      <CardLabel>{`${t("LANDMARK")}`}</CardLabel>
+      <CardLabel>{`${t(labels?.landmark || "LANDMARK")}`}</CardLabel>
       <TextInput
         t={t}
         type={"textarea"}
@@ -220,6 +260,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         onChange={(e) => {
           setLandmark(e.target.value);
         }}
+        disable={disableFields?.landmark}
         ValidationRequired={true}
         validation={{
           isRequired: false,
@@ -228,7 +269,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         }}
       />
 
-      <CardLabel>{`${t("CITY")}`} <span className="check-page-link-button">*</span></CardLabel>
+      <CardLabel>{`${t(labels?.city || "CITY")}`} <span className="check-page-link-button">*</span></CardLabel>
       <Controller
         control={control}
         name={"city"}
@@ -240,6 +281,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
             selected={city}
             select={setCity}
             option={allCities}
+            disable={disableFields?.city}
             optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
             optionKey="i18nKey"
             t={t}
@@ -249,7 +291,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         )}
       />
 
-      <CardLabel>{`${t("LOCALITY")}`} <span className="check-page-link-button">*</span></CardLabel>
+      <CardLabel>{`${t(labels?.locality || "LOCALITY")}`} <span className="check-page-link-button">*</span></CardLabel>
       <Controller
         control={control}
         name={"locality"}
@@ -261,6 +303,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
             selected={locality}
             select={setLocality}
             option={structuredLocality}
+            disable={disableFields?.locality}
             optionCardStyles={{ overflowY: "auto", maxHeight: "300px" }}
             optionKey="i18nKey"
             t={t}
@@ -270,7 +313,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         )}
       />
 
-      <CardLabel>{`${t("PINCODE")}`} <span className="check-page-link-button">*</span></CardLabel>
+      <CardLabel>{`${t(labels?.pincode || "PINCODE")}`} <span className="check-page-link-button">*</span></CardLabel>
       <TextInput
         t={t}
         type="text"
@@ -282,6 +325,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
           const val = e.target.value.replace(/\D/g, "").slice(0, 6);
           setPincode(val);
         }}
+        disable={disableFields?.pincode}
         style={inputStyles}
         placeholder="Enter Pincode"
         ValidationRequired={true}

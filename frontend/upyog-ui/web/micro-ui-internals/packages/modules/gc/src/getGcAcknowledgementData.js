@@ -24,22 +24,30 @@ const getValue = (value, t) => {
 
 /**
  * Shapes a Garbage Collection application into the common acknowledgement-PDF format.
- * It supports both the GC create payload and the persisted garbage-account response.
+ * Supports both single & multi-application payloads as per UPYOG Garbage Service HLD.
  */
 const getGcAcknowledgementData = async (application = {}, tenantInfo, t) => {
-  const account = application?.garbageAccounts?.[0] || application?.garbageAccount || application;
+  const account =
+    application?.garbageApplications?.[0] ||
+    application?.garbageAccounts?.[0] ||
+    application?.garbageAccount ||
+    application;
+
   const applicationDetails = account?.grbgApplication || account?.GarbageApplication || {};
   const applicant =
     account?.additionalDetail?.applicantDetails?.[0] ||
     account?.additionalDetails?.applicantDetails?.[0] ||
     account?.applicantDetails?.[0] ||
+    account?.tenantDetails ||
     {};
+
   const propertyLocation = account?.propertyLocation || {};
-  const address = account?.addresses?.[0] || account?.address || {};
+  const address = account?.addresses?.[0] || account?.address || propertyLocation;
   const addressDetails = address?.additionalDetail || address?.additionalDetails || {};
   const collectionUnit = account?.grbgCollectionUnits?.[0] || {};
   const garbageSpec = account?.garbageSpecification || {};
-  const oldGarbageId = account?.grbgOldDetails?.oldGarbageId || garbageSpec?.oldGarbageId || collectionUnit?.oldGarbageId;
+  const oldGarbageId = account?.grbgOldDetails?.oldGarbageId || garbageSpec?.oldGarbageId || collectionUnit?.oldGarbageId || account?.oldGarbageNo;
+  const floorNo = collectionUnit?.floorNo || garbageSpec?.floorNo;
 
   return {
     t,
@@ -47,7 +55,7 @@ const getGcAcknowledgementData = async (application = {}, tenantInfo, t) => {
     name: getTenantName(tenantInfo, t),
     email: getValue(tenantInfo?.emailId, t),
     applicationNumber: getValue(
-      applicationDetails?.applicationNo || account?.grbgApplicationNumber || account?.applicationNo,
+      applicationDetails?.applicationNo || account?.grbgApplicationNumber || account?.applicationNo || account?.garbageNo,
       t
     ),
     phoneNumber: getValue(tenantInfo?.contactNumber, t),
@@ -81,18 +89,19 @@ const getGcAcknowledgementData = async (application = {}, tenantInfo, t) => {
         title: t("GC_GARBAGE_SPECIFICATIONS"),
         values: [
           { title: t("GC_OLD_GARBAGE_ID"), value: getValue(oldGarbageId, t) },
-          { title: t("GC_TYPE_OF_COLLECTION"), value: getValue(collectionUnit?.unitType || garbageSpec?.typeOfCollection, t) },
-          { title: t("GC_OWNER_OR_TENANT"), value: getValue(collectionUnit?.ownerType || garbageSpec?.propertyOwnerType, t) },
-          { title: t("GC_NAME"), value: getValue(garbageSpec?.name || account?.name, t) },
-          { title: t("GC_PHONE_NUMBER"), value: getValue(garbageSpec?.phoneNumber || account?.mobileNumber, t) },
+          { title: t("GC_TYPE_OF_COLLECTION"), value: getValue(collectionUnit?.unitType || collectionUnit?.collectionType || garbageSpec?.typeOfCollection || garbageSpec?.collectionType, t) },
+          { title: t("GC_OWNER_OR_TENANT"), value: getValue(collectionUnit?.ownerType || collectionUnit?.propertyType || garbageSpec?.propertyType || garbageSpec?.ownerType, t) },
+          ...(floorNo ? [{ title: t("GC_FLOOR_UNIT") || "Assigned Floor", value: getValue(floorNo === "0" ? t("GC_FLOOR_GROUND") || "Ground Floor" : `${floorNo} Floor`, t) }] : []),
+          { title: t("GC_NAME"), value: getValue(applicant?.name || garbageSpec?.name || account?.name, t) },
+          { title: t("GC_PHONE_NUMBER"), value: getValue(applicant?.mobileNumber || garbageSpec?.phoneNumber || account?.mobileNumber, t) },
           { title: t("GC_GENDER"), value: getValue(garbageSpec?.gender || account?.gender, t) },
-          { title: t("GC_EMAIL"), value: getValue(garbageSpec?.email || account?.emailId, t) },
+          { title: t("GC_EMAIL"), value: getValue(applicant?.email || garbageSpec?.email || account?.emailId, t) },
           { title: t("GC_CATEGORY"), value: getValue(collectionUnit?.category || garbageSpec?.category, t) },
           { title: t("GC_SUB_CATEGORY"), value: getValue(collectionUnit?.subCategory || garbageSpec?.subCategory, t) },
           { title: t("GC_SUB_CATEGORY_TYPE"), value: getValue(collectionUnit?.subCategoryType || garbageSpec?.subCategoryType, t) },
           { title: t("GC_SPECIAL_CATEGORY"), value: getValue(collectionUnit?.specialCategory || garbageSpec?.specialCategory, t) },
           { title: t("GC_IS_INHERITANCE"), value: (collectionUnit?.isInheritance || garbageSpec?.isInheritance) ? t("YES") : t("NO") },
-          { title: t("GC_NO_OF_UNITS"), value: getValue(collectionUnit?.no_of_units, t) },
+          { title: t("GC_NO_OF_UNITS"), value: getValue(collectionUnit?.no_of_units || garbageSpec?.no_of_units, t) },
         ],
       },
     ],
