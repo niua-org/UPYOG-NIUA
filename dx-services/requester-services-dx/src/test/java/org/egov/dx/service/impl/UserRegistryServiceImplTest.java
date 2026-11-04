@@ -13,8 +13,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+import org.egov.tracer.model.CustomException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -128,6 +131,17 @@ public class UserRegistryServiceImplTest {
         Map<String, Object> user = (Map<String, Object>) body.get("user");
         assertEquals("548796521458", user.get("aadhaarNumber"));
         assertNull(user.get("isIdentityVerified"));
+    }
+
+    @Test
+    void testResolveOrCreateUserUuid_InvalidAadhaar_ThrowsCustomException() {
+        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+                .name("Citizen")
+                .build();
+
+        assertThrows(CustomException.class, () ->
+                userRegistryService.resolveOrCreateUserUuid("invalid", demographics, "pg.citya", new RequestInfo()));
+        verifyNoInteractions(restTemplate);
     }
 
     @Test

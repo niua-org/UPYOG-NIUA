@@ -18,6 +18,7 @@ import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserRepository;
+import org.egov.user.util.AadhaarNumberUtils;
 import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Request;
@@ -225,10 +226,10 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
 
         // 2. Resolve existing user or auto-create
         String stateTenant = resolveStateTenant(tenantId);
-        String fullAadhaar = org.egov.user.util.AadhaarNumberUtils.normalizeToTwelveDigits(
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(
                 StringUtils.firstNonBlank(aadhaarNumber, eKyc.getFullAadhaarNumber()));
         if (fullAadhaar == null) {
-            fullAadhaar = org.egov.user.util.AadhaarNumberUtils.normalizeToTwelveDigits(aadhaarNumber);
+            fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(aadhaarNumber);
         }
         String mobileNumber = StringUtils.isNotBlank(request.getMobileNumber())
                 ? request.getMobileNumber().trim()
@@ -414,7 +415,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 String mobileStr = demoNode.hasNonNull("mobile") ? demoNode.path("mobile").asText()
                         : (demoNode.hasNonNull("mobileNumber") ? demoNode.path("mobileNumber").asText() : root.path("mobileNumber").asText(null));
 
-                String fullAadhaar = org.egov.user.util.AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
+                String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
                 return VerifiedAadhaarDemographics.builder()
                         .fullAadhaarNumber(fullAadhaar)
                         .maskedAadhaar(maskedAadhaar)
@@ -474,7 +475,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         String mockMobile = digitsOnly.length() >= 10
                 ? digitsOnly.substring(digitsOnly.length() - 10)
                 : "9999999999";
-        String fullAadhaar = org.egov.user.util.AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
         return VerifiedAadhaarDemographics.builder()
                 .fullAadhaarNumber(fullAadhaar)
                 .maskedAadhaar(masked)
@@ -490,10 +491,9 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
      * citizen on the mobile number who has no Aadhaar linked yet.
      * Respects the edge case where multiple family members share the same mobile number with different Aadhaar cards.
      *
-     * @param maskedAadhaar    masked Aadhaar string
+     * @param fullAadhaarTwelve verified 12-digit Aadhaar number
      * @param mobileNumber     citizen 10-digit mobile number
      * @param stateTenant      state-level tenant ID
-     * @param selectedUserUuid optional UUID selected by citizen during multi-account flow
      * @param requestInfo      request info for decryption
      * @return matched {@link User} entity or null to trigger new profile auto-creation
      */
@@ -502,20 +502,30 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             return null;
         }
 
+        // Query citizen accounts associated with verified mobile number; match only on full 12-digit Aadhaar equality
         if (StringUtils.isNotBlank(mobileNumber)) {
             List<User> matchedUsers = findUsersByMobile(mobileNumber, stateTenant, requestInfo);
             if (!CollectionUtils.isEmpty(matchedUsers)) {
                 for (User u : matchedUsers) {
-                    if (org.egov.user.util.AadhaarNumberUtils.sameTwelveDigits(u.getAadhaarNumber(), fullAadhaarTwelve)) {
+                    if (AadhaarNumberUtils.sameTwelveDigits(u.getAadhaarNumber(), fullAadhaarTwelve)) {
                         if (!Boolean.TRUE.equals(u.getActive())) {
+                            log.error("[AADHAAR-AUTH-STRATEGY] Matched Aadhaar citizen account {} is inactive", u.getUuid());
                             throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
                         }
                         return u;
                     }
                 }
+
+                // If all matched accounts on this mobile are inactive, reject immediately
+                boolean allInactive = matchedUsers.stream().allMatch(u -> !Boolean.TRUE.equals(u.getActive()));
+                if (allInactive) {
+                    log.error("[AADHAAR-AUTH-STRATEGY] All citizen accounts for mobile {} are inactive", MaskUtils.maskMobile(mobileNumber));
+                    throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+                }
             }
         }
 
+        // Match by full Aadhaar across state tenant (no last-4 or caller-supplied UUID fallback)
         UserSearchCriteria criteria = UserSearchCriteria.builder()
                 .aadhaarNumber(fullAadhaarTwelve)
                 .tenantId(stateTenant)
@@ -533,9 +543,10 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 List<User> resultList = !CollectionUtils.isEmpty(decrypted) ? decrypted : users;
                 for (User u : resultList) {
                     if (!Boolean.TRUE.equals(u.getActive())) {
+                        log.error("[AADHAAR-AUTH-STRATEGY] Matched Aadhaar citizen account {} is inactive", u.getUuid());
                         throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
                     }
-                    if (org.egov.user.util.AadhaarNumberUtils.sameTwelveDigits(u.getAadhaarNumber(), fullAadhaarTwelve)) {
+                    if (AadhaarNumberUtils.sameTwelveDigits(u.getAadhaarNumber(), fullAadhaarTwelve)) {
                         return u;
                     }
                 }

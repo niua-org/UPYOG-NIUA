@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
 import org.egov.dx.service.UserRegistryService;
 import org.egov.dx.util.AadhaarConstants;
 import org.egov.dx.util.AadhaarNumberUtils;
@@ -157,16 +158,17 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 userArray = root.path("User");
             }
 
-            if (userArray.isArray()) {
-                for (JsonNode u : userArray) {
-                    boolean active = !u.has("active") || u.path("active").asBoolean(true);
+            // Intentionally no fallback to first/unverified user: UUID is returned only on full 12-digit Aadhaar match
+            if (userArray.isArray() && !userArray.isEmpty()) {
+                for (JsonNode userData : userArray) {
+                    boolean active = !userData.has("active") || userData.path("active").asBoolean(true);
                     if (!active) {
                         continue;
                     }
-                    String storedAadhaar = u.path("aadhaarNumber").asText(null);
+                    String storedAadhaar = userData.path("aadhaarNumber").asText(null);
                     String normalizedStored = AadhaarNumberUtils.normalizeToTwelveDigits(storedAadhaar);
                     if (normalizedStored != null && fullAadhaar.equals(normalizedStored)) {
-                        String candidateUuid = u.path("uuid").asText(null);
+                        String candidateUuid = userData.path("uuid").asText(null);
                         if (StringUtils.isNotBlank(candidateUuid)) {
                             log.info("[USER-REGISTRY] Resolved citizen UUID from full Aadhaar match");
                             return candidateUuid;
@@ -184,8 +186,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         try {
             String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(aadhaarNumber);
             if (fullAadhaar == null) {
-                log.warn("[USER-REGISTRY] Auto-provision skipped: invalid Aadhaar number");
-                return null;
+                throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
             }
 
             String effectiveTenantId = resolveTenantId(tenantId);
@@ -254,18 +255,30 @@ public class UserRegistryServiceImpl implements UserRegistryService {
             }
 
             if (userArray.isArray() && !userArray.isEmpty()) {
-                return userArray.get(0).path("uuid").asText(null);
+                String createdUuid = userArray.get(0).path("uuid").asText(null);
+                if (StringUtils.isNotBlank(createdUuid)) {
+                    log.info("[USER-REGISTRY] Successfully auto-provisioned citizen with UUID: {}", createdUuid);
+                    return createdUuid;
+                }
             }
+        } catch (CustomException ce) {
+            throw ce;
         } catch (Exception e) {
             log.error("[USER-REGISTRY] Failed to auto-provision citizen in egov-user: {}", e.getMessage(), e);
         }
         return null;
     }
 
+    /**
+     * Resolves egov-user host from configuration; fails fast when not configured.
+     *
+     * @return normalized host URL ending with {@code /}
+     */
     private String resolveUserHost() {
         String host = configurations.getUserHost();
         if (StringUtils.isBlank(host)) {
-            host = "http://localhost:8085/";
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST,
+                    "egov.user.host is not configured for user registry integration");
         }
         if (!host.endsWith("/")) {
             host += "/";
@@ -273,19 +286,33 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         return host;
     }
 
+    /**
+     * Builds an absolute URL from host and configured API path segment.
+     *
+     * @param host service host
+     * @param path configured path (must not be blank)
+     * @return absolute URL
+     */
     private String buildUrl(String host, String path) {
-        String cleanPath = StringUtils.isNotBlank(path) ? path : "/user/profile/_search";
-        if (cleanPath.startsWith("/")) {
-            cleanPath = cleanPath.substring(1);
+        if (StringUtils.isBlank(path)) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST,
+                    "egov-user API path is not configured for user registry integration");
         }
+        String cleanPath = path.startsWith("/") ? path.substring(1) : path;
         return host + cleanPath;
     }
 
+    /**
+     * Normalizes tenant to state-level code; tenant is mandatory for registry calls.
+     *
+     * @param tenantId caller tenant identifier
+     * @return state-level tenant id
+     */
     private String resolveTenantId(String tenantId) {
-        if (StringUtils.isNotBlank(tenantId)) {
-            return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
+        if (StringUtils.isBlank(tenantId)) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "tenantId is mandatory");
         }
-        return "pg";
+        return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
     }
 
     private String normalizeGender(String gender) {

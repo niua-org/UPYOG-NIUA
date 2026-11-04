@@ -27,6 +27,7 @@ import org.egov.user.domain.service.identity.VerifiedAadhaarDemographics;
 import org.egov.user.domain.service.profile.validator.ProfileValidator;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import AadhaarNumberUtils;
 import org.egov.user.util.MaskUtils;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FamilyRestRepository;
@@ -1601,7 +1602,7 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, "Aadhaar OTP verification failed");
         }
 
-        String fullAadhaar = org.egov.user.util.AadhaarNumberUtils.normalizeToTwelveDigits(
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(
                 StringUtils.firstNonBlank(rawAadhaar, eKyc.getFullAadhaarNumber()));
 
         // Security: only e-KYC verified mobile is trusted for existing account lookup to prevent account takeover
@@ -1779,7 +1780,7 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, "Aadhaar OTP verification failed");
         }
 
-        String fullAadhaarForProfile = org.egov.user.util.AadhaarNumberUtils.normalizeToTwelveDigits(
+        String fullAadhaarForProfile = AadhaarNumberUtils.normalizeToTwelveDigits(
                 StringUtils.firstNonBlank(rawAadhaar, eKyc.getFullAadhaarNumber()));
 
         // 3. Aadhaar uniqueness validation across citizen accounts
@@ -1946,10 +1947,13 @@ public class ProfileServiceImpl implements ProfileService {
      * @param requestInfo   request context for decryption
      * @return matched {@link User} entity or null if not found
      */
+    /**
+     * Resolves an existing citizen by full 12-digit Aadhaar equality (legacy masked-only DB values are not matched).
+     */
     private User findExistingCitizen(String fullAadhaarTwelve, String mobileNumber, String stateTenant, RequestInfo requestInfo) {
         if (StringUtils.isNotBlank(fullAadhaarTwelve)) {
             User found = findCitizenByAadhaar(fullAadhaarTwelve, stateTenant, requestInfo);
-            if (found != null && org.egov.user.util.AadhaarNumberUtils.sameTwelveDigits(found.getAadhaarNumber(), fullAadhaarTwelve)) {
+            if (found != null && AadhaarNumberUtils.sameTwelveDigits(found.getAadhaarNumber(), fullAadhaarTwelve)) {
                 return found;
             }
         }
@@ -1958,7 +1962,7 @@ public class ProfileServiceImpl implements ProfileService {
             List<User> matchedUsers = findCitizensByMobile(mobileNumber, stateTenant, requestInfo);
             if (!CollectionUtils.isEmpty(matchedUsers)) {
                 for (User u : matchedUsers) {
-                    if (org.egov.user.util.AadhaarNumberUtils.sameTwelveDigits(u.getAadhaarNumber(), fullAadhaarTwelve)) {
+                    if (AadhaarNumberUtils.sameTwelveDigits(u.getAadhaarNumber(), fullAadhaarTwelve)) {
                         return u;
                     }
                 }
@@ -2006,13 +2010,18 @@ public class ProfileServiceImpl implements ProfileService {
 
     /**
      * {@inheritDoc}
+     *
+     * <p>Previously, {@code isIdentityVerified} could be set during citizen auto-provision via
+     * {@code /user/users/_createnovalidate}. That allowed public callers to self-assert verification.
+     * After OTP verification in requester-services-dx, this inter-service hook persists verified identity
+     * in egov-user with source {@code AADHAAR}.</p>
      */
     @Override
     public void markCitizenVerifiedAfterAadhaarEkyc(String userUuid, String fullAadhaarTwelve, String tenantId, RequestInfo requestInfo) {
         if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(fullAadhaarTwelve)) {
             throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "userUuid and 12-digit aadhaarNumber are required");
         }
-        String normalized = org.egov.user.util.AadhaarNumberUtils.normalizeToTwelveDigits(fullAadhaarTwelve);
+        String normalized = AadhaarNumberUtils.normalizeToTwelveDigits(fullAadhaarTwelve);
         if (normalized == null) {
             throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_IDENTIFIER, "Aadhaar must be a 12-digit number");
         }
