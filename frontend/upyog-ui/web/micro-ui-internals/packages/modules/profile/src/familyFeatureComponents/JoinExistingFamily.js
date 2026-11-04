@@ -70,7 +70,7 @@ const JoinExistingFamily = () => {
       setOtpType("FAMILY_ID");
     } catch (err) {
       console.log("error on join existing family page", err);
-      showError(t("PROFILE_FAMILY_NOT_FOUND"));
+      showError(err?.response?.data?.Errors?.[0]?.message || t("PROFILE_FAMILY_NOT_FOUND"));
     } finally {
       setLoading(false);
     }
