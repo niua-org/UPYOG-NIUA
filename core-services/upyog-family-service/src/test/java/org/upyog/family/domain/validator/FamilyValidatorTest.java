@@ -1,5 +1,7 @@
 package org.upyog.family.domain.validator;
 
+import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.User;
 import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
@@ -85,6 +87,20 @@ class FamilyValidatorTest {
         when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
 
         assertDoesNotThrow(() -> validator.validateCreate(request));
+    }
+
+    @Test
+    @DisplayName("validateCreate should succeed when caller is different from Head of Family (e.g. Son creating family with Father as HOF)")
+    void validateCreate_CallerNotHead_Success() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(User.builder().uuid("caller-uuid-son").build())
+                .build();
+        request.setRequestInfo(requestInfo);
+
+        assertDoesNotThrow(() -> validator.validateCreate(request));
+        assertEquals("user-uuid-head", family.getHeadUserUuid());
     }
 
     @Test

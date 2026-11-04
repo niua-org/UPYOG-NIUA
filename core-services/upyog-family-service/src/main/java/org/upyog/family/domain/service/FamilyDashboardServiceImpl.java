@@ -27,6 +27,9 @@ import java.util.stream.Collectors;
 /**
  * Domain service implementation compiling family dashboard metrics and lineage insights in UPYOG.
  *
+ * <p>Implements {@link FamilyDashboardService} by aggregating real-time demographic distributions,
+ * identity verification ratios, document proof attachments, and genealogical lineage records.</p>
+ *
  * @author UPYOG Team
  * @since 1.0.0
  */
@@ -38,6 +41,13 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
     private final UserClient userClient;
     private final ResponseInfoFactory responseInfoFactory;
 
+    /**
+     * Constructs {@link FamilyDashboardServiceImpl} with required repository and client dependencies.
+     *
+     * @param familyRepository data repository for family lookups and lineage queries
+     * @param userClient client querying {@code egov-user} for citizen profiles
+     * @param responseInfoFactory utility creating standard UPYOG {@link ResponseInfo} headers
+     */
     @Autowired
     public FamilyDashboardServiceImpl(FamilyRepository familyRepository,
                                      UserClient userClient,
@@ -49,29 +59,23 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
 
     /**
      * Computes and returns aggregated household analytics for a family unit in UPYOG.
-     * Aggregates active member counts, identity verification ratio, attached document counts, and lineage events.
      *
-     * @param familyId unique family identifier
-     * @param tenantId tenant identifier
-     * @param requestInfo UPYOG request context envelope
-     * @return FamilyDashboardResponse containing aggregated metrics
+     * <p>Loads the family aggregate, enriches member profiles with citizen identity details, computes active
+     * vs inactive counts, calculates verification ratio, counts attached documents, and compiles lineage history.</p>
+     *
+     * @param familyId unique family identifier; must not be blank.
+     * @param tenantId tenant identifier; must not be blank.
+     * @param requestInfo UPYOG request context envelope containing auth tokens.
+     * @return {@link FamilyDashboardResponse} containing computed metrics and demographic breakdowns.
+     * @throws CustomException if the family is not found (Code: {@code FAMILY_NOT_FOUND}).
      */
     @Override
     public FamilyDashboardResponse getFamilyDashboard(String familyId, String tenantId, RequestInfo requestInfo) {
         log.info("[UPYOG-DASHBOARD-SERVICE] Aggregating dashboard for family: {}, tenant: {}", familyId, tenantId);
 
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(familyId)
-                .tenantId(tenantId)
-                .build();
-
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                    "Family with ID " + familyId + " not found.");
-        }
-
-        Family family = families.get(0);
+        Family family = familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
+                        "Family with ID " + familyId + " not found."));
         enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
 
         List<FamilyMember> members = family.getMembers() != null ? family.getMembers() : Collections.emptyList();

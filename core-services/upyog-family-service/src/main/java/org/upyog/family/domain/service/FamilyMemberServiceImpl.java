@@ -39,6 +39,16 @@ import java.util.stream.Collectors;
  * @author UPYOG Team
  * @since 1.0.0
  */
+/**
+ * Domain service implementation managing individual family member lifecycle events in UPYOG.
+ *
+ * <p>Implements {@link FamilyMemberService} handling member additions with Aadhaar consent, direct member join flows
+ * with HoF authorization, and soft-deactivations for member departure (leave). All operations enforce transactional
+ * integrity and dispatch persistence events to Kafka.</p>
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
+ */
 @Service
 @Slf4j
 public class FamilyMemberServiceImpl implements FamilyMemberService {
@@ -51,6 +61,17 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     private final KafkaProducer kafkaProducer;
     private final FamilyConfiguration configuration;
 
+    /**
+     * Constructs {@link FamilyMemberServiceImpl} with all required repository and validator dependencies.
+     *
+     * @param familyRepository data repository for family lookups and queries
+     * @param addMemberValidator validator verifying consent and residency rules for adding members
+     * @param joinFamilyValidator validator checking applicant join tokens and exclusivity
+     * @param leaveFamilyValidator validator enforcing departure policies and HoF preservation
+     * @param userClient client communicating with {@code egov-user} for demographic lookups
+     * @param kafkaProducer asynchronous messaging producer for DB persistence
+     * @param configuration service configuration properties
+     */
     @Autowired
     public FamilyMemberServiceImpl(FamilyRepository familyRepository,
                                   AddMemberValidator addMemberValidator,
@@ -70,10 +91,14 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
 
     /**
      * Adds a new verified member to an existing family unit with verified Aadhaar OTP consent in UPYOG.
-     * Validates consent token, auto-looks up or provisions citizen profile in the user registry, and links member.
      *
-     * @param request member addition payload containing family ID, member attributes, and consent token
-     * @return updated Family aggregate
+     * <p>If the member does not yet have a user UUID, searches {@code egov-user} by mobile number or auto-provisions
+     * a new citizen profile. Verifies multi-family exclusivity, hashes the consent token, updates audit records,
+     * and publishes the update to Kafka topic {@code configuration.getUpdateFamilyTopic()}.</p>
+     *
+     * @param request member addition payload containing family ID, member attributes, and consent token; must not be {@code null}.
+     * @return the updated {@link Family} aggregate populated with the newly added member.
+     * @throws CustomException if target family does not exist, caller is unauthorized, or candidate is already in an active family.
      */
     @Override
     @Transactional
@@ -167,10 +192,14 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
 
     /**
      * Processes an independent citizen request to join an existing family unit upon Head of Family authorization in UPYOG.
-     * Verifies HoF authorization and registers the applicant as an active member of the family.
      *
-     * @param request join family request with applicant UUID and HoF authorization token
-     * @return updated Family aggregate
+     * <p>Validates applicant credentials and the verified HoF consent token via {@link JoinFamilyValidator},
+     * adds the applicant to the active members roster with status {@link MemberStatus#JOINED}, pushes the event
+     * to Kafka persister, and decorates the family aggregate with demographics from {@code egov-user}.</p>
+     *
+     * @param request join family request containing applicant UUID, relationship with head, and verified HoF consent token.
+     * @return the updated {@link Family} aggregate including the newly joined member.
+     * @throws CustomException if target family does not exist, consent is invalid, or applicant already belongs to another family.
      */
     @Override
     @Transactional
@@ -196,7 +225,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 .isHead(false)
                 .isVerified(StringUtils.isNotBlank(request.getHofConsentOtp()))
                 .active(true)
-                .status(MemberStatus.ACTIVE)
+                .status(MemberStatus.JOINED)
                 .consentToken(maskOrHashConsentToken(request.getHofConsentOtp()))
                 .consentDate(now)
                 .effectiveFrom(now)
@@ -228,10 +257,14 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
 
     /**
      * Processes a member exit from a family unit due to marriage, demise, or relocation in UPYOG.
-     * Sets exit date, exit reason, and status to EXITED, while preventing a solitary Head of Family from leaving.
      *
-     * @param request leave family request containing member UUID and exit reason
-     * @return updated Family aggregate
+     * <p>Enforces authorization (must be self or family HoF) and validates via {@link LeaveFamilyValidator}
+     * that a sole Head of Family cannot leave without designating a successor. Soft-deactivates the member,
+     * updates the audit timestamps, and dispatches an update event to the Kafka persister topic.</p>
+     *
+     * @param request leave family request containing family ID, member UUID, and exit reason; must not be {@code null}.
+     * @return the updated {@link Family} aggregate reflecting the member's deactivated status.
+     * @throws CustomException if family or member is not found, or departing member is the sole HoF.
      */
     @Override
     @Transactional
@@ -278,16 +311,9 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     }
 
     private Family getFamilyByIdAndTenant(String familyId, String tenantId) {
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(familyId)
-                .tenantId(tenantId)
-                .build();
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                    "Family with ID " + familyId + " not found.");
-        }
-        return families.get(0);
+        return familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
+                        "Family with ID " + familyId + " not found."));
     }
 
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {

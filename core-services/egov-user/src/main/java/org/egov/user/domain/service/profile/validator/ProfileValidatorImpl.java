@@ -11,6 +11,7 @@ import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserRepository;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -427,7 +428,7 @@ public class ProfileValidatorImpl implements ProfileValidator {
             boolean matchesCaller = (callerMobile != null && trimmedMobile.equals(callerMobile))
                     || (callerUserName != null && trimmedMobile.equalsIgnoreCase(callerUserName.trim()));
             if (!matchesCaller) {
-                log.error("[PROFILE-VALIDATOR] Unauthorized search: Citizen caller {} attempted to search for mobile: {}", callerUuid, trimmedMobile);
+                log.error("[PROFILE-VALIDATOR] Unauthorized search: Citizen caller {} attempted to search for mobile: {}", callerUuid, MaskUtils.maskMobile(trimmedMobile));
                 throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
             }
         }

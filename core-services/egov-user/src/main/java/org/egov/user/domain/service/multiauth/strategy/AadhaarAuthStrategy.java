@@ -16,7 +16,9 @@ import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserRepository;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Request;
 import org.egov.common.contract.request.RequestInfo;
@@ -60,6 +62,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
     private final EncryptionDecryptionUtil encryptionDecryptionUtil;
 
     private final UserConfiguration userConfiguration;
+    private final FamilyRestRepository familyRestRepository;
     private final Map<String, Integer> otpAttemptsByRefId = new ConcurrentHashMap<>();
 
     /**
@@ -71,6 +74,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
      * @param objectMapper             JSON mapper for response parsing
      * @param encryptionDecryptionUtil utility for encrypted search and decryption
      * @param userConfiguration        application properties
+     * @param familyRestRepository     repository for resolving familyId from family-service
      */
     @Autowired
     public AadhaarAuthStrategy(UserService userService,
@@ -78,13 +82,24 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                                RestTemplate restTemplate,
                                ObjectMapper objectMapper,
                                @Autowired(required = false) EncryptionDecryptionUtil encryptionDecryptionUtil,
-                               @Autowired(required = false) UserConfiguration userConfiguration) {
+                               @Autowired(required = false) UserConfiguration userConfiguration,
+                               @Autowired(required = false) FamilyRestRepository familyRestRepository) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.userConfiguration = userConfiguration;
+        this.familyRestRepository = familyRestRepository;
+    }
+
+    public AadhaarAuthStrategy(UserService userService,
+                               UserRepository userRepository,
+                               RestTemplate restTemplate,
+                               ObjectMapper objectMapper,
+                               EncryptionDecryptionUtil encryptionDecryptionUtil,
+                               UserConfiguration userConfiguration) {
+        this(userService, userRepository, restTemplate, objectMapper, encryptionDecryptionUtil, userConfiguration, null);
     }
 
     /**
@@ -201,12 +216,12 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         }
 
         log.info("[AADHAAR-AUTH-STRATEGY] Initiating Aadhaar verification: refId={}, aadhaar={}, tenant={}",
-                refId, maskAadhaar(aadhaarNumber), tenantId);
+                MaskUtils.maskIdentifier(refId), MaskUtils.maskAadhaar(aadhaarNumber), tenantId);
 
         // 1. Verify OTP and obtain verified e-KYC demographics
         VerifiedAadhaarDemographics eKyc = verifyAadhaarOtp(request, refId, aadhaarNumber, otp);
         log.info("[AADHAAR-AUTH-STRATEGY] e-KYC demographic resolution complete: name={}, gender={}, maskedAadhaar={}",
-                eKyc.getName(), eKyc.getGender(), eKyc.getMaskedAadhaar());
+                MaskUtils.maskIdentifier(eKyc.getName()), eKyc.getGender(), eKyc.getMaskedAadhaar());
 
         // 2. Resolve existing user or auto-create
         String stateTenant = resolveStateTenant(tenantId);
@@ -252,6 +267,11 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             } catch (Exception e) {
                 log.warn("[AADHAAR-AUTH-STRATEGY] Could not persist updated verification fields for user {}: {}",
                         existingUser.getId(), e.getMessage());
+            }
+
+            if (familyRestRepository != null && StringUtils.isNotBlank(existingUser.getUuid())) {
+                String familyId = familyRestRepository.getActiveFamilyIdByUserUuid(existingUser.getUuid(), stateTenant, request.getRequestInfo());
+                existingUser.setFamilyId(familyId);
             }
 
             return AuthenticatedUserResult.builder()
@@ -306,6 +326,11 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
         }
 
+        if (familyRestRepository != null && StringUtils.isNotBlank(createdUser.getUuid())) {
+            String familyId = familyRestRepository.getActiveFamilyIdByUserUuid(createdUser.getUuid(), stateTenant, request.getRequestInfo());
+            createdUser.setFamilyId(familyId);
+        }
+
         return AuthenticatedUserResult.builder()
                 .user(createdUser)
                 .isNewUser(true)
@@ -328,7 +353,8 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         if (StringUtils.isNotBlank(refId)) {
             int currentAttempts = otpAttemptsByRefId.getOrDefault(refId, 0);
             if (currentAttempts >= getMaxOtpAttempts()) {
-                log.error("[AADHAAR-AUTH-STRATEGY] Locked transaction: refId {} exceeded max invalid OTP attempts ({})", refId, getMaxOtpAttempts());
+                log.error("[AADHAAR-AUTH-STRATEGY] Locked transaction: refId {} exceeded max invalid OTP attempts ({})",
+                        MaskUtils.maskIdentifier(refId), getMaxOtpAttempts());
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
             }
         }
@@ -375,7 +401,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                     otpAttemptsByRefId.remove(refId);
                 }
 
-                String maskedAadhaar = root.path(UserConstants.JSON_KEY_MASKED_AADHAAR).asText(maskAadhaar(rawAadhaar));
+                String maskedAadhaar = root.path(UserConstants.JSON_KEY_MASKED_AADHAAR).asText(MaskUtils.maskAadhaar(rawAadhaar));
                 JsonNode demoNode = root.path("demographics");
                 String name = demoNode.hasNonNull("name") ? demoNode.path("name").asText() : root.path("name").asText(null);
                 String genderStr = demoNode.hasNonNull("gender") ? demoNode.path("gender").asText() : root.path("gender").asText(null);
@@ -418,7 +444,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             int attempts = otpAttemptsByRefId.compute(refId, (k, v) -> (v == null ? 1 : v + 1));
             if (attempts >= getMaxOtpAttempts()) {
                 log.error("[AADHAAR-AUTH-STRATEGY] refId {} reached max invalid OTP attempts ({}). Invaliding and locking transaction.",
-                        refId, getMaxOtpAttempts());
+                        MaskUtils.maskIdentifier(refId), getMaxOtpAttempts());
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
             }
         }
@@ -432,7 +458,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
      * @return dummy verified demographics
      */
     private VerifiedAadhaarDemographics createMockDemographics(String rawAadhaar, String refId) {
-        String masked = maskAadhaar(rawAadhaar);
+        String masked = MaskUtils.maskAadhaar(rawAadhaar);
         if (StringUtils.isBlank(masked)) {
             masked = "XXXXXXXX" + (StringUtils.isNotBlank(refId) && refId.length() >= 4
                     ? refId.substring(refId.length() - 4) : "1234");
@@ -482,7 +508,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 // If any matched account has matching Aadhaar, prioritize it
                 for (User u : matchedUsers) {
                     if (StringUtils.isNotBlank(u.getAadhaarNumber()) && (u.getAadhaarNumber().equalsIgnoreCase(maskedAadhaar)
-                            || maskAadhaar(u.getAadhaarNumber()).equalsIgnoreCase(maskedAadhaar))) {
+                            || MaskUtils.maskAadhaar(u.getAadhaarNumber()).equalsIgnoreCase(maskedAadhaar))) {
                         if (!Boolean.TRUE.equals(u.getActive())) {
                             log.error("[AADHAAR-AUTH-STRATEGY] Matched Aadhaar citizen account {} is inactive", u.getUuid());
                             throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
@@ -494,7 +520,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 // If all matched accounts on this mobile are inactive, reject immediately
                 boolean allInactive = matchedUsers.stream().allMatch(u -> !Boolean.TRUE.equals(u.getActive()));
                 if (allInactive) {
-                    log.error("[AADHAAR-AUTH-STRATEGY] All citizen accounts for mobile {} are inactive", maskMobile(mobileNumber));
+                    log.error("[AADHAAR-AUTH-STRATEGY] All citizen accounts for mobile {} are inactive", MaskUtils.maskMobile(mobileNumber));
                     throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
                 }
 
@@ -502,7 +528,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 if (matchedUsers.size() == 1) {
                     User singleUser = matchedUsers.get(0);
                     if (!Boolean.TRUE.equals(singleUser.getActive())) {
-                        log.error("[AADHAAR-AUTH-STRATEGY] Citizen account {} for mobile {} is inactive", singleUser.getUuid(), maskMobile(mobileNumber));
+                        log.error("[AADHAAR-AUTH-STRATEGY] Citizen account {} for mobile {} is inactive", singleUser.getUuid(), MaskUtils.maskMobile(mobileNumber));
                         throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
                     }
                     return singleUser;
@@ -612,32 +638,6 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         return encryptedList;
     }
 
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) {
-            return "null";
-        }
-        if (mobile.length() <= 4) {
-            return "****";
-        }
-        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-    }
-
-    /**
-     * Masks raw Aadhaar number, revealing only the last 4 digits (e.g. XXXXXXXX1234).
-     *
-     * @param aadhaar raw 12-digit Aadhaar string
-     * @return masked Aadhaar string
-     */
-    private String maskAadhaar(String aadhaar) {
-        if (StringUtils.isBlank(aadhaar)) {
-            return null;
-        }
-        String clean = aadhaar.trim().replaceAll("\\s+", "");
-        if (clean.length() == 12) {
-            return "XXXXXXXX" + clean.substring(8);
-        }
-        return "XXXXXXXX" + (clean.length() >= 4 ? clean.substring(clean.length() - 4) : "****");
-    }
 
     /**
      * Parses gender string into {@link Gender} enum.

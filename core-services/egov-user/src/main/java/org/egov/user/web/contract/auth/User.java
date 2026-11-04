@@ -41,6 +41,7 @@ public class User implements Serializable {
     private Integer edittedCount;
     private String lastLoginMethod;
     private Boolean isProfileCompleted;
+    private String familyId;
 
     /**
      * CRITICAL: Override getRoles to ensure it never returns null.

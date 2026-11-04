@@ -11,7 +11,10 @@ import lombok.Setter;
 import org.egov.common.contract.request.RequestInfo;
 
 /**
- * Request wrapper for family creation and mutation operations in UPYOG.
+ * Standard UPYOG request envelope for family creation and mutation operations.
+ *
+ * <p>Wraps the target {@link Family} entity alongside platform {@link RequestInfo} metadata
+ * containing caller authentication tokens, user roles, and trace headers.</p>
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -23,10 +26,16 @@ import org.egov.common.contract.request.RequestInfo;
 @AllArgsConstructor
 public class FamilyRequest {
 
+    /**
+     * Standard platform request metadata envelope containing caller credentials and transaction headers.
+     */
     @NotNull(message = "RequestInfo is mandatory")
     @JsonProperty("RequestInfo")
     private RequestInfo requestInfo;
 
+    /**
+     * The core family aggregate payload being created or mutated.
+     */
     @Valid
     @NotNull(message = "Family object is mandatory")
     @JsonProperty("Family")

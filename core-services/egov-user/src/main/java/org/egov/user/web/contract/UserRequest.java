@@ -1,6 +1,5 @@
 package org.egov.user.web.contract;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,7 +57,6 @@ public class UserRequest {
     private String mobileNumber;
     
     @Pattern(regexp = UserServiceConstants.PATTERN_MOBILE)
-    @JsonAlias({"alternateMobileNumber", "alternateMobileNo"})
     private String alternatemobilenumber;
 
     public String getAlternatemobilenumber() {
@@ -141,11 +139,9 @@ public class UserRequest {
     @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
     @Size(max = 50)
     @JsonProperty("fatherOrHusbandName")
-    @JsonAlias({"guardian"})
     private String fatherOrHusbandName;
 
     @JsonProperty("relationship")
-    @JsonAlias({"guardianRelation"})
     private GuardianRelation relationship;
 
     @Size(max = 300)

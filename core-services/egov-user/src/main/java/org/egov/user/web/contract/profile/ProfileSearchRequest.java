@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.profile;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,7 +13,7 @@ import java.util.List;
 
 /**
  * Request DTO for searching citizen profiles by identifier, mobile number, Aadhaar, or demographics.
- * Supports modular entity inclusion via the {@link #include} field.
+ * Supports modular entity inclusion via the {@link #include} field using {@link ProfileIncludeEntity}.
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -58,6 +57,5 @@ public class ProfileSearchRequest {
 
     @Schema(description = "List of entity sections to include in response (allowed values: PROFILE, ADDRESS, DOCUMENT). Defaults to [PROFILE] if omitted.", example = "[\"PROFILE\", \"ADDRESS\", \"DOCUMENT\"]")
     @JsonProperty("include")
-    @JsonAlias({"flags", "entities", "requiredFields"})
-    private List<String> include;
+    private List<ProfileIncludeEntity> include;
 }

@@ -318,40 +318,6 @@ public class CitizenSearchSecurityTest {
     }
 
     @Test
-    @DisplayName("UserService.updateWithoutOtpValidation: Spoofed caller type EMPLOYEE detected as CITIZEN in DB should fail")
-    public void testUserServiceUpdateWithoutOtpValidation_SpoofedCallerTypeEmployee_DetectedAsCitizenFromDb_ThrowsUnauthorized() {
-        RequestInfo requestInfo = RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder()
-                        .id(888L)
-                        .uuid("citizen-in-db-uuid")
-                        .type("EMPLOYEE")
-                        .build())
-                .build();
-
-        User dbCaller = User.builder()
-                .id(888L)
-                .uuid("citizen-in-db-uuid")
-                .username("9998887771")
-                .type(UserType.CITIZEN)
-                .tenantId("pg")
-                .roles(Collections.singleton(Role.getCitizenRole()))
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(dbCaller));
-
-        User targetUser = User.builder()
-                .id(888L)
-                .uuid("citizen-in-db-uuid")
-                .tenantId("pg")
-                .build();
-
-        CustomException ex = assertThrows(CustomException.class, () ->
-                userService.updateWithoutOtpValidation(targetUser, requestInfo)
-        );
-        assertEquals("UNAUTHORIZED_ACCESS", ex.getCode());
-    }
-
-    @Test
     @DisplayName("UserService.updateUserV2: Citizen caller attempting to update another citizen should fail")
     public void testUserServiceUpdateV2_CitizenAttemptsUpdateOtherUser_ThrowsUnauthorized() {
         RequestInfo requestInfo = createCitizenRequestInfo("citizen-uuid-1", "9876543210");

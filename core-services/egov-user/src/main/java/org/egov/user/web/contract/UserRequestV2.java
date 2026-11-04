@@ -199,22 +199,14 @@ public class UserRequestV2 {
     }
 
     /**
-     * Converts this {@link UserRequestV2} DTO to a domain {@link User} entity.
-     *
-     * @param loggedInUserId   numeric ID of authenticated requester
-     * @param loggedInUserUuid UUID of authenticated requester
-     * @param isCreate         flag indicating create mode vs update mode
-     * @return populated {@link User} domain entity
-     */
-    @JsonIgnore
-    /**
-     * Converts this contract DTO to a domain {@link User} model with operator audit metadata.
+     * Converts this V2 contract DTO to a domain {@link User} entity with operator audit metadata.
      *
      * @param loggedInUserId   ID of the operating user
      * @param loggedInUserUuid UUID of the operating user
      * @param isCreate         flag indicating if this is for a new user creation
      * @return populated domain {@link User} entity
      */
+    @JsonIgnore
     public User toDomain(Long loggedInUserId, String loggedInUserUuid, boolean isCreate) {
         BloodGroup bloodGroup = null;
         try {

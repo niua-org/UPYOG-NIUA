@@ -7,8 +7,11 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.validator.FamilyValidator;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.IdGenRepository;
+import org.upyog.family.persistence.repository.OtpClient;
+import org.upyog.family.persistence.repository.RequesterDxClient;
 import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.KafkaProducer;
+import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AuditDetails;
 import org.upyog.family.web.contract.CitizenProfile;
 import org.upyog.family.web.contract.Family;
@@ -30,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -147,7 +151,7 @@ class FamilyServiceImplTest {
         family.setFamilyId("FAM-PARENT-001");
         family.setAuditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).build());
 
-        when(familyRepository.search(any())).thenReturn(Collections.singletonList(family));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-PARENT-001", "pg.citya")).thenReturn(Optional.of(family));
         when(idGenRepository.generateFamilyId(any(), eq("pg.citya"))).thenReturn("FAM-CHILD-002");
         when(configuration.getSplitFamilyTopic()).thenReturn("split-ug-family");
 
@@ -201,8 +205,8 @@ class FamilyServiceImplTest {
                 .auditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).build())
                 .build();
 
-        when(familyRepository.search(any())).thenReturn(Collections.singletonList(surviving))
-                .thenReturn(Collections.singletonList(merging));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-001", "pg.citya")).thenReturn(Optional.of(surviving));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-002", "pg.citya")).thenReturn(Optional.of(merging));
         when(configuration.getMergeFamilyTopic()).thenReturn("merge-ug-family");
 
         FamilyMergeRequest mergeRequest = FamilyMergeRequest.builder()

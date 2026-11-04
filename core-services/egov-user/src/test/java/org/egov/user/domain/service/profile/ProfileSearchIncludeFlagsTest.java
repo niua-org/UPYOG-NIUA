@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.Address;
+import org.egov.user.domain.model.AddressSearchCriteria;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.UserSearchCriteria;
+import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.domain.service.address.AddressService;
 import org.egov.user.domain.service.document.UserDocumentService;
 import org.egov.user.domain.service.identity.IdentityVerificationService;
@@ -46,7 +48,7 @@ import static org.mockito.Mockito.*;
  *   <li>Exclusion of addresses and documents from legacy constructor to prevent PII exposure for existing callers</li>
  *   <li>Rejection of unknown include entity sections (e.g., "FOO", "INVALID_SECTION") with HTTP 400 {@link CustomException}</li>
  *   <li>Authorization restriction preventing citizen callers from searching ADDRESS/DOCUMENT for other citizens' UUIDs</li>
- *   <li>Backwards-compatible alias deserialization (e.g. {@code flags})</li>
+ *   <li>Strict JSON property deserialization via {@code include}</li>
  * </ul>
  *
  * @author UPYOG Team
@@ -80,6 +82,9 @@ public class ProfileSearchIncludeFlagsTest {
     @Mock
     private UserDocumentService userDocumentService;
 
+    @Mock
+    private org.egov.user.persistence.repository.FamilyRestRepository familyRestRepository;
+
     private ProfileServiceImpl profileService;
     private ObjectMapper objectMapper;
 
@@ -94,7 +99,9 @@ public class ProfileSearchIncludeFlagsTest {
                 userDocumentRepository,
                 null,
                 addressService,
-                userDocumentService
+                userDocumentService,
+                null,
+                familyRestRepository
         );
         objectMapper = new ObjectMapper();
         when(encryptionDecryptionUtil.encryptObject(any(), any(), any())).thenAnswer(i -> i.getArgument(0));
@@ -145,7 +152,7 @@ public class ProfileSearchIncludeFlagsTest {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("uuid-123"))
-                .include(Arrays.asList("PROFILE", "ADDRESS", "DOCUMENT"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
                 .build();
 
         User user = createSampleUser("uuid-123");
@@ -219,20 +226,20 @@ public class ProfileSearchIncludeFlagsTest {
     }
 
     @Test
-    @DisplayName("Should support alias 'flags' when deserializing ProfileSearchRequest")
-    public void testDeserializationWithAliasFlags() throws Exception {
+    @DisplayName("Should support 'include' when deserializing ProfileSearchRequest")
+    public void testDeserializationWithInclude() throws Exception {
         String json = "{\n" +
                 "  \"tenantId\": \"pg.citya\",\n" +
                 "  \"uuid\": [\"uuid-123\"],\n" +
-                "  \"flags\": [\"PROFILE\", \"ADDRESS\"]\n" +
+                "  \"include\": [\"PROFILE\", \"ADDRESS\"]\n" +
                 "}";
 
         ProfileSearchRequest req = objectMapper.readValue(json, ProfileSearchRequest.class);
 
         assertNotNull(req.getInclude());
         assertEquals(2, req.getInclude().size());
-        assertTrue(req.getInclude().contains("PROFILE"));
-        assertTrue(req.getInclude().contains("ADDRESS"));
+        assertTrue(req.getInclude().contains(ProfileIncludeEntity.PROFILE));
+        assertTrue(req.getInclude().contains(ProfileIncludeEntity.ADDRESS));
 
         Set<ProfileIncludeEntity> resolved = profileService.resolveIncludes(req.getInclude());
         assertEquals(2, resolved.size());
@@ -241,30 +248,23 @@ public class ProfileSearchIncludeFlagsTest {
     }
 
     @Test
-    @DisplayName("Should reject unknown include value with HTTP 400 CustomException")
-    public void testResolveIncludesWithUnknownValueThrowsCustomException() {
-        List<String> rawIncludes = Arrays.asList("PROFILE", "FOO");
-
-        CustomException exception = assertThrows(CustomException.class, () -> profileService.resolveIncludes(rawIncludes));
+    @DisplayName("Should reject unknown include value in fromString with HTTP 400 CustomException")
+    public void testFromStringWithUnknownValueThrowsCustomException() {
+        CustomException exception = assertThrows(CustomException.class, () -> ProfileIncludeEntity.fromString("FOO"));
         assertEquals("INVALID_INCLUDE_ENTITY", exception.getCode());
         assertTrue(exception.getMessage().contains("FOO"));
     }
 
     @Test
-    @DisplayName("Should reject invalid include entities when resolving ProfileSearchRequest include")
-    public void testSearchWithInvalidIncludeEntity_ThrowsCustomException() throws Exception {
+    @DisplayName("Should reject invalid include entities during JSON deserialization")
+    public void testDeserializationWithInvalidIncludeEntity_ThrowsException() {
         String json = "{\n" +
                 "  \"tenantId\": \"pg.citya\",\n" +
                 "  \"uuid\": [\"uuid-123\"],\n" +
                 "  \"include\": [\"PROFILE\", \"INVALID_SECTION\"]\n" +
                 "}";
 
-        ProfileSearchRequest req = objectMapper.readValue(json, ProfileSearchRequest.class);
-        assertNotNull(req.getInclude());
-
-        CustomException ex = assertThrows(CustomException.class, () -> profileService.resolveIncludes(req.getInclude()));
-        assertEquals("INVALID_INCLUDE_ENTITY", ex.getCode());
-        assertTrue(ex.getMessage().contains("INVALID_SECTION"));
+        assertThrows(Exception.class, () -> objectMapper.readValue(json, ProfileSearchRequest.class));
     }
 
     @Test
@@ -273,7 +273,7 @@ public class ProfileSearchIncludeFlagsTest {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("another-citizen-uuid"))
-                .include(Arrays.asList("PROFILE", "ADDRESS", "DOCUMENT"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
                 .requestInfo(RequestInfo.builder()
                         .userInfo(org.egov.common.contract.request.User.builder()
                                 .uuid("logged-in-citizen-uuid")
@@ -323,5 +323,307 @@ public class ProfileSearchIncludeFlagsTest {
         // Existing clients (PT, TL, PGR, HRMS, UI) rely on null keys being present
         assertTrue(json.contains("\"emailId\":null"));
         assertTrue(json.contains("\"pan\":null"));
+    }
+
+    @Test
+    @DisplayName("Should execute batch enrichment in a single query avoiding N+1 problem for multiple users")
+    public void testBatchEnrichmentSolvesNPlusOneProblemForMultipleUsers() {
+        User u1 = createSampleUser("uuid-1").toBuilder().id(101L).build();
+        User u2 = createSampleUser("uuid-2").toBuilder().id(102L).name("User Two").build();
+        User u3 = createSampleUser("uuid-3").toBuilder().id(103L).name("User Three").build();
+
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Arrays.asList("uuid-1", "uuid-2", "uuid-3"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Arrays.asList(u1, u2, u3));
+
+        Address addr1 = Address.builder().id(201L).city("City 1").userUuid("uuid-1").build();
+        Address addr2 = Address.builder().id(202L).city("City 2").userUuid("uuid-2").build();
+        when(addressService.searchAddress(any(), any())).thenReturn(Arrays.asList(addr1, addr2));
+
+        UserDocument doc1 = UserDocument.builder().id("doc-1").documentType("IDENTITY_PROOF").userUuid("uuid-1").build();
+        UserDocument doc3 = UserDocument.builder().id("doc-3").documentType("ADDRESS_PROOF").userUuid("uuid-3").build();
+        when(userDocumentService.searchDocuments(any(), any())).thenReturn(Arrays.asList(doc1, doc3));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(3, results.size());
+
+        // Verify N+1 resolution: exactly 1 batch address search and 1 batch document search called (NOT 3)
+        verify(addressService, times(1)).searchAddress(any(AddressSearchCriteria.class), any());
+        verify(userDocumentService, times(1)).searchDocuments(any(UserDocumentSearchCriteria.class), any());
+
+        // Verify correct mapping per user
+        User res1 = results.stream().filter(u -> "uuid-1".equals(u.getUuid())).findFirst().orElse(null);
+        User res2 = results.stream().filter(u -> "uuid-2".equals(u.getUuid())).findFirst().orElse(null);
+        User res3 = results.stream().filter(u -> "uuid-3".equals(u.getUuid())).findFirst().orElse(null);
+
+        assertNotNull(res1);
+        assertNotNull(res1.getAddresses());
+        assertEquals(1, res1.getAddresses().size());
+        assertNotNull(res1.getDocuments());
+        assertEquals(1, res1.getDocuments().size());
+
+        assertNotNull(res2);
+        assertNotNull(res2.getAddresses());
+        assertEquals(1, res2.getAddresses().size());
+        assertNull(res2.getDocuments());
+
+        assertNotNull(res3);
+        assertNull(res3.getAddresses());
+        assertNotNull(res3.getDocuments());
+        assertEquals(1, res3.getDocuments().size());
+    }
+
+    @Test
+    @DisplayName("Should throw CustomException with proper error message when address enrichment fails")
+    public void testAddressEnrichmentFailureThrowsProperCustomException() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS))
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+
+        when(addressService.searchAddress(any(), any())).thenThrow(new RuntimeException("Database connection timeout"));
+
+        CustomException exception = assertThrows(CustomException.class, () -> profileService.searchProfile(request));
+        assertEquals("ADDRESS_ENRICHMENT_FAILED", exception.getCode());
+        assertTrue(exception.getMessage().contains("Failed to enrich address details"));
+        assertTrue(exception.getMessage().contains("Database connection timeout"));
+    }
+
+    @Test
+    @DisplayName("Should throw CustomException with proper error message when document enrichment fails")
+    public void testDocumentEnrichmentFailureThrowsProperCustomException() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.DOCUMENT))
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+
+        when(userDocumentService.searchDocuments(any(), any())).thenThrow(new RuntimeException("Filestore unavailable"));
+
+        CustomException exception = assertThrows(CustomException.class, () -> profileService.searchProfile(request));
+        assertEquals("DOCUMENT_ENRICHMENT_FAILED", exception.getCode());
+        assertTrue(exception.getMessage().contains("Failed to enrich document proofs"));
+        assertTrue(exception.getMessage().contains("Filestore unavailable"));
+    }
+
+    @Test
+    @DisplayName("Should return partial response with demographics and error details when address enrichment fails")
+    public void testPartialResponseWhenAddressEnrichmentFailsWithErrorsList() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS))
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+        when(addressService.searchAddress(any(), any())).thenThrow(new RuntimeException("Database connection timeout"));
+
+        List<org.egov.tracer.model.Error> errors = new ArrayList<>();
+        Set<ProfileIncludeEntity> includes = new HashSet<>(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS));
+
+        List<User> results = profileService.searchProfile(request, includes, errors);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals("uuid-123", results.get(0).getUuid());
+        assertNull(results.get(0).getAddresses());
+        assertEquals(1, errors.size());
+        assertEquals("ADDRESS_ENRICHMENT_FAILED", errors.get(0).getCode());
+        assertTrue(errors.get(0).getMessage().contains("Database connection timeout"));
+    }
+
+    @Test
+    @DisplayName("Should return partial response with demographics and error details when document enrichment fails")
+    public void testPartialResponseWhenDocumentEnrichmentFailsWithErrorsList() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.DOCUMENT))
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+        when(userDocumentService.searchDocuments(any(), any())).thenThrow(new RuntimeException("Filestore unavailable"));
+
+        List<org.egov.tracer.model.Error> errors = new ArrayList<>();
+        Set<ProfileIncludeEntity> includes = new HashSet<>(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.DOCUMENT));
+
+        List<User> results = profileService.searchProfile(request, includes, errors);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals("uuid-123", results.get(0).getUuid());
+        assertNull(results.get(0).getDocuments());
+        assertEquals(1, errors.size());
+        assertEquals("DOCUMENT_ENRICHMENT_FAILED", errors.get(0).getCode());
+        assertTrue(errors.get(0).getMessage().contains("Filestore unavailable"));
+    }
+
+    @Test
+    @DisplayName("Should return documents and record address error when address fails but document succeeds")
+    public void testAddressFailureDoesNotBlockDocumentEnrichment() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+        when(addressService.searchAddress(any(), any())).thenThrow(new RuntimeException("DB down"));
+
+        UserDocument doc = UserDocument.builder().id("10").userUuid("uuid-123").documentType("AADHAAR").build();
+        when(userDocumentService.searchDocuments(any(), any())).thenReturn(Collections.singletonList(doc));
+
+        List<org.egov.tracer.model.Error> errors = new ArrayList<>();
+        Set<ProfileIncludeEntity> includes = new HashSet<>(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT));
+
+        List<User> results = profileService.searchProfile(request, includes, errors);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertNull(results.get(0).getAddresses());
+        assertNotNull(results.get(0).getDocuments());
+        assertEquals(1, results.get(0).getDocuments().size());
+        assertEquals("AADHAAR", results.get(0).getDocuments().get(0).getDocumentType());
+
+        assertEquals(1, errors.size());
+        assertEquals("ADDRESS_ENRICHMENT_FAILED", errors.get(0).getCode());
+        assertTrue(errors.get(0).getMessage().contains("DB down"));
+    }
+
+    @Test
+    @DisplayName("Should only return active documents when active is true in ProfileSearchRequest")
+    public void testProfileSearch_WhenActiveIsTrue_EnrichesOnlyActiveDocuments() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.DOCUMENT))
+                .active(true)
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+
+        UserDocument docActive = UserDocument.builder().id("1").userUuid("uuid-123").documentType("DOB_PROOF").active(true).build();
+        UserDocument docInactive = UserDocument.builder().id("2").userUuid("uuid-123").documentType("DOB_PROOF").active(false).build();
+        when(userDocumentService.searchDocuments(any(), any())).thenReturn(Arrays.asList(docActive, docInactive));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertNotNull(results.get(0).getDocuments());
+        assertEquals(1, results.get(0).getDocuments().size());
+        assertEquals("1", results.get(0).getDocuments().get(0).getId());
+        assertEquals(Boolean.TRUE, results.get(0).getDocuments().get(0).getActive());
+    }
+
+    @Test
+    @DisplayName("Should only return active addresses when active is true in ProfileSearchRequest")
+    public void testProfileSearch_WhenActiveIsTrue_EnrichesOnlyActiveAddresses() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS))
+                .active(true)
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+
+        Address addrActive = Address.builder().id(201L).userUuid("uuid-123").city("Active City").status("active").build();
+        Address addrInactive = Address.builder().id(202L).userUuid("uuid-123").city("Inactive City").status("inactive").build();
+        when(addressService.searchAddress(any(), any())).thenReturn(Arrays.asList(addrActive, addrInactive));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertNotNull(results.get(0).getAddresses());
+        assertEquals(1, results.get(0).getAddresses().size());
+        Address resultAddr = results.get(0).getAddresses().iterator().next();
+        assertEquals(201L, resultAddr.getId());
+        assertEquals("active", resultAddr.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should only return active addresses and active documents when active is true in ProfileSearchRequest")
+    public void testProfileSearch_WhenActiveIsTrue_EnrichesOnlyActiveAddressesAndDocuments() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
+                .active(true)
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+
+        Address addrActive = Address.builder().id(201L).userUuid("uuid-123").city("Active City").status("active").build();
+        Address addrInactive = Address.builder().id(202L).userUuid("uuid-123").city("Inactive City").status("inactive").build();
+        when(addressService.searchAddress(any(), any())).thenReturn(Arrays.asList(addrActive, addrInactive));
+
+        UserDocument docActive = UserDocument.builder().id("1").userUuid("uuid-123").documentType("DOB_PROOF").active(true).build();
+        UserDocument docInactive = UserDocument.builder().id("2").userUuid("uuid-123").documentType("DOB_PROOF").active(false).build();
+        when(userDocumentService.searchDocuments(any(), any())).thenReturn(Arrays.asList(docActive, docInactive));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+
+        // Verify active-only addresses
+        assertNotNull(results.get(0).getAddresses());
+        assertEquals(1, results.get(0).getAddresses().size());
+        Address resultAddr = results.get(0).getAddresses().iterator().next();
+        assertEquals(201L, resultAddr.getId());
+        assertEquals("active", resultAddr.getStatus());
+
+        // Verify active-only documents
+        assertNotNull(results.get(0).getDocuments());
+        assertEquals(1, results.get(0).getDocuments().size());
+        UserDocument resultDoc = results.get(0).getDocuments().get(0);
+        assertEquals("1", resultDoc.getId());
+        assertEquals(Boolean.TRUE, resultDoc.getActive());
+    }
+
+    @Test
+    @DisplayName("Should enrich familyId dynamically from FamilyRestRepository when available")
+    public void testProfileSearch_EnrichesFamilyIdFromFamilyService() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(Collections.singletonList(ProfileIncludeEntity.PROFILE))
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+        when(familyRestRepository.getActiveFamilyIdsByUserUuids(anyList(), anyString(), any()))
+                .thenReturn(Collections.singletonMap("uuid-123", "FAM-2024-00123"));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals("FAM-2024-00123", results.get(0).getFamilyId());
+
+        // Verify mapping into UserSearchResponseContent
+        UserSearchResponseContent content = new UserSearchResponseContent(results.get(0), Collections.singleton(ProfileIncludeEntity.PROFILE));
+        assertEquals("FAM-2024-00123", content.getFamilyId());
     }
 }
