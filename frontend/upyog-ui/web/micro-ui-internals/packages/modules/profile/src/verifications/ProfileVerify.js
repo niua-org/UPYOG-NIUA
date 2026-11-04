@@ -108,8 +108,7 @@ const ProfileVerify = () => {
       }, 3000);
     } catch (err) {
       console.log("Error while verifying Profile:", err);
-
-      showError(t("PROFILE_VERIFICATION_FAILED"));
+      showError(err?.response?.data?.Errors?.[0]?.message || t("PROFILE_VERIFICATION_FAILED"));
       setOtp("");
       setVerifying(false);
     }
