@@ -69,7 +69,7 @@ public class Scheduler {
      *
      * <p>The process follows these steps:
      * <ol>
-     *   <li>Queries the repository for all garbage accounts with APPROVED, PENDING_FOR_PAYMENT, or PAID status.</li>
+     *   <li>Queries the repository for all garbage accounts with APPROVED status.</li>
      *   <li>Filters the accounts down to those that are due for billing on the given date using {@link #isBillingDue}.</li>
      *   <li>Iterates through the eligible accounts and delegates to {@link DemandService#generateDemand}.</li>
      *   <li>Accumulates the successful generation count and returns a summary message.</li>
@@ -83,17 +83,14 @@ public class Scheduler {
     private String process(LocalDate billingDate, RequestInfo requestInfo) {
 
         SearchCriteriaGarbageAccount criteria = SearchCriteriaGarbageAccount.builder()
-                .status(Arrays.asList(
-                        ServiceConstants.STATUS_APPROVED,
-                        ServiceConstants.STATUS_PENDING_FOR_PAYMENT,
-                        ServiceConstants.STATUS_PAID))
+                .status(List.of(ServiceConstants.STATUS_APPROVED))
                 .build();
 
         List<GarbageAccount> garbageAccounts =
                 garbageAccountRepository.searchV2(criteria);
 
         if (garbageAccounts.isEmpty()) {
-            return "No garbage accounts found with status APPROVED, PENDING_FOR_PAYMENT, or PAID";
+            return "No garbage accounts found with status APPROVED";
         }
 
         List<GarbageAccount> activeGarbageAccounts =

@@ -219,8 +219,10 @@ public class UserService {
             // Create new user if not found
             owner.setUserName(UUID.randomUUID().toString());
             userDetailResponse = createUser(requestInfo, owner);
+        } else {
+            // Update existing user if found
+            userDetailResponse = updateExistingUser(requestInfo, role, owner, existingUsersFromService.get(0));
         }
-//	        // Update existing user if found
 
         // Assign user UUID to the garbage account
         if (userDetailResponse != null && !CollectionUtils.isEmpty(userDetailResponse.getUser())
@@ -247,42 +249,6 @@ public class UserService {
     }
 
     /**
-     * Determines whether to update an existing user or create a new one based on a mobile number match.
-     *
-     * @param existingUsersFromService a list of currently known users from the user service
-     * @param requestInfo              the contextual information for the API request
-     * @param role                     the default role to ensure is assigned
-     * @param owner                    the target owner details
-     */
-
-    private void updateOrCreateUser(List<OwnerInfo> existingUsersFromService, RequestInfo requestInfo, Role role, OwnerInfo owner) {
-        String mobileNumber = owner.getMobileNumber();
-        List<OwnerInfo> existingUserWithMobile = findUserByMobile(existingUsersFromService, mobileNumber);
-
-        if (!existingUserWithMobile.isEmpty()) {
-            // Update existing user
-            updateExistingUser(requestInfo, role, owner, existingUserWithMobile.get(0));
-        } else {
-            // Create new user if not found
-            owner.setUserName(UUID.randomUUID().toString());
-            createUser(requestInfo, owner);
-        }
-    }
-
-
-    /**
-     * Filters a list of users to find one matching the given mobile number.
-     *
-     * @param users        the list of users to search
-     * @param mobileNumber the target mobile number
-     * @return a list containing the matched users
-     */
-
-    private List<OwnerInfo> findUserByMobile(List<OwnerInfo> users, String mobileNumber) {
-        return users.stream().filter(user -> mobileNumber.equals(user.getMobileNumber())).collect(Collectors.toList());
-    }
-
-    /**
      * Updates an existing user record with fresh owner details.
      *
      * @param requestInfo         the contextual information for the API request
@@ -291,7 +257,6 @@ public class UserService {
      * @param ownerInfoFromSearch the existing user details from the database
      * @return a {@link UserDetailResponse} containing the updated user details
      */
-
     private UserDetailResponse updateExistingUser(RequestInfo requestInfo, Role role, OwnerInfo ownerFromRequest,
                                                   OwnerInfo ownerInfoFromSearch) {
 
@@ -482,20 +447,6 @@ public class UserService {
     private Role getCitizenRole() {
 
         return Role.builder().code("CITIZEN").name("Citizen").build();
-    }
-
-    /**
-     * Executes a user search and directly returns the list of matching owner records.
-     *
-     * @param userSearchRequest the search criteria
-     * @return a {@link List} of {@link OwnerInfo} matching the criteria
-     */
-
-    public List<OwnerInfo> userSearch(UserSearchRequest userSearchRequest) {
-
-        StringBuilder uri = new StringBuilder(grbgConfig.getUserServiceHostUrl())
-                .append(grbgConfig.getUserSearchEndpoint());
-        return userCall(userSearchRequest, uri).getUser();
     }
 
 }

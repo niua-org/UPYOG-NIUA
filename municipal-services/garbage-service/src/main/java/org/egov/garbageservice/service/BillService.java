@@ -40,33 +40,5 @@ public class BillService {
         return billResponse;
     }
 
-    /**
-     * Searches the bills from DB for given criteria and enriches them with TaxAndPayments array
-     *
-     * @param requestInfo
-     * @return
-     */
-    public BillResponse searchBill(BillSearchCriteria billSearchCriteria, RequestInfo requestInfo) {
-        List<Bill> bills = billRepository.searchBill(billSearchCriteria, requestInfo);
-        return BillResponse.builder().resposneInfo(responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true))
-                .bill(bills).build();
-    }
-
-
-
-    /**
-     * Updates an existing bill record through the billing repository.
-     *
-     * <p>This ensures that any modifications to the underlying demands (such as partial
-     * payments or applied penalties) are properly reflected in the billing subsystem.
-     *
-     * @param requestInfo the contextual information for the API request
-     * @param bills       the updated {@link Bill} list to be saved
-     */
-
-    public void updateBill(RequestInfo requestInfo, List<Bill> bills) {
-        billRepository.updateBill(requestInfo, bills);
-    }
-
 
 }

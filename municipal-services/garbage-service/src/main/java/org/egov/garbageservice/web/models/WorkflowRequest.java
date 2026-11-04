@@ -1,6 +1,7 @@
 package org.egov.garbageservice.web.models;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,8 +21,17 @@ import java.util.List;
  */
 public class WorkflowRequest {
 
+    @JsonProperty("action")
     @CustomSafeHtml
     private String action;
 
+    @JsonProperty("comments")
+    @CustomSafeHtml
+    private String comments;
+
+    @JsonProperty("assignes")
+    private List<String> assignes;
+
+    @JsonProperty("documents")
     private List<GrbgDocument> documents;
 }
