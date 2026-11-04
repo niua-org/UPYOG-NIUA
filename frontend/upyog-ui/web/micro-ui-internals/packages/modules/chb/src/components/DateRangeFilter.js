@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { DateRangePicker } from "react-date-range";
-import { differenceInCalendarDays, addMonths, format} from "date-fns";
+import { differenceInCalendarDays, addMonths, format, addDays } from "date-fns";
 import { Calender } from "@nudmcdgnpm/digit-ui-react-components";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -38,8 +38,8 @@ const DateRangeFilter = ({
   const [open, setOpen] = useState(false);
 
   const [selection, setSelection] = useState({
-    startDate: value?.startDate || new Date(),
-    endDate: value?.endDate || new Date(),
+    startDate: value?.startDate || addDays(new Date(), 1),
+    endDate: value?.endDate || addDays(new Date(), 1),
     key: "selection",
   });
 
@@ -109,28 +109,15 @@ const DateRangeFilter = ({
 
   return (
     <div
-        className="employee-select-wrap"
+        className="employee-select-wrap chb-date-range-filter-wrapper"
         ref={wrapperRef}
-        style={{
-            position: "relative",
-        }}
     >
     <div
-        className="select"
+        className="select chb-date-range-filter-clickable"
         onClick={() => setOpen(!open)}
-        style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            cursor: "pointer",
-            width: "50%",
-        }}
         >
         <span
-            className="employee-select-wrap--elipses"
-            style={{
-            color: value?.title ? "#0B0C0C" : "#98A2B3",
-            }}
+            className={`employee-select-wrap--elipses ${value?.title ? "text-dark" : "text-muted"}`}
         >
             {value?.title || t("CHB_SELECT_DATES")}
         </span>
@@ -140,11 +127,7 @@ const DateRangeFilter = ({
 
       {open && (
         <div
-          className="options-card"
-          style={{
-            position: "absolute",
-            zIndex: 1000,
-          }}
+          className="options-card chb-date-range-filter-wrapper-2"
         >
           <DateRangePicker
             ranges={[selection]}
@@ -152,7 +135,7 @@ const DateRangeFilter = ({
             moveRangeOnFirstSelection={false}
             retainEndDateOnFirstSelection={true}
             editableDateInputs={false}
-            minDate={new Date()}
+            minDate={addDays(new Date(), 1)}
             maxDate={addMonths(new Date(), 3)}
             staticRanges={[]} // Remove predefined ranges like "Yesterday", "Last 7 Days", etc.
             inputRanges={[]}

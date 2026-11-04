@@ -46,7 +46,7 @@ const GCApplication = ({ application, tenantId }) => {
   };
 
   return (
-    <Card style={{ marginTop: "16px" }}>
+    <Card className="gc-gc-application-card">
       <KeyNote keyValue={t("GC_APPLICATION_NUMBER_LABEL")} note={appNo || t("CS_NA")} />
       <KeyNote keyValue={t("GC_NAME")} note={name || t("CS_NA")} />
       <KeyNote keyValue={t("GC_MOBILE_NUMBER")} note={mobileNumber || t("CS_NA")} />

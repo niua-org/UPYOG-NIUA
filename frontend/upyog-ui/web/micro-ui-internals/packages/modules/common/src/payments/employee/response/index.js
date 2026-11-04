@@ -764,9 +764,9 @@ export const SuccessfulPayment = (props) => {
         <Banner message={getMessage()} info={t("PAYMENT_LOCALIZATION_RECIEPT_NO")} applicationNumber={receiptNumber} successful={true} />
         <CardText>{getCardText()}</CardText>
         {generatePdfKey ? (
-          <div style={{ display: "flex" }}>
+          <div className="cmn-index-flex-container">
             {!CUSTOM_BUSINESS_SERVICES.includes(businessService) && (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px" }} onClick={IsDisconnectionFlow === "true" ? printDisconnectionRecipet : printReciept}>
+              <div className="primary-label-btn d-grid cmn-index-spacing" onClick={IsDisconnectionFlow === "true" ? printDisconnectionRecipet : printReciept}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                   <path d="M0 0h24v24H0z" fill="none" />
                   <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" />
@@ -774,7 +774,7 @@ export const SuccessfulPayment = (props) => {
                 {t("CS_COMMON_PRINT_RECEIPT")}
               </div>)}
             {businessService == "TL" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset" }} onClick={printCertificate}>
+              <div className="primary-label-btn d-grid cmn-index-spacing-2" onClick={printCertificate}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                   <path d="M0 0h24v24H0z" fill="none" />
                   <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" />
@@ -784,8 +784,7 @@ export const SuccessfulPayment = (props) => {
             ) : null}
             {data?.[0]?.businessService === "BPA_OC" && (data?.[0]?.status === "APPROVED" || data?.[0]?.status === "PENDING_SANC_FEE_PAYMENT") ? (
               <div
-                className="primary-label-btn d-grid"
-                style={{ marginLeft: "unset" }}
+                className="primary-label-btn d-grid cmn-index-spacing-2"
                 onClick={(e) => getPermitOccupancyOrderSearch("occupancy-certificate")}
               >
                 <DownloadPrefixIcon />
@@ -793,7 +792,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "sv-services" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={printReciept}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={printReciept}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -802,7 +801,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "sv-services" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={svCertificate}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={svCertificate}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -811,7 +810,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "sv-services" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={svIdCard}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={svIdCard}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -820,7 +819,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "pet-services" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={printReciept}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={printReciept}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -829,7 +828,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "pet-services" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={petCertificate}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={petCertificate}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -838,7 +837,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "chb-services" ? (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '20px', marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}>
+              <div className="cmn-index-flex-row">
                 <div className="primary-label-btn d-grid" onClick={printCHBReceipt}>
                   <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                     <path d="M0 0h24v24H0z" fill="none" />
@@ -856,7 +855,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "adv-services" ? (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '20px', marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}>
+              <div className="cmn-index-flex-row">
                 <div className="primary-label-btn d-grid" onClick={printADSReceipt}>
                   <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                     <path d="M0 0h24v24H0z" fill="none" />
@@ -874,7 +873,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "request-service.water_tanker" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={printWTReceipt}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={printWTReceipt}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -883,7 +882,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "request-service.mobile_toilet" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={printMTReceipt}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={printMTReceipt}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -892,7 +891,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "request-service.tree_pruning" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={printTPReceipt}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={printTPReceipt}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -901,7 +900,7 @@ export const SuccessfulPayment = (props) => {
               </div>
             ) : null}
             {businessService == "NDC" ? (
-              <div className="primary-label-btn d-grid" style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }} onClick={printNDCReceipt}>
+              <div className="primary-label-btn d-grid cmn-index-top-spacing-2" onClick={printNDCReceipt}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#a82227">
                   <path d="M0 0h24v24H0V0z" fill="none" />
                   <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" />
@@ -912,8 +911,7 @@ export const SuccessfulPayment = (props) => {
             {/* Estate Management Fee Receipt Action */}
             {businessService === BUSINESS_SERVICES.EST ? (
               <div
-                className="primary-label-btn d-grid"
-                style={{ marginLeft: "unset", marginRight: "20px", marginTop: "15px", marginBottom: "15px" }}
+                className="primary-label-btn d-grid cmn-index-top-spacing-2"
                 onClick={printESTReceipt}
               >
                 <DownloadPrefixIcon />
@@ -937,8 +935,7 @@ export const SuccessfulPayment = (props) => {
 
             {data?.[0]?.businessService === "BPA_LOW" ? (
               <div
-                className="primary-label-btn d-grid"
-                style={{ marginLeft: "unset" }}
+                className="primary-label-btn d-grid cmn-index-spacing-2"
                 onClick={(r) => getPermitOccupancyOrderSearch("buildingpermit-low")}
               >
                 <DownloadPrefixIcon />
@@ -950,8 +947,7 @@ export const SuccessfulPayment = (props) => {
               data?.[0]?.businessService !== "BPA_OC" &&
               (data?.[0]?.status === "PENDING_SANC_FEE_PAYMENT" || data?.[0]?.status === "APPROVED") ? (
               <div
-                className="primary-label-btn d-grid"
-                style={{ marginLeft: "unset" }}
+                className="primary-label-btn d-grid cmn-index-spacing-2"
                 onClick={(r) => getPermitOccupancyOrderSearch("buildingpermit")}
               >
                 <DownloadPrefixIcon />
@@ -962,12 +958,12 @@ export const SuccessfulPayment = (props) => {
         ) : null}
       </Card>
       {checkFSMResponse ? (
-        <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+        <ActionBar className="cmn-index-flex-row-3">
           {displayMenu ? <Menu localeKeyPrefix={"ES_COMMON"} options={ACTIONS} t={t} onSelect={onActionSelect} /> : null}
           <SubmitBar label={t("ES_COMMON_TAKE_ACTION")} onSubmit={() => setDisplayMenu(!displayMenu)} />
         </ActionBar>
       ) : (
-        <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+        <ActionBar className="cmn-index-flex-row-3">
           <Link to="/upyog-ui/employee">
             <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
           </Link>
@@ -990,7 +986,7 @@ export const FailedPayment = (props) => {
         <Banner message={getMessage()} complaintNumber={consumerCode} successful={false} />
         <CardText>{t("ES_PAYMENT_FAILED_DETAILS")}</CardText>
       </Card>
-      <ActionBar style={{ display: "flex", justifyContent: "flex-end", alignItems: "baseline" }}>
+      <ActionBar className="cmn-index-flex-row-3">
         <Link to="/upyog-ui/employee">
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>
