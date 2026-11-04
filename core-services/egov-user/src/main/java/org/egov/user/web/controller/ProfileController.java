@@ -17,6 +17,7 @@ import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarEkycMarkVerifiedRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -25,13 +26,18 @@ import org.egov.user.web.contract.profile.ProfileResponse;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.egov.tracer.model.CustomException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.egov.tracer.http.HttpUtils.isInterServiceCall;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -301,6 +307,27 @@ public class ProfileController {
             @ApiResponse(responseCode = "401", description = "Unauthorized caller context"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    /**
+     * Inter-service endpoint invoked after requester-services-dx Aadhaar OTP verification to persist verified identity.
+     *
+     * @param request inter-service mark-verified payload
+     * @param headers HTTP headers used to validate inter-service origin
+     * @return empty OK response
+     */
+    @PostMapping("/aadhaar/_markVerifiedAfterEkyc")
+    public ResponseEntity<Void> markVerifiedAfterEkyc(@RequestBody @Valid AadhaarEkycMarkVerifiedRequest request,
+                                                      @RequestHeader HttpHeaders headers) {
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, "Inter-service call required");
+        }
+        profileService.markCitizenVerifiedAfterAadhaarEkyc(
+                request.getUserUuid(),
+                request.getAadhaarNumber(),
+                request.getTenantId(),
+                request.getRequestInfo());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping("/aadhaar/_verifyProfile")
     public ResponseEntity<AadhaarCitizenVerifyResponse> verifyProfileWithAadhaar(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
         log.info("[PROFILE-CONTROLLER] Received profile Aadhaar verification request. refId: {}, aadhaar: {}",

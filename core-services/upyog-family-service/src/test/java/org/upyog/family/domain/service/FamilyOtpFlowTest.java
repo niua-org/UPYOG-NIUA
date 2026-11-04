@@ -166,7 +166,7 @@ class FamilyOtpFlowTest {
                 .thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByUuids(eq(Collections.singletonList("head-uuid-1")), any()))
                 .thenReturn(Collections.singletonMap("head-uuid-1", headProfile));
-        when(otpClient.validateOtp(eq("9876543210"), eq("123456"), eq("pg.citya"), any()))
+        when(otpClient.validateOtp(eq("9876543210"), eq("123456"), eq("pg.citya"), eq("REF-OTP-9988"), any()))
                 .thenReturn(true);
 
         FamilyOtpVerifyRequest request = FamilyOtpVerifyRequest.builder()
@@ -196,7 +196,7 @@ class FamilyOtpFlowTest {
                 .thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByUuids(eq(Collections.singletonList("head-uuid-1")), any()))
                 .thenReturn(Collections.singletonMap("head-uuid-1", headProfile));
-        when(otpClient.validateOtp(eq("9876543210"), eq("000000"), eq("pg.citya"), any()))
+        when(otpClient.validateOtp(eq("9876543210"), eq("000000"), eq("pg.citya"), eq("REF-OTP-9988"), any()))
                 .thenReturn(false);
 
         FamilyOtpVerifyRequest request = FamilyOtpVerifyRequest.builder()

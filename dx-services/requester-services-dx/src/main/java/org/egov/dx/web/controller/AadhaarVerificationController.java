@@ -302,12 +302,14 @@ public class AadhaarVerificationController {
             existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
                     searchAadhaar, tenantId, request.getRequestInfo());
         }
-        if (StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(request.getUserUuid())) {
-            existingUserUuid = request.getUserUuid();
-        }
         if (StringUtils.isBlank(existingUserUuid) && userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
                     searchAadhaar, demographics, tenantId, request.getRequestInfo());
+        }
+
+        if (StringUtils.isNotBlank(existingUserUuid) && userRegistryService != null) {
+            userRegistryService.markCitizenAadhaarVerifiedAfterEkyc(
+                    existingUserUuid, searchAadhaar, tenantId, request.getRequestInfo());
         }
 
         ResponseInfo successResponseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);

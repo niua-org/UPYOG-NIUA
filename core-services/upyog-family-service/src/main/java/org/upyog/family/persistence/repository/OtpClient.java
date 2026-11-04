@@ -26,8 +26,9 @@ public interface OtpClient {
      * @param mobileNumber the recipient citizen mobile number
      * @param otp          the OTP code submitted by the applicant
      * @param tenantId     the tenant identifier
+     * @param referenceId  OTP reference identifier returned from {@link #sendOtp}
      * @param requestInfo  UPYOG request context envelope
      * @return true if the OTP is valid and matches; false otherwise
      */
-    boolean validateOtp(String mobileNumber, String otp, String tenantId, RequestInfo requestInfo);
+    boolean validateOtp(String mobileNumber, String otp, String tenantId, String referenceId, RequestInfo requestInfo);
 }

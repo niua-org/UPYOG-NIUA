@@ -477,6 +477,10 @@ public class UserService {
     public User createUser(User user, RequestInfo requestInfo) {
         validateMobileAndAccountRules(user);
 
+        user.setIsIdentityVerified(Boolean.FALSE);
+        user.setIdentityVerifiedDate(null);
+        user.setIdentityVerifiedSource(null);
+
         user.setUuid(UUID.randomUUID().toString());
         user.validateNewUser(createUserValidateName);
         conditionallyValidateOtp(user);

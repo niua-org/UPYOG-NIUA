@@ -162,8 +162,6 @@ public class UserController {
         if (StringUtils.isBlank(user.getUsername())) {
             if (StringUtils.isNotBlank(user.getMobileNumber())) {
                 user.setUsername(user.getMobileNumber());
-            } else if (StringUtils.isNotBlank(user.getAadhaarNumber())) {
-                user.setUsername(UserConstants.AADHAAR_USERNAME_PREFIX + user.getAadhaarNumber().replaceAll("\\D", ""));
             } else {
                 user.setUsername(UserConstants.CITIZEN_USERNAME_PREFIX + UUID.randomUUID().toString().substring(0, 8));
             }

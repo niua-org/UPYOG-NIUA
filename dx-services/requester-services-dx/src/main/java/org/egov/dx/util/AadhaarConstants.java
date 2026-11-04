@@ -97,4 +97,5 @@ public final class AadhaarConstants {
     public static final String ROLE_CITIZEN_NAME = "Citizen";
     public static final String IDENTITY_SOURCE_AADHAAR = "AADHAAR";
     public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
+    public static final String CITIZEN_USERNAME_PREFIX = "CITIZEN_";
 }

@@ -1,19 +1,17 @@
 package org.upyog.family.persistence.repository;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 import org.upyog.family.config.FamilyConfiguration;
+import org.upyog.family.domain.service.FamilyOtpSessionRegistry;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.KafkaProducer;
 import org.upyog.family.util.MaskUtils;
@@ -23,7 +21,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Implementation of OtpClient connecting to UPYOG egov-otp service for OTP creation and validation.
+ * Implementation of {@link OtpClient} connecting to UPYOG egov-otp for OTP creation and validation,
+ * with reference-bound sessions, attempt limits, and mock-mode support.
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -36,21 +35,16 @@ public class OtpClientImpl implements OtpClient {
     private final RestTemplate restTemplate;
     private final FamilyConfiguration configuration;
     private final KafkaProducer kafkaProducer;
-    private final ObjectMapper objectMapper;
+    private final FamilyOtpSessionRegistry sessionRegistry;
 
     /**
-     * Dispatches a one-time password (OTP) to the specified citizen mobile number via egov-otp or mock gateway.
-     *
-     * @param mobileNumber recipient's 10-digit mobile number
-     * @param tenantId tenant identifier representing the city/state jurisdiction
-     * @param requestInfo UPYOG request context envelope
-     * @return transaction or reference identifier for the dispatched OTP
-     * @throws CustomException if OTP generation fails
+     * {@inheritDoc}
      */
     @Override
     @SuppressWarnings("unchecked")
     public String sendOtp(String mobileNumber, String tenantId, RequestInfo requestInfo) {
-        log.info("[UPYOG-OTP-CLIENT] Initiating OTP dispatch to mobile: {}, tenant: {}", MaskUtils.maskMobile(mobileNumber), tenantId);
+        log.info("[UPYOG-OTP-CLIENT] Initiating OTP dispatch to mobile: {}, tenant: {}",
+                MaskUtils.maskMobile(mobileNumber), tenantId);
 
         String otpHost = configuration.getOtpHost();
         String otpCreatePath = configuration.getOtpCreatePath();
@@ -79,14 +73,13 @@ public class OtpClientImpl implements OtpClient {
                     String uuid = (String) (otpMap.containsKey("UUID") ? otpMap.get("UUID") : otpMap.get("uuid"));
                     String otpVal = otpMap.get("otp") != null ? String.valueOf(otpMap.get("otp")) : null;
 
-                    // If OTP value is blank, gateway failed to create OTP - fail fast rather than reporting false success
                     if (StringUtils.isBlank(otpVal)) {
-                        log.error("[UPYOG-OTP-CLIENT] Blank OTP value returned from egov-otp for reference UUID: {}", MaskUtils.maskIdentifier(uuid));
+                        log.error("[UPYOG-OTP-CLIENT] Blank OTP value returned from egov-otp for reference UUID: {}",
+                                MaskUtils.maskIdentifier(uuid));
                         throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
                                 "Failed to generate valid OTP code from OTP service.");
                     }
 
-                    // Publish SMS notification using configurable message template
                     if (StringUtils.isNotBlank(configuration.getSmsNotifTopic())) {
                         Map<String, Object> smsPayload = new HashMap<>();
                         smsPayload.put("mobileNumber", mobileNumber);
@@ -99,7 +92,9 @@ public class OtpClientImpl implements OtpClient {
                     }
 
                     if (StringUtils.isNotBlank(uuid)) {
-                        log.info("[UPYOG-OTP-CLIENT] Successfully generated OTP with reference UUID: {}", MaskUtils.maskIdentifier(uuid));
+                        registerSession(uuid, mobileNumber, tenantId);
+                        log.info("[UPYOG-OTP-CLIENT] Successfully generated OTP with reference UUID: {}",
+                                MaskUtils.maskIdentifier(uuid));
                         return uuid;
                     }
                 }
@@ -116,6 +111,7 @@ public class OtpClientImpl implements OtpClient {
 
         if (Boolean.TRUE.equals(configuration.getMockConsentEnabled())) {
             String mockReference = "FAM-OTP-REF-" + UUID.randomUUID().toString().substring(0, 8);
+            registerSession(mockReference, mobileNumber, tenantId);
             log.info("[UPYOG-OTP-CLIENT] Mock consent enabled. Generated mock OTP reference: {} for mobile: {}",
                     MaskUtils.maskIdentifier(mockReference), MaskUtils.maskMobile(mobileNumber));
             return mockReference;
@@ -125,33 +121,63 @@ public class OtpClientImpl implements OtpClient {
     }
 
     /**
-     * Validates an OTP entered by the citizen against egov-otp service or mock gateway.
-     *
-     * @param mobileNumber recipient's 10-digit mobile number
-     * @param otp the one-time password code entered by user
-     * @param tenantId tenant identifier
-     * @param requestInfo UPYOG request context envelope
-     * @return true if OTP is valid, false otherwise
+     * {@inheritDoc}
      */
     @Override
     @SuppressWarnings("unchecked")
-    public boolean validateOtp(String mobileNumber, String otp, String tenantId, RequestInfo requestInfo) {
-        log.info("[UPYOG-OTP-CLIENT] Validating OTP for mobile: {}, tenant: {}", MaskUtils.maskMobile(mobileNumber), tenantId);
+    public boolean validateOtp(String mobileNumber, String otp, String tenantId, String referenceId, RequestInfo requestInfo) {
+        log.info("[UPYOG-OTP-CLIENT] Validating OTP for mobile: {}, tenant: {}, referenceId: {}",
+                MaskUtils.maskMobile(mobileNumber), tenantId, MaskUtils.maskIdentifier(referenceId));
 
-        if (StringUtils.isBlank(otp)) {
+        if (StringUtils.isBlank(otp) || StringUtils.isBlank(referenceId)) {
             return false;
         }
 
-        // Check mock consent bypass - strictly gated by mockConsentEnabled=true AND configured mockFixedOtp
+        FamilyOtpSessionRegistry.OtpChallenge challenge =
+                sessionRegistry.resolveActiveChallenge(referenceId, mobileNumber, tenantId);
+        if (challenge == null) {
+            log.warn("[UPYOG-OTP-CLIENT] No active OTP session for referenceId: {}", MaskUtils.maskIdentifier(referenceId));
+            return false;
+        }
+
+        boolean otpAccepted = false;
+
         if (Boolean.TRUE.equals(configuration.getMockConsentEnabled())) {
             String configuredFixedOtp = configuration.getMockFixedOtp();
             if (StringUtils.isNotBlank(configuredFixedOtp) && configuredFixedOtp.trim().equals(otp.trim())) {
-                log.info("[UPYOG-OTP-CLIENT] Mock consent enabled. Accepted configured fixed OTP for mobile: {}",
-                        MaskUtils.maskMobile(mobileNumber));
-                return true;
+                log.info("[UPYOG-OTP-CLIENT] Mock consent enabled. Accepted configured fixed OTP for referenceId: {}",
+                        MaskUtils.maskIdentifier(referenceId));
+                otpAccepted = true;
             }
+        } else {
+            otpAccepted = validateWithEgovOtp(mobileNumber, otp, tenantId, requestInfo);
         }
 
+        if (!otpAccepted) {
+            challenge.recordFailedAttempt();
+            if (challenge.isExhausted()) {
+                log.warn("[UPYOG-OTP-CLIENT] OTP reference {} exhausted max attempts ({}). Invalidating session.",
+                        MaskUtils.maskIdentifier(referenceId), configuration.getFamilyOtpVerifyMaxAttempts());
+                sessionRegistry.invalidate(referenceId);
+            }
+            return false;
+        }
+
+        sessionRegistry.consume(challenge);
+        return true;
+    }
+
+    private void registerSession(String referenceId, String mobileNumber, String tenantId) {
+        sessionRegistry.register(
+                referenceId,
+                mobileNumber,
+                tenantId,
+                configuration.getFamilyOtpReferenceTtlMs(),
+                configuration.getFamilyOtpVerifyMaxAttempts());
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean validateWithEgovOtp(String mobileNumber, String otp, String tenantId, RequestInfo requestInfo) {
         String otpHost = configuration.getOtpHost();
         String otpValidatePath = configuration.getOtpValidatePath();
         String url = otpHost + otpValidatePath;
