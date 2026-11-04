@@ -145,8 +145,20 @@ def chat():
         logger.info(f"Query: '{user_input}' | Lang: {user_language} | Script: {detected_script}")
         logger.info(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-        # 6. Hard-block check for out-of-domain topics
-        if is_hard_blocked(user_input):
+        # 6. Hard-block check for out-of-domain topics (only when NOT actively filling a workflow form)
+        phone = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
+        config = {"configurable": {"thread_id": phone}}
+        has_active_wf = False
+        for wf_name, graph in workflows.items():
+            st = graph.get_state(config)
+            if st and st.values and st.values.get("messages"):
+                draft_key = "draft_booking" if wf_name == "adv_booking" else "draft_grievance"
+                draft = st.values.get(draft_key) or {}
+                if not draft.get("_cancelled"):
+                    has_active_wf = True
+                    break
+
+        if not has_active_wf and is_hard_blocked(user_input):
             logger.info(f"[CHAT FLOW] Query hard-blocked for out-of-domain topic.")
             sys_blocked = _SYSTEM_CONFIG.get("system_messages", {}).get("blocked", {})
             msg = (sys_blocked.get("response_hi", "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।")

@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Dict, Any, List, Optional
 import os
 import yaml
@@ -384,6 +385,72 @@ def extraction_node(state: AdvBookingState):
             field["id"] for field in extractable_fields
             if field["id"] in missing_fields
         ]
+
+    # Helper function to match an input string deterministically against a list of options
+    def _match_option(user_text: str, options_list: list) -> Optional[str]:
+        if not options_list or not user_text:
+            return None
+        clean_t = user_text.strip().lower()
+        norm_t = re.sub(r'[\s_]+', '', clean_t)
+        
+        # Check digit / option index match (e.g. "1", "Option 1")
+        idx_match = re.match(r'^(?:option\s*)?(\d+)$', clean_t)
+        if idx_match:
+            idx = int(idx_match.group(1)) - 1
+            if 0 <= idx < len(options_list):
+                return options_list[idx]
+                
+        # Check exact text or normalized match
+        for opt in options_list:
+            clean_opt = str(opt).strip().lower()
+            if clean_t == clean_opt or norm_t == re.sub(r'[\s_]+', '', clean_opt):
+                return opt
+                
+        # Substring match if user typed a short answer matching an option
+        for opt in options_list:
+            clean_opt = str(opt).strip().lower()
+            norm_opt = re.sub(r'[\s_]+', '', clean_opt)
+            if (norm_opt in norm_t or norm_t in norm_opt) and len(clean_t.split()) <= 4:
+                return opt
+        return None
+
+    # Deterministic fast-path extraction for the active or missing fields
+    next_step = get_next_step(draft_booking)
+    curr_field = next_step.get("id") if next_step else None
+    ui_clean = user_msg.strip().lower()
+    cleaned_input = re.sub(r'^\d+[\.\)]\s*', '', user_msg).strip()
+
+    did_fast_extract = False
+    if curr_field and curr_field in llm_extractable_fields:
+        field_def = next((item for item in FORM_FIELDS if item["id"] == curr_field), None)
+        if field_def and field_def.get("mdms"):
+            opts = _mdms_get(*field_def["mdms"])
+            matched = _match_option(cleaned_input, opts)
+            if matched:
+                draft_booking[curr_field] = matched
+                did_fast_extract = True
+                logger.info(f"[extract_node] Fast-path exact option match for {curr_field}: {matched}")
+        elif curr_field == "nightLight":
+            if ui_clean in ["yes", "haan", "ha", "y", "true", "required", "need", "yes please", "ji haan"]:
+                draft_booking["nightLight"] = "Yes"
+                did_fast_extract = True
+                logger.info("[extract_node] Fast-path match for nightLight: Yes")
+            elif ui_clean in ["no", "nahi", "nahin", "n", "false", "not required", "none", "no thanks", "ji nahi"]:
+                draft_booking["nightLight"] = "No"
+                did_fast_extract = True
+                logger.info("[extract_node] Fast-path match for nightLight: No")
+        elif curr_field in ["start_date", "end_date"]:
+            if re.match(r'^\d{4}-\d{2}-\d{2}$', user_msg.strip()):
+                draft_booking[curr_field] = user_msg.strip()
+                did_fast_extract = True
+                logger.info(f"[extract_node] Fast-path date match for {curr_field}: {user_msg.strip()}")
+
+    # Recalculate remaining missing fields
+    if not is_edit_query and not draft_booking.get("_awaiting_confirm"):
+        llm_extractable_fields = [
+            f for f in llm_extractable_fields
+            if not draft_booking.get(f)
+        ]
     
     if user_msg and llm_extractable_fields and llm:
         schema_hints = {}
@@ -433,6 +500,24 @@ def extraction_node(state: AdvBookingState):
                     logger.info(f"[extract_node] {field} = {val}")
         except Exception as e:
             logger.error(f"Extraction error: {e}")
+            # Robust error recovery: match against options for missing fields during LLM failure
+            for f in llm_extractable_fields:
+                if draft_booking.get(f):
+                    continue
+                f_def = next((item for item in FORM_FIELDS if item["id"] == f), None)
+                if f_def and f_def.get("mdms"):
+                    f_opts = _mdms_get(*f_def["mdms"])
+                    fb_match = _match_option(user_msg, f_opts)
+                    if fb_match:
+                        draft_booking[f] = fb_match
+                        logger.info(f"[extract_node fallback] Recovered {f} = {fb_match} during error")
+                elif f == "nightLight":
+                    if any(w in ui_clean for w in ["yes", "haan", "ha", "true"]):
+                        draft_booking["nightLight"] = "Yes"
+                        logger.info("[extract_node fallback] Recovered nightLight = Yes during error")
+                    elif any(w in ui_clean for w in ["no", "nahi", "nahin", "false"]):
+                        draft_booking["nightLight"] = "No"
+                        logger.info("[extract_node fallback] Recovered nightLight = No during error")
             
     # Date constraint enforcement: bookings cannot start today or in the past
     from datetime import datetime, timedelta

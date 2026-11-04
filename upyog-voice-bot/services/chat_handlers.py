@@ -406,10 +406,14 @@ def is_informational_question(
         return True
 
     sys_msgs = (system_config or {}).get("system_messages") or _SYSTEM_MESSAGES or {}
-    starters = sys_msgs.get("faq_question", {}).get("question_starters")
+    starters = (sys_msgs.get("faq_question") or {}).get("question_starters") or [
+        "what", "how", "why", "when", "where", "who", "which", "whose", "whom",
+        "can i", "could you", "tell me", "explain", "meaning",
+        "kya", "kaise", "kab", "kahan", "kyun", "kis", "batao", "bataiye"
+    ]
 
     clean_in = user_input.strip().lower()
-    return any(clean_in.startswith(q.lower()) for q in starters)
+    return any(clean_in == q.lower() or clean_in.startswith(f"{q.lower()} ") for q in starters)
 
 
 def resolve_active_and_target_plugin(
@@ -701,8 +705,29 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
         return True, {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
 
     if intent == "end_conversation":
+        goodbye_kws = ["bye", "goodbye", "exit", "quit", "tata", "alvida", "see you", "done for now", "close", "band karo"]
+        clean_in = user_input.strip().lower()
+        is_explicit_goodbye = any(re.search(rf'\b{re.escape(w)}\b', clean_in) for w in goodbye_kws)
+
+        # If citizen is inside an active workflow and did NOT say an explicit goodbye, do NOT abort the form
+        if active_plugin and not is_explicit_goodbye:
+            return False, None
+
+        # Auto-save active draft before exiting if citizen says an explicit goodbye
+        if active_plugin and active_plugin in workflows:
+            state = workflows[active_plugin].get_state(config)
+            if state and state.values:
+                draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
+                draft = state.values.get(draft_key) or {}
+                if draft and any(v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""):
+                    MemoryManager.save_draft_state(phone, active_plugin, draft)
+
         clear_pending_interruption(phone)
-        msg = "Goodbye! Have a great day!"
+        msg = (
+            "अलविदा! आपका दिन शुभ हो!"
+            if user_language == "hi" else
+            "Goodbye! Have a great day!"
+        )
         audio = text_to_speech(msg, user_language)
         return True, {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
 
@@ -1124,14 +1149,21 @@ def dispatch_chat_request(
     intent = intent_data.get("intent", "faq")
     logger.info(f"INTENT: {intent}, SERVICE: {intent_data.get('service')}, EMOTION: {intent_data.get('emotion')}")
 
-    # 4. Pure greeting intent
-    if intent == "greeting":
+    # 4. Active Module & Target Plugin Resolution (Dialogue State First)
+    is_question = bool(intent_data.get("is_question", False)) or (intent == "faq")
+    config = {"configurable": {"thread_id": phone}}
+    active_plugin, plugin_intent, target_wf = resolve_active_and_target_plugin(
+        user_input, intent, phone, session_id, workflows, services_registry, config, is_question=is_question
+    )
+
+    # 5. Pure greeting intent (only when NOT in an active transactional workflow)
+    if not active_plugin and intent == "greeting":
         greet_msg = build_greeting_response(user_language, workflows)
         audio_output = text_to_speech(greet_msg, user_language)
         return {"response": greet_msg, "lang": user_language, "mode": "greeting", "audio": audio_output}
 
-    # 5. Out-of-domain conversational queries (Semantic Domain Filter)
-    if intent == "out_of_domain":
+    # 6. Out-of-domain conversational queries (Semantic Domain Filter - only when NOT in an active workflow)
+    if not active_plugin and intent == "out_of_domain":
         from services.rag_service import get_rejection_message
         sys_blocked = system_config.get("system_messages", {}).get("blocked", {})
         if user_language == 'hi':
@@ -1141,18 +1173,11 @@ def dispatch_chat_request(
         audio_output = text_to_speech(blocked_msg, user_language)
         return {"response": blocked_msg, "lang": user_language, "audio": audio_output, "mode": "blocked"}
 
-    # 6. Login guidance & claim verification
+    # 7. Login guidance & claim verification
     if intent in ["login_query", "login_claim"]:
         is_login_handled, login_resp = handle_login_intent(user_input, user_language, is_authenticated, cached_info, detected_intent=intent)
         if is_login_handled:
             return login_resp
-
-    # 7. Active Module & Target Plugin Resolution
-    is_question = bool(intent_data.get("is_question", False)) or (intent == "faq")
-    config = {"configurable": {"thread_id": phone}}
-    active_plugin, plugin_intent, target_wf = resolve_active_and_target_plugin(
-        user_input, intent, phone, session_id, workflows, services_registry, config, is_question=is_question
-    )
 
     # 8. Mid-Workflow Interruption / FAQ
     ui_lower = user_input.strip().lower()
@@ -1171,12 +1196,12 @@ def dispatch_chat_request(
         return draft_resp
 
     # 10. Transactional Workflow Execution (LangGraph Plugins)
-    # Never execute workflow plugins if the intent is FAQ or an informational question,
-    # or if the query is not an explicit grievance or advertisement workflow action.
-    workflow_intents = {
+    # Read workflow_intents from system_config (config.yml) with safe fallback
+    wf_intents_cfg = system_config.get("system_messages", {}).get("workflow_intents") or [
         "grievance_candidate", "grievance_status_candidate", "grievance_confirm", "grievance_cancel",
         "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel"
-    }
+    ]
+    workflow_intents = set(wf_intents_cfg)
 
     is_query_question = is_informational_question(user_input, intent_data, system_config=system_config)
 

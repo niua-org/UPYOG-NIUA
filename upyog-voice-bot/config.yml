@@ -32,6 +32,10 @@ system_messages:
       "can i", "could you", "tell me", "explain", "meaning",
       "kya", "kaise", "kab", "kahan", "kyun", "kis", "batao", "bataiye"
     ]
+  workflow_intents: [
+    "grievance_candidate", "grievance_status_candidate", "grievance_confirm", "grievance_cancel",
+    "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel"
+  ]
 
 
 # ============================================================
@@ -263,7 +267,7 @@ forms:
         extract_fields: ["name", "mobile", "email"]
       - id: "address"
         type: "text"
-        label: "Address"
+        label: "Applicant Address"
         extractable: true
       - id: "doc_sample"
         type: "file"
