@@ -1,8 +1,11 @@
 package org.egov.demand.repository;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.mock;
@@ -42,16 +45,14 @@ class ServiceRequestRepositoryTest {
     @Test
     void testFetchResult() throws JsonProcessingException, RestClientException {
         HashMap<Object, Object> objectObjectMap = new HashMap<>();
-        when(this.restTemplate.postForObject((String) any(), (Object) any(), (Class<Map<Object, Object>>) any(),
-                (Object[]) any())).thenReturn(objectObjectMap);
+        when(this.restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(objectObjectMap);
         when(this.objectMapper.configure((com.fasterxml.jackson.databind.SerializationFeature) any(), anyBoolean()))
                 .thenReturn(this.objectMapper);
         when(this.objectMapper.writeValueAsString((Object) any())).thenReturn("42");
         Map actualFetchResultResult = this.serviceRequestRepository.fetchResult("Uri", "Request");
         assertSame(objectObjectMap, actualFetchResultResult);
         assertTrue(actualFetchResultResult.isEmpty());
-        verify(this.restTemplate).postForObject((String) any(), (Object) any(), (Class<Map<Object, Object>>) any(),
-                (Object[]) any());
+        verify(this.restTemplate).postForObject(anyString(), any(), eq(Map.class));
         verify(this.objectMapper).configure((com.fasterxml.jackson.databind.SerializationFeature) any(), anyBoolean());
         verify(this.objectMapper).writeValueAsString((Object) any());
     }

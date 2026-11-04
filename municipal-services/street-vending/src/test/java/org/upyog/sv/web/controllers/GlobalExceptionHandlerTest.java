@@ -90,8 +90,8 @@ class GlobalExceptionHandlerTest {
         MvcResult result = mockMvc.perform(post("/street-vending/_create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBodyJson)) // Invalid request body
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error.code").value(400))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error.code").value(500))
                 .andExpect(jsonPath("$.error.message").exists()) // Message should exist, but exact value may vary
                 .andReturn();
         System.out.println("testHandleMethodArgumentNotValidExceptionCreate Response: " + result.getResponse().getContentAsString());

@@ -1,0 +1,105 @@
+services:
+  - name: billing-service
+    basePath: /billingservice
+    healthPath: /billingservice/health
+    versionPath: /billingservice/info
+    dependsOn: []
+    coreRead:
+      method: POST
+      path: /billingservice/demand/_search
+      queryParams:
+        tenantId: "${SMOKE_TENANT_ID}"
+    coreWrite: null
+
+  - name: collection-services
+    basePath: /collection-services
+    healthPath: /collection-services/health
+    versionPath: /collection-services/info
+    dependsOn: [billing-service]
+    coreRead:
+      method: POST
+      path: /collection-services/payments/_search
+      queryParams:
+        tenantId: "${SMOKE_TENANT_ID}"
+
+  - name: egov-hrms
+    basePath: /hrms
+    healthPath: /hrms/health
+    versionPath: /hrms/info
+    dependsOn: []
+    coreRead:
+      method: POST
+      path: /hrms/employees/_search
+      queryParams:
+        tenantId: "${SMOKE_TENANT_ID}"
+
+  - name: verification-service
+    basePath: /verification-service
+    healthPath: /verification-service/health
+    versionPath: /verification-service/info
+    dependsOn: []
+    coreRead:
+      method: POST
+      path: /verification-service/v1/common/_search
+      queryParams:
+        tenantId: "${SMOKE_TENANT_ID}"
+
+  - name: reconciliation-service
+    basePath: /reconciliation-service
+    healthPath: /reconciliation-service/actuator/health
+    versionPath: /reconciliation-service/actuator/info
+    dependsOn: []
+
+  - name: dashboard-analytics
+    basePath: /dashboard-analytics
+    healthPath: /dashboard-analytics/health
+    versionPath: /dashboard-analytics/info
+    dependsOn: []
+
+  - name: dashboard-ingest
+    basePath: /dashboard-ingest
+    healthPath: /dashboard-ingest/health
+    versionPath: /dashboard-ingest/info
+    dependsOn: []
+
+  - name: dashboard-data-engine
+    basePath: /dashboard-data-engine
+    healthPath: /dashboard-data-engine/health
+    versionPath: /dashboard-data-engine/info
+    dependsOn: [dashboard-ingest]
+
+  - name: dashboard-data-extractor
+    basePath: /dashboard-data-extractor
+    healthPath: /dashboard-data-extractor/actuator/health
+    versionPath: /dashboard-data-extractor/actuator/info
+    dependsOn: [dashboard-data-engine]
+
+  - name: employee-dashboard
+    basePath: /employee-dashboard
+    healthPath: /employee-dashboard/health
+    versionPath: /employee-dashboard/info
+    dependsOn: [egov-hrms]
+
+  - name: egov-apportion-service
+    basePath: /apportion-service
+    healthPath: /apportion-service/health
+    versionPath: /apportion-service/info
+    dependsOn: []
+
+  - name: egf-master
+    basePath: /egf-master
+    healthPath: /egf-master/health
+    versionPath: /egf-master/info
+    dependsOn: []
+
+  - name: egf-instrument
+    basePath: /egf-instrument
+    healthPath: /egf-instrument/health
+    versionPath: /egf-instrument/info
+    dependsOn: [egf-master]
+
+  - name: finance-collections-voucher-consumer
+    basePath: /finance-collections-voucher-consumer
+    healthPath: /finance-collections-voucher-consumer/health
+    versionPath: /finance-collections-voucher-consumer/info
+    dependsOn: [collection-services]
