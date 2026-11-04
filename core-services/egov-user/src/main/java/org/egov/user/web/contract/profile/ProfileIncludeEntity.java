@@ -1,5 +1,7 @@
 package org.egov.user.web.contract.profile;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
 
@@ -40,6 +42,7 @@ public enum ProfileIncludeEntity {
      * @return matching {@link ProfileIncludeEntity} constant, or null if input is blank
      * @throws CustomException if the provided value is unknown or invalid (HTTP 400)
      */
+    @JsonCreator
     public static ProfileIncludeEntity fromString(String val) {
         if (StringUtils.isBlank(val)) {
             return null;
@@ -58,6 +61,7 @@ public enum ProfileIncludeEntity {
      *
      * @return name of the enum constant
      */
+    @JsonValue
     public String toValue() {
         return name();
     }

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.upyog.family.config.FamilyConfiguration;
+import org.upyog.family.util.MaskUtils;
 import org.upyog.family.web.contract.CitizenProfile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -82,7 +83,7 @@ public class UserClientImpl implements UserClient {
         }
 
         String url = configuration.getUserHost() + configuration.getUserSearchPath();
-        log.debug("[UPYOG-USER-CLIENT] Querying user service for mobile: {} from: {}", maskMobile(mobileNumber), url);
+        log.debug("[UPYOG-USER-CLIENT] Querying user service for mobile: {} from: {}", MaskUtils.maskMobile(mobileNumber), url);
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("RequestInfo", requestInfo);
@@ -120,7 +121,7 @@ public class UserClientImpl implements UserClient {
         }
 
         String url = configuration.getUserHost() + "/user/citizen/_create";
-        log.info("[UPYOG-USER-CLIENT] Auto-creating citizen user for mobile: {} at: {}", maskMobile(profile.getMobileNumber()), url);
+        log.info("[UPYOG-USER-CLIENT] Auto-creating citizen user for mobile: {} at: {}", MaskUtils.maskMobile(profile.getMobileNumber()), url);
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("RequestInfo", requestInfo);
@@ -176,12 +177,5 @@ public class UserClientImpl implements UserClient {
                 .photo((String) map.get("photo"))
                 .emailId((String) map.get("emailId"))
                 .build();
-    }
-
-    private String maskMobile(String mobile) {
-        if (mobile == null || mobile.length() < 10) {
-            return "******";
-        }
-        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
     }
 }

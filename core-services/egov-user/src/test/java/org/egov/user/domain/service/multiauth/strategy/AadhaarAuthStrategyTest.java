@@ -43,6 +43,9 @@ public class AadhaarAuthStrategyTest {
     @Mock
     private RestTemplate restTemplate;
 
+    @Mock
+    private org.egov.user.persistence.repository.FamilyRestRepository familyRestRepository;
+
     private ObjectMapper objectMapper;
     private UserConfiguration userConfiguration;
     private AadhaarAuthStrategy aadhaarAuthStrategy;
@@ -56,7 +59,7 @@ public class AadhaarAuthStrategyTest {
         userConfiguration.setRolesStateLevelEnabled(true);
 
         aadhaarAuthStrategy = new AadhaarAuthStrategy(
-                userService, userRepository, restTemplate, objectMapper, userConfiguration
+                userService, userRepository, restTemplate, objectMapper, null, userConfiguration, familyRestRepository
         );
     }
 
@@ -109,11 +112,13 @@ public class AadhaarAuthStrategyTest {
         User activeCitizen = buildUser(201L, "uuid-active", "9999999999", "9999999999", "Aadhaar User", true);
 
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(activeCitizen));
+        when(familyRestRepository.getActiveFamilyIdByUserUuid(eq("uuid-active"), any(), any())).thenReturn("FAM-AADHAAR-999");
 
         AuthenticatedUserResult result = aadhaarAuthStrategy.authenticateAndResolveUser(request);
         assertNotNull(result);
         assertFalse(result.isNewUser());
         assertEquals("uuid-active", result.getUser().getUuid());
         assertEquals(Boolean.TRUE, result.getUser().getIsIdentityVerified());
+        assertEquals("FAM-AADHAAR-999", result.getUser().getFamilyId());
     }
 }

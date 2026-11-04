@@ -9,6 +9,12 @@ import org.egov.user.domain.model.User;
 
 import java.util.List;
 
+/**
+ * Web contract response payload for user search endpoints.
+ * <p>
+ * Contains {@link ResponseInfo} status headers along with the list of matching
+ * {@link UserSearchResponseContent} user records.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
