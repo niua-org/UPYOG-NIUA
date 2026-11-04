@@ -19,7 +19,7 @@ const OtpVerify = ({ type, referenceId, userUuid, familyId, onVerified, onError 
 
   const verifyOtp = () =>
     type === "FAMILY_ID"
-      ? Digit.UserService.verifyFamilyOtp(familyId, tenantId, otp, referenceId)
+      ? Digit.UserService.verifyFamilyOtp({familyId, tenantId, otp, referenceId})
       : Digit.UserService.verifyAadhaarOtp({ referenceId, otp, isResync: false, userUuid });
 
   const handleVerify = async () => {
