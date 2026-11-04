@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardLabel, TextInput, SubmitBar, Toast, OTPInput } from "@nudmcdgnpm/digit-ui-react-components";
 import { PROFILE_ROUTES, OTP_LENGTH } from "../utils/constants";
@@ -21,6 +21,8 @@ const ProfileVerify = () => {
   const [verifying, setVerifying] = useState(false);
   const [toast, setToast] = useState(null);
 
+  const navigationTimerRef = useRef(null);
+
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
   // Auto-dismiss toast
@@ -30,6 +32,15 @@ const ProfileVerify = () => {
     const timer = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  // Clear pending navigation timer on unmount
+  useEffect(() => {
+    return () => {
+      if (navigationTimerRef.current) {
+        clearTimeout(navigationTimerRef.current);
+      }
+    };
+  }, []);
 
   const showError = (label) => setToast({ error: true, label });
 
@@ -89,18 +100,16 @@ const ProfileVerify = () => {
 
       setToast({
         error: false,
-        label: "Profile Verified successfully",
+        label: t("PROFILE_VERIFICATION_SUCCESS"),
       });
 
-      setTimeout(() => {
-        navigate(PROFILE_ROUTES.DETAILS, {
-          state: { verifiedData: res },
-        });
+      navigationTimerRef.current = setTimeout(() => {
+        navigate(PROFILE_ROUTES.DETAILS);
       }, 3000);
     } catch (err) {
       console.log("Error while verifying Profile:", err);
 
-      showError("Error while Verifying Profile");
+      showError(t("PROFILE_VERIFICATION_FAILED"));
       setOtp("");
       setVerifying(false);
     }
