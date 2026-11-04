@@ -10,7 +10,11 @@ export const OTP_LENGTH = 6;
 export const PROFILE_ROUTES = {
   DETAILS: "/upyog-ui/citizen/profile/profile-details",
   FAMILY_JOINED: "/upyog-ui/citizen/profile/family-joined",
-  FOUND_FAMILY: "/upyog-ui/citizen/profile/found-family"
+  FOUND_FAMILY: "/upyog-ui/citizen/profile/found-family",
+  PROFILE_JOIN_EXISTING_FAMILY: "/upyog-ui/citizen/profile/join-family",
+  PROFILE_CREATE_FAMILY: "/upyog-ui/citizen/profile/add-family-member",
+  VERIFY: "/upyog-ui/citizen/profile/verify-profile",
+  EDIT_PROFILE_URL: "/upyog-ui/citizen/profile/edit-details"
 };
 
 export const getFamilyIdLength = (value = "") => value.replace(/-/g, "").length;

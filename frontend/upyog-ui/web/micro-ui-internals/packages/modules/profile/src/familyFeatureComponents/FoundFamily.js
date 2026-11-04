@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Card, CardHeader, CardLabel, Dropdown, SubmitBar, Loader,Toast } from "@nudmcdgnpm/digit-ui-react-components";
-import { FieldGrid, Section, withValues, getFamilyHeadFields, getPersonalFields } from "../utils";
+import { FieldGrid, Section, getFamilyHeadFields, getPersonalFields } from "../utils";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 // Function to get user Details
@@ -84,7 +84,7 @@ const FoundFamily = () => {
         tenantId,
         applicantUserUuid: userUuid,
         relationshipWithHead: relationship.code,
-        hofConsentOtp: verifiedData.consentToken,
+        hofConsentOtp: verifiedData.consentToken || verifiedData.txnId,
       });
       // if we get a response with status not equal to JOINED then we will show an error toast
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");

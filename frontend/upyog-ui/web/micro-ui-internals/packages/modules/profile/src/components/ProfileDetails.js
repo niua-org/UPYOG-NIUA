@@ -3,13 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, Loader, EditIcon, Dropdown, ArrowDown } from "@nudmcdgnpm/digit-ui-react-components";
 import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
-
-const EDIT_PROFILE_URL = "/upyog-ui/citizen/profile/edit-details";
-const FAMILY_ACTION_ROUTES = {
-  PROFILE_CREATE_FAMILY: "",
-  PROFILE_JOIN_EXISTING_FAMILY: "/upyog-ui/citizen/profile/join-family",
-};
-
+import {PROFILE_ROUTES} from "../utils/constants";
 
 // Function to get user Details
 const useProfileUser = () => {
@@ -90,10 +84,15 @@ const ProfileDetails = () => {
    * Navigates to the corresponding route based on the selected MDMS code
    */
   const handleFamilySelection = (option) => {
-    const targetRoute = FAMILY_ACTION_ROUTES[option?.code];
+    const targetRoute = PROFILE_ROUTES[option?.code];
     if (targetRoute) {
       navigate(targetRoute);
     }
+  };
+
+  const handleVerifyProfile = () => {
+    // Navigate to the profile verification page
+    navigate(PROFILE_ROUTES.VERIFY);
   };
 
   return (
@@ -105,7 +104,7 @@ const ProfileDetails = () => {
           <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
         </div>
         <div style={profileStyles.headerActions} >
-          {user?.isIdentityVerified && (
+          {user?.isIdentityVerified ? (
           <div>
           <Dropdown
             option={familyOptions}
@@ -121,8 +120,12 @@ const ProfileDetails = () => {
             }
           />
           </div>
+         )
+          : 
+          (
+          <button type="button" onClick={handleVerifyProfile} style={profileStyles.editButton}>{t("VERIFY_PROFILE")}</button> 
           )}
-          <button type="button" onClick={() => navigate(EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
+          <button type="button" onClick={() => navigate(PROFILE_ROUTES.EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
             <EditIcon /> {t("CORE_COMMON_EDIT")}
           </button>
         </div>

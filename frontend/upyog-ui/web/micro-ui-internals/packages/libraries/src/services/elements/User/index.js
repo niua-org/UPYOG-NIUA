@@ -279,4 +279,13 @@ export const UserService = {
       method: "POST",
     }),
 
+  verifyProfile: (details) =>
+    ServiceRequest({
+      url: Urls.profile.verifyProfile,
+      data: details,
+      auth: true,
+      method: "POST",
+      userService: true,
+    }),
+
 };
