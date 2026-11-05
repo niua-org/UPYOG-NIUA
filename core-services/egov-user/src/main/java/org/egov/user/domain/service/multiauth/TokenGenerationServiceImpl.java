@@ -146,6 +146,7 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
                 .authenticatedVia(authType)
                 .isNewUser(isNewUser)
                 .isProfileCompleted(contractUser != null && Boolean.TRUE.equals(contractUser.getIsProfileCompleted()))
+                .familyId(domainUser.getFamilyId())
                 .build();
     }
 
@@ -198,6 +199,7 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
             userInfo.put("lastResyncDate", user.getLastResyncDate());
             userInfo.put("edittedCount", user.getEdittedCount());
             userInfo.put("lastLoginMethod", user.getLastLoginMethod());
+            userInfo.put("familyId", user.getFamilyId());
 
             if (user.getRoles() != null && !user.getRoles().isEmpty()) {
                 List<Map<String, String>> rolesList = user.getRoles().stream()
@@ -359,6 +361,7 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
                 .edittedCount(domainUser.getEdittedCount())
                 .lastLoginMethod(domainUser.getLastLoginMethod())
                 .isProfileCompleted(isProfileComplete)
+                .familyId(domainUser.getFamilyId())
                 .roles(authRoles)
                 .build();
     }

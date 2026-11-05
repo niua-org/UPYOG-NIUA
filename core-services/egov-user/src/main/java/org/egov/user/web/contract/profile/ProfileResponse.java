@@ -1,5 +1,6 @@
 package org.egov.user.web.contract.profile;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.egov.common.contract.response.ResponseInfo;
+import org.egov.tracer.model.Error;
 import org.egov.user.web.contract.UserSearchResponseContent;
 
 import java.util.List;
@@ -25,7 +27,12 @@ public class ProfileResponse {
     @JsonProperty("responseInfo")
     private ResponseInfo responseInfo;
 
-    @Schema(description = "List of returned user profiles")
+    @Schema(description = "List of returned citizen profiles")
     @JsonProperty("user")
     private List<UserSearchResponseContent> user;
+
+    @Schema(description = "List of error or warning details encountered during partial profile enrichment")
+    @JsonProperty("errors")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<Error> errors;
 }

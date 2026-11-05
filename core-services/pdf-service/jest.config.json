@@ -1,0 +1,18 @@
+{
+  "testEnvironment": "node",
+  "watchman": false,
+  "transform": {},
+  "testMatch": ["<rootDir>/test/**/*.test.js"],
+  "setupFiles": ["<rootDir>/test/setup-env.cjs"],
+  "collectCoverageFrom": ["src/utils/commons.js", "src/lib/util.js"],
+  "coverageDirectory": "coverage",
+  "coverageReporters": ["text", "text-summary"],
+  "coverageThreshold": {
+    "global": {
+      "statements": 98,
+      "branches": 96,
+      "functions": 100,
+      "lines": 98
+    }
+  }
+}

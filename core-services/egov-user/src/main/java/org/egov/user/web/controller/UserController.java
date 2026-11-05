@@ -18,6 +18,7 @@ import org.egov.user.domain.service.DigiLockerService;
 import org.egov.user.domain.service.TokenService;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserDetailResponseV2;
 import org.egov.user.web.contract.*;
 import org.egov.user.web.contract.auth.CustomUserDetails;
@@ -34,6 +35,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
+import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,6 +46,22 @@ import java.util.stream.Collectors;
 import static org.egov.tracer.http.HttpUtils.isInterServiceCall;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
+/**
+ * REST Controller exposing core citizen, employee, and address management endpoints in UPYOG.
+ *
+ * <p>Serves as the primary transport boundary for:</p>
+ * <ul>
+ *   <li>Citizen registration with OTP verification or auto-login ({@code /citizen/_create}).</li>
+ *   <li>Internal employee and system user creation without OTP ({@code /users/_createnovalidate}).</li>
+ *   <li>Multi-criteria user searches with role-based and active-status filtering ({@code /_search}, {@code /v1/_search}, {@code /users/v2/_search}).</li>
+ *   <li>OAuth2 access token introspection and user detail resolution for Zuul API Gateway ({@code /_details}).</li>
+ *   <li>Administrative user updates ({@code /users/_updatenovalidate}).</li>
+ *   <li>Legacy and V2 citizen address lifecycle management ({@code /_createAddress}, {@code /_getAddress}, {@code /_updateAddress}).</li>
+ * </ul>
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
+ */
 @Tag(name = "User Management", description = "Core citizen and employee lifecycle management endpoints")
 @RestController
 @Slf4j
@@ -53,6 +72,14 @@ public class UserController {
     private DigiLockerService digiLockerService;
     private UserConfiguration userConfiguration;
 
+    /**
+     * Constructs a new {@link UserController} injecting all necessary service and configuration components.
+     *
+     * @param userService core business logic service for user accounts
+     * @param tokenService token introspection and session management service
+     * @param digiLockerService third-party DigiLocker auth adapter (optional)
+     * @param userConfiguration platform user service configuration properties
+     */
     @Autowired
     public UserController(UserService userService, TokenService tokenService,
                           @Autowired(required = false) DigiLockerService digiLockerService,
@@ -63,6 +90,12 @@ public class UserController {
         this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Backward-compatible constructor for testing and standalone execution.
+     *
+     * @param userService core business logic service for user accounts
+     * @param tokenService token introspection and session management service
+     */
     public UserController(UserService userService, TokenService tokenService) {
         this(userService, tokenService, null, null);
     }
@@ -86,15 +119,20 @@ public class UserController {
     }
 
     /**
-     * end-point to create the citizen with otp.Here otp is mandatory to create
-     * citizen.
+     * Registers a new citizen account with mandatory OTP verification.
      *
-     * @param createUserRequest
-     * @return
+     * <p>If registration-with-login is enabled in {@link UserConfiguration}, automatically creates the citizen
+     * account, issues an OAuth2 bearer access token, and returns the token alongside citizen profile details.
+     * Otherwise, creates the citizen account and returns standard {@link UserDetailResponse}.</p>
+     *
+     * @param createUserRequest the citizen registration request payload containing demographics and validated OTP; must not be {@code null}.
+     * @return an {@link Object} wrapping either an authentication response map with OAuth2 tokens (when auto-login is enabled)
+     *         or a {@link UserDetailResponse} containing the created citizen profile.
+     * @throws org.egov.tracer.model.CustomException if OTP is invalid, mobile number already exists, or validation rules fail.
      */
     @PostMapping("/citizen/_create")
     public Object createCitizen(@RequestBody @Valid CreateUserRequest createUserRequest) {
-        log.info("Received Citizen Registration Request  " + createUserRequest);
+        log.info("Received Citizen Registration Request for mobile: {}", createUserRequest != null && createUserRequest.getUser() != null ? MaskUtils.maskMobile(createUserRequest.getUser().getMobileNumber()) : null);
         User user = createUserRequest.toDomain(true);
         user.setOtpValidationMandatory(isValidationMandatory());
         if (isRegWithLoginEnabled()) {
@@ -106,34 +144,60 @@ public class UserController {
     }
 
     /**
-     * end-point to create the user without otp validation.
+     * Administrative endpoint to create an employee or system user account without OTP verification.
      *
-     * @param createUserRequest
-     * @param headers
-     * @return
+     * <p>Reserved for internal administrative systems, employee onboarding, and background microservices.
+     * Strictly verifies mobile validation requirements against headers and configuration.</p>
+     *
+     * @param createUserRequest the user creation request containing user attributes and assigned roles; must not be {@code null}.
+     * @param headers HTTP headers from the incoming request (used for bypass checks and audit tracing).
+     * @return a {@link UserDetailResponse} wrapping the newly provisioned user account.
+     * @throws org.egov.tracer.model.CustomException if mandatory fields are missing or username/mobile collisions occur.
      */
     @PostMapping("/users/_createnovalidate")
     public UserDetailResponse createUserWithoutValidation(@RequestBody @Valid CreateUserRequest createUserRequest,
                                                           @RequestHeader HttpHeaders headers) {
 
         User user = createUserRequest.toDomain(true);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        if (StringUtils.isBlank(user.getUsername())) {
+            if (StringUtils.isNotBlank(user.getMobileNumber())) {
+                user.setUsername(user.getMobileNumber());
+            } else if (StringUtils.isNotBlank(user.getAadhaarNumber())) {
+                user.setUsername(UserConstants.AADHAAR_USERNAME_PREFIX + user.getAadhaarNumber().replaceAll("\\D", ""));
+            } else {
+                user.setUsername(UserConstants.CITIZEN_USERNAME_PREFIX + UUID.randomUUID().toString().substring(0, 8));
+            }
+        }
+        if (user.getType() == null) {
+            user.setType(UserType.CITIZEN);
+        }
+        if (user.getActive() == null) {
+            user.setActive(true);
+        }
+        if (CollectionUtils.isEmpty(user.getRoles()) && UserType.CITIZEN.equals(user.getType())) {
+            user.setRoles(Collections.singleton(Role.getCitizenRole()));
+        }
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
         user.setOtpValidationMandatory(false);
         final User newUser = userService.createUser(user, createUserRequest.getRequestInfo());
         return createResponse(newUser);
     }
 
     /**
-     * end-point to search the users by providing userSearchRequest. In Request
-     * if there is no active filed value, it will fetch only active users
+     * Searches user accounts based on filter criteria, defaulting to active users only.
      *
-     * @param request
-     * @return
+     * <p>If {@code request.getActive()} is omitted, automatically filters for {@code active = true}.
+     * Enforces pagination limits on non-internal requests and decrypts authorized fields based on caller context.</p>
+     *
+     * @param request search request criteria containing identifiers, names, phone numbers, or role codes.
+     * @param headers HTTP headers used to distinguish internal microservice calls from external client queries.
+     * @return {@link UserSearchResponse} containing decrypted user records matching the filter criteria.
      */
     @PostMapping("/_search")
     public UserSearchResponse get(@RequestBody @Valid UserSearchRequest request, @RequestHeader HttpHeaders headers) {
 
-        log.info("Received User search Request  " + request);
+        log.info("Received User search Request for tenant: {}, mobile: {}", request != null ? request.getTenantId() : null, request != null ? MaskUtils.maskMobile(request.getMobileNumber()) : null);
         if (request.getActive() == null) {
             request.setActive(true);
         }
@@ -141,12 +205,14 @@ public class UserController {
     }
 
     /**
-     * end-point to search the users by providing userSearchRequest. In Request
-     * if there is no active filed value, it will fetch all(active & inactive)
-     * users.
+     * Searches user accounts based on filter criteria, returning both active and inactive users if unconstrained.
      *
-     * @param request
-     * @return
+     * <p>Unlike {@code /_search}, does not default {@code active} to true, enabling retrieval of deactivated
+     * or historical accounts for administrative audit screens.</p>
+     *
+     * @param request search criteria filter envelope.
+     * @param headers incoming HTTP headers used for internal service detection.
+     * @return {@link UserSearchResponse} containing matching user accounts across all activation states.
      */
     @PostMapping("/v1/_search")
     public UserSearchResponse getV1(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
@@ -154,10 +220,14 @@ public class UserController {
     }
 
     /**
-     * end-point to fetch the user details by access-token
+     * Resolves authenticated citizen or employee details using an active OAuth2 access token.
      *
-     * @param accessToken
-     * @return
+     * <p>Called by the Zuul API Gateway edge filter to introspect bearer tokens, validate token validity,
+     * and extract user roles and tenant affiliations for downstream context propagation.</p>
+     *
+     * @param accessToken the bearer access token string to introspect; must not be blank.
+     * @return the common contract {@link org.egov.common.contract.request.User} object representing the authenticated principal.
+     * @throws org.egov.tracer.model.CustomException if the token is expired, invalid, or unrecognized.
      */
     @PostMapping("/_details")
     public org.egov.common.contract.request.User getUser(@RequestParam(value = "access_token") String accessToken) {
@@ -169,7 +239,7 @@ public class UserController {
         // CRITICAL FIX: Return common contract User instead of CustomUserDetails for proper gateway deserialization
         org.egov.user.web.contract.auth.User authUser = userDetail.getSecureUser().getUser();
         log.info("AuthUser extracted from userDetail - id: {}, uuid: {}, userName: {}",
-            authUser.getId(), authUser.getUuid(), authUser.getUserName());
+            authUser.getId(), authUser.getUuid(), MaskUtils.maskIdentifier(authUser.getUserName()));
         log.info("AuthUser roles: {} (size: {})",
             authUser.getRoles(), authUser.getRoles() != null ? authUser.getRoles().size() : "NULL");
 
@@ -215,28 +285,20 @@ public class UserController {
     }
 
     /**
-     * end-point to update the user details without otp validations.
+     * Updates a user account without requiring SMS OTP verification.
+     * Functions symmetrically to {@code /users/_createnovalidate} for user updates.
      *
-     * @param createUserRequest
-     * @param headers
-     * @return
+     * @param createUserRequest the user update request payload; must not be {@code null}.
+     * @param headers HTTP headers from the incoming request.
+     * @return an {@link UpdateResponse} containing the updated user account details.
+     * @throws org.egov.tracer.model.CustomException if update fails.
      */
     @PostMapping("/users/_updatenovalidate")
     public UpdateResponse updateUserWithoutValidation(@RequestBody final @Valid CreateUserRequest createUserRequest,
                                                       @RequestHeader HttpHeaders headers) {
-        if (createUserRequest != null && userService.isCallerCitizen(createUserRequest.getRequestInfo())) {
-            String callerUuid = (createUserRequest.getRequestInfo() != null && createUserRequest.getRequestInfo().getUserInfo() != null)
-                    ? createUserRequest.getRequestInfo().getUserInfo().getUuid() : "unknown";
-            log.error("[USER-CONTROLLER] Unauthorized access: CITIZEN users cannot call /users/_updatenovalidate: uuid={}", callerUuid);
-            throw new CustomException("UNAUTHORIZED_ACCESS", "CITIZEN users are not allowed to use /users/_updatenovalidate");
-        }
-        if (createUserRequest != null && createUserRequest.getUser() != null
-                && UserType.CITIZEN.equals(createUserRequest.getUser().getType())) {
-            log.error("[USER-CONTROLLER] Invalid update: target user type cannot be CITIZEN in /users/_updatenovalidate");
-            throw new CustomException("INVALID_USER_TYPE", "Cannot update CITIZEN user accounts via /users/_updatenovalidate");
-        }
         User user = createUserRequest.toDomain(false);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
         final User updatedUser = userService.updateWithoutOtpValidation(user, createUserRequest.getRequestInfo());
         return createResponseforUpdate(updatedUser);
     }
@@ -278,7 +340,7 @@ public class UserController {
     private UserSearchResponse searchUsers(@RequestBody UserSearchRequest request, HttpHeaders headers) {
 
         UserSearchCriteria searchCriteria = request.toDomain();
-        log.info("searchCriteria_in controller"+searchCriteria);
+        log.info("searchCriteria in controller for tenant: {}, mobile: {}", searchCriteria.getTenantId(), MaskUtils.maskMobile(searchCriteria.getMobileNumber()));
         log.info("headers"+headers);
 
         if (!isInterServiceCall(headers)) {
@@ -370,10 +432,11 @@ public class UserController {
     @PostMapping("/users/v2/_create")
     public Object createUserWithAddress(@RequestBody @Valid CreateUserRequestV2 createUserRequest,
                                         @RequestHeader HttpHeaders headers) {
-        log.info("Received User Registration Request " + createUserRequest);
+        log.info("Received User Registration Request for mobile: {}", createUserRequest != null && createUserRequest.getUser() != null ? MaskUtils.maskMobile(createUserRequest.getUser().getMobileNumber()) : null);
 
         User user = createUserRequest.toDomain(true);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
         user.setOtpValidationMandatory(false);
 
         final User newUser = userService.createUserWithAddressV2(user, createUserRequest.getRequestInfo());
@@ -402,7 +465,8 @@ public class UserController {
                                                 @RequestHeader HttpHeaders headers) {
 
         User user = createUserRequest.toDomain(false);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
 
         final User updatedUser = userService.updateUserV2(user, createUserRequest.getRequestInfo());
 

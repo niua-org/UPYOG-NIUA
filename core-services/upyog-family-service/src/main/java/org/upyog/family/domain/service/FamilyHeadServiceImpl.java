@@ -28,6 +28,11 @@ import java.util.stream.Collectors;
 /**
  * Domain service implementation orchestrating Head of Family succession and transfer flows in UPYOG.
  *
+ * <p>Implements {@link FamilyHeadService} managing leadership transfer between active family members.
+ * Validates succession business rules via {@link AssignHofValidator}, revokes head status from the incumbent,
+ * promotes the designated successor, enqueues persistence commands to Kafka persister, and decorates the
+ * aggregate with fresh citizen demographic attributes.</p>
+ *
  * @author UPYOG Team
  * @since 1.0.0
  */
@@ -41,6 +46,15 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
     private final KafkaProducer kafkaProducer;
     private final FamilyConfiguration configuration;
 
+    /**
+     * Constructs {@link FamilyHeadServiceImpl} with required dependencies.
+     *
+     * @param familyRepository data repository for family lookups and queries
+     * @param assignHofValidator validator validating caller authorization and member status
+     * @param userClient client querying {@code egov-user} for demographic enrichment
+     * @param kafkaProducer messaging client for Kafka persistence
+     * @param configuration service configuration properties
+     */
     @Autowired
     public FamilyHeadServiceImpl(FamilyRepository familyRepository,
                                  AssignHofValidator assignHofValidator,
@@ -56,10 +70,14 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
 
     /**
      * Transfers or assigns the Head of Family (HoF) role to an existing active member of the family unit in UPYOG.
-     * Validates that the target member is active, revokes head status from the current head, and updates family metadata.
      *
-     * @param request HoF assignment payload containing family ID, new head UUID, and optional justification
-     * @return updated Family aggregate
+     * <p>Enforces that the caller is the current HoF, the target member is active in the family, and the family
+     * is {@code ACTIVE}. Revokes head status from the current head, assigns {@code isHead = true} and
+     * {@code relationshipWithHead = "HEAD"} to the successor, updates audit details, and pushes the event to Kafka.</p>
+     *
+     * @param request HoF assignment payload containing family ID, new head UUID, and optional justification; must not be {@code null}.
+     * @return the updated {@link Family} aggregate reflecting the succession.
+     * @throws CustomException if family is not found, caller is unauthorized, or candidate is invalid.
      */
     @Override
     @Transactional
@@ -104,19 +122,26 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
         return existingFamily;
     }
 
+    /**
+     * Retrieves a Family aggregate by familyId and tenantId, throwing a CustomException if not found.
+     *
+     * @param familyId unique family identifier
+     * @param tenantId tenant identifier representing jurisdiction
+     * @return Family aggregate
+     * @throws CustomException if family is not found (Code: {@code FAMILY_NOT_FOUND})
+     */
     private Family getFamilyByIdAndTenant(String familyId, String tenantId) {
-        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
-                .familyId(familyId)
-                .tenantId(tenantId)
-                .build();
-        List<Family> families = familyRepository.search(criteria);
-        if (families.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                    "Family with ID " + familyId + " not found.");
-        }
-        return families.get(0);
+        return familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
+                        "Family with ID " + familyId + " not found."));
     }
 
+    /**
+     * Enriches family members with live citizen demographic data retrieved from egov-user service.
+     *
+     * @param families list of Family domain aggregates to enrich
+     * @param requestInfo UPYOG request context envelope
+     */
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {
         if (families == null || families.isEmpty()) {
             return;
@@ -139,9 +164,10 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
             if (family.getMembers() != null) {
                 for (FamilyMember member : family.getMembers()) {
                     if (profileMap.containsKey(member.getUserUuid())) {
-                        member.setCitizenDetails(profileMap.get(member.getUserUuid()));
+                        member.enrichFromCitizenProfile(profileMap.get(member.getUserUuid()));
                     }
                 }
+                family.enrichHeadName();
             }
         }
     }

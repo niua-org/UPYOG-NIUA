@@ -102,6 +102,7 @@ public class UserSearchResponseContent {
 
     private Integer edittedCount;
     private String lastLoginMethod;
+    private String familyId;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
@@ -112,16 +113,6 @@ public class UserSearchResponseContent {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date pwdExpiryDate;
 
-    /**
-     * Legacy constructor for core search endpoints ({@code /_search}, {@code /v1/_search}, {@code /users/v2/_search}).
-     * <p>
-     * Populates core identity, audit, and demographic profile fields.
-     * Crucially, {@code addresses} and {@code documents} collections are <b>NOT</b> populated and remain {@code null}
-     * to preserve contract compatibility and prevent PII exposure for legacy and v2 callers
-     * (e.g. PT, TL, PGR, HRMS, and UI).
-     *
-     * @param user the domain {@link User} entity to copy fields from
-     */
     /**
      * Legacy constructor used by existing user search callers (e.g. {@code /_search},
      * {@code /v1/_search}, and {@code /users/v2/_search} consumed by PT, TL, PGR, and HRMS).
@@ -222,6 +213,7 @@ public class UserSearchResponseContent {
             this.lastResyncDate = user.getLastResyncDate();
             this.edittedCount = user.getEdittedCount();
             this.lastLoginMethod = user.getLastLoginMethod();
+            this.familyId = user.getFamilyId();
         }
 
         if (includes != null && includes.contains(ProfileIncludeEntity.ADDRESS)) {
@@ -322,6 +314,7 @@ public class UserSearchResponseContent {
         user.setLastResyncDate(this.lastResyncDate);
         user.setEdittedCount(this.edittedCount);
         user.setLastLoginMethod(this.lastLoginMethod);
+        user.setFamilyId(this.familyId);
  
         // Address mappings
         if (this.permanentAddress != null || this.permanentCity != null || this.permanentPinCode != null) {

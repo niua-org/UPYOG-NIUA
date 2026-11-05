@@ -1,6 +1,5 @@
 package org.egov.dx.web.models;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -42,7 +41,6 @@ public class AadhaarVerificationRequest {
     @NotNull(message = AadhaarConstants.MSG_REQUEST_INFO_MANDATORY)
     @Valid
     @JsonProperty("RequestInfo")
-    @JsonAlias("requestInfo")
     private RequestInfo requestInfo;
 
     /**
@@ -51,14 +49,12 @@ public class AadhaarVerificationRequest {
      */
     @Pattern(regexp = AadhaarConstants.REGEX_AADHAAR, message = AadhaarConstants.MSG_INVALID_AADHAAR)
     @JsonProperty("aadhaarNumber")
-    @JsonAlias("aadhaar_number")
     private String aadhaarNumber;
 
     /**
      * Unique session reference identifier returned by /_sendOtp (mandatory for /_verifyOtp).
      */
     @JsonProperty("referenceId")
-    @JsonAlias({"reference_id", "txnId", "transactionId"})
     private String referenceId;
 
     /**
@@ -72,15 +68,19 @@ public class AadhaarVerificationRequest {
      * Optional flag indicating if this verification is triggered to re-sync an existing citizen profile.
      */
     @JsonProperty("isResync")
-    @JsonAlias({"resync", "is_resync"})
     private Boolean isResync;
 
     /**
      * Optional user UUID correlation identifier when re-syncing an existing citizen profile.
      */
     @JsonProperty("userUuid")
-    @JsonAlias({"uuid", "user_uuid"})
     private String userUuid;
+
+    /**
+     * Optional tenant identifier (e.g. "pg", "pg.citya"). Defaults to state-level tenant if omitted.
+     */
+    @JsonProperty("tenantId")
+    private String tenantId;
 
     /**
      * Convenience alias for {@link #referenceId} to maintain compatibility with legacy txnId references.

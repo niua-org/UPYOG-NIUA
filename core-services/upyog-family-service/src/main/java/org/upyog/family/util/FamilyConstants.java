@@ -9,6 +9,9 @@ package org.upyog.family.util;
  */
 public final class FamilyConstants {
 
+    /**
+     * Private constructor to prevent instantiation of utility constants class.
+     */
     private FamilyConstants() {
         // Prevent instantiation
     }
@@ -29,6 +32,7 @@ public final class FamilyConstants {
     public static final String STATUS_STAGED = "STAGED";
     public static final String STATUS_FOUND = "FOUND";
     public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
+    public static final String STATUS_JOINED = "JOINED";
     public static final String STATUS_READY_FOR_JIT = "READY_FOR_JIT_PROVISION";
 
     // ==========================================
@@ -110,6 +114,7 @@ public final class FamilyConstants {
     public static final String ERROR_ALREADY_HEAD = "MEMBER_ALREADY_HEAD_OF_FAMILY";
     public static final String ERROR_MEMBER_INACTIVE = "FAMILY_MEMBER_ALREADY_INACTIVE";
     public static final String ERROR_UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS";
+    public static final String ERROR_USER_NOT_VERIFIED = "USER_NOT_VERIFIED";
 
     // State Registry Integration Error Codes
     public static final String ERROR_INVALID_STATE_FAMILY_REQUEST = "INVALID_STATE_FAMILY_REQUEST";
@@ -124,4 +129,5 @@ public final class FamilyConstants {
     public static final String MSG_HEAD_OF_FAMILY_MANDATORY = "A family unit must have exactly one Head of Family (HoF) with is_head=true";
     public static final String MSG_FAMILY_TENANT_REQUIRED = "Tenant ID is mandatory for family operations";
     public static final String MSG_FAMILY_ID_REQUIRED = "Family ID is mandatory";
+    public static final String MSG_USER_NOT_VERIFIED = "User identity is not verified in database. Citizen must verify their profile (via Aadhaar/e-KYC) before performing family operations.";
 }

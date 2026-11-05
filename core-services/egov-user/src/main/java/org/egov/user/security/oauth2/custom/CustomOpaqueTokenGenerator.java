@@ -3,6 +3,7 @@ package org.egov.user.security.oauth2.custom;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.user.domain.model.SecureUser;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.util.MaskUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -85,7 +86,7 @@ public class CustomOpaqueTokenGenerator implements OAuth2TokenGenerator<OAuth2Ac
             }
 
             // CRITICAL: Log roles before storing in Redis
-            log.info("REDIS STORE: User {} has {} roles", userToStore.getUserName(),
+            log.info("REDIS STORE: User {} has {} roles", MaskUtils.maskIdentifier(userToStore.getUserName()),
                      userToStore.getRoles() != null ? userToStore.getRoles().size() : "null");
             if (userToStore.getRoles() != null) {
                 userToStore.getRoles().forEach(role ->

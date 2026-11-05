@@ -1,0 +1,15 @@
+<!--
+  Standard Maven test plugins for business-services Spring Boot modules.
+  Copy the <properties>, <dependencies>, and <build><plugins> sections into each service pom.xml.
+  See business-services/docs/TESTING.md for naming conventions (*Test vs *IT).
+-->
+<fragment>
+    <properties>
+        <testcontainers.version>1.19.7</testcontainers.version>
+        <wiremock.version>3.3.1</wiremock.version>
+        <jacoco.version>0.8.11</jacoco.version>
+        <!-- Set per service after first JaCoCo run; CI fails if coverage drops below baseline -->
+        <jacoco.line.coverage.minimum>0.00</jacoco.line.coverage.minimum>
+        <jacoco.branch.coverage.minimum>0.00</jacoco.branch.coverage.minimum>
+    </properties>
+</fragment>

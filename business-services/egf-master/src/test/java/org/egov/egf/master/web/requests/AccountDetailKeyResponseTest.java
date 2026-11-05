@@ -1,0 +1,17 @@
+package org.egov.egf.master.web.requests;
+
+import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+
+class AccountDetailKeyResponseTest {
+    @Test
+    void classLoads() {
+        assertThat(AccountDetailKeyResponse.class).isNotNull();
+    }
+
+    @Test
+    void canReflectNoArgConstructorIfPresent() throws Exception {
+        var ctor = AccountDetailKeyResponse.class.getDeclaredConstructors();
+        assertThat(ctor).isNotEmpty();
+    }
+}

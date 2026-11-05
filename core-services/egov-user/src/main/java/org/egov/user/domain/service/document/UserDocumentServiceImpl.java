@@ -175,7 +175,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, UserConstants.MSG_DOCUMENT_SEARCH_CRITERIA_NULL);
         }
 
-        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null) {
+        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null && CollectionUtils.isEmpty(criteria.getUserUuids())) {
             Long userId = userRepository.getUserIdByUuid(criteria.getUserUuid());
             if (userId != null) {
                 criteria.setUserId(userId);
@@ -188,6 +188,16 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         List<UserDocument> documents = documentRepository.search(criteria);
         if (CollectionUtils.isEmpty(documents)) {
             return Collections.emptyList();
+        }
+
+        if (Boolean.TRUE.equals(criteria.getActive())) {
+            documents = documents.stream()
+                    .filter(d -> d.getActive() == null || Boolean.TRUE.equals(d.getActive()))
+                    .collect(Collectors.toList());
+        } else if (Boolean.FALSE.equals(criteria.getActive())) {
+            documents = documents.stream()
+                    .filter(d -> Boolean.FALSE.equals(d.getActive()))
+                    .collect(Collectors.toList());
         }
 
         for (UserDocument d : documents) {

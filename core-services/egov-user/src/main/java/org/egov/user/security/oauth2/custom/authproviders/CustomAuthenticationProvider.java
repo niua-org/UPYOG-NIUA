@@ -19,6 +19,7 @@ import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.auth.Role;
 import org.egov.user.web.contract.multiauth.UserAccountSummary;
+import org.egov.user.util.MaskUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -115,7 +116,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String password = (String) authentication.getCredentials();
         
         log.info("=== Authentication Debug Info ===");
-        log.info("Username: {}", username);
+        log.info("Username: {}", MaskUtils.maskIdentifier(username));
         log.info("Password length: {}", password != null ? password.length() : "null");
         log.info("Authentication details: {}", authentication.getDetails());
         
@@ -132,7 +133,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             throw new BadCredentialsException("Failed to extract authentication details: " + e.getMessage());
         }
         
-        log.debug("Authenticating user: {} with tenantId: {} and userType: {}", username, tenantId, userType);
+        log.debug("Authenticating user: {} with tenantId: {} and userType: {}", MaskUtils.maskIdentifier(username), tenantId, userType);
         
         try {
             // Get user from database
@@ -163,12 +164,12 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                     if (matchedUsers.size() > 1) {
                         boolean allInactive = matchedUsers.stream().allMatch(u -> !Boolean.TRUE.equals(u.getActive()));
                         if (allInactive) {
-                            log.error("All citizen accounts for mobile {} are inactive", username);
+                            log.error("All citizen accounts for mobile {} are inactive", MaskUtils.maskMobile(username));
                             throw new BadCredentialsException("Account inactive");
                         }
                         if (isMultiAccountSelectionEnabled()) {
                             log.info("Multiple ({}) citizen accounts found for mobile: {}. Validating OTP before returning selector.",
-                                    matchedUsers.size(), username);
+                                    matchedUsers.size(), MaskUtils.maskMobile(username));
 
                             boolean isOtpValid = false;
                             if (isFixedOTPEnabled() && getFixedOTPPassword() != null && getFixedOTPPassword().equals(password)) {
@@ -183,13 +184,13 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                                 try {
                                     isOtpValid = userService.validateOtp(tempUser);
                                 } catch (Exception e) {
-                                    log.error("OTP validation error during multi-user check for mobile {}: {}", username, e.getMessage());
+                                    log.error("OTP validation error during multi-user check for mobile {}: {}", MaskUtils.maskMobile(username), e.getMessage());
                                     isOtpValid = false;
                                 }
                             }
 
                             if (!isOtpValid) {
-                                log.error("Invalid OTP entered for multi-user mobile: {}", username);
+                                log.error("Invalid OTP entered for multi-user mobile: {}", MaskUtils.maskMobile(username));
                                 throw new BadCredentialsException("Invalid password");
                             }
 
@@ -199,11 +200,11 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                                     .map(UserAccountSummary::fromUser)
                                     .collect(Collectors.toList());
 
-                            log.info("Prompting user to select from {} accounts linked to mobile: {}", summaries.size(), username);
+                            log.info("Prompting user to select from {} accounts linked to mobile: {}", summaries.size(), MaskUtils.maskMobile(username));
                             throw new MultipleUsersFoundException(username, summaries);
                         } else {
                             log.info("Multiple ({}) citizen accounts found for mobile: {}. Multi-account selection disabled, selecting single user.",
-                                    matchedUsers.size(), username);
+                                    matchedUsers.size(), MaskUtils.maskMobile(username));
                             user = selectPrimaryCitizenUser(matchedUsers, username);
                         }
                     } else {
@@ -217,7 +218,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             }
             
             if (user == null) {
-                log.error("User not found in database for username: {}, tenantId: {}, userType: {}", username, tenantId, userType);
+                log.error("User not found in database for username: {}, tenantId: {}, userType: {}", MaskUtils.maskIdentifier(username), tenantId, userType);
                 throw new BadCredentialsException("User not found");
             }
             
@@ -225,12 +226,12 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
             // Check account status
             if (!Boolean.TRUE.equals(user.getActive())) {
-                log.warn("Account is inactive for user: {}", username);
+                log.warn("Account is inactive for user: {}", MaskUtils.maskIdentifier(username));
                 throw new BadCredentialsException("Account inactive");
             }
 
             if (user.getAccountLocked() != null && user.getAccountLocked()) {
-                log.warn("Account is locked for user: {}", username);
+                log.warn("Account is locked for user: {}", MaskUtils.maskIdentifier(username));
                 if (!userService.isAccountUnlockAble(user)) {
                     throw new BadCredentialsException("Account locked");
                 }
@@ -254,7 +255,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             boolean isPasswordMatched;
             if (userTypeEnum == UserType.CITIZEN && isOtpBased) {
                 if (isFixedOTPEnabled() && getFixedOTPPassword() != null && !getFixedOTPPassword().isEmpty() && getFixedOTPPassword().equals(password)) {
-                    log.info("Fixed OTP validation successful for citizen user: {}", username);
+                    log.info("Fixed OTP validation successful for citizen user: {}", MaskUtils.maskIdentifier(username));
                     isPasswordMatched = true;  // Skip external OTP service call
                 } else {
                     log.info("Fixed OTP not enabled or not matching, validating via OTP service");
@@ -265,7 +266,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             }
 
             if (!isPasswordMatched) {
-                log.error("Password validation failed for user: {}", username);
+                log.error("Password validation failed for user: {}", MaskUtils.maskIdentifier(username));
                 throw new BadCredentialsException("Invalid password");
             }
             
@@ -331,23 +332,23 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             SecureUser secureUser = new SecureUser(authUser);
             log.info("SecureUser created successfully with authorities: {}", secureUser.getAuthorities());
             
-            log.info("Authentication successful for user: {}", username);
+            log.info("Authentication successful for user: {}", MaskUtils.maskIdentifier(username));
             return new UsernamePasswordAuthenticationToken(secureUser, password, secureUser.getAuthorities());
             
         } catch (MultipleUsersFoundException e) {
-            log.info("MultipleUsersFoundException for username: {} - propagating for account selection", username);
+            log.info("MultipleUsersFoundException for username: {} - propagating for account selection", MaskUtils.maskIdentifier(username));
             throw e;
         } catch (UserNotFoundException e) {
-            log.error("UserNotFoundException for username: {}, tenantId: {}, userType: {} - {}", username, tenantId, userType, e.getMessage());
+            log.error("UserNotFoundException for username: {}, tenantId: {}, userType: {} - {}", MaskUtils.maskIdentifier(username), tenantId, userType, e.getMessage());
             throw new BadCredentialsException("User not found: " + e.getMessage());
         } catch (DuplicateUserNameException e) {
-            log.error("DuplicateUserNameException for username: {}, tenantId: {}, userType: {} - {}", username, tenantId, userType, e.getMessage());
+            log.error("DuplicateUserNameException for username: {}, tenantId: {}, userType: {} - {}", MaskUtils.maskIdentifier(username), tenantId, userType, e.getMessage());
             throw new BadCredentialsException("Duplicate user found: " + e.getMessage());
         } catch (BadCredentialsException e) {
             log.error("BadCredentialsException: {}", e.getMessage());
             throw e; // Re-throw as-is
         } catch (Exception e) {
-            log.error("Unexpected authentication error for user: {} - {}", username, e.getMessage(), e);
+            log.error("Unexpected authentication error for user: {} - {}", MaskUtils.maskIdentifier(username), e.getMessage(), e);
             throw new BadCredentialsException("Authentication failed: " + e.getMessage());
         }
     }
@@ -359,22 +360,22 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         
         // Log the validation attempt
         log.info("Password validation - OTP based: {}, Internal call: {}, User: {}", 
-                isOtpBased, isCallInternal, user.getUsername());
+                isOtpBased, isCallInternal, user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null");
         
         if (isOtpBased) {
             // For OTP-based authentication, only skip validation for legitimate internal system calls
             // This should be used very carefully and only for system-to-system communication
             if (null != isCallInternal && isCallInternal.equals("true")) {
-                log.warn("Skipping OTP validation for internal system call - User: {}", user.getUsername());
+                log.warn("Skipping OTP validation for internal system call - User: {}", user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null");
                 return true;
             }
             user.setOtpReference(password);
             try {
                 boolean otpValid = userService.validateOtp(user);
-                log.info("OTP validation result for user {}: {}", user.getUsername(), otpValid);
+                log.info("OTP validation result for user {}: {}", user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null", otpValid);
                 return otpValid;
             } catch (ServiceCallException e) {
-                log.error("OTP validation failed for user {}: {}", user.getUsername(), e.getMessage());
+                log.error("OTP validation failed for user {}: {}", user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null", e.getMessage());
                 return false;
             }
         } else {
@@ -382,12 +383,12 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             // The isCallInternal flag should only be used for very specific system operations
             // and should never bypass regular user authentication
             if (null != isCallInternal && isCallInternal.equals("true")) {
-                log.warn("Internal call detected but still validating password for security - User: {}", user.getUsername());
+                log.warn("Internal call detected but still validating password for security - User: {}", user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null");
                 // Continue with normal password validation instead of bypassing
             }
             
             boolean passwordValid = passwordEncoder.matches(password, user.getPassword());
-            log.info("Password validation result for user {}: {}", user.getUsername(), passwordValid);
+            log.info("Password validation result for user {}: {}", user != null ? MaskUtils.maskIdentifier(user.getUsername()) : "null", passwordValid);
             return passwordValid;
         }
     }
@@ -504,7 +505,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     /**
      * Unlock account and disable existing failed login attempts for the user
-     *
      * @param user to be unlocked
      * @return Updated user
      */
@@ -616,13 +616,13 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             return null;
         }
         log.info("Selecting primary citizen user for mobile: {} from {} candidates",
-                mobileNumber, matchedUsers.size());
+                MaskUtils.maskMobile(mobileNumber), matchedUsers.size());
 
         // 1. Look for active user whose username matches the mobile number
         for (User u : matchedUsers) {
             if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && !Boolean.FALSE.equals(u.getActive())) {
                 log.info("Selected primary citizen user with matching username: {} (UUID: {})",
-                        u.getUsername(), u.getUuid());
+                        MaskUtils.maskIdentifier(u.getUsername()), u.getUuid());
                 return u;
             }
         }
@@ -631,7 +631,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         for (User u : matchedUsers) {
             if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && Boolean.FALSE.equals(u.getActive())) {
                 log.error("Primary citizen account with username {} for mobile {} is inactive",
-                        u.getUsername(), mobileNumber);
+                        MaskUtils.maskIdentifier(u.getUsername()), MaskUtils.maskMobile(mobileNumber));
                 throw new BadCredentialsException("Account inactive");
             }
         }
@@ -640,12 +640,12 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         for (User u : matchedUsers) {
             if (!Boolean.FALSE.equals(u.getActive())) {
                 log.warn("No citizen account found with username == mobile {}. Falling back to active candidate: {} (UUID: {})",
-                        mobileNumber, u.getUsername(), u.getUuid());
+                        MaskUtils.maskMobile(mobileNumber), MaskUtils.maskIdentifier(u.getUsername()), u.getUuid());
                 return u;
             }
         }
 
-        log.error("All matched citizen accounts for mobile {} are inactive", mobileNumber);
+        log.error("All matched citizen accounts for mobile {} are inactive", MaskUtils.maskMobile(mobileNumber));
         throw new BadCredentialsException("Account inactive");
     }
 

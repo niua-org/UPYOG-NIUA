@@ -10,6 +10,7 @@ import org.egov.dx.adapter.vendor.dto.VendorSendOtpResponse;
 import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpRequest;
 import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpSuccessResponse;
 import org.egov.dx.service.AadhaarSessionManager;
+import org.egov.dx.service.UserRegistryService;
 import org.egov.dx.service.impl.AadhaarSessionManagerImpl;
 import org.egov.dx.util.AadhaarConstants;
 import org.egov.dx.validator.AadhaarVerificationValidator;
@@ -47,6 +48,7 @@ public class AadhaarVerificationController {
     private final AadhaarGatewayAdapter gatewayAdapter;
     private final AadhaarVerificationValidator validator;
     private final AadhaarSessionManager sessionManager;
+    private final UserRegistryService userRegistryService;
 
     /**
      * Constructor injection satisfying the Dependency Inversion Principle (DIP).
@@ -54,19 +56,28 @@ public class AadhaarVerificationController {
      * @param gatewayAdapter abstraction for the configured vendor gateway adapter
      * @param validator component handling request validation
      * @param sessionManager abstraction managing OTP attempts and replay prevention
+     * @param userRegistryService abstraction for resolving existing citizen profiles
      */
     @Autowired
     public AadhaarVerificationController(AadhaarGatewayAdapter gatewayAdapter,
                                          AadhaarVerificationValidator validator,
-                                         AadhaarSessionManager sessionManager) {
+                                         AadhaarSessionManager sessionManager,
+                                         @Autowired(required = false) UserRegistryService userRegistryService) {
         this.gatewayAdapter = gatewayAdapter;
         this.validator = validator;
         this.sessionManager = sessionManager;
+        this.userRegistryService = userRegistryService;
+    }
+
+    public AadhaarVerificationController(AadhaarGatewayAdapter gatewayAdapter,
+                                         AadhaarVerificationValidator validator,
+                                         AadhaarSessionManager sessionManager) {
+        this(gatewayAdapter, validator, sessionManager, null);
     }
 
     public AadhaarVerificationController(AadhaarGatewayAdapter gatewayAdapter,
                                          AadhaarVerificationValidator validator) {
-        this(gatewayAdapter, validator, new AadhaarSessionManagerImpl(3, null));
+        this(gatewayAdapter, validator, new AadhaarSessionManagerImpl(3, null), null);
     }
 
     /**
@@ -120,6 +131,10 @@ public class AadhaarVerificationController {
         String message = StringUtils.isNotBlank(vendorRes.getData().getMessage())
                 ? vendorRes.getData().getMessage()
                 : AadhaarConstants.MSG_OTP_SENT_SUCCESS;
+
+        if (StringUtils.isNotBlank(referenceId) && StringUtils.isNotBlank(aadhaarNumber)) {
+            sessionManager.storeAadhaarForReferenceId(referenceId, aadhaarNumber);
+        }
 
         log.info("Aadhaar OTP dispatched successfully. maskedAadhaar: {}, referenceId: {}, txnId: {}",
                 maskedAadhaar, referenceId, txnId);
@@ -239,6 +254,20 @@ public class AadhaarVerificationController {
         String rawDob = StringUtils.isNotBlank(details.getDob()) ? details.getDob() : details.getDateOfBirth();
         String normalizedDob = normalizeDob(rawDob);
 
+        // Retrieve stored Aadhaar from session if not provided directly in verify request
+        String storedAadhaar = (StringUtils.isNotBlank(referenceId))
+                ? sessionManager.getAadhaarForReferenceId(referenceId)
+                : null;
+        String effectiveAadhaar = StringUtils.isNotBlank(request.getAadhaarNumber())
+                ? request.getAadhaarNumber()
+                : storedAadhaar;
+
+        if (StringUtils.isNotBlank(effectiveAadhaar)) {
+            if (StringUtils.isBlank(details.getAadhaarNumber()) || "XXXXXXXX1234".equals(details.getAadhaarNumber())) {
+                details.setAadhaarNumber(maskAadhaar(effectiveAadhaar));
+            }
+        }
+
         UserDemographics demographics = UserDemographics.builder()
                 .name(details.getName())
                 .dob(normalizedDob)
@@ -257,6 +286,30 @@ public class AadhaarVerificationController {
                 .country(addr != null ? addr.getCountry() : null)
                 .build();
 
+        // 8. Resolve existing citizen userUuid from egov-user service or auto-provision if not found
+        String searchAadhaar = StringUtils.isNotBlank(effectiveAadhaar)
+                ? effectiveAadhaar
+                : details.getAadhaarNumber();
+
+        String tenantId = StringUtils.isNotBlank(request.getTenantId())
+                ? request.getTenantId()
+                : (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null
+                   ? request.getRequestInfo().getUserInfo().getTenantId()
+                   : null);
+
+        String existingUserUuid = null;
+        if (userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
+            existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
+                    searchAadhaar, tenantId, request.getRequestInfo());
+        }
+        if (StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(request.getUserUuid())) {
+            existingUserUuid = request.getUserUuid();
+        }
+        if (StringUtils.isBlank(existingUserUuid) && userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
+            existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
+                    searchAadhaar, demographics, tenantId, request.getRequestInfo());
+        }
+
         ResponseInfo successResponseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
 
         AadhaarVerificationResponse response = AadhaarVerificationResponse.builder()
@@ -266,12 +319,13 @@ public class AadhaarVerificationController {
                 .status(AadhaarConstants.STATUS_VERIFIED)
                 .isVerified(true)
                 .maskedAadhaar(details.getAadhaarNumber())
+                .userUuid(existingUserUuid)
                 .demographics(demographics)
                 .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
                 .build();
 
-        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}",
-                referenceId, details.getAadhaarNumber());
+        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}",
+                referenceId, details.getAadhaarNumber(), existingUserUuid);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -17,6 +17,7 @@ import org.egov.user.web.contract.multiauth.LoginV2Request;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -191,7 +192,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
             effectiveIdentifier = familyId;
         }
         log.info("[FAMILY-AUTH-STRATEGY] Initiating family login: familyId={}, mobile={}, aadhaar={}, effectiveIdentifier={}, tenant={}",
-                familyId, maskMobile(mobileNumber), maskMobile(request.getAadhaarNumber()), maskMobile(effectiveIdentifier), tenantId);
+                familyId, MaskUtils.maskMobile(mobileNumber), MaskUtils.maskAadhaar(request.getAadhaarNumber()), MaskUtils.maskIdentifier(effectiveIdentifier), tenantId);
 
         // 1. Validate OTP for member mobile number or familyId
         validateOtp(effectiveIdentifier, otp, tenantId, request);
@@ -211,7 +212,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         // 2b. If client specified a selected user UUID, verify that it belongs to the matched accounts for this verified identifier
         if (StringUtils.isNotBlank(request.getSelectedUserUuid())) {
             log.info("[FAMILY-AUTH-STRATEGY] Resolving selected user UUID: {} for effective identifier: {}",
-                    request.getSelectedUserUuid(), maskMobile(effectiveIdentifier));
+                    request.getSelectedUserUuid(), MaskUtils.maskIdentifier(effectiveIdentifier));
             User selectedUser = matchedUsers.stream()
                     .filter(u -> request.getSelectedUserUuid().equals(u.getUuid()))
                     .findFirst()
@@ -256,7 +257,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                 throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
             }
             log.info("[FAMILY-AUTH-STRATEGY] Found {} citizen profiles linked to effective identifier: {}. Returning list for selection.",
-                    matchedUsers.size(), maskMobile(effectiveIdentifier));
+                    matchedUsers.size(), MaskUtils.maskIdentifier(effectiveIdentifier));
             return AuthenticatedUserResult.builder()
                     .multipleUsersFound(true)
                     .matchedUsers(matchedUsers)
@@ -298,7 +299,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
 
         // 2e. Auto-create citizen profile for family member / head if not found
         log.info("[FAMILY-AUTH-STRATEGY] Citizen account not found for identifier: {}. Auto-provisioning citizen profile.",
-                maskMobile(effectiveIdentifier));
+                MaskUtils.maskIdentifier(effectiveIdentifier));
         String defaultName = StringUtils.isNotBlank(mobileNumber) ? "Family Member"
                 : (StringUtils.isNotBlank(request.getAadhaarNumber()) ? "Aadhaar Citizen" : "Family Citizen");
         String name = StringUtils.isNotBlank(request.getName()) ? request.getName().trim() : defaultName;
@@ -408,19 +409,19 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
      * @throws CustomException if OTP verification is rejected
      */
     private void validateOtp(String identity, String otp, String tenantId, LoginV2Request request) {
-        log.debug("[FAMILY-AUTH-STRATEGY] Validating OTP for identity: {}", maskMobile(identity));
+        log.debug("[FAMILY-AUTH-STRATEGY] Validating OTP for identity: {}", MaskUtils.maskIdentifier(identity));
 
         if (StringUtils.isNotBlank(identity)) {
             int currentAttempts = invalidOtpAttempts.getOrDefault(identity, 0);
             if (currentAttempts >= getMaxOtpAttempts()) {
                 log.error("[FAMILY-AUTH-STRATEGY] Locked: identity {} has exceeded maximum allowed OTP attempts ({})",
-                        maskMobile(identity), getMaxOtpAttempts());
+                        MaskUtils.maskIdentifier(identity), getMaxOtpAttempts());
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
             }
         }
 
         if (isFixedOTPEnabled() && StringUtils.isNotBlank(getFixedOTPPassword()) && getFixedOTPPassword().equals(otp)) {
-            log.info("[FAMILY-AUTH-STRATEGY] Fixed OTP matched for family identity: {}", maskMobile(identity));
+            log.info("[FAMILY-AUTH-STRATEGY] Fixed OTP matched for family identity: {}", MaskUtils.maskIdentifier(identity));
             if (StringUtils.isNotBlank(identity)) {
                 invalidOtpAttempts.remove(identity);
             }
@@ -444,18 +445,18 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                 int attempts = invalidOtpAttempts.compute(identity, (k, v) -> (v == null ? 1 : v + 1));
                 if (attempts >= getMaxOtpAttempts()) {
                     log.error("[FAMILY-AUTH-STRATEGY] Identity {} reached max invalid OTP attempts ({}). Lockout triggered.",
-                            maskMobile(identity), getMaxOtpAttempts());
+                            MaskUtils.maskIdentifier(identity), getMaxOtpAttempts());
                     throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
                 }
             }
-            log.error("[FAMILY-AUTH-STRATEGY] OTP verification rejected by egov-otp for identity: {}", maskMobile(identity));
-            throw new CustomException(UserConstants.ERROR_INVALID_OTP, "Invalid or expired OTP for family identity: " + maskMobile(identity));
+            log.error("[FAMILY-AUTH-STRATEGY] OTP verification rejected by egov-otp for identity: {}", MaskUtils.maskIdentifier(identity));
+            throw new CustomException(UserConstants.ERROR_INVALID_OTP, "Invalid or expired OTP for family identity: " + MaskUtils.maskIdentifier(identity));
         }
 
         if (StringUtils.isNotBlank(identity)) {
             invalidOtpAttempts.remove(identity);
         }
-        log.info("[FAMILY-AUTH-STRATEGY] OTP verified successfully for family identity: {}", maskMobile(identity));
+        log.info("[FAMILY-AUTH-STRATEGY] OTP verified successfully for family identity: {}", MaskUtils.maskIdentifier(identity));
     }
 
     /**
@@ -634,19 +635,5 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
             return tenantId.split("\\.")[0];
         }
         return tenantId;
-    }
-
-    /**
-     * Masks the member's mobile number for log security.
-     *
-     * @param mobile 10-digit mobile number
-     * @return masked mobile string
-     */
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) return "N/A";
-        if (mobile.length() >= 6) {
-            return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-        }
-        return "******";
     }
 }

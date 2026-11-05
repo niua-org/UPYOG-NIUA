@@ -1,8 +1,9 @@
 package org.egov.egf.instrument.persistence.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -26,10 +27,11 @@ import org.egov.egf.instrument.persistence.entity.InstrumentEntity;
 import org.egov.egf.master.web.contract.BankAccountContract;
 import org.egov.egf.master.web.contract.BankContract;
 import org.egov.egf.master.web.contract.FinancialStatusContract;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataAccessException;
@@ -37,11 +39,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@Ignore
+@Disabled
 public class InstrumentJdbcRepositoryTest {
 
     @Autowired
@@ -57,7 +59,7 @@ public class InstrumentJdbcRepositoryTest {
     @Autowired
     private DishonorReasonJdbcRepository dishonorReasonJdbcRepository;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         instrumentJdbcRepository = new InstrumentJdbcRepository(namedParameterJdbcTemplate, jdbcTemplate,
                 instrumentVoucherJdbcRepository, dishonorReasonJdbcRepository);
@@ -187,13 +189,14 @@ public class InstrumentJdbcRepositoryTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     @Sql(scripts = { "/sql/instrument/clearInstrument.sql", "/sql/instrument/insertInstrumentData.sql" })
     public void test_search_invalid_sort_option() {
 
         InstrumentSearch search = getInstrumentSearch();
         search.setSortBy("desc");
-        instrumentJdbcRepository.search(search);
+        assertThrows(InvalidDataException.class, () -> instrumentJdbcRepository.search(search));
+
 
     }
 

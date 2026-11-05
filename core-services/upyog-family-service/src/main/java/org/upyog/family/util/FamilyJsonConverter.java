@@ -18,6 +18,11 @@ public class FamilyJsonConverter {
 
     private final ObjectMapper objectMapper;
 
+    /**
+     * Constructs a FamilyJsonConverter with the specified Jackson ObjectMapper.
+     *
+     * @param objectMapper ObjectMapper instance for JSON serialization/deserialization, or a default instance if null
+     */
     @Autowired
     public FamilyJsonConverter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();

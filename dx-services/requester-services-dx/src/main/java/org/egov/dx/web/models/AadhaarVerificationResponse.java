@@ -1,6 +1,5 @@
 package org.egov.dx.web.models;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,7 +33,6 @@ public class AadhaarVerificationResponse {
      * Standard eGov ResponseInfo block containing request matching metadata and response status.
      */
     @JsonProperty("ResponseInfo")
-    @JsonAlias("responseInfo")
     private ResponseInfo responseInfo;
 
     /**
@@ -78,6 +76,13 @@ public class AadhaarVerificationResponse {
      */
     @JsonProperty("maskedAadhaar")
     private String maskedAadhaar;
+
+    /**
+     * Citizen UUID resolved from egov-user service if a citizen already exists with this Aadhaar.
+     * Null if no citizen account is associated with this verified Aadhaar.
+     */
+    @JsonProperty("userUuid")
+    private String userUuid;
 
     /**
      * Authenticated citizen demographics and residential address obtained from UIDAI e-KYC.
