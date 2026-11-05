@@ -106,7 +106,7 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         }
 
         String rootTenant = StringUtils.isNotBlank(tenantId) ? tenantId.split("\\.")[0] : "pg";
-        String url = configuration.getIdGenHost() + configuration.getIdGenPath();
+        String url = buildUrl(configuration.getIdGenHost(), configuration.getIdGenPath());
         log.info("[UPYOG-IDGEN-CLIENT] Requesting ID generation for idName: {}, tenant: {}, count: {} from: {}",
                 idName, rootTenant, count, url);
 
@@ -151,5 +151,18 @@ public class IdGenRepositoryImpl implements IdGenRepository {
             log.error("[UPYOG-IDGEN-CLIENT] Failed to generate ID from IDGen for {}: {}", idName, e.getMessage());
             throw new CustomException("IDGEN_ERROR", "Error generating ID from idgen service: " + e.getMessage());
         }
+    }
+
+    /**
+     * Builds an absolute URL from host and API path segment, normalizing trailing/leading slashes.
+     *
+     * @param host service host
+     * @param path configured path
+     * @return normalized absolute URL
+     */
+    private String buildUrl(String host, String path) {
+        String cleanHost = host.trim().endsWith("/") ? host.trim() : host.trim() + "/";
+        String cleanPath = path.trim().startsWith("/") ? path.trim().substring(1) : path.trim();
+        return cleanHost + cleanPath;
     }
 }
