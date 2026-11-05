@@ -173,12 +173,48 @@ public class UserController {
         if (user.getType() == null) {
             user.setType(UserType.CITIZEN);
         }
-        if (user.getActive() == null) {
+        if (user.getActive() == null || (Boolean.FALSE.equals(user.getActive()) && createUserRequest.getUser().getActive() == null)) {
             user.setActive(true);
         }
         if (CollectionUtils.isEmpty(user.getRoles()) && UserType.CITIZEN.equals(user.getType())) {
             user.setRoles(Collections.singleton(Role.getCitizenRole()));
         }
+
+        if (StringUtils.isNotBlank(user.getMobileNumber())) {
+            String mobileNumber = user.getMobileNumber().trim();
+            try {
+                UserSearchCriteria searchCriteria = UserSearchCriteria.builder()
+                        .mobileNumber(mobileNumber)
+                        .tenantId(user.getTenantId())
+                        .type(user.getType())
+                        .build();
+
+                List<User> existingUsers = userService.searchUsers(searchCriteria, true, createUserRequest.getRequestInfo());
+                if (!CollectionUtils.isEmpty(existingUsers)) {
+                    if (existingUsers.size() == 1) {
+                        log.info("[USER-CONTROLLER] Exactly one existing user found for mobile: {}. Returning user UUID: {}",
+                                MaskUtils.maskMobile(mobileNumber), existingUsers.get(0).getUuid());
+                        return createResponse(existingUsers.get(0));
+                    } else {
+                        // In case of multiple users, return the user whose username is same as mobile number
+                        User matchedUser = existingUsers.stream()
+                                .filter(u -> u != null && StringUtils.equalsIgnoreCase(
+                                        u.getUsername() != null ? u.getUsername().trim() : null, mobileNumber))
+                                .findFirst()
+                                .orElse(existingUsers.get(0));
+
+                        log.info("[USER-CONTROLLER] Multiple ({}) existing users found for mobile: {}. Returning user UUID: {} (username: {})",
+                                existingUsers.size(), MaskUtils.maskMobile(mobileNumber), matchedUser.getUuid(),
+                                MaskUtils.maskIdentifier(matchedUser.getUsername()));
+                        return createResponse(matchedUser);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[USER-CONTROLLER] Error searching existing users for mobile {} during _createnovalidate: {}",
+                        MaskUtils.maskMobile(mobileNumber), e.getMessage());
+            }
+        }
+
         boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
         user.setMobileValidationMandatory(mobileRequired);
         user.setOtpValidationMandatory(false);

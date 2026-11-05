@@ -41,6 +41,12 @@ public class FamilyConfiguration {
     @Value("${egov.idgen.family.id.format}")
     private String idGenFamilyIdFormat;
 
+    @Value("${egov.idgen.member.id.name}")
+    private String idGenMemberIdName;
+
+    @Value("${egov.idgen.member.id.format}")
+    private String idGenMemberIdFormat;
+
     @Value("${egov.user.host}")
     private String userHost;
 

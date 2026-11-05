@@ -40,6 +40,9 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private final Configurations configurations;
     private final ObjectMapper objectMapper;
 
+    @Value("${egov.user.aadhaar.search.path}")
+    private String aadhaarSearchPath;
+
     @Value("${egov.user.profile.search.path}")
     private String profileSearchPath;
 
@@ -71,20 +74,15 @@ public class UserRegistryServiceImpl implements UserRegistryService {
             return null;
         }
 
+        if (StringUtils.isBlank(aadhaarSearchPath)) {
+            throw new CustomException("INVALID_CONFIGURATION", "egov.user.aadhaar.search.path is not configured");
+        }
+
         String effectiveTenantId = resolveTenantId(tenantId);
         String userHost = resolveUserHost();
 
-        String standardSearchUrl = buildUrl(userHost, userSearchPath);
-        String uuid = searchByFullAadhaar(standardSearchUrl, fullAadhaar, effectiveTenantId, requestInfo);
-        if (StringUtils.isNotBlank(uuid)) {
-            return uuid;
-        }
-
-        String profileSearchUrl = buildUrl(userHost, profileSearchPath);
-        if (!profileSearchUrl.equalsIgnoreCase(standardSearchUrl)) {
-            uuid = searchByFullAadhaar(profileSearchUrl, fullAadhaar, effectiveTenantId, requestInfo);
-        }
-        return uuid;
+        String searchUrl = buildUrl(userHost, aadhaarSearchPath);
+        return searchByFullAadhaar(searchUrl, fullAadhaar, effectiveTenantId, requestInfo);
     }
 
     /**
@@ -117,6 +115,10 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         if (fullAadhaar == null) {
             log.warn("[USER-REGISTRY] Cannot mark citizen verified: Aadhaar is not a valid 12-digit value");
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
+        }
+
+        if (StringUtils.isBlank(markVerifiedPath)) {
+            throw new CustomException("INVALID_CONFIGURATION", "egov.user.aadhaar.mark.verified.path is not configured");
         }
 
         try {
@@ -189,6 +191,9 @@ public class UserRegistryServiceImpl implements UserRegistryService {
 
     private String autoCreateCitizen(String aadhaarNumber, UserDemographics demographics, String tenantId, RequestInfo requestInfo) {
         try {
+            if (StringUtils.isBlank(userCreatePath)) {
+                throw new CustomException("INVALID_CONFIGURATION", "egov.user.create.novalidate.path is not configured");
+            }
             if (StringUtils.isBlank(aadhaarNumber)) {
                 throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, "Aadhaar number is mandatory");
             }

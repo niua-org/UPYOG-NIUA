@@ -6,6 +6,7 @@ import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -144,4 +145,12 @@ public interface ProfileService {
      * @param requestInfo        request context
      */
     void markCitizenVerifiedAfterAadhaarEkyc(String userUuid, String fullAadhaarTwelve, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Searches citizen profiles specifically by Aadhaar number (Restricted to internal services).
+     *
+     * @param request Aadhaar search request containing Aadhaar number, tenantId, and RequestInfo
+     * @return list containing the matching decrypted citizen profile, or empty list if not found
+     */
+    List<User> searchProfileByAadhaar(AadhaarSearchRequest request);
 }

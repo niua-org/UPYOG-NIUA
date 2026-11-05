@@ -39,6 +39,7 @@ import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -633,8 +634,14 @@ public class ProfileServiceImpl implements ProfileService {
             if (eKyc.getGender() != null) {
                 userToUpdate.setGender(eKyc.getGender());
             }
-            if (StringUtils.isNotBlank(eKyc.getMaskedAadhaar())) {
-                userToUpdate.setAadhaarNumber(eKyc.getMaskedAadhaar());
+            String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(aadhaar);
+            String effectiveAadhaar = fullAadhaar != null
+                    ? fullAadhaar
+                    : (AadhaarNumberUtils.normalizeToTwelveDigits(existingUser.getAadhaarNumber()) != null
+                        ? existingUser.getAadhaarNumber()
+                        : eKyc.getMaskedAadhaar());
+            if (StringUtils.isNotBlank(effectiveAadhaar)) {
+                userToUpdate.setAadhaarNumber(effectiveAadhaar);
             }
             userToUpdate.setIsIdentityVerified(existingUser.getIsIdentityVerified());
             userToUpdate.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate());
@@ -760,7 +767,6 @@ public class ProfileServiceImpl implements ProfileService {
                 .tenantId(stateTenant)
                 .uuid(StringUtils.isNotBlank(request.getUuid()) ? Collections.singletonList(request.getUuid().trim()) : null)
                 .mobileNumber(request.getMobileNumber())
-                .aadhaarNumber(request.getAadhaarNumber())
                 .name(request.getName())
                 .active(request.getActive() != null ? request.getActive() : true)
                 .type(UserType.CITIZEN)
@@ -994,8 +1000,14 @@ public class ProfileServiceImpl implements ProfileService {
         if (eKyc.getGender() != null) {
             userToUpdate.setGender(eKyc.getGender());
         }
-        if (StringUtils.isNotBlank(eKyc.getMaskedAadhaar())) {
-            userToUpdate.setAadhaarNumber(eKyc.getMaskedAadhaar());
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(request.getAadhaarNumber());
+        String effectiveAadhaar = fullAadhaar != null
+                ? fullAadhaar
+                : (AadhaarNumberUtils.normalizeToTwelveDigits(existingUser.getAadhaarNumber()) != null
+                    ? existingUser.getAadhaarNumber()
+                    : eKyc.getMaskedAadhaar());
+        if (StringUtils.isNotBlank(effectiveAadhaar)) {
+            userToUpdate.setAadhaarNumber(effectiveAadhaar);
         }
 
         userToUpdate.setIsIdentityVerified(true);
@@ -1628,9 +1640,14 @@ public class ProfileServiceImpl implements ProfileService {
             existingUser.setLastResyncDate(new Date());
             existingUser.setLastLoginMethod(AuthType.AADHAAR_NUMBER.name());
 
-            if (StringUtils.isNotBlank(fullAadhaar)) {
+            String effectiveAadhaar = fullAadhaar != null
+                    ? fullAadhaar
+                    : (AadhaarNumberUtils.normalizeToTwelveDigits(existingUser.getAadhaarNumber()) != null
+                        ? existingUser.getAadhaarNumber()
+                        : eKyc.getMaskedAadhaar());
+            if (StringUtils.isNotBlank(effectiveAadhaar)) {
                 // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
-                existingUser.setAadhaarNumber(fullAadhaar);
+                existingUser.setAadhaarNumber(effectiveAadhaar);
             }
             if (StringUtils.isNotBlank(eKyc.getName()) && ("Citizen".equalsIgnoreCase(existingUser.getName()) || StringUtils.isBlank(existingUser.getName()))) {
                 existingUser.setName(eKyc.getName());
@@ -1687,13 +1704,15 @@ public class ProfileServiceImpl implements ProfileService {
 
         Long loggedInUserId = resolveLoggedInUserId(request.getRequestInfo(), 0L);
 
+        String effectiveAadhaar = fullAadhaar != null ? fullAadhaar : eKyc.getMaskedAadhaar();
+
         User newCitizen = User.builder()
                 .username(username)
                 .name(citizenName)
                 .mobileNumber(hasMobile ? mobileNumber : null)
                 .gender(eKyc.getGender())
                 .dob(eKyc.getDob())
-                .aadhaarNumber(fullAadhaar)
+                .aadhaarNumber(effectiveAadhaar)
                 .photo(eKyc.getPhoto())
                 .isIdentityVerified(true)
                 .identityVerifiedDate(new Date())
@@ -2052,6 +2071,26 @@ public class ProfileServiceImpl implements ProfileService {
         User encryptedToUpdate = encryptUser(existingUser);
         userRepository.update(encryptedToUpdate, existingUser, existingUser.getId(), existingUser.getUuid());
         log.info("[PROFILE-SERVICE] Marked citizen UUID {} as Aadhaar-verified after inter-service e-KYC", userUuid);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<User> searchProfileByAadhaar(AadhaarSearchRequest request) {
+        if (request == null || StringUtils.isBlank(request.getAadhaarNumber())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_IDENTIFIER, "Aadhaar number is mandatory for Aadhaar search");
+        }
+
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(request.getAadhaarNumber());
+        String searchAadhaar = fullAadhaar != null ? fullAadhaar : request.getAadhaarNumber().trim();
+
+        String stateTenant = resolveStateTenant(request.getTenantId());
+        User citizen = findCitizenByAadhaar(searchAadhaar, stateTenant, request.getRequestInfo());
+        if (citizen == null) {
+            return Collections.emptyList();
+        }
+        return Collections.singletonList(citizen);
     }
 
     /**

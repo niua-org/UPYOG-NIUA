@@ -118,6 +118,7 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
             reqBody.put("txnId", refId);
             reqBody.put("referenceId", refId);
             reqBody.put("otp", otp);
+            reqBody.put("tenantId", tenantId);
             reqBody.put("isResync", isResync);
 
             HttpHeaders headers = new HttpHeaders();

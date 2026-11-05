@@ -37,6 +37,7 @@ public class UserRegistryServiceImplTest {
         when(configurations.getUserHost()).thenReturn("http://localhost:8085/");
 
         userRegistryService = new UserRegistryServiceImpl(restTemplate, configurations, objectMapper);
+        ReflectionTestUtils.setField(userRegistryService, "aadhaarSearchPath", "/user/profile/aadhaar/_search");
         ReflectionTestUtils.setField(userRegistryService, "profileSearchPath", "/user/profile/_search");
         ReflectionTestUtils.setField(userRegistryService, "userSearchPath", "/user/_search");
         ReflectionTestUtils.setField(userRegistryService, "userCreatePath", "/user/users/_createnovalidate");
@@ -162,7 +163,7 @@ public class UserRegistryServiceImplTest {
 
     @Test
     void testSearchUserUuidByAadhaar_MissingSearchPath_ThrowsCustomException() {
-        ReflectionTestUtils.setField(userRegistryService, "userSearchPath", "");
+        ReflectionTestUtils.setField(userRegistryService, "aadhaarSearchPath", "");
         assertThrows(CustomException.class, () ->
                 userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo()));
     }

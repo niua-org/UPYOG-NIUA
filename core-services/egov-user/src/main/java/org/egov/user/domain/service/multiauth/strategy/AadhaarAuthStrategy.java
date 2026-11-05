@@ -400,6 +400,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             reqBody.put("txnId", refId);
             reqBody.put("referenceId", refId);
             reqBody.put("otp", otp);
+            reqBody.put("tenantId", request.getTenantId());
             reqBody.put("isResync", false);
 
             HttpHeaders headers = new HttpHeaders();
