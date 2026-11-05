@@ -65,6 +65,13 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         }
     }
 
+    /**
+     * Constructs a RequesterDxClientImpl with RestTemplate, FamilyConfiguration, and ObjectMapper.
+     *
+     * @param restTemplate Spring RestTemplate for making HTTP calls to requester-services-dx
+     * @param configuration family module configuration for endpoints and timeouts
+     * @param objectMapper Jackson ObjectMapper for parsing response payloads
+     */
     @Autowired
     public RequesterDxClientImpl(RestTemplate restTemplate,
                                  FamilyConfiguration configuration,
@@ -74,11 +81,24 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
     }
 
+    /**
+     * Registers a verified Head of Family consent token bound to a target family.
+     *
+     * @param consentToken the verified consent token string
+     * @param familyId target family identifier
+     */
     @Override
     public void registerConsentToken(String consentToken, String familyId) {
         registerConsentToken(consentToken, familyId, null);
     }
 
+    /**
+     * Registers a verified Head of Family consent token bound to both a target family and an applicant UUID.
+     *
+     * @param consentToken the verified consent token string
+     * @param familyId target family identifier
+     * @param applicantUuid citizen user UUID permitted to use this token
+     */
     @Override
     public void registerConsentToken(String consentToken, String familyId, String applicantUuid) {
         if (StringUtils.isNotBlank(consentToken)) {
@@ -293,6 +313,13 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         }
     }
 
+    /**
+     * Records token consumption binding to member and family to prevent replay attacks.
+     *
+     * @param tokenKey unique token cache key
+     * @param memberId member UUID or Aadhaar reference
+     * @param familyId target family identifier
+     */
     private void recordTokenBinding(String tokenKey, String memberId, String familyId) {
         if (StringUtils.isNotBlank(tokenKey)) {
             consumedTokens.put(tokenKey, new TokenBinding(memberId, familyId, System.currentTimeMillis()));

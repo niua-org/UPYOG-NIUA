@@ -88,4 +88,13 @@ public final class AadhaarConstants {
     public static final String DEFAULT_REASON = "For UPYOG Citizen Profile verification";
     public static final String DEFAULT_MASKED_AADHAAR = "XXXX";
     public static final String MASK_CHAR = "X";
+
+    /* -------------------------------------------------------------------------
+     * User Registry & Auto-Provisioning Constants
+     * ---------------------------------------------------------------------- */
+    public static final String USER_TYPE_CITIZEN = "CITIZEN";
+    public static final String ROLE_CITIZEN = "CITIZEN";
+    public static final String ROLE_CITIZEN_NAME = "Citizen";
+    public static final String IDENTITY_SOURCE_AADHAAR = "AADHAAR";
+    public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
 }

@@ -67,4 +67,20 @@ public interface AadhaarSessionManager {
      * @return max attempts threshold
      */
     int getMaxOtpAttempts();
+
+    /**
+     * Associates the citizen's Aadhaar number with the active session reference ID.
+     *
+     * @param refId session reference ID
+     * @param aadhaarNumber raw 12-digit or masked Aadhaar identifier
+     */
+    void storeAadhaarForReferenceId(String refId, String aadhaarNumber);
+
+    /**
+     * Retrieves the Aadhaar number associated with the active session reference ID.
+     *
+     * @param refId session reference ID
+     * @return Aadhaar number or null if not found/expired
+     */
+    String getAadhaarForReferenceId(String refId);
 }

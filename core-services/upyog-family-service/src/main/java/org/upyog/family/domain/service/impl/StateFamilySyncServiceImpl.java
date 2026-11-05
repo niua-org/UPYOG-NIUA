@@ -55,12 +55,27 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
     private final ResponseInfoFactory responseInfoFactory;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Constructs a StateFamilySyncServiceImpl with default Jackson ObjectMapper.
+     *
+     * @param stateFamilySyncRepository repository for staging state family registry payloads
+     * @param familyRepository repository for UPYOG family persistence and exclusivity queries
+     * @param responseInfoFactory factory creating standard UPYOG response headers
+     */
     public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
                                       FamilyRepository familyRepository,
                                       ResponseInfoFactory responseInfoFactory) {
         this(stateFamilySyncRepository, familyRepository, responseInfoFactory, new ObjectMapper());
     }
 
+    /**
+     * Constructs a StateFamilySyncServiceImpl with explicit ObjectMapper and repository dependencies.
+     *
+     * @param stateFamilySyncRepository repository for staging state family registry payloads
+     * @param familyRepository repository for UPYOG family persistence and exclusivity queries
+     * @param responseInfoFactory factory creating standard UPYOG response headers
+     * @param objectMapper Jackson ObjectMapper for JSON mapping
+     */
     @Autowired
     public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
                                       FamilyRepository familyRepository,
@@ -72,6 +87,14 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
     }
 
+    /**
+     * Ingests and stages external State Family Registry data into UPYOG.
+     * Generates a unique referenceId and stages the family unit for the "Family Found" UI screen.
+     *
+     * @param request state family sync request containing external state registry payload
+     * @return StateFamilySyncResponse containing referenceId and masked member profiles
+     * @throws CustomException if stateFamily, stateFamilyId, tenantId, or members are invalid
+     */
     @Override
     public StateFamilySyncResponse syncStateFamily(StateFamilySyncRequest request) {
         log.info("[STATE-FAMILY-SYNC-SVC] Received State Family Sync request from State Wrapper");
@@ -120,6 +143,15 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .build();
     }
 
+    /**
+     * Retrieves a staged StateFamily record by referenceId or stateFamilyId for UPYOG UI rendering.
+     *
+     * @param referenceId staging reference ID generated during sync
+     * @param stateFamilyId state-assigned external family identifier
+     * @param requestInfo UPYOG request context envelope
+     * @return StateFamilySyncResponse containing staged state family with masked PII
+     * @throws CustomException if state family is not found in staging repository
+     */
     @Override
     public StateFamilySyncResponse getStateFamily(String referenceId, String stateFamilyId, RequestInfo requestInfo) {
         log.info("[STATE-FAMILY-SYNC-SVC] Fetching State Family for UI: refId={}, stateFamilyId={}",
@@ -151,6 +183,14 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .build();
     }
 
+    /**
+     * Executes Just-In-Time (JIT) check and provisioning of a Family aggregate and its members upon citizen selection.
+     * Enforces multi-family exclusivity and idempotently provisions the family if not previously created.
+     *
+     * @param request JIT provision request containing member selection and state family references
+     * @return provisioned or updated Family domain aggregate
+     * @throws CustomException if exclusivity constraints are violated or state family is not found
+     */
     @Override
     @Transactional
     public Family jitProvisionFamilyAndMember(StateFamilyJitProvisionRequest request) {
@@ -495,6 +535,13 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .build();
     }
 
+    /**
+     * Extracts a string field value from an additionalDetails object (supporting JsonNode or Map).
+     *
+     * @param additionalDetails additionalDetails container object
+     * @param fieldName target field name to extract
+     * @return extracted string value or null if absent or null
+     */
     private String extractFieldFromAdditionalDetails(Object additionalDetails, String fieldName) {
         if (additionalDetails == null) {
             return null;
@@ -510,6 +557,12 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
         return null;
     }
 
+    /**
+     * Converts an arbitrary additionalDetails object into a mutable Map of String to Object.
+     *
+     * @param additionalDetails additionalDetails container object
+     * @return map of key-value attributes
+     */
     @SuppressWarnings("unchecked")
     private Map<String, Object> getOrConvertToMap(Object additionalDetails) {
         if (additionalDetails == null) {

@@ -101,6 +101,7 @@ public class UserSearchRequest {
                 .userName(userName)
                 .name(name)
                 .mobileNumber(mobileNumber)
+//				.aadhaarNumber(aadhaarNumber) - Excluded from HTTP search to prevent unauthorized Aadhaar lookup
 //				.pan(pan)
                 .emailId(emailId)
                 .fuzzyLogic(fuzzyLogic)

@@ -66,6 +66,9 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         log.info("[UPYOG-FAMILY-OTP-SERVICE] Processing send OTP request for family: {}, tenant: {}",
                 request.getFamilyId(), request.getTenantId());
 
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+
         String callerUuid = request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null
                 ? request.getRequestInfo().getUserInfo().getUuid()
                 : null;
@@ -137,6 +140,9 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         log.info("[UPYOG-FAMILY-OTP-SERVICE] Processing verify OTP request for family: {}, tenant: {}",
                 request.getFamilyId(), request.getTenantId());
 
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+
         String callerUuid = request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null
                 ? request.getRequestInfo().getUserInfo().getUuid()
                 : null;
@@ -203,6 +209,12 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 .build();
     }
 
+    /**
+     * Sanitizes family details and masks member mobile numbers to protect PII when displaying to an applicant.
+     *
+     * @param original original Family domain aggregate
+     * @return sanitized Family instance with masked mobile numbers
+     */
     private Family sanitizeFamilyForJoin(Family original) {
         if (original == null) {
             return null;
@@ -236,6 +248,12 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 .build();
     }
 
+    /**
+     * Enriches family members with live citizen demographic data retrieved from egov-user service.
+     *
+     * @param families list of Family domain aggregates to enrich
+     * @param requestInfo UPYOG request context envelope
+     */
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {
         if (families == null || families.isEmpty()) {
             return;
@@ -258,9 +276,10 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
             if (family.getMembers() != null) {
                 for (FamilyMember member : family.getMembers()) {
                     if (profileMap.containsKey(member.getUserUuid())) {
-                        member.setCitizenDetails(profileMap.get(member.getUserUuid()));
+                        member.enrichFromCitizenProfile(profileMap.get(member.getUserUuid()));
                     }
                 }
+                family.enrichHeadName();
             }
         }
     }

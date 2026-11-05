@@ -53,9 +53,9 @@ public class UserSearchCriteria {
      * <b>Validation Rules:</b>
      * <ul>
      *   <li><b>External Requests:</b> At least one identifying criterion ({@code userName}, {@code name},
-     *       {@code mobileNumber}, {@code emailId}, {@code uuid}, or {@code aadhaarNumber}) must be specified.
+     *       {@code mobileNumber}, {@code emailId}, or {@code uuid}) must be specified. Aadhaar is strictly disallowed from external searches.
      *       Furthermore, {@code tenantId} is mandatory if searching by {@code userName}, {@code name}, or {@code mobileNumber}.</li>
-     *   <li><b>Inter-Service Requests:</b> Additional criteria such as {@code id} or {@code roleCodes} are permitted
+     *   <li><b>Inter-Service Requests:</b> Additional criteria such as {@code id}, {@code roleCodes}, or internal {@code aadhaarNumber} are permitted
      *       as primary filters. Tenant ID is mandatory if searching by {@code roleCodes}.</li>
      * </ul>
      *
@@ -81,7 +81,7 @@ public class UserSearchCriteria {
                     CollectionUtils.isEmpty(uuid) && CollectionUtils.isEmpty(id) && CollectionUtils.isEmpty(roleCodes) && isEmpty(aadhaarNumber);
         else
             return isEmpty(userName) && isEmpty(name) && isEmpty(mobileNumber) && isEmpty(emailId) &&
-                    CollectionUtils.isEmpty(uuid) && isEmpty(aadhaarNumber);
+                    CollectionUtils.isEmpty(uuid);
     }
 
     private boolean validateIfTenantIdExists(boolean isInterServiceCall) {

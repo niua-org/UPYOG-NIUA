@@ -74,7 +74,12 @@ class FamilyControllerTest {
 
         FamilyMember head = FamilyMember.builder()
                 .userUuid("user-uuid-head")
+                .name("Rajesh Sharma")
                 .relationshipWithHead("HEAD")
+                .photo("photo-head-001")
+                .mobileNumber("9876543210")
+                .gender("MALE")
+                .dob(631152000000L)
                 .isHead(true)
                 .active(true)
                 .build();
@@ -83,6 +88,7 @@ class FamilyControllerTest {
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .headUserUuid("user-uuid-head")
+                .headName("Rajesh Sharma")
                 .status(FamilyStatus.ACTIVE)
                 .members(Collections.singletonList(head))
                 .build();
@@ -120,7 +126,14 @@ class FamilyControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestInfo)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.Families[0].familyId").value("FAM-2026-0001"));
+                .andExpect(jsonPath("$.Families[0].familyId").value("FAM-2026-0001"))
+                .andExpect(jsonPath("$.Families[0].headName").value("Rajesh Sharma"))
+                .andExpect(jsonPath("$.Families[0].members[0].name").value("Rajesh Sharma"))
+                .andExpect(jsonPath("$.Families[0].members[0].photo").value("photo-head-001"))
+                .andExpect(jsonPath("$.Families[0].members[0].relationshipWithHead").value("HEAD"))
+                .andExpect(jsonPath("$.Families[0].members[0].mobileNumber").value("9876543210"))
+                .andExpect(jsonPath("$.Families[0].members[0].gender").value("MALE"))
+                .andExpect(jsonPath("$.Families[0].members[0].dob").value(631152000000L));
     }
 
     @Test

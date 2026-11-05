@@ -6,6 +6,7 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.FileStoreClient;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyDocument;
@@ -46,6 +47,9 @@ class FamilyValidatorTest {
 
     @Mock
     private FamilyMasterDataService familyMasterDataService;
+
+    @Mock
+    private UserClient userClient;
 
     @InjectMocks
     private FamilyValidator validator;

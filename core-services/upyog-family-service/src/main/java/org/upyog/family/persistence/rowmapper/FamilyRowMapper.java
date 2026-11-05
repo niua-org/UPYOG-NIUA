@@ -36,6 +36,11 @@ public class FamilyRowMapper implements ResultSetExtractor<List<Family>> {
 
     private final ObjectMapper objectMapper;
 
+    /**
+     * Constructs a FamilyRowMapper with the specified ObjectMapper for deserializing JSONB columns.
+     *
+     * @param objectMapper Jackson ObjectMapper used for JSON parsing
+     */
     @Autowired
     public FamilyRowMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;

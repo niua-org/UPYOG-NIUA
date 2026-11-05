@@ -6,6 +6,7 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.FileStoreClient;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyDocument;
@@ -44,21 +45,25 @@ public class FamilyValidator {
     private final FamilyRepository familyRepository;
     private final FileStoreClient fileStoreClient;
     private final FamilyMasterDataService familyMasterDataService;
+    private final UserClient userClient;
 
     /**
-     * Constructs {@link FamilyValidator} with repository, filestore, and master data dependencies.
+     * Constructs {@link FamilyValidator} with repository, filestore, master data, and user client dependencies.
      *
      * @param familyRepository data repository for family lookups and exclusivity queries
      * @param fileStoreClient client verifying document existence in FileStore
      * @param familyMasterDataService service providing MDMS relationship master data
+     * @param userClient client communicating with user service to verify citizen identity
      */
     @Autowired
     public FamilyValidator(FamilyRepository familyRepository,
                            FileStoreClient fileStoreClient,
-                           FamilyMasterDataService familyMasterDataService) {
+                           FamilyMasterDataService familyMasterDataService,
+                           UserClient userClient) {
         this.familyRepository = familyRepository;
         this.fileStoreClient = fileStoreClient;
         this.familyMasterDataService = familyMasterDataService;
+        this.userClient = userClient;
     }
 
     /**
@@ -81,6 +86,9 @@ public class FamilyValidator {
         if (request == null || request.getFamily() == null) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Family request body cannot be null");
         }
+
+        // 0. Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
 
         Family family = request.getFamily();
 
@@ -106,6 +114,9 @@ public class FamilyValidator {
                 .filter(m -> Boolean.TRUE.equals(m.getIsHead()))
                 .findFirst()
                 .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_HEAD_OF_FAMILY_REQUIRED, FamilyConstants.MSG_HEAD_OF_FAMILY_MANDATORY));
+
+        // Ensure Head of Family is identity-verified in user registry database
+        userClient.validateUserIsVerified(headMember.getUserUuid(), request.getRequestInfo());
 
         if (StringUtils.isBlank(family.getHeadUserUuid())) {
             family.setHeadUserUuid(headMember.getUserUuid());
@@ -175,6 +186,9 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Target family does not exist");
         }
 
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+
         if (!FamilyStatus.ACTIVE.equals(existingFamily.getStatus())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Cannot update family with status: " + existingFamily.getStatus());
         }
@@ -240,6 +254,11 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Parent family not found: " + request.getParentFamilyId());
         }
 
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+        // Ensure new family Head of Family is identity-verified in user registry database
+        userClient.validateUserIsVerified(request.getNewFamilyHeadUserUuid(), request.getRequestInfo());
+
         if (!FamilyStatus.ACTIVE.equals(parentFamily.getStatus())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_SPLIT, "Parent family is not in ACTIVE state");
         }
@@ -301,6 +320,11 @@ public class FamilyValidator {
         if (mergingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Merging family not found: " + request.getMergingFamilyId());
         }
+
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+        // Ensure nominated common Head of Family is identity-verified in user registry database
+        userClient.validateUserIsVerified(request.getCommonHeadUserUuid(), request.getRequestInfo());
 
         if (survivingFamily.getFamilyId().equals(mergingFamily.getFamilyId())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_MERGE, "Cannot merge a family unit into itself");
