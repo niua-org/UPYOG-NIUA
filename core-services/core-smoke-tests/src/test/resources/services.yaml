@@ -1,0 +1,384 @@
+# Catalog from application.properties / application.yml only.
+# healthPath is set only when that file contains a literal health URL.
+# management.endpoints.web.base-path is recorded as managementPath and is not called.
+# readPath, writePath, authPath, and tenantPath are empty: those APIs were not taken from config.
+# versionPath is empty: no version endpoint property was present.
+services:
+  - name: egov-user
+    basePath: /user
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-pg-service
+    basePath: /pg-service
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-workflow-v2
+    basePath: /egov-workflow-v2
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: national-dashboard-ingest
+    basePath: /national-dashboard
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-indexer
+    basePath: /egov-indexer
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-common-masters
+    basePath: /egov-common-masters
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-location
+    basePath: /egov-location
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: pdf-service
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-accesscontrol
+    basePath: /access
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-filestore
+    basePath: /filestore
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: report
+    basePath: /report
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: audit-service
+    basePath: /audit-service
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: service-request
+    basePath: /service-request
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: mdms-v2
+    basePath: /mdms-v2
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-data-uploader
+    basePath: /data-uploader
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-persister
+    basePath: /common-persist
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-notification-sms
+    basePath: /notification-sms
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-idgen
+    basePath: /egov-idgen
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: chatbot
+    basePath: /chatbot
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-survey-services
+    basePath: /egov-survey-services
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-localization
+    basePath: /localization
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-otp
+    basePath: /otp
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: zuul
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: gateway
+    basePath: ""
+    healthPath: /gateway/health
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: user-otp
+    basePath: /user-otp
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-document-uploader
+    basePath: /egov-document-uploader
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-searcher
+    basePath: /egov-searcher
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-enc-service
+    basePath: /egov-enc-service
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: xstate-chatbot/nodejs
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: xstate-chatbot/react-app
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: tenant
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-url-shortening
+    basePath: /egov-url-shortening
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-notification-mail
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: individual
+    basePath: /individual
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-telemetry/egov-telemetry-batch-process
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-telemetry/egov-telemetry-kafka-streams
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-telemetry/telemetry-client
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: egov-mdms-service
+    basePath: /egov-mdms-service
+    healthPath: ""
+    versionPath: ""
+    managementPath: /
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: national-dashboard-kafka-pipeline
+    basePath: /national-dashboard
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: upyog-draft-service
+    basePath: /upyog-draft-service
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: gis-service
+    basePath: /gis-service
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""
+  - name: nlp-engine
+    basePath: ""
+    healthPath: ""
+    versionPath: ""
+    managementPath: ""
+    readPath: ""
+    writePath: ""
+    authPath: ""
+    tenantPath: ""

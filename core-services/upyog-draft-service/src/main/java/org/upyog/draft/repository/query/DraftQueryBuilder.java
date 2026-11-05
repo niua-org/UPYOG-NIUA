@@ -5,6 +5,8 @@ import org.upyog.draft.web.models.DraftSearchCriteria;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 @Component
 public class DraftQueryBuilder {
@@ -12,6 +14,22 @@ public class DraftQueryBuilder {
     private static final String BASE_SELECT = "SELECT draft_id, tenant_id, business_service, module_name, "
             + "module_entity_id, creator_type, draft_data, completion_pct, status, createdby, lastmodifiedby, "
             + "createdtime, lastmodifiedtime FROM ug_draft_detail WHERE 1=1";
+
+    private static final String DEFAULT_SORT_COLUMN = "lastmodifiedtime";
+
+    private static final Set<String> ALLOWED_SORT_COLUMNS = Set.of(
+            "draft_id",
+            "tenant_id",
+            "business_service",
+            "module_name",
+            "module_entity_id",
+            "creator_type",
+            "completion_pct",
+            "status",
+            "createdby",
+            "lastmodifiedby",
+            "createdtime",
+            "lastmodifiedtime");
 
     public String getSearchQuery(DraftSearchCriteria criteria, List<Object> params) {
         StringBuilder query = new StringBuilder(BASE_SELECT);
@@ -55,12 +73,23 @@ public class DraftQueryBuilder {
     }
 
     private void appendSort(StringBuilder query, DraftSearchCriteria criteria) {
-        String sortBy = criteria.getSortBy() != null ? criteria.getSortBy() : "lastmodifiedtime";
-        if ("lastModifiedTime".equalsIgnoreCase(sortBy)) {
-            sortBy = "lastmodifiedtime";
-        }
+        String sortColumn = resolveSortColumn(criteria.getSortBy());
         String sortOrder = "ASC".equalsIgnoreCase(criteria.getSortOrder()) ? "ASC" : "DESC";
-        query.append(" ORDER BY ").append(sortBy).append(" ").append(sortOrder);
+        query.append(" ORDER BY ").append(sortColumn).append(" ").append(sortOrder);
+    }
+
+    private static String resolveSortColumn(String sortBy) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return DEFAULT_SORT_COLUMN;
+        }
+        if ("lastModifiedTime".equalsIgnoreCase(sortBy)) {
+            return DEFAULT_SORT_COLUMN;
+        }
+        String normalized = sortBy.toLowerCase(Locale.ROOT);
+        if (ALLOWED_SORT_COLUMNS.contains(normalized)) {
+            return normalized;
+        }
+        return DEFAULT_SORT_COLUMN;
     }
 
     private void appendPagination(StringBuilder query, DraftSearchCriteria criteria, List<Object> params) {

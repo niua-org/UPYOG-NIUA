@@ -68,6 +68,11 @@ public class SecurityConfig {
                 .requestMatchers("/password/_update", "/_logout").permitAll()
 
 				// TODO: need to check how to handle this later , currently allowing all
+                // 4. Newly Added Endpoints: ONLY those publicly accessible without any role (Registration / Pre-Auth)
+               // .requestMatchers("/profile/_create", "/profile/_init",
+                //               "/profile/aadhaar/_verify", "/profile/aadhaar/_verifyProfile").permitAll()
+				
+								   // TODO: need to check how to handle this later , currently allowing all
 				// Controller modules - access control is enforced centrally by Zuul Gateway via MDMS
 				.requestMatchers("/profile/**", "/address/**", "/document/**", "/users/**", "/citizen/**").permitAll()
 
