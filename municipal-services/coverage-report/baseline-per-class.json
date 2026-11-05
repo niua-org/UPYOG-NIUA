@@ -1,0 +1,2762 @@
+[
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.MigrationService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/MigrationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 559,
+    "branch_missed": 160,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.validator.PropertyValidator",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/validator/PropertyValidator.java",
+    "line_pct": 11.3,
+    "branch_pct": 10.45,
+    "line_missed": 369,
+    "branch_missed": 360,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.NotificationUtil",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/NotificationUtil.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 348,
+    "branch_missed": 116,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.PaymentNotificationService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/PaymentNotificationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 286,
+    "branch_missed": 130,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.PropertyService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/PropertyService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 282,
+    "branch_missed": 156,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.NotificationService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/NotificationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 233,
+    "branch_missed": 90,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.UserService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/UserService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 227,
+    "branch_missed": 58,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.PropertyRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/PropertyRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 212,
+    "branch_missed": 62,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.PropertySearchRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/PropertySearchRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 192,
+    "branch_missed": 58,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.validator.PropertyMigrationValidator",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/validator/PropertyMigrationValidator.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 182,
+    "branch_missed": 154,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.OldPropertyRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/OldPropertyRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 175,
+    "branch_missed": 52,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.builder.PropertyQueryBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/builder/PropertyQueryBuilder.java",
+    "line_pct": 29.87,
+    "branch_pct": 22.39,
+    "line_missed": 162,
+    "branch_missed": 104,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.EnrichmentService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/EnrichmentService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 158,
+    "branch_missed": 64,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.PropertyRepository",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/PropertyRepository.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 144,
+    "branch_missed": 56,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.OwnerInfo",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/OwnerInfo.java",
+    "line_pct": 10.06,
+    "branch_pct": 0.0,
+    "line_missed": 143,
+    "branch_missed": 58,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.validator.AssessmentValidator",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/validator/AssessmentValidator.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 128,
+    "branch_missed": 104,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.AssessmentNotificationService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/AssessmentNotificationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 121,
+    "branch_missed": 56,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.config.PropertyConfiguration",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/config/PropertyConfiguration.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 107,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.PropertyUtil",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/PropertyUtil.java",
+    "line_pct": 0.93,
+    "branch_pct": 0.0,
+    "line_missed": 106,
+    "branch_missed": 35,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.TranslationService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/TranslationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 100,
+    "branch_missed": 34,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldOwnerInfo",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldOwnerInfo.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 97,
+    "branch_missed": 16,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.AssessmentEnrichmentService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/AssessmentEnrichmentService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 94,
+    "branch_missed": 42,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.EncryptionDecryptionUtil",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/EncryptionDecryptionUtil.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 90,
+    "branch_missed": 28,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.AssessmentService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/AssessmentService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 87,
+    "branch_missed": 46,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.controllers.PropertyController",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/controllers/PropertyController.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 81,
+    "branch_missed": 28,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.OpenPropertyRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/OpenPropertyRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 80,
+    "branch_missed": 14,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.WorkflowService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/WorkflowService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 67,
+    "branch_missed": 30,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.AssessmentRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/AssessmentRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 65,
+    "branch_missed": 14,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.UnmaskingUtil",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/UnmaskingUtil.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 65,
+    "branch_missed": 46,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.User",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/User.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 62,
+    "branch_missed": 14,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.DiffService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/DiffService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 59,
+    "branch_missed": 20,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.FuzzySearchService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/FuzzySearchService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 58,
+    "branch_missed": 24,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Property",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Property.java",
+    "line_pct": 5.0,
+    "branch_pct": 7.14,
+    "line_missed": 57,
+    "branch_missed": 13,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.CommonUtils",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/CommonUtils.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 56,
+    "branch_missed": 24,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Rebate",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Rebate.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 54,
+    "branch_missed": 18,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Exemption",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Exemption.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 54,
+    "branch_missed": 18,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Penalty",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Penalty.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 54,
+    "branch_missed": 18,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.builder.FuzzySearchQueryBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/builder/FuzzySearchQueryBuilder.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 54,
+    "branch_missed": 26,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.user.User",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/user/User.java",
+    "line_pct": 1.96,
+    "branch_pct": 0.0,
+    "line_missed": 50,
+    "branch_missed": 14,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.PropertyEncryptionService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/PropertyEncryptionService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 49,
+    "branch_missed": 8,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.PaymentUpdateService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/PaymentUpdateService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 48,
+    "branch_missed": 14,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.PropertyDetail",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/PropertyDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 48,
+    "branch_missed": 246,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.builder.AssessmentQueryBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/builder/AssessmentQueryBuilder.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 44,
+    "branch_missed": 20,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.AssessmentRepository",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/AssessmentRepository.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 41,
+    "branch_missed": 16,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.Bill",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/Bill.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 36,
+    "branch_missed": 202,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.BoundaryService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/BoundaryService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 36,
+    "branch_missed": 18,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.BillDetail",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/BillDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 34,
+    "branch_missed": 18,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldPropertyCriteria",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldPropertyCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 34,
+    "branch_missed": 202,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.consumer.FileStoreConsumer",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/consumer/FileStoreConsumer.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 34,
+    "branch_missed": 10,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.Payment",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/Payment.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 30,
+    "branch_missed": 176,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.controllers.AssessmentController",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/controllers/AssessmentController.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 29,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.Transaction",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/Transaction.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 28,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.BusinessService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/BusinessService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 27,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldProperty$PropertyBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldProperty.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 24,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.builder.OldPropertyQueryBulider",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/builder/OldPropertyQueryBulider.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 24,
+    "branch_missed": 12,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.user.UserSearchRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/user/UserSearchRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 22,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.ElasticSearchRepository",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/ElasticSearchRepository.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 22,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Assessment",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Assessment.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 22,
+    "branch_missed": 120,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.State",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/State.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 22,
+    "branch_missed": 32,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.ProcessInstance",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/ProcessInstance.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 22,
+    "branch_missed": 18,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Address",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Address.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 22,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Address",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Address.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 21,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldUnit",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldUnit.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 21,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldProperty",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldProperty.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 20,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.PaymentDetail",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/PaymentDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 19,
+    "branch_missed": 118,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.PropertyAuditEncRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/PropertyAuditEncRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 18,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.CreationReason",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/CreationReason.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 18,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.CalculationService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/CalculationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 18,
+    "branch_missed": 2,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Event",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Event.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 18,
+    "branch_missed": 102,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Unit",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Unit.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 18,
+    "branch_missed": 14,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.consumer.NotificationConsumer",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/consumer/NotificationConsumer.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 18,
+    "branch_missed": 10,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.Category",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/Category.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 17,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.BillAccountDetail",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/BillAccountDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 17,
+    "branch_missed": 94,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.Bill$StatusEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/Bill.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 17,
+    "branch_missed": 8,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.Action",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/Action.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 17,
+    "branch_missed": 32,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.PropertyInfo",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/PropertyInfo.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 17,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.EventDetails",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/EventDetails.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 16,
+    "branch_missed": 70,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Boundary",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Boundary.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 16,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.AssessmentUtils",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/AssessmentUtils.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 16,
+    "branch_missed": 2,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.IdGenRepository",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/IdGenRepository.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 15,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.ServiceRequestRepository",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/ServiceRequestRepository.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 15,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Calculation",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Calculation.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 15,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.DocumentType$ApplicationEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/DocumentType.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 15,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OwnerType",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OwnerType.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 15,
+    "branch_missed": 8,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.Source",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/Source.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 14,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.Channel",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/Channel.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 14,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.Status",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/Status.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 14,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.BillingService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/BillingService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 14,
+    "branch_missed": 2,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.PropertyDetail$ChannelEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/PropertyDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 14,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.PropertyInfo",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/PropertyInfo.java",
+    "line_pct": 7.14,
+    "branch_pct": 0.0,
+    "line_missed": 13,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.EncryptionCount",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/EncryptionCount.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 13,
+    "branch_missed": 78,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Assessment$Source",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Assessment.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 13,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Locality",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Locality.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 13,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.PropertyDetail$SourceEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/PropertyDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 13,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.PropertyAuditRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/PropertyAuditRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 12,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.OccupancyType",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/OccupancyType.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 12,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.DocumentBelongsTo",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/DocumentBelongsTo.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 12,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.AssessmentSearchCriteria",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/AssessmentSearchCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 12,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.ConstructionDetail",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/ConstructionDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 12,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Institution",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Institution.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 12,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.Transaction$TxnStatusEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/Transaction.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 12,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.EncryptionCountRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/EncryptionCountRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.Type",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/Type.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.enums.Relationship",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/enums/Relationship.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Document",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Document.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.UnitUsage",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/UnitUsage.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 62,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.PropertyCriteria",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/PropertyCriteria.java",
+    "line_pct": 66.67,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.BusinessServiceResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/BusinessServiceResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 24,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.ProcessInstanceRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/ProcessInstanceRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.PropertyInfo$StatusEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/PropertyInfo.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldInstitution",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldInstitution.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.PropertyDetail$StatusEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/PropertyDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldOwnerInfo$RelationshipEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldOwnerInfo.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldPropertyRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldPropertyRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldProperty$CreationReasonEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldProperty.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.UnitUsage$OccupancyTypeEnum",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/UnitUsage.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.ResponseInfoFactory",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/ResponseInfoFactory.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 11,
+    "branch_missed": 10,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Action",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Action.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 38,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Source",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Source.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Status",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Status.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.ProcessInstanceResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/ProcessInstanceResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.MigrationCount",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/MigrationCount.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.BillingSlabSearchCriteria",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/BillingSlabSearchCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 54,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldPropertyResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldPropertyResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.DocumentType",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/DocumentType.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 10,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.Email",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/Email.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 34,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.AuditDetails",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/AuditDetails.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Draft",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Draft.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 46,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldAuditDetails",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldAuditDetails.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldDocument",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldDocument.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.TaxAndPayment",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/TaxAndPayment.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.producer.PropertyProducer",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/producer/PropertyProducer.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.producer.SenderConfig",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/producer/SenderConfig.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 9,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 8,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.BillResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/BillResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 8,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.ActionItem",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/ActionItem.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 8,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Recepient",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Recepient.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 8,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.PropertyAudit",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/PropertyAudit.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 8,
+    "branch_missed": 38,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.UsageType",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/UsageType.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 8,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.UnitUsage",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/UnitUsage.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 8,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.FuzzySearchCriteria",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/FuzzySearchCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentDeleteResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentDeleteResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyDeleteRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyDeleteRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyMigrationCountRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyMigrationCountRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentDeleteRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentDeleteRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyDeleteResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyDeleteResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Difference",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Difference.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 38,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.GeoLocation",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/GeoLocation.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.PropertyApplication",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/PropertyApplication.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.TaxHeadEstimate",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/TaxHeadEstimate.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Floor",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Floor.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 7,
+    "branch_missed": 30,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.user.CreateUserRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/user/CreateUserRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.SMSRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/SMSRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.EmailRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/EmailRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdGenerationRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdGenerationRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdGenerationResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdGenerationResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.rowmapper.MigrationCountRowMapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/rowmapper/MigrationCountRowMapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 2,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.EventRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/EventRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.DraftRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/DraftRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdGenerationResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdGenerationResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdGenerationRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdGenerationRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.DraftResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/DraftResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.consumer.ReceiptConsumer",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/consumer/ReceiptConsumer.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 2,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.TransactionRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/TransactionRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 6,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.RequestInfoWrapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/RequestInfoWrapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 5,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 5,
+    "branch_missed": 14,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.PaymentRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/PaymentRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 5,
+    "branch_missed": 22,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 5,
+    "branch_missed": 14,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.RequestInfoWrapper",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/RequestInfoWrapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 5,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.PTConstants",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/PTConstants.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 5,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.user.UserDetailResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/user/UserDetailResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 4,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyRequest",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyRequest.java",
+    "line_pct": 42.86,
+    "branch_pct": 0.0,
+    "line_missed": 4,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldUserDetailResponse",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldUserDetailResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 4,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.consumer.ReceiptConsumerSaveTax",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/consumer/ReceiptConsumerSaveTax.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 4,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.MigrationService$1",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/MigrationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 2,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.DraftsService",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/DraftsService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 2,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.consumer.HashMapDeserializer",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/consumer/HashMapDeserializer.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 2,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.TransactionAdditionalFields",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/TransactionAdditionalFields.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 2,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.user.CreateUserRequest$CreateUserRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/user/CreateUserRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.user.UserSearchRequest$UserSearchRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/user/UserSearchRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 4,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.SMSRequest$SMSRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/SMSRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.EmailRequest$EmailRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/EmailRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentRequest$AssessmentRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.FuzzySearchCriteria$FuzzySearchCriteriaBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/FuzzySearchCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyDeleteRequest$PropertyDeleteRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyDeleteRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentDeleteResponse$AssessmentDeleteResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentDeleteResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentDeleteRequest$AssessmentDeleteRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentDeleteRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.Email$EmailBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/Email.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdGenerationResponse$IdGenerationResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdGenerationResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.AssessmentResponse$AssessmentResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/AssessmentResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.RequestInfoWrapper$RequestInfoWrapperBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/RequestInfoWrapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyMigrationCountRequest$PropertyMigrationCountRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyMigrationCountRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyDeleteResponse$PropertyDeleteResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyDeleteResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdRequest$IdRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdGenerationRequest$IdGenerationRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdGenerationRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyResponse$PropertyResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.IdResponse$IdResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/IdResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.config.PropertyConfiguration$PropertyConfigurationBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/config/PropertyConfiguration.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.BillResponse$BillResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/BillResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.BillAccountDetail$BillAccountDetailBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/BillAccountDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.Payment$PaymentBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/Payment.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.PaymentDetail$PaymentDetailBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/PaymentDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.Bill$BillBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/Bill.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.collection.BillDetail$BillDetailBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/collection/BillDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.service.TranslationService$1",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/service/TranslationService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.ActionItem$ActionItemBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/ActionItem.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Recepient$RecepientBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Recepient.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Event$EventBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Event.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.EventDetails$EventDetailsBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/EventDetails.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.EventRequest$EventRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/EventRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.event.Action$ActionBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/event/Action.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.PropertyInfo$PropertyInfoBuilderImpl",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/PropertyInfo.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Document$DocumentBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Document.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.ConstructionDetail$ConstructionDetailBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/ConstructionDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Unit$UnitBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Unit.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.PropertyAudit$PropertyAuditBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/PropertyAudit.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Institution$InstitutionBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Institution.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Address$AddressBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Address.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.AssessmentSearchCriteria$AssessmentSearchCriteriaBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/AssessmentSearchCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Assessment$AssessmentBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Assessment.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Locality$LocalityBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Locality.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.EncryptionCount$EncryptionCountBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/EncryptionCount.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.AuditDetails$AuditDetailsBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/AuditDetails.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.UnitUsage$UnitUsageBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/UnitUsage.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.GeoLocation$GeoLocationBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/GeoLocation.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.Action$ActionBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/Action.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.ProcessInstanceResponse$ProcessInstanceResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/ProcessInstanceResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.BusinessServiceResponse$BusinessServiceResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/BusinessServiceResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.ProcessInstance$ProcessInstanceBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/ProcessInstance.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.ProcessInstanceRequest$ProcessInstanceRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/ProcessInstanceRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.BusinessService$BusinessServiceBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/BusinessService.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.workflow.State$StateBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/workflow/State.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Address$AddressBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Address.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldPropertyCriteria$OldPropertyCriteriaBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldPropertyCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.RequestInfoWrapper$RequestInfoWrapperBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/RequestInfoWrapper.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldPropertyResponse$OldPropertyResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldPropertyResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.UnitUsage$UnitUsageBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/UnitUsage.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.BillingSlabSearchCriteria$BillingSlabSearchCriteriaBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/BillingSlabSearchCriteria.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.TaxHeadEstimate$TaxHeadEstimateBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/TaxHeadEstimate.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.DraftResponse$DraftResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/DraftResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdRequest$IdRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.DraftRequest$DraftRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/DraftRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.DocumentType$DocumentTypeBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/DocumentType.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldOwnerInfo$OldOwnerInfoBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldOwnerInfo.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Calculation$CalculationBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Calculation.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Floor$FloorBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Floor.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.UsageType$UsageTypeBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/UsageType.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldDocument$OldDocumentBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldDocument.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldPropertyRequest$OldPropertyRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldPropertyRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.MigrationCount$MigrationCountBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/MigrationCount.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdGenerationResponse$IdGenerationResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdGenerationResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Boundary$BoundaryBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Boundary.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdGenerationRequest$IdGenerationRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdGenerationRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldUnit$OldUnitBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldUnit.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.IdResponse$IdResponseBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/IdResponse.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.Draft$DraftBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/Draft.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.PropertyDetail$PropertyDetailBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/PropertyDetail.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldInstitution$OldInstitutionBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldInstitution.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.oldProperty.OldAuditDetails$OldAuditDetailsBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/oldProperty/OldAuditDetails.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.TransactionRequest$TransactionRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/TransactionRequest.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.Transaction$TransactionBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/Transaction.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.transaction.TaxAndPayment$TaxAndPaymentBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/transaction/TaxAndPayment.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.AssessmentConstants",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/AssessmentConstants.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.builder.FuzzySearchQueryBuilder$1",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/builder/FuzzySearchQueryBuilder.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.repository.builder.FuzzySearchQueryBuilder$2",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/repository/builder/FuzzySearchQueryBuilder.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 1,
+    "branch_missed": 0,
+    "priority_target": true
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.web.contracts.PropertyRequest$PropertyRequestBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/web/contracts/PropertyRequest.java",
+    "line_pct": 100.0,
+    "branch_pct": 0.0,
+    "line_missed": 0,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Property$PropertyBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Property.java",
+    "line_pct": 100.0,
+    "branch_pct": 0.0,
+    "line_missed": 0,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.PropertyCriteria$PropertyCriteriaBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/PropertyCriteria.java",
+    "line_pct": 100.0,
+    "branch_pct": 58.33,
+    "line_missed": 0,
+    "branch_missed": 5,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.OwnerInfo$OwnerInfoBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/OwnerInfo.java",
+    "line_pct": 100.0,
+    "branch_pct": 0.0,
+    "line_missed": 0,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.Property$PropertyBuilderImpl",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/Property.java",
+    "line_pct": 100.0,
+    "branch_pct": 0.0,
+    "line_missed": 0,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.models.PropertyInfo$PropertyInfoBuilder",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/models/PropertyInfo.java",
+    "line_pct": 100.0,
+    "branch_pct": 0.0,
+    "line_missed": 0,
+    "branch_missed": 0,
+    "priority_target": false
+  },
+  {
+    "module": "property-services",
+    "class": "org.egov.pt.util.ErrorConstants",
+    "source_file": "/workspace/municipal-services/property-services/src/main/java/org/egov/pt/util/ErrorConstants.java",
+    "line_pct": 0.0,
+    "branch_pct": 0.0,
+    "line_missed": 0,
+    "branch_missed": 0,
+    "priority_target": true
+  }
+]

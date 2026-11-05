@@ -1,0 +1,343 @@
+services:
+- name: property-services
+  basePath: /property-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-idgen
+  - egov-workflow-v2
+  coreRead:
+    method: POST
+    path: /property/_search
+  coreWrite:
+    method: POST
+    path: /property/_create
+- name: pgr-services
+  basePath: /pgr-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-idgen
+  - egov-workflow-v2
+  - egov-hrms
+  coreRead:
+    method: POST
+    path: /request/_search
+  coreWrite:
+    method: POST
+    path: /request/_create
+- name: ws-services
+  basePath: /ws-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-idgen
+  - egov-workflow-v2
+  - property-services
+  coreRead:
+    method: POST
+    path: /connection/_search
+  coreWrite:
+    method: POST
+    path: /connection/_create
+- name: sw-services
+  basePath: /sw-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-idgen
+  - property-services
+- name: bpa-services
+  basePath: /bpa-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-idgen
+  - egov-workflow-v2
+  - property-services
+- name: fsm
+  basePath: /fsm
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - vendor
+  - vehicle
+- name: tl-services
+  basePath: /tl-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-workflow-v2
+- name: pt-services-v2
+  basePath: /pt-services-v2
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - property-services
+- name: vendor-management
+  basePath: /vendor-management
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  coreRead:
+    method: POST
+    path: /api/v1/_search
+  coreWrite:
+    method: POST
+    path: /api/v1/_create
+- name: community-hall-booking
+  basePath: /community-hall-booking
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-workflow-v2
+- name: firenoc-services
+  basePath: /firenoc-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+  - egov-workflow-v2
+  coreRead:
+    method: POST
+    path: /v1/fire-noc/_search
+  coreWrite:
+    method: POST
+    path: /v1/fire-noc/_create
+- name: advertisement-service
+  basePath: /adv-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: asset-calculator
+  basePath: /asset-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: asset-services
+  basePath: /asset-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: birth-death-services
+  basePath: /birth-death-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: bpa-calculator
+  basePath: /bpa-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: challan-generation
+  basePath: /challan-generation
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: challan-generation-calculator
+  basePath: /challan-generation-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: cnd-calculator
+  basePath: /cnd-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: cnd-service
+  basePath: /cnd-service
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: echallan-calculator
+  basePath: /echallan-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: echallan-services
+  basePath: /echallan-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: egov-user-event
+  basePath: /egov-user-event
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: estate-management
+  basePath: /estate-management
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: ewaste-services
+  basePath: /ewaste-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: fsm-calculator
+  basePath: /fsm-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: garbage-service
+  basePath: /gc-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: inbox
+  basePath: /inbox
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: land-services
+  basePath: /land-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: ndc-calculator
+  basePath: /ndc-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: ndc-services
+  basePath: /ndc-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: noc-services
+  basePath: /noc-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: pet-services
+  basePath: /pet-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: pgr-ai-services
+  basePath: /pgr-ai-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: pqm
+  basePath: /pqm-service
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: pqm-anomaly-finder
+  basePath: /pqm-anomaly-finder
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: pt-calculator-v2
+  basePath: /pt-calculator-v2
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: rainmaker-pgr
+  basePath: /rainmaker-pgr
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: request-service
+  basePath: /request-service
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: street-vending
+  basePath: /sv-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: sw-calculator
+  basePath: /sw-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: tl-calculator
+  basePath: /tl-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: tp-services
+  basePath: /tp-services
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: turn-io-adapter
+  basePath: /turn-io-adapter
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: vehicle
+  basePath: /vehicle
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: vendor
+  basePath: /vendor
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: ws-calculator
+  basePath: /ws-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: firenoc-calculator
+  basePath: /firenoc-calculator
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
+- name: upyog-aggregation-service
+  basePath: /upyog-aggregation-service
+  healthPath: /health
+  versionPath: /info
+  dependsOn:
+  - egov-mdms-service
