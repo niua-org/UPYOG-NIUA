@@ -1,5 +1,6 @@
 package org.egov.user.domain.service.profile;
 
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
@@ -133,4 +134,14 @@ public interface ProfileService {
      * @throws org.egov.tracer.model.CustomException if mobile numbers do not match or Aadhaar is already linked to another account
      */
     AadhaarCitizenVerifyResponse verifyLoggedInCitizenProfile(AadhaarCitizenVerifyRequest request);
+
+    /**
+     * Marks an existing citizen profile as Aadhaar-verified after inter-service e-KYC OTP success.
+     *
+     * @param userUuid           citizen UUID
+     * @param fullAadhaarTwelve  verified 12-digit Aadhaar number
+     * @param tenantId           tenant identifier
+     * @param requestInfo        request context
+     */
+    void markCitizenVerifiedAfterAadhaarEkyc(String userUuid, String fullAadhaarTwelve, String tenantId, RequestInfo requestInfo);
 }

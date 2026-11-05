@@ -69,6 +69,12 @@ public class FamilyConfiguration {
     @Value("${family.consent.mock.fixed.otp:}")
     private String mockFixedOtp;
 
+    @Value("${family.otp.verify.max.attempts:5}")
+    private Integer familyOtpVerifyMaxAttempts;
+
+    @Value("${family.otp.reference.ttl.minutes:10}")
+    private Long familyOtpReferenceTtlMinutes;
+
     @Value("${family.consent.token.ttl.minutes:15}")
     private Long consentTokenTtlMinutes;
 
@@ -139,6 +145,30 @@ public class FamilyConfiguration {
         long minutes = (consentTokenTtlMinutes != null && consentTokenTtlMinutes > 0)
                 ? consentTokenTtlMinutes
                 : 15L;
+        return minutes * 60L * 1000L;
+    }
+
+    /**
+     * Returns configured maximum failed OTP validation attempts per reference (default 5).
+     *
+     * @return max attempts, at least 1
+     */
+    public int getFamilyOtpVerifyMaxAttempts() {
+        if (familyOtpVerifyMaxAttempts == null || familyOtpVerifyMaxAttempts < 1) {
+            return 5;
+        }
+        return familyOtpVerifyMaxAttempts;
+    }
+
+    /**
+     * Returns OTP reference TTL in milliseconds (default 10 minutes).
+     *
+     * @return TTL in milliseconds
+     */
+    public long getFamilyOtpReferenceTtlMs() {
+        long minutes = (familyOtpReferenceTtlMinutes != null && familyOtpReferenceTtlMinutes > 0)
+                ? familyOtpReferenceTtlMinutes
+                : 10L;
         return minutes * 60L * 1000L;
     }
 }

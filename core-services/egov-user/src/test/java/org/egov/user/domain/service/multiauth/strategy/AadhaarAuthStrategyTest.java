@@ -90,6 +90,7 @@ public class AadhaarAuthStrategyTest {
                 .build();
 
         User inactiveCitizen = buildUser(201L, "uuid-inactive", "9999999999", "9999999999", "Aadhaar User", false);
+        inactiveCitizen.setAadhaarNumber("123456789012");
 
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(inactiveCitizen));
 
@@ -110,6 +111,7 @@ public class AadhaarAuthStrategyTest {
                 .build();
 
         User activeCitizen = buildUser(201L, "uuid-active", "9999999999", "9999999999", "Aadhaar User", true);
+        activeCitizen.setAadhaarNumber("123456789012");
 
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(activeCitizen));
         when(familyRestRepository.getActiveFamilyIdByUserUuid(eq("uuid-active"), any(), any())).thenReturn("FAM-AADHAAR-999");

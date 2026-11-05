@@ -62,7 +62,7 @@ public class AadhaarVerificationController {
     public AadhaarVerificationController(AadhaarGatewayAdapter gatewayAdapter,
                                          AadhaarVerificationValidator validator,
                                          AadhaarSessionManager sessionManager,
-                                         @Autowired(required = false) UserRegistryService userRegistryService) {
+                                         UserRegistryService userRegistryService) {
         this.gatewayAdapter = gatewayAdapter;
         this.validator = validator;
         this.sessionManager = sessionManager;
@@ -286,7 +286,9 @@ public class AadhaarVerificationController {
                 .country(addr != null ? addr.getCountry() : null)
                 .build();
 
-        // 8. Resolve existing citizen userUuid from egov-user service or auto-provision if not found
+        // 8. Resolve existing citizen userUuid from egov-user (full Aadhaar match) or auto-provision if not found.
+        // UserRegistryService is a required Spring bean; verified flag is set via markCitizenAadhaarVerifiedAfterEkyc
+        // because public user create no longer accepts isIdentityVerified from callers.
         String searchAadhaar = StringUtils.isNotBlank(effectiveAadhaar)
                 ? effectiveAadhaar
                 : details.getAadhaarNumber();
@@ -298,16 +300,19 @@ public class AadhaarVerificationController {
                    : null);
 
         String existingUserUuid = null;
-        if (userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
+        if (StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
                     searchAadhaar, tenantId, request.getRequestInfo());
         }
-        if (StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(request.getUserUuid())) {
-            existingUserUuid = request.getUserUuid();
-        }
-        if (StringUtils.isBlank(existingUserUuid) && userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
+        if (StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
                     searchAadhaar, demographics, tenantId, request.getRequestInfo());
+        }
+
+        // Persist verified identity in egov-user after successful OTP (not via public create payload)
+        if (StringUtils.isNotBlank(existingUserUuid)) {
+            userRegistryService.markCitizenAadhaarVerifiedAfterEkyc(
+                    existingUserUuid, searchAadhaar, tenantId, request.getRequestInfo());
         }
 
         ResponseInfo successResponseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
