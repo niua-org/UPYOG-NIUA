@@ -64,18 +64,6 @@ class AuthPreCheckFilterTest {
     }
 
     @Test
-    void filter_mcpPath_enablesAuthWithoutBodyRewrite() {
-        when(requestPath.value()).thenReturn("/upyog-mcp-server/mcp");
-        HashMap<String, Object> attributes = new HashMap<>();
-        when(exchange.getAttributes()).thenReturn(attributes);
-
-        filter.filter(exchange, chain).block();
-
-        assertThat(attributes.get(AUTH_BOOLEAN_FLAG_NAME)).isEqualTo(Boolean.TRUE);
-        verify(chain).filter(exchange);
-    }
-
-    @Test
     void filter_jsonBody_usesModifyRequestBodyFilter() {
         when(requestPath.value()).thenReturn("/billing/_create");
         when(request.getHeaders()).thenReturn(new org.springframework.http.HttpHeaders());

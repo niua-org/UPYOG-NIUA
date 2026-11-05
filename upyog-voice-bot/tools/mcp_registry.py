@@ -1,8 +1,7 @@
 """
 tools/mcp_registry.py — FastMCP Tool Registry
 =============================================
-The voice-agent functions registered here call upyog-mcp-server when
-upyog.mcp.enabled is true. This process is the assistant, not the UPYOG gateway.
+Registers UPYOG REST tools onto the FastMCP server.
 """
 
 import logging

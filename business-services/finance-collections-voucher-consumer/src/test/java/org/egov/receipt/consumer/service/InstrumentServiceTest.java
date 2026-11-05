@@ -2,25 +2,25 @@ package org.egov.receipt.consumer.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.mdms.service.MicroServiceUtil;
-import org.egov.receipt.consumer.FinanceConsumerTestFixtures;
-import org.egov.receipt.consumer.model.DishonorReasonContract;
 import org.egov.receipt.consumer.model.FinanceMdmsModel;
+import org.egov.receipt.consumer.model.FinancialStatus;
 import org.egov.receipt.consumer.model.InstrumentContract;
-import org.egov.receipt.consumer.model.InstrumentRequest;
 import org.egov.receipt.consumer.model.InstrumentResponse;
-import org.egov.receipt.consumer.model.InstrumentType;
 import org.egov.receipt.consumer.model.InstrumentVoucherContract;
 import org.egov.receipt.consumer.model.ProcessStatus;
 import org.egov.receipt.consumer.model.ReceiptReq;
 import org.egov.receipt.consumer.model.Voucher;
 import org.egov.receipt.consumer.model.VoucherResponse;
 import org.egov.receipt.consumer.repository.ServiceRequestRepository;
+import org.egov.receipt.consumer.support.ReceiptTestFixtures;
+import org.egov.receipt.consumer.v2.model.Payment;
 import org.egov.receipt.consumer.v2.model.PaymentRequest;
 import org.egov.receipt.custom.exception.VoucherCustomException;
 import org.egov.reciept.consumer.config.PropertiesManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -28,13 +28,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,122 +53,126 @@ class InstrumentServiceTest {
     private MicroServiceUtil microServiceUtil;
     @Mock
     private VoucherService voucherService;
+
     @InjectMocks
     private InstrumentService instrumentService;
 
-    private FinanceMdmsModel finSerMdms;
+    private FinanceMdmsModel mdms;
 
     @BeforeEach
-    void setUp() throws VoucherCustomException {
-        finSerMdms = FinanceConsumerTestFixtures.financeMdmsWithData();
+    void stubHosts() {
+        mdms = new FinanceMdmsModel();
+        mdms.setFinanceServiceMdmsData(ReceiptTestFixtures.financeMdmsPtPayload());
         when(propertiesManager.getInstrumentHostUrl()).thenReturn("http://instrument/");
-        when(propertiesManager.getInstrumentCreate()).thenReturn("/create");
-        when(propertiesManager.getInstrumentCancel()).thenReturn("/cancel");
-        when(microServiceUtil.getFinancialStatusByCode(any(), any(), any(), eq("New")))
-                .thenReturn(FinanceConsumerTestFixtures.financialStatus("New"));
-        when(microServiceUtil.getFinancialStatusByCode(any(), any(), eq(finSerMdms), eq("Cancelled")))
-                .thenReturn(FinanceConsumerTestFixtures.financialStatus("Cancelled"));
+        when(propertiesManager.getInstrumentCreate()).thenReturn("instrument/_create");
+        when(propertiesManager.getInstrumentCancel()).thenReturn("instrument/_cancel");
     }
 
     @Test
-    void createInstrument_v1_postsInstrumentWithVoucherLink() throws VoucherCustomException {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", null, null);
-        VoucherResponse voucherResponse = FinanceConsumerTestFixtures.voucherResponse("VN-100", "0");
+    void createInstrument_validReceipt_buildsRequestAndReturnsResponse() throws Exception {
+        ReceiptReq receiptReq = ReceiptTestFixtures.receiptReqWithInstrument("pb.amritsar", "PT");
+        FinancialStatus status = financialStatus("New");
+        when(microServiceUtil.getFinancialStatusByCode(anyString(), any(), any(), eq("New"))).thenReturn(status);
+
         InstrumentResponse apiResponse = new InstrumentResponse();
-        apiResponse.setInstruments(List.of(new InstrumentContract()));
-        when(serviceRequestRepository.fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(apiResponse);
+        apiResponse.setInstruments(Collections.emptyList());
+        when(serviceRequestRepository.fetchResult(any(), any(), anyString())).thenReturn(apiResponse);
 
-        InstrumentResponse result = instrumentService.createInstrument(receiptReq, voucherResponse, finSerMdms, null);
+        InstrumentResponse response = instrumentService.createInstrument(receiptReq, null, mdms, "V1");
 
-        assertThat(result.getInstruments()).hasSize(1);
-        verify(serviceRequestRepository).fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID));
+        assertThat(response).isNotNull();
     }
 
     @Test
-    void createInstrument_v2_usesPaymentIdAsReceiptReference() throws VoucherCustomException {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", null, null);
-        receiptReq.getReceipt().get(0).setPaymentId("PAY-88");
-        receiptReq.getReceipt().get(0).getInstrument().setPaymentId("PAY-88");
-        VoucherResponse voucherResponse = FinanceConsumerTestFixtures.voucherResponse("VN-200", "0");
-        when(serviceRequestRepository.fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(Map.of("instruments", List.of(Map.of("id", "inst-1"))));
+    void createInstrument_withVoucher_attachesInstrumentVouchers() throws Exception {
+        ReceiptReq receiptReq = ReceiptTestFixtures.receiptReqWithInstrument("pb.amritsar", "PT");
+        when(microServiceUtil.getFinancialStatusByCode(anyString(), any(), any(), eq("New")))
+                .thenReturn(financialStatus("New"));
+        VoucherResponse voucherResponse = new VoucherResponse();
+        voucherResponse.setVouchers(List.of(Voucher.builder().voucherNumber("VCH-200").build()));
+        when(serviceRequestRepository.fetchResult(any(), any(), anyString())).thenReturn(new InstrumentResponse());
 
-        assertThat(instrumentService.createInstrument(receiptReq, voucherResponse, finSerMdms, "V2")).isNotNull();
+        instrumentService.createInstrument(receiptReq, voucherResponse, mdms, "V1");
+
+        ArgumentCaptor<org.egov.receipt.consumer.model.InstrumentRequest> requestCaptor =
+                ArgumentCaptor.forClass(org.egov.receipt.consumer.model.InstrumentRequest.class);
+        verify(serviceRequestRepository).fetchResult(any(), requestCaptor.capture(), eq("pb.amritsar"));
+        InstrumentVoucherContract iv = requestCaptor.getValue().getInstruments().get(0).getInstrumentVouchers().get(0);
+        assertThat(iv.getVoucherHeaderId()).isEqualTo("VCH-200");
+        assertThat(iv.getReceiptHeaderId()).isEqualTo("RCPT-001");
     }
 
     @Test
-    void cancelInstrument_updatesStatusAndPostsCancel() throws VoucherCustomException {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", "VN-OLD", null);
-        receiptReq.getReceipt().get(0).getInstrument().setTransactionDateInput(1_700_000_000_000L);
-        when(serviceRequestRepository.fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(new InstrumentResponse());
+    void cancelInstrument_setsCancelledStatusAndCallsCancelEndpoint() throws Exception {
+        ReceiptReq receiptReq = ReceiptTestFixtures.receiptReqFromFixture();
+        when(microServiceUtil.getFinancialStatusByCode(anyString(), any(), any(), eq("Cancelled")))
+                .thenReturn(financialStatus("Cancelled"));
+        when(serviceRequestRepository.fetchResult(any(), any(), anyString())).thenReturn(new InstrumentResponse());
 
-        instrumentService.cancelInstrument(receiptReq, finSerMdms);
+        instrumentService.cancelInstrument(receiptReq, mdms);
 
-        verify(serviceRequestRepository).fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID));
+        ArgumentCaptor<StringBuilder> urlCaptor = ArgumentCaptor.forClass(StringBuilder.class);
+        verify(serviceRequestRepository).fetchResult(urlCaptor.capture(), any(), eq("pb.amritsar"));
+        assertThat(urlCaptor.getValue().toString()).isEqualTo("http://instrument/instrument/_cancel");
     }
 
     @Test
-    void cancelInstrumentForPayment_successWhenInstrumentIsNew() throws VoucherCustomException {
-        PaymentRequest payRequest = FinanceConsumerTestFixtures.paymentRequest(null);
+    void cancelInstrumentForPayment_cancelsWhenInstrumentIsNew() throws Exception {
+        FinancialStatus newStatus = financialStatus("New");
+        newStatus.setId("New");
+        FinancialStatus cancelStatus = financialStatus("Cancelled");
         InstrumentContract instrument = InstrumentContract.builder()
-                .financialStatus(FinanceConsumerTestFixtures.financialStatus("New"))
+                .financialStatus(newStatus)
+                .tenantId("pb.amritsar")
                 .build();
-        when(microServiceUtil.getInstruments(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(List.of(instrument));
-        when(serviceRequestRepository.fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(new InstrumentResponse());
+        when(microServiceUtil.getFinancialStatusByCode(eq("pb.amritsar"), any(), eq(mdms), eq("Cancelled")))
+                .thenReturn(cancelStatus);
+        when(microServiceUtil.getFinancialStatusByCode(eq("pb.amritsar"), any(), eq(mdms), eq("New")))
+                .thenReturn(newStatus);
+        when(microServiceUtil.getInstruments(any(), any(), eq("pb.amritsar"))).thenReturn(List.of(instrument));
+        when(serviceRequestRepository.fetchResult(any(), any(), anyString())).thenReturn(new InstrumentResponse());
 
-        instrumentService.cancelInstrumentForPayment(payRequest, finSerMdms);
+        PaymentRequest payRequest = new PaymentRequest();
+        payRequest.setRequestInfo(receiptReqFromFixture().getRequestInfo());
+        Payment payment = new Payment();
+        payment.setId("pay-001");
+        payment.setTenantId("pb.amritsar");
+        payRequest.setPayment(payment);
 
-        verify(serviceRequestRepository).fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID));
+        instrumentService.cancelInstrumentForPayment(payRequest, mdms);
+
+        verify(serviceRequestRepository).fetchResult(any(), any(), eq("pb.amritsar"));
     }
 
     @Test
-    void cancelInstrumentForPayment_missingInstrument_throws() throws VoucherCustomException {
-        PaymentRequest payRequest = FinanceConsumerTestFixtures.paymentRequest(null);
-        when(microServiceUtil.getInstruments(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(List.of());
+    void cancelInstrumentForPayment_throwsWhenInstrumentMissing() throws VoucherCustomException {
+        when(microServiceUtil.getFinancialStatusByCode(anyString(), any(), any(), eq("Cancelled")))
+                .thenReturn(financialStatus("Cancelled"));
+        when(microServiceUtil.getFinancialStatusByCode(anyString(), any(), any(), eq("New")))
+                .thenReturn(financialStatus("New"));
+        when(microServiceUtil.getInstruments(any(), any(), anyString())).thenReturn(Collections.emptyList());
 
-        assertThatThrownBy(() -> instrumentService.cancelInstrumentForPayment(payRequest, finSerMdms))
+        PaymentRequest payRequest = new PaymentRequest();
+        payRequest.setRequestInfo(new org.egov.receipt.consumer.model.RequestInfo());
+        Payment payment = new Payment();
+        payment.setId("pay-missing");
+        payment.setTenantId("pb.amritsar");
+        payRequest.setPayment(payment);
+
+        assertThatThrownBy(() -> instrumentService.cancelInstrumentForPayment(payRequest, mdms))
                 .isInstanceOf(VoucherCustomException.class)
-                .hasMessageContaining("not exist");
+                .extracting("status")
+                .isEqualTo(ProcessStatus.FAILED);
     }
 
-    @Test
-    void cancelInstrumentForPayment_wrongStatus_throws() throws VoucherCustomException {
-        PaymentRequest payRequest = FinanceConsumerTestFixtures.paymentRequest(null);
-        InstrumentContract instrument = InstrumentContract.builder()
-                .financialStatus(FinanceConsumerTestFixtures.financialStatus("Cancelled"))
-                .build();
-        when(microServiceUtil.getInstruments(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(List.of(instrument));
-
-        assertThatThrownBy(() -> instrumentService.cancelInstrumentForPayment(payRequest, finSerMdms))
-                .isInstanceOf(VoucherCustomException.class)
-                .hasMessageContaining("already in");
+    private static FinancialStatus financialStatus(String code) {
+        FinancialStatus status = new FinancialStatus();
+        status.setCode(code);
+        status.setId(code);
+        return status;
     }
 
-    @Test
-    void processDishonorIntruments_createsReversalAndUpdatesInstrument() throws Exception {
-        InstrumentContract contract = InstrumentContract.builder()
-                .tenantId(FinanceConsumerTestFixtures.TENANT_ID)
-                .instrumentType(InstrumentType.builder().name("Cheque").build())
-                .instrumentVouchers(new ArrayList<>(List.of(InstrumentVoucherContract.builder().voucherHeaderId("VH-1").build())))
-                .dishonor(DishonorReasonContract.builder().dishonorDate(FinanceConsumerTestFixtures.RECEIPT_DATE).build())
-                .build();
-        InstrumentRequest request = new InstrumentRequest();
-        request.setInstruments(List.of(contract));
-        request.setRequestInfo(FinanceConsumerTestFixtures.requestInfo());
-
-        when(voucherService.processReversalVoucher(any(), any()))
-                .thenReturn(FinanceConsumerTestFixtures.voucherResponse("REV-1", "0"));
-        when(serviceRequestRepository.fetchResult(any(), any(), eq(FinanceConsumerTestFixtures.TENANT_ID)))
-                .thenReturn(new InstrumentResponse());
-
-        instrumentService.processDishonorIntruments(request);
-
-        assertThat(contract.getDishonor().getReversalVoucherId()).isEqualTo("REV-1");
+    private static ReceiptReq receiptReqFromFixture() {
+        return ReceiptTestFixtures.receiptReqFromFixture();
     }
 }

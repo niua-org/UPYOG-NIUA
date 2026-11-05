@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -19,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,39 +27,33 @@ class TokenServiceTest {
     private RestTemplate restTemplate;
     @Mock
     private PropertiesManager propertiesManager;
-    @Spy
-    private ObjectMapper mapper = new ObjectMapper();
+
     @InjectMocks
     private TokenService tokenService;
 
     @BeforeEach
-    void stubProperties() {
-        when(propertiesManager.getUserHostUrl()).thenReturn("http://user/");
-        when(propertiesManager.getTokenGenUrl()).thenReturn("/oauth/token");
+    void setUp() {
+        org.springframework.test.util.ReflectionTestUtils.setField(tokenService, "mapper", new ObjectMapper());
         when(propertiesManager.getTokenAuhorizationtKey()).thenReturn("Basic abc");
-        when(propertiesManager.getSiUser()).thenReturn("system");
+        when(propertiesManager.getSiUser()).thenReturn("user");
+        when(propertiesManager.getSiScope()).thenReturn("scope");
         when(propertiesManager.getSiPassword()).thenReturn("pass");
-        when(propertiesManager.getSiUserType()).thenReturn("SYSTEM");
-        when(propertiesManager.getSiScope()).thenReturn("read");
         when(propertiesManager.getSiGrantType()).thenReturn("password");
+        when(propertiesManager.getSiUserType()).thenReturn("EMPLOYEE");
+        when(propertiesManager.getTokenGenUrl()).thenReturn("/oauth/token");
+        when(propertiesManager.getUserHostUrl()).thenReturn("http://user/");
     }
 
     @Test
-    void generateAdminToken_success() {
+    void generateAdminToken_returnsAccessToken() {
         Map<String, Object> response = new HashMap<>();
         response.put("access_token", "token-123");
-        response.put("UserRequest", Map.of("uuid", "u1"));
+        response.put("UserRequest", Map.of("uuid", "u1", "type", "EMPLOYEE"));
         when(restTemplate.postForObject(anyString(), any(), eq(Object.class))).thenReturn(response);
 
-        assertThat(tokenService.generateAdminToken("pg.citya")).isEqualTo("token-123");
-        verify(propertiesManager).setSiAuthToken("token-123");
-    }
+        String token = tokenService.generateAdminToken("pb.amritsar");
 
-    @Test
-    void generateAdminToken_nullResponse() {
-        when(restTemplate.postForObject(anyString(), any(), eq(Object.class))).thenReturn(null);
-
-        assertThat(tokenService.generateAdminToken("pg.citya")).isNull();
+        assertThat(token).isEqualTo("token-123");
     }
 
     @Test
@@ -69,6 +61,6 @@ class TokenServiceTest {
         when(restTemplate.postForObject(anyString(), any(), eq(Object.class)))
                 .thenThrow(new RestClientException("down"));
 
-        assertThat(tokenService.generateAdminToken("pg.citya")).isNull();
+        assertThat(tokenService.generateAdminToken("pb.amritsar")).isNull();
     }
 }

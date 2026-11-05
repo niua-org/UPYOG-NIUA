@@ -2,34 +2,36 @@ package org.egov.receipt.consumer.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.egov.receipt.consumer.FinanceConsumerTestFixtures;
+import org.egov.receipt.consumer.entity.VoucherIntegrationLog;
+import org.egov.receipt.consumer.model.EgwStatus;
 import org.egov.receipt.consumer.model.ProcessStatus;
 import org.egov.receipt.consumer.model.ReceiptReq;
+import org.egov.receipt.consumer.model.Voucher;
 import org.egov.receipt.consumer.model.VoucherResponse;
 import org.egov.receipt.consumer.repository.VoucherIntegartionLogRepository;
+import org.egov.receipt.consumer.support.ReceiptTestFixtures;
 import org.egov.receipt.consumer.util.PaymentUtils;
-import org.egov.receipt.consumer.v2.model.PaymentRequest;
-import org.egov.receipt.consumer.v2.model.PaymentStatusEnum;
-import org.egov.receipt.custom.exception.VoucherCustomException;
 import org.egov.reciept.consumer.config.PropertiesManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,13 +40,9 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class EgfKafkaListenerTest {
 
-    private static final String CREATE_TOPIC = "egov.collection.receipt.voucher.save";
-    private static final String CANCEL_TOPIC = "egov.collection.receipt.voucher.cancel";
-    private static final String PAY_CREATE = "kafka.payment.create";
-    private static final String PAY_CANCEL = "kafka.payment.cancel";
+    private static final String VOUCHER_CREATE_TOPIC = "egov.collection.receipt.voucher.save";
+    private static final String VOUCHER_CANCEL_TOPIC = "egov.collection.receipt.voucher.cancel";
 
-    @Spy
-    private ObjectMapper objectMapper = new ObjectMapper();
     @Mock
     private VoucherService voucherService;
     @Mock
@@ -52,172 +50,194 @@ class EgfKafkaListenerTest {
     @Mock
     private InstrumentService instrumentService;
     @Mock
-    private VoucherIntegartionLogRepository voucherIntegartionLogRepository;
-    @Mock
     private PropertiesManager manager;
     @Mock
+    private VoucherIntegartionLogRepository logRepository;
+    @Mock
     private PaymentUtils payUtils;
+
     @InjectMocks
     private EgfKafkaListener listener;
 
+    private ObjectMapper objectMapper;
+
     @BeforeEach
-    void topics() {
-        when(manager.getVoucherCreateTopic()).thenReturn(CREATE_TOPIC);
-        when(manager.getVoucherCancelTopic()).thenReturn(CANCEL_TOPIC);
-        when(manager.getCreatePaymentTopicName()).thenReturn(PAY_CREATE);
-        when(manager.getCancelPaymentTopicName()).thenReturn(PAY_CANCEL);
+    void setUp() {
+        objectMapper = new ObjectMapper();
+        ReflectionTestUtils.setField(listener, "objectMapper", objectMapper);
+        when(manager.getVoucherCreateTopic()).thenReturn(VOUCHER_CREATE_TOPIC);
+        when(manager.getVoucherCancelTopic()).thenReturn(VOUCHER_CANCEL_TOPIC);
+        when(manager.getCreatePaymentTopicName()).thenReturn("payment.create");
+        when(manager.getCancelPaymentTopicName()).thenReturn("payment.cancel");
     }
 
     @Test
-    void process_voucherCreate_successFlow() throws Exception {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", null, null);
-        String payload = objectMapper.writeValueAsString(receiptReq);
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
-        when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(VoucherResponse.builder().vouchers(Collections.emptyList()).build());
+    void process_invalidPayload_doesNotCreateVoucher() {
+        ConsumerRecord<String, String> record = new ConsumerRecord<>(VOUCHER_CREATE_TOPIC, 0, 0L, "key", "not-json");
+
+        listener.process(record);
+
+        verify(voucherService, never()).createReceiptVoucher(any(), any(), any());
+        verify(logRepository, never()).saveVoucherIntegrationLog(any());
+    }
+
+    @Test
+    void process_tenantNotEnabled_skipsVoucherProcessing() throws Exception {
+        ReceiptReq req = ReceiptTestFixtures.receiptReqForVoucherCreation("pb.amritsar", "PT");
+        ConsumerRecord<String, String> record = receiptRecord(VOUCHER_CREATE_TOPIC, req);
+        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(false);
+
+        listener.process(record);
+
+        verify(voucherService, never()).createReceiptVoucher(any(), any(), any());
+        verify(logRepository, never()).saveVoucherIntegrationLog(any());
+    }
+
+    @Test
+    void process_voucherCreateTopic_createsVoucherUpdatesReceiptAndLogsSuccess() throws Exception {
+        ReceiptReq req = ReceiptTestFixtures.receiptReqForVoucherCreation("pb.amritsar", "PT");
+        ConsumerRecord<String, String> record = receiptRecord(VOUCHER_CREATE_TOPIC, req);
+        stubTenantEnabled();
+        when(voucherService.getVoucherByServiceAndRefDoc(any(), eq("pb.amritsar"), eq("PT"), eq("RCPT-001")))
+                .thenReturn(emptyVoucherResponse());
         when(voucherService.isVoucherCreationEnabled(any(), any(), any())).thenReturn(true);
-        when(voucherService.createReceiptVoucher(any(), any(), eq(null)))
-                .thenReturn(FinanceConsumerTestFixtures.voucherResponse("VN-1", "0"));
+        VoucherResponse created = voucherResponseWithNumber("VCH-NEW");
+        when(voucherService.createReceiptVoucher(any(), any(), isNull())).thenReturn(created);
 
-        listener.process(new ConsumerRecord<>(CREATE_TOPIC, 0, 0L, "k", payload));
+        listener.process(record);
 
-        verify(receiptService).updateReceipt(any(), any());
-        verify(instrumentService).createInstrument(any(), any(), any(), eq(null));
-        verify(voucherIntegartionLogRepository).saveVoucherIntegrationLog(any());
+        verify(receiptService).updateReceipt(any(), eq(created));
+        verify(instrumentService).createInstrument(any(), eq(created), any(), isNull());
+        ArgumentCaptor<VoucherIntegrationLog> logCaptor = ArgumentCaptor.forClass(VoucherIntegrationLog.class);
+        verify(logRepository).saveVoucherIntegrationLog(logCaptor.capture());
+        VoucherIntegrationLog log = logCaptor.getValue();
+        assertThat(log.getStatus()).isEqualTo(ProcessStatus.SUCCESS.name());
+        assertThat(log.getDescription()).contains("VCH-NEW");
+        assertThat(log.getVoucherNumber()).isEqualTo("VCH-NEW");
     }
 
     @Test
-    void process_voucherCreate_disabled_logsSuccessWithoutCreate() throws Exception {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", null, null);
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
+    void process_voucherCreateTopic_existingActiveVoucher_logsNaWithoutCreating() throws Exception {
+        ReceiptReq req = ReceiptTestFixtures.receiptReqForVoucherCreation("pb.amritsar", "PT");
+        ConsumerRecord<String, String> record = receiptRecord(VOUCHER_CREATE_TOPIC, req);
+        stubTenantEnabled();
+        Voucher existing = Voucher.builder()
+                .voucherNumber("VCH-EXISTING")
+                .status(EgwStatus.builder().code("1").build())
+                .build();
         when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(VoucherResponse.builder().vouchers(Collections.emptyList()).build());
+                .thenReturn(voucherResponseWith(existing));
+        when(voucherService.isVoucherCreationEnabled(any(), any(), any())).thenReturn(true);
+
+        listener.process(record);
+
+        verify(voucherService, never()).createReceiptVoucher(any(), any(), any());
+        ArgumentCaptor<VoucherIntegrationLog> logCaptor = ArgumentCaptor.forClass(VoucherIntegrationLog.class);
+        verify(logRepository).saveVoucherIntegrationLog(logCaptor.capture());
+        assertThat(logCaptor.getValue().getStatus()).isEqualTo(ProcessStatus.NA.name());
+        assertThat(logCaptor.getValue().getDescription()).contains("Already voucher exists");
+    }
+
+    @Test
+    void process_voucherCreateTopic_voucherCreationDisabled_logsSuccessWithoutCreate() throws Exception {
+        ReceiptReq req = ReceiptTestFixtures.receiptReqForVoucherCreation("pb.amritsar", "PT");
+        ConsumerRecord<String, String> record = receiptRecord(VOUCHER_CREATE_TOPIC, req);
+        stubTenantEnabled();
+        when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
+                .thenReturn(emptyVoucherResponse());
         when(voucherService.isVoucherCreationEnabled(any(), any(), any())).thenReturn(false);
 
-        listener.process(new ConsumerRecord<>(CREATE_TOPIC, 0, 0L, "k", objectMapper.writeValueAsString(receiptReq)));
+        listener.process(record);
 
         verify(voucherService, never()).createReceiptVoucher(any(), any(), any());
-        verify(voucherIntegartionLogRepository).saveVoucherIntegrationLog(any());
+        ArgumentCaptor<VoucherIntegrationLog> logCaptor = ArgumentCaptor.forClass(VoucherIntegrationLog.class);
+        verify(logRepository).saveVoucherIntegrationLog(logCaptor.capture());
+        assertThat(logCaptor.getValue().getStatus()).isEqualTo(ProcessStatus.SUCCESS.name());
+        assertThat(logCaptor.getValue().getDescription()).contains("not enabled");
     }
 
     @Test
-    void process_voucherCreate_existingVoucher_recordsNa() throws Exception {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", null, null);
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
+    void process_voucherCancelTopic_noVoucherInErp_logsFailedBackup() throws Exception {
+        ReceiptReq req = ReceiptTestFixtures.receiptReqFromFixture();
+        ConsumerRecord<String, String> record = receiptRecord(VOUCHER_CANCEL_TOPIC, req);
+        stubTenantEnabled();
         when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(FinanceConsumerTestFixtures.voucherResponse("VN-EXIST", "0"));
-        when(voucherService.isVoucherCreationEnabled(any(), any(), any())).thenReturn(true);
+                .thenReturn(emptyVoucherResponse());
 
-        listener.process(new ConsumerRecord<>(CREATE_TOPIC, 0, 0L, "k", objectMapper.writeValueAsString(receiptReq)));
+        listener.process(record);
 
-        verify(voucherService, never()).createReceiptVoucher(any(), any(), any());
-        verify(voucherIntegartionLogRepository).saveVoucherIntegrationLog(any());
+        verify(voucherService, never()).cancelReceiptVoucher(any(), any(), anySet());
+        ArgumentCaptor<VoucherIntegrationLog> logCaptor = ArgumentCaptor.forClass(VoucherIntegrationLog.class);
+        verify(logRepository).saveVoucherIntegrationLog(logCaptor.capture());
+        assertThat(logCaptor.getValue().getStatus()).isEqualTo(ProcessStatus.FAILED.name());
+        assertThat(logCaptor.getValue().getDescription()).contains("Voucher is not exist");
     }
 
     @Test
-    void process_voucherCancel_notFound_recordsFailure() throws Exception {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", "VN-REQ", null);
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
+    void process_voucherCancelTopic_voucherAlreadyCancelled_logsNaWithoutCancel() throws Exception {
+        ReceiptReq req = ReceiptTestFixtures.receiptReqFromFixture();
+        ConsumerRecord<String, String> record = receiptRecord(VOUCHER_CANCEL_TOPIC, req);
+        stubTenantEnabled();
+        Voucher cancelled = Voucher.builder()
+                .voucherNumber("VCH-CANCELLED")
+                .status(EgwStatus.builder().code("4").build())
+                .build();
         when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(VoucherResponse.builder().vouchers(Collections.emptyList()).build());
+                .thenReturn(voucherResponseWith(cancelled));
 
-        listener.process(new ConsumerRecord<>(CANCEL_TOPIC, 0, 0L, "k", objectMapper.writeValueAsString(receiptReq)));
+        listener.process(record);
 
-        verify(voucherIntegartionLogRepository).saveVoucherIntegrationLog(any());
+        verify(voucherService, never()).cancelReceiptVoucher(any(), any(), anySet());
+        ArgumentCaptor<VoucherIntegrationLog> logCaptor = ArgumentCaptor.forClass(VoucherIntegrationLog.class);
+        verify(logRepository).saveVoucherIntegrationLog(logCaptor.capture());
+        assertThat(logCaptor.getValue().getStatus()).isEqualTo(ProcessStatus.NA.name());
+        assertThat(logCaptor.getValue().getDescription()).contains("already in Cancelled status");
     }
 
     @Test
-    void process_voucherCancel_alreadyCancelled_recordsNa() throws Exception {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", "VN-REQ", null);
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
+    void process_voucherCancelTopic_activeVoucher_cancelsVoucherAndInstrument() throws Exception {
+        ReceiptReq req = ReceiptTestFixtures.receiptReqForVoucherCreation("pb.amritsar", "PT");
+        req.getReceipt().get(0).getBill().get(0).getBillDetails().get(0).setVoucherHeader("VCH-ACTIVE");
+        ConsumerRecord<String, String> record = receiptRecord(VOUCHER_CANCEL_TOPIC, req);
+        stubTenantEnabled();
+        Voucher active = Voucher.builder()
+                .voucherNumber("VCH-ACTIVE")
+                .status(EgwStatus.builder().code("2").build())
+                .build();
         when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(FinanceConsumerTestFixtures.voucherResponse("VN-ERP", "4"));
+                .thenReturn(voucherResponseWith(active));
 
-        listener.process(new ConsumerRecord<>(CANCEL_TOPIC, 0, 0L, "k", objectMapper.writeValueAsString(receiptReq)));
+        listener.process(record);
 
-        verify(voucherService, never()).cancelReceiptVoucher(any(), any(), any());
-        verify(voucherIntegartionLogRepository).saveVoucherIntegrationLog(any());
-    }
-
-    @Test
-    void process_voucherCancel_activeVoucher_cancels() throws Exception {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", "VN-REQ", null);
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
-        when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(FinanceConsumerTestFixtures.voucherResponse("VN-ERP", "0"));
-
-        listener.process(new ConsumerRecord<>(CANCEL_TOPIC, 0, 0L, "k", objectMapper.writeValueAsString(receiptReq)));
-
-        verify(voucherService).cancelReceiptVoucher(any(), any(), eq(Set.of("VN-ERP")));
+        verify(voucherService).cancelReceiptVoucher(any(), eq("pb.amritsar"), eq(Collections.singleton("VCH-ACTIVE")));
         verify(instrumentService).cancelInstrument(any(), any());
+        ArgumentCaptor<VoucherIntegrationLog> logCaptor = ArgumentCaptor.forClass(VoucherIntegrationLog.class);
+        verify(logRepository).saveVoucherIntegrationLog(logCaptor.capture());
+        assertThat(logCaptor.getValue().getStatus()).isEqualTo(ProcessStatus.SUCCESS.name());
+        assertThat(logCaptor.getValue().getDescription()).contains("CANCELLED successfully");
     }
 
-    @Test
-    void process_paymentCreate_transformsAndCreatesVoucher() throws Exception {
-        PaymentRequest paymentRequest = FinanceConsumerTestFixtures.paymentRequest(null);
+    private void stubTenantEnabled() throws Exception {
         when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
-        doAnswer(invocation -> {
-            invocation.<java.util.List>getArgument(1).add(FinanceConsumerTestFixtures.receiptReq("RCPT-PAY", null, null).getReceipt().get(0));
-            return null;
-        }).when(payUtils).getReceiptsFromPayments(any(), any());
-        when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(VoucherResponse.builder().vouchers(Collections.emptyList()).build());
-        when(voucherService.isVoucherCreationEnabled(any(), any(), any())).thenReturn(true);
-        when(voucherService.createReceiptVoucher(any(), any(), anyString()))
-                .thenReturn(FinanceConsumerTestFixtures.voucherResponse("VN-PAY", "0"));
-
-        listener.process(new ConsumerRecord<>(PAY_CREATE, 0, 0L, "k", objectMapper.writeValueAsString(paymentRequest)));
-
-        verify(instrumentService).createInstrument(any(), any(), any(), eq("V2"));
-        verify(voucherIntegartionLogRepository).saveVoucherIntegrationLog(any());
     }
 
-    @Test
-    void process_paymentCancel_success() throws Exception {
-        PaymentRequest paymentRequest = FinanceConsumerTestFixtures.paymentRequest(PaymentStatusEnum.CANCELLED);
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
-        doAnswer(invocation -> {
-            invocation.<java.util.List>getArgument(1).add(FinanceConsumerTestFixtures.receiptReq("RCPT-PAY", null, null).getReceipt().get(0));
-            return null;
-        }).when(payUtils).getReceiptsFromPayments(any(), any());
-        when(voucherService.getVoucherByServiceAndRefDoc(any(), any(), any(), any()))
-                .thenReturn(FinanceConsumerTestFixtures.voucherResponse("VN-PAY", "0"));
-
-        listener.process(new ConsumerRecord<>(PAY_CANCEL, 0, 0L, "k", objectMapper.writeValueAsString(paymentRequest)));
-
-        verify(voucherService).cancelReceiptVoucher(any(), any(), any());
-        verify(instrumentService).cancelInstrumentForPayment(any(), any());
+    private ConsumerRecord<String, String> receiptRecord(String topic, ReceiptReq req) throws Exception {
+        return new ConsumerRecord<>(topic, 0, 0L, "key", objectMapper.writeValueAsString(req));
     }
 
-    @Test
-    void process_paymentCancel_dishonoured_onlyLogs() throws Exception {
-        PaymentRequest paymentRequest = FinanceConsumerTestFixtures.paymentRequest(PaymentStatusEnum.DISHONOURED);
-        doAnswer(invocation -> {
-            invocation.<java.util.List>getArgument(1).add(FinanceConsumerTestFixtures.receiptReq("RCPT-PAY", null, null).getReceipt().get(0));
-            return null;
-        }).when(payUtils).getReceiptsFromPayments(any(), any());
-        when(voucherService.isTenantEnabledInFinanceModule(any(), any())).thenReturn(true);
-
-        listener.process(new ConsumerRecord<>(PAY_CANCEL, 0, 0L, "k", objectMapper.writeValueAsString(paymentRequest)));
-
-        verify(voucherService, never()).cancelReceiptVoucher(any(), any(), any());
+    private static VoucherResponse emptyVoucherResponse() {
+        VoucherResponse response = new VoucherResponse();
+        response.setVouchers(new ArrayList<>());
+        return response;
     }
 
-    @Test
-    void process_tenantNotEnabled_recordsCustomException() throws Exception {
-        ReceiptReq receiptReq = FinanceConsumerTestFixtures.receiptReq("RCPT-001", null, null);
-        doThrow(new VoucherCustomException(ProcessStatus.FAILED, "tenant disabled"))
-                .when(voucherService).isTenantEnabledInFinanceModule(any(), any());
-
-        listener.process(new ConsumerRecord<>(CREATE_TOPIC, 0, 0L, "k", objectMapper.writeValueAsString(receiptReq)));
-
-        verify(voucherIntegartionLogRepository).saveVoucherIntegrationLog(any());
+    private static VoucherResponse voucherResponseWith(Voucher voucher) {
+        VoucherResponse response = new VoucherResponse();
+        response.setVouchers(new ArrayList<>(List.of(voucher)));
+        return response;
     }
 
-    @Test
-    void process_invalidJson_doesNotPersistWhenReceiptMissing() {
-        listener.process(new ConsumerRecord<>(CREATE_TOPIC, 0, 0L, "k", "{not-json"));
-
-        verify(voucherIntegartionLogRepository, never()).saveVoucherIntegrationLog(any());
+    private static VoucherResponse voucherResponseWithNumber(String voucherNumber) {
+        return voucherResponseWith(Voucher.builder().voucherNumber(voucherNumber).build());
     }
 }

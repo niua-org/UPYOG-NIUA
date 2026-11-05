@@ -35,7 +35,6 @@ import static com.example.gateway.constants.GatewayConstants.CORRELATION_ID_KEY;
 import static com.example.gateway.constants.GatewayConstants.CURRENT_REQUEST_SANITIZED_BODY;
 import static com.example.gateway.constants.GatewayConstants.REQUEST_INFO_FIELD_NAME_PASCAL_CASE;
 import static com.example.gateway.constants.GatewayConstants.TENANTID_MDC;
-import static com.example.gateway.utils.UpyogMcpGatewaySupport.GATEWAY_REQUEST_INFO_ATTR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
