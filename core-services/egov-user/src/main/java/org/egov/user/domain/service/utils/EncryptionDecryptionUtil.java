@@ -1,5 +1,6 @@
 package org.egov.user.domain.service.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -22,15 +23,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Utility service for encrypting and decrypting user sensitive attributes
+ * (Aadhaar, mobile, PAN, addresses) via DIGIT Encryption Service with ABAC support.
+ */
 @Slf4j
 @Component
 public class EncryptionDecryptionUtil {
-    private EncryptionService encryptionService;
-    @Autowired
-    private AuditService auditService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final EncryptionService encryptionService;
+    private final AuditService auditService;
+    private final ObjectMapper objectMapper;
 
     @Value(("${state.level.tenant.id}"))
     private String stateLevelTenantId;
@@ -39,10 +41,23 @@ public class EncryptionDecryptionUtil {
     private boolean abacEnabled;
 
     @Autowired
-    public EncryptionDecryptionUtil(EncryptionService encryptionService) {
+    public EncryptionDecryptionUtil(EncryptionService encryptionService,
+                                   AuditService auditService,
+                                   ObjectMapper objectMapper) {
         this.encryptionService = encryptionService;
+        this.auditService = auditService;
+        this.objectMapper = objectMapper;
     }
 
+    /**
+     * Encrypts the provided object using the configured encryption service.
+     *
+     * @param objectToEncrypt payload containing plaintext sensitive attributes
+     * @param key             encryption model key name
+     * @param classType       target class type for conversion
+     * @param <T>             target type generic parameter
+     * @return encrypted representation converted to {@code classType}
+     */
     public <T> T encryptObject(Object objectToEncrypt, String key, Class<T> classType) {
         if (objectToEncrypt == null) {
             return null;
@@ -98,10 +113,10 @@ public class EncryptionDecryptionUtil {
 
         try {
             // Convert to JSON and check common encrypted fields
-            com.fasterxml.jackson.databind.JsonNode userNode = objectMapper.valueToTree(userObj);
+            JsonNode userNode = objectMapper.valueToTree(userObj);
 
-            // Check commonly encrypted fields like mobileNumber, emailId, name, aadhaarNumber
-            String[] fieldsToCheck = {"mobileNumber", "emailId", "name", "aadhaarNumber", "pan"};
+            // Check commonly encrypted fields like mobileNumber, emailId, name, aadhaarNumber, and address fields
+            String[] fieldsToCheck = {"mobileNumber", "emailId", "name", "aadhaarNumber", "pan", "address", "houseName", "streetName", "houseNumber", "landmark", "locality"};
 
             for (String field : fieldsToCheck) {
                 if (userNode.has(field) && userNode.get(field) != null && !userNode.get(field).isNull()) {
@@ -121,6 +136,18 @@ public class EncryptionDecryptionUtil {
         }
     }
 
+    /**
+     * Decrypts ciphertext fields within the provided object using ABAC policy and audit rules.
+     * Preserves assigned user roles across serialization/deserialization boundaries.
+     *
+     * @param objectToDecrypt object or collection of objects to decrypt
+     * @param key             encryption model key name
+     * @param classType       target class type
+     * @param requestInfo     request context containing requester information
+     * @param <E>             element type
+     * @param <P>             return type
+     * @return decrypted object or collection
+     */
     public <E, P> P decryptObject(Object objectToDecrypt, String key, Class<E> classType, RequestInfo requestInfo) {
         if (objectToDecrypt == null) {
             return null;
@@ -235,6 +262,13 @@ public class EncryptionDecryptionUtil {
         }
     }
 
+    /**
+     * Checks if the user requesting decryption is the same user whose profile data is being decrypted.
+     *
+     * @param objectToDecrypt payload to decrypt (User or List of Users)
+     * @param userInfo        current authenticated requester info
+     * @return true if requester UUID matches target user UUID
+     */
     public boolean isUserDecryptingForSelf(Object objectToDecrypt, User userInfo) {
         org.egov.user.domain.model.User userToDecrypt = null;
         if (objectToDecrypt instanceof List) {
@@ -270,6 +304,13 @@ public class EncryptionDecryptionUtil {
         return false;
     }
 
+    /**
+     * Resolves the encryption security key and purpose string for the decryption context.
+     *
+     * @param objectToDecrypt payload to decrypt
+     * @param userInfo        authenticated user context
+     * @return map with "key" and "purpose" entries
+     */
     public Map<String,String> getKeyToDecrypt(Object objectToDecrypt, User userInfo) {
         Map<String,String> keyPurposeMap = new HashMap<>();
 

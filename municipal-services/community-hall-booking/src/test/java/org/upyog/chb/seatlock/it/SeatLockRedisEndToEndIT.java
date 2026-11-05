@@ -11,7 +11,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ import org.upyog.chb.seatlock.service.TimerSeatBookingService;
 @SpringBootTest(classes = SeatLockIntegrationTestApplication.class)
 @Testcontainers(disabledWithoutDocker = true)
 @DisplayName("Seat lock integration (Redis)")
-@Ignore
+@Disabled("Requires Docker; run manually in CI with Testcontainers")
 class SeatLockRedisEndToEndIT {
 
 	@Container

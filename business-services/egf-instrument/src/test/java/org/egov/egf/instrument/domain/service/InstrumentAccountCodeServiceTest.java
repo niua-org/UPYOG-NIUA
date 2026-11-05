@@ -1,7 +1,8 @@
 package org.egov.egf.instrument.domain.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -19,19 +20,18 @@ import org.egov.egf.instrument.domain.repository.InstrumentAccountCodeRepository
 import org.egov.egf.instrument.domain.repository.InstrumentTypeRepository;
 import org.egov.egf.master.web.contract.ChartOfAccountContract;
 import org.egov.egf.master.web.repository.ChartOfAccountContractRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Matchers;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.SmartValidator;
 
 @Import(TestConfiguration.class)
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class InstrumentAccountCodeServiceTest {
 
     private InstrumentAccountCodeService instrumentAccountCodeService;
@@ -52,7 +52,7 @@ public class InstrumentAccountCodeServiceTest {
 
     private RequestInfo requestInfo = new RequestInfo();
 
-    @Before
+    @BeforeEach
     public void setup() {
         instrumentAccountCodeService = new InstrumentAccountCodeService(validator, instrumentAccountCodeRepository,
                 chartOfAccountContractRepository, instrumentTypeRepository);
@@ -72,30 +72,28 @@ public class InstrumentAccountCodeServiceTest {
 
     }
 
-    @Test(expected = CustomBindException.class)
+    @Test
     public final void test_create_unique_false() {
 
         List<InstrumentAccountCode> expextedResult = getInstrumentAccountCodes();
 
         when(instrumentAccountCodeRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
         when(instrumentAccountCodeRepository.uniqueCheck(any(String.class), any(InstrumentAccountCode.class))).thenReturn(false);
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.create(expextedResult, errors,
-                requestInfo);
+        assertThrows(CustomBindException.class,
+                () -> instrumentAccountCodeService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_create_and_with_null_req() {
 
         List<InstrumentAccountCode> expextedResult = getInstrumentAccountCodes();
 
         when(instrumentAccountCodeRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.create(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentAccountCodeService.create(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -114,7 +112,7 @@ public class InstrumentAccountCodeServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_null_id() {
 
         List<InstrumentAccountCode> expextedResult = getInstrumentAccountCodes();
@@ -123,14 +121,13 @@ public class InstrumentAccountCodeServiceTest {
         when(instrumentAccountCodeRepository.update(any(List.class), any(RequestInfo.class)))
                 .thenReturn(expextedResult);
         when(instrumentAccountCodeRepository.uniqueCheck(any(String.class), any(InstrumentAccountCode.class))).thenReturn(true);
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.update(expextedResult, errors,
-                requestInfo);
+        assertThrows(InvalidDataException.class,
+                () -> instrumentAccountCodeService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = CustomBindException.class)
+    @Test
     public final void test_update_unique_false() {
 
         List<InstrumentAccountCode> expextedResult = getInstrumentAccountCodes();
@@ -138,10 +135,9 @@ public class InstrumentAccountCodeServiceTest {
         when(instrumentAccountCodeRepository.update(any(List.class), any(RequestInfo.class)))
                 .thenReturn(expextedResult);
         when(instrumentAccountCodeRepository.uniqueCheck(any(String.class), any(InstrumentAccountCode.class))).thenReturn(false);
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.update(expextedResult, errors,
-                requestInfo);
+        assertThrows(CustomBindException.class,
+                () -> instrumentAccountCodeService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -160,7 +156,7 @@ public class InstrumentAccountCodeServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_null_req() {
 
         List<InstrumentAccountCode> expextedResult = getInstrumentAccountCodes();
@@ -168,14 +164,13 @@ public class InstrumentAccountCodeServiceTest {
         when(instrumentAccountCodeRepository.delete(any(List.class), any(RequestInfo.class)))
                 .thenReturn(expextedResult);
 
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.delete(null, errors,
-                requestInfo);
+        assertThrows(InvalidDataException.class,
+                () -> instrumentAccountCodeService.delete(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_null_id() {
 
         List<InstrumentAccountCode> expextedResult = getInstrumentAccountCodes();
@@ -184,14 +179,13 @@ public class InstrumentAccountCodeServiceTest {
         when(instrumentAccountCodeRepository.delete(any(List.class), any(RequestInfo.class)))
                 .thenReturn(expextedResult);
 
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.delete(expextedResult, errors,
-                requestInfo);
+        assertThrows(InvalidDataException.class,
+                () -> instrumentAccountCodeService.delete(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_with_null_req() {
 
         List<InstrumentAccountCode> expextedResult = getInstrumentAccountCodes();
@@ -199,9 +193,8 @@ public class InstrumentAccountCodeServiceTest {
         when(instrumentAccountCodeRepository.update(any(List.class), any(RequestInfo.class)))
                 .thenReturn(expextedResult);
 
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.update(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> instrumentAccountCodeService.update(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -258,7 +251,7 @@ public class InstrumentAccountCodeServiceTest {
         assertEquals(expextedResult, actualResult);
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_fetch_instrumenttype() {
 
         List<InstrumentAccountCode> instrumentAccountCodes = getInstrumentAccountCodes();
@@ -270,10 +263,8 @@ public class InstrumentAccountCodeServiceTest {
 
         when(instrumentTypeRepository.findById(any(InstrumentType.class))).thenReturn(expextedResult);
 
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.fetchRelated(instrumentAccountCodes,
-                new RequestInfo());
-
-        assertEquals(expextedResult, actualResult.get(0).getInstrumentType());
+        assertThrows(InvalidDataException.class, () -> instrumentAccountCodeService.fetchRelated(instrumentAccountCodes,
+                new RequestInfo()));
     }
 
     @Test
@@ -285,7 +276,7 @@ public class InstrumentAccountCodeServiceTest {
 
         instrumentAccountCodes.get(0).setAccountCode(expextedResult);
 
-        when(chartOfAccountContractRepository.findByGlcode(any(ChartOfAccountContract.class), Matchers.anyObject()))
+        when(chartOfAccountContractRepository.findByGlcode(any(ChartOfAccountContract.class), any()))
                 .thenReturn(expextedResult);
 
         List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.fetchRelated(instrumentAccountCodes,
@@ -294,7 +285,7 @@ public class InstrumentAccountCodeServiceTest {
         assertEquals(expextedResult, actualResult.get(0).getAccountCode());
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_fetch_instrumenttype_null() {
 
         List<InstrumentAccountCode> instrumentAccountCodes = getInstrumentAccountCodes();
@@ -306,13 +297,11 @@ public class InstrumentAccountCodeServiceTest {
 
         when(instrumentTypeRepository.findById(null)).thenReturn(expextedResult);
 
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.fetchRelated(instrumentAccountCodes,
-                new RequestInfo());
-
-        assertEquals(expextedResult, actualResult.get(0).getInstrumentType());
+        assertThrows(InvalidDataException.class, () -> instrumentAccountCodeService.fetchRelated(instrumentAccountCodes,
+                new RequestInfo()));
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_fetch_accountcode_null() {
 
         List<InstrumentAccountCode> instrumentAccountCodes = getInstrumentAccountCodes();
@@ -323,10 +312,8 @@ public class InstrumentAccountCodeServiceTest {
 
         when(chartOfAccountContractRepository.findByGlcode(null, new RequestInfo())).thenReturn(expextedResult);
 
-        List<InstrumentAccountCode> actualResult = instrumentAccountCodeService.fetchRelated(instrumentAccountCodes,
-                new RequestInfo());
-
-        assertEquals(expextedResult, actualResult.get(0).getAccountCode());
+        assertThrows(InvalidDataException.class, () -> instrumentAccountCodeService.fetchRelated(instrumentAccountCodes,
+                new RequestInfo()));
     }
 
     private List<InstrumentAccountCode> getInstrumentAccountCodes() {

@@ -1,16 +1,27 @@
+/**
+ * =============================================================================
+ * ChallanResponseCitizen Component - Challan Generation Module
+ * =============================================================================
+ * Purpose:
+ *   Acknowledgement / Response screen displayed after a Challan is generated
+ *   or submitted. Serves both Citizen and Employee viewports.
+ *
+ * Key Capabilities:
+ *   1. Success Banner       : Displays the generated Challan Number with confirmation badge.
+ *   2. Download / Print PDF : Generates or retrieves the PDF Challan Notice from PDF Service.
+ *   3. Navigation & Actions :
+ *      - "Go to Home"       : Returns user to citizen/employee dashboard.
+ *      - "Make Payment"     : Directs user to the payment collection screen.
+ *      - "Pay Later"        : Updates workflow state to allow deferring payment.
+ * =============================================================================
+ */
+
 import { Banner, Card, CardText, ActionBar, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, Fragment, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ChallanData, getLocationName } from "../utils";
 import { Loader } from "./Loader";
 import { useLocation } from "react-router-dom";
-
-/**
- * ChallanResponseCitizen component:
- * - Displays challan acknowledgement screen
- * - Fetches challan details
- * - Supports print, pay later, and payment actions
- */
 
 const ChallanResponseCitizen = (props) => {
   const location = useLocation();
@@ -156,7 +167,6 @@ const ChallanResponseCitizen = (props) => {
         </div>
         <ActionBar className="challan-response-action-bar" >
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} onSubmit={onSubmit} />
-          <SubmitBar label={t("CHALLAN_PAY_LATER")} onSubmit={payLater} />
           <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handlePayment} />
         </ActionBar>
       </Card>

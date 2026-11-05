@@ -18,7 +18,6 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.lang.reflect.Constructor;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -51,12 +50,8 @@ class TokenServiceTest {
     private TokenService tokenService;
 
     @BeforeEach
-    void setUp() throws Exception {
-        Constructor<TokenService> constructor = TokenService.class.getDeclaredConstructor(
-                OAuth2AuthorizationService.class, ActionRestRepository.class, UserService.class);
-        constructor.setAccessible(true);
-        tokenService = constructor.newInstance(authorizationService, actionRestRepository, userService);
-        ReflectionTestUtils.setField(tokenService, "redisTemplate", redisTemplate);
+    void setUp() {
+        tokenService = new TokenService(authorizationService, actionRestRepository, userService, redisTemplate);
         ReflectionTestUtils.setField(tokenService, "isRoleStateLevel", false);
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }

@@ -40,6 +40,28 @@
 
 package org.egov.user.domain.model.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+/**
+ * Enumeration representing relationships to a legal guardian (Father, Mother, Husband, Other).
+ */
 public enum GuardianRelation {
     FATHER, MOTHER, HUSBAND, OTHER;
+
+    /**
+     * Resolves a {@link GuardianRelation} from a case-insensitive string value.
+     *
+     * @param text relationship name string
+     * @return matching {@link GuardianRelation}, or null if input is null/unmatched
+     */
+    @JsonCreator
+    public static GuardianRelation fromValue(String text) {
+        if (text == null) return null;
+        for (GuardianRelation g : GuardianRelation.values()) {
+            if (g.name().equalsIgnoreCase(text.trim())) {
+                return g;
+            }
+        }
+        return null;
+    }
 }

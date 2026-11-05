@@ -51,14 +51,20 @@ public class ResponseInfoFactory {
 
 		final String apiId = requestInfo != null ? requestInfo.getApiId() : "";
 		final String ver = requestInfo != null ? requestInfo.getVer() : "";
-		Long ts = null;
-		if (requestInfo != null)
-			ts = requestInfo.getTs();
-		final String resMsgId = "uief87324"; // FIXME : Hard-coded
+		Long ts = (requestInfo != null && requestInfo.getTs() != null)
+				? requestInfo.getTs()
+				: System.currentTimeMillis();
+		final String resMsgId = "uief-aadhaar-res-" + System.currentTimeMillis();
 		final String msgId = requestInfo != null ? requestInfo.getMsgId() : "";
+		final String status = Boolean.TRUE.equals(success) ? "successful" : "failed";
 
-
-		return ResponseInfo.builder().apiId(apiId).ver(ver).ts(ts).resMsgId(resMsgId).msgId(msgId).resMsgId(resMsgId)
+		return ResponseInfo.builder()
+				.apiId(apiId)
+				.ver(ver)
+				.ts(ts)
+				.resMsgId(resMsgId)
+				.msgId(msgId)
+				.status(status)
 				.build();
 	}
 }

@@ -2,8 +2,8 @@ import { Banner, Card, Loader, Row, StatusTable, SubmitBar, Toast } from "@nudmc
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, } from "react-router-dom";
-import { ADSDataConvert, getSlotSearchCriteria } from "../../../utils";
-import "../../../css/ads-inline-auto.css";
+import { ADSDataConvert, getSlotSearchCriteria, downloadADSAcknowledgement } from "../../../utils";
+
 const GetActionMessage = props => {
   const {
     t
@@ -21,7 +21,7 @@ const rowContainerStyle = {
   justifyContent: "space-between"
 };
 const BannerPicker = props => {
-  return <Banner message={GetActionMessage(props)} applicationNumber={props.data?.bookingApplication[0].bookingNo} info={props.isSuccess ? props.t("ADS_BOOKING_NO") : ""} successful={props.isSuccess} className="ads-auto-93" />;
+  return <Banner message={GetActionMessage(props)} applicationNumber={props.data?.bookingApplication[0].bookingNo} info={props.isSuccess ? props.t("ADS_BOOKING_NO") : ""} successful={props.isSuccess} className="ads-acknowledgement-link-full-width" />;
 };
 
 /**
@@ -50,6 +50,14 @@ const ADSAcknowledgement = ({ data, onSuccess, mutation }) => {
       undefined,
       mutation.data?.bookingApplication[0].bookingId
     )
+  };
+
+  const handleDownloadPdf = () => {
+    try {
+      downloadADSAcknowledgement(mutation?.data?.bookingApplication?.[0], t);
+    } catch (e) {
+      setShowToast({ error: true, label: t("CS_SOMETHING_WENT_WRONG") });
+    }
   };
 
   const handleMakePayment = async () => {
@@ -117,13 +125,14 @@ const ADSAcknowledgement = ({ data, onSuccess, mutation }) => {
           width: "60%"
         }} />}
       </StatusTable>
-      {mutation.isSuccess && <div className="ads-auto-94">
+      {mutation.isSuccess && <div className="ads-acknowledgement-flex">
         {user.type === "EMPLOYEE" && <Link to={`/upyog-ui/employee`}>
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>}
         {user.type === "CITIZEN" && <Link to={`/upyog-ui/citizen`}>
           <SubmitBar label={t("CORE_COMMON_GO_TO_HOME")} />
         </Link>}
+        <SubmitBar label={t("ADS_DOWNLOAD_ACK_FORM")} onSubmit={handleDownloadPdf} />
         <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
       </div>}
       {!mutation.isSuccess && user.type === "CITIZEN" && <Link to={`/upyog-ui/citizen`}>

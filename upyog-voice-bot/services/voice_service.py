@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+USE_EDGE_TTS = os.environ.get("USE_EDGE_TTS", "True").strip().lower() == "true"
 
 # Global state for stop flag (barge-in interruption)
 stop_generation = threading.Event()
@@ -30,31 +31,6 @@ TRANSLATION_SERVICE_ID = "ai4bharat/indictrans-v2-all-gpu--t4"
 TTS_SERVICE_ID = "ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4"
 TTS_SERVICE_ID_DRAVIDIAN = "ai4bharat/indic-tts-coqui-dravidian-gpu--t4"
 TTS_SERVICE_ID_MISC = "ai4bharat/indic-tts-coqui-misc-gpu--t4"
-
-
-# ============== DYNAMIC PER-TURN LANGUAGE DETECTION ==============
-
-# Phonetic Hindi words in Roman script
-HINDI_PHONETIC_WORDS = {
-    'kya', 'kaise', 'kahan', 'kab', 'kyun', 'kaun', 'kitna', 'kitne', 'kitni',
-    'hai', 'hain', 'tha', 'thi', 'the', 'hoga', 'hogi', 'hoge', 'honge', 'ho', 'hai',
-    'mujhe', 'aapko', 'humko', 'tumhe', 'unhe', 'apna', 'mera', 'meri', 'mere', 'tera', 'teri', 'tere',
-    'aur', 'ya', 'lekin', 'toh', 'ki', 'ke', 'ka', 'ko', 'se', 'par', 'mein', 'me', 'mai',
-    'nahi', 'nahin', 'mat', 'bilkul', 'haan', 'theek', 'accha', 'sahi', 'galat', 'kuch', 'kuchh',
-    'batao', 'bataye', 'bataiye', 'samjhao', 'dikhao', 'chahiye', 'milega', 'milegi',
-    'karo', 'karein', 'karega', 'karegi', 'dijiye', 'lijiye', 'dekhiye', 'suniye',
-    'paisa', 'paise', 'rupaye', 'mahina', 'saal', 'din', 'ghanta', 'minute',
-    'ghar', 'daftar', 'office', 'kaam', 'kam',
-    'naam', 'number', 'document', 'form', 'form mein', 'apply', 'karein', 'karna',
-    'bhai', 'yaar', 'sir', 'madam', 'dada', 'babu',
-    'aap', 'tum', 'hum', 'woh', 'yeh', 'ye', 'vo', 'unka', 'iska', 'uska',
-    'abhi', 'phir', 'fir', 'kabhi', 'hamesha', 'kal', 'aaj', 'raat', 'din',
-    'ek', 'do', 'teen', 'char', 'paanch', 'chalo', 'chal', 'jao', 'aao',
-    'dekh', 'sun', 'bolo', 'likh', 'padh', 'samajh',
-    'sirf', 'bas', 'hi', 'bhi', 'to', 'hi', 'to',
-    'kaafi', 'zyada', 'kam', 'chotu', 'bada', 'chhota',
-    'ke', 'ka', 'ki', 'ko', 'se', 'me', 'mein', 'pe', 'ka'
-}
 
 # English words commonly transliterated into Devanagari
 ENGLISH_IN_DEVANAGARI = [
@@ -243,8 +219,8 @@ def clean_text_for_tts(text: str, language_code: str = "en") -> str:
 
 
 def text_to_speech(text: str, language_code: str, gender: str = "female"):
-    """Convert text to speech using Edge-TTS with Bhashini fallback."""
-    logger.info(f"[TTS GENERATION] Input text length: {len(text)} | Language: '{language_code}' | Gender: '{gender}'")
+    """Use Edge TTS when selected, with Bhashini as fallback."""
+    logger.info(f"[TTS GENERATION] Input text length: {len(text)} | Language: '{language_code}' | Gender: '{gender}' | USE_EDGE_TTS={USE_EDGE_TTS}")
 
     # Clean markdown, headers and apply pronunciation rules
     text = clean_text_for_tts(text, language_code)
@@ -259,8 +235,8 @@ def text_to_speech(text: str, language_code: str, gender: str = "female"):
 
     logger.info(f"[TTS] Generating TTS for language: {language_code}")
 
-    # Try Edge-TTS first for English/Hindi
-    if language_code in ["en", "hi"]:
+    # Edge TTS is configured here for English and Hindi only.
+    if USE_EDGE_TTS and language_code in ["en", "hi"]:
         voice_map = {
             "en": "en-IN-NeerjaNeural",
             "hi": "hi-IN-MadhurNeural"
@@ -286,8 +262,12 @@ def text_to_speech(text: str, language_code: str, gender: str = "female"):
                 logger.error("[TTS EDGE-TTS] Edge-TTS generated empty or invalid audio file, falling back to Bhashini.")
         except Exception as e:
             logger.error(f"[TTS EDGE-TTS] Edge-TTS failed: {e}. Falling back to Bhashini...")
+    elif USE_EDGE_TTS:
+        logger.info(f"[TTS] No Edge TTS voice configured for '{language_code}'; using Bhashini.")
+    else:
+        logger.info("[TTS] USE_EDGE_TTS is false; using Bhashini directly.")
 
-    # Fallback to Bhashini
+    # Use Bhashini when selected or when Edge TTS is unavailable/fails.
     if language_code == "en":
         tts_service_id = TTS_SERVICE_ID_MISC
     elif language_code in ["hi", "mr", "bn", "gu", "pa", "as", "or"]:

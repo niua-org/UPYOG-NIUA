@@ -1,0 +1,94 @@
+serviceMaps:
+  serviceName: upyog-family-service
+  mappings:
+    - version: 1.0.0
+      description: Persists newly registered Family aggregate into ug_family and ug_family_member tables in UPYOG
+      fromTopic: save-ug-family
+      isTransaction: true
+      queryMaps:
+        - query: INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, status, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
+          basePath: Family
+          jsonMaps:
+            - jsonPath: $.Family.id
+            - jsonPath: $.Family.familyId
+            - jsonPath: $.Family.tenantId
+            - jsonPath: $.Family.headUserUuid
+            - jsonPath: $.Family.category
+            - jsonPath: $.Family.status
+            - jsonPath: $.Family.additionalDetails
+              type: JSON
+              dbType: JSONB
+            - jsonPath: $.Family.auditDetails.createdBy
+            - jsonPath: $.Family.auditDetails.createdTime
+            - jsonPath: $.Family.auditDetails.lastModifiedBy
+            - jsonPath: $.Family.auditDetails.lastModifiedTime
+
+        - query: INSERT INTO ug_family_member (id, family_id, tenant_id, user_uuid, relationship_with_head, is_head, is_verified, active, status, exit_reason, exit_date, consent_token, consent_date, effective_from, effective_to, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
+          basePath: Family.members.*
+          jsonMaps:
+            - jsonPath: $.Family.members.*.id
+            - jsonPath: $.Family.members.*.familyId
+            - jsonPath: $.Family.members.*.tenantId
+            - jsonPath: $.Family.members.*.userUuid
+            - jsonPath: $.Family.members.*.relationshipWithHead
+            - jsonPath: $.Family.members.*.isHead
+            - jsonPath: $.Family.members.*.isVerified
+            - jsonPath: $.Family.members.*.active
+            - jsonPath: $.Family.members.*.status
+            - jsonPath: $.Family.members.*.exitReason
+            - jsonPath: $.Family.members.*.exitDate
+            - jsonPath: $.Family.members.*.consentToken
+            - jsonPath: $.Family.members.*.consentDate
+            - jsonPath: $.Family.members.*.effectiveFrom
+            - jsonPath: $.Family.members.*.effectiveTo
+            - jsonPath: $.Family.members.*.additionalDetails
+              type: JSON
+              dbType: JSONB
+            - jsonPath: $.Family.members.*.auditDetails.createdBy
+            - jsonPath: $.Family.members.*.auditDetails.createdTime
+            - jsonPath: $.Family.members.*.auditDetails.lastModifiedBy
+            - jsonPath: $.Family.members.*.auditDetails.lastModifiedTime
+
+    - version: 1.0.0
+      description: Updates Family metadata and member linkages in UPYOG
+      fromTopic: update-ug-family
+      isTransaction: true
+      queryMaps:
+        - query: UPDATE ug_family SET head_user_uuid = ?, category = ?, status = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? WHERE family_id = ?;
+          basePath: Family
+          jsonMaps:
+            - jsonPath: $.Family.headUserUuid
+            - jsonPath: $.Family.category
+            - jsonPath: $.Family.status
+            - jsonPath: $.Family.additionalDetails
+              type: JSON
+              dbType: JSONB
+            - jsonPath: $.Family.auditDetails.lastModifiedBy
+            - jsonPath: $.Family.auditDetails.lastModifiedTime
+            - jsonPath: $.Family.familyId
+
+        - query: INSERT INTO ug_family_member (id, family_id, tenant_id, user_uuid, relationship_with_head, is_head, is_verified, active, status, exit_reason, exit_date, consent_token, consent_date, effective_from, effective_to, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET relationship_with_head = EXCLUDED.relationship_with_head, is_head = EXCLUDED.is_head, is_verified = EXCLUDED.is_verified, active = EXCLUDED.active, status = EXCLUDED.status, exit_reason = EXCLUDED.exit_reason, exit_date = EXCLUDED.exit_date, consent_token = EXCLUDED.consent_token, consent_date = EXCLUDED.consent_date, effective_from = EXCLUDED.effective_from, effective_to = EXCLUDED.effective_to, additional_details = EXCLUDED.additional_details, last_modified_by = EXCLUDED.last_modified_by, last_modified_time = EXCLUDED.last_modified_time;
+          basePath: Family.members.*
+          jsonMaps:
+            - jsonPath: $.Family.members.*.id
+            - jsonPath: $.Family.members.*.familyId
+            - jsonPath: $.Family.members.*.tenantId
+            - jsonPath: $.Family.members.*.userUuid
+            - jsonPath: $.Family.members.*.relationshipWithHead
+            - jsonPath: $.Family.members.*.isHead
+            - jsonPath: $.Family.members.*.isVerified
+            - jsonPath: $.Family.members.*.active
+            - jsonPath: $.Family.members.*.status
+            - jsonPath: $.Family.members.*.exitReason
+            - jsonPath: $.Family.members.*.exitDate
+            - jsonPath: $.Family.members.*.consentToken
+            - jsonPath: $.Family.members.*.consentDate
+            - jsonPath: $.Family.members.*.effectiveFrom
+            - jsonPath: $.Family.members.*.effectiveTo
+            - jsonPath: $.Family.members.*.additionalDetails
+              type: JSON
+              dbType: JSONB
+            - jsonPath: $.Family.members.*.auditDetails.createdBy
+            - jsonPath: $.Family.members.*.auditDetails.createdTime
+            - jsonPath: $.Family.members.*.auditDetails.lastModifiedBy
+            - jsonPath: $.Family.members.*.auditDetails.lastModifiedTime

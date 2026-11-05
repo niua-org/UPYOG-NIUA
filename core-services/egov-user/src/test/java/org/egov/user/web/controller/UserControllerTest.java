@@ -6,6 +6,7 @@ import org.egov.user.domain.exception.UserNotFoundException;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.TokenService;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.model.Address;
@@ -34,8 +35,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.Collections;
 import java.util.Set;
 
@@ -56,14 +55,17 @@ class UserControllerTest {
     private TokenService tokenService;
 
     private UserController controller;
+    private UserConfiguration userConfiguration;
 
     @BeforeEach
     void setUp() {
-        controller = new UserController(userService, tokenService);
-        ReflectionTestUtils.setField(controller, "IsValidationMandatory", true);
-        ReflectionTestUtils.setField(controller, "isRegWithLoginEnabled", false);
-        ReflectionTestUtils.setField(controller, "defaultSearchSize", 100);
-        ReflectionTestUtils.setField(controller, "mobileValidationWorkaroundEnabled", "true");
+        userConfiguration = UserConfiguration.builder()
+                .otpValidationRegisterMandatory(true)
+                .citizenRegistrationWithLoginEnabled(false)
+                .defaultSearchSize(100)
+                .mobileValidationWorkaroundEnabled("true")
+                .build();
+        controller = new UserController(userService, tokenService, null, userConfiguration);
     }
 
     @Test
@@ -95,7 +97,7 @@ class UserControllerTest {
 
     @Test
     void createCitizen_loginEnabled_returnsOkResponseEntity() {
-        ReflectionTestUtils.setField(controller, "isRegWithLoginEnabled", true);
+        userConfiguration.setCitizenRegistrationWithLoginEnabled(true);
         RequestInfo requestInfo = RequestInfo.builder().build();
         Object tokenBody = Collections.singletonMap("access_token", "abc");
         when(userService.registerWithLogin(any(User.class), eq(requestInfo))).thenReturn(tokenBody);
@@ -224,23 +226,6 @@ class UserControllerTest {
     }
 
     @Test
-    void patch_delegatesToPartialUpdate() {
-        RequestInfo requestInfo = RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder().id(1L).uuid("uuid-1").build())
-                .build();
-        User persisted = User.builder().uuid("uuid-1").username("alice").active(true).type(UserType.EMPLOYEE).build();
-        when(userService.partialUpdate(any(User.class), eq(requestInfo))).thenReturn(persisted);
-
-        UserRequest profileRequest = userRequest("alice");
-        profileRequest.setUuid("uuid-1");
-        profileRequest.setId(1L);
-        UpdateResponse response = controller.patch(new CreateUserRequest(requestInfo, profileRequest));
-
-        assertThat(response.getUser()).hasSize(1);
-        verify(userService).partialUpdate(any(User.class), eq(requestInfo));
-    }
-
-    @Test
     void updateUserWithoutValidation_delegatesToService() {
         RequestInfo requestInfo = RequestInfo.builder()
                 .userInfo(org.egov.common.contract.request.User.builder().id(1L).uuid("uuid-1").build())
@@ -249,7 +234,7 @@ class UserControllerTest {
         when(userService.updateWithoutOtpValidation(any(User.class), eq(requestInfo))).thenReturn(updated);
 
         UpdateResponse response = controller.updateUserWithoutValidation(
-                new CreateUserRequest(requestInfo, userRequest("alice")), gatewayHeaders());
+                new CreateUserRequest(requestInfo, userRequest("alice"), null), gatewayHeaders());
 
         assertThat(response.getUser()).hasSize(1);
         verify(userService).updateWithoutOtpValidation(any(User.class), eq(requestInfo));
@@ -309,7 +294,7 @@ class UserControllerTest {
     }
 
     private CreateUserRequest createRequest(RequestInfo requestInfo) {
-        return new CreateUserRequest(requestInfo, userRequest("9999999999"));
+        return new CreateUserRequest(requestInfo, userRequest("9999999999"), null);
     }
 
     private UserRequest userRequest(String userName) {

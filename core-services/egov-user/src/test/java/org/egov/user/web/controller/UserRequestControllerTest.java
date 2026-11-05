@@ -52,7 +52,7 @@ class UserRequestControllerTest {
                 .active(true)
                 .roles(Set.of())
                 .build();
-        CreateUserRequest createUserRequest = new CreateUserRequest(requestInfo, userRequest);
+        CreateUserRequest createUserRequest = new CreateUserRequest(requestInfo, userRequest, null);
 
         User updated = User.builder().uuid("uuid-1").username("jamaalbhai").name("Jamaal Bhai").build();
         when(userService.updateWithoutOtpValidation(any(User.class), eq(requestInfo))).thenReturn(updated);

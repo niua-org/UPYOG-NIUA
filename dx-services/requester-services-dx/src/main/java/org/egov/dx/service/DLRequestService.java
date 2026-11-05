@@ -106,7 +106,7 @@ public class DLRequestService {
        	    String value = new ObjectMapper().readValue(responseBody, String[].class)[0];
        	 authResponse.setDlReqRef(value);
        	} catch (Exception e) {
-       	    e.printStackTrace();
+       	    log.error("Failed to parse encryption response: {}", e.getMessage(), e);
        	}
     	return encoded;              
     	}
@@ -157,7 +157,7 @@ public class DLRequestService {
         	    String value = new ObjectMapper().readValue(responseBody, String[].class)[0];
         	    map.add("code_verifier", value);
         	} catch (Exception e) {
-        	    e.printStackTrace();
+        	    log.error("Failed to parse encryption response: {}", e.getMessage(), e);
         	}
          HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map,
                  headers);

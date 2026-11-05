@@ -20,10 +20,10 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,12 +37,14 @@ class UserUtilsTest {
 
     @Mock
     private MultiStateInstanceUtil multiStateInstanceUtil;
+    @Mock
+    private com.example.gateway.utils.UserAuthCache userAuthCache;
 
     private UserUtils userUtils;
 
     @BeforeEach
     void setUp() {
-        userUtils = new UserUtils(restTemplate, applicationProperties);
+        userUtils = new UserUtils(restTemplate, applicationProperties, userAuthCache);
         ReflectionTestUtils.setField(userUtils, "multiStateInstanceUtil", multiStateInstanceUtil);
     }
 
@@ -53,6 +55,10 @@ class UserUtilsTest {
         User expected = User.builder().uuid("user-1").userName("citizen").build();
         when(restTemplate.postForObject(
                 "http://auth-host/user/_details?access_token=token-1", null, User.class)).thenReturn(expected);
+        when(userAuthCache.get(eq("token-1"), any())).thenAnswer(invocation -> {
+            java.util.function.Function<String, User> loader = invocation.getArgument(1);
+            return loader.apply("token-1");
+        });
 
         User actual = userUtils.getUser("token-1");
 
@@ -69,6 +75,10 @@ class UserUtilsTest {
         when(restTemplate.postForObject(
                 "http://auth-host/user/_details?access_token=token-1", null, User.class))
                 .thenThrow(new RuntimeException("auth down"));
+        when(userAuthCache.get(eq("token-1"), any())).thenAnswer(invocation -> {
+            java.util.function.Function<String, User> loader = invocation.getArgument(1);
+            return loader.apply("token-1");
+        });
 
         assertThatThrownBy(() -> userUtils.getUser("token-1"))
                 .isInstanceOfSatisfying(CustomException.class, exception -> {

@@ -1,0 +1,1486 @@
+{
+  "info": {
+    "_postman_id": "814dc228-aa54-4c78-9374-f65cb59e4297",
+    "name": "UPYOG - Citizen Profile & Aadhaar Verification Collection (Updated v3.0)",
+    "description": "Comprehensive Postman Collection covering all endpoints, edge cases, Section 8 field governance, and multi-auth orchestration across egov-user and requester-services-dx.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55680972",
+    "_collection_link": "https://go.postman.co/collection/55680972-814dc228-aa54-4c78-9374-f65cb59e4297?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Multi-Auth Login Orchestration (Login v2)",
+      "item": [
+        {
+          "name": "Mobile Login (Standard / Single Account)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470400000,\n    \"action\": \"loginv2\",\n    \"msgId\": \"msg-login-001\"\n  },\n  \"authType\": \"MOBILE\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"mobileNumber\": \"8588070881\",\n  \"otp\": \"123456\",\n  \"scope\": \"read write\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/users/v2/_login",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "users",
+                "v2",
+                "_login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Access token returned\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"access_token\");",
+                  "});",
+                  "if (jsonData.access_token) {",
+                  "    pm.collectionVariables.set(\"authToken\", jsonData.access_token);",
+                  "}",
+                  "if (jsonData.UserRequest && jsonData.UserRequest.uuid) {",
+                  "    pm.collectionVariables.set(\"userUuid\", jsonData.UserRequest.uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mobile Login (Multi-Account Selection with selectedUserUuid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470400000,\n    \"action\": \"loginv2\",\n    \"msgId\": \"msg-login-002\"\n  },\n  \"authType\": \"MOBILE\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"mobileNumber\": \"8588070881\",\n  \"otp\": \"123456\",\n  \"selectedUserUuid\": \"{{userUuid}}\",\n  \"scope\": \"read write\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/users/v2/_login",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "users",
+                "v2",
+                "_login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Multi-account token resolved\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"access_token\");",
+                  "});",
+                  "if (jsonData.access_token) {",
+                  "    pm.collectionVariables.set(\"authToken\", jsonData.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aadhaar Login (e-KYC & Auto-Provisioning on Shared Mobile)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470410000,\n    \"action\": \"loginv2\",\n    \"msgId\": \"msg-login-003\"\n  },\n  \"authType\": \"AADHAAR\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"aadhaarNumber\": \"548796521458\",\n  \"otp\": \"123456\",\n  \"txnId\": \"{{referenceId}}\",\n  \"scope\": \"read write\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/users/v2/_login",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "users",
+                "v2",
+                "_login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Aadhaar authenticated access token generated\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"access_token\");",
+                  "});",
+                  "if (jsonData.access_token) {",
+                  "    pm.collectionVariables.set(\"authToken\", jsonData.access_token);",
+                  "}",
+                  "if (jsonData.UserRequest && jsonData.UserRequest.uuid) {",
+                  "    pm.collectionVariables.set(\"userUuid\", jsonData.UserRequest.uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Family ID Login (Haryana PPP Construct)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470420000,\n    \"action\": \"loginv2\",\n    \"msgId\": \"msg-login-004\"\n  },\n  \"authType\": \"FAMILY_ID\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"familyId\": \"UPYOG_FAM_789012\",\n  \"mobileNumber\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"scope\": \"read write\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/users/v2/_login",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "users",
+                "v2",
+                "_login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Family ID auth verified\", function () {",
+                  "    pm.expect(jsonData).to.have.property(\"access_token\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Orchestrates citizen login across MOBILE, AADHAAR, and FAMILY_ID channels. Evaluates isProfileCompleted."
+    },
+    {
+      "name": "2. Aadhaar Verification Gateway (requester-services-dx)",
+      "item": [
+        {
+          "name": "Send OTP (Verhoeff Checksum Validated)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.dx\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470400000,\n    \"action\": \"_sendOtp\",\n    \"did\": \"1\",\n    \"key\": \"1\",\n    \"msgId\": \"msg-aadhaar-001\"\n  },\n  \"aadhaarNumber\": \"548796521458\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dx_host}}/requester-services-dx/aadhaar/v1/_sendOtp",
+              "host": [
+                "{{dx_host}}"
+              ],
+              "path": [
+                "requester-services-dx",
+                "aadhaar",
+                "v1",
+                "_sendOtp"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"OTP sent with valid checksum\", function () {",
+                  "    pm.expect(jsonData.status).to.eql(\"OTP_SENT\");",
+                  "});",
+                  "if (jsonData.referenceId) {",
+                  "    pm.collectionVariables.set(\"referenceId\", jsonData.referenceId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP & Extract Demographics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.dx\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470410000,\n    \"action\": \"_verifyOtp\",\n    \"msgId\": \"msg-aadhaar-002\"\n  },\n  \"referenceId\": \"{{referenceId}}\",\n  \"otp\": \"123456\",\n  \"isResync\": false,\n  \"userUuid\": \"{{userUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dx_host}}/requester-services-dx/aadhaar/v1/_verifyOtp",
+              "host": [
+                "{{dx_host}}"
+              ],
+              "path": [
+                "requester-services-dx",
+                "aadhaar",
+                "v1",
+                "_verifyOtp"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Aadhaar OTP verified\", function () {",
+                  "    pm.expect(jsonData.status).to.eql(\"VERIFIED\");",
+                  "    pm.expect(jsonData.isVerified).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Send OTP for Re-sync Flow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.dx\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470400000,\n    \"action\": \"_sendOtp\",\n    \"msgId\": \"msg-resync-001\",\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"aadhaarNumber\": \"548796521458\",\n  \"isResync\": true,\n  \"userUuid\": \"{{userUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dx_host}}/requester-services-dx/aadhaar/v1/_sendOtp",
+              "host": [
+                "{{dx_host}}"
+              ],
+              "path": [
+                "requester-services-dx",
+                "aadhaar",
+                "v1",
+                "_sendOtp"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Re-sync OTP sent\", function () {",
+                  "    pm.expect(jsonData.status).to.eql(\"OTP_SENT\");",
+                  "});",
+                  "if (jsonData.referenceId) {",
+                  "    pm.collectionVariables.set(\"referenceId\", jsonData.referenceId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edge Case - Invalid Verhoeff Checksum (e.g. 222222222222)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.dx\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470400000,\n    \"action\": \"_sendOtp\",\n    \"msgId\": \"msg-bad-checksum\"\n  },\n  \"aadhaarNumber\": \"222222222222\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dx_host}}/requester-services-dx/aadhaar/v1/_sendOtp",
+              "host": [
+                "{{dx_host}}"
+              ],
+              "path": [
+                "requester-services-dx",
+                "aadhaar",
+                "v1",
+                "_sendOtp"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Verhoeff checksum failure reported\", function () {",
+                  "    var hasErr = jsonData.Errors && jsonData.Errors.some(function(e) {",
+                  "        return e.code === \"INVALID_AADHAAR_CHECKSUM\" || (e.message && e.message.includes(\"checksum\"));",
+                  "    });",
+                  "    pm.expect(hasErr).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edge Case - Replay Attack (Re-submitting Consumed referenceId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.dx\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470410000,\n    \"action\": \"_verifyOtp\",\n    \"msgId\": \"msg-replay-attempt\"\n  },\n  \"referenceId\": \"{{referenceId}}\",\n  \"otp\": \"123456\",\n  \"isResync\": false,\n  \"userUuid\": \"{{userUuid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dx_host}}/requester-services-dx/aadhaar/v1/_verifyOtp",
+              "host": [
+                "{{dx_host}}"
+              ],
+              "path": [
+                "requester-services-dx",
+                "aadhaar",
+                "v1",
+                "_verifyOtp"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Replay attack prevented\", function () {",
+                  "    var hasErr = jsonData.Errors && jsonData.Errors.some(function(e) {",
+                  "        return e.code === \"OTP_ALREADY_VERIFIED\" || (e.message && e.message.includes(\"verified\"));",
+                  "    });",
+                  "    pm.expect(hasErr).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Integration layer for UIDAI Aadhaar verification, Verhoeff checksum validation, and replay attack prevention."
+    },
+    {
+      "name": "3. Citizen Profile Lifecycle (egov-user)",
+      "item": [
+        {
+          "name": "Initialize Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470430000,\n    \"action\": \"_init\",\n    \"msgId\": \"msg-init-001\"\n  },\n  \"tenantId\": \"{{tenantId}}\",\n  \"mobileNumber\": \"9876543210\",\n  \"name\": \"Aarav Sharma\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_init",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_init"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.user && jsonData.user.uuid) {",
+                  "    pm.collectionVariables.set(\"userUuid\", jsonData.user.uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Profile (Section 8 Full Profile with Mandatory Fields)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470440000,\n    \"authToken\": \"{{authToken}}\",\n    \"userInfo\": {\n      \"id\": 1042,\n      \"uuid\": \"{{userUuid}}\",\n      \"tenantId\": \"{{tenantId}}\",\n      \"roles\": [\n        {\n          \"name\": \"Citizen\",\n          \"code\": \"CITIZEN\",\n          \"tenantId\": \"{{tenantId}}\"\n        }\n      ]\n    }\n  },\n  \"user\": {\n    \"name\": \"Aarav Sharma\",\n    \"fatherName\": \"Rajesh Sharma\",\n    \"motherName\": \"Sunita Sharma\",\n    \"spouseName\": \"Pooja Sharma\",\n    \"mobileNumber\": \"8588070881\",\n    \"alternateMobileNumber\": \"9876543219\",\n    \"dob\": \"1992-07-14\",\n    \"emailId\": \"aarav.sharma@example.com\",\n    \"gender\": \"MALE\",\n    \"tenantId\": \"{{tenantId}}\",\n    \"type\": \"CITIZEN\",\n    \"aadhaarNumber\": \"XXXXXXXX1458\",\n    \"addresses\": [\n      {\n        \"type\": \"PERMANENT\",\n        \"city\": \"Amritsar\",\n        \"locality\": \"Sector 14\",\n        \"streetName\": \"MG Road\",\n        \"houseNumber\": \"Flat 402\",\n        \"houseName\": \"Royal Palms\",\n        \"landmark\": \"Near Civil Hospital\",\n        \"pinCode\": \"143001\",\n        \"tenantId\": \"{{tenantId}}\",\n        \"filestoreId\": \"a124d1e2-5678-4321-9876-0123456789cd\"\n      }\n    ],\n    \"documents\": [\n      {\n        \"documentType\": \"IDENTITY_PROOF\",\n        \"filestoreId\": \"f784d1e2-5678-4321-9876-0123456789ab\",\n        \"tenantId\": \"{{tenantId}}\"\n      },\n      {\n        \"documentType\": \"ADDRESS_PROOF\",\n        \"filestoreId\": \"a124d1e2-5678-4321-9876-0123456789cd\",\n        \"tenantId\": \"{{tenantId}}\"\n      },\n      {\n        \"documentType\": \"DOB_PROOF\",\n        \"filestoreId\": \"b344d1e2-5678-4321-9876-0123456789ef\",\n        \"tenantId\": \"{{tenantId}}\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_create",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_create"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Profile created with UUID\", function () {",
+                  "    pm.expect(jsonData.user).to.exist;",
+                  "    pm.expect(jsonData.user.uuid).to.not.be.empty;",
+                  "});",
+                  "if (jsonData.user && jsonData.user.uuid) {",
+                  "    pm.collectionVariables.set(\"userUuid\", jsonData.user.uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Profile - Minor (< 18 Yrs) with Mandatory Guardian",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470445000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"user\": {\n    \"name\": \"Vivaan Sharma\",\n    \"fatherName\": \"Rajesh Sharma\",\n    \"motherName\": \"Sunita Sharma\",\n    \"guardian\": \"Rajesh Sharma\",\n    \"guardianRelation\": \"FATHER\",\n    \"mobileNumber\": \"8588070882\",\n    \"dob\": \"2012-05-10\",\n    \"emailId\": \"vivaan.sharma@example.com\",\n    \"gender\": \"MALE\",\n    \"tenantId\": \"{{tenantId}}\",\n    \"type\": \"CITIZEN\",\n    \"addresses\": [\n      {\n        \"type\": \"PERMANENT\",\n        \"city\": \"Amritsar\",\n        \"locality\": \"Sector 14\",\n        \"streetName\": \"MG Road\",\n        \"houseNumber\": \"Flat 402\",\n        \"houseName\": \"Royal Palms\",\n        \"landmark\": \"Near Civil Hospital\",\n        \"pinCode\": \"143001\",\n        \"tenantId\": \"{{tenantId}}\",\n        \"filestoreId\": \"addr-proof-minor-1234\"\n      }\n    ],\n    \"documents\": [\n      {\n        \"documentType\": \"IDENTITY_PROOF\",\n        \"filestoreId\": \"ident-proof-minor-5678\",\n        \"tenantId\": \"{{tenantId}}\"\n      },\n      {\n        \"documentType\": \"DOB_PROOF\",\n        \"filestoreId\": \"dob-proof-minor-9012\",\n        \"tenantId\": \"{{tenantId}}\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_create",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_create"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Minor profile created with Guardian\", function () {",
+                  "    pm.expect(jsonData.user).to.exist;",
+                  "    pm.expect(jsonData.user.guardian).to.not.be.empty;",
+                  "    pm.expect(jsonData.user.guardianRelation).to.not.be.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edge Case - Minor (< 18 Yrs) without Guardian (Rejection)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470445000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"user\": {\n    \"name\": \"Vivaan Sharma\",\n    \"fatherName\": \"Rajesh Sharma\",\n    \"motherName\": \"Sunita Sharma\",\n    \"guardian\": \"\",\n    \"guardianRelation\": \"\",\n    \"mobileNumber\": \"8588070882\",\n    \"dob\": \"2012-05-10\",\n    \"emailId\": \"vivaan.sharma@example.com\",\n    \"gender\": \"MALE\",\n    \"tenantId\": \"{{tenantId}}\",\n    \"type\": \"CITIZEN\",\n    \"addresses\": [\n      {\n        \"type\": \"PERMANENT\",\n        \"city\": \"Amritsar\",\n        \"locality\": \"Sector 14\",\n        \"streetName\": \"MG Road\",\n        \"houseNumber\": \"Flat 402\",\n        \"houseName\": \"Royal Palms\",\n        \"landmark\": \"Near Civil Hospital\",\n        \"pinCode\": \"143001\",\n        \"tenantId\": \"{{tenantId}}\",\n        \"filestoreId\": \"addr-proof-minor-1234\"\n      }\n    ],\n    \"documents\": [\n      {\n        \"documentType\": \"IDENTITY_PROOF\",\n        \"filestoreId\": \"ident-proof-minor-5678\",\n        \"tenantId\": \"{{tenantId}}\"\n      },\n      {\n        \"documentType\": \"DOB_PROOF\",\n        \"filestoreId\": \"dob-proof-minor-9012\",\n        \"tenantId\": \"{{tenantId}}\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_create",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_create"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Guardian mandatory for minor rejection reported\", function () {",
+                  "    var hasErr = jsonData.Errors && jsonData.Errors.some(function(e) {",
+                  "        return e.code === \"GUARDIAN_MANDATORY_FOR_MINOR\" || (e.message && e.message.toLowerCase().includes(\"guardian\"));",
+                  "    });",
+                  "    pm.expect(hasErr).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile (Partial Update - Editable Fields Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470480000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"isResync\": false,\n  \"profile\": {\n    \"uuid\": \"{{userUuid}}\",\n    \"tenantId\": \"{{tenantId}}\",\n    \"mobileNumber\": \"8588070881\",\n    \"emailId\": \"aarav.sharma@example.com\",\n    \"spouseName\": \"Pooja R. Sharma\",\n    \"alternateMobileNumber\": \"9876543299\",\n    \"photo\": \"dcfc576e-239d-4977-9a9e-0894d52430df\",\n    \"bloodGroup\": \"B+\",\n    \"identificationMark\": \"Mole on right cheek\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_update",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_update"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Profile updated successfully\", function () {",
+                  "    pm.expect(jsonData.user).to.exist;",
+                  "    pm.expect(jsonData.user.spouseName).to.eql(\"Pooja R. Sharma\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470450000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"tenantId\": \"{{tenantId}}\",\n  \"uuid\": [\n    \"{{userUuid}}\"\n  ],\n  \"mobileNumber\": \"8588070881\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_search",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_search"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Profile found in search\", function () {",
+                  "    pm.expect(jsonData.user).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.user.length).to.be.at.least(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resync Profile with Aadhaar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470460000,\n    \"action\": \"_resync\",\n    \"authToken\": \"{{authToken}}\",\n    \"userInfo\": {\n      \"uuid\": \"{{userUuid}}\"\n    }\n  },\n  \"userUuid\": \"{{userUuid}}\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"aadhaarNumber\": \"548796521458\",\n  \"referenceId\": \"{{referenceId}}\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_resync",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_resync"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Profile re-synced and identity verified\", function () {",
+                  "    pm.expect(jsonData.user).to.exist;",
+                  "    pm.expect(jsonData.user.isIdentityVerified).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edge Case - Alternate Mobile Same as Primary (Rejection)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470480000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"profile\": {\n    \"uuid\": \"{{userUuid}}\",\n    \"tenantId\": \"{{tenantId}}\",\n    \"mobileNumber\": \"8588070881\",\n    \"alternateMobileNumber\": \"8588070881\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/profile/_update",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "profile",
+                "_update"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400 Bad Request\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Duplicate alternate mobile rejection reported\", function () {",
+                  "    var hasErr = jsonData.Errors && jsonData.Errors.some(function(e) {",
+                  "        return e.code === \"ALTERNATE_MOBILE_SAME_AS_PRIMARY\" || (e.message && e.message.toLowerCase().includes(\"alternate\"));",
+                  "    });",
+                  "    pm.expect(hasErr).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Profile creation, partial updates, Aadhaar re-sync, and Section 8 governance rules."
+    },
+    {
+      "name": "4. Address Lifecycle & SCD Type 2 (/address/*)",
+      "item": [
+        {
+          "name": "Create Permanent Address (Auto-deactivates previous)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470470000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"uuid\": \"{{userUuid}}\",\n  \"address\": {\n    \"tenantId\": \"{{tenantId}}\",\n    \"type\": \"PERMANENT\",\n    \"city\": \"Amritsar\",\n    \"locality\": \"Sector 14\",\n    \"streetName\": \"Westend Marg\",\n    \"houseNumber\": \"12\",\n    \"houseName\": \"Sadhna Sadan\",\n    \"landmark\": \"Near Civil Hospital\",\n    \"pinCode\": \"143001\",\n    \"latitude\": 31.634,\n    \"longitude\": 74.872,\n    \"filestoreId\": \"dcfc576e-239d-4977-9a9e-0894d52430df\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/address/_create",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "address",
+                "_create"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Address created\", function () {",
+                  "    pm.expect(jsonData.address).to.exist;",
+                  "});",
+                  "if (jsonData.address && jsonData.address.length > 0 && jsonData.address[0].id) {",
+                  "    pm.collectionVariables.set(\"addressId\", jsonData.address[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Address (SCD Type 2 Versioning)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470480000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"address\": {\n    \"id\": \"{{addressId}}\",\n    \"tenantId\": \"{{tenantId}}\",\n    \"type\": \"CORRESPONDENCE\",\n    \"houseNumber\": \"Flat 505\",\n    \"houseName\": \"Golden Heights Tower B\",\n    \"streetName\": \"Mall Road\",\n    \"landmark\": \"Near Golden Gate\",\n    \"locality\": \"Civil Lines\",\n    \"city\": \"Amritsar\",\n    \"pinCode\": \"143002\",\n    \"latitude\": 31.64,\n    \"longitude\": 74.88,\n    \"filestoreId\": \"dcfc576e-239d-4977-9a9e-0894d52430df\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/address/_update",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "address",
+                "_update"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Address updated with new version\", function () {",
+                  "    pm.expect(jsonData.address).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Addresses (Active vs Historical Inactive)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470490000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"userUuid\": \"{{userUuid}}\",\n  \"tenantId\": \"{{tenantId}}\",\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/address/_search",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "address",
+                "_search"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Address list returned\", function () {",
+                  "    pm.expect(jsonData.address).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Address (Soft-Deactivation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470500000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"uuid\": \"{{userUuid}}\",\n  \"address\": {\n    \"id\": \"{{addressId}}\",\n    \"tenantId\": \"{{tenantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/address/_delete",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "address",
+                "_delete"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "refresh Address Cache",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470500000,\n    \"action\": \"_refreshCache\",\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"tenantId\": \"{{tenantId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/address/v1/_refreshCache",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "address",
+                "v1",
+                "_refreshCache"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Address cache refreshed\", function () {",
+                  "    pm.expect(jsonData.allowedAddressTypes).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Managing citizen addresses. Permanent address exclusivity and SCD Type 2 audit versioning."
+    },
+    {
+      "name": "5. Document Verification (/document/*)",
+      "item": [
+        {
+          "name": "Create User Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470510000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"documents\": [\n    {\n      \"userUuid\": \"{{userUuid}}\",\n      \"tenantId\": \"{{tenantId}}\",\n      \"documentType\": \"AADHAAR_CARD\",\n      \"filestoreId\": \"f784d1e2-5678-4321-9876-0123456789ab\",\n      \"documentUid\": \"XXXXXXXX1458\",\n      \"active\": true\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/document/_create",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "document",
+                "_create"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.documents && jsonData.documents.length > 0 && jsonData.documents[0].id) {",
+                  "    pm.collectionVariables.set(\"documentId\", jsonData.documents[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470520000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"criteria\": {\n    \"userUuid\": \"{{userUuid}}\",\n    \"documentType\": \"AADHAAR_CARD\",\n    \"tenantId\": \"{{tenantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/document/_search",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "document",
+                "_search"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.test(\"Documents returned\", function () {",
+                  "    pm.expect(jsonData.documents).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470530000,\n    \"authToken\": \"{{authToken}}\"\n  },\n  \"documents\": [\n    {\n      \"id\": \"{{documentId}}\",\n      \"tenantId\": \"{{tenantId}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{user_host}}/user/document/_delete",
+              "host": [
+                "{{user_host}}"
+              ],
+              "path": [
+                "user",
+                "document",
+                "_delete"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Managing citizen documents validated against egov-filestore."
+    },
+    {
+      "name": "6. Supporting Platform Services (OTP & FileStore)",
+      "item": [
+        {
+          "name": "Generate Mobile SMS OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"RequestInfo\": {\n    \"apiId\": \"org.egov.user\",\n    \"ver\": \"1.0\",\n    \"ts\": 1728470400000,\n    \"action\": \"_create\",\n    \"msgId\": \"msg-otp-create-001\"\n  },\n  \"otp\": {\n    \"tenantId\": \"{{tenantId}}\",\n    \"identity\": \"8588070881\",\n    \"userType\": \"CITIZEN\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{otp_host}}/otp/v1/_create",
+              "host": [
+                "{{otp_host}}"
+              ],
+              "path": [
+                "otp",
+                "v1",
+                "_create"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Document to FileStore",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "value": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{filestore_host}}/filestore/v1/files?tenantId={{tenantId}}&module=USER",
+              "host": [
+                "{{filestore_host}}"
+              ],
+              "path": [
+                "filestore",
+                "v1",
+                "files"
+              ],
+              "query": [
+                {
+                  "key": "tenantId",
+                  "value": "{{tenantId}}"
+                },
+                {
+                  "key": "module",
+                  "value": "USER"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Integration points for SMS OTP generation and binary file storage."
+    }
+  ],
+  "variable": [
+    {
+      "key": "user_host",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "dx_host",
+      "value": "http://localhost:8280"
+    },
+    {
+      "key": "otp_host",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "filestore_host",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "authToken",
+      "value": "e158f381-81d3-463e-908d-937d1d234567"
+    },
+    {
+      "key": "userUuid",
+      "value": "a823019f-b98a-4467-938a-0987654321ab"
+    },
+    {
+      "key": "tenantId",
+      "value": "pb.amritsar"
+    },
+    {
+      "key": "referenceId",
+      "value": "784512"
+    },
+    {
+      "key": "addressId",
+      "value": "1"
+    },
+    {
+      "key": "documentId",
+      "value": "doc-uuid-001"
+    }
+  ]
+}

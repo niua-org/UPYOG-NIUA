@@ -1,4 +1,40 @@
 # ============================================================
+# Chat Memory & Retention Policy
+# ============================================================
+memory:
+  # Number of days to retain long-term chat history in Qdrant before cleanup
+  # Configurable per environment or pod (default: 1 day for sandbox/storage limits)
+  retention_days: 30
+
+# ============================================================
+# System Messages & Intent Responses Configuration
+# ============================================================
+system_messages:
+  greeting:
+    keywords: ["hello", "hi", "hey", "namaste", "good morning", "good afternoon", "good evening", "hola", "howdy", "greetings", "नमस्ते", "हेलो"]
+    response_en: "Hello! I'm UPYOG AI. How can I help you today?"
+    response_hi: "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?"
+  blocked:
+    response_en: "I can only help with UPYOG and urban government services."
+    response_hi: "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।"
+  login:
+    keywords_query: ["how to login", "how do i login", "login kaise kare", "login help", "लॉगिन कैसे करें"]
+    keywords_claim: ["login done", "logged in", "login ho gaya", "maine login kar liya", "लॉगिन हो गया"]
+    guidance_en: "In the left sidebar, scroll down and click on **Login**. Enter your registered mobile number and then enter the OTP received on your phone. Once logged in, you will be able to create bookings, register complaints, and check your application status."
+    guidance_hi: "बाईं ओर के साइडबार (Left Sidebar) में नीचे जाएं और **Login** विकल्प पर क्लिक करें। अपना पंजीकृत मोबाइल नंबर भरें और फिर प्राप्त OTP दर्ज करें। लॉगिन करने के बाद, आप बुकिंग बना सकते हैं, शिकायत दर्ज कर सकते हैं और अपने आवेदन की स्थिति देख सकते हैं।"
+    verified_en: "Great! Your login session is verified ({name}). You can now proceed to book an advertisement or register a complaint. How would you like to proceed?"
+    verified_hi: "बहुत बढ़िया! आपकी पहचान सत्यापित हो गई है ({name})। अब आप विज्ञापन बुकिंग कर सकते हैं या शिकायत दर्ज कर सकते हैं। आप क्या करना चाहते हैं?"
+    unverified_en: "I do not detect an active logged-in session yet. Please complete the login by clicking **Login** in the left sidebar and entering your mobile number and OTP."
+    unverified_hi: "मुझे अभी आपका सक्रिय लॉगिन सत्र नहीं मिला है। कृपया बाईं ओर के साइडबार में नीचे **Login** विकल्प पर क्लिक करके अपने मोबाइल नंबर और OTP से लॉगिन पूरा करें।"
+  faq_question:
+    question_starters: [
+      "what", "how", "why", "when", "where", "who", "which", "whose", "whom",
+      "can i", "could you", "tell me", "explain", "meaning",
+      "kya", "kaise", "kab", "kahan", "kyun", "kis", "batao", "bataiye"
+    ]
+
+
+# ============================================================
 # Services Registry
 # The bot reads this at runtime to build its greeting message.
 # Add, remove or rename entries here — no Python code changes needed.
@@ -197,42 +233,55 @@ forms:
         type: "dropdown"
         label: "Advertisement Type"
         mdms: ["Advertisement", "AdType"]
+        extractable: true
       - id: "location"
         type: "dropdown"
         label: "Advertisement Location"
         mdms: ["Advertisement", "Location"]
+        extractable: true
       - id: "faceArea"
         type: "dropdown"
         label: "Face Area"
         mdms: ["Advertisement", "FaceArea"]
+        extractable: true
       - id: "start_date"
         type: "date"
         label: "From Date"
+        extractable: true
       - id: "end_date"
         type: "date"
         label: "To Date"
+        extractable: true
       - id: "nightLight"
         type: "dropdown"
         label: "Night Light Required"
         mdms: ["Advertisement", "NightLight"]
+        extractable: true
       - id: "selected_slots"
         type: "slots"
         label: "Selected Booking Slot"
+        extractable: false
       - id: "applicant_details"
         type: "hidden"
         label: "Applicant Details"
+        extractable: true
+        extract_fields: ["name", "mobile", "email"]
       - id: "address"
         type: "text"
         label: "Address"
+        extractable: true
       - id: "doc_sample"
         type: "file"
         label: "Sample Document"
+        extractable: false
       - id: "doc_address"
         type: "file"
         label: "Address Proof"
+        extractable: false
       - id: "doc_identity"
         type: "file"
         label: "Identity Proof"
+        extractable: false
 
   # ── Grievance / PGR Form ──────────────────────────────────────────────────────
   grievance:
@@ -242,18 +291,22 @@ forms:
       - id: "category"
         type: "dropdown"
         label: "Grievance Category"
+        extractable: true
 
       # Step 2: Specific complaint type within the chosen category
       - id: "sub_category"
         type: "dropdown"
         label: "Complaint Type"
+        extractable: true
 
       # Step 3: Free-text problem description
       - id: "description"
         type: "text"
         label: "Problem Description"
+        extractable: true
 
       # Step 4: Area/locality (fetched live from egov-location API)
       - id: "locality"
         type: "dropdown"
         label: "Your Area / Locality"
+        extractable: true

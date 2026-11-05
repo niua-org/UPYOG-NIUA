@@ -9,6 +9,13 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+/**
+ * Criteria DTO encapsulating multi-attribute filter parameters for querying user records.
+ * <p>
+ * Supports querying by primary identifiers (IDs, UUIDs), account attributes (username, userType, active),
+ * communication coordinates (mobileNumber, emailId, alternatemobilenumber), demographic data (name, Aadhaar),
+ * role assignments (roleCodes), tenant boundary, and address parameters for V2 searches.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -34,10 +41,27 @@ public class UserSearchCriteria {
     private String alternatemobilenumber;
     //private boolean digilockersearch;
 
+    @Builder.Default
     private Boolean excludeAddressDetails = false; // This fields is added to exclude address details from user search response V2
     private String addressId; // This field is added to search user with particular address using addressId
     private String addressStatus; // This field is used to search address with particular status
+    private String aadhaarNumber;
 
+    /**
+     * Validates that the search criteria conforms to service security rules and contains necessary criteria.
+     * <p>
+     * <b>Validation Rules:</b>
+     * <ul>
+     *   <li><b>External Requests:</b> At least one identifying criterion ({@code userName}, {@code name},
+     *       {@code mobileNumber}, {@code emailId}, or {@code uuid}) must be specified. Aadhaar is strictly disallowed from external searches.
+     *       Furthermore, {@code tenantId} is mandatory if searching by {@code userName}, {@code name}, or {@code mobileNumber}.</li>
+     *   <li><b>Inter-Service Requests:</b> Additional criteria such as {@code id}, {@code roleCodes}, or internal {@code aadhaarNumber} are permitted
+     *       as primary filters. Tenant ID is mandatory if searching by {@code roleCodes}.</li>
+     * </ul>
+     *
+     * @param isInterServiceCall flag indicating whether the search request originates internally from another trusted microservice
+     * @throws InvalidUserSearchCriteriaException if required search parameters or tenant identifiers are absent
+     */
     public void validate(boolean isInterServiceCall) {
         if (validateIfEmptySearch(isInterServiceCall) || validateIfTenantIdExists(isInterServiceCall)) {
             throw new InvalidUserSearchCriteriaException(this);
@@ -54,7 +78,7 @@ public class UserSearchCriteria {
          */
         if (isInterServiceCall)
             return isEmpty(userName) && isEmpty(name) && isEmpty(mobileNumber) && isEmpty(emailId) &&
-                    CollectionUtils.isEmpty(uuid) && CollectionUtils.isEmpty(id) && CollectionUtils.isEmpty(roleCodes);
+                    CollectionUtils.isEmpty(uuid) && CollectionUtils.isEmpty(id) && CollectionUtils.isEmpty(roleCodes) && isEmpty(aadhaarNumber);
         else
             return isEmpty(userName) && isEmpty(name) && isEmpty(mobileNumber) && isEmpty(emailId) &&
                     CollectionUtils.isEmpty(uuid);

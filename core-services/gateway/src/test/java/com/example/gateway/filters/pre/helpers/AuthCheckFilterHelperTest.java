@@ -90,7 +90,7 @@ class AuthCheckFilterHelperTest {
         Map<String, Object> body = new HashMap<>();
         body.put(REQUEST_INFO_FIELD_NAME_PASCAL_CASE, Map.of("authToken", "token-1"));
 
-        assertThatThrownBy(() -> helper.apply(exchange, body))
+        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
                 .isInstanceOfSatisfying(CustomException.class, exception ->
                         assertThat(exception.getCode()).isEqualTo("AUTHENTICATION_ERROR"));
     }
@@ -101,7 +101,7 @@ class AuthCheckFilterHelperTest {
         Map<String, Object> body = new HashMap<>();
         body.put(REQUEST_INFO_FIELD_NAME_PASCAL_CASE, Map.of("authToken", "token-1"));
 
-        assertThatThrownBy(() -> helper.apply(exchange, body))
+        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
                 .isInstanceOfSatisfying(CustomException.class, exception -> {
                     assertThat(exception.getCode()).isEqualTo("AUTHENTICATION_ERROR");
                     assertThat(exception.getMessage()).isEqualTo("auth down");

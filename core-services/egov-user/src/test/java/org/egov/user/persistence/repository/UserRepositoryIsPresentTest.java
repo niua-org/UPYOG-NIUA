@@ -54,7 +54,6 @@ class UserRepositoryIsPresentTest {
 
     @Test
     void isUserPresent_countGreaterThanZero_returnsTrue() {
-        when(userTypeQueryBuilder.getUserPresentByUserNameAndTenant()).thenReturn("SELECT count");
         when(namedParameterJdbcTemplate.queryForObject(anyString(), any(Map.class), eq(Integer.class))).thenReturn(1);
 
         assertThat(userRepository.isUserPresent("alice", "pb", UserType.CITIZEN)).isTrue();
@@ -62,7 +61,6 @@ class UserRepositoryIsPresentTest {
 
     @Test
     void isUserPresent_zeroCount_returnsFalse() {
-        when(userTypeQueryBuilder.getUserPresentByUserNameAndTenant()).thenReturn("SELECT count");
         when(namedParameterJdbcTemplate.queryForObject(anyString(), any(Map.class), eq(Integer.class))).thenReturn(0);
 
         assertThat(userRepository.isUserPresent("bob", "pb", UserType.EMPLOYEE)).isFalse();
@@ -70,10 +68,14 @@ class UserRepositoryIsPresentTest {
 
     @Test
     void getUserIdByUuid_returnsIdFromDatabase() {
-        when(userTypeQueryBuilder.getUserIdByUuid()).thenReturn("SELECT id FROM eg_user WHERE uuid=:uuid");
         when(namedParameterJdbcTemplate.queryForObject(anyString(), any(org.springframework.jdbc.core.namedparam.SqlParameterSource.class), eq(Long.class)))
                 .thenReturn(42L);
 
         assertThat(userRepository.getUserIdByUuid("uuid-1")).isEqualTo(42L);
+    }
+
+    @Test
+    void getUserIdByUuid_blankUuid_returnsNull() {
+        assertThat(userRepository.getUserIdByUuid("  ")).isNull();
     }
 }

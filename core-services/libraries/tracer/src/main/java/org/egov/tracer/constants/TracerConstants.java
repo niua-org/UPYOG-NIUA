@@ -15,6 +15,13 @@ public class TracerConstants {
     public static final String UNABLE_TO_RETRIEVE_REQUEST_BODY_MSG = "Unable to retrieve request body";
     public static final String UTF_8_CODE = "UTF-8";
     public static final String EXCEPTION_CAUGHT_IN_TRACER_MSG = "Exception caught in tracer ";
+    public static final String REQUEST_MESSAGE_WITH_BODY = "Sending request to {} with verb {} with body {}";
+    public static final String REQUEST_MESSAGE = "Sending request to {} with verb {}";
+    public static final String RESPONSE_MESSAGE_WITH_BODY = "Received from {} response code {} and body {}: ";
+    public static final String RESPONSE_MESSAGE = "Received response from {}";
+    public static final String FAILED_RESPONSE_MESSAGE = "Received error response from {}";
+    public static final String EMPTY_BODY = "<NOT-AVAILABLE>";
+    public static final String RESPONSE_BODY_ERROR_MESSAGE = "Error reading response body";
 
     private TracerConstants() {
     }

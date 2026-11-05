@@ -50,21 +50,27 @@ public class SecurityConfig {
         return http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
+                // 1. Infrastructure, Health & API Documentation
                 .requestMatchers("/actuator/**", "/health/**").permitAll()
-                .requestMatchers("/oauth2/**", "/login", "/error").permitAll()
-                .requestMatchers("/user/oauth/**").permitAll()  // Allow access to custom auth endpoints
-                .requestMatchers("/_oauth2/**").permitAll()  // Allow access to custom OAuth2 endpoints
-                // User Controller endpoints
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                .requestMatchers("/error").permitAll()
+
+                // 2. OAuth2 & Authentication Endpoints (Unauthenticated / Public)
+                .requestMatchers("/oauth2/**", "/login", "/user/oauth/**", "/_oauth2/**", "/digilocker/oauth/token").permitAll()
+                .requestMatchers("/users/v2/_login").permitAll()
+                .requestMatchers("/password/nologin/_update").permitAll()
+
+                // 3. Previous / Existing Endpoints (Preserved from original baseline)
                 .requestMatchers("/_details", "/_search", "/v1/_search",
                                "/citizen/_create", "/users/_createnovalidate",
-                               "/users/_updatenovalidate", "/profile/_update",
-                               "/digilocker/oauth/token",
-                               "/users/v2/_create", "/users/v2/_search", "/users/v2/_update",
-                               "/_createAddress", "/_getAddress", "/_updateAddress").permitAll()
-                // Password Controller endpoints
-                .requestMatchers("/password/_update", "/password/nologin/_update").permitAll()
-                // Logout Controller endpoints
-                .requestMatchers("/_logout").permitAll()
+                               "/users/_updatenovalidate",
+                               "/users/v2/_create", "/users/v2/_search", "/users/v2/_update").permitAll()
+                .requestMatchers("/password/_update", "/_logout").permitAll()
+
+                // 4. Newly Added Endpoints: ONLY those publicly accessible without any role (Registration / Pre-Auth)
+                .requestMatchers("/profile/_create", "/profile/_init",
+                               "/profile/aadhaar/_verify", "/profile/aadhaar/_verifyProfile").permitAll()
+
                 .anyRequest().authenticated()
             )
             .build();

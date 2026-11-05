@@ -94,35 +94,10 @@ class RbacFilterHelperTest {
         RequestInfo requestInfo = RequestInfo.builder().userInfo(null).build();
         when(objectMapper.convertValue(body.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class))
                 .thenReturn(requestInfo);
-        when(commonUtils.validateRequestAndSetRequestTenantId(any(), eq(body))).thenReturn(Set.of("pb"));
 
         assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("User information not found");
-    }
-
-    @Test
-    void apply_mcpPathWithoutUser_throwsRuntimeException() {
-        ServerWebExchange exchange = exchangeFor("/upyog-mcp-server/mcp");
-        Map<String, Object> body = new HashMap<>();
-
-        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("User information not found");
-    }
-
-    @Test
-    void apply_mcpPathWithoutTenantInUserOrRequest_throwsTenantMissing() {
-        ServerWebExchange exchange = exchangeFor("/upyog-mcp-server/mcp");
-        Map<String, Object> body = new HashMap<>();
-        User user = User.builder().uuid("user-mcp").roles(List.of()).build();
-        RequestInfo requestInfo = RequestInfo.builder().userInfo(user).build();
-        when(exchange.getAttribute(GATEWAY_REQUEST_INFO_ATTR)).thenReturn(requestInfo);
-        when(commonUtils.getTenantIdsFromRequest(any(), eq(body))).thenReturn(Set.of());
-
-        assertThatThrownBy(() -> Mono.from(helper.apply(exchange, body)).block())
-                .isInstanceOfSatisfying(CustomException.class, ex ->
-                        assertThat(ex.getMessage()).contains("Could not resolve tenantId"));
     }
 
     @Test

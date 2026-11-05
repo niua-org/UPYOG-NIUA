@@ -41,9 +41,7 @@ class EncryptionDecryptionUtilTest {
 
     @BeforeEach
     void setUp() {
-        util = new EncryptionDecryptionUtil(encryptionService);
-        ReflectionTestUtils.setField(util, "auditService", auditService);
-        ReflectionTestUtils.setField(util, "objectMapper", objectMapper);
+        util = new EncryptionDecryptionUtil(encryptionService, auditService, objectMapper);
         ReflectionTestUtils.setField(util, "stateLevelTenantId", "pb");
         ReflectionTestUtils.setField(util, "abacEnabled", true);
     }

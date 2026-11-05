@@ -1,5 +1,6 @@
 package org.egov.user.web.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.Error;
 import org.egov.common.contract.response.ErrorResponse;
 import org.egov.common.contract.response.ResponseInfo;
@@ -11,13 +12,10 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.web.bind.annotation.*;
 
-// REMOVED DEPRECATED IMPORTS:
-// import org.springframework.security.oauth2.core.OAuth2AccessToken;
-// import org.springframework.security.oauth2.provider.token.TokenStore;
-
 import java.util.Date;
 
 @RestController
+@Slf4j
 public class LogoutController {
 
     // CHANGED: TokenStore -> OAuth2AuthorizationService
@@ -59,7 +57,7 @@ public class LogoutController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleError(Exception ex) {
-        ex.printStackTrace();
+        log.error("Logout request encountered an error: {}", ex.getMessage(), ex);
         ErrorResponse response = new ErrorResponse();
         ResponseInfo responseInfo = new ResponseInfo("", "", System.currentTimeMillis(), "", "", "Logout failed");
         response.setResponseInfo(responseInfo);

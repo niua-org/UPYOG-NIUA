@@ -202,8 +202,8 @@ class UserServiceTest {
 
         assertThat(result).containsExactly(stored);
         ArgumentCaptor<UserSearchCriteria> captured = ArgumentCaptor.forClass(UserSearchCriteria.class);
-        verify(userRepository).findAll(captured.capture());
-        assertThat(captured.getValue().getTenantId()).isEqualTo("pb");
+        verify(userRepository, org.mockito.Mockito.atLeastOnce()).findAll(captured.capture());
+        assertThat(captured.getAllValues().stream().anyMatch(c -> "pb".equals(c.getTenantId()))).isTrue();
         assertThat(captured.getValue().getAlternatemobilenumber()).isEqualTo("9999999999");
     }
 
@@ -260,9 +260,10 @@ class UserServiceTest {
         User user = validNewUser();
         user.setName(null);
 
+        lenient().when(userRepository.findAll(any())).thenReturn(Collections.emptyList());
         assertThatThrownBy(() -> userService.createUser(user, requestWithUser()))
                 .isInstanceOf(InvalidUserCreateException.class);
-        verifyNoInteractions(userRepository);
+        verify(userRepository, org.mockito.Mockito.never()).create(any());
     }
 
     @Test

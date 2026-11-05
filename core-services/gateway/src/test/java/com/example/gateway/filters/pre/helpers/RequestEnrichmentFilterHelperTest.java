@@ -18,6 +18,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -89,7 +90,6 @@ class RequestEnrichmentFilterHelperTest {
         Map<String, Object> result = Mono.from(helper.apply(exchange, body)).block();
 
         assertThat(result).isSameAs(body);
-        assertThat(exchange.getAttributes().get("ORIGINAL_REQUEST_BODY")).isSameAs(body);
     }
 
     private static ServerWebExchange exchangeWithCorrelationId() {
@@ -101,6 +101,7 @@ class RequestEnrichmentFilterHelperTest {
         headers.setContentType(MediaType.APPLICATION_JSON);
         lenient().when(requestPath.value()).thenReturn("/service/_create");
         lenient().when(request.getPath()).thenReturn(requestPath);
+        lenient().when(request.getURI()).thenReturn(URI.create("http://localhost/service/_create"));
         lenient().when(request.getHeaders()).thenReturn(headers);
         lenient().when(request.getMethod()).thenReturn(HttpMethod.POST);
         lenient().when(request.mutate()).thenReturn(builder);

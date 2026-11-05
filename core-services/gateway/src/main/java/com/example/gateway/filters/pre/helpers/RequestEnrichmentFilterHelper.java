@@ -12,20 +12,20 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.factory.rewrite.RewriteFunction;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import static com.example.gateway.constants.GatewayConstants.*;
+import static com.example.gateway.utils.CommonUtils.isCustomAsyncUri;
 import static com.example.gateway.utils.CommonUtils.isRequestBodyCompatible;
-import static org.springframework.messaging.simp.SimpMessageHeaderAccessor.getUser;
 
 @Slf4j
 @Component
@@ -43,6 +43,10 @@ public class RequestEnrichmentFilterHelper implements RewriteFunction<Map,Map> {
     private static final String EMPTY_STRING = "";
     private static final String JSON_TYPE = "json";
     private ObjectMapper objectMapper;
+
+    @Value("#{'${egov.custom.async.uris}'.split(',')}")
+    private List<String> customAsyncUris;
+
     private static final String USER_INFO_HEADER_NAME = "x-user-info";
     private static final String PASS_THROUGH_GATEWAY_HEADER_NAME = "x-pass-through-gateway";
     private static final String PASS_THROUGH_GATEWAY_HEADER_VALUE = "true";
@@ -63,9 +67,8 @@ public class RequestEnrichmentFilterHelper implements RewriteFunction<Map,Map> {
         // Add User_Info and Correlation Id in the header
         addRequestHeaders(exchange , body);
 
-        // Store request body for CustomAsyncFilter
-        if (body != null) {
-            exchange.getAttributes().put("ORIGINAL_REQUEST_BODY", body);  // Store original request body for CustomAsyncFilter to access in post-processing
+        if (body != null && isCustomAsyncUri(exchange.getRequest().getURI().getPath(), customAsyncUris)) {
+            exchange.getAttributes().put(ORIGINAL_REQUEST_BODY, body);
         }
         if(Objects.isNull(body)){
             return Mono.empty();
@@ -104,7 +107,7 @@ public class RequestEnrichmentFilterHelper implements RewriteFunction<Map,Map> {
                     throw new RuntimeException(e);
                 }
             });
-            logger.info(ADDED_USER_INFO_TO_HEADER_MESSAGE);
+            logger.debug(ADDED_USER_INFO_TO_HEADER_MESSAGE);
         }
     }
 
@@ -145,13 +148,13 @@ public class RequestEnrichmentFilterHelper implements RewriteFunction<Map,Map> {
 
         // TODO: Check for Camel case of requestInfo as well
         if(Objects.isNull(body) || Objects.isNull(body.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE))){
-            logger.info(SKIPPED_BODY_ENRICHMENT_DUE_TO_NO_KNOWN_FIELD_MESSAGE);
+            logger.debug(SKIPPED_BODY_ENRICHMENT_DUE_TO_NO_KNOWN_FIELD_MESSAGE);
             return;
         }
         RequestInfo requestInfo = objectMapper.convertValue(body.get(REQUEST_INFO_FIELD_NAME_PASCAL_CASE), RequestInfo.class);
         requestInfo.setCorrelationId((String) exchange.getAttributes().get(CORRELATION_ID_KEY));
         body.put(REQUEST_INFO_FIELD_NAME_PASCAL_CASE, requestInfo);
 
-        logger.info(BODY_ENRICHED_MESSAGE);
+        logger.debug(BODY_ENRICHED_MESSAGE);
     }
 }

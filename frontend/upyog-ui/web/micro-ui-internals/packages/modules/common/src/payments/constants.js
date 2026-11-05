@@ -15,6 +15,7 @@ export const BUSINESS_SERVICES = {
   SW: "SW",
   FSM: "FSM",
   BPA: "BPA",
+  CHALLAN: "Challan_Generation",
 };
 
 export const RECEIPT_KEYS = {
@@ -28,6 +29,7 @@ export const RECEIPT_KEYS = {
   WATER_TANKER: "request-service.water_tanker-receipt",
   MOBILE_TOILET: "request-service.mobile_toilet-receipt",
   TREE_PRUNING: "request-service.tree_pruning-receipt",
+  CHALLAN: "challangeneration-receipt",
 };
 
 export const EST_BUSINESS_SERVICE = "est-services";
@@ -48,4 +50,5 @@ export const CUSTOM_BUSINESS_SERVICES = [
   BUSINESS_SERVICES.NDC,
   BUSINESS_SERVICES.EST,
   BUSINESS_SERVICES.GC,
+  BUSINESS_SERVICES.CHALLAN,
 ];
