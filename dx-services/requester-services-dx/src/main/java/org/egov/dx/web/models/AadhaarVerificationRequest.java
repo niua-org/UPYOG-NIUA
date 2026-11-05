@@ -77,6 +77,12 @@ public class AadhaarVerificationRequest {
     private String userUuid;
 
     /**
+     * Optional tenant identifier (e.g. "pg", "pg.citya"). Defaults to state-level tenant if omitted.
+     */
+    @JsonProperty("tenantId")
+    private String tenantId;
+
+    /**
      * Convenience alias for {@link #referenceId} to maintain compatibility with legacy txnId references.
      *
      * @return the referenceId / transactionId

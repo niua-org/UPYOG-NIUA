@@ -12,6 +12,7 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.RequesterDxClient;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.web.contract.AddMemberRequest;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
@@ -37,6 +38,9 @@ class AddMemberValidatorTest {
 
     @Mock
     private RequesterDxClient requesterDxClient;
+
+    @Mock
+    private UserClient userClient;
 
     @InjectMocks
     private AddMemberValidator validator;

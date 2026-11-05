@@ -43,6 +43,11 @@ public class JoinFamilyRequest {
     @JsonProperty("userUuid")
     private String userUuid;
 
+    /**
+     * Resolves and retrieves the applicant's user UUID from either applicantUserUuid or userUuid for backward compatibility.
+     *
+     * @return applicant user UUID, preferring applicantUserUuid if present, otherwise userUuid
+     */
     public String getApplicantUserUuid() {
         if (org.apache.commons.lang3.StringUtils.isNotBlank(applicantUserUuid)) {
             return applicantUserUuid;

@@ -35,6 +35,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
+import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,7 +159,26 @@ public class UserController {
                                                           @RequestHeader HttpHeaders headers) {
 
         User user = createUserRequest.toDomain(true);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        if (StringUtils.isBlank(user.getUsername())) {
+            if (StringUtils.isNotBlank(user.getMobileNumber())) {
+                user.setUsername(user.getMobileNumber());
+            } else if (StringUtils.isNotBlank(user.getAadhaarNumber())) {
+                user.setUsername(UserConstants.AADHAAR_USERNAME_PREFIX + user.getAadhaarNumber().replaceAll("\\D", ""));
+            } else {
+                user.setUsername(UserConstants.CITIZEN_USERNAME_PREFIX + UUID.randomUUID().toString().substring(0, 8));
+            }
+        }
+        if (user.getType() == null) {
+            user.setType(UserType.CITIZEN);
+        }
+        if (user.getActive() == null) {
+            user.setActive(true);
+        }
+        if (CollectionUtils.isEmpty(user.getRoles()) && UserType.CITIZEN.equals(user.getType())) {
+            user.setRoles(Collections.singleton(Role.getCitizenRole()));
+        }
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
         user.setOtpValidationMandatory(false);
         final User newUser = userService.createUser(user, createUserRequest.getRequestInfo());
         return createResponse(newUser);
@@ -276,7 +297,8 @@ public class UserController {
     public UpdateResponse updateUserWithoutValidation(@RequestBody final @Valid CreateUserRequest createUserRequest,
                                                       @RequestHeader HttpHeaders headers) {
         User user = createUserRequest.toDomain(false);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
         final User updatedUser = userService.updateWithoutOtpValidation(user, createUserRequest.getRequestInfo());
         return createResponseforUpdate(updatedUser);
     }
@@ -413,7 +435,8 @@ public class UserController {
         log.info("Received User Registration Request for mobile: {}", createUserRequest != null && createUserRequest.getUser() != null ? MaskUtils.maskMobile(createUserRequest.getUser().getMobileNumber()) : null);
 
         User user = createUserRequest.toDomain(true);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
         user.setOtpValidationMandatory(false);
 
         final User newUser = userService.createUserWithAddressV2(user, createUserRequest.getRequestInfo());
@@ -442,7 +465,8 @@ public class UserController {
                                                 @RequestHeader HttpHeaders headers) {
 
         User user = createUserRequest.toDomain(false);
-        user.setMobileValidationMandatory(isMobileValidationRequired(headers));
+        boolean mobileRequired = isMobileValidationRequired(headers) && StringUtils.isNotBlank(user.getMobileNumber());
+        user.setMobileValidationMandatory(mobileRequired);
 
         final User updatedUser = userService.updateUserV2(user, createUserRequest.getRequestInfo());
 

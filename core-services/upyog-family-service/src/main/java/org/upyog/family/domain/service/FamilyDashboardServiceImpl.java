@@ -95,11 +95,17 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
         List<FamilyLineage> lineages = familyRepository.findLineageByFamilyId(familyId);
         int lineageCount = lineages.size();
 
-        String headName = null;
-        if (StringUtils.isNotBlank(family.getHeadUserUuid())) {
+        String headName = StringUtils.isNotBlank(family.getHeadName())
+                ? family.getHeadName()
+                : null;
+        if (StringUtils.isBlank(headName) && StringUtils.isNotBlank(family.getHeadUserUuid())) {
             for (FamilyMember m : members) {
-                if (family.getHeadUserUuid().equals(m.getUserUuid()) && m.getCitizenDetails() != null) {
-                    headName = m.getCitizenDetails().getName();
+                if (family.getHeadUserUuid().equals(m.getUserUuid())) {
+                    if (StringUtils.isNotBlank(m.getName())) {
+                        headName = m.getName();
+                    } else if (m.getCitizenDetails() != null) {
+                        headName = m.getCitizenDetails().getName();
+                    }
                     break;
                 }
             }
@@ -127,6 +133,12 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
                 .build();
     }
 
+    /**
+     * Enriches family members with live citizen demographic data retrieved from egov-user service.
+     *
+     * @param families list of Family domain aggregates to enrich
+     * @param requestInfo UPYOG request context envelope
+     */
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {
         if (families == null || families.isEmpty()) {
             return;
@@ -149,9 +161,10 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
             if (family.getMembers() != null) {
                 for (FamilyMember member : family.getMembers()) {
                     if (profileMap.containsKey(member.getUserUuid())) {
-                        member.setCitizenDetails(profileMap.get(member.getUserUuid()));
+                        member.enrichFromCitizenProfile(profileMap.get(member.getUserUuid()));
                     }
                 }
+                family.enrichHeadName();
             }
         }
     }

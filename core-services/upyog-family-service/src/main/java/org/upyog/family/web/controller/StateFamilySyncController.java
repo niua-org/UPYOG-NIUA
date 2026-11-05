@@ -41,6 +41,12 @@ public class StateFamilySyncController {
     private final StateFamilySyncService stateFamilySyncService;
     private final ResponseInfoFactory responseInfoFactory;
 
+    /**
+     * Constructs a StateFamilySyncController with the required service and response factory dependencies.
+     *
+     * @param stateFamilySyncService service for state family synchronization and JIT provisioning
+     * @param responseInfoFactory factory for generating standard UPYOG ResponseInfo headers
+     */
     @Autowired
     public StateFamilySyncController(StateFamilySyncService stateFamilySyncService,
                                      ResponseInfoFactory responseInfoFactory) {

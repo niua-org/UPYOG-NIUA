@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.upyog.family.domain.model.FamilyStatus;
 
 import java.util.ArrayList;
@@ -59,6 +60,12 @@ public class Family {
     private String headUserUuid;
 
     /**
+     * Display name of the designated Head of Family, dynamically enriched from citizen demographics.
+     */
+    @JsonProperty("headName")
+    private String headName;
+
+    /**
      * Socio-economic category classification of the household (e.g. {@code GENERAL}, {@code BPL}, {@code EWS}).
      */
     @JsonProperty("category")
@@ -99,4 +106,22 @@ public class Family {
      */
     @JsonProperty("auditDetails")
     private AuditDetails auditDetails;
+
+    /**
+     * Enriches the headName attribute based on the designated Head of Family's resolved member name.
+     */
+    public void enrichHeadName() {
+        if (StringUtils.isNotBlank(this.headUserUuid) && this.members != null) {
+            for (FamilyMember m : this.members) {
+                if (this.headUserUuid.equals(m.getUserUuid())) {
+                    if (StringUtils.isNotBlank(m.getName())) {
+                        this.headName = m.getName();
+                    } else if (m.getCitizenDetails() != null && StringUtils.isNotBlank(m.getCitizenDetails().getName())) {
+                        this.headName = m.getCitizenDetails().getName();
+                    }
+                    break;
+                }
+            }
+        }
+    }
 }

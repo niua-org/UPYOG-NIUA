@@ -1,6 +1,8 @@
 package org.upyog.family.web.contract;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,6 +43,12 @@ public class CitizenProfile {
     @JsonProperty("photo")
     private String photo;
 
+    @JsonProperty("relationshipWithHead")
+    private String relationshipWithHead;
+
     @JsonProperty("emailId")
     private String emailId;
+
+    @JsonProperty("isIdentityVerified")
+    private Boolean isIdentityVerified;
 }

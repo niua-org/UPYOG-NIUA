@@ -17,6 +17,11 @@ public class KafkaProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    /**
+     * Constructs a KafkaProducer instance with the provided Spring KafkaTemplate.
+     *
+     * @param kafkaTemplate Spring KafkaTemplate used for publishing event messages
+     */
     @Autowired
     public KafkaProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;

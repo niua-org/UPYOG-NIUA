@@ -3,11 +3,13 @@ package org.upyog.family.domain.validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
-import org.springframework.stereotype.Component;
 
 /**
  * Specialized validator validating business rules for a member leaving an existing Family Unit in UPYOG.
@@ -21,6 +23,18 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LeaveFamilyValidator {
 
+    private final UserClient userClient;
+
+    /**
+     * Constructs a LeaveFamilyValidator with the required UserClient dependency.
+     *
+     * @param userClient client for user profile lookups and identity verification
+     */
+    @Autowired
+    public LeaveFamilyValidator(UserClient userClient) {
+        this.userClient = userClient;
+    }
+
     /**
      * Validates a member departure from a Family Unit in UPYOG.
      * Ensures target member exists and is active, validates exit reason,
@@ -33,6 +47,9 @@ public class LeaveFamilyValidator {
     public void validate(LeaveFamilyRequest request, Family existingFamily) {
         log.info("[UPYOG-LEAVE-FAMILY-VALIDATOR] Validating leave request: member={}, familyId={}",
                 request.getMemberUserUuid(), request.getFamilyId());
+
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
 
         if (existingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,

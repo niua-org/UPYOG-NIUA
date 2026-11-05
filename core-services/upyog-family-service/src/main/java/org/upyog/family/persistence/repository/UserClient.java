@@ -42,4 +42,24 @@ public interface UserClient {
      * @return created or local CitizenProfile instance with populated UUID
      */
     CitizenProfile createCitizenProfile(CitizenProfile profile, RequestInfo requestInfo);
+
+    /**
+     * Validates that the authenticated caller is verified in the user database.
+     * Bypasses internal system users (e.g. SYSTEM_USER) and official employees.
+     *
+     * @param requestInfo UPYOG request context envelope
+     * @return CitizenProfile if resolved, or null if system/employee bypass
+     * @throws org.egov.tracer.model.CustomException if caller is unauthenticated, not found, or not identity-verified
+     */
+    CitizenProfile validateCallerIsVerified(RequestInfo requestInfo);
+
+    /**
+     * Validates that the specified user UUID is identity-verified in the user database.
+     *
+     * @param userUuid citizen user UUID
+     * @param requestInfo UPYOG request context envelope
+     * @return CitizenProfile of the verified user
+     * @throws org.egov.tracer.model.CustomException if user is not found or not identity-verified
+     */
+    CitizenProfile validateUserIsVerified(String userUuid, RequestInfo requestInfo);
 }

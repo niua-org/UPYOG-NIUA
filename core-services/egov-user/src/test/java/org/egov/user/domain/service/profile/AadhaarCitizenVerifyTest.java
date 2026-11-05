@@ -2,6 +2,7 @@ package org.egov.user.domain.service.profile;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.Gender;
@@ -659,5 +660,70 @@ class AadhaarCitizenVerifyTest {
         assertNotNull(respEntity.getBody());
         assertEquals("Controller Verified User", respEntity.getBody().getUser().getName());
         assertEquals(Boolean.TRUE, respEntity.getBody().getUser().getIsIdentityVerified());
+    }
+
+    @Test
+    @DisplayName("Should match mobile and succeed when Aadhaar mock is enabled even if eKyc mobile is null")
+    void shouldMatchMobileAndSucceedWhenAadhaarMockEnabledEvenIfEkycMobileIsNull() {
+        String citizenUuid = "citizen-mock-uuid-999";
+        String mobile = "9876543210";
+
+        UserConfiguration userConfig = mock(UserConfiguration.class);
+        when(userConfig.getAadhaarGatewayMockEnabled()).thenReturn(true);
+        profileService.setUserConfiguration(userConfig);
+
+        org.egov.common.contract.request.User callerInfo = org.egov.common.contract.request.User.builder()
+                .uuid(citizenUuid)
+                .userName(mobile)
+                .mobileNumber(mobile)
+                .build();
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .apiId("org.egov.user")
+                .ver("1.0")
+                .userInfo(callerInfo)
+                .build();
+
+        AadhaarCitizenVerifyRequest request = AadhaarCitizenVerifyRequest.builder()
+                .requestInfo(requestInfo)
+                .referenceId("ref-mock-999")
+                .otp("123456")
+                .aadhaarNumber("548796521452")
+                .tenantId("pg.citya")
+                .build();
+
+        User existingDbUser = User.builder()
+                .id(999L)
+                .uuid(citizenUuid)
+                .username(mobile)
+                .mobileNumber(mobile)
+                .name("Mock Citizen")
+                .active(true)
+                .tenantId("pg")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingDbUser));
+
+        VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .maskedAadhaar("XXXXXXXX1452")
+                .name("Aadhaar Mock User")
+                .mobileNumber(null)
+                .gender(Gender.MALE)
+                .dob(parseDate("1995-05-15"))
+                .verified(true)
+                .build();
+
+        when(identityVerificationService.verifyAadhaarOtp(any(), any(), any(), any(), any(), eq(false)))
+                .thenReturn(eKyc);
+
+        AadhaarCitizenVerifyResponse response = profileService.verifyLoggedInCitizenProfile(request);
+
+        assertNotNull(response);
+        assertNotNull(response.getUser());
+        assertEquals("Aadhaar Mock User", response.getUser().getName());
+        assertEquals(Boolean.TRUE, response.getUser().getIsIdentityVerified());
+        assertEquals(mobile, eKyc.getMobileNumber());
     }
 }

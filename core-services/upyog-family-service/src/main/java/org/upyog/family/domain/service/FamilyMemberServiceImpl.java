@@ -310,12 +310,26 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         return existingFamily;
     }
 
+    /**
+     * Retrieves a Family aggregate by familyId and tenantId, throwing a CustomException if not found.
+     *
+     * @param familyId unique family identifier
+     * @param tenantId tenant identifier representing jurisdiction
+     * @return Family aggregate
+     * @throws CustomException if family is not found (Code: {@code FAMILY_NOT_FOUND})
+     */
     private Family getFamilyByIdAndTenant(String familyId, String tenantId) {
         return familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
                 .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
                         "Family with ID " + familyId + " not found."));
     }
 
+    /**
+     * Enriches family members with live citizen demographic data retrieved from egov-user service.
+     *
+     * @param families list of Family domain aggregates to enrich
+     * @param requestInfo UPYOG request context envelope
+     */
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {
         if (families == null || families.isEmpty()) {
             return;
@@ -338,13 +352,20 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
             if (family.getMembers() != null) {
                 for (FamilyMember member : family.getMembers()) {
                     if (profileMap.containsKey(member.getUserUuid())) {
-                        member.setCitizenDetails(profileMap.get(member.getUserUuid()));
+                        member.enrichFromCitizenProfile(profileMap.get(member.getUserUuid()));
                     }
                 }
+                family.enrichHeadName();
             }
         }
     }
 
+    /**
+     * Sanitizes or hashes raw OTP tokens to prevent leaking plain OTP codes in persistent storage.
+     *
+     * @param token raw consent token or OTP string
+     * @return sanitized reference token or masked hash string
+     */
     private String maskOrHashConsentToken(String token) {
         if (StringUtils.isBlank(token)) {
             return null;

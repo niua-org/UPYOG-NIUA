@@ -129,6 +129,12 @@ public class FamilyConfiguration {
     @Value("${family.max.limit}")
     private Integer maxLimit;
 
+    /**
+     * Gets the configured time-to-live (TTL) for consent tokens in milliseconds.
+     * Defaults to 15 minutes if not explicitly configured or non-positive.
+     *
+     * @return TTL duration in milliseconds
+     */
     public long getConsentTokenTtlMs() {
         long minutes = (consentTokenTtlMinutes != null && consentTokenTtlMinutes > 0)
                 ? consentTokenTtlMinutes
