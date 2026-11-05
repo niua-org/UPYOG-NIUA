@@ -300,17 +300,17 @@ public class AadhaarVerificationController {
                    : null);
 
         String existingUserUuid = null;
-        if (StringUtils.isNotBlank(searchAadhaar)) {
+        if (userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
                     searchAadhaar, tenantId, request.getRequestInfo());
         }
-        if (StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(searchAadhaar)) {
+        if (userRegistryService != null && StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
                     searchAadhaar, demographics, tenantId, request.getRequestInfo());
         }
 
         // Persist verified identity in egov-user after successful OTP (not via public create payload)
-        if (StringUtils.isNotBlank(existingUserUuid)) {
+        if (userRegistryService != null && StringUtils.isNotBlank(existingUserUuid)) {
             userRegistryService.markCitizenAadhaarVerifiedAfterEkyc(
                     existingUserUuid, searchAadhaar, tenantId, request.getRequestInfo());
         }
