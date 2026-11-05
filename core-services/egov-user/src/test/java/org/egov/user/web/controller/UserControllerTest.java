@@ -28,6 +28,8 @@ import org.egov.user.web.contract.UserSearchResponse;
 import org.egov.user.web.contract.auth.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.Arrays;
+import static org.mockito.Mockito.never;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -137,6 +139,52 @@ class UserControllerTest {
         verify(userService).createUser(userCaptor.capture(), eq(requestInfo));
         assertThat(userCaptor.getValue().isMobileValidationMandatory()).isFalse();
         assertThat(userCaptor.getValue().isOtpValidationMandatory()).isFalse();
+    }
+
+    @Test
+    void createUserWithoutValidation_singleExistingUser_returnsExistingUser() {
+        RequestInfo requestInfo = RequestInfo.builder().build();
+        User existing = User.builder().id(101L).username("9999999999").uuid("uuid-101").active(true).type(UserType.CITIZEN).build();
+        when(userService.searchUsers(any(UserSearchCriteria.class), eq(true), eq(requestInfo)))
+                .thenReturn(Collections.singletonList(existing));
+
+        UserDetailResponse response = controller.createUserWithoutValidation(createRequest(requestInfo), gatewayHeaders());
+
+        assertThat(response.getUser()).hasSize(1);
+        assertThat(response.getUser().get(0).getUuid()).isEqualTo("uuid-101");
+        assertThat(response.getUser().get(0).getUserName()).isEqualTo("9999999999");
+        verify(userService, never()).createUser(any(), any());
+    }
+
+    @Test
+    void createUserWithoutValidation_multipleExistingUsers_returnsUserWithUsernameMatchingMobile() {
+        RequestInfo requestInfo = RequestInfo.builder().build();
+        User user1 = User.builder().id(101L).username("CITIZEN_abc123").uuid("uuid-secondary").active(true).type(UserType.CITIZEN).build();
+        User user2 = User.builder().id(102L).username("9999999999").uuid("uuid-primary").active(true).type(UserType.CITIZEN).build();
+        when(userService.searchUsers(any(UserSearchCriteria.class), eq(true), eq(requestInfo)))
+                .thenReturn(Arrays.asList(user1, user2));
+
+        UserDetailResponse response = controller.createUserWithoutValidation(createRequest(requestInfo), gatewayHeaders());
+
+        assertThat(response.getUser()).hasSize(1);
+        assertThat(response.getUser().get(0).getUuid()).isEqualTo("uuid-primary");
+        assertThat(response.getUser().get(0).getUserName()).isEqualTo("9999999999");
+        verify(userService, never()).createUser(any(), any());
+    }
+
+    @Test
+    void createUserWithoutValidation_multipleExistingUsers_fallbackToFirstIfNoUsernameMatch() {
+        RequestInfo requestInfo = RequestInfo.builder().build();
+        User user1 = User.builder().id(101L).username("CITIZEN_111").uuid("uuid-1").active(true).type(UserType.CITIZEN).build();
+        User user2 = User.builder().id(102L).username("CITIZEN_222").uuid("uuid-2").active(true).type(UserType.CITIZEN).build();
+        when(userService.searchUsers(any(UserSearchCriteria.class), eq(true), eq(requestInfo)))
+                .thenReturn(Arrays.asList(user1, user2));
+
+        UserDetailResponse response = controller.createUserWithoutValidation(createRequest(requestInfo), gatewayHeaders());
+
+        assertThat(response.getUser()).hasSize(1);
+        assertThat(response.getUser().get(0).getUuid()).isEqualTo("uuid-1");
+        verify(userService, never()).createUser(any(), any());
     }
 
     @Test

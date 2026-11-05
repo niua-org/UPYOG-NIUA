@@ -112,8 +112,7 @@ public class AuditRepository {
         }
         auditInputs.put("identificationmark", oldUser.getIdentificationMark());
         auditInputs.put("locale", oldUser.getLocale());
-        if (null != oldUser.getMobileNumber())
-            auditInputs.put("mobilenumber", oldUser.getMobileNumber());
+        auditInputs.put("mobilenumber", oldUser.getMobileNumber());
 
         auditInputs.put("name", oldUser.getName());
         auditInputs.put("pan", oldUser.getPan());

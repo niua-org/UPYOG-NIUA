@@ -293,9 +293,6 @@ public final class UserConstants {
     // =========================================================================
     // 7. External Service Endpoints & Integration Keys
     // =========================================================================
-    public static final String AADHAAR_SEND_OTP_PATH = "/aadhaar/v1/_sendOtp";
-    public static final String AADHAAR_VERIFY_OTP_PATH = "/aadhaar/v1/_verifyOtp";
-
     public static final String JSON_KEY_DEMOGRAPHICS = "demographics";
     public static final String JSON_KEY_NAME = "name";
     public static final String JSON_KEY_GENDER = "gender";
@@ -316,7 +313,6 @@ public final class UserConstants {
     public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
     public static final String CITIZEN_USERNAME_PREFIX = "CITIZEN_";
     public static final String DEFAULT_AADHAAR_CITIZEN_NAME = "Aadhaar Verified Citizen";
-    public static final String DEFAULT_REQUESTER_AADHAAR_VERIFY_ENDPOINT = "requester-services-dx/aadhaar/v1/_verifyOtp";
 
     // =========================================================================
     // 9. Family Service Integration Constants
@@ -325,7 +321,6 @@ public final class UserConstants {
     public static final String FAMILY_STATUS_ACTIVE = "ACTIVE";
     public static final String FIELD_FAMILY_ID = "familyId";
     public static final String FIELD_FAMILY_STATUS = "status";
-    public static final String DEFAULT_FAMILY_SEARCH_ENDPOINT = "family/v1/family/_search";
     public static final String FAMILY_PARAM_MEMBER_USER_UUID = "memberUserUuid";
     public static final String FAMILY_PARAM_MEMBER_USER_UUIDS = "memberUserUuids";
     public static final String PARAM_TENANT_ID = "tenantId";

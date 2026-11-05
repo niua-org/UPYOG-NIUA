@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.utils.UserConstants;
@@ -59,11 +60,7 @@ public class FamilyRestRepository {
             return null;
         }
 
-        String host = userConfiguration != null ? userConfiguration.getFamilyServiceHost() : null;
-        if (StringUtils.isBlank(host)) {
-            log.warn("[FAMILY-REST-REPO] upyog-family-service host configuration is missing. Skipping family ID lookup.");
-            return null;
-        }
+        String host = resolveHost();
 
         try {
             String endpoint = resolveEndpoint();
@@ -119,11 +116,7 @@ public class FamilyRestRepository {
             return Collections.emptyMap();
         }
 
-        String host = userConfiguration != null ? userConfiguration.getFamilyServiceHost() : null;
-        if (StringUtils.isBlank(host)) {
-            log.warn("[FAMILY-REST-REPO] upyog-family-service host configuration is missing. Skipping batch family resolution.");
-            return Collections.emptyMap();
-        }
+        String host = resolveHost();
 
         try {
             String endpoint = resolveEndpoint();
@@ -151,10 +144,21 @@ public class FamilyRestRepository {
         }
     }
 
+    private String resolveHost() {
+        String host = userConfiguration != null ? userConfiguration.getFamilyServiceHost() : null;
+        if (StringUtils.isBlank(host)) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "family.service.host is not configured");
+        }
+        return host;
+    }
+
     private String resolveEndpoint() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceSearchEndpoint()))
-                ? userConfiguration.getFamilyServiceSearchEndpoint()
-                : UserConstants.DEFAULT_FAMILY_SEARCH_ENDPOINT;
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFamilyServiceSearchEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "family.service.search.endpoint is not configured");
+        }
+        return userConfiguration.getFamilyServiceSearchEndpoint();
     }
 
     private UriComponentsBuilder buildBaseUri(String host, String endpoint) {

@@ -67,6 +67,7 @@ public class SecurityConfig {
                                "/users/v2/_create", "/users/v2/_search", "/users/v2/_update").permitAll()
                 .requestMatchers("/password/_update", "/_logout").permitAll()
 
+				// TODO: need to check how to handle this later , currently allowing all
                 // 4. Newly Added Endpoints: ONLY those publicly accessible without any role (Registration / Pre-Auth)
                // .requestMatchers("/profile/_create", "/profile/_init",
                 //               "/profile/aadhaar/_verify", "/profile/aadhaar/_verifyProfile").permitAll()

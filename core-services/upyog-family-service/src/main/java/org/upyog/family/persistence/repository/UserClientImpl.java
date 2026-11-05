@@ -61,7 +61,13 @@ public class UserClientImpl implements UserClient {
             return Collections.emptyMap();
         }
 
-        String url = configuration.getUserHost() + configuration.getUserSearchPath();
+        if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getUserSearchPath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.search.path is not configured");
+        }
+        String url = buildUrl(configuration.getUserHost(), configuration.getUserSearchPath());
         log.debug("[UPYOG-USER-CLIENT] Querying user service for {} UUIDs from: {}", uuids.size(), url);
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -105,7 +111,13 @@ public class UserClientImpl implements UserClient {
             return Collections.emptyList();
         }
 
-        String url = configuration.getUserHost() + configuration.getUserSearchPath();
+        if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getUserSearchPath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.search.path is not configured");
+        }
+        String url = buildUrl(configuration.getUserHost(), configuration.getUserSearchPath());
         log.debug("[UPYOG-USER-CLIENT] Querying user service for mobile: {} from: {}", MaskUtils.maskMobile(mobileNumber), url);
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -150,7 +162,13 @@ public class UserClientImpl implements UserClient {
             return null;
         }
 
-        String url = configuration.getUserHost() + "/user/citizen/_create";
+        if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getUserCreatePath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.create.path is not configured");
+        }
+        String url = buildUrl(configuration.getUserHost(), configuration.getUserCreatePath());
         log.info("[UPYOG-USER-CLIENT] Auto-creating citizen user for mobile: {} at: {}", MaskUtils.maskMobile(profile.getMobileNumber()), url);
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -288,5 +306,18 @@ public class UserClientImpl implements UserClient {
                 .emailId((String) map.get("emailId"))
                 .isIdentityVerified(isIdentityVerified)
                 .build();
+    }
+
+    /**
+     * Builds an absolute URL from host and API path segment, normalizing trailing/leading slashes.
+     *
+     * @param host service host
+     * @param path configured path
+     * @return normalized absolute URL
+     */
+    private String buildUrl(String host, String path) {
+        String cleanHost = host.trim().endsWith("/") ? host.trim() : host.trim() + "/";
+        String cleanPath = path.trim().startsWith("/") ? path.trim().substring(1) : path.trim();
+        return cleanHost + cleanPath;
     }
 }
