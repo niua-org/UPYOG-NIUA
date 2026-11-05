@@ -22,7 +22,7 @@ import { useParams } from "react-router-dom";
 import NDCDocument from "../../../pageComponents/NDCDocument";
 import NDCModal from "../../../pageComponents/NDCModal";
 import { Loader } from "../../../components/Loader";
-import NewApplicationTimeline from "../../../../../templates/ApplicationDetails/components/NewApplicationTimeline";
+import NDCWFTimeline from "../../../components/NDCWFTimeline";
 import getAcknowledgementData from "../../../getAcknowlegment";
 import { EmployeeData, downloadNDCAcknowledgement } from "../../../utils";
 const availableOptions = [
@@ -37,6 +37,8 @@ const ApplicationOverview = () => {
   const toastRef = useRef(null);
   const tenantId = window.localStorage.getItem("Employee.tenant-id");
   const state = tenantId?.split(".")[0];
+  const { data: storeData } = Digit.Hooks.useStore.getInitData();
+  const { tenants } = storeData || {};
   const [showToast, setShowToast] = useState(null);
   const [error, setError] = useState(null);
   const [getLable, setLable] = useState(false);
@@ -211,13 +213,47 @@ const ApplicationOverview = () => {
   const userRoles = user?.info?.roles?.map((e) => e.code);
   const isCemp = user?.info?.roles.find((role) => role.code === "CEMP")?.code;
 
-  let actions =
+  const ndcDetailsList = applicationDetails?.Applications?.[0]?.NdcDetails || [];
+
+  const hasTL = ndcDetailsList.some(
+    (item) =>
+      item?.businessService === "TL"
+  );
+
+  const hasWS_SW = ndcDetailsList.some(
+    (item) =>
+      item?.businessService === "WS" ||
+      item?.businessService === "SW" 
+  );
+
+  const hasBPA = ndcDetailsList.some(
+    (item) =>
+      item?.businessService === "BPA" ||
+      item?.businessService?.includes("BPA") ||
+      item?.businessService?.includes("BUILDING")
+  );
+
+  const hasPT = ndcDetailsList.some(
+    (item) =>
+      item?.businessService === "PT"
+  );
+
+  let rawActions =
     workflowDetails?.data?.actionState?.nextActions?.filter((e) => {
       return userRoles?.some((role) => e.roles?.includes(role)) || !e.roles;
     }) ||
     workflowDetailsTemp?.data?.nextActions?.filter((e) => {
       return userRoles?.some((role) => e.roles?.includes(role)) || !e.roles;
-    });
+    }) || [];
+
+  let actions = rawActions.filter((item) => {
+    const act = item?.action;
+    if (act === "FORWARD_TL") return hasTL;
+    if (act === "FORWARD_WS_SW") return hasWS_SW;
+    if (act === "FORWARD_BPA") return hasBPA;
+    if (act === "FORWARD_PT") return hasPT;
+    return true;
+  });
 
   const closeMenu = () => {
     setDisplayMenu(false);
@@ -446,8 +482,7 @@ const ApplicationOverview = () => {
       setApprover(name);
     }
   }, [workflowDetails]);
-  const { data: storeData } = Digit.Hooks.useStore.getInitData();
-  const { tenants } = storeData || {};
+
   useEffect(() => {
     if (displayData) {
       const checkProperty = displayData?.NdcDetails?.filter((item) => item?.businessService == "NDC_PROPERTY_TAX");
@@ -659,7 +694,7 @@ const ApplicationOverview = () => {
           )}
         </div>
       </Card>
-      <NewApplicationTimeline workflowDetails={workflowDetails} t={t} />
+      <NDCWFTimeline workflowDetails={workflowDetails} application={applicationDetails?.Applications?.[0]} t={t} />
 
       {applicationDetails?.Applications?.[0]?.applicationStatus !== "INITIATED" && actions?.length && (
         <ActionBar>

@@ -59,28 +59,71 @@ const updatedCreateEmployeeconfig = createEmployeeConfig.map((item) => {
   };
 });
 
+const STEP_ROUTES = {
+  1: "application-details",
+  2: "documents",
+  3: "summary",
+};
+
+const ROUTE_TO_STEP = {
+  "application-details": 1,
+  "documents": 2,
+  "summary": 3,
+};
+
+const getRouteInfo = (pathname) => {
+  const match = pathname.match(/^(.*?)\/(application-details|documents|summary)\/?$/);
+  if (match) {
+    return {
+      basePath: match[1],
+      stepRoute: match[2],
+      stepNumber: ROUTE_TO_STEP[match[2]] || 1,
+    };
+  }
+  return {
+    basePath: pathname.replace(/\/+$/, ""),
+    stepRoute: null,
+    stepNumber: 1,
+  };
+};
+
+const getApplicationNumber = (pathname) => {
+  const match = pathname.match(/(NDC-[A-Za-z0-9\-_]+)/);
+  if (match) return match[1];
+
+  const cleaned = pathname.replace(/\/(application-details|documents|summary)\/?$/, "");
+  const segments = cleaned.split("/").filter(Boolean);
+  const last = segments[segments.length - 1];
+  if (last && last !== "new-application" && last !== "create") {
+    return last;
+  }
+  return null;
+};
+
 export const NewNDCStepForm = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const { t } = useTranslation();
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const [showToast, setShowToast] = useState(null);
 
   const formState = useSelector((state) => state.ndc.NDCForm);
   const formData = formState.formData;
-  const step = formState.step;
 
-  const location = useLocation();
+  const { basePath, stepRoute, stepNumber } = getRouteInfo(location.pathname);
+  const applicationId = getApplicationNumber(location.pathname);
 
-  const tenantId = Digit.ULBService.getCurrentTenantId();
-
-  const id = window.location.pathname.split("/").pop();
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
   const { isLoading, data: applicationDetails } = Digit.Hooks.ndc.useSearchEmployeeApplication(
     {
-      applicationNo: id,
+      applicationNo: applicationId,
     },
     tenantId,
+    {
+      enabled: !!applicationId,
+    }
   );
 
   useEffect(() => {
@@ -89,15 +132,48 @@ export const NewNDCStepForm = () => {
     }
   }, [applicationDetails, dispatch]);
 
-  const setStep = (updatedStepNumber) => {
-    dispatch(setNDCStep(updatedStepNumber));
+  // If user accesses base path without step sub-route, redirect to application-details
+  useEffect(() => {
+    if (!stepRoute) {
+      navigate(`${basePath}/application-details`, { replace: true });
+    }
+  }, [stepRoute, basePath, navigate]);
+
+  // Keep Redux step in sync with URL route
+  useEffect(() => {
+    if (stepRoute && ROUTE_TO_STEP[stepRoute] && formState.step !== ROUTE_TO_STEP[stepRoute]) {
+      dispatch(setNDCStep(ROUTE_TO_STEP[stepRoute]));
+    }
+  }, [stepRoute, formState.step, dispatch]);
+
+  // Guard: if user jumps to step 2 or 3 directly without form data or existing application, redirect to step 1
+  useEffect(() => {
+    if (stepNumber > 1 && !applicationId) {
+      const hasData =
+        formData?.NDCDetails?.PropertyDetails ||
+        formData?.NDCDetails?.cpt ||
+        formData?.responseData?.[0] ||
+        formData?.apiData?.Applications?.[0];
+      if (!hasData) {
+        navigate(`${basePath}/application-details`, { replace: true });
+      }
+    }
+  }, [stepNumber, applicationId, formData, basePath, navigate]);
+
+  // Reset form only when unmounting (leaving NDC form flow)
+  useEffect(() => {
+    return () => {
+      dispatch(resetNDCForm());
+    };
+  }, [dispatch]);
+
+  const handleStepChange = (targetStep) => {
+    const nextRoute = STEP_ROUTES[targetStep] || "application-details";
+    dispatch(setNDCStep(targetStep));
+    navigate(`${basePath}/${nextRoute}`);
   };
 
   const handleSubmit = () => {};
-
-  useEffect(() => {
-    dispatch(resetNDCForm());
-  }, [location.pathname, dispatch]);
 
   return (
     <div className="employeeCard ndc-hide-vertical-stepper">
@@ -105,7 +181,12 @@ export const NewNDCStepForm = () => {
         {t("ndc_header_application")}
       </CardHeader>
 
-      <Stepper stepsList={updatedCreateEmployeeconfig} onSubmit={handleSubmit} step={step} setStep={setStep} />
+      <Stepper
+        stepsList={updatedCreateEmployeeconfig}
+        onSubmit={handleSubmit}
+        step={stepNumber}
+        setStep={handleStepChange}
+      />
 
       {showToast && (
         <Toast
