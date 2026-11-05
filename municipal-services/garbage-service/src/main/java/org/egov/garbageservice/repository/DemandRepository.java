@@ -3,9 +3,9 @@ package org.egov.garbageservice.repository;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.garbageservice.config.GarbageServiceConfig;
-import org.egov.garbageservice.web.models.bill.Demand;
-import org.egov.garbageservice.web.models.bill.DemandRequest;
-import org.egov.garbageservice.web.models.bill.DemandResponse;
+import org.egov.garbageservice.web.models.billing.Demand;
+import org.egov.garbageservice.web.models.billing.DemandRequest;
+import org.egov.garbageservice.web.models.billing.DemandResponse;
 import org.egov.garbageservice.util.RequestInfoWrapper;
 import org.egov.tracer.model.ServiceCallException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +17,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.egov.garbageservice.util.RestCallRepository;
+import org.egov.tracer.model.CustomException;
 
 /**
  * Repository component for Demand database interactions.
@@ -73,5 +76,39 @@ public class DemandRepository {
             log.error("Error while fetching demands from url {}: {}", url, e.getMessage(), e);
             throw new ServiceCallException("Error while fetching demands: " + e.getMessage());
         }
+    }
+
+    @Autowired
+    private RestCallRepository restCallRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public List<Demand> saveDemand(RequestInfo requestInfo, List<Demand> demands) {
+        StringBuilder url = new StringBuilder(config.getBillingHost());
+        url.append(config.getDemandCreateEndpoint());
+        DemandRequest request = new DemandRequest(requestInfo, demands);
+        Object result = restCallRepository.fetchResult(url, request);
+        DemandResponse response = null;
+        try {
+            response = objectMapper.convertValue(result, DemandResponse.class);
+        } catch (IllegalArgumentException e) {
+            throw new CustomException("PARSING ERROR", "Failed to parse response of create demand");
+        }
+        return response.getDemands();
+    }
+
+    public List<Demand> updateDemand(RequestInfo requestInfo, List<Demand> demands) {
+        StringBuilder url = new StringBuilder(config.getBillingHost());
+        url.append(config.getDemandUpdateEndpoint());
+        DemandRequest request = new DemandRequest(requestInfo, demands);
+        Object result = restCallRepository.fetchResult(url, request);
+        DemandResponse response = null;
+        try {
+            response = objectMapper.convertValue(result, DemandResponse.class);
+        } catch (IllegalArgumentException e) {
+            throw new CustomException("PARSING ERROR", "Failed to parse response of update demand");
+        }
+        return response.getDemands();
     }
 }

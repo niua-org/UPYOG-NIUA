@@ -1,11 +1,12 @@
 package org.egov.garbageservice.service;
 
+import org.egov.garbageservice.web.models.garbage.GarbageApplication;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.garbageservice.config.GarbageServiceConfig;
-import org.egov.garbageservice.web.models.GarbageAccount;
 import org.egov.garbageservice.util.GrbgConstants;
 import org.egov.garbageservice.util.RestCallRepository;
 import org.egov.mdms.model.MasterDetail;
@@ -71,24 +72,24 @@ public class MdmsService {
     }
 
     /**
-     * Parses the MDMS response to extract the specific garbage fee amount for a given account.
+     * Parses the MDMS response to extract the specific garbage fee amount for a given application.
      *
      * <p>The extraction process performs the following steps:
      * <ol>
      *   <li>Reads the fee structure list from the MDMS response using JSONPath.</li>
-     *   <li>Iterates through the fee categories to find a match with the account's collection unit category.</li>
+     *   <li>Iterates through the fee categories to find a match with the application's collection unit category.</li>
      *   <li>If a match is found, captures the fee amount, service type, and fee type into the calculation breakdown.</li>
      *   <li>Populates the error list if no matching category is found in the fee structure.</li>
      * </ol>
      *
      * @param mdmsResponse         the raw response object obtained from the MDMS service
-     * @param garbageAccount       the garbage account containing the target collection unit category
+     * @param garbageApplication the garbage application containing the target collection unit category
      * @param errorList            a list to which error messages are appended if validation fails
      * @param calculationBreakdown an {@link ObjectNode} populated with the fee details for auditing and response
      * @return the matched fee amount as a {@link BigDecimal}
      */
 
-    public BigDecimal fetchGarbageAmountFromMDMSResponse(Object mdmsResponse, GarbageAccount garbageAccount,
+    public BigDecimal fetchGarbageAmountFromMDMSResponse(Object mdmsResponse, GarbageApplication garbageApplication,
                                                          List<String> errorList, ObjectNode calculationBreakdown) {
 
         AtomicReference<BigDecimal> taxAmount = new AtomicReference<>(null);
@@ -103,9 +104,9 @@ public class MdmsService {
                 return;
             }
 
-            if (!CollectionUtils.isEmpty(garbageAccount.getGrbgCollectionUnits())
+            if (!CollectionUtils.isEmpty(garbageApplication.getGrbgCollectionUnits())
                     && categoryObj.toString().equalsIgnoreCase(
-                    garbageAccount.getGrbgCollectionUnits().get(0).getCategory())) {
+                    garbageApplication.getGrbgCollectionUnits().get(0).getCategory())) {
 
                 BigDecimal fee = BigDecimal.valueOf(Double.parseDouble(amountObj.toString()));
                 calculationBreakdown.put("fee", fee.toString());

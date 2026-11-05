@@ -22,6 +22,9 @@ public class GrbgConstants {
     public static final String STATUS_APPROVED = "APPROVED";
     public static final String STATUS_DISCONNECTED = "DISCONNECTED";
     public static final String STATUS_REJECTED = "REJECTED";
+    public static final String STATUS_PENDING_FOR_DISCONNECTION_VERIFICATION = "PENDING_FOR_DISCONNECTION_VERIFICATION";
+    public static final String STATUS_PENDING_FOR_DISCONNECTION_APPROVAL = "PENDING_FOR_DISCONNECTION_APPROVAL";
+    public static final String STATUS_PENDING_FOR_CITIZEN_ACTION = "PENDING_FOR_CITIZEN_ACTION";
 
     // Workflow Actions
     public static final String WORKFLOW_ACTION_APPLY = "APPLY";
@@ -29,6 +32,9 @@ public class GrbgConstants {
     public static final String WORKFLOW_ACTION_REJECT = "REJECT";
     public static final String WORKFLOW_ACTION_APPROVE = "APPROVE";
     public static final String WORKFLOW_ACTION_DISCONNECT = "DISCONNECT";
+    public static final String WORKFLOW_ACTION_DISCONNECT_INITIATE = "DISCONNECT_INITIATE";
+    public static final String WORKFLOW_ACTION_APPROVE_DISCONNECTION = "APPROVE_FOR_DISCONNECTION";
+    public static final String WORKFLOW_ACTION_RESUBMIT_APPLICATION = "RESUBMIT_APPLICATION";
     public static final String WORKFLOW_ACTION_RECONNECT = "RECONNECT";
     public static final String WORKFLOW_ACTION_RAISE_QUERY_TO_CITIZEN = "RAISE_QUERY_TO_CITIZEN";
     public static final String WORKFLOW_ACTION_SEND_BACK_TO_VERIFIER = "SEND_BACK_TO_VERIFIER";
@@ -36,6 +42,8 @@ public class GrbgConstants {
 
     public static final String BUSINESS_SERVICE_GB_CITIZEN = "garbage-service";
     public static final String BUSINESS_SERVICE_GB_EMPLOYEE = "garbage-service";
+    public static final String BUSINESS_SERVICE_GARBAGE = "garbage-service";
+    public static final String BUSINESS_SERVICE_DISCONNECTION = "DisconnectGarbageConnection";
 
     public static final String WORKFLOW_MODULE_NAME = "GC";
 
