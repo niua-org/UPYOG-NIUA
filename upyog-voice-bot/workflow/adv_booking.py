@@ -206,16 +206,21 @@ def intent_and_ui_node(state: AdvBookingState):
             # 17. Replace the user's message with "continue" to auto-trigger the next question
             user_msg = "continue"
 
-    # 18. Check if the user wants to clear their current booking progress and start over
-    reset_keywords = ["start over", "new booking", "cancel booking", "start new", "restart", "cancel", "clear draft", "delete draft"]
+    # 18. Check if the user wants to clear their current booking progress and cancel
+    reset_keywords = ["start over", "new booking", "cancel booking", "start new", "restart", "cancel", "clear draft", "delete draft", "don't submit", "dont submit", "do not submit", "rehne do", "stop", "abort"]
     if user_msg == "[CANCEL_DRAFT]" or any(w in user_msg.lower() for w in reset_keywords):
-        # 19. Wipe all fields in the draft memory completely clean
         draft_booking = {f: None for f in ALL_FIELDS}
         draft_booking["selected_slots"] = None
         draft_booking["applicant_details"] = None
+        draft_booking["_cancelled"] = True
         MemoryManager.delete_draft_state(phone_number, "adv_booking")
-        # 20. Tell the user the booking was cancelled and start fresh
-        return {"messages": [AIMessage(content="I have cleared your draft. Let's start a new booking.")], "draft_booking": draft_booking, "missing_fields": ALL_FIELDS}
+        is_hi = any('ऀ' <= c <= 'ॿ' for c in user_msg)
+        msg = (
+            "आपकी विज्ञापन बुकिंग रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nयदि आप किसी अन्य सेवा में सहायता चाहते हैं, तो कृपया मुझे बताएं।"
+            if is_hi else
+            "Your advertisement booking has been cancelled. No submission was made to the portal.\n\nIf you would like help with any other service, please let me know."
+        )
+        return {"messages": [AIMessage(content=msg)], "draft_booking": draft_booking, "missing_fields": []}
 
     # 3. Resume logic — 'continue' alone (sent by draft switcher) always resumes
     resume_keywords = ["resume", "proceed", "continue", "previous left", "start with previous"]
@@ -716,6 +721,27 @@ def edit_prompt_node(state: AdvBookingState):
     return {"messages": [AIMessage(content=resp)], "draft_booking": draft_booking, "input_type": "text", "options": []}
 
 
+# Cancels the current booking draft when user declines submission or asks to cancel
+def cancel_booking_node(state: AdvBookingState):
+    phone_number = state.get("phone_number", "default")
+    logger.info(f"[adv_booking.cancel_booking_node] Cancelling booking draft for phone={phone_number}")
+    MemoryManager.delete_draft_state(phone_number, "adv_booking")
+    reset_draft = {f: None for f in ALL_FIELDS}
+    reset_draft["_cancelled"] = True
+    is_hi = False
+    messages = state.get("messages", [])
+    if messages:
+        last_c = messages[-1].content
+        is_hi = any('ऀ' <= c <= 'ॿ' for c in last_c)
+    msg = (
+        "आपकी विज्ञापन बुकिंग रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nयदि आप किसी अन्य सेवा में सहायता चाहते हैं, तो कृपया मुझे बताएं।"
+        if is_hi else
+        "Your advertisement booking has been cancelled. No submission was made to the portal.\n\nIf you would like help with any other service, please let me know."
+    )
+    MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=msg)
+    return {"messages": [AIMessage(content=msg)], "draft_booking": reset_draft, "missing_fields": [], "input_type": "text", "options": []}
+
+
 # The main traffic controller that checks the draft and routes the flow to the correct next step
 def router(state: AdvBookingState) -> str:
     draft_booking = state.get("draft_booking", {})
@@ -732,8 +758,13 @@ def router(state: AdvBookingState) -> str:
         
     if all(draft_booking.get(f) for f in ALL_FIELDS):
         if draft_booking.get("_awaiting_confirm"):
+            cancel_words = ["cancel", "no", "don't", "dont", "do not", "nahi", "nahin", "rehne do", "stop", "abort"]
+            if any(w in user_msg.lower() for w in cancel_words):
+                logger.info("[adv_booking.router] Route -> cancel (User declined confirmation)")
+                return "cancel"
+
             confirm_words = ["confirm", "submit", "yes", "yeah", "yup", "ok", "okay", "confirm & submit"]
-            if any(w in user_msg.lower() for w in confirm_words):
+            if any(w in user_msg.lower() for w in confirm_words) and not any(w in user_msg.lower() for w in ["don't", "dont", "not", "no"]):
                 logger.info("[adv_booking.router] Route -> create_booking (Confirmed)")
                 return "create_booking"
             edit_words = ["edit", "edit details", "modify", "correct", "update"]
@@ -759,6 +790,7 @@ workflow_graph.add_node("confirm_booking", confirm_booking_node)
 workflow_graph.add_node("edit_prompt", edit_prompt_node)
 workflow_graph.add_node("create_booking", create_booking_node)
 workflow_graph.add_node("ask_next", ask_next_node)
+workflow_graph.add_node("cancel", cancel_booking_node)
 
 workflow_graph.add_edge(START, "intent_and_ui")
 workflow_graph.add_conditional_edges(
@@ -778,7 +810,8 @@ workflow_graph.add_conditional_edges(
         "confirm_booking": "confirm_booking",
         "edit_prompt": "edit_prompt",
         "create_booking": "create_booking",
-        "ask_next": "ask_next"
+        "ask_next": "ask_next",
+        "cancel": "cancel"
     }
 )
 workflow_graph.add_edge("slot_search", END)
@@ -787,5 +820,6 @@ workflow_graph.add_edge("confirm_booking", END)
 workflow_graph.add_edge("edit_prompt", END)
 workflow_graph.add_edge("create_booking", END)
 workflow_graph.add_edge("ask_next", END)
+workflow_graph.add_edge("cancel", END)
 
 adv_booking_graph = workflow_graph.compile(checkpointer=shared_memory)

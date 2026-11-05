@@ -477,7 +477,7 @@ def resolve_active_and_target_plugin(
                 plugin_intent = "grievance"
             elif intent in ["adv_candidate", "adv_status_candidate", "booking_candidate"]:
                 plugin_intent = "adv_booking"
-            elif intent in ["adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel", "grievance_confirm", "grievance_cancel"]:
+            elif intent in ["adv_confirm", "booking_confirm", "grievance_confirm"]:
                 plugin_intent = active_plugin or ("adv_booking" if "adv" in intent or "booking" in intent else "grievance")
 
     is_generic_response = ui_lower in ["yes", "no", "yeah", "yup", "ya", "ok", "okay", "sure", "confirm", "cancel", "haan", "nahi", "nahin", "1", "2", "option 1", "option 2"]
@@ -499,7 +499,8 @@ def resolve_active_and_target_plugin(
     elif active_plugin and is_generic_response:
         plugin_intent = active_plugin
 
-    if is_query_question or intent == "faq":
+    cancel_intents = {"adv_cancel", "booking_cancel", "grievance_cancel"}
+    if is_query_question or intent == "faq" or intent in cancel_intents:
         target_wf = None
     else:
         target_wf = plugin_intent or active_plugin
@@ -1156,13 +1157,45 @@ def dispatch_chat_request(
         user_input, intent, phone, session_id, workflows, services_registry, config, is_question=is_question
     )
 
-    # 5. Pure greeting intent (only when NOT in an active transactional workflow)
+    # 5. Service / Workflow Cancellation Intent (adv_cancel, grievance_cancel, booking_cancel)
+    cancel_intents = {"adv_cancel", "grievance_cancel", "booking_cancel"}
+    if intent in cancel_intents:
+        from storage.qdrant_manager import MemoryManager
+        from services.voice_service import text_to_speech
+
+        target_cancelled_plugin = active_plugin or ("adv_booking" if "adv" in intent or "booking" in intent else "grievance")
+        plugin_display = "Advertisement Booking" if "adv" in str(target_cancelled_plugin) or "booking" in str(target_cancelled_plugin) else "Grievance"
+        plugin_display_hi = "विज्ञापन बुकिंग" if "adv" in str(target_cancelled_plugin) or "booking" in str(target_cancelled_plugin) else "शिकायत"
+
+        if active_plugin and active_plugin in workflows:
+            draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
+            empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if active_plugin == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
+            empty_draft["_cancelled"] = True
+            workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
+            MemoryManager.delete_draft_state(phone, active_plugin)
+            clear_pending_interruption(phone)
+            logger.info(f"[WorkflowCancel] Cleanly cancelled active workflow {active_plugin} for {phone}")
+
+            if user_language == 'hi':
+                msg = f"आपकी {plugin_display_hi} रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nमैं आपकी और क्या सहायता कर सकता हूँ?"
+            else:
+                msg = f"Your {plugin_display} application has been cancelled. No submission was made to the portal.\n\nHow else can I assist you today?"
+        else:
+            if user_language == 'hi':
+                msg = f"ठीक है, {plugin_display_hi} अनुरोध रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
+            else:
+                msg = f"Understood. The {plugin_display.lower()} request has been cancelled. How else can I assist you today?"
+
+        audio = text_to_speech(msg, user_language)
+        return {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
+
+    # 6. Pure greeting intent (only when NOT in an active transactional workflow)
     if not active_plugin and intent == "greeting":
         greet_msg = build_greeting_response(user_language, workflows)
         audio_output = text_to_speech(greet_msg, user_language)
         return {"response": greet_msg, "lang": user_language, "mode": "greeting", "audio": audio_output}
 
-    # 6. Out-of-domain conversational queries (Semantic Domain Filter - only when NOT in an active workflow)
+    # 7. Out-of-domain conversational queries (Semantic Domain Filter - only when NOT in an active workflow)
     if not active_plugin and intent == "out_of_domain":
         from services.rag_service import get_rejection_message
         sys_blocked = system_config.get("system_messages", {}).get("blocked", {})

@@ -33,8 +33,8 @@ system_messages:
       "kya", "kaise", "kab", "kahan", "kyun", "kis", "batao", "bataiye"
     ]
   workflow_intents: [
-    "grievance_candidate", "grievance_status_candidate", "grievance_confirm", "grievance_cancel",
-    "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel"
+    "grievance_candidate", "grievance_status_candidate", "grievance_confirm",
+    "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm"
   ]
 
 
