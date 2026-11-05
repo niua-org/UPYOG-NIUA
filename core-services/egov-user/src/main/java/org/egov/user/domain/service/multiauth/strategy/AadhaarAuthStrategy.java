@@ -136,15 +136,17 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
     }
 
     private String getRequesterServiceHost() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getRequesterServiceHost()))
-                ? userConfiguration.getRequesterServiceHost()
-                : "https://upyog.niua.org/";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceHost())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.service.host is not configured");
+        }
+        return userConfiguration.getRequesterServiceHost();
     }
 
     private String getRequesterVerifyEndpoint() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint()))
-                ? userConfiguration.getRequesterAadhaarVerifyEndpoint()
-                : UserConstants.DEFAULT_REQUESTER_AADHAAR_VERIFY_ENDPOINT;
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.aadhaar.verify.endpoint is not configured");
+        }
+        return userConfiguration.getRequesterAadhaarVerifyEndpoint();
     }
 
     private boolean isFixedOTPEnabled() {
@@ -152,19 +154,24 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
     }
 
     private String getFixedOTPPassword() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getCitizenLoginPasswordOtpFixedValue()))
-                ? userConfiguration.getCitizenLoginPasswordOtpFixedValue()
-                : "123456";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getCitizenLoginPasswordOtpFixedValue())) {
+            throw new CustomException(UserConstants.ERROR_FIXED_OTP_NOT_CONFIGURED, UserConstants.MSG_FIXED_OTP_NOT_CONFIGURED);
+        }
+        return userConfiguration.getCitizenLoginPasswordOtpFixedValue();
     }
 
     private boolean isRoleStateLevel() {
-        return userConfiguration == null || Boolean.TRUE.equals(userConfiguration.getRolesStateLevelEnabled());
+        if (userConfiguration == null || userConfiguration.getRolesStateLevelEnabled() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "roles.state.level.enabled is not configured");
+        }
+        return Boolean.TRUE.equals(userConfiguration.getRolesStateLevelEnabled());
     }
 
     private int getMaxOtpAttempts() {
-        return (userConfiguration != null && userConfiguration.getAadhaarOtpMaxAttempts() != null)
-                ? userConfiguration.getAadhaarOtpMaxAttempts()
-                : 3;
+        if (userConfiguration == null || userConfiguration.getAadhaarOtpMaxAttempts() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "aadhaar.otp.max.attempts is not configured");
+        }
+        return userConfiguration.getAadhaarOtpMaxAttempts();
     }
 
     /**
@@ -373,6 +380,14 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             return createMockDemographics(rawAadhaar, refId);
         }
 
+        if (userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getAadhaarGatewayMockEnabled())) {
+            log.info("[AADHAAR-AUTH-STRATEGY] Aadhaar mock mode enabled. Producing verified dummy demographic payload.");
+            if (StringUtils.isNotBlank(refId)) {
+                otpAttemptsByRefId.remove(refId);
+            }
+            return createMockDemographics(rawAadhaar, refId);
+        }
+
         try {
             String host = getRequesterServiceHost();
             String endpoint = getRequesterVerifyEndpoint();
@@ -428,12 +443,10 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         } catch (CustomException ce) {
             throw ce;
         } catch (Exception e) {
-            log.warn("[AADHAAR-AUTH-STRATEGY] External identity provider call failed ({}: {}). Falling back to mock verified demographics for dev environment.",
-                    e.getClass().getSimpleName(), e.getMessage());
-            if (StringUtils.isNotBlank(refId)) {
-                otpAttemptsByRefId.remove(refId);
-            }
-            return createMockDemographics(rawAadhaar, refId);
+            recordFailedOtpAttempt(refId);
+            log.error("[AADHAAR-AUTH-STRATEGY] External identity provider call failed ({}: {}). Failing closed.",
+                    e.getClass().getSimpleName(), e.getMessage(), e);
+            throw new CustomException(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, UserConstants.MSG_AADHAAR_VERIFICATION_REJECTED);
         }
 
         recordFailedOtpAttempt(refId);

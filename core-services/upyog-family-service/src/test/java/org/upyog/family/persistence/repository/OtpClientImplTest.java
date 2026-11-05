@@ -99,6 +99,7 @@ class OtpClientImplTest {
         when(configuration.getSmsNotifTopic()).thenReturn("egov.core.notification.sms");
         when(configuration.getFamilyOtpReferenceTtlMs()).thenReturn(600_000L);
         when(configuration.getFamilyOtpVerifyMaxAttempts()).thenReturn(5);
+        when(configuration.getSmsOtpMessageTemplate()).thenReturn("Your OTP is %s");
 
         Map<String, Object> innerOtp = new HashMap<>();
         innerOtp.put("UUID", "uuid-token-1234");

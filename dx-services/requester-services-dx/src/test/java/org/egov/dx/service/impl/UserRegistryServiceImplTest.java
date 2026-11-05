@@ -152,4 +152,35 @@ public class UserRegistryServiceImplTest {
         String uuid = userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo());
         assertNull(uuid);
     }
+
+    @Test
+    void testSearchUserUuidByAadhaar_MissingUserHost_ThrowsCustomException() {
+        when(configurations.getUserHost()).thenReturn(null);
+        assertThrows(CustomException.class, () ->
+                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo()));
+    }
+
+    @Test
+    void testSearchUserUuidByAadhaar_MissingSearchPath_ThrowsCustomException() {
+        ReflectionTestUtils.setField(userRegistryService, "userSearchPath", "");
+        assertThrows(CustomException.class, () ->
+                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo()));
+    }
+
+    @Test
+    void testResolveOrCreateUserUuid_MissingCreatePath_ThrowsCustomException() {
+        ReflectionTestUtils.setField(userRegistryService, "userCreatePath", " ");
+        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+                .name("Citizen")
+                .build();
+        assertThrows(CustomException.class, () ->
+                userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo()));
+    }
+
+    @Test
+    void testMarkCitizenAadhaarVerifiedAfterEkyc_MissingMarkVerifiedPath_ThrowsCustomException() {
+        ReflectionTestUtils.setField(userRegistryService, "markVerifiedPath", null);
+        assertThrows(CustomException.class, () ->
+                userRegistryService.markCitizenAadhaarVerifiedAfterEkyc("uuid-1", "548796521458", "pg.citya", new RequestInfo()));
+    }
 }

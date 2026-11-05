@@ -40,16 +40,16 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private final Configurations configurations;
     private final ObjectMapper objectMapper;
 
-    @Value("${egov.user.profile.search.path:/user/profile/_search}")
+    @Value("${egov.user.profile.search.path}")
     private String profileSearchPath;
 
-    @Value("${egov.user.search.path:/user/_search}")
+    @Value("${egov.user.search.path}")
     private String userSearchPath;
 
-    @Value("${egov.user.create.novalidate.path:/user/users/_createnovalidate}")
+    @Value("${egov.user.create.novalidate.path}")
     private String userCreatePath;
 
-    @Value("${egov.user.aadhaar.mark.verified.path:/user/profile/aadhaar/_markVerifiedAfterEkyc}")
+    @Value("${egov.user.aadhaar.mark.verified.path}")
     private String markVerifiedPath;
 
     @Autowired
@@ -108,12 +108,15 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     @Override
     public void markCitizenAadhaarVerifiedAfterEkyc(String userUuid, String aadhaarNumber, String tenantId, RequestInfo requestInfo) {
         if (StringUtils.isBlank(userUuid)) {
-            return;
+            throw new CustomException("INVALID_USER_UUID", "User UUID is mandatory to mark citizen as verified");
+        }
+        if (StringUtils.isBlank(aadhaarNumber)) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, "Aadhaar number is mandatory");
         }
         String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(aadhaarNumber);
         if (fullAadhaar == null) {
             log.warn("[USER-REGISTRY] Cannot mark citizen verified: Aadhaar is not a valid 12-digit value");
-            return;
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
         }
 
         try {
@@ -130,6 +133,8 @@ public class UserRegistryServiceImpl implements UserRegistryService {
 
             log.info("[USER-REGISTRY] Marking citizen UUID {} as Aadhaar-verified via egov-user profile service", userUuid);
             restTemplate.postForObject(url, entity, String.class);
+        } catch (CustomException ce) {
+            throw ce;
         } catch (Exception e) {
             log.error("[USER-REGISTRY] Failed to mark citizen {} as Aadhaar-verified: {}", userUuid, e.getMessage());
         }
@@ -184,6 +189,9 @@ public class UserRegistryServiceImpl implements UserRegistryService {
 
     private String autoCreateCitizen(String aadhaarNumber, UserDemographics demographics, String tenantId, RequestInfo requestInfo) {
         try {
+            if (StringUtils.isBlank(aadhaarNumber)) {
+                throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, "Aadhaar number is mandatory");
+            }
             String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(aadhaarNumber);
             if (fullAadhaar == null) {
                 throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);

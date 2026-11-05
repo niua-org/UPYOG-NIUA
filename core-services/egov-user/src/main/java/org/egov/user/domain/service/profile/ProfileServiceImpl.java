@@ -27,7 +27,7 @@ import org.egov.user.domain.service.identity.VerifiedAadhaarDemographics;
 import org.egov.user.domain.service.profile.validator.ProfileValidator;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
-import AadhaarNumberUtils;
+import org.egov.user.util.AadhaarNumberUtils;
 import org.egov.user.util.MaskUtils;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FamilyRestRepository;
@@ -2026,7 +2026,14 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_IDENTIFIER, "Aadhaar must be a 12-digit number");
         }
 
-        User existingUser = userService.getUserByUuid(userUuid);
+        UserSearchCriteria criteria = UserSearchCriteria.builder()
+                .uuid(Collections.singletonList(userUuid))
+                .build();
+        List<User> list = userRepository.findAll(criteria);
+        if (CollectionUtils.isEmpty(list)) {
+            throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, "Citizen not found for UUID: " + userUuid);
+        }
+        User existingUser = list.get(0);
         if (existingUser == null) {
             throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, "Citizen not found for UUID: " + userUuid);
         }

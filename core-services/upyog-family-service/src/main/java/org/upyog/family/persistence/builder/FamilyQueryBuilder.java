@@ -1,6 +1,8 @@
 package org.upyog.family.persistence.builder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -170,6 +172,10 @@ public class FamilyQueryBuilder {
         }
 
         query.append("ORDER BY f.created_time DESC ");
+
+        if (configuration == null || configuration.getMaxLimit() == null || configuration.getDefaultLimit() == null || configuration.getDefaultOffset() == null) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Family pagination configurations are missing");
+        }
 
         int limit = (criteria.getLimit() != null && criteria.getLimit() > 0)
                 ? Math.min(criteria.getLimit(), configuration.getMaxLimit())

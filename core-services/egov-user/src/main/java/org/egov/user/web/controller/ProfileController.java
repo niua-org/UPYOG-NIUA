@@ -209,6 +209,10 @@ public class ProfileController {
                 MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getInclude() : null);
 
+        if (request != null && request.getActive() == null) {
+            request.setActive(true);
+        }
+
         Set<ProfileIncludeEntity> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
         List<Error> enrichmentErrors = new ArrayList<>();
         List<User> users = profileService.searchProfile(request, normalizedIncludes, enrichmentErrors);

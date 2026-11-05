@@ -105,6 +105,7 @@ class AadhaarCitizenVerifyTest {
         String userUuid = "existing-user-uuid-101";
 
         VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .fullAadhaarNumber(aadhaar)
                 .maskedAadhaar(maskedAadhaar)
                 .name("Rohan Sharma")
                 .gender(Gender.MALE)
@@ -124,7 +125,7 @@ class AadhaarCitizenVerifyTest {
                 .mobileNumber("9876543210")
                 .gender(Gender.MALE)
                 .dob(parseDate("1992-04-15"))
-                .aadhaarNumber(maskedAadhaar)
+                .aadhaarNumber(aadhaar)
                 .tenantId("pg")
                 .type(UserType.CITIZEN)
                 .active(true)
@@ -154,7 +155,7 @@ class AadhaarCitizenVerifyTest {
         assertEquals("Rohan Sharma", response.getUser().getName());
         assertEquals("9876543210", response.getUser().getMobileNumber());
         assertEquals(Gender.MALE.toString(), response.getUser().getGender());
-        assertEquals(maskedAadhaar, response.getUser().getAadhaarNumber());
+        assertEquals(aadhaar, response.getUser().getAadhaarNumber());
         assertEquals("UPYOG-FAM-2024-001", response.getUser().getFamilyId());
         assertTrue(response.getUser().getIsIdentityVerified());
 
@@ -166,10 +167,12 @@ class AadhaarCitizenVerifyTest {
     void testVerifyAadhaarExistingUser_FoundByMobile() {
         String refId = "ref-8822";
         String otp = "123456";
+        String aadhaar = "123456785544";
         String maskedAadhaar = "XXXXXXXX5544";
         String userUuid = "mobile-user-uuid-202";
 
         VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .fullAadhaarNumber(aadhaar)
                 .maskedAadhaar(maskedAadhaar)
                 .name("Priya Verma")
                 .gender(Gender.FEMALE)
@@ -189,6 +192,7 @@ class AadhaarCitizenVerifyTest {
                 .mobileNumber("9988776655")
                 .gender(Gender.FEMALE)
                 .dob(parseDate("1996-08-20"))
+                .aadhaarNumber(aadhaar)
                 .tenantId("pg")
                 .type(UserType.CITIZEN)
                 .active(true)
@@ -216,7 +220,7 @@ class AadhaarCitizenVerifyTest {
         assertNotNull(response.getUser());
         assertEquals("Priya Verma", response.getUser().getName());
         assertEquals("9988776655", response.getUser().getMobileNumber());
-        assertEquals(maskedAadhaar, response.getUser().getAadhaarNumber());
+        assertEquals(aadhaar, response.getUser().getAadhaarNumber());
         assertTrue(response.getUser().getIsIdentityVerified());
     }
 
@@ -450,6 +454,7 @@ class AadhaarCitizenVerifyTest {
                 .thenReturn(Collections.singletonList(existingDbUser));
 
         VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .fullAadhaarNumber("123456789988")
                 .maskedAadhaar("XXXXXXXX9988")
                 .name("Aadhaar Verified Citizen")
                 .gender(Gender.MALE)
@@ -469,7 +474,7 @@ class AadhaarCitizenVerifyTest {
         assertEquals("Aadhaar Verified Citizen", response.getUser().getName());
         assertEquals(Boolean.TRUE, response.getUser().getIsIdentityVerified());
         assertEquals("AADHAAR", response.getUser().getIdentityVerifiedSource());
-        assertEquals("XXXXXXXX9988", response.getUser().getAadhaarNumber());
+        assertEquals("123456789988", response.getUser().getAadhaarNumber());
 
         verify(userRepository, times(1)).update(any(User.class), any(User.class), eq(101L), eq(citizenUuid));
     }

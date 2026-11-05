@@ -48,6 +48,12 @@ public class OtpClientImpl implements OtpClient {
 
         String otpHost = configuration.getOtpHost();
         String otpCreatePath = configuration.getOtpCreatePath();
+        if (StringUtils.isBlank(otpHost)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.otp.host is not configured");
+        }
+        if (StringUtils.isBlank(otpCreatePath)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.otp.create.path is not configured");
+        }
         String url = otpHost + otpCreatePath;
 
         Map<String, Object> innerOtp = new HashMap<>();
@@ -83,9 +89,11 @@ public class OtpClientImpl implements OtpClient {
                     if (StringUtils.isNotBlank(configuration.getSmsNotifTopic())) {
                         Map<String, Object> smsPayload = new HashMap<>();
                         smsPayload.put("mobileNumber", mobileNumber);
-                        String template = StringUtils.isNotBlank(configuration.getSmsOtpMessageTemplate())
-                                ? configuration.getSmsOtpMessageTemplate()
-                                : "Your OTP to authorize joining your family in UPYOG is %s.";
+                        String template = configuration.getSmsOtpMessageTemplate();
+                        if (StringUtils.isBlank(template)) {
+                            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                                    "family.sms.otp.message.template is not configured");
+                        }
                         smsPayload.put("message", String.format(template, otpVal));
                         smsPayload.put("category", "OTP");
                         kafkaProducer.push(configuration.getSmsNotifTopic(), smsPayload);
@@ -180,6 +188,12 @@ public class OtpClientImpl implements OtpClient {
     private boolean validateWithEgovOtp(String mobileNumber, String otp, String tenantId, RequestInfo requestInfo) {
         String otpHost = configuration.getOtpHost();
         String otpValidatePath = configuration.getOtpValidatePath();
+        if (StringUtils.isBlank(otpHost)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.otp.host is not configured");
+        }
+        if (StringUtils.isBlank(otpValidatePath)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.otp.validate.path is not configured");
+        }
         String url = otpHost + otpValidatePath;
 
         Map<String, Object> innerOtp = new HashMap<>();

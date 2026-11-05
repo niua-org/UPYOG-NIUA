@@ -82,8 +82,9 @@ public class ProfileSearchRequest {
     @Schema(description = "Citizen name prefix or exact match", example = "Aarav")
     private String name;
 
-    @Schema(description = "Active status filter (true = active only, false = inactive only, null = both)", example = "true")
-    private Boolean active;
+    @Schema(description = "Active status filter (true = active only, false = inactive only, null = both). Defaults to true if omitted.", example = "true")
+    @Builder.Default
+    private Boolean active = true;
 
     @Schema(description = "Identity verification status filter", example = "true")
     private Boolean isIdentityVerified;

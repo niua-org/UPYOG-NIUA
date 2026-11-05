@@ -109,13 +109,17 @@ public class UserController {
     }
 
     private int getDefaultSearchSize() {
-        return userConfiguration != null && userConfiguration.getDefaultSearchSize() != null
-                ? userConfiguration.getDefaultSearchSize() : 10;
+        if (userConfiguration == null || userConfiguration.getDefaultSearchSize() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "egov.user.search.default.size is not configured");
+        }
+        return userConfiguration.getDefaultSearchSize();
     }
 
     private String getMobileValidationWorkaroundEnabled() {
-        return userConfiguration != null && userConfiguration.getMobileValidationWorkaroundEnabled() != null
-                ? userConfiguration.getMobileValidationWorkaroundEnabled() : "false";
+        if (userConfiguration == null || userConfiguration.getMobileValidationWorkaroundEnabled() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "mobile.number.validation.workaround.enabled is not configured");
+        }
+        return userConfiguration.getMobileValidationWorkaroundEnabled();
     }
 
     /**

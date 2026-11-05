@@ -2,6 +2,7 @@ package org.upyog.family.persistence.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
 import org.egov.common.contract.request.RequestInfo;
 import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.util.FamilyConstants;
@@ -54,6 +55,19 @@ public class IdGenRepositoryImpl implements IdGenRepository {
     @Override
     @SuppressWarnings("unchecked")
     public String generateFamilyId(RequestInfo requestInfo, String tenantId) {
+        if (configuration == null || StringUtils.isBlank(configuration.getIdGenHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getIdGenPath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.path is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getIdGenFamilyIdName())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.family.id.name is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getIdGenFamilyIdFormat())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.family.id.format is not configured");
+        }
+
         String url = configuration.getIdGenHost() + configuration.getIdGenPath();
         log.info("[UPYOG-IDGEN-CLIENT] Requesting family ID generation from: {} for tenant: {}", url, tenantId);
 
