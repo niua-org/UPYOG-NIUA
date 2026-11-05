@@ -34,20 +34,30 @@ const WorkbenchCard = () => {
       roles: ROLES.WORKFLOW,
     },
     {
-      label: t("WBH_THEME_CONFIGURATION"), // Theme Configuration 
-      link: `/${window?.contextPath}/employee/workbench/theme-configuration`,
+      label: t("WBH_Employee_ThemeBuilder"), // Theme Configuration for Employee 
+      link: `/${window?.contextPath}/employee/workbench/theme-builder`,
       roles: ROLES.MDMS,
     },
     {
-      label: t("WBH_ONBOARDING_CONTENT_CONFIG"), // Onboarding Content Configuration
-      link: `/${window?.contextPath}/employee/workbench/onboarding-common-content`,
-      roles: ROLES.MDMS,
-    },
-    {
-      label: t("WBH_ONBOARDING_LOGIN_CONFIG"), // Onboarding Login Configuration
-      link: `/${window?.contextPath}/employee/workbench/onboarding-login-configuration`,
-      roles: ROLES.MDMS,
+      label: t("ACTION_TEST_FORM_BUILDER"), // Form Builder for Employee
+      link: `/${window?.contextPath}/employee/workbench/form-builder`,
+      roles: ROLES.MDMS
     }
+    // {
+    //   label: t("WBH_THEME_CONFIGURATION"), // Theme Configuration 
+    //   link: `/${window?.contextPath}/employee/workbench/theme-configuration`,
+    //   roles: ROLES.MDMS,
+    // },
+    // {
+    //   label: t("WBH_ONBOARDING_CONTENT_CONFIG"), // Onboarding Content Configuration
+    //   link: `/${window?.contextPath}/employee/workbench/onboarding-common-content`,
+    //   roles: ROLES.MDMS,
+    // },
+    // {
+    //   label: t("WBH_ONBOARDING_LOGIN_CONFIG"), // Onboarding Login Configuration
+    //   link: `/${window?.contextPath}/employee/workbench/onboarding-login-configuration`,
+    //   roles: ROLES.MDMS,
+    // }
   ];
 
   links = links.filter((link) => (link?.roles && link?.roles?.length > 0 ? Digit.Utils.didEmployeeHasAtleastOneRole(link?.roles) : true));

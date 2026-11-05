@@ -58,6 +58,7 @@ export const StoreService = {
     const { MdmsRes } = await MdmsService.init(stateCode);
     const stateInfo = MdmsRes["common-masters"]?.StateInfo?.[0]||{};
     const uiHomePage = MdmsRes["common-masters"]?.uiHomePage?.[0]||{};
+    const ModuleAccordions = MdmsRes["common-masters"]?.ModuleAccordions || [];
     const localities = {};
     const revenue_localities = {};
     const initData = {
@@ -98,6 +99,7 @@ export const StoreService = {
     Storage.set("initData", initData);
     initData.revenue_localities = revenue_localities;
     initData.localities = localities;
+    initData.ModuleAccordions = ModuleAccordions;
     setTimeout(() => {
       renderTenantLogos(stateInfo, initData.tenants);
     }, 0);
