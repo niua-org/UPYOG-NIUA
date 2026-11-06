@@ -75,8 +75,7 @@ const ProfileVerify = () => {
       setReferenceId(res.referenceId);
       setOtp("");
     } catch (err) {
-      console.log("Error while sending Aadhaar OTP:", err);
-      showError(t("AADHAAR_OTP_SEND_FAILED"));
+      showError(err?.response?.data?.message || t("AADHAAR_OTP_SEND_FAILED"));
     } finally {
       setLoading(false);
     }
