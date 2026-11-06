@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.egov.tracer.model.CustomException;
+import org.upyog.family.util.FamilyConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -39,11 +41,20 @@ public class FamilyConfiguration {
     @Value("${egov.idgen.family.id.format}")
     private String idGenFamilyIdFormat;
 
+    @Value("${egov.idgen.member.id.name}")
+    private String idGenMemberIdName;
+
+    @Value("${egov.idgen.member.id.format}")
+    private String idGenMemberIdFormat;
+
     @Value("${egov.user.host}")
     private String userHost;
 
     @Value("${egov.user.search.path}")
     private String userSearchPath;
+
+    @Value("${egov.user.create.path}")
+    private String userCreatePath;
 
     @Value("${egov.filestore.host}")
     private String fileStoreHost;
@@ -63,16 +74,22 @@ public class FamilyConfiguration {
     @Value("${requester.services.dx.verify.otp.path}")
     private String requesterDxVerifyOtpPath;
 
-    @Value("${family.consent.mock.enabled:false}")
+    @Value("${family.consent.mock.enabled}")
     private Boolean mockConsentEnabled;
 
-    @Value("${family.consent.mock.fixed.otp:}")
+    @Value("${family.consent.mock.fixed.otp}")
     private String mockFixedOtp;
 
-    @Value("${family.consent.token.ttl.minutes:15}")
+    @Value("${family.otp.verify.max.attempts}")
+    private Integer familyOtpVerifyMaxAttempts;
+
+    @Value("${family.otp.reference.ttl.minutes}")
+    private Long familyOtpReferenceTtlMinutes;
+
+    @Value("${family.consent.token.ttl.minutes}")
     private Long consentTokenTtlMinutes;
 
-    @Value("${family.sms.otp.message.template:Your OTP to authorize joining your family in UPYOG is %s.}")
+    @Value("${family.sms.otp.message.template}")
     private String smsOtpMessageTemplate;
 
     @Value("${egov.otp.host}")
@@ -84,7 +101,7 @@ public class FamilyConfiguration {
     @Value("${egov.otp.validate.path}")
     private String otpValidatePath;
 
-    @Value("${kafka.topics.notification.sms:egov.core.notification.sms}")
+    @Value("${kafka.topics.notification.sms}")
     private String smsNotifTopic;
 
     @Value("${family.mdms.module}")
@@ -136,9 +153,36 @@ public class FamilyConfiguration {
      * @return TTL duration in milliseconds
      */
     public long getConsentTokenTtlMs() {
-        long minutes = (consentTokenTtlMinutes != null && consentTokenTtlMinutes > 0)
-                ? consentTokenTtlMinutes
-                : 15L;
-        return minutes * 60L * 1000L;
+        if (consentTokenTtlMinutes == null || consentTokenTtlMinutes <= 0) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "family.consent.token.ttl.minutes is not configured");
+        }
+        return consentTokenTtlMinutes * 60L * 1000L;
+    }
+
+    /**
+     * Returns configured maximum failed OTP validation attempts per reference.
+     *
+     * @return max attempts, at least 1
+     */
+    public int getFamilyOtpVerifyMaxAttempts() {
+        if (familyOtpVerifyMaxAttempts == null || familyOtpVerifyMaxAttempts < 1) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "family.otp.verify.max.attempts is not configured");
+        }
+        return familyOtpVerifyMaxAttempts;
+    }
+
+    /**
+     * Returns OTP reference TTL in milliseconds.
+     *
+     * @return TTL in milliseconds
+     */
+    public long getFamilyOtpReferenceTtlMs() {
+        if (familyOtpReferenceTtlMinutes == null || familyOtpReferenceTtlMinutes <= 0) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "family.otp.reference.ttl.minutes is not configured");
+        }
+        return familyOtpReferenceTtlMinutes * 60L * 1000L;
     }
 }

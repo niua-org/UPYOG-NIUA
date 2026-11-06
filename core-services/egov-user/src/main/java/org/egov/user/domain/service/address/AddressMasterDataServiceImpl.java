@@ -100,9 +100,11 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
     @Override
     public Set<String> getAllowedAddressTypes(RequestInfo requestInfo, String tenantId) {
         String stateTenant = getStateLevelTenant(tenantId);
-        long ttlMillis = (userConfiguration != null && userConfiguration.getAddressTypeCacheTtlMillis() != null)
-                ? userConfiguration.getAddressTypeCacheTtlMillis()
-                : 86400000L; // Default 24 hours
+        if (userConfiguration == null || userConfiguration.getAddressTypeCacheTtlMillis() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "address.type.cache.ttl.millis is not configured");
+        }
+        long ttlMillis = userConfiguration.getAddressTypeCacheTtlMillis();
 
         CacheEntry entry = tenantAddressTypeCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis)) {
@@ -203,15 +205,23 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
      * @return set of active uppercase address type codes
      */
     private Set<String> fetchAddressTypesFromMdms(RequestInfo requestInfo, String stateTenant, String mdmsHost, String mdmsPath) {
-        String moduleName = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsAddressTypeModuleName()))
-                ? userConfiguration.getMdmsAddressTypeModuleName()
-                : "common-masters";
-        String masterName = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsAddressTypeMasterName()))
-                ? userConfiguration.getMdmsAddressTypeMasterName()
-                : "AddressType";
-        String filter = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsAddressTypeFilter()))
-                ? userConfiguration.getMdmsAddressTypeFilter()
-                : "[?(@.active==true)]";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getMdmsAddressTypeModuleName())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "mdms.address.type.moduleName is not configured");
+        }
+        String moduleName = userConfiguration.getMdmsAddressTypeModuleName();
+
+        if (StringUtils.isBlank(userConfiguration.getMdmsAddressTypeMasterName())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "mdms.address.type.masterName is not configured");
+        }
+        String masterName = userConfiguration.getMdmsAddressTypeMasterName();
+
+        if (StringUtils.isBlank(userConfiguration.getMdmsAddressTypeFilter())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "mdms.address.type.filter is not configured");
+        }
+        String filter = userConfiguration.getMdmsAddressTypeFilter();
 
         String url = mdmsHost.endsWith("/")
                 ? mdmsHost + mdmsPath

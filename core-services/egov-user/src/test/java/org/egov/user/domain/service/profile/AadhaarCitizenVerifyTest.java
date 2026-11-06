@@ -17,6 +17,8 @@ import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarSearchRequest;
+import org.egov.user.web.contract.profile.ProfileResponse;
 import org.egov.user.web.controller.ProfileController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,12 +28,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -105,6 +109,7 @@ class AadhaarCitizenVerifyTest {
         String userUuid = "existing-user-uuid-101";
 
         VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .fullAadhaarNumber(aadhaar)
                 .maskedAadhaar(maskedAadhaar)
                 .name("Rohan Sharma")
                 .gender(Gender.MALE)
@@ -124,7 +129,7 @@ class AadhaarCitizenVerifyTest {
                 .mobileNumber("9876543210")
                 .gender(Gender.MALE)
                 .dob(parseDate("1992-04-15"))
-                .aadhaarNumber(maskedAadhaar)
+                .aadhaarNumber(aadhaar)
                 .tenantId("pg")
                 .type(UserType.CITIZEN)
                 .active(true)
@@ -154,7 +159,7 @@ class AadhaarCitizenVerifyTest {
         assertEquals("Rohan Sharma", response.getUser().getName());
         assertEquals("9876543210", response.getUser().getMobileNumber());
         assertEquals(Gender.MALE.toString(), response.getUser().getGender());
-        assertEquals(maskedAadhaar, response.getUser().getAadhaarNumber());
+        assertEquals(aadhaar, response.getUser().getAadhaarNumber());
         assertEquals("UPYOG-FAM-2024-001", response.getUser().getFamilyId());
         assertTrue(response.getUser().getIsIdentityVerified());
 
@@ -166,10 +171,12 @@ class AadhaarCitizenVerifyTest {
     void testVerifyAadhaarExistingUser_FoundByMobile() {
         String refId = "ref-8822";
         String otp = "123456";
+        String aadhaar = "123456785544";
         String maskedAadhaar = "XXXXXXXX5544";
         String userUuid = "mobile-user-uuid-202";
 
         VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .fullAadhaarNumber(aadhaar)
                 .maskedAadhaar(maskedAadhaar)
                 .name("Priya Verma")
                 .gender(Gender.FEMALE)
@@ -189,6 +196,7 @@ class AadhaarCitizenVerifyTest {
                 .mobileNumber("9988776655")
                 .gender(Gender.FEMALE)
                 .dob(parseDate("1996-08-20"))
+                .aadhaarNumber(aadhaar)
                 .tenantId("pg")
                 .type(UserType.CITIZEN)
                 .active(true)
@@ -216,7 +224,7 @@ class AadhaarCitizenVerifyTest {
         assertNotNull(response.getUser());
         assertEquals("Priya Verma", response.getUser().getName());
         assertEquals("9988776655", response.getUser().getMobileNumber());
-        assertEquals(maskedAadhaar, response.getUser().getAadhaarNumber());
+        assertEquals(aadhaar, response.getUser().getAadhaarNumber());
         assertTrue(response.getUser().getIsIdentityVerified());
     }
 
@@ -450,6 +458,7 @@ class AadhaarCitizenVerifyTest {
                 .thenReturn(Collections.singletonList(existingDbUser));
 
         VerifiedAadhaarDemographics eKyc = VerifiedAadhaarDemographics.builder()
+                .fullAadhaarNumber("123456789988")
                 .maskedAadhaar("XXXXXXXX9988")
                 .name("Aadhaar Verified Citizen")
                 .gender(Gender.MALE)
@@ -469,7 +478,7 @@ class AadhaarCitizenVerifyTest {
         assertEquals("Aadhaar Verified Citizen", response.getUser().getName());
         assertEquals(Boolean.TRUE, response.getUser().getIsIdentityVerified());
         assertEquals("AADHAAR", response.getUser().getIdentityVerifiedSource());
-        assertEquals("XXXXXXXX9988", response.getUser().getAadhaarNumber());
+        assertEquals("123456789988", response.getUser().getAadhaarNumber());
 
         verify(userRepository, times(1)).update(any(User.class), any(User.class), eq(101L), eq(citizenUuid));
     }
@@ -725,5 +734,105 @@ class AadhaarCitizenVerifyTest {
         assertEquals("Aadhaar Mock User", response.getUser().getName());
         assertEquals(Boolean.TRUE, response.getUser().getIsIdentityVerified());
         assertEquals(mobile, eKyc.getMobileNumber());
+    }
+
+    @Test
+    @DisplayName("Should successfully search citizen profile using dedicated searchProfileByAadhaar")
+    void testSearchProfileByAadhaar_ExistingCitizen_ReturnsCitizenList() {
+        String aadhaar = "548796521458";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid("citizen-uuid-101")
+                .aadhaarNumber(aadhaar)
+                .active(true)
+                .type(UserType.CITIZEN)
+                .name("Aadhaar Citizen")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        AadhaarSearchRequest searchReq = AadhaarSearchRequest.builder()
+                .requestInfo(new RequestInfo())
+                .tenantId("pg")
+                .aadhaarNumber(aadhaar)
+                .build();
+
+        List<User> result = profileService.searchProfileByAadhaar(searchReq);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("citizen-uuid-101", result.get(0).getUuid());
+    }
+
+    @Test
+    @DisplayName("Should return empty list when citizen not found by Aadhaar")
+    void testSearchProfileByAadhaar_NotFound_ReturnsEmptyList() {
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.emptyList());
+
+        AadhaarSearchRequest searchReq = AadhaarSearchRequest.builder()
+                .requestInfo(new RequestInfo())
+                .tenantId("pg")
+                .aadhaarNumber("999988887777")
+                .build();
+
+        List<User> result = profileService.searchProfileByAadhaar(searchReq);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Dedicated /profile/aadhaar/_search endpoint should accept inter-service calls and return 200 OK")
+    void testSearchProfileByAadhaar_ControllerEndpoint_InterServiceAllowed_Returns200() {
+        ProfileController controller = new ProfileController(profileService);
+
+        String aadhaar = "548796521458";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid("citizen-uuid-101")
+                .aadhaarNumber(aadhaar)
+                .active(true)
+                .type(UserType.CITIZEN)
+                .name("Aadhaar Citizen")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        AadhaarSearchRequest searchReq = AadhaarSearchRequest.builder()
+                .requestInfo(new RequestInfo())
+                .tenantId("pg")
+                .aadhaarNumber(aadhaar)
+                .build();
+
+        HttpHeaders headers = new HttpHeaders(); // Internal microservice call has no x-pass-through-gateway
+
+        ResponseEntity<ProfileResponse> response = controller.searchByAadhaar(searchReq, headers);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().getUser().size());
+        assertEquals("citizen-uuid-101", response.getBody().getUser().get(0).getUuid());
+    }
+
+    @Test
+    @DisplayName("Dedicated /profile/aadhaar/_search endpoint should block external gateway callers with 401 Unauthorized")
+    void testSearchProfileByAadhaar_ControllerEndpoint_ExternalGatewayCall_ThrowsUnauthorized() {
+        ProfileController controller = new ProfileController(profileService);
+
+        AadhaarSearchRequest searchReq = AadhaarSearchRequest.builder()
+                .requestInfo(new RequestInfo())
+                .tenantId("pg")
+                .aadhaarNumber("548796521458")
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-pass-through-gateway", "true"); // Caller arrives from external gateway
+
+        CustomException ex = assertThrows(CustomException.class, () -> controller.searchByAadhaar(searchReq, headers));
+        assertEquals("UNAUTHORIZED_ACCESS", ex.getCode());
     }
 }

@@ -111,9 +111,10 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     @Override
     public Set<String> getAllowedRelationships(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
-        long ttlMillis = configuration.getRelationshipCacheTtl() != null
-                ? configuration.getRelationshipCacheTtl()
-                : 86400000L;
+        if (configuration == null || configuration.getRelationshipCacheTtl() == null) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.relationship.cache.ttl is not configured");
+        }
+        long ttlMillis = configuration.getRelationshipCacheTtl();
 
         CacheEntry entry = tenantRelationshipCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis)) {
@@ -187,6 +188,18 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
      * @return set of normalized relationship codes, or empty set on failure
      */
     private Set<String> fetchRelationshipsFromMdms(RequestInfo requestInfo, String stateTenant) {
+        if (configuration == null || StringUtils.isBlank(configuration.getMdmsHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.mdms.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getMdmsSearchPath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.mdms.search.path is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getMdmsFamilyModule())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.mdms.module is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getMdmsRelationshipMaster())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.mdms.relationship.master is not configured");
+        }
         String url = configuration.getMdmsHost() + configuration.getMdmsSearchPath();
         MdmsCriteriaReq request = buildMdmsRequest(requestInfo, stateTenant);
 
@@ -252,7 +265,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
      */
     private String resolveStateTenant(String tenantId) {
         if (StringUtils.isBlank(tenantId)) {
-            return "pg";
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "tenantId is mandatory");
         }
         return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
     }

@@ -90,6 +90,7 @@ public class AadhaarAuthStrategyTest {
                 .build();
 
         User inactiveCitizen = buildUser(201L, "uuid-inactive", "9999999999", "9999999999", "Aadhaar User", false);
+        inactiveCitizen.setAadhaarNumber("123456789012");
 
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(inactiveCitizen));
 
@@ -110,6 +111,7 @@ public class AadhaarAuthStrategyTest {
                 .build();
 
         User activeCitizen = buildUser(201L, "uuid-active", "9999999999", "9999999999", "Aadhaar User", true);
+        activeCitizen.setAadhaarNumber("123456789012");
 
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(activeCitizen));
         when(familyRestRepository.getActiveFamilyIdByUserUuid(eq("uuid-active"), any(), any())).thenReturn("FAM-AADHAAR-999");
@@ -120,5 +122,58 @@ public class AadhaarAuthStrategyTest {
         assertEquals("uuid-active", result.getUser().getUuid());
         assertEquals(Boolean.TRUE, result.getUser().getIsIdentityVerified());
         assertEquals("FAM-AADHAAR-999", result.getUser().getFamilyId());
+    }
+
+    @Test
+    @DisplayName("Should throw FIXED_OTP_NOT_CONFIGURED when fixed OTP is enabled but value is missing")
+    public void testLogin_WhenFixedOtpEnabledButValueMissing_ThrowsException() {
+        userConfiguration.setCitizenLoginPasswordOtpFixedValue(null);
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.AADHAAR_NUMBER)
+                .aadhaarNumber("123456789012")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> aadhaarAuthStrategy.authenticateAndResolveUser(request));
+        assertEquals(UserConstants.ERROR_FIXED_OTP_NOT_CONFIGURED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should throw INVALID_REQUEST when requester service host is missing for live OTP")
+    public void testLogin_WhenRequesterHostMissing_ThrowsException() {
+        userConfiguration.setCitizenLoginPasswordOtpFixedEnabled(false);
+        userConfiguration.setRequesterServiceHost(null);
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.AADHAAR_NUMBER)
+                .aadhaarNumber("123456789012")
+                .otp("654321")
+                .tenantId("pg.citya")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> aadhaarAuthStrategy.authenticateAndResolveUser(request));
+        assertEquals(UserConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals("requester.service.host is not configured", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should throw INVALID_REQUEST when requester verify endpoint is missing for live OTP")
+    public void testLogin_WhenRequesterEndpointMissing_ThrowsException() {
+        userConfiguration.setCitizenLoginPasswordOtpFixedEnabled(false);
+        userConfiguration.setRequesterServiceHost("http://localhost:8280/");
+        userConfiguration.setRequesterAadhaarVerifyEndpoint(null);
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.AADHAAR_NUMBER)
+                .aadhaarNumber("123456789012")
+                .otp("654321")
+                .tenantId("pg.citya")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> aadhaarAuthStrategy.authenticateAndResolveUser(request));
+        assertEquals(UserConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals("requester.aadhaar.verify.endpoint is not configured", ex.getMessage());
     }
 }

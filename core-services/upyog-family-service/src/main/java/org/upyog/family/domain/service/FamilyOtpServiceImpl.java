@@ -183,7 +183,11 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         }
 
         boolean isValid = otpClient.validateOtp(
-                headProfile.getMobileNumber(), request.getOtp(), request.getTenantId(), request.getRequestInfo());
+                headProfile.getMobileNumber(),
+                request.getOtp(),
+                request.getTenantId(),
+                request.getReferenceId(),
+                request.getRequestInfo());
         if (!isValid) {
             throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
                     "Invalid or expired OTP entered.");

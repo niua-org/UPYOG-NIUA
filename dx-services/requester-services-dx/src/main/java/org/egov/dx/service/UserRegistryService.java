@@ -40,4 +40,15 @@ public interface UserRegistryService {
      * @return the existing or newly created citizen UUID
      */
     String resolveOrCreateUserUuid(String aadhaarNumber, UserDemographics demographics, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Marks an existing citizen as identity-verified after successful Aadhaar e-KYC OTP verification.
+     * Persists full 12-digit Aadhaar via egov-user profile service (inter-service).
+     *
+     * @param userUuid      citizen UUID to update
+     * @param aadhaarNumber verified 12-digit Aadhaar number
+     * @param tenantId      tenant identifier
+     * @param requestInfo   request context
+     */
+    void markCitizenAadhaarVerifiedAfterEkyc(String userUuid, String aadhaarNumber, String tenantId, RequestInfo requestInfo);
 }

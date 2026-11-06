@@ -5,13 +5,19 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.util.Configurations;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Map;
+
+import org.egov.tracer.model.CustomException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -31,9 +37,11 @@ public class UserRegistryServiceImplTest {
         when(configurations.getUserHost()).thenReturn("http://localhost:8085/");
 
         userRegistryService = new UserRegistryServiceImpl(restTemplate, configurations, objectMapper);
+        ReflectionTestUtils.setField(userRegistryService, "aadhaarSearchPath", "/user/profile/aadhaar/_search");
         ReflectionTestUtils.setField(userRegistryService, "profileSearchPath", "/user/profile/_search");
         ReflectionTestUtils.setField(userRegistryService, "userSearchPath", "/user/_search");
         ReflectionTestUtils.setField(userRegistryService, "userCreatePath", "/user/users/_createnovalidate");
+        ReflectionTestUtils.setField(userRegistryService, "markVerifiedPath", "/user/profile/aadhaar/_markVerifiedAfterEkyc");
     }
 
     @Test
@@ -44,7 +52,7 @@ public class UserRegistryServiceImplTest {
     }
 
     @Test
-    void testSearchUserUuidByAadhaar_MatchesVerifiedCitizen_ReturnsUuid() {
+    void testSearchUserUuidByAadhaar_MatchesFullAadhaar_ReturnsUuid() {
         String mockResponse = "{\n" +
                 "  \"responseInfo\": {\"status\": \"SUCCESS\"},\n" +
                 "  \"user\": [\n" +
@@ -52,6 +60,7 @@ public class UserRegistryServiceImplTest {
                 "      \"id\": 9154,\n" +
                 "      \"uuid\": \"0b90ae1c-7506-4114-b409-d48093e5db45\",\n" +
                 "      \"active\": true,\n" +
+                "      \"aadhaarNumber\": \"548796521458\",\n" +
                 "      \"isIdentityVerified\": true\n" +
                 "    }\n" +
                 "  ]\n" +
@@ -62,19 +71,78 @@ public class UserRegistryServiceImplTest {
 
         String uuid = userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo());
         assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", uuid);
+
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).postForObject(anyString(), captor.capture(), eq(String.class));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) captor.getValue().getBody();
+        assertEquals("548796521458", body.get("aadhaarNumber"));
     }
 
     @Test
-    void testSearchUserUuidByAadhaar_EmptyUserList_RetriesMasked_ReturnsNullIfNotFound() {
-        String emptyResponse = "{\"responseInfo\":{\"status\":\"SUCCESS\"},\"user\":[]}";
+    void testSearchUserUuidByAadhaar_LastFourOnlyMaskedRecord_DoesNotMatch() {
+        String mockResponse = "{\n" +
+                "  \"responseInfo\": {\"status\": \"SUCCESS\"},\n" +
+                "  \"user\": [\n" +
+                "    {\n" +
+                "      \"uuid\": \"legacy-user\",\n" +
+                "      \"active\": true,\n" +
+                "      \"aadhaarNumber\": \"XXXXXXXX1458\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
 
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(String.class)))
-                .thenReturn(emptyResponse);
+                .thenReturn(mockResponse);
 
         String uuid = userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo());
         assertNull(uuid);
-        // Verified it tried both raw and masked
-        verify(restTemplate, atLeast(2)).postForObject(anyString(), any(HttpEntity.class), eq(String.class));
+    }
+
+    @Test
+    void testResolveOrCreateUserUuid_CitizenDoesNotExist_AutoProvisionsWithoutIdentityVerifiedFlag() {
+        String emptySearchResponse = "{\"responseInfo\":{\"status\":\"SUCCESS\"},\"user\":[]}";
+        String createResponse = "{\n" +
+                "  \"responseInfo\": {\"status\": \"200\"},\n" +
+                "  \"user\": [\n" +
+                "    {\n" +
+                "      \"uuid\": \"newly-created-citizen-uuid-456\",\n" +
+                "      \"active\": true\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        when(restTemplate.postForObject(contains("_search"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(emptySearchResponse);
+        when(restTemplate.postForObject(contains("_createnovalidate"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(createResponse);
+
+        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+                .name("New Citizen")
+                .build();
+
+        String uuid = userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo());
+        assertEquals("newly-created-citizen-uuid-456", uuid);
+
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).postForObject(contains("_createnovalidate"), captor.capture(), eq(String.class));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) captor.getValue().getBody();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> user = (Map<String, Object>) body.get("user");
+        assertEquals("548796521458", user.get("aadhaarNumber"));
+        assertNull(user.get("isIdentityVerified"));
+    }
+
+    @Test
+    void testResolveOrCreateUserUuid_InvalidAadhaar_ThrowsCustomException() {
+        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+                .name("Citizen")
+                .build();
+
+        assertThrows(CustomException.class, () ->
+                userRegistryService.resolveOrCreateUserUuid("invalid", demographics, "pg.citya", new RequestInfo()));
+        verifyNoInteractions(restTemplate);
     }
 
     @Test
@@ -87,63 +155,33 @@ public class UserRegistryServiceImplTest {
     }
 
     @Test
-    void testResolveOrCreateUserUuid_CitizenExists_ReturnsExistingUuid() {
-        String mockSearchResponse = "{\n" +
-                "  \"responseInfo\": {\"status\": \"SUCCESS\"},\n" +
-                "  \"user\": [\n" +
-                "    {\n" +
-                "      \"id\": 9154,\n" +
-                "      \"uuid\": \"existing-citizen-uuid-123\",\n" +
-                "      \"active\": true,\n" +
-                "      \"isIdentityVerified\": true\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
-
-        when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(String.class)))
-                .thenReturn(mockSearchResponse);
-
-        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
-                .name("Existing Citizen")
-                .dob("1990-01-01")
-                .gender("M")
-                .build();
-
-        String uuid = userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo());
-        assertEquals("existing-citizen-uuid-123", uuid);
+    void testSearchUserUuidByAadhaar_MissingUserHost_ThrowsCustomException() {
+        when(configurations.getUserHost()).thenReturn(null);
+        assertThrows(CustomException.class, () ->
+                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo()));
     }
 
     @Test
-    void testResolveOrCreateUserUuid_CitizenDoesNotExist_AutoProvisionsAndReturnsNewUuid() {
-        String emptySearchResponse = "{\"responseInfo\":{\"status\":\"SUCCESS\"},\"user\":[]}";
-        String createResponse = "{\n" +
-                "  \"responseInfo\": {\"status\": \"200\"},\n" +
-                "  \"user\": [\n" +
-                "    {\n" +
-                "      \"id\": 9219,\n" +
-                "      \"uuid\": \"newly-created-citizen-uuid-456\",\n" +
-                "      \"active\": true,\n" +
-                "      \"isIdentityVerified\": true\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+    void testSearchUserUuidByAadhaar_MissingSearchPath_ThrowsCustomException() {
+        ReflectionTestUtils.setField(userRegistryService, "aadhaarSearchPath", "");
+        assertThrows(CustomException.class, () ->
+                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo()));
+    }
 
-        when(restTemplate.postForObject(contains("_search"), any(HttpEntity.class), eq(String.class)))
-                .thenReturn(emptySearchResponse);
-        when(restTemplate.postForObject(contains("_createnovalidate"), any(HttpEntity.class), eq(String.class)))
-                .thenReturn(createResponse);
-
+    @Test
+    void testResolveOrCreateUserUuid_MissingCreatePath_ThrowsCustomException() {
+        ReflectionTestUtils.setField(userRegistryService, "userCreatePath", " ");
         org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
-                .name("New Citizen")
-                .dob("1995-05-15")
-                .gender("M")
-                .fullAddress("123, Model Town, City, State, 143001")
-                .city("Amritsar")
-                .pincode("143001")
+                .name("Citizen")
                 .build();
+        assertThrows(CustomException.class, () ->
+                userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo()));
+    }
 
-        String uuid = userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo());
-        assertEquals("newly-created-citizen-uuid-456", uuid);
-        verify(restTemplate, times(1)).postForObject(contains("_createnovalidate"), any(HttpEntity.class), eq(String.class));
+    @Test
+    void testMarkCitizenAadhaarVerifiedAfterEkyc_MissingMarkVerifiedPath_ThrowsCustomException() {
+        ReflectionTestUtils.setField(userRegistryService, "markVerifiedPath", null);
+        assertThrows(CustomException.class, () ->
+                userRegistryService.markCitizenAadhaarVerifiedAfterEkyc("uuid-1", "548796521458", "pg.citya", new RequestInfo()));
     }
 }

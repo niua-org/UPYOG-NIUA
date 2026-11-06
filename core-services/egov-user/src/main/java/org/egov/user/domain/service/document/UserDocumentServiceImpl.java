@@ -6,6 +6,7 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.persistence.repository.FileStoreRepository;
+import org.egov.user.persistence.repository.IdGenRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.document.UserDocumentRequest;
@@ -30,6 +31,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
     private final UserRepository userRepository;
     private final FileStoreRepository fileStoreRepository;
     private final UserConfiguration userConfiguration;
+    private final IdGenRepository idGenRepository;
 
     /**
      * Primary constructor injecting repositories and configuration properties.
@@ -38,20 +40,38 @@ public class UserDocumentServiceImpl implements UserDocumentService {
      * @param userRepository      repository for user lookups
      * @param fileStoreRepository repository for file store download URL resolution
      * @param userConfiguration   application configuration properties
+     * @param idGenRepository     repository for generating formatted document IDs via idgen
      */
     @Autowired
     public UserDocumentServiceImpl(UserDocumentRepository documentRepository,
                                   UserRepository userRepository,
                                   FileStoreRepository fileStoreRepository,
-                                  @Autowired(required = false) UserConfiguration userConfiguration) {
+                                  @Autowired(required = false) UserConfiguration userConfiguration,
+                                  @Autowired(required = false) IdGenRepository idGenRepository) {
         this.documentRepository = documentRepository;
         this.userRepository = userRepository;
         this.fileStoreRepository = fileStoreRepository;
         this.userConfiguration = userConfiguration;
+        this.idGenRepository = idGenRepository;
     }
 
     /**
-     * Testing constructor without userConfiguration.
+     * Constructor without idGenRepository.
+     *
+     * @param documentRepository  repository for user document persistence
+     * @param userRepository      repository for user lookups
+     * @param fileStoreRepository repository for file store download URL resolution
+     * @param userConfiguration   application configuration properties
+     */
+    public UserDocumentServiceImpl(UserDocumentRepository documentRepository,
+                                  UserRepository userRepository,
+                                  FileStoreRepository fileStoreRepository,
+                                  UserConfiguration userConfiguration) {
+        this(documentRepository, userRepository, fileStoreRepository, userConfiguration, null);
+    }
+
+    /**
+     * Testing constructor without userConfiguration and idGenRepository.
      *
      * @param documentRepository  repository for user document persistence
      * @param userRepository      repository for user lookups
@@ -60,7 +80,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
     public UserDocumentServiceImpl(UserDocumentRepository documentRepository,
                                   UserRepository userRepository,
                                   FileStoreRepository fileStoreRepository) {
-        this(documentRepository, userRepository, fileStoreRepository, null);
+        this(documentRepository, userRepository, fileStoreRepository, null, null);
     }
 
     @Override
@@ -96,6 +116,9 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             }
 
             validateDocumentAttributes(doc);
+            if (StringUtils.isBlank(doc.getId())) {
+                doc.setId(generateDocumentIdOrDefault(request.getRequestInfo(), defaultTenant));
+            }
             doc.setCreatedBy(operatorId);
             doc.setLastModifiedBy(operatorId);
             doc.setDocumentUid(maskSensitiveUid(doc.getDocumentType(), doc.getDocumentUid()));
@@ -145,7 +168,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             doc.setTenantId(existingDoc.getTenantId());
         }
         validateDocumentAttributes(doc);
-        doc.setId(UUID.randomUUID().toString());
+        doc.setId(generateDocumentIdOrDefault(request.getRequestInfo(), doc.getTenantId()));
         doc.setUserId(existingDoc.getUserId());
         String userUuid = resolveUserUuid(request);
         if (StringUtils.isBlank(userUuid)) {
@@ -406,6 +429,27 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         return (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getId() != null)
                 ? requestInfo.getUserInfo().getId()
                 : fallback;
+    }
+
+    /**
+     * Resolves an IDGen-formatted user document ID or falls back to standard UUID if IDGen is unconfigured or unavailable.
+     *
+     * @param requestInfo request context
+     * @param tenantId    tenant identifier
+     * @return generated document identifier
+     */
+    private String generateDocumentIdOrDefault(RequestInfo requestInfo, String tenantId) {
+        if (idGenRepository != null) {
+            try {
+                String generatedId = idGenRepository.generateUserDocumentId(requestInfo, tenantId);
+                if (StringUtils.isNotBlank(generatedId)) {
+                    return generatedId;
+                }
+            } catch (Exception e) {
+                log.warn("[USER-DOC-SERVICE] IdGen failed to generate user document ID, falling back to UUID: {}", e.getMessage());
+            }
+        }
+        return UUID.randomUUID().toString();
     }
 
     /**

@@ -108,6 +108,9 @@ public class UserService {
     @Value("${egov.user.host}")
     private String userHost;
 
+    @Value("${egov.user.oauth.token.endpoint}")
+    private String userOauthTokenEndpoint;
+
     @Value("${account.unlock.cool.down.period.minutes}")
     private Long accountUnlockCoolDownPeriod;
 
@@ -477,6 +480,10 @@ public class UserService {
     public User createUser(User user, RequestInfo requestInfo) {
         validateMobileAndAccountRules(user);
 
+        user.setIsIdentityVerified(Boolean.FALSE);
+        user.setIdentityVerifiedDate(null);
+        user.setIdentityVerifiedSource(null);
+
         user.setUuid(UUID.randomUUID().toString());
         user.validateNewUser(createUserValidateName);
         conditionallyValidateOtp(user);
@@ -617,7 +624,18 @@ public class UserService {
             map.add("isInternal", "true");
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-            String tokenUrl = (userHost.endsWith("/") ? userHost.substring(0, userHost.length() - 1) : userHost) + "/user/oauth/token";
+            if (StringUtils.isBlank(userHost)) {
+                throw new CustomException("CONFIG_ERROR", "egov.user.host is not configured");
+            }
+            if (StringUtils.isBlank(userOauthTokenEndpoint)) {
+                throw new CustomException("CONFIG_ERROR", "egov.user.oauth.token.endpoint is not configured");
+            }
+            String host = userHost.trim();
+            if (!host.endsWith("/")) {
+                host += "/";
+            }
+            String endpoint = userOauthTokenEndpoint.trim();
+            String tokenUrl = host + (endpoint.startsWith("/") ? endpoint.substring(1) : endpoint);
             return restTemplate.postForEntity(tokenUrl, request, Map.class).getBody();
 
         } catch (Exception e) {
