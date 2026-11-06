@@ -31,19 +31,9 @@ const GCAcknowledgement = () => {
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const { tenants = [] } = storeData || {};
 
-  const appList =
-    state?.data?.garbageApplications ||
-    state?.data?.garbageAccounts ||
-    state?.data?.GarbageApplications ||
-    (Array.isArray(state?.data) ? state.data : state?.data ? [state.data] : []);
+  const appList = state?.data?.garbageApplications || [];
 
-  const getAppNo = (app) =>
-    app?.applicationNo ||
-    app?.grbgApplication?.applicationNo ||
-    app?.garbageAccount?.grbgApplication?.applicationNo ||
-    app?.grbgApplicationNumber ||
-    app?.garbageNo ||
-    "";
+  const getAppNo = (app) => app?.applicationNo || "";
 
   const primaryApp = appList[0] || {};
   const primaryAppNo = getAppNo(primaryApp);

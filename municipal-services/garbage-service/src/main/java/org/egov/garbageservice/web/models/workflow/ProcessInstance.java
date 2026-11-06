@@ -3,7 +3,7 @@ package org.egov.garbageservice.web.models.workflow;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.egov.common.contract.request.User;
-import org.egov.garbageservice.web.models.AuditDetails;
+import org.egov.garbageservice.web.models.garbage.AuditDetails;
 import org.egov.tracer.annotations.CustomSafeHtml;
 
 import java.util.ArrayList;

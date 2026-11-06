@@ -1,18 +1,20 @@
 package org.egov.garbageservice.service;
 
+import org.egov.garbageservice.web.models.garbage.GarbageApplication;
+import org.egov.garbageservice.web.models.garbage.GarbageRequest;
+import org.egov.garbageservice.web.models.garbage.GarbageBillGenerate;
+import org.egov.garbageservice.web.models.garbage.AuditDetails;
+import org.egov.garbageservice.repository.GarbageRepository;
+
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.garbageservice.config.GarbageServiceConfig;
-import org.egov.garbageservice.web.models.bill.Demand;
-import org.egov.garbageservice.web.models.bill.DemandDetail;
-import org.egov.garbageservice.web.models.AmountCalculationResult;
-import org.egov.garbageservice.web.models.GarbageAccount;
-import org.egov.garbageservice.web.models.GarbageAccountRequest;
-import org.egov.garbageservice.web.models.SchedulerLog;
+import org.egov.garbageservice.web.models.billing.Demand;
+import org.egov.garbageservice.web.models.billing.DemandDetail;
+import org.egov.garbageservice.web.models.garbage.AmountCalculationResult;
 import org.egov.garbageservice.kafka.Producer;
 import org.egov.garbageservice.repository.DemandRepository;
-import org.egov.garbageservice.repository.GarbageAccountRepository;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.lang3.StringUtils;
@@ -37,9 +39,7 @@ public class DemandService {
     @Autowired
     private GarbageCalculationService calculationService;
 
-    @Autowired
-    @Qualifier("billDemandRepository")
-    private org.egov.garbageservice.web.models.bill.DemandRepository billDemandRepository;
+
 
     @Autowired
     private DemandRepository demandRepository;
@@ -54,7 +54,7 @@ public class DemandService {
     private MdmsUtil mdmsUtil;
 
     @Autowired
-    private GarbageAccountRepository garbageAccountRepository;
+    private GarbageRepository garbageRepository;
 
     /**
      * Generates a monthly billing demand for the specified garbage account.
@@ -77,10 +77,10 @@ public class DemandService {
      */
 
     public void generateDemand(RequestInfo requestInfo,
-                               GarbageAccount garbageAccount,
+                               GarbageApplication garbageApplication,
                                LocalDate billingDate) {
 
-        String consumerCode = garbageAccount.getGrbgApplicationNumber();
+        String consumerCode = garbageApplication.getApplicationNo() != null ? garbageApplication.getApplicationNo() : garbageApplication.getGrbgApplicationNumber();
 
         LocalDate periodFrom = billingDate;
         LocalDate periodTo = billingDate.plusMonths(1).minusDays(1);
@@ -95,7 +95,7 @@ public class DemandService {
         List<Demand> existingDemands =
                 demandRepository.searchAllDemands(
                         requestInfo,
-                        garbageAccount.getTenantId(),
+                        garbageApplication.getTenantId(),
                         consumerCode,
                         config.getBusinessService(),
                         false);
@@ -112,13 +112,13 @@ public class DemandService {
                     consumerCode,
                     periodFrom,
                     periodTo);
-            updateDisconnectionHistory(garbageAccount, userUuid, requestInfo);
-            garbageAccount.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+            updateDisconnectionHistory(garbageApplication, userUuid, requestInfo);
+            garbageApplication.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
             return;
         }
 
         AmountCalculationResult currentAmount =
-                calculationService.calculateAmount(requestInfo, garbageAccount);
+                calculationService.calculateAmount(requestInfo, garbageApplication);
 
         log.info(
                 "Generating demand for garbage account {}, period {} to {}, amount {}",
@@ -131,7 +131,7 @@ public class DemandService {
         List<Demand> unpaidDemands =
                 demandRepository.searchAllDemands(
                         requestInfo,
-                        garbageAccount.getTenantId(),
+                        garbageApplication.getTenantId(),
                         consumerCode,
                         config.getBusinessService(),
                         true);
@@ -154,7 +154,7 @@ public class DemandService {
             rentalFeeAmount =
                     previousUnpaid.add(currentAmount.getPayableAmount());
 
-            BigDecimal penaltyRate = mdmsUtil.getPenaltyRate(requestInfo, garbageAccount.getTenantId());
+            BigDecimal penaltyRate = mdmsUtil.getPenaltyRate(requestInfo, garbageApplication.getTenantId());
             penaltyAmount =
                     previousUnpaid
                             .multiply(penaltyRate)
@@ -179,10 +179,10 @@ public class DemandService {
 
 
         User payer = User.builder()
-                .name(garbageAccount.getName())
-                .emailId(garbageAccount.getEmailId())
-                .mobileNumber(garbageAccount.getMobileNumber())
-                .tenantId(garbageAccount.getTenantId())
+                .name(garbageApplication.getName())
+                .emailId(garbageApplication.getEmailId())
+                .mobileNumber(garbageApplication.getMobileNumber())
+                .tenantId(garbageApplication.getTenantId())
                 .build();
 
         List<DemandDetail> demandDetails =
@@ -193,7 +193,7 @@ public class DemandService {
                         .taxHeadMasterCode(ServiceConstants.GRBG_TAX_HEAD_CODE)
                         .taxAmount(currentAmount.getTotalAmount().setScale(0, RoundingMode.HALF_UP))
                         .collectionAmount(BigDecimal.ZERO)
-                        .tenantId(garbageAccount.getTenantId())
+                        .tenantId(garbageApplication.getTenantId())
                         .build()
         );
 
@@ -204,7 +204,7 @@ public class DemandService {
                             .taxHeadMasterCode(ServiceConstants.GRBG_PENALTY_FEE)
                             .taxAmount(penaltyAmount.setScale(0, RoundingMode.HALF_UP))
                             .collectionAmount(BigDecimal.ZERO)
-                            .tenantId(garbageAccount.getTenantId())
+                            .tenantId(garbageApplication.getTenantId())
                             .build()
             );
         }
@@ -215,7 +215,7 @@ public class DemandService {
                             .taxHeadMasterCode(ServiceConstants.GRBG_REBATE_FEE)
                             .taxAmount(currentAmount.getRebateAmount().negate().setScale(0, RoundingMode.HALF_UP))
                             .collectionAmount(BigDecimal.ZERO)
-                            .tenantId(garbageAccount.getTenantId())
+                            .tenantId(garbageApplication.getTenantId())
                             .build()
             );
         }
@@ -224,7 +224,7 @@ public class DemandService {
                 .consumerCode(consumerCode)
                 .demandDetails(demandDetails)
                 .payer(payer)
-                .tenantId(garbageAccount.getTenantId())
+                .tenantId(garbageApplication.getTenantId())
                 .taxPeriodFrom(convertToTimestamp(periodFrom))
                 .taxPeriodTo(convertToTimestamp(periodTo))
                 .consumerType(config.getModuleName())
@@ -232,36 +232,31 @@ public class DemandService {
                 .build();
 
         if (!demandsToUpdate.isEmpty()) {
-            billDemandRepository.updateDemand(
+            demandRepository.updateDemand(
                     requestInfo,
                     demandsToUpdate);
         }
 
-        billDemandRepository.saveDemand(
+        demandRepository.saveDemand(
                 requestInfo,
                 Collections.singletonList(demand));
 
-        SchedulerLog schedulerLog =
-                SchedulerLog.builder()
+        GarbageBillGenerate billLog =
+                GarbageBillGenerate.builder()
                         .id(UUID.randomUUID().toString())
-                        .garbageAccountId(consumerCode)
-                        .tenantId(garbageAccount.getTenantId())
+                        .garbageId(consumerCode)
+                        .tenantId(garbageApplication.getTenantId())
                         .billingDate(billingDate)
                         .billingPeriodFrom(convertToTimestamp(periodFrom))
                         .billingPeriodTo(convertToTimestamp(periodTo))
                         .amount(finalAmount)
-                        .penaltyAmount(penaltyAmount)
+                        .penaltyAmount(penaltyAmount != null ? penaltyAmount : BigDecimal.ZERO)
                         .paymentType(ServiceConstants.PAYMENT_TYPE_FULL)
                         .status(ServiceConstants.STATUS_PENDING)
-                        .createdBy(userUuid)
-                        .createdTime(now)
-                        .lastModifiedBy(userUuid)
-                        .lastModifiedTime(now)
+                        .auditDetails(AuditDetails.builder().createdBy(userUuid).createdTime(now).lastModifiedBy(userUuid).lastModifiedTime(now).build())
                         .build();
 
-        producer.push(
-                config.getSchedulerLogTopic(),
-                Map.of("schedulerLog", schedulerLog));
+        garbageRepository.saveBillGenerate(billLog);
 
         /**
          * Post-demand account synchronization:
@@ -272,24 +267,24 @@ public class DemandService {
          */
         try {
             // 1. Set billing attributes
-            garbageAccount.setDueDate(periodTo);
-            garbageAccount.setPaymentStatus(ServiceConstants.STATUS_PENDING_FOR_PAYMENT);
-            garbageAccount.setPaymentAmount(finalAmount);
-            garbageAccount.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+            garbageApplication.setDueDate(periodTo);
+            garbageApplication.setPaymentStatus(ServiceConstants.STATUS_PENDING_FOR_PAYMENT);
+            garbageApplication.setPaymentAmount(finalAmount);
+            garbageApplication.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
 
             // 2. If resuming from disconnection, update disconnection history and reactivate service status
-            updateDisconnectionHistory(garbageAccount, userUuid, requestInfo);
+            updateDisconnectionHistory(garbageApplication, userUuid, requestInfo);
 
-            // 3. Update audit details and push account update to Kafka
-            if (garbageAccount.getAuditDetails() != null) {
-                garbageAccount.getAuditDetails().setLastModifiedBy(userUuid);
-                garbageAccount.getAuditDetails().setLastModifiedTime(Instant.now().toEpochMilli());
+            // 3. Update audit details and push application update to Kafka
+            if (garbageApplication.getAuditDetails() != null) {
+                garbageApplication.getAuditDetails().setLastModifiedBy(userUuid);
+                garbageApplication.getAuditDetails().setLastModifiedTime(Instant.now().toEpochMilli());
             } else {
-                garbageAccount.setAuditDetails(GrbgUtils.getAuditDetails(userUuid, false));
+                garbageApplication.setAuditDetails(GrbgUtils.getAuditDetails(userUuid, false));
             }
-            GarbageAccountRequest garbageAccountRequest = new GarbageAccountRequest(requestInfo, List.of(garbageAccount), false, false);
-            garbageAccountRepository.save(config.getUpdateGarbageAccountTopic(), garbageAccountRequest);
-            log.info("Updated Garbage Account due date to {}, payment status to PENDING_FOR_PAYMENT, payment amount to {} for Garbage Account Id: {}", periodTo, finalAmount, consumerCode);
+            GarbageRequest garbageRequest = new GarbageRequest(requestInfo, List.of(garbageApplication));
+            garbageRepository.updateGarbageApplication(garbageRequest);
+            log.info("Updated Garbage Application due date to {}, payment status to PENDING_FOR_PAYMENT, payment amount to {} for Application No: {}", periodTo, finalAmount, consumerCode);
         } catch (Exception e) {
             log.error("Failed to update allotment due date, payment status and payment amount on demand generation: {}", e.getMessage(), e);
         }
@@ -311,10 +306,10 @@ public class DemandService {
      * @param userUuid       the UUID of the user triggering the update
      * @param requestInfo    the {@link RequestInfo} providing request metadata and user context
      */
-    public void updateDisconnectionHistory(GarbageAccount garbageAccount, String userUuid, RequestInfo requestInfo) {
+    public void updateDisconnectionHistory(GarbageApplication garbageApplication, String userUuid, RequestInfo requestInfo) {
         try {
-            if (garbageAccount != null && garbageAccount.getAdditionalDetail() != null && garbageAccount.getAdditionalDetail().isObject()) {
-                ObjectNode addDetail = (ObjectNode) garbageAccount.getAdditionalDetail();
+            if (garbageApplication != null && garbageApplication.getAdditionalDetail() != null && garbageApplication.getAdditionalDetail().isObject()) {
+                ObjectNode addDetail = (ObjectNode) garbageApplication.getAdditionalDetail();
                 String dDate = addDetail.hasNonNull(GrbgConstants.DISCONNECTION_DATE)
                         ? addDetail.get(GrbgConstants.DISCONNECTION_DATE).asText() : null;
                 String dReason = addDetail.hasNonNull(GrbgConstants.DISCONNECTION_REASON)
@@ -333,22 +328,22 @@ public class DemandService {
 
                     addDetail.remove(GrbgConstants.DISCONNECTION_DATE);
                     addDetail.remove(GrbgConstants.DISCONNECTION_REASON);
-                    garbageAccount.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+                    garbageApplication.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
 
-                    if (garbageAccount.getAuditDetails() != null) {
-                        garbageAccount.getAuditDetails().setLastModifiedBy(userUuid);
-                        garbageAccount.getAuditDetails().setLastModifiedTime(Instant.now().toEpochMilli());
+                    if (garbageApplication.getAuditDetails() != null) {
+                        garbageApplication.getAuditDetails().setLastModifiedBy(userUuid);
+                        garbageApplication.getAuditDetails().setLastModifiedTime(Instant.now().toEpochMilli());
                     } else {
-                        garbageAccount.setAuditDetails(GrbgUtils.getAuditDetails(userUuid, false));
+                        garbageApplication.setAuditDetails(GrbgUtils.getAuditDetails(userUuid, false));
                     }
-                    GarbageAccountRequest garbageAccountRequest = new GarbageAccountRequest(requestInfo, List.of(garbageAccount), false, false);
-                    garbageAccountRepository.save(config.getUpdateGarbageAccountTopic(), garbageAccountRequest);
-                    log.info("Updated disconnection history for Garbage Account: {}", garbageAccount.getGrbgApplicationNumber());
+                    GarbageRequest garbageRequest = new GarbageRequest(requestInfo, List.of(garbageApplication));
+                    garbageRepository.updateGarbageApplication(garbageRequest);
+                    log.info("Updated disconnection history for Garbage Application: {}", garbageApplication.getApplicationNo());
                 }
             }
         } catch (Exception e) {
             log.error("Failed to update disconnection history for Garbage Account {}: {}",
-                    garbageAccount != null ? garbageAccount.getGrbgApplicationNumber() : "null", e.getMessage(), e);
+                    garbageApplication != null ? (garbageApplication.getApplicationNo() != null ? garbageApplication.getApplicationNo() : garbageApplication.getGrbgApplicationNumber()) : "null", e.getMessage(), e);
         }
     }
 
@@ -362,4 +357,7 @@ public class DemandService {
     private Long convertToTimestamp(LocalDate date) {
         return date.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
+
+
+
 }

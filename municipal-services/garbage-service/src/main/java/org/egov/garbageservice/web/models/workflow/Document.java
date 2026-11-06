@@ -2,14 +2,14 @@ package org.egov.garbageservice.web.models.workflow;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-import org.egov.garbageservice.web.models.AuditDetails;
+import org.egov.garbageservice.web.models.garbage.AuditDetails;
 import org.egov.tracer.annotations.CustomSafeHtml;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @EqualsAndHashCode(of = {"id"})
 /**
  * Contract model for a file attached to a workflow {@link ProcessInstance}.

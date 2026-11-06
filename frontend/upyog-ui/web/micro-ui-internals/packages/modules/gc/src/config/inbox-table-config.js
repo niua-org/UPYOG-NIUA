@@ -35,55 +35,60 @@ export const TableConfig = (t) => ({
       {
         Header: t("GC_APPLICATION_NUMBER_LABEL"),
         Cell: ({ row }) => {
+          const appNo = row.original.searchData?.applicationNo || row.original.searchData?.grbgApplicationNumber;
           return (
             <div>
               <span className="link">
-                <Link to={`${props.parentRoute}/application-details/` + `${row.original.searchData?.grbgApplicationNumber}`}>
-                  {row.original.searchData?.grbgApplicationNumber}
+                <Link to={`${props.parentRoute}/application-details/` + `${encodeURIComponent(appNo)}`}>
+                  {appNo}
                 </Link>
               </span>
             </div>
           );
         },
-        mobileCell: (original) => GetMobCell(original.searchData?.grbgApplicationNumber),
+        mobileCell: (original) => GetMobCell(original.searchData?.applicationNo || original.searchData?.grbgApplicationNumber),
       },
       {
         Header: t("GC_APPLICANT_NAME"),
         Cell: ({ row }) => {
-          return GetCell(row.original.searchData?.name || t("CS_NA"));
+          const name = row.original.searchData?.applicantDetails?.[0]?.name || row.original.searchData?.name;
+          return GetCell(name || t("CS_NA"));
         },
-        mobileCell: (original) => GetMobCell(original.searchData?.name || t("CS_NA")),
+        mobileCell: (original) => GetMobCell(original.searchData?.applicantDetails?.[0]?.name || original.searchData?.name || t("CS_NA")),
       },
       {
         Header: t("GC_MOBILE_NUMBER"),
-        Cell: ({ row }) => GetCell(row.original.searchData?.mobileNumber || t("CS_NA")),
-        mobileCell: (original) => GetMobCell(original.searchData?.mobileNumber || t("CS_NA")),
+        Cell: ({ row }) => {
+          const mobile = row.original.searchData?.applicantDetails?.[0]?.mobileNumber || row.original.searchData?.mobileNumber;
+          return GetCell(mobile || t("CS_NA"));
+        },
+        mobileCell: (original) => GetMobCell(original.searchData?.applicantDetails?.[0]?.mobileNumber || original.searchData?.mobileNumber || t("CS_NA")),
       },
       {
         Header: t("ES_INBOX_LOCALITY"),
         Cell: ({ row }) => {
-          const locality = row.original.searchData?.addresses?.[0]?.additionalDetail?.locality;
+          const locality = row.original.searchData?.propertyLocation?.locality || row.original.searchData?.addresses?.[0]?.additionalDetail?.locality;
           return GetCell(locality ? t(locality) : t("CS_NA"));
         },
         mobileCell: (original) => {
-          const locality = original.searchData?.addresses?.[0]?.additionalDetail?.locality;
+          const locality = original.searchData?.propertyLocation?.locality || original.searchData?.addresses?.[0]?.additionalDetail?.locality;
           return GetMobCell(locality ? t(locality) : t("CS_NA"));
         },
       },
       {
         Header: t("PT_COMMON_TABLE_COL_STATUS_LABEL"),
         Cell: ({ row }) => {
-          const status = row.original.workflowData?.state?.applicationStatus;
+          const status = row.original.workflowData?.state?.applicationStatus || row.original.searchData?.status;
           return GetCell(status ? t(`GC_STATUS_${status}`) : t("CS_NA"));
         },
         mobileCell: (original) => {
-          const status = original.workflowData?.state?.applicationStatus;
+          const status = original.workflowData?.state?.applicationStatus || original.searchData?.status;
           return GetMobCell(status ? t(`GC_STATUS_${status}`) : t("CS_NA"));
         },
       },
     ],
     serviceRequestIdKey: (original) => {
-      return original?.searchData?.grbgApplicationNumber;
+      return original?.searchData?.applicationNo || original?.searchData?.grbgApplicationNumber;
     },
   },
 });

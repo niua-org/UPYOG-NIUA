@@ -73,8 +73,7 @@ const GCApplicationDetails = () => {
     { enabled: !!applicationNo, cacheTime: 0, staleTime: 0 }
   );
 
-  const applicationList = gcData?.garbageApplications || gcData?.garbageAccounts || gcData?.GarbageApplications || gcData?.data || [];
-  const application = applicationList.length > 0 ? applicationList[0] : null;
+  const application = gcData?.garbageApplications?.[0] || null;
 
   const businessService = application?.businessService || "garbage-service";
 
@@ -104,37 +103,20 @@ const GCApplicationDetails = () => {
     </div>
   );
 
-  let appData = application?.garbageAccount || application || {};
-  if (typeof appData === "string") {
-    try {
-      appData = JSON.parse(appData);
-    } catch (e) {
-      appData = {};
-    }
-  }
-
-  const applicationDetails = appData?.grbgApplication || appData?.GarbageApplication || {};
-  const appNo =
-    applicationDetails?.applicationNo ||
-    appData?.grbgApplicationNumber ||
-    appData?.applicationNo ||
-    appData?.garbageNo ||
-    t("CS_NA");
-
-  const appStatus =
-    applicationDetails?.status ||
-    appData?.status ||
-    appData?.applicationStatus ||
-    t("CS_NA");
+  const appData = application || {};
+  const appNo = appData?.applicationNo || t("CS_NA");
+  const appStatus = appData?.status || t("CS_NA");
+  const connStatus = appData?.connectionStatus || "ACTIVE";
 
   const dueDate = appData?.dueDate || null;
   const paymentStatus = appData?.paymentStatus || null;
 
   // Determine Owner vs Tenant Persona
-  const specs = appData?.grbgCollectionUnits?.[0] || appData?.garbageSpecification || {};
-  const propertyType = specs?.propertyType || specs?.ownerType || "OWNER";
+  const specs = appData?.garbageSpecification || {};
+  const propertyType = specs?.propertyType || "OWNER";
   const isOwner = propertyType === "OWNER" || user?.uuid === appData?.ownerUuid;
   const floorNo = specs?.floorNo || null;
+  const childApps = appData?.childGarbageApplications || [];
 
   // Reason Dropdowns for Lifecycle Actions
   const disconnectReasons = useMemo(
@@ -176,8 +158,9 @@ const GCApplicationDetails = () => {
     }
 
     try {
+      const { grbgCollectionUnits, childGarbageAccounts, ...cleanAppData } = appData || {};
       const payloadApp = {
-        ...appData,
+        ...cleanAppData,
         workflow: {
           action: selectedAction,
           comments: comments || `${selectedAction} initiated by owner.`,
@@ -197,7 +180,6 @@ const GCApplicationDetails = () => {
 
       const payload = {
         garbageApplications: [payloadApp],
-        garbageAccounts: [payloadApp],
       };
 
       await mutateAsync(payload);
@@ -295,6 +277,9 @@ const GCApplicationDetails = () => {
           <CardSubHeader className="gc-check-page-header">{t("GC_APPLICATION_SUMMARY") || "Application Summary"}</CardSubHeader>
           <StatusTable>
             <Row className="border-none" label={t("GC_APPLICATION_NUMBER_LABEL")} text={appNo} />
+            {appData?.garbageNo && (
+              <Row className="border-none" label={t("GC_GARBAGE_NUMBER_LABEL") || "Garbage Number"} text={appData.garbageNo} />
+            )}
             <Row
               className="border-none"
               label={t("GC_APPLICATION_STATUS_LABEL")}
@@ -408,6 +393,71 @@ const GCApplicationDetails = () => {
             </>
           )}
 
+          {/* Owner Cross-View: Tenant Floor Connections */}
+          {isOwner && childApps.length > 0 && (
+            <div style={{ marginTop: "24px" }}>
+              <CardSubHeader className="gc-check-page-header">
+                {t("GC_TENANT_APPLICATIONS") || "Tenant Floor Connections"}
+              </CardSubHeader>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+                {childApps.map((child, cIdx) => {
+                  const childAppNo = child?.applicationNo || child?.garbageNo || `Tenant ${cIdx + 1}`;
+                  const childFloor = child?.garbageSpecification?.floorNo || child?.floorNo || `${cIdx + 1}`;
+                  const childName = child?.applicantDetails?.[0]?.name || child?.tenantDetails?.name || t("CS_NA");
+                  const childMobile = child?.applicantDetails?.[0]?.mobileNumber || child?.tenantDetails?.mobileNumber || t("CS_NA");
+                  const childStatus = child?.status || "APPLICATION_CREATED";
+                  const childConnStatus = child?.connectionStatus || childStatus;
+                  return (
+                    <Card key={childAppNo} style={{ padding: "12px 16px", border: "1px solid #d6d5d4", borderRadius: "4px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <span style={{ fontWeight: "bold", fontSize: "16px" }}>
+                          {t("GC_FLOOR")} {childFloor}: {childName}
+                        </span>
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            color: "#fff",
+                            backgroundColor:
+                              childConnStatus === "ACTIVE" || childStatus === "APPROVED"
+                                ? "#00703c"
+                                : childConnStatus === "DISCONNECTED"
+                                ? "#a82227"
+                                : "#1d70b8",
+                          }}
+                        >
+                          {childConnStatus}
+                        </span>
+                      </div>
+                      <StatusTable>
+                        <Row
+                          className="border-none"
+                          label={t("GC_APPLICATION_NUMBER_LABEL")}
+                          text={
+                            <span className="link">
+                              <a href={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(childAppNo)}`}>
+                                {childAppNo}
+                              </a>
+                            </span>
+                          }
+                        />
+                        <Row className="border-none" label={t("GC_MOBILE_NUMBER")} text={childMobile} />
+                      </StatusTable>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {!isOwner && (
+            <div style={{ padding: "12px", backgroundColor: "#f3f2f1", borderLeft: "4px solid #1d70b8", marginTop: "16px", fontSize: "14px", color: "#505a5f" }}>
+              {t("GC_TENANT_NOTICE_OWNER_AUTHORITY") || "Only the property owner has the authority to request connection disconnection or reconnection for this property."}
+            </div>
+          )}
+
           <GCWFApplicationTimeline application={appData} />
         </Card>
 
@@ -430,7 +480,7 @@ const GCApplicationDetails = () => {
           )}
 
           {/* Owner-Only Lifecycle Actions as per HLD Section 5.1 & 5.2 */}
-          {isOwner && (appStatus === "APPROVED" || appStatus === "ACTIVE") && (
+          {isOwner && connStatus === "ACTIVE" && (
             <>
               <button
                 type="button"
@@ -474,7 +524,7 @@ const GCApplicationDetails = () => {
             </>
           )}
 
-          {isOwner && appStatus === "DISCONNECTED" && (
+          {isOwner && connStatus === "DISCONNECTED" && (
             <>
               <button
                 type="button"

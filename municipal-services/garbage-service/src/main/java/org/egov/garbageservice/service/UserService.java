@@ -1,452 +1,277 @@
 package org.egov.garbageservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
-import org.egov.common.contract.request.User;
+import org.egov.common.contract.request.Role;
 import org.egov.garbageservice.config.GarbageServiceConfig;
-import org.egov.garbageservice.web.models.*;
-import org.egov.garbageservice.web.models.contract.CreateUserRequest;
-import org.egov.garbageservice.web.models.contract.OwnerInfo;
-import org.egov.garbageservice.web.models.contract.Role;
-import org.egov.garbageservice.web.models.contract.UserDetailResponse;
 import org.egov.garbageservice.repository.ServiceRequestRepository;
+import org.egov.garbageservice.util.UserUtil;
+import org.egov.garbageservice.web.models.garbage.ApplicantDetail;
+import org.egov.garbageservice.web.models.garbage.AuditDetails;
+import org.egov.garbageservice.web.models.garbage.GarbageApplication;
+import org.egov.garbageservice.web.models.garbage.GarbageSearchCriteria;
+import org.egov.garbageservice.web.models.user.CreateUserRequest;
+import org.egov.garbageservice.web.models.user.User;
+import org.egov.garbageservice.web.models.user.UserDetailResponse;
+import org.egov.garbageservice.web.models.user.UserSearchRequest;
 import org.egov.tracer.model.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Integrates with eGov user service to search, create, and link citizens to garbage accounts.
- * Maps OwnerInfo to user payloads, assigns roles, and supports account onboarding from GarbageAccountService.
+ * Service managing user creation, lookup, and search enrichment via eGov User Service.
+ * Method naming and patterns aligned with tp-services.
  */
 @Service
 @Slf4j
 public class UserService {
 
-    @Value("${egov.user.context.path}")
-    private String userContextPath;
+    private final ObjectMapper mapper;
+    private final ServiceRequestRepository serviceRequestRepository;
+    private final GarbageServiceConfig config;
+    private final UserUtil userUtil;
 
-    @Value("${egov.user.create.path}")
-    private String userCreateEndpoint;
-
-    @Value("${egov.user.update.path}")
-    private String userUpdateEndpoint;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private GarbageServiceConfig grbgConfig;
-
-    @Autowired
-    private ServiceRequestRepository serviceRequestRepository;
-
-    @Autowired
-    private ObjectMapper mapper;
-
-    /**
-     * Retrieves user details by UUID from the eGov user service.
-     *
-     * @param userUuid the unique identifier of the user to search for
-     * @return a {@link UserSearchResponse} containing the matching user details, or null if not found
-     */
-
-    public UserSearchResponse searchUser(String userUuid) {
-        StringBuilder url = new StringBuilder(grbgConfig.getUserServiceHostUrl());
-        url.append(grbgConfig.getUserSearchEndpoint());
-
-        UserSearchRequest userSearchRequest = UserSearchRequest.builder()
-                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid(userUuid).build()).build())
-                .uuid(Collections.singletonList(userUuid)).build();
-
-        UserSearchResponse userSearchResponse = null;
-        try {
-            userSearchResponse = restTemplate.postForObject(url.toString(), userSearchRequest,
-                    UserSearchResponse.class);
-        } catch (Exception e) {
-            log.error("Error occured while user search.", e);
-            throw new CustomException("USER SEARCH ERROR",
-                    "Error occured while user search. Message: " + e.getMessage());
-        }
-
-        return userSearchResponse;
+    public UserService(ObjectMapper mapper, ServiceRequestRepository serviceRequestRepository,
+                       GarbageServiceConfig config, UserUtil userUtil) {
+        this.mapper = mapper;
+        this.serviceRequestRepository = serviceRequestRepository;
+        this.config = config;
+        this.userUtil = userUtil;
     }
 
     /**
-     * Searches for multiple users based on generic criteria and returns a mapped response.
+     * Retrieves an existing user for the given applicant details, or null if not found.
      *
-     * @param userSearchRequest the generic search criteria
-     * @return a {@link Map} linking user UUIDs to their respective {@link User} objects
-     * @throws CustomException if the user service responds with an error
+     * @param tenantId ULB tenant
+     * @param applicantDetail applicant details containing mobile number
+     * @param requestInfo request context
+     * @return User object or null
      */
-
-    public Map<String, User> searchUser(UserSearchRequest userSearchRequest) {
-
-        StringBuilder url = new StringBuilder(grbgConfig.getUserServiceHostUrl());
-        url.append(grbgConfig.getUserSearchEndpoint());
-
-        UserResponse userSearchResponse = null;
-
-        try {
-            userSearchResponse = restTemplate.postForObject(url.toString(), userSearchRequest, UserResponse.class);
-        } catch (HttpServerErrorException e) {
-
-            LinkedHashMap<?, ?> customException = new Gson().fromJson(e.getResponseBodyAsString(), LinkedHashMap.class);
-
-            String errorMessage = String.format("Message: %s", customException.get("errorMessage"));
-            throw new CustomException("ERR_USER_SERVICE_ERROR", errorMessage);
-        } catch (Exception e) {
-            log.error("Error occured while update user role.", e);
-            throw new CustomException("ERR_USER_SERVICE_ERROR",
-                    "Error occured while update user role. Message: " + e.getMessage());
+    public User fetchExistingUser(String tenantId, ApplicantDetail applicantDetail, RequestInfo requestInfo) {
+        if (applicantDetail == null || StringUtils.isBlank(applicantDetail.getMobileNumber())) {
+            return null;
         }
-
-        Map<String, User> uuidToUserMap = new HashMap<>();
-        if (null != userSearchResponse && !CollectionUtils.isEmpty(userSearchResponse.getUser())) {
-            userSearchResponse.getUser().forEach(user -> {
-                uuidToUserMap.put(user.getUuid(), user);
-            });
-        }
-        return uuidToUserMap;
+        return fetchExistingUserByMobile(tenantId, applicantDetail.getMobileNumber(), requestInfo);
     }
 
     /**
-     * Orchestrates the creation or linking of user identities for all garbage accounts in a request.
+     * Retrieves an existing user for a given mobile number.
      *
-     * <p>The process follows these steps:
-     * <ol>
-     *   <li>Flattens parent and child garbage accounts into a single processing list.</li>
-     *   <li>Processes the accounts in batches to mitigate potential performance or timeout issues.</li>
-     *   <li>Validates the phone number and username for each account.</li>
-     *   <li>Delegates valid accounts to {@link #processGarbageAccount} for identity resolution.</li>
-     * </ol>
-     *
-     * @param createGarbageRequest the request payload containing the garbage accounts
-     * @return the updated request payload with user UUIDs assigned to the accounts
+     * @param tenantId ULB tenant
+     * @param mobileNumber mobile number to look up
+     * @param requestInfo request context
+     * @return User object or null
      */
+    public User fetchExistingUserByMobile(String tenantId, String mobileNumber, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(mobileNumber)) {
+            return null;
+        }
 
-    public GarbageAccountRequest createUser(GarbageAccountRequest createGarbageRequest) {
-        RequestInfo requestInfo = createGarbageRequest.getRequestInfo();
-        Role role = getCitizenRole();
+        UserSearchRequest userSearchRequest = getBaseUserSearchRequest(UserUtil.getStateLevelTenant(tenantId), requestInfo);
+        userSearchRequest.setMobileNumber(mobileNumber);
+        userSearchRequest.setUserType("CITIZEN");
 
-        List<GarbageAccount> allGarbageAccounts = new ArrayList<>();
+        StringBuilder uri = new StringBuilder(config.getUserServiceHostUrl())
+                .append(config.getUserSearchEndpoint());
 
-        // Step 1: Flatten parent and child garbage accounts into one list
-        createGarbageRequest.getGarbageAccounts().forEach(garbageAccount -> {
-            allGarbageAccounts.add(garbageAccount);
-        });
+        UserDetailResponse userDetailResponse = userUtil.userCall(userSearchRequest, uri);
+        if (userDetailResponse == null || CollectionUtils.isEmpty(userDetailResponse.getUser())) {
+            log.info("No existing user found for mobile number: {}", mobileNumber);
+            return null;
+        }
+        return userDetailResponse.getUser().get(0);
+    }
 
-        // Step 2: Process accounts in batches of 100 to avoid potential failures
-        int batchSize = 100;
-        for (int i = 0; i < allGarbageAccounts.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, allGarbageAccounts.size());
-            List<GarbageAccount> batch = allGarbageAccounts.subList(i, end);
-            for (GarbageAccount account : batch) {
-                if (isValidPhoneNumber(account.getMobileNumber()) && isValidUserName(account.getName())) {
-                    processGarbageAccount(requestInfo, role, account);
+    /**
+     * Creates a new citizen user in user registry and returns the generated User details.
+     *
+     * @param requestInfo request context
+     * @param applicantDetail applicant details
+     * @param tenantId ULB tenant
+     * @return created User
+     */
+    public User createUserHandler(RequestInfo requestInfo, ApplicantDetail applicantDetail, String tenantId) {
+        Role role = userUtil.getCitizenRole();
+        User user = convertApplicantToUserRequest(applicantDetail, role, tenantId);
+
+        StringBuilder uri = new StringBuilder(config.getUserServiceHostUrl())
+                .append("/user/users/_createnovalidate");
+
+        CreateUserRequest userRequest = CreateUserRequest.builder()
+                .requestInfo(requestInfo)
+                .user(user)
+                .build();
+
+        UserDetailResponse userDetailResponse = userUtil.userCall(userRequest, uri);
+
+        if (ObjectUtils.isEmpty(userDetailResponse) || CollectionUtils.isEmpty(userDetailResponse.getUser())) {
+            throw new CustomException("INVALID_USER_RESPONSE",
+                    "User creation failed for mobile number: " + applicantDetail.getMobileNumber());
+        }
+        User createdUser = userDetailResponse.getUser().get(0);
+        log.info("Created new user with uuid: {}", createdUser.getUuid());
+        return createdUser;
+    }
+
+    private User convertApplicantToUserRequest(ApplicantDetail applicant, Role role, String tenantId) {
+        User user = new User();
+        String name = applicant.getName() != null ? applicant.getName() : applicant.getApplicantName();
+        user.setName(name);
+        user.setUserName(applicant.getMobileNumber());
+        user.setMobileNumber(applicant.getMobileNumber());
+        user.setAltContactNumber(applicant.getAlternateNumber());
+        user.setEmailId(applicant.getEmailId());
+        user.setGender(applicant.getGender());
+        user.setFatherOrHusbandName(applicant.getGuardianName());
+        user.setActive(true);
+        user.setTenantId(tenantId);
+        user.setRoles(Collections.singletonList(role));
+        user.setType("CITIZEN");
+        return user;
+    }
+
+    /**
+     * Searches user registry using a generic UserSearchRequest.
+     *
+     * @param userSearchRequest criteria
+     * @return UserDetailResponse
+     */
+    public UserDetailResponse searchUser(UserSearchRequest userSearchRequest) {
+        StringBuilder uri = new StringBuilder(config.getUserServiceHostUrl())
+                .append(config.getUserSearchEndpoint());
+        return userUtil.userCall(userSearchRequest, uri);
+    }
+
+    public UserDetailResponse getUser(UserSearchRequest userSearchRequest) {
+        return searchUser(userSearchRequest);
+    }
+
+    /**
+     * Searches user UUIDs for a given mobile number across a tenant.
+     *
+     * @param tenantId ULB tenant
+     * @param mobileNumber mobile number
+     * @param requestInfo request context
+     * @return list of matching user UUIDs
+     */
+    public List<String> searchUserUuidsByMobile(String tenantId, String mobileNumber, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(mobileNumber)) {
+            return Collections.emptyList();
+        }
+        UserSearchRequest userSearchRequest = getBaseUserSearchRequest(UserUtil.getStateLevelTenant(tenantId), requestInfo);
+        userSearchRequest.setMobileNumber(mobileNumber);
+        userSearchRequest.setUserType("CITIZEN");
+
+        UserDetailResponse response = searchUser(userSearchRequest);
+        if (response != null && !CollectionUtils.isEmpty(response.getUser())) {
+            return response.getUser().stream().map(User::getUuid).filter(Objects::nonNull).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * Enriches a GarbageApplication with citizen contact details dynamically resolved from
+     * the User Service via ownerUuid and tenantUuid (as name/mobile are not stored in DB columns).
+     *
+     * @param application the application to enrich
+     * @param criteria search criteria
+     */
+    public void enrichApplicationWithUserDetails(GarbageApplication application, GarbageSearchCriteria criteria) {
+        try {
+            Set<String> uuidsToFetch = new HashSet<>();
+            if (StringUtils.isNotBlank(application.getTenantUuid())) {
+                uuidsToFetch.add(application.getTenantUuid());
+            }
+            if (StringUtils.isNotBlank(application.getOwnerUuid())) {
+                uuidsToFetch.add(application.getOwnerUuid());
+            }
+
+            if (uuidsToFetch.isEmpty()) {
+                return;
+            }
+
+            UserSearchRequest userSearchRequest = UserSearchRequest.builder()
+                    .uuid(uuidsToFetch)
+                    .build();
+
+            UserDetailResponse userDetailResponse = getUser(userSearchRequest);
+            if (userDetailResponse != null && !CollectionUtils.isEmpty(userDetailResponse.getUser())) {
+                Map<String, User> userMap = userDetailResponse.getUser().stream()
+                        .filter(u -> u != null && u.getUuid() != null)
+                        .collect(Collectors.toMap(User::getUuid, (User u) -> u, (a, b) -> a));
+
+                // If tenant application, primary applicant is tenant; otherwise owner
+                String targetUuid = StringUtils.isNotBlank(application.getTenantUuid())
+                        ? application.getTenantUuid()
+                        : application.getOwnerUuid();
+
+                User primaryUser = userMap.get(targetUuid);
+                if (primaryUser != null) {
+                    ApplicantDetail applicantDetail = convertUserToApplicantDetail(primaryUser, targetUuid,
+                            application.getApplicationNo(), application.getAuditDetails());
+                    application.setApplicantDetails(Collections.singletonList(applicantDetail));
                 }
             }
-        }
-        return createGarbageRequest;
-    }
-
-
-    /**
-     * Validates a username against allowed enterprise patterns, rejecting disallowed special characters.
-     *
-     * @param name the username to validate
-     * @return {@code true} if the name is valid; {@code false} otherwise
-     */
-
-    private boolean isValidUserName(String name) {
-        if (name == null) return false;
-        // Regex pattern: Disallow specified special characters
-        String regex = "^[^\\\\$\\\"<>?\\\\\\\\~`!@#%^()+={}\\[\\]*,:;“”‘’]{1,49}$";
-        return name.matches(regex);
-    }
-
-    /**
-     * Validates a mobile phone number to ensure it adheres to a standard 10-digit format starting with 6-9.
-     *
-     * @param mobileNumber the mobile number to validate
-     * @return {@code true} if the format is valid; {@code false} otherwise
-     */
-
-    private boolean isValidPhoneNumber(String mobileNumber) {
-
-        String regex = "^[6-9]\\d{9}$";
-        return mobileNumber != null && mobileNumber.matches(regex);
-
-    }
-
-    /**
-     * Resolves the user identity for a specific garbage account, creating a new user if necessary.
-     *
-     * <p>The method follows these steps:
-     * <ol>
-     *   <li>Constructs an {@link OwnerInfo} payload from the garbage account details.</li>
-     *   <li>Checks if a user already exists with the same mobile number in the given tenant context.</li>
-     *   <li>If no matching user is found, provisions a new user via the eGov user service.</li>
-     *   <li>Assigns the resolved or newly created user UUID back to the garbage account.</li>
-     * </ol>
-     *
-     * @param requestInfo    the contextual information for the API request
-     * @param role           the default role to assign (e.g., CITIZEN)
-     * @param garbageAccount the garbage account being processed
-     */
-
-    public void processGarbageAccount(RequestInfo requestInfo, Role role, GarbageAccount garbageAccount) {
-        OwnerInfo owner = createOwnerInfoFromAccount(garbageAccount);
-        addUserDefaultFields(role, owner);
-
-        // Check if the user already exists
-        UserDetailResponse userDetailResponse = userExists(owner, requestInfo);
-        List<OwnerInfo> existingUsersFromService = userDetailResponse.getUser();
-
-        if (CollectionUtils.isEmpty(existingUsersFromService)) {
-            // Create new user if not found
-            owner.setUserName(UUID.randomUUID().toString());
-            userDetailResponse = createUser(requestInfo, owner);
-        } else {
-            // Update existing user if found
-            userDetailResponse = updateExistingUser(requestInfo, role, owner, existingUsersFromService.get(0));
+        } catch (Exception e) {
+            log.error("Error while enriching garbage application with user details: {}", e.getMessage(), e);
         }
 
-        // Assign user UUID to the garbage account
-        if (userDetailResponse != null && !CollectionUtils.isEmpty(userDetailResponse.getUser())
-                && !StringUtils.isEmpty(userDetailResponse.getUser().get(0).getUuid())) {
-            garbageAccount.setUserUuid(userDetailResponse.getUser().get(0).getUuid());
+        // Fallback enrichment from additionalDetail if applicantDetails is still empty
+        try {
+            if (CollectionUtils.isEmpty(application.getApplicantDetails()) && application.getAdditionalDetail() != null) {
+                com.fasterxml.jackson.databind.JsonNode addNode = application.getAdditionalDetail();
+                if (addNode.has("applicantDetails") && addNode.get("applicantDetails").isArray() && !addNode.get("applicantDetails").isEmpty()) {
+                    com.fasterxml.jackson.databind.JsonNode appNode = addNode.get("applicantDetails").get(0);
+                    ApplicantDetail ad = ApplicantDetail.builder()
+                            .name(appNode.has("name") ? appNode.get("name").asText() : (appNode.has("applicantName") ? appNode.get("applicantName").asText() : ""))
+                            .applicantName(appNode.has("applicantName") ? appNode.get("applicantName").asText() : (appNode.has("name") ? appNode.get("name").asText() : ""))
+                            .mobileNumber(appNode.has("mobileNumber") ? appNode.get("mobileNumber").asText() : "")
+                            .emailId(appNode.has("emailId") ? appNode.get("emailId").asText() : "")
+                            .build();
+                    application.setApplicantDetails(Collections.singletonList(ad));
+                } else if (addNode.has("tenantDetails")) {
+                    com.fasterxml.jackson.databind.JsonNode tNode = addNode.get("tenantDetails");
+                    ApplicantDetail ad = ApplicantDetail.builder()
+                            .name(tNode.has("name") ? tNode.get("name").asText() : "")
+                            .applicantName(tNode.has("name") ? tNode.get("name").asText() : "")
+                            .mobileNumber(tNode.has("mobileNumber") ? tNode.get("mobileNumber").asText() : "")
+                            .emailId(tNode.has("emailId") ? tNode.get("emailId").asText() : (tNode.has("email") ? tNode.get("email").asText() : ""))
+                            .build();
+                    application.setApplicantDetails(Collections.singletonList(ad));
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Fallback applicant details enrichment from additionalDetail skipped: {}", ex.getMessage());
         }
     }
 
-    /**
-     * Extracts owner details from a garbage account into an {@link OwnerInfo} structure.
-     *
-     * @param garbageAccount the source garbage account
-     * @return a populated {@link OwnerInfo} object
-     */
-
-    private OwnerInfo createOwnerInfoFromAccount(GarbageAccount garbageAccount) {
-        String tenantId = garbageAccount.getTenantId();
-
-        return OwnerInfo.builder()
-                .mobileNumber(garbageAccount.getMobileNumber())
-                .name(garbageAccount.getName())
-                .tenantId(tenantId)
+    public ApplicantDetail convertUserToApplicantDetail(User user, String applicantUuid, String applicationNo, AuditDetails auditDetails) {
+        if (user == null) {
+            return null;
+        }
+        return ApplicantDetail.builder()
+                .name(user.getName())
+                .applicantName(user.getName())
+                .emailId(user.getEmailId())
+                .mobileNumber(user.getMobileNumber())
+                .alternateNumber(user.getAltContactNumber())
+                .gender(user.getGender())
+                .guardianName(user.getFatherOrHusbandName())
                 .build();
     }
-
-    /**
-     * Updates an existing user record with fresh owner details.
-     *
-     * @param requestInfo         the contextual information for the API request
-     * @param role                the default role to assign
-     * @param ownerFromRequest    the new owner details
-     * @param ownerInfoFromSearch the existing user details from the database
-     * @return a {@link UserDetailResponse} containing the updated user details
-     */
-    private UserDetailResponse updateExistingUser(RequestInfo requestInfo, Role role, OwnerInfo ownerFromRequest,
-                                                  OwnerInfo ownerInfoFromSearch) {
-
-        UserDetailResponse userDetailResponse;
-
-        ownerFromRequest.setId(ownerInfoFromSearch.getId());
-        ownerFromRequest.setUuid(ownerInfoFromSearch.getUuid());
-        addUserDefaultFields(role, ownerFromRequest);
-
-        StringBuilder uri = new StringBuilder(grbgConfig.getUserServiceHostUrl()).append(userContextPath)
-                .append(userUpdateEndpoint);
-        userDetailResponse = userCall(new CreateUserRequest(requestInfo, ownerFromRequest), uri);
-        if (userDetailResponse.getUser().get(0).getUuid() == null) {
-            throw new CustomException("INVALID USER RESPONSE", "The user updated has uuid as null");
-        }
-        return userDetailResponse;
-    }
-
-    /**
-     * Provisions a brand new user via the eGov user service.
-     *
-     * @param requestInfo the contextual information for the API request
-     * @param owner       the details of the owner to create
-     * @return a {@link UserDetailResponse} containing the newly created user details
-     * @throws CustomException if the creation process fails
-     */
-
-    private UserDetailResponse createUser(RequestInfo requestInfo, OwnerInfo owner) {
-        UserDetailResponse userDetailResponse;
-        StringBuilder uri = new StringBuilder(grbgConfig.getUserServiceHostUrl()).append(userContextPath)
-                .append(userCreateEndpoint);
-
-        CreateUserRequest userRequest = CreateUserRequest.builder().requestInfo(requestInfo).user(owner).build();
-
-        userDetailResponse = userCall(userRequest, uri);
-
-        if (ObjectUtils.isEmpty(userDetailResponse)) {
-
-            throw new CustomException("INVALID USER RESPONSE",
-                    "The user create has failed for the mobileNumber : " + owner.getUserName());
-
-        }
-        return userDetailResponse;
-    }
-
-    /**
-     * Probes the user service to check if a user matching the owner's mobile number already exists.
-     *
-     * @param owner       the owner details containing the mobile number
-     * @param requestInfo the contextual information for the API request
-     * @return a {@link UserDetailResponse} with matching users, or empty if none exist
-     */
-
-    private UserDetailResponse userExists(OwnerInfo owner, RequestInfo requestInfo) {
-        // If mobile number is not present, return an empty response to avoid invalid search
-        if (StringUtils.isEmpty(owner.getMobileNumber())) {
-            return new UserDetailResponse();
-        }
-
-        UserSearchRequest userSearchRequest = getBaseUserSearchRequest(owner.getTenantId(), requestInfo);
-        userSearchRequest.setMobileNumber(owner.getMobileNumber());
-        userSearchRequest.setUserType(owner.getType());
-
-
-        StringBuilder uri = new StringBuilder(grbgConfig.getUserServiceHostUrl())
-                .append(grbgConfig.getUserSearchEndpoint());
-        return userCall(userSearchRequest, uri);
-    }
-
-    /**
-     * Executes the REST call to the eGov user service and handles response mapping and date parsing.
-     *
-     * @param userRequest the payload to send
-     * @param url         the destination URL
-     * @return the mapped {@link UserDetailResponse}
-     * @throws CustomException on parsing errors
-     */
-
-    private UserDetailResponse userCall(Object userRequest, StringBuilder url) {
-
-        String dobFormat = null;
-        if (url.indexOf(grbgConfig.getUserServiceHostUrl()) != -1 || url.indexOf(userUpdateEndpoint) != -1)
-            dobFormat = "yyyy-MM-dd";
-        else if (url.indexOf(userCreateEndpoint) != -1)
-            dobFormat = "dd/MM/yyyy";
-        try {
-            Optional<Object> response = serviceRequestRepository.fetchResult(url, userRequest);
-
-            if (response.isPresent()) {
-                LinkedHashMap<String, Object> responseMap = (LinkedHashMap<String, Object>) response.get();
-                parseResponse(responseMap, dobFormat);
-                UserDetailResponse userDetailResponse = mapper.convertValue(responseMap, UserDetailResponse.class);
-                return userDetailResponse;
-            } else {
-                return new UserDetailResponse();
-            }
-        }
-        // Which Exception to throw?
-        catch (IllegalArgumentException e) {
-            throw new CustomException("IllegalArgumentException", "ObjectMapper not able to convertValue in userCall");
-        }
-    }
-
-    /**
-     * Normalizes date formats in the raw JSON response returned by the user service.
-     *
-     * @param responeMap the raw response map
-     * @param dobFormat  the expected format for date of birth fields
-     */
-
-    private void parseResponse(LinkedHashMap<String, Object> responeMap, String dobFormat) {
-
-        List<LinkedHashMap<String, Object>> users = (List<LinkedHashMap<String, Object>>) responeMap.get("user");
-        String format1 = "dd-MM-yyyy HH:mm:ss";
-
-        if (null != users) {
-
-            users.forEach(map -> {
-
-                map.put("createdDate", dateTolong((String) map.get("createdDate"), format1));
-                if ((String) map.get("lastModifiedDate") != null)
-                    map.put("lastModifiedDate", dateTolong((String) map.get("lastModifiedDate"), format1));
-                if ((String) map.get("dob") != null)
-                    map.put("dob", dateTolong((String) map.get("dob"), dobFormat));
-                if ((String) map.get("pwdExpiryDate") != null)
-                    map.put("pwdExpiryDate", dateTolong((String) map.get("pwdExpiryDate"), format1));
-            });
-        }
-    }
-
-    /**
-     * Converts a formatted date string into an epoch timestamp in milliseconds.
-     *
-     * @param date   the formatted date string
-     * @param format the pattern to parse against
-     * @return the epoch timestamp, or null if parsing fails
-     */
-
-    private Long dateTolong(String date, String format) {
-        SimpleDateFormat f = new SimpleDateFormat(format);
-        Date d = null;
-        try {
-            d = f.parse(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return d.getTime();
-    }
-
-    /**
-     * Constructs a baseline user search request targeting active citizens for a specific tenant.
-     *
-     * @param tenantId    the tenant ID to search within
-     * @param requestInfo the contextual information for the API request
-     * @return a pre-populated {@link UserSearchRequest}
-     */
 
     public UserSearchRequest getBaseUserSearchRequest(String tenantId, RequestInfo requestInfo) {
-
-        return UserSearchRequest.builder().requestInfo(requestInfo).userType("CITIZEN").tenantId(tenantId).active(true)
+        return UserSearchRequest.builder()
+                .requestInfo(requestInfo)
+                .userType("CITIZEN")
+                .tenantId(tenantId)
+                .active(true)
                 .build();
     }
-
-    /**
-     * Applies default roles and state flags to an owner payload prior to creation.
-     *
-     * @param role  the role to assign (e.g., CITIZEN)
-     * @param owner the owner object to mutate
-     */
-
-    private void addUserDefaultFields(Role role, OwnerInfo owner) {
-
-        owner.setActive(true);
-        owner.setRoles(Collections.singletonList(role));
-        owner.setType("CITIZEN");
-        owner.setCreatedDate(null);
-        owner.setCreatedBy(null);
-        owner.setLastModifiedDate(null);
-        owner.setLastModifiedBy(null);
-    }
-
-    /**
-     * Generates a default CITIZEN role definition.
-     *
-     * @return the {@link Role} object for a standard citizen
-     */
-
-    private Role getCitizenRole() {
-
-        return Role.builder().code("CITIZEN").name("Citizen").build();
-    }
-
 }

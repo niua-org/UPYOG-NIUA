@@ -33,7 +33,7 @@
       "tenantId": "pg",
       "businessService": "garbage-service",
       "business": "garbage-service",
-      "businessServiceSla": 0,
+      "businessServiceSla": null,
       "states": [
         {
           "sla": null,
@@ -65,14 +65,6 @@
           "isStateUpdatable": true,
           "actions": [
             {
-              "action": "REJECT",
-              "nextState": "REJECTED",
-              "roles": [
-                "GC_VERIFIER"
-              ],
-              "active": true
-            },
-            {
               "action": "VERIFY",
               "nextState": "PENDING_FOR_APPROVAL",
               "roles": [
@@ -95,6 +87,14 @@
                 "GC_APPROVER"
               ],
               "active": true
+            },
+            {
+              "action": "REJECT",
+              "nextState": "REJECTED",
+              "roles": [
+                "GC_VERIFIER"
+              ],
+              "active": true
             }
           ]
         },
@@ -108,14 +108,6 @@
           "isStateUpdatable": true,
           "actions": [
             {
-              "action": "REJECT",
-              "nextState": "REJECTED",
-              "roles": [
-                "GC_APPROVER"
-              ],
-              "active": true
-            },
-            {
               "action": "APPROVE",
               "nextState": "APPROVED",
               "roles": [
@@ -126,6 +118,14 @@
             {
               "action": "SEND_BACK_TO_VERIFIER",
               "nextState": "PENDING_FOR_VERIFICATION",
+              "roles": [
+                "GC_APPROVER"
+              ],
+              "active": true
+            },
+            {
+              "action": "REJECT",
+              "nextState": "REJECTED",
               "roles": [
                 "GC_APPROVER"
               ],
@@ -159,39 +159,9 @@
           "applicationStatus": "APPROVED",
           "docUploadRequired": false,
           "isStartState": false,
-          "isTerminateState": false,
-          "isStateUpdatable": true,
-          "actions": [
-            {
-              "action": "DISCONNECT",
-              "nextState": "DISCONNECTED",
-              "roles": [
-                "CITIZEN",
-                "GC_CEMP"
-              ],
-              "active": true
-            }
-          ]
-        },
-        {
-          "sla": null,
-          "state": "DISCONNECTED",
-          "applicationStatus": "DISCONNECTED",
-          "docUploadRequired": false,
-          "isStartState": false,
-          "isTerminateState": false,
-          "isStateUpdatable": true,
-          "actions": [
-            {
-              "action": "RECONNECT",
-              "nextState": "PENDING_FOR_VERIFICATION",
-              "roles": [
-                "CITIZEN",
-                "GC_CEMP"
-              ],
-              "active": true
-            }
-          ]
+          "isTerminateState": true,
+          "isStateUpdatable": false,
+          "actions": null
         },
         {
           "sla": null,

@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-
 /**
  * Spring configuration properties bean holding application settings, external endpoints, Kafka topics, and MDMS configs.
  */
@@ -23,6 +22,9 @@ public class GarbageServiceConfig {
     @Value("${workflow.business.search}")
     public String workflowBusinessServiceSearchPath;
 
+    @Value("${workflow.valid.action.search.path}")
+    private String workflowValidActionSearchPath;
+
     @Value("${egov.billing.host}")
     public String billingHost;
 
@@ -35,10 +37,13 @@ public class GarbageServiceConfig {
     @Value("${egov.cancel.bill.endpoint}")
     public String cancleBillEndpoint;
 
-    @Value("${egov.grbg.business.service}")
+    @Value("${egov.update.bill.endpoint}")
+    private String updateBillEndpoint;
+
+    @Value("${egov.gc.business.service}")
     private String businessService;
 
-    @Value("${egov.grbg.module.name}")
+    @Value("${egov.gc.module.name}")
     private String moduleName;
 
     @Value("${egov.demand.create.endpoint}")
@@ -50,11 +55,10 @@ public class GarbageServiceConfig {
     @Value("${egov.demand.search.endpoint}")
     private String demandSearchEndpoint;
 
-    @Value("${kafka.topics.scheduler.log}")
+    @Value("${kafka.topics.save.scheduler.log}")
     private String schedulerLogTopic;
 
-    // save monthly rent payment topic
-    @Value("${save-monthly-rent-payment}")
+    @Value("${kafka.topics.save.monthly.bill}")
     private String monthlyRentPaymentSaveTopic;
 
     @Value("${egov.mdms.host}")
@@ -63,17 +67,20 @@ public class GarbageServiceConfig {
     @Value("${egov.mdms.search.endpoint}")
     private String mdmsSearchEndpoint;
 
-    @Value("${kafka.topics.save.grbg.account}")
-    private String saveGarbageAccountTopic;
-
-    @Value("${kafka.topics.update.grbg.account}")
-    private String updateGarbageAccountTopic;
-
-    @Value("${workflow.valid.action.search.path}")
-    private String workflowValidActionSearchPath;
-
     @Value("${egov.mdms.host}")
     private String mdmsServiceHostUrl;
+
+    @Value("${kafka.topics.save.garbage}")
+    private String saveGarbageApplicationTopic;
+
+    @Value("${kafka.topics.update.garbage}")
+    private String updateGarbageApplicationTopic;
+
+    @Value("${kafka.topics.save.connection.log}")
+    private String saveConnectionLogTopic;
+
+    @Value("${kafka.topics.notification.sms}")
+    private String notificationSmsTopic;
 
     @Value("${egov.user.host}")
     private String userServiceHostUrl;
@@ -81,6 +88,9 @@ public class GarbageServiceConfig {
     @Value("${egov.user.search.endpoint}")
     private String userSearchEndpoint;
 
-    @Value("${egov.update.bill.endpoint}")
-    private String updateBillEndpoint;
+    @Value("${egov.pt.host}")
+    private String ptHost;
+
+    @Value("${egov.pt.search.endpoint}")
+    private String ptSearchEndpoint;
 }

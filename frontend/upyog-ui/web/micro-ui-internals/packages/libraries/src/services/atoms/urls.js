@@ -375,9 +375,14 @@ const Urls = {
   },
 
   gc: {
-    create: "/gc-services/garbage-accounts/_create",
-    search: "/gc-services/garbage-accounts/_search",
-    update: "/gc-services/garbage-accounts/_update",
+    create: "/gc-services/garbage/v1/_create",
+    search: "/gc-services/garbage/v1/_search",
+    update: "/gc-services/garbage/v1/_update",
+    disconnect: "/gc-services/garbage/connection/_disconnect",
+    reconnect: "/gc-services/garbage/connection/_reconnect",
+    permanent: "/gc-services/garbage/connection/_permanent",
+    connectionUpdate: "/gc-services/garbage/connection/_update",
+    connectionHistory: "/gc-services/garbage/connection/_history",
   }
 };
 

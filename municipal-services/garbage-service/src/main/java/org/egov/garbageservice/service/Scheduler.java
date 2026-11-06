@@ -4,153 +4,121 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.egov.common.contract.request.RequestInfo;
-import org.egov.garbageservice.web.models.GarbageAccount;
-import org.egov.garbageservice.web.models.SearchCriteriaGarbageAccount;
-import org.egov.garbageservice.repository.GarbageAccountRepository;
-import org.egov.garbageservice.util.ServiceConstants;
+import org.egov.garbageservice.repository.GarbageRepository;
+import org.egov.garbageservice.web.models.garbage.*;
+import org.egov.garbageservice.web.models.user.*;
+import org.egov.garbageservice.web.models.workflow.*;
+import org.egov.garbageservice.web.models.billing.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Scheduled service responsible for automated periodic garbage billing and demand generation.
- *
- * <p>This scheduler leverages a cron expression to routinely scan for approved and active
- * garbage accounts that are due for billing on the current date, and invokes the
- * {@link DemandService} to generate their billing demands.
+ * Automated billing scheduler running nightly via ShedLock.
+ * Halts recurring monthly billing demands for disconnected and permanently disconnected applications
+ * as specified in HLD Section 5.3 & 15.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class Scheduler {
 
-    private final GarbageAccountRepository garbageAccountRepository;
+    private final GarbageRepository garbageRepository;
     private final DemandService demandService;
 
-    /**
-     * Automatically triggered cron job that evaluates and processes all eligible garbage accounts for billing.
-     *
-     * <p>This method executes based on the configured {@code grbg.scheduler.cron} property. It
-     * uses ShedLock to ensure only a single instance of this job runs across distributed environments.
-     */
-
-    @Scheduled(cron = "${grbg.scheduler.cron}")
+    @Scheduled(cron = "${gc.scheduler.cron:${grbg.scheduler.cron:0 0 1 * * ?}}")
     @SchedulerLock(name = "GarbageScheduler_generateDemand", lockAtLeastFor = "PT10M", lockAtMostFor = "PT30M")
     public void generateDemands() {
         LocalDate today = LocalDate.now();
+        log.info("Starting automated nightly garbage billing scheduler for date: {}", today);
         process(today, RequestInfo.builder().build());
     }
 
-    /**
-     * Allows for manual invocation of the billing generation process for a specific date.
-     *
-     * <p>If a billing date is not explicitly provided, it defaults to the current date.
-     * This is useful for administrative backfilling or triggering ad-hoc billing cycles.
-     *
-     * @param requestInfo the contextual information for the API request
-     * @param billingDate the specific date for which bills should be generated (optional)
-     * @return a {@link String} message summarizing the number of demands generated
-     */
-
     public String triggerManually(RequestInfo requestInfo, LocalDate billingDate) {
         LocalDate date = (billingDate != null ? billingDate : LocalDate.now());
-        log.info("Manual scheduler trigger for {}", date);
+        log.info("Manual scheduler trigger for date: {}", date);
         return process(date, requestInfo);
     }
 
-    /**
-     * Core processing logic that identifies due accounts and generates demands.
-     *
-     * <p>The process follows these steps:
-     * <ol>
-     *   <li>Queries the repository for all garbage accounts with APPROVED status.</li>
-     *   <li>Filters the accounts down to those that are due for billing on the given date using {@link #isBillingDue}.</li>
-     *   <li>Iterates through the eligible accounts and delegates to {@link DemandService#generateDemand}.</li>
-     *   <li>Accumulates the successful generation count and returns a summary message.</li>
-     * </ol>
-     *
-     * @param billingDate the target date for evaluating billing eligibility
-     * @param requestInfo the contextual request info block
-     * @return a summary string indicating how many demands were successfully generated
-     */
-
     private String process(LocalDate billingDate, RequestInfo requestInfo) {
-
-        SearchCriteriaGarbageAccount criteria = SearchCriteriaGarbageAccount.builder()
-                .status(List.of(ServiceConstants.STATUS_APPROVED))
+        GarbageSearchCriteria criteria = GarbageSearchCriteria.builder()
+                .status(List.of("APPROVED"))
+                .connectionStatus("ACTIVE")
+                .isSchedulerCall(true)
                 .build();
 
-        List<GarbageAccount> garbageAccounts =
-                garbageAccountRepository.searchV2(criteria);
+        List<GarbageApplication> applications = garbageRepository.getGarbageApplications(criteria);
 
-        if (garbageAccounts.isEmpty()) {
-            return "No garbage accounts found with status APPROVED";
+        if (applications.isEmpty()) {
+            log.info("No active or approved garbage applications found for billing.");
+            return "No garbage applications found with status APPROVED and connection_status ACTIVE";
         }
 
-        List<GarbageAccount> activeGarbageAccounts =
-                garbageAccounts.stream()
-                        .filter(a -> isBillingDue(a, billingDate))
-                        .collect(Collectors.toList());
+        // Section 2 & 8: Fetch status APPROVED and connection_status ACTIVE
+        List<GarbageApplication> activeApps = applications.stream()
+                .filter(a -> "ACTIVE".equalsIgnoreCase(a.getConnectionStatus()) || org.apache.commons.lang3.StringUtils.isBlank(a.getConnectionStatus()))
+                .filter(a -> !"DISCONNECTED".equalsIgnoreCase(a.getConnectionStatus()))
+                .filter(a -> !"PERMANENTLY_DISCONNECTED".equalsIgnoreCase(a.getConnectionStatus()))
+                .filter(a -> isBillingDue(a, billingDate))
+                .collect(Collectors.toList());
 
-        if (activeGarbageAccounts.isEmpty()) {
-            return "No active Garbage Accounts found";
+        if (activeApps.isEmpty()) {
+            log.info("No garbage applications due for billing on date: {}", billingDate);
+            return "No active Garbage Applications due on " + billingDate;
         }
 
         int generated = 0;
+        long periodFrom = billingDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long periodTo = billingDate.plusMonths(1).minusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        long now = System.currentTimeMillis();
 
-        for (GarbageAccount account : activeGarbageAccounts) {
+        for (GarbageApplication app : activeApps) {
             try {
-
-                demandService.generateDemand(
-                        requestInfo,
-                        account,
-                        billingDate);
-
+                demandService.generateDemand(requestInfo, app, billingDate);
                 generated++;
 
-                log.info(
-                        "Demand generated for {}",
-                        account.getGrbgApplicationNumber());
+                // Log execution to ug_gc_bill_generate (HLD Section 11.6)
+                GarbageBillGenerate billLog = GarbageBillGenerate.builder()
+                        .id(UUID.randomUUID().toString())
+                        .garbageId(app.getApplicationNo())
+                        .tenantId(app.getTenantId())
+                        .billingDate(billingDate)
+                        .billingPeriodFrom(periodFrom)
+                        .billingPeriodTo(periodTo)
+                        .amount(app.getPaymentAmount() != null ? app.getPaymentAmount() : BigDecimal.ZERO)
+                        .penaltyAmount(BigDecimal.ZERO)
+                        .paymentType("MONTHLY")
+                        .status("GENERATED")
+                        .auditDetails(AuditDetails.builder().createdBy("SCHEDULER").createdTime(now).build())
+                        .build();
+
+                garbageRepository.saveBillGenerate(billLog);
+                log.info("Demand generated and logged in ug_gc_bill_generate for application: {}", app.getApplicationNo());
 
             } catch (Exception e) {
-
-                log.error(
-                        "Failed for {}",
-                        account.getGrbgApplicationNumber(),
-                        e);
+                log.error("Failed to generate demand for application {}: {}", app.getApplicationNo(), e.getMessage());
             }
         }
-        String result = "Generated: " + generated;
 
-        log.info("Scheduler done — {}", result);
-
+        String result = "Demands generated: " + generated;
+        log.info("Billing scheduler execution finished: {}", result);
         return result;
     }
 
-    /**
-     * Determines whether a specific garbage account is due for billing on the given scheduler date.
-     *
-     * <p>The logic checks the account's original approval date. An account is due if the current
-     * scheduler date is on the same day of the month as the original approval date. It also accounts
-     * for edge cases where the approval day is beyond the end of the current month (e.g., Feb 28th).
-     *
-     * @param account       the {@link GarbageAccount} being evaluated
-     * @param schedulerDate the date against which the account's billing cycle is checked
-     * @return {@code true} if the account is due for billing; {@code false} otherwise
-     */
-
-    private boolean isBillingDue(GarbageAccount account, LocalDate schedulerDate) {
-
-        Long approvalTimestamp = account.getApprovalDate();
-
+    private boolean isBillingDue(GarbageApplication application, LocalDate schedulerDate) {
+        Long approvalTimestamp = application.getApprovalDate();
         if (approvalTimestamp == null) {
-            return false;
+            // Default to due on 1st of month if approvalDate is null
+            return schedulerDate.getDayOfMonth() == 1;
         }
 
         LocalDate approvalDate = Instant.ofEpochMilli(approvalTimestamp)
@@ -161,10 +129,7 @@ public class Scheduler {
             return false;
         }
 
-        int billingDay = Math.min(
-                approvalDate.getDayOfMonth(),
-                schedulerDate.lengthOfMonth());
-
+        int billingDay = Math.min(approvalDate.getDayOfMonth(), schedulerDate.lengthOfMonth());
         return schedulerDate.getDayOfMonth() == billingDay;
     }
 }
