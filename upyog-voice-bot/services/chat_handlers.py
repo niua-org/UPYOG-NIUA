@@ -52,6 +52,122 @@ def _load_system_messages() -> dict:
 
 _SYSTEM_MESSAGES: dict = _load_system_messages()
 
+from storage.qdrant_manager import MemoryManager
+from services.voice_service import text_to_speech, translate_text
+
+# ====================================================================
+# CONFIG DEFAULTS & WORKFLOW METADATA REGISTRY
+# ====================================================================
+
+DEFAULT_WORKFLOW_INTENTS = [
+    "grievance_candidate", "grievance_status_candidate", "grievance_confirm",
+    "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm"
+]
+
+DEFAULT_QUESTION_STARTERS = [
+    "what", "how", "why", "when", "where", "who", "which", "whose", "whom",
+    "can i", "could you", "tell me", "explain", "meaning",
+    "kya", "kaise", "kab", "kahan", "kyun", "kis", "batao", "bataiye"
+]
+
+DEFAULT_GOODBYE_KEYWORDS = [
+    "bye", "goodbye", "exit", "quit", "tata", "alvida", "see you", "done for now", "band karo"
+]
+
+WORKFLOW_METADATA = {
+    "adv_booking": {
+        "draft_key": "draft_booking",
+        "display_name": "Advertisement Booking",
+        "display_name_hi": "विज्ञापन बुकिंग",
+    },
+    "grievance": {
+        "draft_key": "draft_grievance",
+        "display_name": "Grievance",
+        "display_name_hi": "शिकायत",
+    },
+}
+
+
+def get_workflow_draft_key(wf_name: str) -> Optional[str]:
+    """Returns the state dictionary key corresponding to a workflow plugin."""
+    meta = WORKFLOW_METADATA.get(wf_name)
+    if meta:
+        return meta["draft_key"]
+    return None
+
+
+def get_workflow_fields(wf_name: str) -> List[str]:
+    """Returns all primary form fields for the specified workflow plugin."""
+    if wf_name == "adv_booking":
+        try:
+            from workflow.adv_booking import ALL_FIELDS
+            return list(ALL_FIELDS)
+        except Exception:
+            return ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"]
+    elif wf_name == "grievance":
+        try:
+            from workflow.grievance import ALL_FIELDS
+            return list(ALL_FIELDS)
+        except Exception:
+            return ["category", "sub_category", "description", "locality"]
+    return []
+
+
+def get_workflow_reset_draft(wf_name: str, cancelled: bool = False) -> dict:
+    """Constructs a clean, completely reset draft dictionary for a workflow plugin."""
+    fields = get_workflow_fields(wf_name)
+    reset_draft = {f: None for f in fields}
+    if wf_name == "adv_booking":
+        reset_draft["selected_slots"] = None
+        reset_draft["applicant_details"] = None
+        reset_draft["_awaiting_confirm"] = None
+    elif wf_name == "grievance":
+        reset_draft["category_code"] = None
+        reset_draft["locality_code"] = None
+        reset_draft["_awaiting_confirm"] = None
+        reset_draft["_confirmed"] = None
+    if cancelled:
+        reset_draft["_cancelled"] = True
+    return reset_draft
+
+
+def is_draft_actively_in_progress(wf_name: str, state_values: dict) -> bool:
+    """
+    Checks if a workflow state represents an unsubmitted, actively in-progress draft.
+    Returns False if the draft is cancelled, already submitted/empty, or absent.
+    """
+    if not isinstance(state_values, dict):
+        return False
+    draft_key = get_workflow_draft_key(wf_name)
+    if not draft_key:
+        return False
+    draft = state_values.get(draft_key)
+    if not isinstance(draft, dict) or draft.get("_cancelled"):
+        return False
+    has_fields = any(v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != "")
+    has_options = bool(draft.get("_category_options") or draft.get("_sub_options") or draft.get("_locality_options") or draft.get("_slot_options"))
+    messages = state_values.get("messages", [])
+    return bool((has_fields or has_options) and messages)
+
+
+def detect_active_workflow(phone: str, workflows: dict) -> Optional[str]:
+    """Inspects available workflows and returns the active workflow name, if any."""
+    config = {"configurable": {"thread_id": phone}}
+    active_candidates = []
+    for wf_name, graph in workflows.items():
+        try:
+            st = graph.get_state(config)
+            if st and st.values and is_draft_actively_in_progress(wf_name, st.values):
+                timestamp = getattr(st, "created_at", "") or ""
+                msg_count = len(st.values.get("messages", []))
+                active_candidates.append((wf_name, timestamp, msg_count))
+        except Exception as e:
+            logger.debug(f"[detect_active_workflow] Error inspecting {wf_name}: {e}")
+    if active_candidates:
+        active_candidates.sort(key=lambda x: (x[1], x[2]), reverse=True)
+        return active_candidates[0][0]
+    return None
+
 
 # ====================================================================
 # 1. PENDING INTERRUPTION & MULTI-DRAFT REDIS HELPERS
@@ -396,7 +512,12 @@ def is_informational_question(
     system_config: Optional[dict] = None
 ) -> bool:
     """Checks whether the user input is an informational question or FAQ query.
-    Extracts question_starters from system_config (config.yml) under system_messages.faq_question.
+
+    Matching rules:
+    1. Returns True if classifier intent is 'faq', 'is_question' is True, or '?' is present.
+    2. Otherwise checks question starters loaded from system_config (config.yml) under
+       `system_messages.faq_question.question_starters` (fallback: `DEFAULT_QUESTION_STARTERS`).
+    3. Input matches if it is identical to a starter or starts with `<starter> ` (word boundary).
     """
     if not user_input:
         return False
@@ -406,11 +527,7 @@ def is_informational_question(
         return True
 
     sys_msgs = (system_config or {}).get("system_messages") or _SYSTEM_MESSAGES or {}
-    starters = (sys_msgs.get("faq_question") or {}).get("question_starters") or [
-        "what", "how", "why", "when", "where", "who", "which", "whose", "whom",
-        "can i", "could you", "tell me", "explain", "meaning",
-        "kya", "kaise", "kab", "kahan", "kyun", "kis", "batao", "bataiye"
-    ]
+    starters = (sys_msgs.get("faq_question") or {}).get("question_starters") or DEFAULT_QUESTION_STARTERS
 
     clean_in = user_input.strip().lower()
     return any(clean_in == q.lower() or clean_in.startswith(f"{q.lower()} ") for q in starters)
@@ -431,25 +548,7 @@ def resolve_active_and_target_plugin(
     Handles service switching with draft auto-save.
     Returns: (active_plugin, plugin_intent, target_wf)
     """
-    active_plugin = None
-    active_plugins = []
-    for wf_name, graph in workflows.items():
-        state = graph.get_state(config)
-        if state and state.values:
-            draft_key = "draft_booking" if wf_name == "adv_booking" else "draft_grievance"
-            draft = state.values.get(draft_key)
-            if isinstance(draft, dict) and not draft.get("_cancelled"):
-                has_fields = any(v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != "")
-                has_options = bool(draft.get("_category_options") or draft.get("_sub_options") or draft.get("_locality_options") or draft.get("_slot_options"))
-                messages = state.values.get("messages", [])
-
-                if (has_fields or has_options) and messages:
-                    timestamp = getattr(state, "created_at", "") or ""
-                    active_plugins.append((wf_name, timestamp, len(messages)))
-
-    if active_plugins:
-        active_plugins.sort(key=lambda x: (x[1], x[2]), reverse=True)
-        active_plugin = active_plugins[0][0]
+    active_plugin = detect_active_workflow(phone, workflows)
 
     plugin_intent = None
     ui_lower = user_input.lower().strip()
@@ -486,15 +585,18 @@ def resolve_active_and_target_plugin(
         if active_plugin in workflows:
             prev_state = workflows[active_plugin].get_state(config)
             if prev_state and prev_state.values:
-                prev_draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
-                prev_draft = prev_state.values.get(prev_draft_key) or {}
-                if prev_draft and any(v for k, v in prev_draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""):
-                    from storage.qdrant_manager import MemoryManager
-                    MemoryManager.save_draft_state(phone, active_plugin, prev_draft)
-                    logger.info(f"[AutoSave] Saved previous workflow draft for {phone}/{active_plugin}")
+                prev_draft_key = get_workflow_draft_key(active_plugin)
+                if prev_draft_key:
+                    prev_draft = prev_state.values.get(prev_draft_key) or {}
+                    if prev_draft and any(v for k, v in prev_draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""):
+                        try:
+                            MemoryManager.save_draft_state(phone, active_plugin, prev_draft)
+                            logger.info(f"[AutoSave] Saved previous workflow draft for {phone}/{active_plugin}")
+                        except Exception as e:
+                            logger.warning(f"[AutoSave] Qdrant save draft failed: {e}")
 
-                empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if active_plugin == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
-                workflows[active_plugin].update_state(config, {prev_draft_key: empty_draft, "missing_fields": [], "messages": []})
+                    empty_draft = get_workflow_reset_draft(active_plugin)
+                    workflows[active_plugin].update_state(config, {prev_draft_key: empty_draft, "missing_fields": [], "messages": []})
         active_plugin = plugin_intent
     elif active_plugin and is_generic_response:
         plugin_intent = active_plugin
@@ -557,8 +659,8 @@ def handle_workflow_interruption_or_faq(
     else:
         state = workflows[active_plugin].get_state(config)
         if state and state.values:
-            draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
-            draft = state.values.get(draft_key) or {}
+            draft_key = get_workflow_draft_key(active_plugin)
+            draft = (state.values.get(draft_key) or {}) if draft_key else {}
 
             if active_plugin == "grievance":
                 from workflow.grievance import _pgr_categories, _pgr_localities
@@ -589,24 +691,26 @@ def handle_workflow_interruption_or_faq(
 
     if is_explicit_question:
         from services.rag_service import retrieve_document
-        from services.voice_service import text_to_speech
-        from storage.qdrant_manager import MemoryManager
 
         draft_saved = False
         saved_plugin_name = None
 
         state = workflows[active_plugin].get_state(config)
         if state and state.values:
-            draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
-            draft = state.values.get(draft_key) or {}
-            real_fields = {k: v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""}
-            if real_fields:
-                MemoryManager.save_draft_state(phone, active_plugin, draft)
-                draft_saved = True
-                saved_plugin_name = active_plugin
+            draft_key = get_workflow_draft_key(active_plugin)
+            if draft_key:
+                draft = state.values.get(draft_key) or {}
+                real_fields = {k: v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""}
+                if real_fields:
+                    try:
+                        MemoryManager.save_draft_state(phone, active_plugin, draft)
+                        draft_saved = True
+                        saved_plugin_name = active_plugin
+                    except Exception as e:
+                        logger.warning(f"[handle_workflow_interruption] Qdrant save draft failed: {e}")
 
-            empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if active_plugin == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
-            workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
+                empty_draft = get_workflow_reset_draft(active_plugin)
+                workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
 
         faq_ans = retrieve_document(user_input, user_language, history, session_id=session_id)
 
@@ -636,10 +740,8 @@ def handle_workflow_interruption_or_faq(
 # 7. DRAFT MANAGEMENT ACTIONS
 # ====================================================================
 
-def handle_draft_management(intent: str, user_input: str, user_language: str, phone: str, session_id: str, active_plugin: Optional[str], workflows: dict, config: dict) -> Tuple[bool, Optional[dict]]:
+def handle_draft_management(intent: str, user_input: str, user_language: str, phone: str, session_id: str, active_plugin: Optional[str], workflows: dict, config: dict, system_config: Optional[dict] = None) -> Tuple[bool, Optional[dict]]:
     """Handles explicit draft operations (continue, save, resume, delete, profile)."""
-    from storage.qdrant_manager import MemoryManager
-    from services.voice_service import text_to_speech
     from services.intent_service import process_user_message
     from draft_switcher import MultiDraftSwitcher, _SERVICES_MAP
     ui_lower = user_input.lower()
@@ -650,11 +752,12 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
             target_wf = all_drafts[0].get("plugin_name", "adv_booking")
             draft_data = all_drafts[0].get("draft_data", {})
             if target_wf in workflows and draft_data:
-                draft_key = "draft_booking" if target_wf == "adv_booking" else "draft_grievance"
-                config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
-                workflows[target_wf].update_state(config_update, {draft_key: draft_data})
+                draft_key = get_workflow_draft_key(target_wf)
+                if draft_key:
+                    config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+                    workflows[target_wf].update_state(config_update, {draft_key: draft_data})
 
-            agent_res = process_user_message("continue", phone, session_id, target_workflow=target_wf)
+            agent_res = process_user_message("continue", phone, session_id, target_workflow=target_wf, user_language=user_language)
             audio = text_to_speech(agent_res.get("response", ""), user_language)
             return True, {
                 "response": agent_res.get("response", ""),
@@ -697,18 +800,24 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
             config_check = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
             state = workflows[plugin].get_state(config_check)
             if state and state.values:
-                draft_key = "draft_booking" if plugin == "adv_booking" else "draft_grievance"
-                draft = state.values.get(draft_key) or {}
-                if draft:
-                    MemoryManager.save_draft_state(phone, plugin, draft)
+                draft_key = get_workflow_draft_key(plugin)
+                if draft_key:
+                    draft = state.values.get(draft_key) or {}
+                    if draft:
+                        try:
+                            MemoryManager.save_draft_state(phone, plugin, draft)
+                        except Exception as e:
+                            logger.warning(f"[handle_draft_management] Qdrant save draft failed: {e}")
         msg = "Your draft application has been saved successfully. You can resume it anytime by saying 'Continue my application'!"
         audio = text_to_speech(msg, user_language)
         return True, {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
 
     if intent == "end_conversation":
-        goodbye_kws = ["bye", "goodbye", "exit", "quit", "tata", "alvida", "see you", "done for now", "close", "band karo"]
+        sys_msgs = (system_config or {}).get("system_messages") or _SYSTEM_MESSAGES or {}
+        goodbye_kws = sys_msgs.get("goodbye_keywords") or DEFAULT_GOODBYE_KEYWORDS
         clean_in = user_input.strip().lower()
-        is_explicit_goodbye = any(re.search(rf'\b{re.escape(w)}\b', clean_in) for w in goodbye_kws)
+        is_short_msg = len(clean_in.split()) <= 4
+        is_explicit_goodbye = is_short_msg and any(re.search(rf'\b{re.escape(w)}\b', clean_in) for w in goodbye_kws)
 
         # If citizen is inside an active workflow and did NOT say an explicit goodbye, do NOT abort the form
         if active_plugin and not is_explicit_goodbye:
@@ -718,10 +827,14 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
         if active_plugin and active_plugin in workflows:
             state = workflows[active_plugin].get_state(config)
             if state and state.values:
-                draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
-                draft = state.values.get(draft_key) or {}
-                if draft and any(v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""):
-                    MemoryManager.save_draft_state(phone, active_plugin, draft)
+                draft_key = get_workflow_draft_key(active_plugin)
+                if draft_key:
+                    draft = state.values.get(draft_key) or {}
+                    if draft and any(v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != ""):
+                        try:
+                            MemoryManager.save_draft_state(phone, active_plugin, draft)
+                        except Exception as e:
+                            logger.warning(f"[handle_draft_management] Qdrant auto-save on goodbye failed: {e}")
 
         clear_pending_interruption(phone)
         msg = (
@@ -856,7 +969,7 @@ def execute_workflow_plugin(target_wf: str, user_input: str, user_language: str,
             "audio": audio
         }
 
-    agent_res = process_user_message(user_input, phone, session_id, target_workflow=target_wf)
+    agent_res = process_user_message(user_input, phone, session_id, target_workflow=target_wf, user_language=user_language)
     resp_content = agent_res.get("response", "")
 
     if user_language == 'en' and any('ऀ' <= c <= 'ॿ' for c in resp_content):
@@ -1160,31 +1273,55 @@ def dispatch_chat_request(
     # 5. Service / Workflow Cancellation Intent (adv_cancel, grievance_cancel, booking_cancel)
     cancel_intents = {"adv_cancel", "grievance_cancel", "booking_cancel"}
     if intent in cancel_intents:
-        from storage.qdrant_manager import MemoryManager
-        from services.voice_service import text_to_speech
+        intended_plugin = "adv_booking" if ("adv" in intent or "booking" in intent) else ("grievance" if "grievance" in intent else None)
 
-        target_cancelled_plugin = active_plugin or ("adv_booking" if "adv" in intent or "booking" in intent else "grievance")
-        plugin_display = "Advertisement Booking" if "adv" in str(target_cancelled_plugin) or "booking" in str(target_cancelled_plugin) else "Grievance"
-        plugin_display_hi = "विज्ञापन बुकिंग" if "adv" in str(target_cancelled_plugin) or "booking" in str(target_cancelled_plugin) else "शिकायत"
+        # Mismatch guard: If user is actively filling one workflow (e.g. grievance) but classifier
+        # emitted a cancel intent for another workflow (e.g. adv_cancel), do NOT wipe the active workflow!
+        if active_plugin and intended_plugin and active_plugin != intended_plugin:
+            logger.warning(
+                f"[WorkflowCancel] Mismatch ignored: user active in '{active_plugin}' but received cancel intent '{intent}' for '{intended_plugin}'."
+            )
+            name_en = WORKFLOW_METADATA.get(intended_plugin, {}).get("display_name", intended_plugin)
+            name_hi = WORKFLOW_METADATA.get(intended_plugin, {}).get("display_name_hi", intended_plugin)
+            active_name_en = WORKFLOW_METADATA.get(active_plugin, {}).get("display_name", active_plugin)
+            active_name_hi = WORKFLOW_METADATA.get(active_plugin, {}).get("display_name_hi", active_plugin)
+            msg = (
+                f"You do not have an active {name_en} application in progress. Would you like to continue with your {active_name_en}?"
+                if user_language != 'hi' else
+                f"आपके पास कोई सक्रिय {name_hi} आवेदन नहीं है। क्या आप अपने {active_name_hi} को जारी रखना चाहते हैं?"
+            )
+            audio = text_to_speech(msg, user_language)
+            return {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
+
+        target_cancelled_plugin = active_plugin or intended_plugin or "adv_booking"
+        meta = WORKFLOW_METADATA.get(target_cancelled_plugin, {})
+        plugin_display = meta.get("display_name", "Application")
+        plugin_display_hi = meta.get("display_name_hi", "आवेदन")
+
+        sys_cancel = (system_config or {}).get("system_messages", {}).get("cancellation", {})
+        target_cancel_cfg = sys_cancel.get(target_cancelled_plugin, {})
 
         if active_plugin and active_plugin in workflows:
-            draft_key = "draft_booking" if active_plugin == "adv_booking" else "draft_grievance"
-            empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if active_plugin == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
-            empty_draft["_cancelled"] = True
-            workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
-            MemoryManager.delete_draft_state(phone, active_plugin)
+            draft_key = get_workflow_draft_key(active_plugin)
+            if draft_key:
+                empty_draft = get_workflow_reset_draft(active_plugin, cancelled=True)
+                workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
+            try:
+                MemoryManager.delete_draft_state(phone, active_plugin)
+            except Exception as e:
+                logger.warning(f"[WorkflowCancel] Qdrant delete draft failed: {e}")
             clear_pending_interruption(phone)
             logger.info(f"[WorkflowCancel] Cleanly cancelled active workflow {active_plugin} for {phone}")
 
             if user_language == 'hi':
-                msg = f"आपकी {plugin_display_hi} रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nमैं आपकी और क्या सहायता कर सकता हूँ?"
+                msg = target_cancel_cfg.get("hi") or f"आपकी {plugin_display_hi} रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nमैं आपकी और क्या सहायता कर सकता हूँ?"
             else:
-                msg = f"Your {plugin_display} application has been cancelled. No submission was made to the portal.\n\nHow else can I assist you today?"
+                msg = target_cancel_cfg.get("en") or f"Your {plugin_display} application has been cancelled. No submission was made to the portal.\n\nHow else can I assist you today?"
         else:
             if user_language == 'hi':
-                msg = f"ठीक है, {plugin_display_hi} अनुरोध रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
+                msg = sys_cancel.get("general", {}).get("hi") or f"ठीक है, {plugin_display_hi} अनुरोध रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
             else:
-                msg = f"Understood. The {plugin_display.lower()} request has been cancelled. How else can I assist you today?"
+                msg = sys_cancel.get("general", {}).get("en") or f"Understood. The {plugin_display.lower()} request has been cancelled. How else can I assist you today?"
 
         audio = text_to_speech(msg, user_language)
         return {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
@@ -1198,7 +1335,7 @@ def dispatch_chat_request(
     # 7. Out-of-domain conversational queries (Semantic Domain Filter - only when NOT in an active workflow)
     if not active_plugin and intent == "out_of_domain":
         from services.rag_service import get_rejection_message
-        sys_blocked = system_config.get("system_messages", {}).get("blocked", {})
+        sys_blocked = (system_config or {}).get("system_messages", {}).get("blocked", {})
         if user_language == 'hi':
             blocked_msg = sys_blocked.get("response_hi") or get_rejection_message("out_of_domain", "hi")
         else:
@@ -1206,13 +1343,13 @@ def dispatch_chat_request(
         audio_output = text_to_speech(blocked_msg, user_language)
         return {"response": blocked_msg, "lang": user_language, "audio": audio_output, "mode": "blocked"}
 
-    # 7. Login guidance & claim verification
+    # 8. Login guidance & claim verification
     if intent in ["login_query", "login_claim"]:
         is_login_handled, login_resp = handle_login_intent(user_input, user_language, is_authenticated, cached_info, detected_intent=intent)
         if is_login_handled:
             return login_resp
 
-    # 8. Mid-Workflow Interruption / FAQ
+    # 9. Mid-Workflow Interruption / FAQ
     ui_lower = user_input.strip().lower()
     is_ui_payload = (ui_lower.startswith("[") and ui_lower.endswith("]")) or (ui_lower.startswith("{") and ui_lower.endswith("}"))
     is_interrupted, faq_resp = handle_workflow_interruption_or_faq(
@@ -1221,19 +1358,16 @@ def dispatch_chat_request(
     if is_interrupted:
         return faq_resp
 
-    # 9. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
+    # 10. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
     is_draft_op, draft_resp = handle_draft_management(
-        intent, user_input, user_language, phone, session_id, active_plugin, workflows, config
+        intent, user_input, user_language, phone, session_id, active_plugin, workflows, config, system_config=system_config
     )
     if is_draft_op:
         return draft_resp
 
-    # 10. Transactional Workflow Execution (LangGraph Plugins)
+    # 11. Transactional Workflow Execution (LangGraph Plugins)
     # Read workflow_intents from system_config (config.yml) with safe fallback
-    wf_intents_cfg = system_config.get("system_messages", {}).get("workflow_intents") or [
-        "grievance_candidate", "grievance_status_candidate", "grievance_confirm", "grievance_cancel",
-        "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm", "adv_cancel", "booking_cancel"
-    ]
+    wf_intents_cfg = (system_config or {}).get("system_messages", {}).get("workflow_intents") or DEFAULT_WORKFLOW_INTENTS
     workflow_intents = set(wf_intents_cfg)
 
     is_query_question = is_informational_question(user_input, intent_data, system_config=system_config)
@@ -1256,6 +1390,6 @@ def dispatch_chat_request(
             target_wf, user_input, user_language, phone, session_id, is_authenticated
         )
 
-    # 11. Knowledge Base RAG / FAQ Retrieval Fallback
+    # 12. Knowledge Base RAG / FAQ Retrieval Fallback
     return execute_rag_fallback(user_input, user_language, detected_script, history, session_id)
 
