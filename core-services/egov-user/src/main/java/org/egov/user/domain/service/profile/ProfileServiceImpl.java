@@ -2090,6 +2090,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (citizen == null) {
             return Collections.emptyList();
         }
+        // Aadhaar search participates in the same SSOT familyId enrichment as other profile endpoints
         enrichFamilyId(citizen, stateTenant, request.getRequestInfo());
         return Collections.singletonList(citizen);
     }

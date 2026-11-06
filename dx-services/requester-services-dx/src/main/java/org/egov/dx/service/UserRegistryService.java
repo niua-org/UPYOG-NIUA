@@ -22,6 +22,9 @@ public interface UserRegistryService {
     /**
      * Resolves the citizen UUID for a given Aadhaar number (raw or masked) by querying egov-user.
      *
+     * <p>Note: Thin wrapper over {@link #searchCitizenByAadhaar(String, String, RequestInfo)};
+     * callers needing multiple attributes should prefer the record API to avoid duplicate HTTP roundtrips.</p>
+     *
      * @param aadhaarNumber the raw 12-digit or masked Aadhaar number
      * @param tenantId      the tenant identifier (e.g., "pg.citya", "pg")
      * @param requestInfo   eGov RequestInfo header
@@ -41,6 +44,9 @@ public interface UserRegistryService {
 
     /**
      * Resolves the active Family ID for a given Aadhaar number by querying egov-user / family service.
+     *
+     * <p>Note: Thin wrapper over {@link #searchCitizenByAadhaar(String, String, RequestInfo)};
+     * callers should prefer {@link #searchCitizenByAadhaar(String, String, RequestInfo)} to avoid duplicate HTTP calls.</p>
      *
      * @param aadhaarNumber the raw 12-digit or masked Aadhaar number
      * @param tenantId      the tenant identifier

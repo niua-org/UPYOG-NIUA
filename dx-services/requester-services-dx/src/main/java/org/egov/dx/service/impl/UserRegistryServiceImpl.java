@@ -245,8 +245,10 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                         String candidateUuid = userData.path("uuid").asText(null);
                         if (StringUtils.isNotBlank(candidateUuid)) {
                             String candidateFamilyId = extractFamilyIdNode(userData);
-                            log.info("[USER-REGISTRY] Resolved citizen UUID: {} with familyId: {} from full Aadhaar match",
+                            log.debug("[USER-REGISTRY] Resolved citizen UUID: {} with familyId: {} from full Aadhaar match",
                                     candidateUuid, candidateFamilyId);
+                            log.info("[USER-REGISTRY] Resolved citizen from full Aadhaar match; familyId present={}",
+                                    StringUtils.isNotBlank(candidateFamilyId));
                             return UserRegistryRecord.builder()
                                     .userUuid(candidateUuid)
                                     .familyId(candidateFamilyId)
@@ -261,6 +263,13 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         return null;
     }
 
+    /**
+     * Extracts and sanitizes the {@code familyId} field from a user JSON node.
+     * Treats missing nodes, blank values, and literal string "null" as absent.
+     *
+     * @param userData JSON node containing user attributes
+     * @return trimmed family identifier, or {@code null} if absent or blank
+     */
     private String extractFamilyIdNode(JsonNode userData) {
         if (userData == null || !userData.hasNonNull("familyId")) {
             return null;
@@ -272,6 +281,18 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         return null;
     }
 
+    /**
+     * Queries upyog-family-service directly for the active Family ID of a citizen member.
+     *
+     * <p>Applies an {@code ACTIVE} status filter and normalizes tenant to state level.
+     * If {@code family.service.host} is unconfigured or blank, the call is skipped returning {@code null}.
+     * Fails open in a non-blocking manner on network or service errors so caller flows are not disrupted.</p>
+     *
+     * @param userUuid    unique citizen member UUID
+     * @param tenantId    caller tenant identifier
+     * @param requestInfo standard RequestInfo context
+     * @return active family identifier, or {@code null} if not found or skipped
+     */
     private String queryFamilyServiceForFamilyId(String userUuid, String tenantId, RequestInfo requestInfo) {
         String familyHost = configurations.getFamilyServiceHost();
         if (StringUtils.isBlank(familyHost)) {
@@ -289,7 +310,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                     .queryParam("memberUserUuid", userUuid)
                     .queryParam("status", "ACTIVE");
             if (StringUtils.isNotBlank(tenantId)) {
-                uriBuilder.queryParam("tenantId", tenantId);
+                uriBuilder.queryParam("tenantId", resolveTenantId(tenantId));
             }
 
             HttpHeaders headers = new HttpHeaders();

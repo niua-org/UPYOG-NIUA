@@ -100,8 +100,10 @@ public class AadhaarVerificationController {
 
         String aadhaarNumber = request.getAadhaarNumber();
         String maskedAadhaar = maskAadhaar(aadhaarNumber);
-        log.info("Processing Aadhaar Send OTP for masked Aadhaar: {}, apiId: {}, isResync: {}, userUuid: {}",
+        log.debug("Processing Aadhaar Send OTP for masked Aadhaar: {}, apiId: {}, isResync: {}, userUuid: {}",
                 maskedAadhaar, request.getRequestInfo().getApiId(), request.getIsResync(), request.getUserUuid());
+        log.info("Processing Aadhaar Send OTP for masked Aadhaar: {}, apiId: {}, isResync: {}, hasUserUuid: {}",
+                maskedAadhaar, request.getRequestInfo().getApiId(), request.getIsResync(), StringUtils.isNotBlank(request.getUserUuid()));
 
         // 2. Map to Vendor DTO
         VendorSendOtpRequest vendorReq = VendorSendOtpRequest.builder()
@@ -187,8 +189,10 @@ public class AadhaarVerificationController {
             return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_MAX_OTP_ATTEMPTS_EXCEEDED, AadhaarConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED), HttpStatus.BAD_REQUEST);
         }
 
-        log.info("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, userUuid: {}",
+        log.debug("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, userUuid: {}",
                 referenceId, request.getRequestInfo().getApiId(), request.getIsResync(), request.getUserUuid());
+        log.info("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, hasUserUuid: {}",
+                referenceId, request.getRequestInfo().getApiId(), request.getIsResync(), StringUtils.isNotBlank(request.getUserUuid()));
 
         // 3. Map to Vendor DTO
         Long vendorRefId = null;
@@ -310,14 +314,6 @@ public class AadhaarVerificationController {
                 existingUserUuid = userRecord.getUserUuid();
                 resolvedFamilyId = userRecord.getFamilyId();
             }
-            if (StringUtils.isBlank(existingUserUuid)) {
-                existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
-                        searchAadhaar, tenantId, request.getRequestInfo());
-            }
-            if (StringUtils.isBlank(resolvedFamilyId)) {
-                resolvedFamilyId = userRegistryService.searchFamilyIdByAadhaar(
-                        searchAadhaar, tenantId, request.getRequestInfo());
-            }
         }
         if (userRegistryService != null && StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
@@ -350,8 +346,10 @@ public class AadhaarVerificationController {
                 .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
                 .build();
 
-        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}, familyId: {}",
+        log.debug("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}, familyId: {}",
                 referenceId, details.getAadhaarNumber(), existingUserUuid, resolvedFamilyId);
+        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userResolved: {}, familyIdPresent: {}",
+                referenceId, details.getAadhaarNumber(), StringUtils.isNotBlank(existingUserUuid), StringUtils.isNotBlank(resolvedFamilyId));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
