@@ -107,13 +107,13 @@ public class JoinFamilyValidator {
         }
 
         // Validate HoF consent / OTP authorization
-        if (StringUtils.isBlank(request.getHofConsentOtp())) {
+        if (StringUtils.isBlank(request.getTxnId())) {
             throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Head of Family authorization OTP / consent token is mandatory to join this family.");
+                    "Head of Family authorization OTP / consent transaction identifier (txnId) is mandatory to join this family.");
         }
 
         boolean consentValid = requesterDxClient.verifyConsentToken(
-                request.getHofConsentOtp(),
+                request.getTxnId(),
                 request.getApplicantUserUuid(),
                 existingFamily.getFamilyId(),
                 request.getTenantId(),

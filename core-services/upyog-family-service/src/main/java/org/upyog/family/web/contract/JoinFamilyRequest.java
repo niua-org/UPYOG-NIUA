@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 
 /**
@@ -49,7 +50,7 @@ public class JoinFamilyRequest {
      * @return applicant user UUID, preferring applicantUserUuid if present, otherwise userUuid
      */
     public String getApplicantUserUuid() {
-        if (org.apache.commons.lang3.StringUtils.isNotBlank(applicantUserUuid)) {
+        if (StringUtils.isNotBlank(applicantUserUuid)) {
             return applicantUserUuid;
         }
         return userUuid;
@@ -59,7 +60,7 @@ public class JoinFamilyRequest {
     @JsonProperty("relationshipWithHead")
     private String relationshipWithHead;
 
-    @NotBlank(message = "HoF approval OTP or consent token is mandatory")
-    @JsonProperty("hofConsentOtp")
-    private String hofConsentOtp;
+    @NotBlank(message = "Transaction identifier (txnId) is mandatory")
+    @JsonProperty("txnId")
+    private String txnId;
 }

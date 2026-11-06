@@ -236,7 +236,7 @@ public class UserIdentityVerificationSecurityTest {
                 .tenantId("pg.citya")
                 .applicantUserUuid(applicantUuid)
                 .relationshipWithHead("SON")
-                .hofConsentOtp("CONSENT-VERIFIED-12345")
+                .txnId("CONSENT-VERIFIED-12345")
                 .build();
 
         CustomException ex = assertThrows(CustomException.class, () ->
