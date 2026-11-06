@@ -32,6 +32,27 @@ system_messages:
       "can i", "could you", "tell me", "explain", "meaning",
       "kya", "kaise", "kab", "kahan", "kyun", "kis", "batao", "bataiye"
     ]
+  # Workflow intents that trigger or drive transactional form execution.
+  # NOTE: Cancellation intents (adv_cancel, grievance_cancel, booking_cancel) are
+  # intentionally excluded here because they represent dialogue abort/exit signals,
+  # not workflow execution triggers. They are intercepted by dedicated cancel handlers.
+  workflow_intents: [
+    "grievance_candidate", "grievance_status_candidate", "grievance_confirm",
+    "adv_candidate", "adv_status_candidate", "booking_candidate", "adv_confirm", "booking_confirm"
+  ]
+  goodbye_keywords: [
+    "bye", "goodbye", "exit", "quit", "tata", "alvida", "see you", "done for now", "band karo"
+  ]
+  cancellation:
+    adv_booking:
+      en: "Your Advertisement Booking application has been cancelled. No submission was made to the portal.\n\nHow else can I assist you today?"
+      hi: "आपकी विज्ञापन बुकिंग रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nमैं आपकी और क्या सहायता कर सकता हूँ?"
+    grievance:
+      en: "Your Grievance application has been cancelled. No submission was made to the portal.\n\nHow else can I assist you today?"
+      hi: "आपकी शिकायत दर्ज करने की प्रक्रिया रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nमैं आपकी और क्या सहायता कर सकता हूँ?"
+    general:
+      en: "Understood. The request has been cancelled. How else can I assist you today?"
+      hi: "ठीक है, अनुरोध रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
 
 
 # ============================================================
@@ -263,7 +284,7 @@ forms:
         extract_fields: ["name", "mobile", "email"]
       - id: "address"
         type: "text"
-        label: "Address"
+        label: "Applicant Address"
         extractable: true
       - id: "doc_sample"
         type: "file"

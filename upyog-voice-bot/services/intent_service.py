@@ -206,7 +206,8 @@ load_plugins()
 
 
 def process_user_message(user_input: str, phone_number: str, session_id: str,
-                         target_workflow: str = "adv_booking") -> Dict[str, Any]:
+                         target_workflow: str = "adv_booking",
+                         user_language: str = "en") -> Dict[str, Any]:
     """Dispatches user input to the correct LangGraph plugin workflow (adv_booking, grievance, etc)."""
     intent = target_workflow
     if intent not in workflows:
@@ -219,7 +220,7 @@ def process_user_message(user_input: str, phone_number: str, session_id: str,
     try:
         events = target_graph.stream(
             {"messages": [HumanMessage(content=user_input)], "phone_number": phone_number,
-             "session_id": session_id, "active_service": intent},
+             "session_id": session_id, "active_service": intent, "user_language": user_language},
             config,
             stream_mode="values"
         )
