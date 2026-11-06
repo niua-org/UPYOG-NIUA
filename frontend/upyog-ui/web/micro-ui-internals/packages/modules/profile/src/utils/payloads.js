@@ -58,8 +58,8 @@ export const buildUpdateDocumentPayload = ({ existingDoc, tenantId, filestoreId,
 });
 
 // Body item for Digit.UserService.createUserDocument (`documents` is an array)
-export const buildCreateDocumentPayload = ({ userUuid, tenantId, documentType, filestoreId, fileName }) => ({
-  userUuid,
+export const buildCreateDocumentPayload = ({ uuid, tenantId, documentType, filestoreId, fileName }) => ({
+  uuid,
   tenantId,
   documentType,
   filestoreId,

@@ -4,7 +4,7 @@
  */
 
 export const AADHAAR_LENGTH = 12;
-export const FAMILY_ID_LENGTH = 12;
+export const FAMILY_ID_LENGTH = 13;
 export const OTP_LENGTH = 6;
 
 export const PROFILE_ROUTES = {

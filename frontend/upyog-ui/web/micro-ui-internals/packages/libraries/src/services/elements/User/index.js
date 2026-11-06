@@ -161,7 +161,7 @@ export const UserService = {
       userService: true,
       data: {
         address: details,
-        userUuid: userUuid,
+        uuid: userUuid,
       },
       params: { tenantId: stateCode },
     }),
@@ -186,7 +186,7 @@ export const UserService = {
       auth: true,
       userService: true,
       data: {
-        userUuid: userUuid,
+        uuid: userUuid,
         tenantId: tenantId,
       }
     }),
@@ -268,6 +268,7 @@ export const UserService = {
       data: details,
       auth: true,
       method: "POST",
+      userService: true,
     }),
 
   verifyFamilyOtp: (details) =>

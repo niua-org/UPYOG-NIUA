@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Dropdown, Loader,Modal,Card} from "@nudmcdgnpm/digit-ui-react-components";
 
-const FAMILY_ID_LENGTH = 12;
+const FAMILY_ID_LENGTH = 13;
 const getFamilyIdLength = (value) => value.replace(/-/g, "").length;
 
 const SelectLoginPage = ({ t, onSelect, mobileNumber = "",aadharNumber="", onMobileChange, onAadharChange, onAadharSelect, canSubmit, familyId = "", onFamilyIdChange, onFamilyIdSelect }) => {
@@ -28,9 +28,16 @@ const SelectLoginPage = ({ t, onSelect, mobileNumber = "",aadharNumber="", onMob
     return !(validCity && (validMobile || validAadhar || validFamilyId) && canSubmit);
   };
 
+  // handle input changes and validate the input values for mobile number, only be 10 should start with 6-9
   const handleMobileChange = (e) => {
     const value = e.target.value;
+
     if (/^\d{0,10}$/.test(value)) {
+      if (value.length > 0 && !/^[6-9]/.test(value)) {
+        showError("mobile", t("CORE_COMMON_PROFILE_MOBILE_NUMBER_INVALID"));
+        return;
+      }
+
       onMobileChange(e);
       clearError();
     } else {
@@ -216,10 +223,10 @@ const SelectLoginPage = ({ t, onSelect, mobileNumber = "",aadharNumber="", onMob
           <div className="login-input-wrap">
             <input
               type="text"
-              maxLength={16}
+              maxLength={15}
               value={familyId}
               disabled={!!mobileNumber || !!aadharNumber}
-              placeholder={"Enter 12 character family ID"}
+              placeholder={"Enter 15 character family ID"}
               onChange={handleFamilyIdChange}
             />
           </div>
