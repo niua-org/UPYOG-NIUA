@@ -18,6 +18,7 @@ import org.egov.dx.web.models.AadhaarVerificationRequest;
 import org.egov.dx.web.models.AadhaarVerificationResponse;
 import org.egov.dx.web.models.ResponseInfoFactory;
 import org.egov.dx.web.models.UserDemographics;
+import org.egov.dx.web.models.UserRegistryRecord;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -300,13 +301,32 @@ public class AadhaarVerificationController {
                    : null);
 
         String existingUserUuid = null;
+        String resolvedFamilyId = null;
+
         if (userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
-            existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
+            UserRegistryRecord userRecord = userRegistryService.searchCitizenByAadhaar(
                     searchAadhaar, tenantId, request.getRequestInfo());
+            if (userRecord != null) {
+                existingUserUuid = userRecord.getUserUuid();
+                resolvedFamilyId = userRecord.getFamilyId();
+            }
+            if (StringUtils.isBlank(existingUserUuid)) {
+                existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
+                        searchAadhaar, tenantId, request.getRequestInfo());
+            }
+            if (StringUtils.isBlank(resolvedFamilyId)) {
+                resolvedFamilyId = userRegistryService.searchFamilyIdByAadhaar(
+                        searchAadhaar, tenantId, request.getRequestInfo());
+            }
         }
         if (userRegistryService != null && StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
                     searchAadhaar, demographics, tenantId, request.getRequestInfo());
+        }
+
+        if (userRegistryService != null && StringUtils.isBlank(resolvedFamilyId) && StringUtils.isNotBlank(existingUserUuid)) {
+            resolvedFamilyId = userRegistryService.searchFamilyIdByUserUuid(
+                    existingUserUuid, tenantId, request.getRequestInfo());
         }
 
         // Persist verified identity in egov-user after successful OTP (not via public create payload)
@@ -325,12 +345,13 @@ public class AadhaarVerificationController {
                 .isVerified(true)
                 .maskedAadhaar(details.getAadhaarNumber())
                 .userUuid(existingUserUuid)
+                .familyId(resolvedFamilyId)
                 .demographics(demographics)
                 .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
                 .build();
 
-        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}",
-                referenceId, details.getAadhaarNumber(), existingUserUuid);
+        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}, familyId: {}",
+                referenceId, details.getAadhaarNumber(), existingUserUuid, resolvedFamilyId);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

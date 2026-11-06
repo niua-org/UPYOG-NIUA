@@ -2090,6 +2090,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (citizen == null) {
             return Collections.emptyList();
         }
+        enrichFamilyId(citizen, stateTenant, request.getRequestInfo());
         return Collections.singletonList(citizen);
     }
 

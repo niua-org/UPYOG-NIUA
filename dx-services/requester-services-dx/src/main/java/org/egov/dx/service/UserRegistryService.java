@@ -2,6 +2,7 @@ package org.egov.dx.service;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.web.models.UserDemographics;
+import org.egov.dx.web.models.UserRegistryRecord;
 
 /**
  * Service abstraction for interacting with egov-user service to resolve existing citizen profiles
@@ -27,6 +28,36 @@ public interface UserRegistryService {
      * @return the citizen UUID if found, or null if citizen does not exist or lookup fails
      */
     String searchUserUuidByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Resolves citizen account record (user UUID and active familyId) for a given Aadhaar number by querying egov-user.
+     *
+     * @param aadhaarNumber the raw 12-digit or masked Aadhaar number
+     * @param tenantId      the tenant identifier
+     * @param requestInfo   eGov RequestInfo header
+     * @return {@link UserRegistryRecord} containing userUuid and active familyId if found, or null
+     */
+    UserRegistryRecord searchCitizenByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Resolves the active Family ID for a given Aadhaar number by querying egov-user / family service.
+     *
+     * @param aadhaarNumber the raw 12-digit or masked Aadhaar number
+     * @param tenantId      the tenant identifier
+     * @param requestInfo   eGov RequestInfo header
+     * @return active familyId string, or null if not found
+     */
+    String searchFamilyIdByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Resolves the active Family ID for a citizen user UUID by querying family service or egov-user.
+     *
+     * @param userUuid    citizen unique identifier
+     * @param tenantId    the tenant identifier
+     * @param requestInfo eGov RequestInfo header
+     * @return active familyId string, or null if not found
+     */
+    String searchFamilyIdByUserUuid(String userUuid, String tenantId, RequestInfo requestInfo);
 
     /**
      * Resolves an existing citizen UUID by Aadhaar; if citizen does not exist in egov-user,

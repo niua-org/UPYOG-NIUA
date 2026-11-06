@@ -3,6 +3,7 @@ package org.egov.dx.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.util.Configurations;
+import org.egov.dx.web.models.UserRegistryRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -183,5 +184,71 @@ public class UserRegistryServiceImplTest {
         ReflectionTestUtils.setField(userRegistryService, "markVerifiedPath", null);
         assertThrows(CustomException.class, () ->
                 userRegistryService.markCitizenAadhaarVerifiedAfterEkyc("uuid-1", "548796521458", "pg.citya", new RequestInfo()));
+    }
+
+    @Test
+    void testSearchCitizenByAadhaar_MatchesFullAadhaar_ReturnsRecordWithUuidAndFamilyId() {
+        String mockResponse = "{\n" +
+                "  \"responseInfo\": {\"status\": \"SUCCESS\"},\n" +
+                "  \"user\": [\n" +
+                "    {\n" +
+                "      \"id\": 9154,\n" +
+                "      \"uuid\": \"0b90ae1c-7506-4114-b409-d48093e5db45\",\n" +
+                "      \"active\": true,\n" +
+                "      \"aadhaarNumber\": \"548796521458\",\n" +
+                "      \"familyId\": \"FAM-2026-F638A3E1\",\n" +
+                "      \"isIdentityVerified\": true\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(mockResponse);
+
+        UserRegistryRecord record = userRegistryService.searchCitizenByAadhaar("548796521458", "pg.citya", new RequestInfo());
+        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", record.getUserUuid());
+        assertEquals("FAM-2026-F638A3E1", record.getFamilyId());
+        assertEquals("FAM-2026-F638A3E1", userRegistryService.searchFamilyIdByAadhaar("548796521458", "pg.citya", new RequestInfo()));
+    }
+
+    @Test
+    void testSearchFamilyIdByUserUuid_WithFamilyServiceHost_QueriesFamilyServiceDirectly() {
+        when(configurations.getFamilyServiceHost()).thenReturn("http://localhost:8092/");
+        when(configurations.getFamilyServiceSearchEndpoint()).thenReturn("family/v1/family/_search");
+
+        String mockFamilyResponse = "{\n" +
+                "  \"families\": [\n" +
+                "    {\n" +
+                "      \"familyId\": \"FAM-DIRECT-123\",\n" +
+                "      \"status\": \"ACTIVE\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        when(restTemplate.postForObject(contains("family/v1/family/_search"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(mockFamilyResponse);
+
+        String familyId = userRegistryService.searchFamilyIdByUserUuid("usr-123", "pg.citya", new RequestInfo());
+        assertEquals("FAM-DIRECT-123", familyId);
+    }
+
+    @Test
+    void testSearchFamilyIdByUserUuid_WithoutFamilyServiceHost_QueriesProfileSearch() {
+        when(configurations.getFamilyServiceHost()).thenReturn(null);
+
+        String mockProfileResponse = "{\n" +
+                "  \"user\": [\n" +
+                "    {\n" +
+                "      \"uuid\": \"usr-123\",\n" +
+                "      \"familyId\": \"FAM-FROM-PROFILE-456\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        when(restTemplate.postForObject(contains("/user/profile/_search"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(mockProfileResponse);
+
+        String familyId = userRegistryService.searchFamilyIdByUserUuid("usr-123", "pg.citya", new RequestInfo());
+        assertEquals("FAM-FROM-PROFILE-456", familyId);
     }
 }

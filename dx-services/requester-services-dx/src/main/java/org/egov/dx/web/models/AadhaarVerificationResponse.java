@@ -84,6 +84,9 @@ public class AadhaarVerificationResponse {
     @JsonProperty("userUuid")
     private String userUuid;
 
+    @JsonProperty("familyId")
+    private String familyId;
+
     /**
      * Authenticated citizen demographics and residential address obtained from UIDAI e-KYC.
      */

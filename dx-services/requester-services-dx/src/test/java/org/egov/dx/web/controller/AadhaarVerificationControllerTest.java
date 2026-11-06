@@ -13,6 +13,7 @@ import org.egov.dx.util.AadhaarConstants;
 import org.egov.dx.validator.AadhaarVerificationValidator;
 import org.egov.dx.web.models.AadhaarVerificationRequest;
 import org.egov.dx.web.models.AadhaarVerificationResponse;
+import org.egov.dx.web.models.UserRegistryRecord;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -383,5 +384,51 @@ public class AadhaarVerificationControllerTest {
         assertNotNull(body);
         assertTrue(body.getIsVerified());
         assertEquals("newly-provisioned-citizen-uuid-999", body.getUserUuid());
+    }
+
+    @Test
+    void testVerifyOtp_WithExistingCitizenAndFamilyId_ReturnsUserUuidAndFamilyId() {
+        UserRegistryService userRegistryService = mock(UserRegistryService.class);
+        AadhaarSessionManager sessionManager = new AadhaarSessionManagerImpl(3, null);
+        AadhaarVerificationController customController = new AadhaarVerificationController(
+                gatewayAdapter, validator, sessionManager, userRegistryService);
+
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .referenceId("998877")
+                .otp("123456")
+                .aadhaarNumber("548796521458")
+                .tenantId("pg.citya")
+                .build();
+
+        VendorVerifyOtpSuccessResponse mockVendorRes = VendorVerifyOtpSuccessResponse.builder()
+                .code(200)
+                .transactionId("TXN-VERIFY-1")
+                .data(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.builder()
+                        .status("VALID")
+                        .aadhaarNumber("XXXXXXXX1458")
+                        .name("Citizen Name")
+                        .build())
+                .build();
+
+        UserRegistryRecord mockRecord = UserRegistryRecord.builder()
+                .userUuid("0b90ae1c-7506-4114-b409-d48093e5db45")
+                .familyId("FAM-2026-F638A3E1")
+                .build();
+
+        when(gatewayAdapter.verifyOtp(any(VendorVerifyOtpRequest.class))).thenReturn(mockVendorRes);
+        when(userRegistryService.searchCitizenByAadhaar(eq("548796521458"), eq("pg.citya"), any()))
+                .thenReturn(mockRecord);
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = customController.verifyOtp(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertTrue(body.getIsVerified());
+        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", body.getUserUuid());
+        assertEquals("FAM-2026-F638A3E1", body.getFamilyId());
+        assertEquals("XXXXXXXX1458", body.getMaskedAadhaar());
     }
 }

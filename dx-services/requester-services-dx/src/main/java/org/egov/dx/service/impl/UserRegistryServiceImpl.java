@@ -11,6 +11,7 @@ import org.egov.dx.util.AadhaarConstants;
 import org.egov.dx.util.AadhaarNumberUtils;
 import org.egov.dx.util.Configurations;
 import org.egov.dx.web.models.UserDemographics;
+import org.egov.dx.web.models.UserRegistryRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,6 +71,15 @@ public class UserRegistryServiceImpl implements UserRegistryService {
      */
     @Override
     public String searchUserUuidByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo) {
+        UserRegistryRecord record = searchCitizenByAadhaar(aadhaarNumber, tenantId, requestInfo);
+        return record != null ? record.getUserUuid() : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public UserRegistryRecord searchCitizenByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo) {
         String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(aadhaarNumber);
         if (fullAadhaar == null) {
             return null;
@@ -82,7 +93,63 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         String userHost = resolveUserHost();
 
         String searchUrl = buildUrl(userHost, aadhaarSearchPath);
-        return searchByFullAadhaar(searchUrl, fullAadhaar, effectiveTenantId, requestInfo);
+        return searchCitizenRecordByFullAadhaar(searchUrl, fullAadhaar, effectiveTenantId, requestInfo);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String searchFamilyIdByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo) {
+        UserRegistryRecord record = searchCitizenByAadhaar(aadhaarNumber, tenantId, requestInfo);
+        return record != null ? record.getFamilyId() : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String searchFamilyIdByUserUuid(String userUuid, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(userUuid)) {
+            return null;
+        }
+
+        // 1. Try querying upyog-family-service directly if configured
+        String familyId = queryFamilyServiceForFamilyId(userUuid, tenantId, requestInfo);
+        if (StringUtils.isNotBlank(familyId)) {
+            return familyId;
+        }
+
+        // 2. Fallback to querying egov-user profile search endpoint
+        if (StringUtils.isNotBlank(profileSearchPath)) {
+            try {
+                String url = buildUrl(resolveUserHost(), profileSearchPath);
+                Map<String, Object> reqBody = new HashMap<>();
+                reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
+                reqBody.put("tenantId", resolveTenantId(tenantId));
+                reqBody.put("uuid", userUuid);
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(reqBody, headers);
+
+                String responseStr = restTemplate.postForObject(url, entity, String.class);
+                if (StringUtils.isNotBlank(responseStr)) {
+                    JsonNode root = objectMapper.readTree(responseStr);
+                    JsonNode userArray = root.path("user");
+                    if (!userArray.isArray() || userArray.isEmpty()) {
+                        userArray = root.path("User");
+                    }
+                    if (userArray.isArray() && !userArray.isEmpty()) {
+                        return extractFamilyIdNode(userArray.get(0));
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[USER-REGISTRY] Non-blocking: Failed to query familyId from profile search for user {}: {}",
+                        userUuid, e.getMessage());
+            }
+        }
+        return null;
     }
 
     /**
@@ -142,7 +209,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         }
     }
 
-    private String searchByFullAadhaar(String url, String fullAadhaar, String tenantId, RequestInfo requestInfo) {
+    private UserRegistryRecord searchCitizenRecordByFullAadhaar(String url, String fullAadhaar, String tenantId, RequestInfo requestInfo) {
         try {
             Map<String, Object> reqBody = new HashMap<>();
             reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
@@ -177,14 +244,76 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                     if (normalizedStored != null && fullAadhaar.equals(normalizedStored)) {
                         String candidateUuid = userData.path("uuid").asText(null);
                         if (StringUtils.isNotBlank(candidateUuid)) {
-                            log.info("[USER-REGISTRY] Resolved citizen UUID from full Aadhaar match");
-                            return candidateUuid;
+                            String candidateFamilyId = extractFamilyIdNode(userData);
+                            log.info("[USER-REGISTRY] Resolved citizen UUID: {} with familyId: {} from full Aadhaar match",
+                                    candidateUuid, candidateFamilyId);
+                            return UserRegistryRecord.builder()
+                                    .userUuid(candidateUuid)
+                                    .familyId(candidateFamilyId)
+                                    .build();
                         }
                     }
                 }
             }
         } catch (Exception e) {
             log.warn("[USER-REGISTRY] Failed to query citizen by Aadhaar from URL [{}]: {}", url, e.getMessage());
+        }
+        return null;
+    }
+
+    private String extractFamilyIdNode(JsonNode userData) {
+        if (userData == null || !userData.hasNonNull("familyId")) {
+            return null;
+        }
+        String familyId = userData.path("familyId").asText(null);
+        if (StringUtils.isNotBlank(familyId) && !"null".equalsIgnoreCase(familyId.trim())) {
+            return familyId.trim();
+        }
+        return null;
+    }
+
+    private String queryFamilyServiceForFamilyId(String userUuid, String tenantId, RequestInfo requestInfo) {
+        String familyHost = configurations.getFamilyServiceHost();
+        if (StringUtils.isBlank(familyHost)) {
+            return null;
+        }
+        try {
+            String endpoint = StringUtils.defaultIfBlank(configurations.getFamilyServiceSearchEndpoint(), "family/v1/family/_search");
+            if (!familyHost.endsWith("/")) {
+                familyHost += "/";
+            }
+            if (endpoint.startsWith("/")) {
+                endpoint = endpoint.substring(1);
+            }
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(familyHost + endpoint)
+                    .queryParam("memberUserUuid", userUuid)
+                    .queryParam("status", "ACTIVE");
+            if (StringUtils.isNotBlank(tenantId)) {
+                uriBuilder.queryParam("tenantId", tenantId);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<RequestInfo> entity = new HttpEntity<>(requestInfo != null ? requestInfo : new RequestInfo(), headers);
+
+            String responseStr = restTemplate.postForObject(uriBuilder.toUriString(), entity, String.class);
+            if (StringUtils.isNotBlank(responseStr)) {
+                JsonNode root = objectMapper.readTree(responseStr);
+                JsonNode families = root.path("families");
+                if (!families.isArray() || families.isEmpty()) {
+                    families = root.path("Families");
+                }
+                if (families.isArray() && !families.isEmpty()) {
+                    for (JsonNode family : families) {
+                        String fid = family.path("familyId").asText(null);
+                        if (StringUtils.isNotBlank(fid) && !"null".equalsIgnoreCase(fid.trim())) {
+                            return fid.trim();
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[USER-REGISTRY] Non-blocking: Could not resolve familyId from family service: {}", e.getMessage());
         }
         return null;
     }
