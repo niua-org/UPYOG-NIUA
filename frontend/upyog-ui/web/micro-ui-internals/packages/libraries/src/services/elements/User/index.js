@@ -268,6 +268,7 @@ export const UserService = {
       data: details,
       auth: true,
       method: "POST",
+      userService: true,
     }),
 
   verifyFamilyOtp: (details) =>
