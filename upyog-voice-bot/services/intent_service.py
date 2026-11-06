@@ -299,13 +299,6 @@ def process_user_message(user_input: str, phone_number: str, session_id: str,
             pass
         response_text = re.sub(r'<ui-slot-table[^>]*>', '', response_text).strip()
 
-    # Parse <ui-applicant-form cartAmount="..." />
-    form_match = re.search(r'<ui-applicant-form cartAmount="([^"]*)"\s*/>', response_text)
-    if form_match:
-        input_type = "applicant_form"
-        options = {"cartAmount": form_match.group(1)}
-        response_text = re.sub(r'<ui-applicant-form[^>]*>', '', response_text).strip()
-        
     # Parse <ui-booking-history data='[...]' /> or <ui-complaint-history data='[...]' />
     history_match = re.search(r"<ui-(booking|complaint)-history data='(\[.*?\])'\s*/>", response_text, re.DOTALL)
     if not history_match:
