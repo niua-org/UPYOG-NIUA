@@ -75,7 +75,7 @@ const ProfileVerify = () => {
       setReferenceId(res.referenceId);
       setOtp("");
     } catch (err) {
-      showError(err?.response?.data?.message || t("AADHAAR_OTP_SEND_FAILED"));
+      showError(err?.response?.data?.status || t("AADHAAR_OTP_SEND_FAILED"));
     } finally {
       setLoading(false);
     }
