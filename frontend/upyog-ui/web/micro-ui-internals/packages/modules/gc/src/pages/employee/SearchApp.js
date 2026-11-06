@@ -75,7 +75,7 @@ const SearchApp = () => {
         config
     );
 
-    const searchResult = data?.garbageAccounts || data?.GarbageApplications || data?.data || [];
+    const searchResult = data?.garbageApplications || [];
     const count = searchResult?.length || 0;
     const paginatedResult = searchResult.slice(pageConfig.offset, pageConfig.offset + pageConfig.limit);
 

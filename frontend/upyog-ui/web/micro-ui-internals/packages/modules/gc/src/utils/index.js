@@ -74,7 +74,6 @@ export const GCDataConvert = (data) => {
 
   // Documents
   const ownerDocs = (docData?.ownerDocuments || docData?.documents || []).map((doc) => ({
-    uuid: doc?.uuid || user?.uuid,
     documentType: doc?.documentType,
     fileStoreId: doc?.fileStoreId,
     documentUid: doc?.documentUid || doc?.fileStoreId,
@@ -136,7 +135,6 @@ export const GCDataConvert = (data) => {
   const tenantApps = tenants.map((tenant, idx) => {
     const rawTDocs = tenantDocsMap[tenant.id] || [];
     const tDocs = rawTDocs.map((doc) => ({
-      uuid: doc?.uuid,
       documentType: doc?.documentType,
       fileStoreId: doc?.fileStoreId,
       documentUid: doc?.documentUid || doc?.fileStoreId,
@@ -145,13 +143,14 @@ export const GCDataConvert = (data) => {
     return {
       tenantId: tenantId,
       propertyId: propertyLocation.propertyId,
+      floorNo: String(tenant.floorNo || idx + 1),
       ownerUuid: user?.uuid || propertyLoc?.ownerInfo?.uuid || null,
       tenantUuid: tenant?.tenantUuid || null,
       tenantDetails: {
         name: tenant.name,
         mobileNumber: tenant.mobileNumber,
         emailId: tenant.email,
-        floorNo: String(tenant.floorNo),
+        floorNo: String(tenant.floorNo || idx + 1),
       },
       applicantDetails: [
         {
@@ -162,6 +161,7 @@ export const GCDataConvert = (data) => {
       ],
       applicationNo: null,
       status: "APPLICATION_CREATED",
+      connectionStatus: "ACTIVE",
       businessService: "garbage-service",
       channel: user?.type === "EMPLOYEE" ? "EMPLOYEE" : "CITIZEN",
       propertyLocation: propertyLocation,
@@ -181,12 +181,12 @@ export const GCDataConvert = (data) => {
     };
   });
 
-  const allApplications = [ownerApp, ...tenantApps];
+  // Attach nested child garbage applications to owner parent application
+  ownerApp.childGarbageApplications = tenantApps;
 
-  // Return both garbageApplications (HLD canonical) and garbageAccounts (backward compatibility)
+  // Canonical payload sends parent application with nested children
   return {
-    garbageApplications: allApplications,
-    garbageAccounts: allApplications,
+    garbageApplications: [ownerApp],
   };
 };
 
@@ -219,7 +219,7 @@ export const downloadGCReceipt = async (tenantId, payments) => {
 export const downloadGCAcknowledgement = async (application, tenants, t) => {
   const tenantInfo = tenants?.find((tenant) => tenant.code === application?.tenantId);
   const getGcAcknowledgementData = (await import("../getGcAcknowledgementData")).default;
-  const ackData = await getGcAcknowledgementData({ garbageApplications: [application], garbageAccounts: [application] }, tenantInfo, t);
+  const ackData = await getGcAcknowledgementData({ garbageApplications: [application] }, tenantInfo, t);
   Digit.Utils.pdf.generate(ackData);
 };
 

@@ -89,21 +89,16 @@ const CreateApplication = () => {
 
   const handleSubmit = async () => {
     try {
-      let formdata = GCDataConvert(params);
+      const formdata = GCDataConvert(params);
+      const targetApp = formdata?.garbageApplications?.[0];
 
-      // Unwrap the nested garbageAccount object if it exists
-      if (formdata?.garbageAccounts?.[0]?.garbageAccount) {
-        formdata.garbageAccounts[0] = formdata.garbageAccounts[0].garbageAccount;
-      }
-
-      // Ensure tenantId aligns correctly for the employee context
-      if (formdata?.garbageAccounts?.[0]) {
-        formdata.garbageAccounts[0].tenantId = tenantId;
-        if (formdata.garbageAccounts[0].propertyLocation) {
-          formdata.garbageAccounts[0].propertyLocation.tenantId = tenantId;
-          formdata.garbageAccounts[0].propertyLocation.city = tenantId;
+      if (targetApp) {
+        targetApp.tenantId = tenantId;
+        if (targetApp.propertyLocation) {
+          targetApp.propertyLocation.tenantId = tenantId;
+          targetApp.propertyLocation.city = tenantId;
         }
-        formdata.garbageAccounts[0].workflow = { action: "APPLY" };
+        targetApp.workflow = { action: "APPLY" };
       }
       
       mutation.mutate(formdata, {

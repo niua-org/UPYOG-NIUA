@@ -83,7 +83,7 @@ const GCActionModal = ({ t, action, tenantId, closeModal, submitAction, applicat
       ];
     }
     const payload = {
-      garbageAccounts: [
+      garbageApplications: [
         {
           ...applicationData,
           workflowAction,

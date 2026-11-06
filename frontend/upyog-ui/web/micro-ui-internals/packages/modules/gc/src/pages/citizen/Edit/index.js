@@ -53,7 +53,7 @@ const GCEdIt = () => {
     filters: { applicationNumber: [applicationNo] },
   }, { enabled: !!applicationNo, cacheTime: 0, staleTime: 0 });
 
-  const applicationList = gcData?.garbageAccounts || gcData?.GarbageApplications || gcData?.data || [];
+  const applicationList = gcData?.garbageApplications || [];
   const application = applicationList.length > 0 ? applicationList[0] : null;
 
 
@@ -139,15 +139,14 @@ const GCEdIt = () => {
       const applicationStatus =
         application?.applicationStatus || application?.status || application?.grbgApplication?.status;
 
-      // Persist the edited form first. The garbage-service deliberately treats
-      // workflow-only requests separately and reloads the account from storage.
-      const payload = { garbageAccounts: [formdata] };
+      // Persist the edited form first.
+      const payload = { garbageApplications: [formdata] };
 
       await Digit.GCServices.update(payload, tenantId);
 
       if (applicationStatus === "EDIT_APPLICATION") {
         const workflowPayload = {
-          garbageAccounts: [
+          garbageApplications: [
             {
               ...formdata,
               workflowAction: "EDIT",

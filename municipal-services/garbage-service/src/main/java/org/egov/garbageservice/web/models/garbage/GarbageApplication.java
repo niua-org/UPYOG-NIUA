@@ -3,6 +3,7 @@ package org.egov.garbageservice.web.models.garbage;
 import org.egov.garbageservice.web.models.workflow.WorkflowRequest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -143,16 +144,8 @@ public class GarbageApplication {
     // Hierarchy & cross-view support
     @JsonProperty("childGarbageApplications")
     @Builder.Default
-        @com.fasterxml.jackson.annotation.JsonAlias({"childGarbageAccounts"})
+    @com.fasterxml.jackson.annotation.JsonAlias({"childGarbageAccounts"})
     private List<GarbageApplication> childGarbageApplications = new ArrayList<>();
-
-    public List<GarbageApplication> getChildGarbageAccounts() {
-        return childGarbageApplications;
-    }
-
-    public void setChildGarbageAccounts(List<GarbageApplication> childGarbageAccounts) {
-        this.childGarbageApplications = childGarbageAccounts;
-    }
 
     @CustomSafeHtml
     @JsonProperty("parentApplicationNo")
@@ -185,6 +178,7 @@ public class GarbageApplication {
         this.oldGarbageNo = oldGarbageId;
     }
 
+    @JsonIgnore
     public Boolean getIsOwner() {
         if (garbageSpecification != null && StringUtils.isNotBlank(garbageSpecification.getPropertyType())) {
             return "OWNER".equalsIgnoreCase(garbageSpecification.getPropertyType());
@@ -255,13 +249,22 @@ public class GarbageApplication {
         }
     }
 
+    @JsonProperty("grbgCollectionUnits")
     public List<GarbageSpecification> getGrbgCollectionUnits() {
         if (garbageSpecification != null) {
-            return Collections.singletonList(garbageSpecification);
+            return new ArrayList<>(Collections.singletonList(garbageSpecification));
         }
-        return Collections.emptyList();
+        return new ArrayList<>();
     }
 
+    @JsonProperty("grbgCollectionUnits")
+    public void setGrbgCollectionUnits(List<GarbageSpecification> grbgCollectionUnits) {
+        if (grbgCollectionUnits != null && !grbgCollectionUnits.isEmpty()) {
+            this.garbageSpecification = grbgCollectionUnits.get(0);
+        }
+    }
+
+    @JsonIgnore
     public Boolean getIsActive() {
         return !"DISCONNECTED".equalsIgnoreCase(connectionStatus) && !"PERMANENTLY_DISCONNECTED".equalsIgnoreCase(connectionStatus);
     }

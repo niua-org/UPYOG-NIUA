@@ -76,7 +76,6 @@ public class UserService {
         UserSearchRequest userSearchRequest = getBaseUserSearchRequest(UserUtil.getStateLevelTenant(tenantId), requestInfo);
         userSearchRequest.setMobileNumber(mobileNumber);
         userSearchRequest.setUserType("CITIZEN");
-        userSearchRequest.setUserName(mobileNumber);
 
         StringBuilder uri = new StringBuilder(config.getUserServiceHostUrl())
                 .append(config.getUserSearchEndpoint());
@@ -221,6 +220,34 @@ public class UserService {
             }
         } catch (Exception e) {
             log.error("Error while enriching garbage application with user details: {}", e.getMessage(), e);
+        }
+
+        // Fallback enrichment from additionalDetail if applicantDetails is still empty
+        try {
+            if (CollectionUtils.isEmpty(application.getApplicantDetails()) && application.getAdditionalDetail() != null) {
+                com.fasterxml.jackson.databind.JsonNode addNode = application.getAdditionalDetail();
+                if (addNode.has("applicantDetails") && addNode.get("applicantDetails").isArray() && !addNode.get("applicantDetails").isEmpty()) {
+                    com.fasterxml.jackson.databind.JsonNode appNode = addNode.get("applicantDetails").get(0);
+                    ApplicantDetail ad = ApplicantDetail.builder()
+                            .name(appNode.has("name") ? appNode.get("name").asText() : (appNode.has("applicantName") ? appNode.get("applicantName").asText() : ""))
+                            .applicantName(appNode.has("applicantName") ? appNode.get("applicantName").asText() : (appNode.has("name") ? appNode.get("name").asText() : ""))
+                            .mobileNumber(appNode.has("mobileNumber") ? appNode.get("mobileNumber").asText() : "")
+                            .emailId(appNode.has("emailId") ? appNode.get("emailId").asText() : "")
+                            .build();
+                    application.setApplicantDetails(Collections.singletonList(ad));
+                } else if (addNode.has("tenantDetails")) {
+                    com.fasterxml.jackson.databind.JsonNode tNode = addNode.get("tenantDetails");
+                    ApplicantDetail ad = ApplicantDetail.builder()
+                            .name(tNode.has("name") ? tNode.get("name").asText() : "")
+                            .applicantName(tNode.has("name") ? tNode.get("name").asText() : "")
+                            .mobileNumber(tNode.has("mobileNumber") ? tNode.get("mobileNumber").asText() : "")
+                            .emailId(tNode.has("emailId") ? tNode.get("emailId").asText() : (tNode.has("email") ? tNode.get("email").asText() : ""))
+                            .build();
+                    application.setApplicantDetails(Collections.singletonList(ad));
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Fallback applicant details enrichment from additionalDetail skipped: {}", ex.getMessage());
         }
     }
 

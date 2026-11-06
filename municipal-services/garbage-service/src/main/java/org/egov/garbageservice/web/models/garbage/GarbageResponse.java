@@ -28,10 +28,6 @@ public class GarbageResponse {
     @JsonProperty("garbageApplications")
     private List<GarbageApplication> garbageApplications;
 
-    // Backward compatibility with legacy frontend consumers
-    @JsonProperty("garbageAccounts")
-    private List<GarbageApplication> garbageAccounts;
-
     @JsonProperty("totalCount")
     private Integer totalCount;
 
@@ -39,7 +35,6 @@ public class GarbageResponse {
         return GarbageResponse.builder()
                 .responseInfo(responseInfo)
                 .garbageApplications(applications)
-                .garbageAccounts(applications)
                 .totalCount(applications != null ? applications.size() : 0)
                 .build();
     }

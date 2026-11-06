@@ -27,81 +27,63 @@ const getValue = (value, t) => {
  * Supports both single & multi-application payloads as per UPYOG Garbage Service HLD.
  */
 const getGcAcknowledgementData = async (application = {}, tenantInfo, t) => {
-  const account =
-    application?.garbageApplications?.[0] ||
-    application?.garbageAccounts?.[0] ||
-    application?.garbageAccount ||
-    application;
-
-  const applicationDetails = account?.grbgApplication || account?.GarbageApplication || {};
-  const applicant =
-    account?.additionalDetail?.applicantDetails?.[0] ||
-    account?.additionalDetails?.applicantDetails?.[0] ||
-    account?.applicantDetails?.[0] ||
-    account?.tenantDetails ||
-    {};
-
+  const account = application?.garbageApplications?.[0] || application || {};
+  const applicant = account?.applicantDetails?.[0] || {};
   const propertyLocation = account?.propertyLocation || {};
-  const address = account?.addresses?.[0] || account?.address || propertyLocation;
-  const addressDetails = address?.additionalDetail || address?.additionalDetails || {};
-  const collectionUnit = account?.grbgCollectionUnits?.[0] || {};
   const garbageSpec = account?.garbageSpecification || {};
-  const oldGarbageId = account?.grbgOldDetails?.oldGarbageId || garbageSpec?.oldGarbageId || collectionUnit?.oldGarbageId || account?.oldGarbageNo;
-  const floorNo = collectionUnit?.floorNo || garbageSpec?.floorNo;
+  const oldGarbageId = account?.oldGarbageNo || garbageSpec?.oldGarbageNo;
+  const floorNo = garbageSpec?.floorNo;
 
   return {
     t,
     tenantId: tenantInfo?.code || account?.tenantId,
     name: getTenantName(tenantInfo, t),
     email: getValue(tenantInfo?.emailId, t),
-    applicationNumber: getValue(
-      applicationDetails?.applicationNo || account?.grbgApplicationNumber || account?.applicationNo || account?.garbageNo,
-      t
-    ),
+    applicationNumber: getValue(account?.applicationNo, t),
     phoneNumber: getValue(tenantInfo?.contactNumber, t),
     heading: t("GC_APPLICATION_DETAILS"),
     details: [
       {
         title: t("ES_APPLICANT_DETAILS"),
         values: [
-          { title: t("GC_APPLICANT_NAME"), value: getValue(applicant?.applicantName || applicant?.name || account?.name, t) },
-          { title: t("GC_MOBILE_NUMBER"), value: getValue(applicant?.mobileNumber || account?.mobileNumber, t) },
-          { title: t("GC_ALT_MOBILE_NUMBER"), value: getValue(applicant?.alternateNumber || account?.alternateNumber, t) },
-          { title: t("GC_EMAIL_ID"), value: getValue(applicant?.emailId || applicant?.email || account?.emailId || account?.email, t) },
+          { title: t("GC_APPLICANT_NAME"), value: getValue(applicant?.name, t) },
+          { title: t("GC_MOBILE_NUMBER"), value: getValue(applicant?.mobileNumber, t) },
+          { title: t("GC_ALT_MOBILE_NUMBER"), value: getValue(applicant?.alternateNumber, t) },
+          { title: t("GC_EMAIL_ID"), value: getValue(applicant?.emailId, t) },
         ],
       },
       {
         title: t("GC_PROPERTY_LOCATION_DETAILS"),
         values: [
           { title: t("GC_PROPERTY_ID"), value: getValue(account?.propertyId || propertyLocation?.propertyId, t) },
-          { title: t("GC_HOUSE_NO"), value: getValue(propertyLocation?.houseNo || addressDetails?.houseNo, t) },
-          { title: t("GC_BUILDING_NAME"), value: getValue(propertyLocation?.houseName || addressDetails?.houseName, t) },
-          { title: t("GC_STREET_NAME"), value: getValue(propertyLocation?.streetName || addressDetails?.streetName, t) },
-          { title: t("GC_ADDRESS_LINE1"), value: getValue(address?.address1 || propertyLocation?.addressline1, t) },
-          { title: t("GC_ADDRESS_LINE2"), value: getValue(address?.address2 || propertyLocation?.addressline2, t) },
-          { title: t("GC_LANDMARK"), value: getValue(propertyLocation?.landmark || addressDetails?.landmark, t) },
-          { title: t("GC_CITY"), value: getValue(propertyLocation?.city || address?.city, t) },
-          { title: t("GC_LOCALITY"), value: getValue(propertyLocation?.locality || addressDetails?.locality, t) },
-          { title: t("GC_ADDRESS_PINCODE"), value: getValue(propertyLocation?.pincode || address?.pincode, t) },
+          { title: t("GC_HOUSE_NO"), value: getValue(propertyLocation?.houseNo, t) },
+          { title: t("GC_BUILDING_NAME"), value: getValue(propertyLocation?.houseName, t) },
+          { title: t("GC_STREET_NAME"), value: getValue(propertyLocation?.streetName, t) },
+          { title: t("GC_ADDRESS_LINE1"), value: getValue(propertyLocation?.addressline1, t) },
+          { title: t("GC_ADDRESS_LINE2"), value: getValue(propertyLocation?.addressline2, t) },
+          { title: t("GC_LANDMARK"), value: getValue(propertyLocation?.landmark, t) },
+          { title: t("GC_CITY"), value: getValue(propertyLocation?.city, t) },
+          { title: t("GC_LOCALITY"), value: getValue(propertyLocation?.locality, t) },
+          { title: t("GC_ADDRESS_PINCODE"), value: getValue(propertyLocation?.pincode, t) },
         ],
       },
       {
         title: t("GC_GARBAGE_SPECIFICATIONS"),
         values: [
           { title: t("GC_OLD_GARBAGE_ID"), value: getValue(oldGarbageId, t) },
-          { title: t("GC_TYPE_OF_COLLECTION"), value: getValue(collectionUnit?.unitType || collectionUnit?.collectionType || garbageSpec?.typeOfCollection || garbageSpec?.collectionType, t) },
-          { title: t("GC_OWNER_OR_TENANT"), value: getValue(collectionUnit?.ownerType || collectionUnit?.propertyType || garbageSpec?.propertyType || garbageSpec?.ownerType, t) },
+          { title: t("GC_TYPE_OF_COLLECTION"), value: getValue(garbageSpec?.collectionType, t) },
+          { title: t("GC_OWNER_OR_TENANT"), value: getValue(garbageSpec?.propertyType, t) },
           ...(floorNo ? [{ title: t("GC_FLOOR_UNIT") || "Assigned Floor", value: getValue(floorNo === "0" ? t("GC_FLOOR_GROUND") || "Ground Floor" : `${floorNo} Floor`, t) }] : []),
-          { title: t("GC_NAME"), value: getValue(applicant?.name || garbageSpec?.name || account?.name, t) },
-          { title: t("GC_PHONE_NUMBER"), value: getValue(applicant?.mobileNumber || garbageSpec?.phoneNumber || account?.mobileNumber, t) },
-          { title: t("GC_GENDER"), value: getValue(garbageSpec?.gender || account?.gender, t) },
-          { title: t("GC_EMAIL"), value: getValue(applicant?.email || garbageSpec?.email || account?.emailId, t) },
-          { title: t("GC_CATEGORY"), value: getValue(collectionUnit?.category || garbageSpec?.category, t) },
-          { title: t("GC_SUB_CATEGORY"), value: getValue(collectionUnit?.subCategory || garbageSpec?.subCategory, t) },
-          { title: t("GC_SUB_CATEGORY_TYPE"), value: getValue(collectionUnit?.subCategoryType || garbageSpec?.subCategoryType, t) },
-          { title: t("GC_SPECIAL_CATEGORY"), value: getValue(collectionUnit?.specialCategory || garbageSpec?.specialCategory, t) },
-          { title: t("GC_IS_INHERITANCE"), value: (collectionUnit?.isInheritance || garbageSpec?.isInheritance) ? t("YES") : t("NO") },
-          { title: t("GC_NO_OF_UNITS"), value: getValue(collectionUnit?.no_of_units || garbageSpec?.no_of_units, t) },
+          { title: t("GC_NAME"), value: getValue(applicant?.name, t) },
+          { title: t("GC_PHONE_NUMBER"), value: getValue(applicant?.mobileNumber, t) },
+          { title: t("GC_GENDER"), value: getValue(applicant?.gender, t) },
+          { title: t("GC_EMAIL"), value: getValue(applicant?.emailId, t) },
+          { title: t("GC_CATEGORY"), value: getValue(garbageSpec?.category, t) },
+          { title: t("GC_SUB_CATEGORY"), value: getValue(garbageSpec?.subCategory, t) },
+          { title: t("GC_SUB_CATEGORY_TYPE"), value: getValue(garbageSpec?.subCategoryType, t) },
+          { title: t("GC_SPECIAL_CATEGORY"), value: getValue(garbageSpec?.specialCategory, t) },
+          { title: t("GC_IS_INHERITANCE"), value: garbageSpec?.isInheritance ? t("YES") : t("NO") },
+          { title: t("GC_NO_OF_UNITS"), value: getValue(garbageSpec?.no_of_units, t) },
         ],
       },
     ],

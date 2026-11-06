@@ -49,7 +49,8 @@ public class GarbageQueryBuilder {
             + "LEFT OUTER JOIN ug_gc_document doc ON doc.garbage_id = app.id "
             + "LEFT OUTER JOIN ug_gc_connection_log clog ON clog.garbage_id = app.id ";
 
-    private static final String COUNT_QUERY = "SELECT count(DISTINCT app.id) FROM ug_gc_application app ";
+    private static final String COUNT_QUERY = "SELECT count(DISTINCT app.id) FROM ug_gc_application app "
+            + "LEFT OUTER JOIN ug_gc_specification spec ON spec.garbage_id = app.id ";
 
     public String buildSearchQuery(GarbageSearchCriteria criteria, List<Object> params) {
         StringBuilder query = new StringBuilder(BASE_QUERY);
@@ -92,9 +93,15 @@ public class GarbageQueryBuilder {
 
         List<String> grbgNos = criteria.getResolvedGarbageNumbers();
         if (!CollectionUtils.isEmpty(grbgNos)) {
-            query.append(" AND app.garbage_no IN (")
+            query.append(" AND (app.garbage_no IN (")
                     .append(createQueryPlaceholders(grbgNos.size()))
-                    .append(") ");
+                    .append(") OR app.old_garbage_no IN (")
+                    .append(createQueryPlaceholders(grbgNos.size()))
+                    .append(") OR spec.old_garbage_no IN (")
+                    .append(createQueryPlaceholders(grbgNos.size()))
+                    .append(")) ");
+            params.addAll(grbgNos);
+            params.addAll(grbgNos);
             params.addAll(grbgNos);
         }
 
@@ -106,16 +113,53 @@ public class GarbageQueryBuilder {
             params.addAll(propIds);
         }
 
-        if (StringUtils.isNotBlank(criteria.getOwnerUuid()) && StringUtils.isNotBlank(criteria.getTenantUuid())) {
-            query.append(" AND (app.owner_uuid = ? OR app.tenant_uuid = ?) ");
-            params.add(criteria.getOwnerUuid());
-            params.add(criteria.getTenantUuid());
-        } else if (StringUtils.isNotBlank(criteria.getOwnerUuid())) {
-            query.append(" AND app.owner_uuid = ? ");
-            params.add(criteria.getOwnerUuid());
-        } else if (StringUtils.isNotBlank(criteria.getTenantUuid())) {
-            query.append(" AND app.tenant_uuid = ? ");
-            params.add(criteria.getTenantUuid());
+        List<String> ownerUuids = criteria.getResolvedOwnerUuids();
+        List<String> tenantUuids = criteria.getResolvedTenantUuids();
+
+        String resolvedOwnerType = criteria.getResolvedOwnerType();
+        if ("OWNER".equalsIgnoreCase(resolvedOwnerType)) {
+            if (!CollectionUtils.isEmpty(ownerUuids)) {
+                query.append(" AND app.owner_uuid IN (")
+                        .append(createQueryPlaceholders(ownerUuids.size()))
+                        .append(") ");
+                params.addAll(ownerUuids);
+            }
+        } else if ("TENANT".equalsIgnoreCase(resolvedOwnerType)) {
+            if (!CollectionUtils.isEmpty(tenantUuids)) {
+                query.append(" AND (app.tenant_uuid IN (")
+                        .append(createQueryPlaceholders(tenantUuids.size()))
+                        .append(") ");
+                params.addAll(tenantUuids);
+                if (StringUtils.isNotBlank(criteria.getMobileNumber())) {
+                    query.append(" OR (app.tenant_uuid IS NULL AND app.additional_detail::text LIKE ?) ");
+                    params.add("%" + criteria.getMobileNumber() + "%");
+                }
+                query.append(") ");
+            } else if (StringUtils.isNotBlank(criteria.getMobileNumber())) {
+                query.append(" AND (app.additional_detail::text LIKE ?) ");
+                params.add("%" + criteria.getMobileNumber() + "%");
+            }
+            query.append(" AND (spec.property_type = 'TENANT' OR app.tenant_uuid IS NOT NULL OR app.parent_application_no IS NOT NULL) ");
+        } else {
+            if (!CollectionUtils.isEmpty(ownerUuids) && !CollectionUtils.isEmpty(tenantUuids)) {
+                query.append(" AND (app.owner_uuid IN (")
+                        .append(createQueryPlaceholders(ownerUuids.size()))
+                        .append(") OR app.tenant_uuid IN (")
+                        .append(createQueryPlaceholders(tenantUuids.size()))
+                        .append(")) ");
+                params.addAll(ownerUuids);
+                params.addAll(tenantUuids);
+            } else if (!CollectionUtils.isEmpty(ownerUuids)) {
+                query.append(" AND app.owner_uuid IN (")
+                        .append(createQueryPlaceholders(ownerUuids.size()))
+                        .append(") ");
+                params.addAll(ownerUuids);
+            } else if (!CollectionUtils.isEmpty(tenantUuids)) {
+                query.append(" AND app.tenant_uuid IN (")
+                        .append(createQueryPlaceholders(tenantUuids.size()))
+                        .append(") ");
+                params.addAll(tenantUuids);
+            }
         }
 
         if (!CollectionUtils.isEmpty(criteria.getStatus())) {

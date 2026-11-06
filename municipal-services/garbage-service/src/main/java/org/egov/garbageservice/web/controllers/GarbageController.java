@@ -70,6 +70,27 @@ public class GarbageController {
                 ? searchRequest.getSearchCriteria()
                 : (criteria != null ? criteria : new GarbageSearchCriteria());
 
+        if (criteria != null && searchRequest != null && searchRequest.getSearchCriteria() != null) {
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getOwnerType()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getOwnerType())) {
+                resolvedCriteria.setOwnerType(criteria.getOwnerType());
+            }
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getPropertyType()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getPropertyType())) {
+                resolvedCriteria.setPropertyType(criteria.getPropertyType());
+            }
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getMobileNumber()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getMobileNumber())) {
+                resolvedCriteria.setMobileNumber(criteria.getMobileNumber());
+            }
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getGarbageNo()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getGarbageNo())) {
+                resolvedCriteria.setGarbageNo(criteria.getGarbageNo());
+            }
+            if (criteria.getGarbageNumber() != null && resolvedCriteria.getGarbageNumber() == null) {
+                resolvedCriteria.setGarbageNumber(criteria.getGarbageNumber());
+            }
+            if (criteria.getStatus() != null && resolvedCriteria.getStatus() == null) {
+                resolvedCriteria.setStatus(criteria.getStatus());
+            }
+        }
+
         org.egov.common.contract.request.RequestInfo requestInfo = (searchRequest != null)
                 ? searchRequest.getRequestInfo()
                 : null;

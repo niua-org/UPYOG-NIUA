@@ -1,5 +1,6 @@
 package org.egov.garbageservice.web.models.garbage;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,12 +34,8 @@ public class GarbageRequest {
 
     @Valid
     @JsonProperty("garbageApplications")
+    @JsonAlias({"garbageAccounts"})
     private List<GarbageApplication> garbageApplications;
-
-    // Backward compatibility with legacy frontend payloads
-    @Valid
-    @JsonProperty("garbageAccounts")
-    private List<GarbageApplication> garbageAccounts;
 
     @Builder.Default
     @JsonProperty("fromMigration")
@@ -49,17 +46,12 @@ public class GarbageRequest {
     private Boolean createChildAccountOnly = false;
 
     public List<GarbageApplication> getGarbageApplications() {
-        if (garbageApplications != null && !garbageApplications.isEmpty()) {
-            return garbageApplications;
-        }
-        if (garbageAccounts != null && !garbageAccounts.isEmpty()) {
-            return garbageAccounts;
-        }
         if (garbageApplications == null) {
             garbageApplications = new ArrayList<>();
         }
         return garbageApplications;
     }
+
     public GarbageRequest(RequestInfo requestInfo, List<GarbageApplication> garbageApplications) {
         this.requestInfo = requestInfo;
         this.garbageApplications = garbageApplications;

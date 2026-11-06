@@ -1,5 +1,6 @@
 package org.egov.garbageservice.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
@@ -47,13 +48,14 @@ public class GarbageServiceImpl implements GarbageService {
     private final IdgenUtil idgenUtil;
     private final ResponseInfoFactory responseInfoFactory;
     private final GarbageServiceConfig config;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public GarbageServiceImpl(GarbageRepository garbageRepository, UserService userService,
                               PropertyService propertyService, NotificationService notificationService,
                               WorkflowService workflowService, DemandRepository demandRepository,
                               IdgenUtil idgenUtil, ResponseInfoFactory responseInfoFactory,
-                              GarbageServiceConfig config) {
+                              GarbageServiceConfig config, ObjectMapper objectMapper) {
         this.garbageRepository = garbageRepository;
         this.userService = userService;
         this.propertyService = propertyService;
@@ -63,6 +65,7 @@ public class GarbageServiceImpl implements GarbageService {
         this.idgenUtil = idgenUtil;
         this.responseInfoFactory = responseInfoFactory;
         this.config = config;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -167,6 +170,26 @@ public class GarbageServiceImpl implements GarbageService {
                 }
             }
 
+            if (primaryApplicant != null) {
+                try {
+                    com.fasterxml.jackson.databind.node.ObjectNode addObj;
+                    if (app.getAdditionalDetail() != null && app.getAdditionalDetail().isObject()) {
+                        addObj = (com.fasterxml.jackson.databind.node.ObjectNode) app.getAdditionalDetail();
+                    } else {
+                        addObj = objectMapper.createObjectNode();
+                    }
+                    if (!addObj.has("applicantDetails")) {
+                        addObj.putPOJO("applicantDetails", app.getApplicantDetails());
+                    }
+                    if (!isOwnerApp && !addObj.has("tenantDetails")) {
+                        addObj.putPOJO("tenantDetails", primaryApplicant);
+                    }
+                    app.setAdditionalDetail(addObj);
+                } catch (Exception ex) {
+                    log.warn("Failed to attach applicantDetails to additionalDetail: {}", ex.getMessage());
+                }
+            }
+
             // Dynamically enrich property address details
             propertyService.enrichApplicationWithPropertyDetails(app, requestInfo);
 
@@ -183,9 +206,7 @@ public class GarbageServiceImpl implements GarbageService {
             // Enrich Documents
             if (!CollectionUtils.isEmpty(app.getDocuments())) {
                 for (GarbageDocument doc : app.getDocuments()) {
-                    if (StringUtils.isBlank(doc.getDocumentDetailId())) {
-                        doc.setDocumentDetailId(UUID.randomUUID().toString());
-                    }
+                    doc.setDocumentDetailId(UUID.randomUUID().toString());
                     doc.setGarbageId(app.getId());
                     doc.setAuditDetails(auditDetails);
                 }
@@ -390,29 +411,50 @@ public class GarbageServiceImpl implements GarbageService {
         }
 
         // Persona Search Routing (HLD Section 17 & 18)
-        if (StringUtils.isNotBlank(criteria.getMobileNumber()) && StringUtils.isBlank(criteria.getOwnerUuid()) && StringUtils.isBlank(criteria.getTenantUuid())) {
-            List<String> userUuids = userService.searchUserUuidsByMobile(criteria.getTenantId(), criteria.getMobileNumber(), requestInfo);
-            if (userUuids.isEmpty() && requestInfo != null && requestInfo.getUserInfo() != null
-                    && criteria.getMobileNumber().equals(requestInfo.getUserInfo().getMobileNumber())) {
-                userUuids = Collections.singletonList(requestInfo.getUserInfo().getUuid());
-            }
-            if (!userUuids.isEmpty()) {
-                String matchedUuid = userUuids.get(0);
-                if (Boolean.TRUE.equals(criteria.getIsOwner())) {
-                    criteria.setOwnerUuid(matchedUuid);
-                } else {
-                    criteria.setOwnerUuid(matchedUuid);
-                    criteria.setTenantUuid(matchedUuid);
+        String resolvedOwnerType = criteria.getResolvedOwnerType();
+        List<String> userUuids = Collections.emptyList();
+
+        boolean hasDirectIdentifier = !CollectionUtils.isEmpty(criteria.getResolvedApplicationNumbers())
+                || !CollectionUtils.isEmpty(criteria.getResolvedGarbageNumbers())
+                || !CollectionUtils.isEmpty(criteria.getResolvedPropertyIds());
+
+        if (!hasDirectIdentifier) {
+            String mobileToSearch = StringUtils.isNotBlank(criteria.getMobileNumber())
+                    ? criteria.getMobileNumber()
+                    : (requestInfo != null && requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getMobileNumber() : null);
+
+            if (StringUtils.isNotBlank(mobileToSearch) && CollectionUtils.isEmpty(criteria.getOwnerUuids()) && CollectionUtils.isEmpty(criteria.getTenantUuids())) {
+                userUuids = userService.searchUserUuidsByMobile(criteria.getTenantId(), mobileToSearch, requestInfo);
+                if (userUuids.isEmpty() && requestInfo != null && requestInfo.getUserInfo() != null
+                        && mobileToSearch.equals(requestInfo.getUserInfo().getMobileNumber())) {
+                    userUuids = Collections.singletonList(requestInfo.getUserInfo().getUuid());
+                }
+            } else if (CollectionUtils.isEmpty(criteria.getOwnerUuids()) && CollectionUtils.isEmpty(criteria.getTenantUuids())
+                    && StringUtils.isBlank(criteria.getOwnerUuid()) && StringUtils.isBlank(criteria.getTenantUuid())) {
+                if (requestInfo != null && requestInfo.getUserInfo() != null && StringUtils.isNotBlank(requestInfo.getUserInfo().getUuid())) {
+                    boolean isCitizen = "CITIZEN".equalsIgnoreCase(requestInfo.getUserInfo().getType());
+                    if (isCitizen) {
+                        userUuids = Collections.singletonList(requestInfo.getUserInfo().getUuid());
+                    }
                 }
             }
-        } else if (StringUtils.isBlank(criteria.getMobileNumber()) && StringUtils.isBlank(criteria.getOwnerUuid()) && StringUtils.isBlank(criteria.getTenantUuid())) {
-            if (requestInfo != null && requestInfo.getUserInfo() != null && StringUtils.isNotBlank(requestInfo.getUserInfo().getUuid())) {
-                boolean isCitizen = requestInfo.getUserInfo().getRoles() != null && requestInfo.getUserInfo().getRoles().stream()
-                        .anyMatch(r -> "CITIZEN".equalsIgnoreCase(r.getCode()));
-                if (isCitizen) {
-                    String callerUuid = requestInfo.getUserInfo().getUuid();
-                    criteria.setOwnerUuid(callerUuid);
-                    criteria.setTenantUuid(callerUuid);
+
+            if (!userUuids.isEmpty()) {
+                if ("TENANT".equalsIgnoreCase(resolvedOwnerType)) {
+                    criteria.setTenantUuids(userUuids);
+                    criteria.setTenantUuid(userUuids.get(0));
+                    criteria.setOwnerUuids(null);
+                    criteria.setOwnerUuid(null);
+                } else if ("OWNER".equalsIgnoreCase(resolvedOwnerType)) {
+                    criteria.setOwnerUuids(userUuids);
+                    criteria.setOwnerUuid(userUuids.get(0));
+                    criteria.setTenantUuids(null);
+                    criteria.setTenantUuid(null);
+                } else {
+                    criteria.setOwnerUuids(userUuids);
+                    criteria.setTenantUuids(userUuids);
+                    criteria.setOwnerUuid(userUuids.get(0));
+                    criteria.setTenantUuid(userUuids.get(0));
                 }
             }
         }
@@ -438,6 +480,24 @@ public class GarbageServiceImpl implements GarbageService {
         for (GarbageApplication app : applications) {
             if (app.getGarbageSpecification() != null && "OWNER".equalsIgnoreCase(app.getGarbageSpecification().getPropertyType())) {
                 List<GarbageApplication> children = tenantAppsByProp.get(app.getPropertyId());
+                if (CollectionUtils.isEmpty(children) && StringUtils.isNotBlank(app.getPropertyId())) {
+                    GarbageSearchCriteria childCrit = GarbageSearchCriteria.builder()
+                            .tenantId(app.getTenantId())
+                            .propertyId(Collections.singletonList(app.getPropertyId()))
+                            .build();
+                    List<GarbageApplication> propApps = garbageRepository.getGarbageApplications(childCrit);
+                    if (!CollectionUtils.isEmpty(propApps)) {
+                        children = propApps.stream()
+                                .filter(c -> (app.getApplicationNo() != null && app.getApplicationNo().equalsIgnoreCase(c.getParentApplicationNo()))
+                                        || (c.getGarbageSpecification() != null && "TENANT".equalsIgnoreCase(c.getGarbageSpecification().getPropertyType()) && !c.getApplicationNo().equalsIgnoreCase(app.getApplicationNo())))
+                                .collect(Collectors.toList());
+                        if (!CollectionUtils.isEmpty(children)) {
+                            for (GarbageApplication child : children) {
+                                userService.enrichApplicationWithUserDetails(child, criteria);
+                            }
+                        }
+                    }
+                }
                 if (!CollectionUtils.isEmpty(children)) {
                     app.setChildGarbageApplications(new ArrayList<>(children));
                 }
@@ -951,6 +1011,40 @@ public class GarbageServiceImpl implements GarbageService {
             }
             if (StringUtils.isBlank(app.getPropertyId())) {
                 throw new CustomException("INVALID_PROPERTY_ID", "PropertyId is mandatory for garbage application");
+            }
+
+            // Check if active connection already exists on this property and floor
+            String floorNo = app.getFloorNo();
+            if (StringUtils.isBlank(floorNo) && app.getGarbageSpecification() != null) {
+                floorNo = app.getGarbageSpecification().getFloorNo();
+            }
+            if (StringUtils.isBlank(floorNo)) {
+                floorNo = Boolean.TRUE.equals(app.getIsOwner()) ? "0" : "1";
+            }
+
+            GarbageSearchCriteria criteria = GarbageSearchCriteria.builder()
+                    .tenantId(app.getTenantId())
+                    .propertyId(Collections.singletonList(app.getPropertyId()))
+                    .build();
+            List<GarbageApplication> existingApps = garbageRepository.getGarbageApplications(criteria);
+            if (!CollectionUtils.isEmpty(existingApps)) {
+                final String targetFloor = floorNo;
+                boolean duplicateExists = existingApps.stream().anyMatch(existing -> {
+                    String existingFloor = existing.getFloorNo();
+                    if (StringUtils.isBlank(existingFloor) && existing.getGarbageSpecification() != null) {
+                        existingFloor = existing.getGarbageSpecification().getFloorNo();
+                    }
+                    if (StringUtils.isBlank(existingFloor)) {
+                        existingFloor = "0";
+                    }
+                    return targetFloor.equalsIgnoreCase(existingFloor)
+                            && !"PERMANENTLY_DISCONNECTED".equalsIgnoreCase(existing.getConnectionStatus())
+                            && !"REJECTED".equalsIgnoreCase(existing.getStatus());
+                });
+                if (duplicateExists) {
+                    throw new CustomException("DUPLICATE_APPLICATION",
+                            "An active garbage connection already exists for Property: " + app.getPropertyId() + " on Floor: " + targetFloor);
+                }
             }
         }
     }

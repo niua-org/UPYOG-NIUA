@@ -119,11 +119,13 @@ public class GarbageRowMapper implements ResultSetExtractor<List<GarbageApplicat
                         .category(rs.getString("spec_category"))
                         .no_of_units(noOfUnits)
                         .specialCategory(rs.getString("spec_special_category"))
-                        .floorNo(rs.getString("spec_floor_no"))
+                        .floorNo(StringUtils.isNotBlank(rs.getString("spec_floor_no")) ? rs.getString("spec_floor_no") : rs.getString("app_floor_no"))
                         .isInheritance(rs.getBoolean("spec_is_inheritance"))
                         .build();
 
                 currentApplication.setGarbageSpecification(spec);
+            } else if (currentApplication.getGarbageSpecification() == null && StringUtils.isNotBlank(rs.getString("app_floor_no"))) {
+                currentApplication.setFloorNo(rs.getString("app_floor_no"));
             }
 
             // Extract Document

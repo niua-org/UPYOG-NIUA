@@ -54,9 +54,15 @@ public class GarbageSearchCriteria {
     @JsonProperty("ownerUuid")
     private String ownerUuid;
 
+    @JsonProperty("ownerUuids")
+    private List<String> ownerUuids;
+
     @CustomSafeHtml
     @JsonProperty("tenantUuid")
     private String tenantUuid;
+
+    @JsonProperty("tenantUuids")
+    private List<String> tenantUuids;
 
     @CustomSafeHtml
     @JsonProperty("mobileNumber")
@@ -97,6 +103,14 @@ public class GarbageSearchCriteria {
 
     @JsonProperty("isOwner")
     private Boolean isOwner;
+
+    @CustomSafeHtml
+    @JsonProperty("ownerType")
+    private String ownerType;
+
+    @CustomSafeHtml
+    @JsonProperty("propertyType")
+    private String propertyType;
 
     @CustomSafeHtml
     @JsonProperty("requestType")
@@ -147,5 +161,38 @@ public class GarbageSearchCriteria {
             return Collections.singletonList(garbageNo);
         }
         return Collections.emptyList();
+    }
+
+    public List<String> getResolvedOwnerUuids() {
+        if (ownerUuids != null && !ownerUuids.isEmpty()) {
+            return ownerUuids;
+        }
+        if (StringUtils.isNotBlank(ownerUuid)) {
+            return Collections.singletonList(ownerUuid);
+        }
+        return Collections.emptyList();
+    }
+
+    public List<String> getResolvedTenantUuids() {
+        if (tenantUuids != null && !tenantUuids.isEmpty()) {
+            return tenantUuids;
+        }
+        if (StringUtils.isNotBlank(tenantUuid)) {
+            return Collections.singletonList(tenantUuid);
+        }
+        return Collections.emptyList();
+    }
+
+    public String getResolvedOwnerType() {
+        if (StringUtils.isNotBlank(ownerType)) {
+            return ownerType.toUpperCase();
+        }
+        if (StringUtils.isNotBlank(propertyType)) {
+            return propertyType.toUpperCase();
+        }
+        if (isOwner != null) {
+            return isOwner ? "OWNER" : "TENANT";
+        }
+        return null;
     }
 }

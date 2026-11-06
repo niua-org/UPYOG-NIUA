@@ -9,41 +9,46 @@ import { GCServices } from "../../elements/GC";
 export const GCSearch = {
   all: async (tenantId, filters = {}) => {
     const response = await GCServices.search({ tenantId, filters });
-    return response;
+    return response?.garbageApplications || [];
   },
 
   application: async (tenantId, filters = {}) => {
     const response = await GCServices.search({ tenantId, filters });
-    return (
-      response?.garbageAccounts?.[0] ||
-      response?.GarbageApplications?.[0] ||
-      response?.data?.[0] ||
-      response
-    );
+    return response?.garbageApplications?.[0] || null;
   },
 
-  BookingDetails: ({ garbageAccounts: app, t }) => {
-    const appDetails = app?.grbgApplication || {};
-    const address = app?.addresses?.[0] || {};
-    const addressAdditional = address?.additionalDetail || {};
-    const collectionUnit = app?.grbgCollectionUnits?.[0] || {};
-    const applicant = app?.additionalDetail?.applicantDetails?.[0] || {};
+  BookingDetails: ({ application, garbageApplications, garbageAccounts, t }) => {
+    const app = application || garbageApplications || garbageAccounts || {};
+    const address = app?.propertyLocation || {};
+    const collectionUnit = app?.garbageSpecification || {};
+    const applicant = app?.applicantDetails?.[0] || {};
+
+    const appNo = app?.applicationNo || t("CS_NA");
+    const appStatus = app?.status || t("CS_NA");
+    const connStatus = app?.connectionStatus || null;
+    const propertyType = collectionUnit?.propertyType || "OWNER";
+    const floorNo = collectionUnit?.floorNo;
 
     return [
       {
         title: "GC_APPLICATION_DETAILS",
         asSectionHeader: true,
         values: [
-          { title: "GC_APPLICATION_NUMBER_LABEL", value: appDetails?.applicationNo || t("CS_NA") },
-          { title: "GC_APPLICATION_STATUS_LABEL", value: appDetails?.status ? t(`GC_STATUS_${appDetails.status}`) : t("CS_NA") },
+          { title: "GC_APPLICATION_NUMBER_LABEL", value: appNo },
+          ...(app?.garbageNo ? [{ title: "GC_GARBAGE_NUMBER_LABEL", value: app.garbageNo }] : []),
+          { title: "GC_APPLICATION_STATUS_LABEL", value: appStatus ? t(`GC_STATUS_${appStatus}`) : t("CS_NA") },
+          ...(connStatus ? [{ title: "GC_CONNECTION_STATUS", value: t(`GC_STATUS_${connStatus}`) || connStatus }] : []),
+          { title: "GC_PROPERTY_TYPE", value: propertyType },
+          ...(floorNo ? [{ title: "GC_FLOOR_UNIT", value: floorNo === "0" ? t("GC_FLOOR_GROUND") || "Ground Floor" : `${floorNo} Floor` }] : []),
           ...(app?.dueDate ? [{ title: "GC_DUE_DATE", value: app.dueDate }] : []),
+          ...(app?.paymentStatus ? [{ title: "GC_PAYMENT_STATUS", value: app.paymentStatus }] : []),
         ],
       },
       {
         title: "ES_APPLICANT_DETAILS",
         asSectionHeader: true,
         values: [
-          { title: "GC_APPLICANT_NAME", value: applicant?.applicantName || t("CS_NA") },
+          { title: "GC_APPLICANT_NAME", value: applicant?.name || t("CS_NA") },
           { title: "GC_MOBILE_NUMBER", value: applicant?.mobileNumber || t("CS_NA") },
           { title: "GC_ALT_MOBILE_NUMBER", value: applicant?.alternateNumber || t("CS_NA") },
           { title: "GC_EMAIL_ID", value: applicant?.emailId || t("CS_NA") },
@@ -53,33 +58,29 @@ export const GCSearch = {
         title: "GC_PROPERTY_LOCATION_DETAILS",
         asSectionHeader: true,
         values: [
-          { title: "GC_PROPERTY_ID", value: app?.propertyId || t("CS_NA") },
+          { title: "GC_PROPERTY_ID", value: app?.propertyId || address?.propertyId || t("CS_NA") },
           { title: "GC_PINCODE", value: address?.pincode || t("CS_NA") },
-          { title: "GC_CITY", value: address?.city || t("CS_NA") },
-          { title: "GC_LOCALITY", value: addressAdditional?.locality || t("CS_NA") },
-          { title: "GC_STREET_NAME", value: addressAdditional?.streetName || t("CS_NA") },
-          { title: "GC_HOUSE_NO", value: addressAdditional?.houseNo || t("CS_NA") },
-          { title: "GC_BUILDING_NAME", value: addressAdditional?.houseName || t("CS_NA") },
-          { title: "GC_ADDRESS_LINE1", value: address?.address1 || t("CS_NA") },
-          { title: "GC_ADDRESS_LINE2", value: address?.address2 || t("CS_NA") },
-          { title: "GC_LANDMARK", value: addressAdditional?.landmark || t("CS_NA") },
+          { title: "GC_CITY", value: address?.city ? t(address.city) : t("CS_NA") },
+          { title: "GC_LOCALITY", value: address?.locality ? t(address.locality) : t("CS_NA") },
+          { title: "GC_STREET_NAME", value: address?.streetName || t("CS_NA") },
+          { title: "GC_HOUSE_NO", value: address?.houseNo || t("CS_NA") },
+          { title: "GC_BUILDING_NAME", value: address?.houseName || t("CS_NA") },
+          { title: "GC_ADDRESS_LINE1", value: address?.addressline1 || t("CS_NA") },
+          { title: "GC_ADDRESS_LINE2", value: address?.addressline2 || t("CS_NA") },
+          { title: "GC_LANDMARK", value: address?.landmark || t("CS_NA") },
         ],
       },
       {
         title: "GC_GARBAGE_SPECIFICATIONS",
         asSectionHeader: true,
         values: [
-          { title: "GC_OLD_GARBAGE_ID", value: app?.grbgOldDetails?.oldGarbageId || t("CS_NA") },
-          { title: "GC_TYPE_OF_COLLECTION", value: collectionUnit?.unitType ? t(collectionUnit.unitType) : t("CS_NA") },
-          { title: "GC_OWNER_OR_TENANT", value: collectionUnit?.ownerType ? t(collectionUnit.ownerType) : t("CS_NA") },
-          { title: "GC_NAME", value: app?.name || t("CS_NA") },
-          { title: "GC_PHONE_NUMBER", value: app?.mobileNumber || t("CS_NA") },
-          { title: "GC_GENDER", value: app?.gender ? t(app.gender) : t("CS_NA") },
-          { title: "GC_EMAIL", value: app?.emailId || t("CS_NA") },
+          { title: "GC_OLD_GARBAGE_ID", value: app?.oldGarbageNo || collectionUnit?.oldGarbageNo || t("CS_NA") },
+          { title: "GC_TYPE_OF_COLLECTION", value: collectionUnit?.collectionType ? t(collectionUnit.collectionType) : t("CS_NA") },
+          { title: "GC_OWNER_OR_TENANT", value: propertyType },
           { title: "GC_CATEGORY", value: collectionUnit?.category ? t(collectionUnit.category) : t("CS_NA") },
           { title: "GC_SUB_CATEGORY", value: collectionUnit?.subCategory ? t(collectionUnit.subCategory) : t("CS_NA") },
           { title: "GC_SUB_CATEGORY_TYPE", value: collectionUnit?.subCategoryType ? t(collectionUnit.subCategoryType) : t("CS_NA") },
-          ...["HOUSEHOLD_MULTI_COLLECTION", "COMMERCIAL_MULTI_COLLECTION", "MIX_PROPERTY"].includes(collectionUnit?.unitType)
+          ...["HOUSEHOLD_MULTI_COLLECTION", "COMMERCIAL_MULTI_COLLECTION", "MIX_PROPERTY"].includes(collectionUnit?.collectionType)
             ? [{ title: "GC_NO_OF_UNITS", value: collectionUnit?.no_of_units || t("CS_NA") }]
             : [],
           { title: "GC_SPECIAL_CATEGORY", value: collectionUnit?.specialCategory ? t(collectionUnit.specialCategory) : t("CS_NA") },
@@ -106,11 +107,11 @@ export const GCSearch = {
   },
 
   applicationDetails: async (t, tenantId, applicationNo, userType, args) => {
-    const response = await GCSearch.application(tenantId, { applicationNumber: applicationNo, ...args });
+    const response = await GCSearch.application(tenantId, { applicationNumber: [applicationNo], ...args });
 
     return {
       tenantId: response?.tenantId || tenantId,
-      applicationDetails: GCSearch.BookingDetails({ garbageAccounts: response, t }),
+      applicationDetails: GCSearch.BookingDetails({ application: response, t }),
       applicationData: response,
       transformToAppDetailsForEmployee: GCSearch.BookingDetails,
     };

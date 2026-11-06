@@ -2,8 +2,10 @@ import { GCServices } from "../../elements/GC";
 
 const ApplicationUpdateActionGC = async (applicationData, tenantId) => {
   try {
-    const response = await GCServices.update(applicationData, tenantId);
-    return response;
+    const payload = applicationData?.garbageApplications
+      ? applicationData
+      : { garbageApplications: [applicationData] };
+    return await GCServices.update(payload, tenantId);
   } catch (error) {
     throw new Error(error?.response?.data?.Errors?.[0]?.message || error?.message);
   }

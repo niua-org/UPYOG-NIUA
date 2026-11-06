@@ -17,34 +17,25 @@ const GCApplication = ({ application, tenantId }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
 
-  const applicant =
-    application?.additionalDetail?.applicantDetails?.[0] ||
-    application?.applicantDetails?.[0] ||
-    application?.tenantDetails ||
-    {};
+  const applicant = application?.applicantDetails?.[0] || {};
+  const name = applicant?.name || applicant?.applicantName || t("CS_NA");
+  const mobileNumber = applicant?.mobileNumber || t("CS_NA");
 
-  const name = applicant?.name || application?.name || t("CS_NA");
-  const mobileNumber = applicant?.mobileNumber || application?.mobileNumber || t("CS_NA");
-
-  const appNo =
-    application?.applicationNo ||
-    application?.grbgApplication?.applicationNo ||
-    application?.grbgApplicationNumber ||
-    application?.garbageNo ||
-    t("CS_NA");
-
-  const appStatus =
-    application?.status ||
-    application?.grbgApplication?.status ||
-    application?.applicationStatus ||
-    t("CS_NA");
+  const appNo = application?.applicationNo || t("CS_NA");
+  const garbageNo = application?.garbageNo || null;
+  const oldGarbageNo = application?.oldGarbageNo || application?.garbageSpecification?.oldGarbageNo || null;
+  const appStatus = application?.status || t("CS_NA");
+  const connectionStatus = application?.connectionStatus || null;
 
   const propertyId = application?.propertyId;
-  const collectionUnit = application?.garbageSpecification || application?.grbgCollectionUnits?.[0] || {};
+  const collectionUnit = application?.garbageSpecification || {};
   const category = collectionUnit?.category;
-  const typeOfCollection = collectionUnit?.collectionType || collectionUnit?.unitType;
-  const propertyType = collectionUnit?.propertyType || collectionUnit?.ownerType || "OWNER";
-  const floorNo = collectionUnit?.floorNo;
+  const typeOfCollection = collectionUnit?.collectionType;
+  const propertyType = collectionUnit?.propertyType || (application?.isOwner === false || application?.tenantUuid ? "TENANT" : "OWNER");
+  const floorNo = collectionUnit?.floorNo || application?.floorNo;
+  const dueDate = application?.dueDate;
+  const paymentStatus = application?.paymentStatus;
+  const paymentAmount = application?.paymentAmount;
 
   const handleMakePayment = () => {
     navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
@@ -88,6 +79,12 @@ const GCApplication = ({ application, tenantId }) => {
         </span>
       </div>
 
+      {garbageNo && (
+        <KeyNote keyValue={t("GC_GARBAGE_NUMBER_LABEL") || "Garbage Number"} note={garbageNo} />
+      )}
+      {oldGarbageNo && (
+        <KeyNote keyValue={t("GC_OLD_GARBAGE_ID") || "Old Garbage Number"} note={oldGarbageNo} />
+      )}
       <KeyNote keyValue={t("GC_APPLICANT_NAME")} note={name} />
       <KeyNote keyValue={t("GC_MOBILE_NUMBER")} note={mobileNumber} />
       {propertyId && <KeyNote keyValue={t("GC_PROPERTY_ID")} note={propertyId} />}
@@ -100,6 +97,17 @@ const GCApplication = ({ application, tenantId }) => {
       {category && <KeyNote keyValue={t("GC_CATEGORY")} note={t(category)} />}
       {typeOfCollection && <KeyNote keyValue={t("GC_TYPE_OF_COLLECTION")} note={t(typeOfCollection)} />}
 
+      {connectionStatus && (
+        <KeyNote
+          keyValue={t("GC_CONNECTION_STATUS") || "Connection Status"}
+          note={
+            <span style={{ color: connectionStatus === "ACTIVE" ? "#00703c" : "#d4351c", fontWeight: "600" }}>
+              {t(`GC_STATUS_${connectionStatus}`) || connectionStatus}
+            </span>
+          }
+        />
+      )}
+
       <KeyNote
         keyValue={t("GC_APPLICATION_STATUS_LABEL")}
         note={
@@ -109,7 +117,13 @@ const GCApplication = ({ application, tenantId }) => {
         }
       />
 
-      {application?.dueDate && <KeyNote keyValue={t("GC_DUE_DATE")} note={application.dueDate} />}
+      {dueDate && <KeyNote keyValue={t("GC_DUE_DATE")} note={dueDate} />}
+      {paymentStatus && (
+        <KeyNote keyValue={t("GC_PAYMENT_STATUS") || "Payment Status"} note={t(`GC_PAYMENT_${paymentStatus}`) || paymentStatus} />
+      )}
+      {paymentAmount > 0 && (
+        <KeyNote keyValue={t("GC_PAYMENT_AMOUNT") || "Fee Amount"} note={`₹ ${paymentAmount}`} />
+      )}
 
       <div className="gc-btn-row" style={{ marginTop: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
         <Link to={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(appNo)}`}>
