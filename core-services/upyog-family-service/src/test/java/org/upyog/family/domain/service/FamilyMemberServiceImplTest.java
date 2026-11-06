@@ -128,7 +128,7 @@ class FamilyMemberServiceImplTest {
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-3")
                 .relationshipWithHead("DAUGHTER")
-                .hofConsentOtp("OTP-1234")
+                .txnId("OTP-1234")
                 .build();
 
         when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
