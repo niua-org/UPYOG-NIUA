@@ -11,6 +11,10 @@ const App = () => {
   const FamilyJoinedResponse = Digit?.ComponentRegistryService?.getComponent("FamilyJoinedResponse");
   const FoundFamily = Digit?.ComponentRegistryService?.getComponent("FoundFamily");
   const VerifyProfile = Digit?.ComponentRegistryService?.getComponent("VerifyProfile");
+  const AddFamilyMember = Digit?.ComponentRegistryService?.getComponent("AddFamilyMember");
+  const FamilyMemberVerified = Digit?.ComponentRegistryService?.getComponent("FamilyMemberVerified");
+  const FamilyMemberAdded = Digit?.ComponentRegistryService?.getComponent("FamilyMemberAdded");
+  const FamilyCreatedResponse = Digit?.ComponentRegistryService?.getComponent("FamilyCreatedResponse");
 
 
 
@@ -26,6 +30,10 @@ const App = () => {
           <Route path="family-joined" element={<PrivateRoute><FamilyJoinedResponse /></PrivateRoute>} />
           <Route path="found-family" element={<PrivateRoute><FoundFamily /></PrivateRoute>} />
           <Route path="verify-profile" element={<PrivateRoute><VerifyProfile /></PrivateRoute>} />
+          <Route path="add-family-member" element={<PrivateRoute><AddFamilyMember /></PrivateRoute>} />
+          <Route path="family-member-verified" element={<PrivateRoute><FamilyMemberVerified /></PrivateRoute>} />
+          <Route path="family-member-added" element={<PrivateRoute><FamilyMemberAdded /></PrivateRoute>} />
+          <Route path="family-created" element={<PrivateRoute><FamilyCreatedResponse /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

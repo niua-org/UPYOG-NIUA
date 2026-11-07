@@ -397,7 +397,8 @@ const Urls = {
     joinFamily: "/family/v1/member/_join",
     sendFamilyIdOtp : "/family/v1/family/_sendOtp",
     verifyFamilyOtp : "/family/v1/family/_verifyOtp",
-    verifyProfile: "/user/profile/aadhaar/_verifyProfile"
+    verifyProfile: "/user/profile/aadhaar/_verifyProfile",
+    createFamily: "/family/v1/family/_create",
   }
 };
 

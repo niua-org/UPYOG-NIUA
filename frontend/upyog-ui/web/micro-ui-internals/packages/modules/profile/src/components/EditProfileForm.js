@@ -113,7 +113,7 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
             <TextInput t={t} type="text" name="name" value={form.name} onChange={(e) => setField("name", e.target.value)} disable={true} />
           </FormField>
           <FormField label={t("CORE_COMMON_PROFILE_GENDER")} required={isEmployee} error={errors.gender} t={t}>
-            <Dropdown selected={form.gender} select={(v) => setField("gender", v)} option={genderOptions} optionKey="i18nKey" t={t} name="gender" disable={true} />
+            <Dropdown selected={form.gender} select={(v) => setField("gender", v)} option={genderOptions} optionKey="i18nKey" t={t} name="gender" disable={false} />
           </FormField>
           <FormField label={t("CORE_COMMON_PROFILE_DOB")} required t={t}>
             <DatePicker date={form.dob} onChange={(v) => setField("dob", v)} disabled={userDetails?.dob ? true:false} />
