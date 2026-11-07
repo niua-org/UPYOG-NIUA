@@ -62,12 +62,12 @@ public class MessageServiceTest {
             .message("marathi message for tenant a")
             .build();
         List<Message> marathiMessagesForGivenTenant = Collections.singletonList(tenantMessage1);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("default"), ENGLISH_INDIA))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("default"), ENGLISH_INDIA, "module"))
             .thenReturn(defaultEnglishMessages);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("a"), MR_IN))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("a"), MR_IN, "module"))
             .thenReturn(marathiMessagesForGivenTenant);
-        when(messageCacheRepository.getMessages(anyString(), any())).thenReturn(null);
-        when(messageCacheRepository.getComputedMessages(anyString(), any())).thenReturn(null);
+        when(messageCacheRepository.getMessages(anyString(), any(), any())).thenReturn(null);
+        when(messageCacheRepository.getComputedMessages(anyString(), any(), any())).thenReturn(null);
         final MessageSearchCriteria searchCriteria = MessageSearchCriteria.builder()
             .locale(MR_IN)
             .tenantId(new Tenant(tenantId))
@@ -96,12 +96,12 @@ public class MessageServiceTest {
             .message("default message1")
             .build();
         List<Message> defaultEnglishMessages = Collections.singletonList(defaultMessage1);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("default"), ENGLISH_INDIA))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("default"), ENGLISH_INDIA, "module"))
             .thenReturn(defaultEnglishMessages);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("a"), MR_IN))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("a"), MR_IN, "module"))
             .thenReturn(Collections.emptyList());
-        when(messageCacheRepository.getMessages(anyString(), any())).thenReturn(null);
-        when(messageCacheRepository.getComputedMessages(anyString(), any())).thenReturn(null);
+        when(messageCacheRepository.getMessages(anyString(), any(), any())).thenReturn(null);
+        when(messageCacheRepository.getComputedMessages(anyString(), any(), any())).thenReturn(null);
         final MessageSearchCriteria searchCriteria = MessageSearchCriteria.builder()
             .locale(MR_IN)
             .tenantId(new Tenant(tenantId))
@@ -110,7 +110,7 @@ public class MessageServiceTest {
 
         messageService.getFilteredMessages(searchCriteria);
 
-        verify(messageCacheRepository).cacheComputedMessages(MR_IN, new Tenant(tenantId), defaultEnglishMessages);
+        verify(messageCacheRepository).cacheComputedMessages(MR_IN, new Tenant(tenantId), "module", defaultEnglishMessages);
     }
 
     @Test
@@ -129,13 +129,13 @@ public class MessageServiceTest {
             .message("default message1")
             .build();
         List<Message> defaultEnglishMessages = Collections.singletonList(defaultMessage1);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("default"), ENGLISH_INDIA))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("default"), ENGLISH_INDIA, "module"))
             .thenReturn(defaultEnglishMessages);
         final List<Message> tenantSpecificMessages = Collections.emptyList();
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("a"), MR_IN))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("a"), MR_IN, "module"))
             .thenReturn(tenantSpecificMessages);
-        when(messageCacheRepository.getMessages(anyString(), any())).thenReturn(null);
-        when(messageCacheRepository.getComputedMessages(anyString(), any())).thenReturn(null);
+        when(messageCacheRepository.getMessages(anyString(), any(), any())).thenReturn(null);
+        when(messageCacheRepository.getComputedMessages(anyString(), any(), any())).thenReturn(null);
         final MessageSearchCriteria searchCriteria = MessageSearchCriteria.builder()
             .locale(MR_IN)
             .tenantId(new Tenant(tenantId))
@@ -143,9 +143,9 @@ public class MessageServiceTest {
             .build();
         messageService.getFilteredMessages(searchCriteria);
 
-        verify(messageCacheRepository).cacheMessages(ENGLISH_INDIA, new Tenant("default"), defaultEnglishMessages);
-        verify(messageCacheRepository).cacheMessages(MR_IN, new Tenant("default"), tenantSpecificMessages);
-        verify(messageCacheRepository).cacheMessages(MR_IN, new Tenant("a"), tenantSpecificMessages);
+        verify(messageCacheRepository).cacheMessages(ENGLISH_INDIA, new Tenant("default"), "module", defaultEnglishMessages);
+        verify(messageCacheRepository).cacheMessages(MR_IN, new Tenant("default"), "module", tenantSpecificMessages);
+        verify(messageCacheRepository).cacheMessages(MR_IN, new Tenant("a"), "module", tenantSpecificMessages);
     }
 
     @Test
@@ -227,16 +227,16 @@ public class MessageServiceTest {
             .build();
         List<Message> marathiMessagesForTenantParent = Arrays.asList(tenantParentMessage1, tenantParentMessage2);
 
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("default"), ENGLISH_INDIA))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("default"), ENGLISH_INDIA, "module"))
             .thenReturn(defaultEnglishMessages);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("a.b.c"), MR_IN))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("a.b.c"), MR_IN, "module"))
             .thenReturn(marathiMessagesForGivenTenant);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("a.b"), MR_IN))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("a.b"), MR_IN, "module"))
             .thenReturn(marathiMessagesForTenantParent);
-        when(messageRepository.findByTenantIdAndLocale(new Tenant("a"), MR_IN))
+        when(messageRepository.findByTenantIdLocaleAndModule(new Tenant("a"), MR_IN, "module"))
             .thenReturn(Collections.emptyList());
-        when(messageCacheRepository.getMessages(anyString(), any())).thenReturn(null);
-        when(messageCacheRepository.getComputedMessages(anyString(), any())).thenReturn(null);
+        when(messageCacheRepository.getMessages(anyString(), any(), any())).thenReturn(null);
+        when(messageCacheRepository.getComputedMessages(anyString(), any(), any())).thenReturn(null);
         final MessageSearchCriteria searchCriteria = MessageSearchCriteria.builder()
             .locale(MR_IN)
             .tenantId(new Tenant(tenantId))
@@ -283,7 +283,7 @@ public class MessageServiceTest {
             .message("default message2")
             .build();
         List<Message> expectedMessages = Arrays.asList(defaultMessage1, defaultMessage2);
-        when(messageCacheRepository.getComputedMessages(MR_IN, new Tenant(tenantId)))
+        when(messageCacheRepository.getComputedMessages(MR_IN, new Tenant(tenantId), "module"))
             .thenReturn(expectedMessages);
         final MessageSearchCriteria searchCriteria = MessageSearchCriteria.builder()
             .locale(MR_IN)
@@ -321,7 +321,7 @@ public class MessageServiceTest {
             .message("default message2")
             .build();
         List<Message> expectedMessages = Arrays.asList(defaultMessage1, defaultMessage2);
-        when(messageCacheRepository.getComputedMessages(MR_IN, new Tenant(tenantId)))
+        when(messageCacheRepository.getComputedMessages(MR_IN, new Tenant(tenantId), "module1"))
             .thenReturn(expectedMessages);
         final MessageSearchCriteria searchCriteria = MessageSearchCriteria.builder()
             .locale(MR_IN)
@@ -397,11 +397,11 @@ public class MessageServiceTest {
             .message("marathi message for tenant a")
             .build();
         List<Message> marathiMessagesForGivenTenant = Collections.singletonList(tenantMessage1);
-        when(messageCacheRepository.getMessages(MR_IN, new Tenant("a")))
+        when(messageCacheRepository.getMessages(MR_IN, new Tenant("a"), "module"))
             .thenReturn(marathiMessagesForGivenTenant);
-        when(messageCacheRepository.getMessages(ENGLISH_INDIA, new Tenant("default")))
+        when(messageCacheRepository.getMessages(ENGLISH_INDIA, new Tenant("default"), "module"))
             .thenReturn(defaultEnglishMessages);
-        when(messageCacheRepository.getComputedMessages(anyString(), any())).thenReturn(null);
+        when(messageCacheRepository.getComputedMessages(anyString(), any(), any())).thenReturn(null);
         final MessageSearchCriteria searchCriteria = MessageSearchCriteria.builder()
             .locale(MR_IN)
             .tenantId(new Tenant(tenantId))

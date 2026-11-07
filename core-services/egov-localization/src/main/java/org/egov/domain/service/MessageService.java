@@ -24,8 +24,10 @@ import org.springframework.util.CollectionUtils;
  * from locale: mr_IN and tenant mh.panvel 5) Override messages from step 3 with
  * messages from step 4.
  *
- * The items cached in Redis are - 1) The final computed message list. 2) The
- * raw messages ready from PostGres for every locale and tenant combination.
+ * Messages are loaded and cached per module so a search only holds that module's rows.
+ *
+ * The items cached in Redis are, for each module - 1) The computed message list.
+ * 2) The raw messages read from Postgres for every locale and tenant combination.
  *
  * Cache bust logic - a) For a create/update request to locale: mr_IN and
  * tenant: mh.panvel - 1) In validate cache entry for raw messages with key
@@ -78,44 +80,15 @@ public class MessageService {
 	}
 
 	public List<Message> getFilteredMessages(MessageSearchCriteria searchCriteria) {
-		List<Message> messages = getMessages(searchCriteria);
-		if (searchCriteria.isModuleAbsent() && !CollectionUtils.isEmpty(searchCriteria.getCodes())) {
-
-		    /*if(!CollectionUtils.isEmpty(searchCriteria.getCodes()))
-		        throw new CustomException("INVALID_SEARCH_CRITERIA","ModuleName should be provided when searching on codes");*/
-
-            Set<String> codes = searchCriteria.getCodes();
-
-			return messages.stream()
-					.filter(e -> e.getLocale().equals(searchCriteria.getLocale())
-							&& e.getTenant().equals(searchCriteria.getTenantId().getTenantId())
-                            && codes.contains(e.getCode()))
-					.collect(Collectors.toList());
-		} else if(searchCriteria.isModuleAbsent() && CollectionUtils.isEmpty(searchCriteria.getCodes())){
-            return messages.parallelStream()
-                .filter(e -> e.getLocale().equals(searchCriteria.getLocale())
-                    && e.getTenant().equals(searchCriteria.getTenantId().getTenantId()))
-                .collect(Collectors.toList());
-        } else {
-			List<String> modules = Arrays.asList(searchCriteria.getModule().split("[,]"));
-
-			if(CollectionUtils.isEmpty(searchCriteria.getCodes()))
-                messages = messages.stream()
-                    .filter(message -> modules.contains(message.getModule())
-                        && message.getLocale().equals(searchCriteria.getLocale())
-                        && message.getTenant().equals(searchCriteria.getTenantId().getTenantId()))
-                    .collect(Collectors.toList());
-			else {
-			    Set<String> codes = searchCriteria.getCodes();
-                messages = messages.stream()
-                    .filter(message -> modules.contains(message.getModule())
-                        && codes.contains(message.getCode())
-                        && message.getLocale().equals(searchCriteria.getLocale())
-                        && message.getTenant().equals(searchCriteria.getTenantId().getTenantId()))
-                    .collect(Collectors.toList());
-            }
-
+		List<Message> messages = new ArrayList<>();
+		for (String module : resolveModules(searchCriteria)) {
+			for (Message message : getMessagesForModule(searchCriteria, module)) {
+				if (matchesSearchCriteria(message, searchCriteria)) {
+					messages.add(message);
+				}
+			}
 		}
+		messages.sort(Comparator.comparing(Message::getCode));
 		return messages;
 	}
 
@@ -141,15 +114,71 @@ public class MessageService {
 		messageCacheRepository.bustCacheEntry(locale, tenant);
 	}
 
-	private List<Message> getMessages(MessageSearchCriteria searchCriteria) {
+	/**
+	 * Modules to load for this search. Uses the requested module list when it is present.
+	 * When it is absent, reads distinct module names for the tenant hierarchy and locale
+	 * (and {@code en_IN}) so each module can be loaded on its own instead of the full catalog.
+	 *
+	 * @param searchCriteria locale, tenant, and optional comma-separated modules
+	 * @return module names to compute; never null
+	 */
+	private List<String> resolveModules(MessageSearchCriteria searchCriteria) {
+		if (!searchCriteria.isModuleAbsent()) {
+			return Arrays.stream(searchCriteria.getModule().split("[,]"))
+					.map(String::trim)
+					.filter(module -> !module.isEmpty())
+					.distinct()
+					.collect(Collectors.toList());
+		}
+		List<String> tenantIds = searchCriteria.getTenantId().getTenantHierarchy().stream()
+				.map(Tenant::getTenantId)
+				.distinct()
+				.collect(Collectors.toList());
+		List<String> locales = new ArrayList<>();
+		locales.add(searchCriteria.getLocale());
+		if (!ENGLISH_INDIA.equals(searchCriteria.getLocale())) {
+			locales.add(ENGLISH_INDIA);
+		}
+		return messageRepository.findModules(tenantIds, locales).stream()
+				.filter(module -> module != null && !module.isEmpty())
+				.distinct()
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Whether a computed message belongs in the response. The locale and tenant must match
+	 * the request. When codes are present, the message code must be one of them.
+	 *
+	 * @param message candidate from the module's computed list
+	 * @param searchCriteria search locale, tenant, and optional codes
+	 * @return {@code true} when the message should be returned
+	 */
+	private boolean matchesSearchCriteria(Message message, MessageSearchCriteria searchCriteria) {
+		if (!searchCriteria.getLocale().equals(message.getLocale())
+				|| !searchCriteria.getTenantId().getTenantId().equals(message.getTenant())) {
+			return false;
+		}
+		return CollectionUtils.isEmpty(searchCriteria.getCodes()) || searchCriteria.getCodes().contains(message.getCode());
+	}
+
+	/**
+	 * Computed messages for a single module. Returns the per-module Redis entry when present,
+	 * and otherwise merges Postgres rows for that module and caches the result. Holding one
+	 * module at a time keeps the search heap bounded by that module rather than the catalog.
+	 *
+	 * @param searchCriteria locale and tenant used as the cache identity
+	 * @param module module to load
+	 * @return computed messages for that module, including English fallbacks for missing codes
+	 */
+	private List<Message> getMessagesForModule(MessageSearchCriteria searchCriteria, String module) {
 		final List<Message> cachedMessages = messageCacheRepository.getComputedMessages(searchCriteria.getLocale(),
-				searchCriteria.getTenantId());
+				searchCriteria.getTenantId(), module);
 		if (cachedMessages != null) {
 			return cachedMessages;
 		}
 		final List<Message> computedMessages = computeMessageList(searchCriteria.getLocale(),
-				searchCriteria.getTenantId());
-		messageCacheRepository.cacheComputedMessages(searchCriteria.getLocale(), searchCriteria.getTenantId(),
+				searchCriteria.getTenantId(), module);
+		messageCacheRepository.cacheComputedMessages(searchCriteria.getLocale(), searchCriteria.getTenantId(), module,
 				computedMessages);
 		return computedMessages;
 	}
@@ -184,16 +213,16 @@ public class MessageService {
 		return messageIdentitiesForGivenModule.stream().map(MessageIdentity::getCode).collect(Collectors.toList());
 	}
 
-	private List<Message> computeMessageList(String locale, Tenant tenant) {
-		final Collection<Message> messagesForGivenLocale = getMessagesForGivenLocale(locale, tenant);
-		List<Message> defaultMessages = getDefaultMessagesForMissingCodes(messagesForGivenLocale);
+	private List<Message> computeMessageList(String locale, Tenant tenant, String module) {
+		final Collection<Message> messagesForGivenLocale = getMessagesForGivenLocale(locale, tenant, module);
+		List<Message> defaultMessages = getDefaultMessagesForMissingCodes(messagesForGivenLocale, module);
 		return Stream.concat(messagesForGivenLocale.stream(), defaultMessages.stream())
 				.sorted(Comparator.comparing(Message::getCode)).collect(Collectors.toList());
 	}
 
-	private List<Message> getDefaultMessagesForMissingCodes(Collection<Message> messagesForGivenLocale) {
+	private List<Message> getDefaultMessagesForMissingCodes(Collection<Message> messagesForGivenLocale, String module) {
 		final List<Message> messagesInEnglishForDefaultTenant = fetchMessageFromRepository(ENGLISH_INDIA,
-				new Tenant(Tenant.DEFAULT_TENANT));
+				new Tenant(Tenant.DEFAULT_TENANT), module);
 
         Set<String> messageCodesInGivenLanguage = new HashSet<>();
 
@@ -205,10 +234,10 @@ public class MessageService {
 				messagesInEnglishForDefaultTenant);
 	}
 
-	private Collection<Message> getMessagesForGivenLocale(String locale, Tenant tenant) {
+	private Collection<Message> getMessagesForGivenLocale(String locale, Tenant tenant, String module) {
 		final Map<String, Message> codeToMessageMap = new HashMap<>();
 		final List<Message> messages = tenant.getTenantHierarchy().stream()
-				.map(tenantItem -> fetchMessageFromRepository(locale, tenantItem)).flatMap(List::stream)
+				.map(tenantItem -> fetchMessageFromRepository(locale, tenantItem, module)).flatMap(List::stream)
 				.collect(Collectors.toList());
 
 		messages.forEach(message -> {
@@ -231,13 +260,16 @@ public class MessageService {
 				.collect(Collectors.toList());
 	}
 
-	private List<Message> fetchMessageFromRepository(String locale, Tenant tenant) {
-		final List<Message> cachedMessages = messageCacheRepository.getMessages(locale, tenant);
+	private List<Message> fetchMessageFromRepository(String locale, Tenant tenant, String module) {
+		final List<Message> cachedMessages = messageCacheRepository.getMessages(locale, tenant, module);
 		if (cachedMessages != null) {
 			return cachedMessages;
 		}
-		final List<Message> messages = messageRepository.findByTenantIdAndLocale(tenant, locale);
-		messageCacheRepository.cacheMessages(locale, tenant, messages);
+		List<Message> messages = messageRepository.findByTenantIdLocaleAndModule(tenant, locale, module);
+		if (messages == null) {
+			messages = Collections.emptyList();
+		}
+		messageCacheRepository.cacheMessages(locale, tenant, module, messages);
 		return messages;
 	}
 

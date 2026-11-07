@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -41,6 +42,9 @@ public class MessageCacheRepositoryTest {
     public void test_should_delete_messages_cached_from_db_for_a_given_tenant_and_locale() {
         final Tenant tenant = new Tenant("a.b.c");
         final String locale = "en_IN";
+
+        when(hashOperations.keys(MESSAGE_HASH_KEY))
+            .thenReturn(new HashSet<Object>(Collections.singletonList("en_IN:a.b.c")));
 
         cacheRepository.bustCacheEntry(locale, tenant);
 

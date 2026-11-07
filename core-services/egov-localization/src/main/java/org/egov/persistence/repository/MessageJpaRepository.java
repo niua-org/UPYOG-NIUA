@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -24,4 +25,16 @@ public interface MessageJpaRepository extends JpaRepository<Message, String> {
 	@Query("select m.id from Message m where m.tenantId = :tenantId and m.locale = :locale and m.module = :module and m.code = :code")
 	List<Message> find(@Param("tenantId") String tenantId, @Param("locale") String locale,
 			@Param("module") String module, @Param("code") String code);
+
+	/**
+	 * Distinct module names for the given tenants and locales. Selects names only, so callers
+	 * can iterate modules without loading their message rows.
+	 *
+	 * @param tenantIds tenant ids to include
+	 * @param locales locales to include
+	 * @return distinct module names
+	 */
+	@Query("select distinct m.module from Message m where m.tenantId in :tenantIds and m.locale in :locales")
+	List<String> findDistinctModules(@Param("tenantIds") Collection<String> tenantIds,
+			@Param("locales") Collection<String> locales);
 }
