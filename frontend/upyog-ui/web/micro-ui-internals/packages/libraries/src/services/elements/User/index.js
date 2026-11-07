@@ -199,12 +199,30 @@ export const UserService = {
       method: "POST",
     }),
 
+    verifyAadharOtp: (details) =>
+    ServiceRequest({
+      url: Urls.loginV2.verifyAadharOtp,
+      data: details,
+      auth: true,
+      method: "POST",
+    }),
+
   newAuthenticate: (details) =>
     ServiceRequest({
       url: Urls.loginV2.userLogin,
       data: details,
       auth: false,
       method: "POST",
+    }),
+
+  createFamily: async (Data, tenantid) => 
+    ServiceRequest({
+      url: Urls.profile.createFamily,
+      data: Data,
+      params: { tenantId: tenantid },
+      auth: true,
+      method: "POST",
+      userService: false,
     }),
 
   createUserDocument: async (documents, tenantId) =>
@@ -268,6 +286,7 @@ export const UserService = {
       data: details,
       auth: true,
       method: "POST",
+      userService: true,
     }),
 
   verifyFamilyOtp: (details) =>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, Loader, EditIcon, Dropdown, ArrowDown } from "@nudmcdgnpm/digit-ui-react-components";
-import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument } from "../utils";
+import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument, clearFamilyMembers } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
-import {PROFILE_ROUTES} from "../utils/constants";
+import { PROFILE_ROUTES } from "../utils/constants";
+
+const EDIT_PROFILE_URL = "/upyog-ui/citizen/profile/edit-details";
 
 // Function to get user Details
 const useProfileUser = () => {
@@ -18,7 +20,7 @@ const useProfileUser = () => {
     const fetchUser = async () => {
       if (!uuid) { setLoading(false); return; }
       try {
-        const response = await Digit.UserService.userSearch(tenantId, { uuid: [uuid], include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
+        const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
         if (isActive) setUser(response?.user?.[0] || null);
       } catch (e) {
         if (isActive) setError(true);
@@ -68,7 +70,16 @@ const ProfileDetails = () => {
       },
   });
   let familyOptions = [];
-  FamilyCreateOptions && FamilyCreateOptions.map((family) => {familyOptions.push({ i18nKey: `${family.code}`, code: `${family.code}`, name: `${family.name}` })});
+  FamilyCreateOptions &&
+    FamilyCreateOptions.forEach((family) => {
+      // Once family ID is created, remove "Create Family" option
+      if (user?.familyId && family.code === "PROFILE_CREATE_FAMILY") {
+        return;
+      }
+      familyOptions.push({ i18nKey: `${family.code}`, code: `${family.code}`, name: `${family.name}` });
+    });
+
+
 
   if (loading) return <Loader />;
   if (error || !user) return <div style={profileStyles.message}>{t("CORE_COMMON_PROFILE_LOAD_ERROR")}</div>;
@@ -86,6 +97,9 @@ const ProfileDetails = () => {
   const handleFamilySelection = (option) => {
     const targetRoute = PROFILE_ROUTES[option?.code];
     if (targetRoute) {
+      if (option?.code === "PROFILE_CREATE_FAMILY") {
+        clearFamilyMembers();
+      }
       navigate(targetRoute);
     }
   };
@@ -104,6 +118,16 @@ const ProfileDetails = () => {
           <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
         </div>
         <div style={profileStyles.headerActions} >
+          {user?.familyId && (
+            <div style={profileStyles.familyIdBadge}>
+              <span style={{ fontSize: "14px", color: "#505A5F", fontWeight: 500 }}>
+                {t("CORE_COMMON_FAMILY_ID", "Family ID")}:
+              </span>
+              <span style={{ fontSize: "15px", color: "#0B0C0C", fontWeight: 700 }}>
+                {user.familyId}
+              </span>
+            </div>
+          )}
           {user?.isIdentityVerified ? (
           <div>
           <Dropdown
@@ -115,7 +139,7 @@ const ProfileDetails = () => {
             customSelector={
               <div style={profileStyles.dropdownButton}>
                 <span>{t("PROFILE_ADD_FAMILY")}</span>
-                <ArrowDown/>
+                <ArrowDown />
               </div>
             }
           />

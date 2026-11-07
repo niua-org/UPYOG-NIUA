@@ -219,3 +219,34 @@ export const getFamilyFields = (family) =>
     ["PROFILE_FAMILY_STATUS", family?.status],
     ["PROFILE_FAMILY_MEMBERS_COUNT", family?.members?.length],
   ]);
+
+
+/**
+ * Need to create a list of members while creating a family
+ * It store all the member details to session first and when create family api call
+ * it removed the same Key from session as well to maintain the clean standards
+ */
+const KEY = "Digit.family.members";
+
+export const getFamilyMembers = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem(KEY) || "[]");
+    } catch {
+        return [];
+    }
+};
+
+export const addFamilyMember = (member) => {
+    const list = getFamilyMembers();
+    // Prevent duplicate Aadhaar / userUuid
+    if (list.some((m) => m.userUuid === member.userUuid)) return list;
+    const updated = [...list, member];
+    sessionStorage.setItem(KEY, JSON.stringify(updated));
+    return updated;
+};
+
+export const setFamilyMembers = (list) => {
+    sessionStorage.setItem(KEY, JSON.stringify(list || []));
+};
+
+export const clearFamilyMembers = () => sessionStorage.removeItem(KEY);

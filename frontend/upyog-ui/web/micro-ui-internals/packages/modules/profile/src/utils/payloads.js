@@ -66,3 +66,48 @@ export const buildCreateDocumentPayload = ({ userUuid, tenantId, documentType, f
   ...(fileName && { fileName }),
   active: true,
 });
+
+
+
+// Body for Digit.UserService.createFamily
+export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid }) => {
+  // 1. Use ONLY the members explicitly verified and added to the screen
+  const members = membersList || [];
+
+  // 2. Head UUID from the radio button (or fallback to the first member)
+  const finalHeadUuid = selectedHeadUuid || members[0]?.userUuid;
+
+  // 3. Keep relationshipWithHead exactly as selected from the dropdown,
+  // and set isHead: true ONLY for the member selected as Head via radio button
+  const finalMembers = members.map((member) => ({
+    userUuid: member.userUuid,
+    name: member.name || "Family Member",
+    relationshipWithHead: member.relationshipWithHead,
+    isHead: member.userUuid === finalHeadUuid,
+  }));
+
+  return {
+    Family: {
+      tenantId: tenantId,
+      headUserUuid: finalHeadUuid,
+      members: finalMembers,
+    },
+  };
+};
+
+// Maps and standardizes the Aadhaar OTP verification response into a verified member object
+export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) => ({
+  ...response,
+  userUuid: response?.userUuid || response?.uuid,
+  uuid: response?.userUuid || response?.uuid,
+  message: response?.message || "Aadhaar verified successfully",
+  maskedAadhaar: response?.maskedAadhaar || (cleanAadhaar ? `XXXXXXXX${cleanAadhaar.slice(-4)}` : "NA"),
+  name: response?.demographics?.name || response?.name,
+  dob: response?.demographics?.dob || response?.dob,
+  gender: response?.demographics?.gender || response?.gender,
+  demographics: response?.demographics || {
+    name: response?.name,
+    dob: response?.dob,
+    gender: response?.gender,
+  },
+});
