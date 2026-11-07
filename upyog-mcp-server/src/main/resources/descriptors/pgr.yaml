@@ -1,0 +1,180 @@
+id: pgr
+displayName: Grievance
+description: Public grievance registration and search.
+allowedRolesHint:
+  - CITIZEN
+  - CSR
+  - GO
+  - RO
+  - GA
+  - GRO
+  - DGRO
+  - PGR-ADMIN
+  - PGR_LME
+masters:
+  - module: RAINMAKER-PGR
+    name: ServiceDefs
+operations:
+  search:
+    type: READ
+    description: Search grievances by tenant and optional service request id.
+    readOnly: true
+    destructive: false
+    requiresConfirmation: false
+    httpMethod: POST
+    gatewayPath: /pgr-services/v2/request/_search
+    supportsStatus: true
+    statusArgument: serviceRequestId
+    statusArgumentAsList: false
+    inputSchema:
+      type: object
+      additionalProperties: false
+      required: [tenantId]
+      properties:
+        tenantId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        serviceRequestId:
+          type: string
+          maxLength: 128
+        serviceCode:
+          type: string
+          maxLength: 128
+        applicationStatus:
+          type: string
+          maxLength: 64
+        mobileNumber:
+          type: string
+          maxLength: 10
+    query:
+      tenantId:
+        "$payload": tenantId
+      serviceRequestId:
+        "$payload": serviceRequestId
+      serviceCode:
+        "$payload": serviceCode
+      applicationStatus:
+        "$payload": applicationStatus
+      mobileNumber:
+        "$payload": mobileNumber
+      limit:
+        "$page": size
+      offset:
+        "$page": offset
+    response:
+      listPath: ServiceWrappers
+      keep:
+        - service.serviceRequestId
+        - service.applicationStatus
+        - service.serviceCode
+        - service.description
+        - service.tenantId
+        - service.citizen.mobileNumber
+    examples:
+      - tenantId: pg.citya
+        serviceRequestId: PGR-2024-000123
+  create:
+    type: WRITE
+    description: Register a grievance. Complaint text is stored as data. Documents are uploaded to filestore first.
+    readOnly: false
+    destructive: false
+    requiresConfirmation: true
+    httpMethod: POST
+    gatewayPath: /pgr-services/v2/request/_create
+    filestoreModule: PGR
+    documentsTarget: workflow.verificationDocuments
+    inputSchema:
+      type: object
+      additionalProperties: false
+      required: [tenantId, serviceCode, priority, address]
+      properties:
+        tenantId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        serviceCode:
+          type: string
+          minLength: 1
+          maxLength: 128
+        description:
+          type: string
+          maxLength: 1000
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        address:
+          type: object
+          additionalProperties: false
+          required: [locality]
+          properties:
+            tenantId:
+              type: string
+            doorNo:
+              type: string
+            street:
+              type: string
+            city:
+              type: string
+            pincode:
+              type: string
+            landmark:
+              type: string
+            locality:
+              type: object
+              additionalProperties: false
+              required: [code]
+              properties:
+                code:
+                  type: string
+                name:
+                  type: string
+        documents:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [fileName, contentType, contentBase64]
+            properties:
+              documentType:
+                type: string
+              fileName:
+                type: string
+              contentType:
+                type: string
+              contentBase64:
+                type: string
+    requestBody:
+      service:
+        tenantId:
+          "$payload": tenantId
+        serviceCode:
+          "$payload": serviceCode
+        description:
+          "$payload": description
+        priority:
+          "$payload": priority
+        address:
+          "$payload": address
+        accountId:
+          "$user": uuid
+        source:
+          "$constant": web
+      workflow:
+        action:
+          "$constant": APPLY
+    response:
+      listPath: ServiceWrappers
+      keep:
+        - service.serviceRequestId
+        - service.applicationStatus
+        - service.serviceCode
+        - service.tenantId
+    examples:
+      - tenantId: pg.citya
+        serviceCode: Garbage
+        priority: HIGH
+        description: Lane near the park is not cleaned
+        address:
+          locality:
+            code: JLC478

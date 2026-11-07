@@ -1,0 +1,60 @@
+id: property
+displayName: Property
+description: Property search. Bills and payment links use the billing tools.
+allowedRolesHint:
+  - CITIZEN
+  - PT_CEMP
+  - PT_DOC_VERIFIER
+  - PT_FIELD_INSPECTOR
+  - PT_APPROVER
+  - PTADMIN
+  - CEMP
+operations:
+  search:
+    type: READ
+    description: Search a property by id. Owner names and contact numbers are masked.
+    readOnly: true
+    destructive: false
+    requiresConfirmation: false
+    httpMethod: POST
+    gatewayPath: /property-services/property/_search
+    supportsStatus: true
+    statusArgument: propertyIds
+    statusArgumentAsList: true
+    inputSchema:
+      type: object
+      additionalProperties: false
+      required: [tenantId]
+      properties:
+        tenantId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        propertyIds:
+          type: array
+          items:
+            type: string
+        mobileNumber:
+          type: string
+          maxLength: 10
+    query:
+      tenantId:
+        "$payload": tenantId
+      propertyIds:
+        "$payload": propertyIds
+      mobileNumber:
+        "$payload": mobileNumber
+      limit:
+        "$page": size
+      offset:
+        "$page": offset
+    response:
+      listPath: Properties
+      keep:
+        - propertyId
+        - status
+        - tenantId
+    examples:
+      - tenantId: pg.citya
+        propertyIds:
+          - PT-107-001834

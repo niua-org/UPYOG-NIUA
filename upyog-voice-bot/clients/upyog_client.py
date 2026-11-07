@@ -75,6 +75,33 @@ def _load_config() -> dict:
 
 _cfg = _load_config()
 
+
+def mcp_enabled() -> bool:
+    """Use upyog-mcp-server for agent actions unless UPYOG_MCP_ENABLED is false."""
+    flag = os.environ.get("UPYOG_MCP_ENABLED")
+    if flag is None:
+        flag = str((_cfg.get("mcp") or {}).get("enabled", True))
+    return str(flag).lower() in ("1", "true", "yes")
+
+
+def _mcp_client():
+    from clients.upyog_mcp_client import UpyogMcpClient
+    configured = (_cfg.get("mcp") or {}).get("url")
+    return UpyogMcpClient(os.environ.get("UPYOG_MCP_URL") or configured)
+
+
+def _mcp_auth(phone_anchor: Optional[str] = None) -> Tuple[str, Dict[str, Any]]:
+    """Return the logged-in citizen token. The MCP server rejects a missing token."""
+    info = api_client.get_request_info(phone_anchor)
+    token = info.get("authToken")
+    if not token:
+        raise PermissionError("No authenticated UPYOG session.")
+    return token, info.get("userInfo") or {}
+
+
+def _tenant_for(user_info: Dict[str, Any], env_cfg: Dict[str, Any]) -> str:
+    return user_info.get("tenantId") or env_cfg.get("tenant_id") or MDMS_TENANT_ID
+
 # ContextVar for active environment per execution thread / async task
 _current_base_url_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("_current_base_url_var", default=None)
 
@@ -778,6 +805,13 @@ def upload_to_filestore(file_name: str, file_data_base64: str, token: str, base_
 
 def search_ads(mobile_number: str, booking_no: str = None, status: str = None, latest: bool = False, base_url: Optional[str] = None) -> str:
     """Searches UPYOG database for past advertisement bookings using the citizen's mobile number."""
+    if mcp_enabled():
+        # Advertisement search goes through the MCP search tool, not the gateway client.
+        from clients.mcp_agent import friendly, search_bookings
+        try:
+            return search_bookings(mobile_number, booking_no, status, latest)
+        except Exception as exc:
+            return json.dumps({"error": friendly(exc, "Failed to fetch bookings from UPYOG")})
     logger.info(f"[search_ads] Called with mobile_number={mobile_number}, booking_no={booking_no}, status={status}, latest={latest}")
     b_url = get_current_base_url(base_url)
     env_cfg = get_current_environment_config(b_url)
@@ -836,6 +870,21 @@ def mdms_get(module_name: str, master_name: str, base_url: Optional[str] = None)
     logger.info(f"[mdms_get] Requested master={master_name} for module={module_name}")
     if master_name == "NightLight":
         return ["Yes", "No"]
+    if mcp_enabled():
+        # Allow-listed masters use lookup_master. Anything else keeps the direct gateway call below.
+        from clients.mcp_agent import master_names
+        from clients.upyog_mcp_client import McpCallError
+        try:
+            return master_names(module_name, master_name)
+        except McpCallError as exc:
+            if exc.code == "MASTER_NOT_ALLOWED":
+                logger.info("[mdms_get] %s is not on the MCP server; using the gateway", module_name)
+            else:
+                logger.error("[mdms_get] MCP error: %s", exc)
+                return []
+        except Exception as exc:
+            logger.error("[mdms_get] MCP error: %s", exc)
+            return []
 
     b_url = get_current_base_url(base_url)
     env_cfg = get_current_environment_config(b_url)
@@ -947,6 +996,12 @@ def slot_search(addType: str, faceArea: str, location: str,
 
 def fetch_bill(booking_no: str, mobile_number: str = None, base_url: Optional[str] = None) -> str:
     """Calculates and fetches the estimated bill amount for an advertisement booking."""
+    if mcp_enabled():
+        from clients.mcp_agent import bill_text, friendly
+        try:
+            return bill_text(booking_no, mobile_number)
+        except Exception as exc:
+            return friendly(exc, "Unable to fetch the bill details at this moment due to a technical issue. Please try again later.")
     logger.info(f"[fetch_bill] Called for booking_no='{booking_no}', mobile='{mobile_number}'")
     try:
         request_info = api_client.get_request_info(mobile_number)
@@ -985,6 +1040,18 @@ def create_booking(booking_details_json: str, base_url: Optional[str] = None) ->
         details = json.loads(booking_details_json)
     except Exception:
         return "Error: Could not parse booking details. Please provide valid JSON."
+    if mcp_enabled():
+        # The citizen already confirmed in the voice flow, so prepare and confirm run together.
+        from clients.mcp_agent import create_advertisement, friendly
+        try:
+            return create_advertisement(details)
+        except PermissionError:
+            return (
+                "You must be logged in with your registered UPYOG mobile number to create a booking. "
+                "Please log in first using the login button."
+            )
+        except Exception as exc:
+            return friendly(exc, "I apologize, but we could not complete your advertisement booking due to a technical issue with the municipal portal.")
 
     b_url = get_current_base_url(base_url)
     env_cfg = get_current_environment_config(b_url)
@@ -1147,6 +1214,13 @@ def create_booking(booking_details_json: str, base_url: Optional[str] = None) ->
 
 def pgr_get_categories(phone_anchor: str = None, base_url: Optional[str] = None) -> dict:
     """Fetches the list of all grievance complaint categories from the UPYOG server."""
+    if mcp_enabled():
+        from clients.mcp_agent import pgr_categories
+        try:
+            return pgr_categories(phone_anchor)
+        except Exception as exc:
+            logger.error("pgr_get_categories via MCP failed: %s", exc)
+            return {}
     b_url = get_current_base_url(base_url)
     env_cfg = get_current_environment_config(b_url)
     grv = _cfg.get("grievance", {})
@@ -1224,6 +1298,18 @@ def pgr_create_complaint(complaint_json: str, base_url: Optional[str] = None) ->
         details = json.loads(complaint_json)
     except Exception:
         return "Error: Could not parse complaint details. Please provide valid JSON."
+    if mcp_enabled():
+        # The citizen already confirmed in the voice flow, so prepare and confirm run together.
+        from clients.mcp_agent import friendly, pgr_create
+        try:
+            return pgr_create(details, details.get("phone_number"))
+        except PermissionError:
+            return (
+                "You must be logged in with your registered UPYOG mobile number to register a complaint. "
+                "Please log in first using the login button."
+            )
+        except Exception as exc:
+            return friendly(exc, "We were unable to complete your complaint registration due to a temporary technical issue.")
 
     b_url = get_current_base_url(base_url)
     env_cfg = get_current_environment_config(b_url)
@@ -1329,6 +1415,13 @@ def pgr_create_complaint(complaint_json: str, base_url: Optional[str] = None) ->
 
 def pgr_search_complaints_raw(phone_anchor: str = None, complaint_id: str = None, base_url: Optional[str] = None) -> list:
     """Fetches raw JSON list of past complaints from UPYOG server for UI rendering."""
+    if mcp_enabled():
+        from clients.mcp_agent import pgr_search
+        try:
+            return pgr_search(phone_anchor, complaint_id)
+        except Exception as exc:
+            logger.error("[pgr_search_complaints_raw] MCP error: %s", exc)
+            return []
     try:
         b_url = get_current_base_url(base_url)
         env_cfg = get_current_environment_config(b_url)

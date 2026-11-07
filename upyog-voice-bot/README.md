@@ -1,5 +1,7 @@
 # UPYOG Voice Bot v2 — Complete Knowledge Transfer Document
 
+The conversational agent calls **upyog-mcp-server** for grievance, advertisement, master-data, and bill actions. See [section 18](#18-calling-the-upyog-mcp-server).
+
 **Project:** UPYOG Conversational Voice Assistant  
 **Version:** v2  
 **Prepared for:** Incoming developers / intern onboarding  
@@ -26,6 +28,7 @@
 15. Common bugs and fixes
 16. What was built in v1 vs v2
 17. Glossary
+18. Calling the UPYOG MCP server
 
 ---
 
@@ -1082,6 +1085,72 @@ Venv ensures the bot's Python packages do not conflict with other Python project
 | ULB | Urban Local Body — municipal corporation / city government |
 | UPYOG | Urban Platform for Urban Governance — the government services platform |
 | NUDM | National Urban Digital Mission — the overarching government initiative |
+
+---
+
+## 18. Calling the UPYOG MCP server
+
+The voice bot is the assistant. `upyog-mcp-server` is the integration layer. Grievance, advertisement, master data, and bill steps call that server. Login and OTP stay in this bot.
+
+### What is wired
+
+| Voice-bot function | MCP tool |
+|---|---|
+| `pgr_get_categories` | `lookup_master` (`pgr` / `ServiceDefs`) |
+| `pgr_search_complaints` | `search` on `pgr` |
+| `pgr_create_complaint` | `prepare_action` then `confirm_action` |
+| `search_ads` | `search` on `advertisement` |
+| `mdms_get` for Advertisement, PGR, and CHB | `lookup_master` |
+| `fetch_bill` | `get_pending_bill` (`businessService=adv-services`) |
+| `create_booking` | `prepare_action` then `confirm_action` |
+
+The grievance and booking screens already ask the citizen to say yes. Only after that yes does the bot call `prepare_action` and then `confirm_action`. The bot does not send `RequestInfo`, a URL, or a file-store id.
+
+Slot search and locality lookup still call the API gateway. The MCP server does not expose those two reads.
+
+### Configuration
+
+In `config.yml`:
+
+```yaml
+upyog:
+  mcp:
+    enabled: true
+    url: "http://localhost:8080/upyog-mcp-server/mcp"
+```
+
+Environment variables override the file:
+
+| Variable | Meaning |
+|---|---|
+| `UPYOG_MCP_URL` | Streamable HTTP endpoint via gateway, default `{UPYOG_GATEWAY_BASE_URL}/upyog-mcp-server/mcp` |
+| `UPYOG_MCP_ENABLED` | `false` keeps the old direct gateway calls |
+
+The header on every MCP call is `Auth-Token` (gateway) with the citizen session token from login. Writes on the MCP server need Redis. Without it, confirm returns `CONFIRMATION_STORE_UNAVAILABLE` and the bot tells the citizen the request was not submitted.
+
+### Run both
+
+```bash
+# upyog-mcp-server
+export UPYOG_MCP_TOKEN_SECRET="$(openssl rand -hex 32)"
+export UPYOG_GATEWAY_BASE_URL=http://localhost:8080
+export REDIS_ENABLED=true
+mvn spring-boot:run
+
+# upyog-voice-bot
+export UPYOG_MCP_URL=http://localhost:8080/upyog-mcp-server/mcp
+python app.py
+```
+
+### Tests
+
+From `upyog-voice-bot`:
+
+```bash
+python -m unittest tests.test_mcp_integration -v
+```
+
+The tests mock the HTTP session. They check the auth header, Streamable HTTP parsing, prepare-then-confirm, grievance search mapping, an empty bill, and an unknown master. They do not call a live gateway.
 
 ---
 

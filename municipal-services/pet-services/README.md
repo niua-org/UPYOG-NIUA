@@ -35,7 +35,7 @@ NA
 #### Swagger UI
 - **Local Development**: [http://localhost:8087/pet-services/swagger-ui/index.html](http://localhost:8087/pet-services/swagger-ui/index.html)
 - **OpenAPI Specification**: [http://localhost:8087/pet-services/v3/api-docs](http://localhost:8087/pet-services/v3/api-docs)
-=======
+
 ##### Method
 - **a) Create API `pet-registration/_create` :** This Api is used to create new Pet Application.
 - **a) update API `pet-registration/_update` :** This Api is used to update the Created Pet Application
@@ -47,7 +47,6 @@ NA
   ptr.kafka.create.topic=save-ptr-application
 
   ptr.kafka.update.topic=update-ptr-application
->>>>>>> master-LTS
 
 #### Postman Collection
 - Import the OpenAPI specification directly into Postman using the above URL

@@ -1,0 +1,18 @@
+id: bad
+displayName: Bad
+description: Invalid method
+operations:
+  search:
+    type: READ
+    description: bad
+    readOnly: true
+    destructive: false
+    requiresConfirmation: false
+    httpMethod: GET
+    gatewayPath: /pgr-services/v2/request/_search
+    inputSchema:
+      type: object
+      additionalProperties: false
+      properties:
+        tenantId:
+          type: string
