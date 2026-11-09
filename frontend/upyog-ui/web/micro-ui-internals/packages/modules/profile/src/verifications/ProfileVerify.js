@@ -82,7 +82,6 @@ const ProfileVerify = () => {
   // Verify Profile OTP
   const handleVerify = async () => {
     setVerifying(true);
-
     try {
       const res = await Digit.UserService.verifyProfile({
         referenceId,
@@ -94,41 +93,44 @@ const ProfileVerify = () => {
       if (res?.user?.isIdentityVerified !== true) {
         throw new Error("PROFILE_VERIFICATION_FAILED");
       }
-      // Update session and local storage with the verified user data
+
+      // 1. Whitelist only required non-sensitive fields from verified user
+      const verifiedFields = {
+        name: res.user.name,
+        isIdentityVerified: res.user.isIdentityVerified,
+        ...(res.user.gender && { gender: res.user.gender }),
+        ...(res.user.dob && { dob: res.user.dob }),
+      };
+
       const sessionUser = Digit.UserService.getUser();
-      if (sessionUser && res?.user) {
-        const fullUpdatedUser = {
+      if (sessionUser) {
+        // 2. Align user shape: keep existing tokens and merge only whitelisted fields into info
+        const updatedUser = {
           ...sessionUser,
           info: {
             ...sessionUser.info,
-            ...res.user, // update the user info with the verified data
+            ...verifiedFields,
           },
         };
-        // 1. Session Storage update
-        Digit.UserService.setUser(fullUpdatedUser);
-        Digit.SessionStorage.set("citizen.userRequestObject", fullUpdatedUser);
-        // 2. Local Storage update (Upyog auth keys)
-        localStorage.setItem("user-info", JSON.stringify(fullUpdatedUser.info));
-        localStorage.setItem("Citizen.user-info", JSON.stringify(fullUpdatedUser.info));
-        localStorage.setItem("citizen.userRequestObject", JSON.stringify(fullUpdatedUser.info));
+
+        // 3. Update via standard Digit helpers (SessionStorage)
+        Digit.UserService.setUser(updatedUser);
+        Digit.SessionStorage.set("citizen.userRequestObject", updatedUser);
+
+        // 4. Update documented UPYOG localStorage keys (only safe info object, no raw aadhaar)
+        localStorage.setItem("user-info", JSON.stringify(updatedUser.info));
+        localStorage.setItem("Citizen.user-info", JSON.stringify(updatedUser.info));
       }
+
       setToast({
         error: false,
         label: t("PROFILE_VERIFICATION_SUCCESS"),
       });
-      // 3. Clean full navigation so that user is redirected to profile details page after verification with sync info
+
       navigationTimerRef.current = setTimeout(() => {
-        window.location.href = "/upyog-ui/citizen/profile/profile-details";
+        window.location.href = PROFILE_ROUTES.DETAILS;
       }, 2000);
 
-      setToast({
-        error: false,
-        label: t("PROFILE_VERIFICATION_SUCCESS"),
-      });
-
-      navigationTimerRef.current = setTimeout(() => {
-        navigate(PROFILE_ROUTES.DETAILS);
-      }, 3000);
     } catch (err) {
       console.log("Error while verifying Profile:", err);
       showError(err?.response?.data?.Errors?.[0]?.message || t("PROFILE_VERIFICATION_FAILED"));

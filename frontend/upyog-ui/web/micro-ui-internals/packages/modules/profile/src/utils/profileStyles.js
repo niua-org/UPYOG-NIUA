@@ -387,7 +387,8 @@ export const profileStyles = {
     gap: "8px",
   },
 
-   addressModalPopup: {
+ // Two-column layout for the library's AddressDetails form, scoped to the address modal.
+  addressModalPopup: {
     backgroundColor: "#fff",
     position: "relative",
     width: "min(900px, 95vw)",
@@ -402,8 +403,10 @@ export const profileStyles = {
 
 
 
-// Two-column layout for the library's AddressDetails form, scoped to the address modal.
-// Kept as a CSS string because selectors (:has, sibling, media query) can't be inline styles.
+/**
+ * Two-column layout for the library's AddressDetails form, scoped to the address modal.
+ * Kept as a CSS string because selectors (:has, sibling, media query) can't be inline styles.
+*/
 export const addressModalCss = `
   /* separator below the modal header */
   .address-modal-grid {

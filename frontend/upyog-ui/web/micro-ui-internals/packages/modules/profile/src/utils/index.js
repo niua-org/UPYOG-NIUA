@@ -75,7 +75,11 @@ export const getAddressBlocks = (addresses = []) => {
 export const getInitials = (name = "") =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
 
-// Converts a gender code string into the Dropdown option shape
+/**
+ * Normalizes a gender code or dropdown option into the Dropdown option shape.
+ * @param {string|{code?: string, value?: string}|null|undefined} gender
+ * @returns {{i18nKey: string, code: string, value: string}|null}
+ */
 export const toGenderOption = (gender) => {
   if (!gender) return null;
   const code = typeof gender === "object" ? (gender.code || gender.value) : gender;
