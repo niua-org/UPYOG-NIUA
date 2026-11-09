@@ -1,11 +1,8 @@
 import {
   Card,
-  CardSubHeader,
   CardSectionHeader,
   Header,
   Loader,
-  Row,
-  StatusTable,
   SubmitBar,
   ActionBar,
   Modal,
@@ -36,6 +33,7 @@ import { downloadGCReceipt, downloadGCAcknowledgement, multiUnits } from "../../
  *   - PERMANENT_DISCONNECT (Terminal Disconnection)
  *   with modal capturing reason and reasonDetails.
  */
+
 const GCApplicationDetails = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
@@ -55,6 +53,25 @@ const GCApplicationDetails = () => {
   const [comments, setComments] = useState("");
   const [showToast, setShowToast] = useState(null);
 
+  const getLabel = (key, fallback) => {
+    const val = t(key);
+    return val && val !== key ? val : fallback;
+  };
+
+  const formatFloor = (floor) => {
+    if (floor === null || floor === undefined || floor === "") return getLabel("CS_NA", "NA");
+    const floorStr = String(floor).trim();
+    if (floorStr === "0") {
+      return getLabel("GC_FLOOR_GROUND", "Ground Floor");
+    }
+    const fNum = parseInt(floorStr, 10);
+    if (!isNaN(fNum)) {
+      const suffix = fNum === 1 ? "st" : fNum === 2 ? "nd" : fNum === 3 ? "rd" : "th";
+      return `${fNum}${suffix} Floor`;
+    }
+    return `${floorStr} Floor`;
+  };
+
   useEffect(() => {
     if (showToast) {
       const timer = setTimeout(() => setShowToast(null), 6000);
@@ -73,7 +90,8 @@ const GCApplicationDetails = () => {
     { enabled: !!applicationNo, cacheTime: 0, staleTime: 0 }
   );
 
-  const application = gcData?.garbageApplications?.[0] || null;
+  const applicationList = gcData?.garbageApplications || [];
+  const application = applicationList.length > 0 ? applicationList[0] : null;
 
   const businessService = application?.businessService || "garbage-service";
 
@@ -81,13 +99,13 @@ const GCApplicationDetails = () => {
   const { tenants } = storeData || {};
 
   const { data: reciept_data, isLoading: recieptDataLoading } = Digit.Hooks.useRecieptSearch(
-    { tenantId, businessService: "garbage-service", consumerCodes: applicationNo },
+    { tenantId, businessService: "garbage-service", consumerCodes: applicationNo, isEmployee: false },
     { enabled: !!applicationNo }
   );
 
   const GCDocuments = Digit?.ComponentRegistryService?.getComponent("GCDocuments");
 
-  const { isLoading: isWorkflowLoading, data: workflowDetails } = Digit.Hooks.useWorkflowDetails({
+  const { isLoading: isWorkflowLoading } = Digit.Hooks.useWorkflowDetails({
     tenantId: tenantId,
     id: applicationNo,
     moduleCode: businessService,
@@ -98,7 +116,7 @@ const GCApplicationDetails = () => {
   const { mutateAsync } = useMutation({ mutationFn: (data) => Digit.GCServices.update(data, tenantId) });
 
   const CloseBtn = (props) => (
-    <div onClick={props.onClick} className="gc-gcapplication-details-clickable" style={{ cursor: "pointer" }}>
+    <div onClick={props.onClick} style={{ cursor: "pointer" }}>
       <CloseSvg />
     </div>
   );
@@ -117,6 +135,21 @@ const GCApplicationDetails = () => {
   const isOwner = propertyType === "OWNER" || user?.uuid === appData?.ownerUuid;
   const floorNo = specs?.floorNo || null;
   const childApps = appData?.childGarbageApplications || [];
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "APPROVED":
+      case "ACTIVE":
+        return "#00703c";
+      case "DISCONNECTED":
+        return "#a82227";
+      case "PERMANENTLY_DISCONNECTED":
+      case "REJECTED":
+        return "#d4351c";
+      default:
+        return "#1d70b8";
+    }
+  };
 
   // Reason Dropdowns for Lifecycle Actions
   const disconnectReasons = useMemo(
@@ -158,9 +191,8 @@ const GCApplicationDetails = () => {
     }
 
     try {
-      const { grbgCollectionUnits, childGarbageAccounts, ...cleanAppData } = appData || {};
       const payloadApp = {
-        ...cleanAppData,
+        ...appData,
         workflow: {
           action: selectedAction,
           comments: comments || `${selectedAction} initiated by owner.`,
@@ -215,7 +247,7 @@ const GCApplicationDetails = () => {
   const docs = appData?.documents || [];
 
   const handleMakePayment = () => {
-    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
+    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${encodeURIComponent(appNo)}`);
   };
 
   if (isLoading || isWorkflowLoading) {
@@ -223,20 +255,23 @@ const GCApplicationDetails = () => {
   }
 
   if (!application) {
-    return <div>{t("GC_APPLICATION_NOT_FOUND") || "Application not found"}</div>;
+    return (
+      <div className="cardHeaderWithOptions">
+        <Header>{t("GC_APPLICATION_NOT_FOUND") || "Application not found"}</Header>
+      </div>
+    );
   }
 
   // Address Details
-  const address = appData?.addresses?.[0] || appData?.propertyLocation || {};
+  const address = appData?.propertyLocation || {};
   const addressAdditional = address?.additionalDetail || {};
-  const propertyId = appData?.propertyId || address?.propertyId;
+  const propertyId = appData?.propertyId;
   const pincode = address?.pincode;
-  const city = address?.city || appData?.tenantId;
-  const localityRaw = addressAdditional?.locality || address?.locality;
-  const localityText = typeof localityRaw === "string" ? t(localityRaw) : localityRaw?.name ? t(localityRaw.name) : null;
-  const street = addressAdditional?.streetName || address?.streetName;
-  const houseNo = addressAdditional?.houseNo || address?.houseNo;
-  const buildingName = addressAdditional?.houseName || address?.houseName;
+  const city = address?.city;
+  const localityText = addressAdditional?.locality ? t(addressAdditional.locality) : address?.locality ? t(address.locality) : "";
+  const street = addressAdditional?.streetName || address?.street;
+  const houseNo = addressAdditional?.houseNo || address?.doorNo;
+  const buildingName = addressAdditional?.houseName || address?.buildingName;
   const addressLine1 = address?.address1 || address?.addressline1;
   const addressLine2 = address?.address2 || address?.addressline2;
   const landmark = addressAdditional?.landmark || address?.landmark;
@@ -260,51 +295,59 @@ const GCApplicationDetails = () => {
   return (
     <React.Fragment>
       <div>
-        <div className="cardHeaderWithOptions gc-gcapplication-details-spacing">
-          <Header styles={{ fontSize: "32px" }}>{t("GC_APPLICATION_DETAILS") || "Garbage Service Details"}</Header>
+        {/* Header with Title and MultiLink download dropdown (matching Employee view structure) */}
+        <div className="cardHeaderWithOptions" style={{ marginBottom: "20px" }}>
+          <Header styles={{ marginLeft: "0px", paddingTop: "10px", fontSize: "32px" }}>
+            {t("GC_APPLICATION_DETAILS") || "Garbage Service Details"}
+          </Header>
           {downloadOptions.length > 0 && (
             <MultiLink
-              className="multilinkWrapper"
+              className="multilinkWrapper employee-mulitlink-main-div"
               onHeadClick={() => setShowOptions(!showOptions)}
               displayOptions={showOptions}
               options={downloadOptions}
+              downloadBtnClassName={"employee-download-btn-className"}
+              optionsClassName={"employee-options-btn-className"}
             />
           )}
         </div>
 
-        <Card>
-          {/* Application Summary */}
-          <CardSubHeader className="gc-check-page-header">{t("GC_APPLICATION_SUMMARY") || "Application Summary"}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("GC_APPLICATION_NUMBER_LABEL")} text={appNo} />
+        {/* Section 1: Application Summary */}
+        <div className="app-details-section-card">
+          <div className="app-details-section-header-wrap">
+            <div className="app-details-section-title-wrap">
+              <span className="app-details-section-accent-bar" />
+              <CardSectionHeader className="app-details-section-title">
+                {t("GC_APPLICATION_SUMMARY") || "Application Summary"}
+              </CardSectionHeader>
+            </div>
+          </div>
+          <div className="app-details-kv-grid">
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_APPLICATION_NUMBER_LABEL")}</p>
+              <p className="app-details-kv-value">{appNo}</p>
+            </div>
             {appData?.garbageNo && (
-              <Row className="border-none" label={t("GC_GARBAGE_NUMBER_LABEL") || "Garbage Number"} text={appData.garbageNo} />
+              <div className="app-details-kv-cell">
+                <p className="app-details-kv-label">
+                  {t("GC_GARBAGE_NUMBER") && t("GC_GARBAGE_NUMBER") !== "GC_GARBAGE_NUMBER"
+                    ? t("GC_GARBAGE_NUMBER")
+                    : t("GC_GARBAGE_NUMBER_LABEL") && t("GC_GARBAGE_NUMBER_LABEL") !== "GC_GARBAGE_NUMBER_LABEL"
+                    ? t("GC_GARBAGE_NUMBER_LABEL")
+                    : "Garbage Number"}
+                </p>
+                <p className="app-details-kv-value">{appData.garbageNo}</p>
+              </div>
             )}
-            <Row
-              className="border-none"
-              label={t("GC_APPLICATION_STATUS_LABEL")}
-              text={
-                <span
-                  style={{
-                    color:
-                      appStatus === "APPROVED" || appStatus === "ACTIVE"
-                        ? "#00703c"
-                        : appStatus === "DISCONNECTED"
-                        ? "#a82227"
-                        : appStatus === "PERMANENTLY_DISCONNECTED"
-                        ? "#d4351c"
-                        : "#1d70b8",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {t(`GC_STATUS_${appStatus}`) || appStatus}
-                </span>
-              }
-            />
-            <Row
-              className="border-none"
-              label={t("GC_PROPERTY_TYPE") || "Application Type"}
-              text={
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_APPLICATION_STATUS_LABEL")}</p>
+              <p className="app-details-kv-value" style={{ color: getStatusColor(appStatus), fontWeight: "bold" }}>
+                {t(`GC_STATUS_${appStatus}`) || appStatus}
+              </p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_PROPERTY_TYPE") || "Application Type"}</p>
+              <p className="app-details-kv-value">
                 <span
                   style={{
                     backgroundColor: propertyType === "OWNER" ? "#1d70b8" : "#00703c",
@@ -317,149 +360,276 @@ const GCApplicationDetails = () => {
                 >
                   {propertyType}
                 </span>
-              }
-            />
+              </p>
+            </div>
             {floorNo && (
-              <Row
-                className="border-none"
-                label={t("GC_FLOOR_UNIT") || "Assigned Floor"}
-                text={floorNo === "0" ? t("GC_FLOOR_GROUND") || "Ground Floor" : `${floorNo} Floor`}
-              />
+              <div className="app-details-kv-cell">
+                <p className="app-details-kv-label">{getLabel("GC_FLOOR_UNIT", "Assigned Floor")}</p>
+                <p className="app-details-kv-value">
+                  {formatFloor(floorNo)}
+                </p>
+              </div>
             )}
-            {dueDate && <Row className="border-none" label={t("GC_DUE_DATE")} text={dueDate} />}
+            {dueDate && (
+              <div className="app-details-kv-cell">
+                <p className="app-details-kv-label">{t("GC_DUE_DATE")}</p>
+                <p className="app-details-kv-value">{dueDate}</p>
+              </div>
+            )}
             {paymentStatus && (
-              <Row className="border-none" label={t("GC_PAYMENT_STATUS") || "Payment Status"} text={paymentStatus} />
+              <div className="app-details-kv-cell">
+                <p className="app-details-kv-label">{t("GC_PAYMENT_STATUS") || "Payment Status"}</p>
+                <p className="app-details-kv-value">{paymentStatus}</p>
+              </div>
             )}
-          </StatusTable>
+          </div>
+        </div>
 
-          {/* Applicant Details */}
-          <CardSubHeader className="gc-check-page-header">{t("ES_APPLICANT_DETAILS")}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("GC_APPLICANT_NAME")} text={applicantName} />
-            <Row className="border-none" label={t("GC_MOBILE_NUMBER")} text={applicantMobile} />
-            <Row className="border-none" label={t("GC_EMAIL_ID")} text={applicantEmail} />
-          </StatusTable>
+        {/* Section 2: Applicant Details */}
+        <div className="app-details-section-card">
+          <div className="app-details-section-header-wrap">
+            <div className="app-details-section-title-wrap">
+              <span className="app-details-section-accent-bar" />
+              <CardSectionHeader className="app-details-section-title">
+                {t("ES_APPLICANT_DETAILS")}
+              </CardSectionHeader>
+            </div>
+          </div>
+          <div className="app-details-kv-grid">
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_APPLICANT_NAME")}</p>
+              <p className="app-details-kv-value">{applicantName}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_MOBILE_NUMBER")}</p>
+              <p className="app-details-kv-value">{applicantMobile}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_EMAIL_ID")}</p>
+              <p className="app-details-kv-value">{applicantEmail}</p>
+            </div>
+          </div>
+        </div>
 
-          {/* Property Location */}
-          <CardSubHeader className="gc-check-page-header">{t("GC_PROPERTY_LOCATION_DETAILS")}</CardSubHeader>
-          <StatusTable>
-            <Row className="border-none" label={t("GC_PROPERTY_ID")} text={propertyId || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_PINCODE")} text={pincode || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_CITY")} text={city ? t(city) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_LOCALITY")} text={localityText || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_STREET_NAME")} text={street || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_HOUSE_NO")} text={houseNo || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_BUILDING_NAME")} text={buildingName || t("CS_NA")} />
-            <Row className="border-none" label={t("GC_ADDRESS_LINE1")} text={addressLine1 || t("CS_NA")} />
-            {addressLine2 && <Row className="border-none" label={t("GC_ADDRESS_LINE2")} text={addressLine2} />}
-            <Row className="border-none" label={t("GC_LANDMARK")} text={landmark || t("CS_NA")} />
-          </StatusTable>
+        {/* Section 3: Property & Location Details */}
+        <div className="app-details-section-card">
+          <div className="app-details-section-header-wrap">
+            <div className="app-details-section-title-wrap">
+              <span className="app-details-section-accent-bar" />
+              <CardSectionHeader className="app-details-section-title">
+                {t("GC_PROPERTY_LOCATION_DETAILS")}
+              </CardSectionHeader>
+            </div>
+          </div>
+          <div className="app-details-kv-grid">
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_PROPERTY_ID")}</p>
+              <p className="app-details-kv-value">{propertyId || t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_PINCODE")}</p>
+              <p className="app-details-kv-value">{pincode || t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_CITY")}</p>
+              <p className="app-details-kv-value">{city ? t(city) : t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_LOCALITY")}</p>
+              <p className="app-details-kv-value">{localityText || t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_STREET_NAME")}</p>
+              <p className="app-details-kv-value">{street || t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_HOUSE_NO")}</p>
+              <p className="app-details-kv-value">{houseNo || t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_BUILDING_NAME")}</p>
+              <p className="app-details-kv-value">{buildingName || t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_ADDRESS_LINE1")}</p>
+              <p className="app-details-kv-value">{addressLine1 || t("CS_NA")}</p>
+            </div>
+            {addressLine2 && (
+              <div className="app-details-kv-cell">
+                <p className="app-details-kv-label">{t("GC_ADDRESS_LINE2")}</p>
+                <p className="app-details-kv-value">{addressLine2}</p>
+              </div>
+            )}
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_LANDMARK")}</p>
+              <p className="app-details-kv-value">{landmark || t("CS_NA")}</p>
+            </div>
+          </div>
+        </div>
 
-          {/* Garbage Specifications */}
-          <CardSubHeader className="gc-check-page-header">{t("GC_GARBAGE_SPECIFICATIONS")}</CardSubHeader>
-          <StatusTable>
-            {oldGarbageId && <Row className="border-none" label={t("GC_OLD_GARBAGE_ID")} text={oldGarbageId} />}
-            <Row className="border-none" label={t("GC_TYPE_OF_COLLECTION")} text={typeOfCollection ? t(typeOfCollection) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_CATEGORY")} text={category ? t(category) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_SUB_CATEGORY")} text={subCategory ? t(subCategory) : t("CS_NA")} />
-            <Row className="border-none" label={t("GC_SUB_CATEGORY_TYPE")} text={subCategoryType ? t(subCategoryType) : t("CS_NA")} />
+        {/* Section 4: Garbage Specifications */}
+        <div className="app-details-section-card">
+          <div className="app-details-section-header-wrap">
+            <div className="app-details-section-title-wrap">
+              <span className="app-details-section-accent-bar" />
+              <CardSectionHeader className="app-details-section-title">
+                {t("GC_GARBAGE_SPECIFICATIONS")}
+              </CardSectionHeader>
+            </div>
+          </div>
+          <div className="app-details-kv-grid">
+            {oldGarbageId && (
+              <div className="app-details-kv-cell">
+                <p className="app-details-kv-label">{t("GC_OLD_GARBAGE_ID")}</p>
+                <p className="app-details-kv-value">{oldGarbageId}</p>
+              </div>
+            )}
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_TYPE_OF_COLLECTION")}</p>
+              <p className="app-details-kv-value">{typeOfCollection ? t(typeOfCollection) : t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_CATEGORY")}</p>
+              <p className="app-details-kv-value">{category ? t(category) : t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_SUB_CATEGORY")}</p>
+              <p className="app-details-kv-value">{subCategory ? t(subCategory) : t("CS_NA")}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_SUB_CATEGORY_TYPE")}</p>
+              <p className="app-details-kv-value">{subCategoryType ? t(subCategoryType) : t("CS_NA")}</p>
+            </div>
             {multiUnits.includes(typeOfCollection) && (
-              <Row className="border-none" label={t("GC_NO_OF_UNITS")} text={no_of_units || "1"} />
+              <div className="app-details-kv-cell">
+                <p className="app-details-kv-label">{t("GC_NO_OF_UNITS")}</p>
+                <p className="app-details-kv-value">{no_of_units || "1"}</p>
+              </div>
             )}
-            <Row className="border-none" label={t("GC_SPECIAL_CATEGORY")} text={specialCategory ? t(specialCategory) : "NONE"} />
-            <Row className="border-none" label={t("GC_IS_INHERITANCE")} text={isInheritance ? t("YES") : t("NO")} />
-          </StatusTable>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_SPECIAL_CATEGORY")}</p>
+              <p className="app-details-kv-value">{specialCategory ? t(specialCategory) : "NONE"}</p>
+            </div>
+            <div className="app-details-kv-cell">
+              <p className="app-details-kv-label">{t("GC_IS_INHERITANCE")}</p>
+              <p className="app-details-kv-value">{isInheritance ? t("YES") : t("NO")}</p>
+            </div>
+          </div>
+        </div>
 
-          {/* Documents */}
-          {docs.length > 0 && (
-            <>
-              <CardSubHeader className="gc-check-page-header">{t("GC_GARBAGE_DOCUMENTS")}</CardSubHeader>
-              <StatusTable>
-                <Card className="chb-doc-card">
-                  {docs.map((doc, index) => (
-                    <div key={`doc-${index}`} className="chb-doc-item">
-                      <div>
-                        <CardSectionHeader>{t("GC_" + doc?.documentType?.replaceAll(".", "_"))}</CardSectionHeader>
-                        {GCDocuments ? (
-                          <GCDocuments value={docs} Code={doc?.documentType} index={index} />
-                        ) : (
-                          <span>{doc?.documentType}</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </Card>
-              </StatusTable>
-            </>
-          )}
-
-          {/* Owner Cross-View: Tenant Floor Connections */}
-          {isOwner && childApps.length > 0 && (
-            <div style={{ marginTop: "24px" }}>
-              <CardSubHeader className="gc-check-page-header">
-                {t("GC_TENANT_APPLICATIONS") || "Tenant Floor Connections"}
-              </CardSubHeader>
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                {childApps.map((child, cIdx) => {
-                  const childAppNo = child?.applicationNo || child?.garbageNo || `Tenant ${cIdx + 1}`;
-                  const childFloor = child?.garbageSpecification?.floorNo || child?.floorNo || `${cIdx + 1}`;
-                  const childName = child?.applicantDetails?.[0]?.name || child?.tenantDetails?.name || t("CS_NA");
-                  const childMobile = child?.applicantDetails?.[0]?.mobileNumber || child?.tenantDetails?.mobileNumber || t("CS_NA");
-                  const childStatus = child?.status || "APPLICATION_CREATED";
-                  const childConnStatus = child?.connectionStatus || childStatus;
-                  return (
-                    <Card key={childAppNo} style={{ padding: "12px 16px", border: "1px solid #d6d5d4", borderRadius: "4px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                        <span style={{ fontWeight: "bold", fontSize: "16px" }}>
-                          {t("GC_FLOOR")} {childFloor}: {childName}
-                        </span>
-                        <span
-                          style={{
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                            color: "#fff",
-                            backgroundColor:
-                              childConnStatus === "ACTIVE" || childStatus === "APPROVED"
-                                ? "#00703c"
-                                : childConnStatus === "DISCONNECTED"
-                                ? "#a82227"
-                                : "#1d70b8",
-                          }}
-                        >
-                          {childConnStatus}
-                        </span>
-                      </div>
-                      <StatusTable>
-                        <Row
-                          className="border-none"
-                          label={t("GC_APPLICATION_NUMBER_LABEL")}
-                          text={
-                            <span className="link">
-                              <a href={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(childAppNo)}`}>
-                                {childAppNo}
-                              </a>
-                            </span>
-                          }
-                        />
-                        <Row className="border-none" label={t("GC_MOBILE_NUMBER")} text={childMobile} />
-                      </StatusTable>
-                    </Card>
-                  );
-                })}
+        {/* Section 5: Documents */}
+        {docs.length > 0 && (
+          <div className="app-details-section-card">
+            <div className="app-details-section-header-wrap">
+              <div className="app-details-section-title-wrap">
+                <span className="app-details-section-accent-bar" />
+                <CardSectionHeader className="app-details-section-title">
+                  {t("GC_GARBAGE_DOCUMENTS")}
+                </CardSectionHeader>
               </div>
             </div>
-          )}
-
-          {!isOwner && (
-            <div style={{ padding: "12px", backgroundColor: "#f3f2f1", borderLeft: "4px solid #1d70b8", marginTop: "16px", fontSize: "14px", color: "#505a5f" }}>
-              {t("GC_TENANT_NOTICE_OWNER_AUTHORITY") || "Only the property owner has the authority to request connection disconnection or reconnection for this property."}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+              {docs.map((doc, index) => (
+                <div key={`doc-${index}`} style={{ minWidth: "220px", flex: "1 1 220px", marginBottom: "8px" }}>
+                  <CardSectionHeader style={{ fontSize: "14px", fontWeight: "600", marginBottom: "4px" }}>
+                    {t("GC_" + doc?.documentType?.replaceAll(".", "_"))}
+                  </CardSectionHeader>
+                  {GCDocuments ? (
+                    <GCDocuments value={docs} Code={doc?.documentType} index={index} />
+                  ) : (
+                    <span>{doc?.documentType}</span>
+                  )}
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
+        {/* Section 6: Owner Cross-View: Tenant Floor Connections */}
+        {isOwner && childApps.length > 0 && (
+          <div className="app-details-section-card">
+            <div className="app-details-section-header-wrap">
+              <div className="app-details-section-title-wrap">
+                <span className="app-details-section-accent-bar" />
+                <CardSectionHeader className="app-details-section-title">
+                  {t("GC_TENANT_APPLICATIONS") || "Tenant Floor Connections"}
+                </CardSectionHeader>
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+              {childApps.map((child, cIdx) => {
+                const childAppNo = child?.applicationNo || child?.garbageNo || `Tenant ${cIdx + 1}`;
+                const childFloor = child?.garbageSpecification?.floorNo || child?.floorNo || `${cIdx + 1}`;
+                const childName = child?.applicantDetails?.[0]?.name || child?.tenantDetails?.name || t("CS_NA");
+                const childMobile = child?.applicantDetails?.[0]?.mobileNumber || child?.tenantDetails?.mobileNumber || t("CS_NA");
+                const childStatus = child?.status || "APPLICATION_CREATED";
+                const childConnStatus = child?.connectionStatus || childStatus;
+                return (
+                  <Card key={childAppNo} style={{ padding: "12px 16px", border: "1px solid #d6d5d4", borderRadius: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                      <span style={{ fontWeight: "bold", fontSize: "16px" }}>
+                        {formatFloor(childFloor)}: {childName}
+                      </span>
+                      <span
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          color: "#fff",
+                          backgroundColor:
+                            childConnStatus === "ACTIVE" || childStatus === "APPROVED"
+                              ? "#00703c"
+                              : childConnStatus === "DISCONNECTED"
+                              ? "#a82227"
+                              : "#1d70b8",
+                        }}
+                      >
+                        {childConnStatus}
+                      </span>
+                    </div>
+                    <div className="app-details-kv-grid">
+                      <div className="app-details-kv-cell">
+                        <p className="app-details-kv-label">{t("GC_APPLICATION_NUMBER_LABEL")}</p>
+                        <p className="app-details-kv-value">
+                          <span className="link">
+                            <a href={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(childAppNo)}`}>
+                              {childAppNo}
+                            </a>
+                          </span>
+                        </p>
+                      </div>
+                      <div className="app-details-kv-cell">
+                        <p className="app-details-kv-label">{t("GC_MOBILE_NUMBER")}</p>
+                        <p className="app-details-kv-value">{childMobile}</p>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Tenant notice */}
+        {!isOwner && (
+          <div style={{ padding: "12px", backgroundColor: "#f3f2f1", borderLeft: "4px solid #1d70b8", marginBottom: "24px", fontSize: "14px", color: "#505a5f" }}>
+            {t("GC_TENANT_NOTICE_OWNER_AUTHORITY") || "Only the property owner has the authority to request connection disconnection or reconnection for this property."}
+          </div>
+        )}
+
+        {/* Section 7: Workflow Timeline */}
+        <div className="app-details-section-card">
+          <div className="app-details-section-header-wrap">
+            <div className="app-details-section-title-wrap">
+              <span className="app-details-section-accent-bar" />
+              <CardSectionHeader className="app-details-section-title">
+                {t("CS_APPLICATION_DETAILS_APPLICATION_TIMELINE") || "Application Timeline"}
+              </CardSectionHeader>
+            </div>
+          </div>
           <GCWFApplicationTimeline application={appData} />
-        </Card>
+        </div>
 
         {/* Action Bar for Payments, Edits, and Owner-Only Lifecycle actions */}
         <ActionBar style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
@@ -492,7 +662,7 @@ const GCApplicationDetails = () => {
                   padding: "10px 18px",
                   fontWeight: "bold",
                   cursor: "pointer",
-                  borderRadius: "2px",
+                  borderRadius: "4px",
                 }}
                 onClick={() => {
                   setSelectedAction("DISCONNECT");
@@ -512,7 +682,7 @@ const GCApplicationDetails = () => {
                   padding: "10px 18px",
                   fontWeight: "bold",
                   cursor: "pointer",
-                  borderRadius: "2px",
+                  borderRadius: "4px",
                 }}
                 onClick={() => {
                   setSelectedAction("PERMANENT_DISCONNECT");
@@ -536,7 +706,7 @@ const GCApplicationDetails = () => {
                   padding: "10px 18px",
                   fontWeight: "bold",
                   cursor: "pointer",
-                  borderRadius: "2px",
+                  borderRadius: "4px",
                 }}
                 onClick={() => {
                   setSelectedAction("RECONNECT");
@@ -556,7 +726,7 @@ const GCApplicationDetails = () => {
                   padding: "10px 18px",
                   fontWeight: "bold",
                   cursor: "pointer",
-                  borderRadius: "2px",
+                  borderRadius: "4px",
                 }}
                 onClick={() => {
                   setSelectedAction("PERMANENT_DISCONNECT");
@@ -587,7 +757,7 @@ const GCApplicationDetails = () => {
             actionSaveLabel={t("CS_COMMON_CONFIRM_SUBMIT") || "Confirm & Submit"}
             actionSaveOnSubmit={submitLifecycleAction}
           >
-            <Card className="gc-gcapplication-details-card" style={{ padding: "8px 0" }}>
+            <Card style={{ padding: "8px 0", boxShadow: "none", margin: 0 }}>
               {selectedAction === "PERMANENT_DISCONNECT" && (
                 <div
                   style={{
