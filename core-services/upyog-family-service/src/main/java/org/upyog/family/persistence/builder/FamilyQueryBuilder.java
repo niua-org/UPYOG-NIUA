@@ -23,8 +23,8 @@ public class FamilyQueryBuilder {
 
     public static final String INSERT_FAMILY_SQL =
             "INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, "
-            + "status, additional_details, created_by, created_time, last_modified_by, last_modified_time) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?)";
+            + "status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?)";
 
     public static final String INSERT_MEMBER_SQL =
             "INSERT INTO ug_family_member (id, family_id, tenant_id, user_uuid, relationship_with_head, "
@@ -40,7 +40,7 @@ public class FamilyQueryBuilder {
 
     public static final String UPDATE_FAMILY_SQL =
             "UPDATE ug_family SET head_user_uuid = ?, category = ?, "
-            + "status = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? "
+            + "status = ?, family_type = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? "
             + "WHERE family_id = ?";
 
     public static final String UPDATE_MEMBER_SQL =
@@ -70,7 +70,7 @@ public class FamilyQueryBuilder {
     private static final String BASE_FAMILY_QUERY =
             "SELECT f.id as f_id, f.family_id as f_family_id, f.tenant_id as f_tenant_id, "
             + "f.head_user_uuid as f_head_user_uuid, f.category as f_category, "
-            + "f.status as f_status, "
+            + "f.status as f_status, f.family_type as f_family_type, "
             + "f.additional_details as f_additional_details, f.created_by as f_created_by, "
             + "f.created_time as f_created_time, f.last_modified_by as f_last_modified_by, "
             + "f.last_modified_time as f_last_modified_time, "
@@ -154,6 +154,12 @@ public class FamilyQueryBuilder {
             addClause(whereClause);
             whereClause.append("f.status = ? ");
             preparedStmtList.add(criteria.getStatus().name());
+        }
+
+        if (StringUtils.isNotBlank(criteria.getFamilyType())) {
+            addClause(whereClause);
+            whereClause.append("f.family_type = ? ");
+            preparedStmtList.add(criteria.getFamilyType());
         }
 
         if (StringUtils.isNotBlank(criteria.getMemberUserUuid())) {

@@ -93,6 +93,7 @@ public class FamilyRowMapper implements ResultSetExtractor<List<Family>> {
                         .headUserUuid(rs.getString("f_head_user_uuid"))
                         .category(rs.getString("f_category"))
                         .status(FamilyStatus.fromValue(rs.getString("f_status")))
+                        .familyType(rs.getString("f_family_type"))
                         .additionalDetails(additionalDetails)
                         .members(new ArrayList<>())
                         .documents(new ArrayList<>())

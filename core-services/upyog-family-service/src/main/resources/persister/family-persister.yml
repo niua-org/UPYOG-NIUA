@@ -6,7 +6,7 @@ serviceMaps:
       fromTopic: save-ug-family
       isTransaction: true
       queryMaps:
-        - query: INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, status, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
+        - query: INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.id
@@ -15,6 +15,7 @@ serviceMaps:
             - jsonPath: $.Family.headUserUuid
             - jsonPath: $.Family.category
             - jsonPath: $.Family.status
+            - jsonPath: $.Family.familyType
             - jsonPath: $.Family.additionalDetails
               type: JSON
               dbType: JSONB
@@ -54,12 +55,13 @@ serviceMaps:
       fromTopic: update-ug-family
       isTransaction: true
       queryMaps:
-        - query: UPDATE ug_family SET head_user_uuid = ?, category = ?, status = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? WHERE family_id = ?;
+        - query: UPDATE ug_family SET head_user_uuid = ?, category = ?, status = ?, family_type = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? WHERE family_id = ?;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.headUserUuid
             - jsonPath: $.Family.category
             - jsonPath: $.Family.status
+            - jsonPath: $.Family.familyType
             - jsonPath: $.Family.additionalDetails
               type: JSON
               dbType: JSONB

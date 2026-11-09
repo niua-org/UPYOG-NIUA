@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS ug_family (
     head_user_uuid VARCHAR(64) NOT NULL,
     category VARCHAR(64),
     status VARCHAR(32) NOT NULL,
+    family_type VARCHAR(64) DEFAULT 'UPYOG_INTERNAL',
     additional_details JSONB,
     created_by VARCHAR(64),
     created_time BIGINT,
@@ -83,6 +84,7 @@ CREATE TABLE IF NOT EXISTS ug_state_family_sync (
 CREATE INDEX IF NOT EXISTS idx_ug_family_tenant ON ug_family(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_ug_family_head ON ug_family(head_user_uuid);
 CREATE INDEX IF NOT EXISTS idx_ug_family_status ON ug_family(status);
+CREATE INDEX IF NOT EXISTS idx_ug_family_family_type ON ug_family(family_type);
 
 CREATE INDEX IF NOT EXISTS idx_ug_family_member_family_id ON ug_family_member(family_id);
 CREATE INDEX IF NOT EXISTS idx_ug_family_member_user_uuid ON ug_family_member(user_uuid);

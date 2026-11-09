@@ -3,6 +3,7 @@ package org.upyog.family.domain.validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.upyog.family.domain.model.FamilyStatus;
+import org.upyog.family.domain.service.config.FamilyConfigurationService;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.FileStoreClient;
@@ -46,24 +47,38 @@ public class FamilyValidator {
     private final FileStoreClient fileStoreClient;
     private final FamilyMasterDataService familyMasterDataService;
     private final UserClient userClient;
+    private final FamilyConfigurationService familyConfigurationService;
 
     /**
-     * Constructs {@link FamilyValidator} with repository, filestore, master data, and user client dependencies.
+     * Constructs {@link FamilyValidator} with repository, filestore, master data, user client, and configuration service.
      *
      * @param familyRepository data repository for family lookups and exclusivity queries
      * @param fileStoreClient client verifying document existence in FileStore
      * @param familyMasterDataService service providing MDMS relationship master data
      * @param userClient client communicating with user service to verify citizen identity
+     * @param familyConfigurationService service validating state family configuration policy
      */
     @Autowired
     public FamilyValidator(FamilyRepository familyRepository,
                            FileStoreClient fileStoreClient,
                            FamilyMasterDataService familyMasterDataService,
-                           UserClient userClient) {
+                           UserClient userClient,
+                           @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.familyRepository = familyRepository;
         this.fileStoreClient = fileStoreClient;
         this.familyMasterDataService = familyMasterDataService;
         this.userClient = userClient;
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    /**
+     * Backward-compatible constructor for testing without FamilyConfigurationService.
+     */
+    public FamilyValidator(FamilyRepository familyRepository,
+                           FileStoreClient fileStoreClient,
+                           FamilyMasterDataService familyMasterDataService,
+                           UserClient userClient) {
+        this(familyRepository, fileStoreClient, familyMasterDataService, userClient, null);
     }
 
     /**
@@ -94,6 +109,11 @@ public class FamilyValidator {
 
         if (StringUtils.isBlank(family.getTenantId())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_FAMILY_TENANT_REQUIRED);
+        }
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), family.getTenantId());
         }
 
         if (family.getMembers() == null || family.getMembers().isEmpty()) {
@@ -193,6 +213,11 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Cannot update family with status: " + existingFamily.getStatus());
         }
 
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), existingFamily.getTenantId());
+        }
+
         // Caller authorization: Only current HoF is authorized to update family metadata
         if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
             String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
@@ -252,6 +277,11 @@ public class FamilyValidator {
     public void validateSplit(FamilySplitRequest request, Family parentFamily) {
         if (parentFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Parent family not found: " + request.getParentFamilyId());
+        }
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), request.getTenantId());
         }
 
         // Ensure caller is identity-verified in user registry database
@@ -319,6 +349,11 @@ public class FamilyValidator {
         }
         if (mergingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Merging family not found: " + request.getMergingFamilyId());
+        }
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), request.getTenantId());
         }
 
         // Ensure caller is identity-verified in user registry database

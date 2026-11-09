@@ -85,6 +85,9 @@ public final class UserConstants {
     public static final String ERROR_INVALID_SEARCH_CRITERIA = "INVALID_SEARCH_CRITERIA";
     public static final String ERROR_USER_UUID_REQUIRED = "USER_UUID_REQUIRED";
     public static final String ERROR_INVALID_REQUEST = "INVALID_REQUEST";
+    public static final String ERROR_FAMILY_NOT_SUPPORTED = "FAMILY_NOT_SUPPORTED";
+    public static final String ERROR_OPERATION_NOT_ALLOWED = "OPERATION_NOT_ALLOWED";
+    public static final String MDMS_MASTER_FAMILY_CONFIGURATION = "FamilyConfiguration";
     public static final String ERROR_INVALID_TENANT_ID = "INVALID_TENANT_ID";
     public static final String ERROR_INVALID_AADHAAR_IDENTIFIER = "INVALID_AADHAAR_IDENTIFIER";
     public static final String ERROR_AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";

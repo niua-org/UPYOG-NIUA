@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
 import org.upyog.family.domain.model.FamilyStatus;
+import org.upyog.family.domain.service.config.FamilyConfigurationService;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.RequesterDxClient;
@@ -33,24 +34,35 @@ public class AddMemberValidator {
     private final FamilyMasterDataService masterDataService;
     private final RequesterDxClient requesterDxClient;
     private final UserClient userClient;
+    private final FamilyConfigurationService familyConfigurationService;
 
     /**
-     * Constructs an AddMemberValidator with required repository, master data, DX requester, and user client dependencies.
+     * Constructs an AddMemberValidator with required repository, master data, DX requester, user client, and configuration service.
      *
      * @param familyRepository repository for family persistence and query lookups
      * @param masterDataService service for MDMS relationship validation
      * @param requesterDxClient client for validating consent tokens against DX requester
      * @param userClient client for user profile lookups and identity verification
+     * @param familyConfigurationService service validating state family configuration policy
      */
     @Autowired
     public AddMemberValidator(FamilyRepository familyRepository,
                               FamilyMasterDataService masterDataService,
                               RequesterDxClient requesterDxClient,
-                              UserClient userClient) {
+                              UserClient userClient,
+                              @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.familyRepository = familyRepository;
         this.masterDataService = masterDataService;
         this.requesterDxClient = requesterDxClient;
         this.userClient = userClient;
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    public AddMemberValidator(FamilyRepository familyRepository,
+                              FamilyMasterDataService masterDataService,
+                              RequesterDxClient requesterDxClient,
+                              UserClient userClient) {
+        this(familyRepository, masterDataService, requesterDxClient, userClient, null);
     }
 
     /**
@@ -67,6 +79,11 @@ public class AddMemberValidator {
 
         // Ensure caller is identity-verified in user registry database
         userClient.validateCallerIsVerified(request.getRequestInfo());
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), request.getTenantId());
+        }
 
         if (existingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,

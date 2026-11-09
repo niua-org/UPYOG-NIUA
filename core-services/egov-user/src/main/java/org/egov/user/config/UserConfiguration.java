@@ -126,6 +126,19 @@ public class UserConfiguration {
     @Value("${family.service.search.endpoint}")
     private String familyServiceSearchEndpoint;
 
+    // Family MDMS Configuration
+    @Value("${family.mdms.module}")
+    private String mdmsFamilyModule;
+
+    @Value("${family.mdms.configuration.master}")
+    private String mdmsFamilyConfigurationMaster;
+
+    @Value("${family.mdms.configuration.filter}")
+    private String mdmsFamilyConfigurationFilter;
+
+    @Value("${family.configuration.cache.ttl}")
+    private Long familyConfigurationCacheTtl;
+
     @Value("${egov.user.oauth.token.endpoint}")
     private String userOauthTokenEndpoint;
 

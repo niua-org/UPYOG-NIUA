@@ -90,4 +90,20 @@ class FamilyQueryBuilderTest {
         assertEquals("FAM-001", params.get(1));
         assertEquals("FAM-002", params.get(2));
     }
+
+    @Test
+    @DisplayName("getFamilySearchQuery should filter by familyType when provided")
+    void getFamilySearchQuery_FamilyTypeCriteria() {
+        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
+                .tenantId("pg.citya")
+                .familyType("STATE_REGISTRY")
+                .build();
+
+        List<Object> params = new ArrayList<>();
+        String sql = queryBuilder.getFamilySearchQuery(criteria, params);
+
+        assertTrue(sql.contains("f.family_type = ?"));
+        assertEquals("pg.citya", params.get(0));
+        assertEquals("STATE_REGISTRY", params.get(1));
+    }
 }

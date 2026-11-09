@@ -3,9 +3,11 @@ package org.egov.user.domain.service.multiauth.validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.domain.service.config.FamilyConfigurationService;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Request;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +19,17 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class LoginV2ValidatorImpl implements LoginV2Validator {
+
+    private final FamilyConfigurationService familyConfigurationService;
+
+    @Autowired
+    public LoginV2ValidatorImpl(@Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    public LoginV2ValidatorImpl() {
+        this(null);
+    }
 
     @Override
     public void validate(LoginV2Request request) {
@@ -76,6 +89,9 @@ public class LoginV2ValidatorImpl implements LoginV2Validator {
                 if (StringUtils.isBlank(request.getFamilyId())) {
                     log.error("[LOGIN-V2-VALIDATOR] Validation failed: familyId required for FAMILY_ID auth");
                     throw new CustomException(UserConstants.ERROR_INVALID_FAMILY_ID, UserConstants.MSG_FAMILY_ID_REQUIRED);
+                }
+                if (familyConfigurationService != null) {
+                    familyConfigurationService.validateFamilySupported(request.getRequestInfo(), request.getTenantId());
                 }
                 break;
         }

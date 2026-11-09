@@ -7,7 +7,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.user.config.UserConfiguration;
+import org.egov.user.domain.service.config.FamilyConfigurationService;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.web.contract.config.FamilyConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -37,14 +39,23 @@ public class FamilyRestRepository {
     private final RestTemplate restTemplate;
     private final UserConfiguration userConfiguration;
     private final ObjectMapper objectMapper;
+    private final FamilyConfigurationService familyConfigurationService;
 
     @Autowired
     public FamilyRestRepository(@Autowired(required = false) RestTemplate restTemplate,
                                 @Autowired(required = false) UserConfiguration userConfiguration,
-                                @Autowired(required = false) ObjectMapper objectMapper) {
+                                @Autowired(required = false) ObjectMapper objectMapper,
+                                @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.restTemplate = restTemplate;
         this.userConfiguration = userConfiguration;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    public FamilyRestRepository(RestTemplate restTemplate,
+                                UserConfiguration userConfiguration,
+                                ObjectMapper objectMapper) {
+        this(restTemplate, userConfiguration, objectMapper, null);
     }
 
     /**
@@ -58,6 +69,14 @@ public class FamilyRestRepository {
     public String getActiveFamilyIdByUserUuid(String userUuid, String tenantId, RequestInfo requestInfo) {
         if (StringUtils.isBlank(userUuid) || restTemplate == null) {
             return null;
+        }
+
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping family resolution.", tenantId);
+                return null;
+            }
         }
 
         String host = resolveHost();
@@ -114,6 +133,14 @@ public class FamilyRestRepository {
 
         if (cleanUuids.isEmpty()) {
             return Collections.emptyMap();
+        }
+
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping batch family resolution.", tenantId);
+                return Collections.emptyMap();
+            }
         }
 
         String host = resolveHost();

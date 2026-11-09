@@ -72,6 +72,9 @@ public class FamilyRepositoryImpl implements FamilyRepository {
         }
 
         String additionalDetailsJson = convertToJsonString(family.getAdditionalDetails());
+        String familyType = StringUtils.isNotBlank(family.getFamilyType())
+                ? family.getFamilyType()
+                : FamilyConstants.TYPE_UPYOG_INTERNAL;
 
         jdbcTemplate.update(FamilyQueryBuilder.INSERT_FAMILY_SQL,
                 family.getId(),
@@ -80,6 +83,7 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                 family.getHeadUserUuid(),
                 family.getCategory(),
                 family.getStatus() != null ? family.getStatus().name() : FamilyConstants.STATUS_ACTIVE,
+                familyType,
                 additionalDetailsJson,
                 family.getAuditDetails() != null ? family.getAuditDetails().getCreatedBy() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getCreatedTime() : null,
@@ -160,11 +164,15 @@ public class FamilyRepositoryImpl implements FamilyRepository {
         log.info("[UPYOG-FAMILY-REPO] Updating family: familyId={}, status={}", family.getFamilyId(), family.getStatus());
 
         String additionalDetailsJson = convertToJsonString(family.getAdditionalDetails());
+        String familyType = StringUtils.isNotBlank(family.getFamilyType())
+                ? family.getFamilyType()
+                : FamilyConstants.TYPE_UPYOG_INTERNAL;
 
         jdbcTemplate.update(FamilyQueryBuilder.UPDATE_FAMILY_SQL,
                 family.getHeadUserUuid(),
                 family.getCategory(),
                 family.getStatus() != null ? family.getStatus().name() : FamilyConstants.STATUS_ACTIVE,
+                familyType,
                 additionalDetailsJson,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedBy() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedTime() : null,

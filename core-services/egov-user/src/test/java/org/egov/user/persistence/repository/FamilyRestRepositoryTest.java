@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -151,6 +152,24 @@ class FamilyRestRepositoryTest {
         when(userConfiguration.getFamilyServiceHost()).thenReturn(null);
         assertThrows(CustomException.class, () ->
                 familyRestRepository.getActiveFamilyIdsByUserUuids(Collections.singletonList("u1"), "pg", requestInfo));
+        verify(restTemplate, never()).postForObject(any(String.class), any(), any());
+    }
+
+    @Test
+    @DisplayName("getActiveFamilyIdByUserUuid: Skips REST call when family concept is disabled for tenant")
+    void testGetActiveFamilyId_FamilyDisabled_SkipsRestCall() {
+        org.egov.user.domain.service.config.FamilyConfigurationService configService =
+                mock(org.egov.user.domain.service.config.FamilyConfigurationService.class);
+        org.egov.user.web.contract.config.FamilyConfig disabledConfig = org.egov.user.web.contract.config.FamilyConfig.builder()
+                .isFamilySupported(false)
+                .familyType("NONE")
+                .build();
+        when(configService.getActiveFamilyConfiguration(any(), eq("ul"))).thenReturn(disabledConfig);
+
+        FamilyRestRepository repoWithConfig = new FamilyRestRepository(restTemplate, userConfiguration, objectMapper, configService);
+        String result = repoWithConfig.getActiveFamilyIdByUserUuid("u1", "ul", requestInfo);
+
+        assertNull(result);
         verify(restTemplate, never()).postForObject(any(String.class), any(), any());
     }
 }

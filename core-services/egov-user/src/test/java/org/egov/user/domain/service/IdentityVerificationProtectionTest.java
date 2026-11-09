@@ -227,14 +227,14 @@ public class IdentityVerificationProtectionTest {
                 .build();
 
         User domainCreateV1 = requestV1.toDomain(1L, "uuid", true);
-        assertTrue(domainCreateV1.getIsIdentityVerified(), "explicit payload flags are mapped on create");
-        assertNotNull(domainCreateV1.getIdentityVerifiedDate());
-        assertEquals(UserConstants.IDENTITY_SOURCE_AADHAAR, domainCreateV1.getIdentityVerifiedSource());
+        assertFalse(domainCreateV1.getIsIdentityVerified(), "toDomain(true) must set isIdentityVerified=false");
+        assertNull(domainCreateV1.getIdentityVerifiedDate(), "toDomain(true) must nullify identityVerifiedDate");
+        assertNull(domainCreateV1.getIdentityVerifiedSource(), "toDomain(true) must nullify identityVerifiedSource");
 
         User domainUpdateV1 = requestV1.toDomain(1L, "uuid", false);
-        assertTrue(domainUpdateV1.getIsIdentityVerified(), "V1 update maps explicit identity flags from payload");
-        assertNotNull(domainUpdateV1.getIdentityVerifiedDate());
-        assertEquals(UserConstants.IDENTITY_SOURCE_AADHAAR, domainUpdateV1.getIdentityVerifiedSource());
+        assertNull(domainUpdateV1.getIsIdentityVerified(), "toDomain(false) must not accept isIdentityVerified");
+        assertNull(domainUpdateV1.getIdentityVerifiedDate(), "toDomain(false) must not accept identityVerifiedDate");
+        assertNull(domainUpdateV1.getIdentityVerifiedSource(), "toDomain(false) must not accept identityVerifiedSource");
 
         UserRequestV2 requestV2 = UserRequestV2.builder()
                 .isIdentityVerified(true)
