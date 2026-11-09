@@ -38,15 +38,15 @@ const AddFamilyMember = () => {
    * Callback invoked by AadhaarVerification upon successful OTP authentication.
    *
    * @param {Object} verificationData
-   * @param {Object} verificationData.verifiedMember - Demographic details returned from verification API
-   * @param {string} verificationData.cleanAadhaar - Unmasked 12-digit Aadhaar number
-   * @param {string} verificationData.maskedMobile - Masked mobile number (e.g. XXXXXX7935)
+   * @param {Object} verificationData.verifiedMember - Sanitized demographic details returned from verification API
+   * @param {string} verificationData.aadhaarLast4 - Last 4 digits of Aadhaar (full number is not persisted for PII compliance)
+   * @param {string} verificationData.maskedMobile - Masked mobile number (e.g. +91 ******7935)
    */
-  const handleVerified = ({ verifiedMember, cleanAadhaar, maskedMobile }) => {
+  const handleVerified = ({ verifiedMember, aadhaarLast4, maskedMobile }) => {
     // Persist verified data to sessionStorage so state is preserved if user refreshes the review page
     try {
       sessionStorage.setItem("Digit.family.verifiedMember", JSON.stringify(verifiedMember));
-      sessionStorage.setItem("Digit.family.cleanAadhaar", cleanAadhaar);
+      sessionStorage.setItem("Digit.family.aadhaarLast4", aadhaarLast4);
       sessionStorage.setItem("Digit.family.maskedMobile", maskedMobile);
     } catch (storageErr) {
       console.error("sessionStorage write error:", storageErr);
@@ -56,7 +56,7 @@ const AddFamilyMember = () => {
     navigate("/upyog-ui/citizen/profile/family-member-verified", {
       state: {
         verifiedMember,
-        cleanAadhaar,
+        aadhaarLast4,
         maskedMobile,
       },
     });

@@ -191,17 +191,14 @@ export const UserService = {
       }
     }),
 
+  /**
+   * Sends an OTP to the citizen's Aadhaar-linked mobile number.
+   * @param {Object} details - Payload containing aadhaarNumber.
+   * @returns {Promise<Object>} API response containing txnId, referenceId, and masked mobile number.
+   */
   sendAadhaarOtp: (details) =>
     ServiceRequest({
       url: Urls.loginV2.aadharSendOtp,
-      data: details,
-      auth: true,
-      method: "POST",
-    }),
-
-    verifyAadharOtp: (details) =>
-    ServiceRequest({
-      url: Urls.loginV2.verifyAadharOtp,
       data: details,
       auth: true,
       method: "POST",
@@ -215,11 +212,17 @@ export const UserService = {
       method: "POST",
     }),
 
-  createFamily: async (Data, tenantid) => 
+  /**
+   * Creates a new family entity with member relationships and designated Head of Family.
+   * @param {Object} data - Expected payload shape { Family: { tenantId, headUserUuid, familyMembers: [...] } }.
+   * @param {string} tenantId - Tenant identifier (e.g. state or ULB tenantId).
+   * @returns {Promise<{ Families: Array<{ familyId: string }> }>} Promise resolving to response containing created family details.
+   */
+  createFamily: (data, tenantId) =>
     ServiceRequest({
       url: Urls.profile.createFamily,
-      data: Data,
-      params: { tenantId: tenantid },
+      data: data,
+      params: { tenantId },
       auth: true,
       method: "POST",
       userService: false,
@@ -261,6 +264,11 @@ export const UserService = {
       userService: true,
     }),
 
+  /**
+   * Verifies the Aadhaar OTP provided by the citizen.
+   * @param {Object} details - Verification payload containing RequestInfo, referenceId/txnId, otp, tenantId, etc.
+   * @returns {Promise<Object>} API response containing verification status and citizen demographics.
+   */
   verifyAadhaarOtp: (details) =>
     ServiceRequest({
       url: Urls.loginV2.verifyAadharOtp,

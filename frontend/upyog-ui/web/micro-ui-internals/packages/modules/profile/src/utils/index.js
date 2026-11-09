@@ -221,13 +221,14 @@ export const getFamilyFields = (family) =>
   ]);
 
 
-/**
- * Need to create a list of members while creating a family
- * It store all the member details to session first and when create family api call
- * it removed the same Key from session as well to maintain the clean standards
- */
+// Key used to stage family members during multi-step Create Family flow
 const KEY = "Digit.family.members";
 
+/**
+ * Retrieves the current list of staged family members from sessionStorage.
+ *
+ * @returns {Array<Object>} List of family members, or empty array if none found or on storage error.
+ */
 export const getFamilyMembers = () => {
     try {
         return JSON.parse(sessionStorage.getItem(KEY) || "[]");
@@ -236,17 +237,49 @@ export const getFamilyMembers = () => {
     }
 };
 
+/**
+ * Appends a new family member to the staged list in sessionStorage.
+ * Silently ignores and returns the existing list if a member with matching userUuid already exists.
+ *
+ * @param {Object} member - The member object to add (must include userUuid).
+ * @returns {Array<Object>} The updated list of family members (or unchanged list if duplicate).
+ */
 export const addFamilyMember = (member) => {
     const list = getFamilyMembers();
     // Prevent duplicate Aadhaar / userUuid
     if (list.some((m) => m.userUuid === member.userUuid)) return list;
     const updated = [...list, member];
-    sessionStorage.setItem(KEY, JSON.stringify(updated));
+    try {
+        sessionStorage.setItem(KEY, JSON.stringify(updated));
+    } catch (e) {
+        console.error("Failed to persist family member in sessionStorage", e);
+    }
     return updated;
 };
 
+/**
+ * Overwrites the staged family members list in sessionStorage.
+ *
+ * @param {Array<Object>} list - The full list of family members to persist.
+ * @returns {void}
+ */
 export const setFamilyMembers = (list) => {
-    sessionStorage.setItem(KEY, JSON.stringify(list || []));
+    try {
+        sessionStorage.setItem(KEY, JSON.stringify(list || []));
+    } catch (e) {
+        console.error("Failed to persist family members list in sessionStorage", e);
+    }
 };
 
-export const clearFamilyMembers = () => sessionStorage.removeItem(KEY);
+/**
+ * Clears the staged family members list from sessionStorage.
+ *
+ * @returns {void}
+ */
+export const clearFamilyMembers = () => {
+    try {
+        sessionStorage.removeItem(KEY);
+    } catch (e) {
+        console.error("Failed to clear family members from sessionStorage", e);
+    }
+};

@@ -24,7 +24,14 @@ import { buildVerifiedMemberInfo } from "../utils/payloads";
  * 4. Displays masked mobile number to which OTP was dispatched.
  * 5. 30-second countdown timer for resending OTP.
  * 6. "Edit Aadhaar Number" action to cancel current OTP session and unlock the input.
- * 7. Verifies 6-digit OTP via `Digit.UserService.verifyAadharOtp` and triggers `onVerified`.
+ * 7. Verifies 6-digit OTP via `Digit.UserService.verifyAadhaarOtp` and triggers `onVerified`.
+ *
+ * @param {Object} props
+ * @param {string} [props.label] - Custom input label for Aadhaar number field
+ * @param {boolean} [props.showConsentBox=true] - Whether to display the informational Aadhaar consent box
+ * @param {(data: { verifiedMember: Object, aadhaarLast4: string, maskedMobile: string }) => void} props.onVerified - Callback invoked on successful OTP verification
+ * @param {(msg: string) => void} [props.onError] - Callback invoked when an error occurs during OTP send or verify
+ * @returns {JSX.Element} Rendered Aadhaar verification card content
  */
 const AadhaarVerification = ({
   label,
@@ -163,10 +170,11 @@ const AadhaarVerification = ({
         tenantId: tenantId,
       };
 
-      const response = await Digit.UserService.verifyAadharOtp(requestData);
-      const verifiedMember = buildVerifiedMemberInfo({ response, cleanAadhaar });
+      const response = await Digit.UserService.verifyAadhaarOtp(requestData);
+      const aadhaarLast4 = cleanAadhaar ? cleanAadhaar.slice(-4) : "";
+      const verifiedMember = buildVerifiedMemberInfo({ response, aadhaarLast4 });
 
-      onVerified?.({ verifiedMember, cleanAadhaar, maskedMobile });
+      onVerified?.({ verifiedMember, aadhaarLast4, maskedMobile });
     } catch (err) {
       const errorMsg =
         err?.response?.data?.message ||

@@ -19,6 +19,22 @@ import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 /**
+ * Helper to construct the initial Member #1 (applicant) object from logged-in user info.
+ * @param {Object} currentUser - User profile object from Digit.UserService.getUser()?.info
+ * @returns {Object} Initial applicant member object
+ */
+const createInitialApplicant = (currentUser) => ({
+  userUuid: currentUser?.uuid,
+  name: currentUser?.name || "Citizen",
+  relationshipWithHead: "",
+  isHead: true,
+  isApplicant: true,
+  mobileNumber: currentUser?.mobileNumber,
+  gender: currentUser?.gender,
+  aadhaarLast4: currentUser?.aadhaarNumber ? String(currentUser.aadhaarNumber).slice(-4) : undefined,
+});
+
+/**
  * FamilyMemberAdded Component
  *
  * Central review and submission screen for creating a new family group.
@@ -71,18 +87,13 @@ const FamilyMemberAdded = () => {
   // Initialize family members list: Read from sessionStorage or seed with logged-in user
   const [members, setMembers] = useState(() => {
     const stored = getFamilyMembers();
-    if (stored && stored.length > 0) return stored;
+    // Validate stored members belong to currently logged-in user to prevent stale/cross-user data
+    if (stored && stored.length > 0 && stored.some((m) => m.userUuid === loggedInUuid)) {
+      return stored;
+    }
     const currentUser = Digit.UserService.getUser()?.info;
     if (currentUser?.uuid) {
-      const initialHead = {
-        userUuid: currentUser.uuid,
-        name: currentUser.name || "Citizen",
-        relationshipWithHead: "",
-        isHead: true,
-        mobileNumber: currentUser.mobileNumber,
-        gender: currentUser.gender,
-        aadhaarLast4: currentUser.aadhaarNumber ? String(currentUser.aadhaarNumber).slice(-4) : undefined,
-      };
+      const initialHead = createInitialApplicant(currentUser);
       setFamilyMembers([initialHead]);
       return [initialHead];
     }
@@ -109,15 +120,7 @@ const FamilyMemberAdded = () => {
     if (!members.length) {
       const currentUser = Digit.UserService.getUser()?.info;
       if (currentUser?.uuid) {
-        const initialHead = {
-          userUuid: currentUser.uuid,
-          name: currentUser.name,
-          relationshipWithHead: "",
-          isHead: true,
-          mobileNumber: currentUser.mobileNumber,
-          gender: currentUser.gender,
-          aadhaarLast4: currentUser.aadhaarNumber ? String(currentUser.aadhaarNumber).slice(-4) : undefined,
-        };
+        const initialHead = createInitialApplicant(currentUser);
         setFamilyMembers([initialHead]);
         setMembers([initialHead]);
         setSelectedHeadUuid(initialHead.userUuid);
@@ -272,17 +275,25 @@ const FamilyMemberAdded = () => {
 
   /**
    * Final Submission Handler:
-   * 1. Validates that all members have relationships selected.
-   * 2. Formats payload matching backend user-family create schema.
-   * 3. Dispatches createFamily API call.
-   * 4. Clears temporary session storage.
-   * 5. Navigates to FamilyCreatedResponse with generated familyId.
+   * 1. Validates that the family has at least 2 members.
+   * 2. Validates that non-head members have assigned relationships.
+   * 3. Formats payload using validated React `members` state.
+   * 4. Dispatches createFamily API call.
+   * 5. Handles missing familyId explicitly before navigating.
+   * 6. Clears temporary session storage.
+   * 7. Navigates to FamilyCreatedResponse.
    */
   const handleCreateFamilyId = async () => {
     if (submitting || !selectedHeadUuid) return;
 
-    // Validation: Ensure all members have an assigned relationship
-    const unassignedMember = members.find((m) => !m.relationshipWithHead);
+    // 1. Client-side validation: Family must have at least 2 members
+    if (members.length < 2) {
+      showToast("error", t("ERR_FAMILY_MIN_MEMBERS", "Please add at least one family member before creating Family ID."));
+      return;
+    }
+
+    // 2. Validation: Ensure non-head members have an assigned relationship
+    const unassignedMember = members.find((m) => m.userUuid !== selectedHeadUuid && !m.relationshipWithHead);
     if (unassignedMember) {
       showToast("error", t("ERR_SELECT_RELATIONSHIP_FOR_ALL"));
       return;
@@ -292,11 +303,10 @@ const FamilyMemberAdded = () => {
 
     try {
       const tenantId = Digit.ULBService.getCurrentTenantId();
-      const membersList = getFamilyMembers();
 
-      // Build structured payload for backend
+      // 3. Use validated `members` React state (avoids state vs. storage divergence)
       const payload = buildCreateFamilyPayload({
-        membersList: membersList,
+        membersList: members,
         tenantId: tenantId,
         selectedHeadUuid: selectedHeadUuid,
       });
@@ -305,10 +315,18 @@ const FamilyMemberAdded = () => {
       const res = await Digit.UserService.createFamily(payload, tenantId);
       const createdFamilyId = res?.Families?.[0]?.familyId;
 
+      // 4. Handle missing familyId explicitly
+      if (!createdFamilyId) {
+        throw new Error(
+          t("ERR_FAMILY_ID_NOT_GENERATED", "Family created, but failed to retrieve generated Family ID. Please check profile details.")
+        );
+      }
+
       // Clear cached family data and temporary verification tokens from session
       clearFamilyMembers();
       try {
         sessionStorage.removeItem("Digit.family.verifiedMember");
+        sessionStorage.removeItem("Digit.family.aadhaarLast4");
         sessionStorage.removeItem("Digit.family.cleanAadhaar");
         sessionStorage.removeItem("Digit.family.maskedMobile");
       } catch (storageErr) {
@@ -321,9 +339,10 @@ const FamilyMemberAdded = () => {
         state: { familyId: createdFamilyId },
       });
     } catch (err) {
+      // 5. Fallback string is now localized via t(...)
       showToast(
         "error",
-        err?.response?.data?.Errors?.[0]?.message || err?.message || "Failed to create Family ID."
+        err?.response?.data?.Errors?.[0]?.message || err?.message || t("ERR_FAILED_TO_CREATE_FAMILY_ID", "Failed to create Family ID.")
       );
     } finally {
       setSubmitting(false);

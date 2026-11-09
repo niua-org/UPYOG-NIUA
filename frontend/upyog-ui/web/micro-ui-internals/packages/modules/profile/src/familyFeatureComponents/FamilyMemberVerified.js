@@ -10,10 +10,9 @@ import {
   StatusTable,
   Row,
   Toast,
-  Loader,
   Dropdown,
 } from "@nudmcdgnpm/digit-ui-react-components";
-import { addFamilyMember } from "../utils";
+import { addFamilyMember, getFamilyMembers } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
 
@@ -72,11 +71,12 @@ const FamilyMemberVerified = () => {
     }
   });
 
-  // Retrieve unmasked Aadhaar number for last-4 extraction or fallback to sessionStorage
-  const [cleanAadhaar] = useState(() => {
+  // Retrieve last 4 digits of Aadhaar (or fallback to sessionStorage / verifiedMember)
+  const [aadhaarLast4] = useState(() => {
     return (
-      location.state?.cleanAadhaar ||
-      sessionStorage.getItem("Digit.family.cleanAadhaar") ||
+      location.state?.aadhaarLast4 ||
+      verifiedMember?.aadhaarLast4 ||
+      sessionStorage.getItem("Digit.family.aadhaarLast4") ||
       ""
     );
   });
@@ -84,20 +84,19 @@ const FamilyMemberVerified = () => {
   /**
    * Route Guard:
    * Protect against direct URL hits or empty state reloads.
-   * If no verified member data exists, redirect to Add Family Member.
+   * If verified member userUuid is missing, redirect to Add Family Member.
    */
   useEffect(() => {
-    if (!verifiedMember && !cleanAadhaar) {
+    if (!verifiedMember?.userUuid) {
       navigate(PROFILE_ROUTES.ADD_FAMILY_MEMBER, { replace: true });
     }
-  }, [verifiedMember, cleanAadhaar, navigate]);
+  }, [verifiedMember?.userUuid, navigate]);
 
   // Relationship dropdown and validation error state
   const [selectedRelationship, setSelectedRelationship] = useState(null);
   const [relationshipError, setRelationshipError] = useState(null);
 
-  // Submission loader and toast notification state
-  const [submitting, setSubmitting] = useState(false);
+  // Toast notification state
   const [toast, setToast] = useState(null);
 
   // Toast notification helper
@@ -110,8 +109,10 @@ const FamilyMemberVerified = () => {
    * Action Handler: Add to Family
    * 1. Validates that a relationship option has been selected.
    * 2. Constructs member object containing userUuid, demographic fields, and relationship.
-   * 3. Appends member to temporary session storage list via `addFamilyMember()`.
-   * 4. Redirects to `FamilyMemberAdded` screen replacing history stack.
+   * 3. Prevents duplicate addition with toast feedback.
+   * 4. Appends member to temporary session storage list via `addFamilyMember()`.
+   * 5. Cleans up single-member verification cache from sessionStorage.
+   * 6. Redirects to `FamilyMemberAdded` screen replacing history stack.
    */
   const handleAddFamilyMember = () => {
     // 1. Validate relationship selection
@@ -124,11 +125,10 @@ const FamilyMemberVerified = () => {
     const member = {
       userUuid: verifiedMember?.userUuid,
       name: verifiedMember?.demographics?.name,
-      relationshipWithHead: (selectedRelationship?.code || selectedRelationship?.rawName || "").toUpperCase(),
+      relationshipWithHead: (selectedRelationship?.code || "").toUpperCase(),
       isHead: false,
-      aadhaarLast4: cleanAadhaar ? cleanAadhaar.slice(-4) : undefined,
-      mobileNumber: verifiedMember?.mobileNumber,
-      gender: verifiedMember?.demographics?.gender,
+      aadhaarLast4: aadhaarLast4 || verifiedMember?.aadhaarLast4 || undefined,
+      gender: verifiedMember?.gender || verifiedMember?.demographics?.gender,
     };
 
     // 3. Guard against missing userUuid
@@ -137,12 +137,32 @@ const FamilyMemberVerified = () => {
       return;
     }
 
-    // 4. Append to temporary frontend staging list in sessionStorage
+    // 4. Guard against duplicate member addition
+    const currentMembers = getFamilyMembers();
+    if (currentMembers.some((m) => m.userUuid === member.userUuid)) {
+      showToast("error", t("ERR_FAMILY_MEMBER_ALREADY_ADDED", "This member is already added to the family."));
+      return;
+    }
+
+    // 5. Append to temporary frontend staging list in sessionStorage
     addFamilyMember(member);
 
-    // 5. Navigate to family members table view (replace: true to keep history stack clean)
+    // 6. Clean up single-member verification cache from sessionStorage so state does not linger
+    try {
+      sessionStorage.removeItem("Digit.family.verifiedMember");
+      sessionStorage.removeItem("Digit.family.aadhaarLast4");
+      sessionStorage.removeItem("Digit.family.cleanAadhaar");
+      sessionStorage.removeItem("Digit.family.maskedMobile");
+    } catch (clearErr) {
+      console.error("Error clearing verification session keys:", clearErr);
+    }
+
+    // 7. Navigate to family members table view (replace: true to keep history stack clean)
     navigate(PROFILE_ROUTES.PROFILE_CREATE_FAMILY, { replace: true });
   };
+
+  // Prevent transient rendering of NA fields while redirecting
+  if (!verifiedMember?.userUuid) return null;
 
   return (
     <React.Fragment>
@@ -153,26 +173,26 @@ const FamilyMemberVerified = () => {
         {/* Verification Success Banner */}
         <div style={profileStyles.verifiedBanner}>
           <span>✓</span>
-          <span>{verifiedMember?.message || t("AADHAAR_VERIFIED_SUCCESSFULLY")}</span>
+          <span>{verifiedMember?.message ? t(verifiedMember.message, verifiedMember.message) : t("AADHAAR_VERIFIED_SUCCESSFULLY", "Aadhaar verified successfully")}</span>
         </div>
 
         {/* Demographics Status Table */}
         <StatusTable>
           <Row
             label={t("CORE_COMMON_NAME")}
-            text={verifiedMember?.demographics?.name || "NA"}
+            text={verifiedMember?.name || verifiedMember?.demographics?.name || "NA"}
           />
           <Row
             label={t("CORE_COMMON_PROFILE_DOB")}
-            text={verifiedMember?.demographics?.dob || "NA"}
+            text={verifiedMember?.dob || verifiedMember?.demographics?.dob || "NA"}
           />
           <Row
             label={t("CORE_COMMON_PROFILE_GENDER")}
-            text={t(verifiedMember?.demographics?.gender) || "NA"}
+            text={t(verifiedMember?.gender || verifiedMember?.demographics?.gender) || "NA"}
           />
           <Row
             label={t("CORE_COMMON_AADHAR_NUMBER")}
-            text={verifiedMember?.maskedAadhaar || (cleanAadhaar ? `XXXX-XXXX-${cleanAadhaar.slice(-4)}` : "NA")}
+            text={verifiedMember?.maskedAadhaar || (aadhaarLast4 ? `XXXX-XXXX-${aadhaarLast4}` : "NA")}
           />
         </StatusTable>
 
@@ -204,9 +224,7 @@ const FamilyMemberVerified = () => {
         <SubmitBar
           label={t("ADD_TO_FAMILY")}
           onSubmit={handleAddFamilyMember}
-          disabled={submitting}
         />
-        {submitting && <Loader />}
       </Card>
 
       {/* Toast Feedback */}

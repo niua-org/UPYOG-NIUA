@@ -20,6 +20,7 @@ const useProfileUser = () => {
     const fetchUser = async () => {
       if (!uuid) { setLoading(false); return; }
       try {
+        // The updated /user/profile/_search endpoint expects a single uuid string rather than a list of UUIDs
         const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
         if (isActive) setUser(response?.user?.[0] || null);
       } catch (e) {
@@ -68,7 +69,7 @@ const ProfileDetails = () => {
         const activeData = formattedData?.filter((option) => option.active);
         return activeData;
       },
-  });
+    });
   let familyOptions = [];
   FamilyCreateOptions &&
     FamilyCreateOptions.forEach((family) => {
@@ -129,26 +130,26 @@ const ProfileDetails = () => {
             </div>
           )}
           {user?.isIdentityVerified ? (
-          <div>
-          <Dropdown
-            option={familyOptions}
-            optionKey="name"
-            select={handleFamilySelection}
-            style={profileStyles.dropdownWrap}
-            optionCardStyles={profileStyles.dropdownMenu}
-            customSelector={
-              <div style={profileStyles.dropdownButton}>
-                <span>{t("PROFILE_ADD_FAMILY")}</span>
-                <ArrowDown />
-              </div>
-            }
-          />
-          </div>
-         )
-          : 
-          (
-          <button type="button" onClick={handleVerifyProfile} style={profileStyles.editButton}>{t("VERIFY_PROFILE")}</button> 
-          )}
+            <div>
+              <Dropdown
+                option={familyOptions}
+                optionKey="name"
+                select={handleFamilySelection}
+                style={profileStyles.dropdownWrap}
+                optionCardStyles={profileStyles.dropdownMenu}
+                customSelector={
+                  <div style={profileStyles.dropdownButton}>
+                    <span>{t("PROFILE_ADD_FAMILY")}</span>
+                    <ArrowDown />
+                  </div>
+                }
+              />
+            </div>
+          )
+            :
+            (
+              <button type="button" onClick={handleVerifyProfile} style={profileStyles.editButton}>{t("VERIFY_PROFILE")}</button>
+            )}
           <button type="button" onClick={() => navigate(PROFILE_ROUTES.EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
             <EditIcon /> {t("CORE_COMMON_EDIT")}
           </button>
