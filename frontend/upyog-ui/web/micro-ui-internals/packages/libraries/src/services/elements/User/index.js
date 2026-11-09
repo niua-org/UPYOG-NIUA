@@ -285,6 +285,7 @@ export const UserService = {
       data: details,
       auth: true,
       method: "POST",
+      userService: true,
     }),
 
   sendFamilyOtp: (details) =>
@@ -304,6 +305,7 @@ export const UserService = {
       data: details,
       auth: true,
       method: "POST",
+      userService: true,
     }),
 
   verifyProfile: (details) =>
