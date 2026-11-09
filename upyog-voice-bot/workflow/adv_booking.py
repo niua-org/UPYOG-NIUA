@@ -127,8 +127,8 @@ def get_next_step(draft: dict) -> dict:
     for f_id in draft.get("_failed_fields", []):
         if not draft.get(f_id):
             failed_step = next((f for f in FORM_FIELDS if f["id"] == f_id), None)
-        if failed_step:
-            return failed_step
+            if failed_step:
+                return failed_step
         
     for field in FORM_FIELDS:
         if not draft.get(field["id"]):
@@ -421,14 +421,12 @@ def extraction_node(state: AdvBookingState):
             extracted_data = json.loads(ext.content.strip())
             if not isinstance(extracted_data, dict):
                 raise ValueError("Extraction response must be a JSON object")
-            validation_error=None   
-
             for field in llm_extractable_fields:
                 val = extracted_data.get(field)
                 if val is not None and str(val).lower() not in ("null", "none", ""):
                     #1. Look up field configuration from config.yml to determine if it has predefined options
-                    field_def=next((item for item in FORM_FIELDS if item["id"] == field), {})
-                    options=_mdms_get(*field_def["mdms"]) if field_def.get("mdms") else None
+                    field_def = next((item for item in FORM_FIELDS if item["id"] == field), {})
+                    options = _mdms_get(*field_def["mdms"]) if field_def.get("mdms") else None
                     
                     #2. Call Validator.py to check the value 
                     is_valid, err_msg, clean_val = validate_field(field_def, val, draft=draft_booking, valid_options=options)
@@ -439,14 +437,15 @@ def extraction_node(state: AdvBookingState):
                             draft_booking[field] = clean_val
                         logger.info(f"[extract_node] {field} validated = {clean_val}")
 
-                      # If this field previously failed, remove it from the failed list
+                        # If this field previously failed, remove it from the failed list
                         if field in draft_booking.get("_failed_fields", []):
                             draft_booking["_failed_fields"].remove(field)
                         draft_booking.get("_field_errors", {}).pop(field, None)  
 
                     else:
-                        logger.error(f"[extract_node] Validation failed for {field} = '{val}': {err_msg}")
-                        draft_booking[field] = None
+                        logger.warning(f"[extract_node] Validation failed for {field}: {err_msg}")
+                        if not draft_booking.get(field):
+                            draft_booking[field] = None
 
                         # Save each failed field and its specific error message
                         draft_booking.setdefault("_failed_fields", [])
@@ -520,11 +519,11 @@ def ask_next_node(state: AdvBookingState):
 
     return {
         "messages": [AIMessage(content=resp)],
-        "draft"
+        "draft_booking": draft_booking,
         "missing_fields": [f for f in ALL_FIELDS if not draft_booking.get(f)], 
         "input_type": "text", 
         "options": []
-        }
+    }
 
 
 # Shows a beautiful UI table to the user displaying the available slots they can pick from
@@ -602,7 +601,12 @@ def create_booking_node(state: AdvBookingState):
     logger.info(f"[adv_booking.create_booking_node] Executing booking registration for phone={phone_number}")
     
     
-    draft_booking["mobileNumber"] = draft_booking.get("mobileNumber") or (phone_number if phone_number != "default" else "")
+    if not draft_booking.get("mobileNumber") and phone_number and phone_number != "default":
+        phone_def = next((item for item in FORM_FIELDS if item["id"] == "mobileNumber"), {"id": "mobileNumber", "type": "mobile"})
+        is_valid, _, clean_phone = validate_field(phone_def, phone_number)
+        draft_booking["mobileNumber"] = clean_phone if is_valid else ""
+    elif not draft_booking.get("mobileNumber"):
+        draft_booking["mobileNumber"] = ""
     draft_booking["phone_number"] = phone_number
     
     raw_resp = create_booking(json.dumps(draft_booking))

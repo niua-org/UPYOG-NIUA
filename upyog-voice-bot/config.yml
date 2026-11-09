@@ -231,7 +231,7 @@ forms:
         extractable: true
         validation:
           required: true
-          
+
       - id: "location"
         type: "dropdown"
         label: "Advertisement Location"
@@ -263,7 +263,7 @@ forms:
         validation:
           required: true
           on_or_after: "start_date"
-          
+
       - id: "nightLight"
         type: "dropdown"
         label: "Night Light Required"
@@ -287,8 +287,8 @@ forms:
           required: true
           min_length: 2
           max_length: 50
-          pattern: "^[a-zA-Z ]+$"
-      
+          pattern: "^[a-zA-Z\\u0900-\\u097F .'-]+$"
+
       - id: "mobileNumber"
         type: "text"
         label: "Mobile Number"
@@ -302,8 +302,8 @@ forms:
         label: "Email Address"
         extractable: true
         validation:
-          required: true
-          pattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9.-]+$"
+          required: false
+          pattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z]+(\\.[a-zA-Z]{2,})+$"
 
       - id: "address"
         type: "text"
@@ -357,7 +357,6 @@ forms:
         validation:
           required: true
           min_length: 10
-
 
       # Step 4: Area/locality (fetched live from egov-location API)
       - id: "locality"

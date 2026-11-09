@@ -269,6 +269,20 @@ def extraction_node(state: GrievanceState):
     curr_field = next_step.get("id")
 
     def _validate_and_set(field_id: str, raw_value: Any, valid_opts: list = None) -> tuple:
+        """
+        Validate a field value using validator.py and update the draft state.
+
+        Args:
+            field_id: Form field identifier being validated.
+            raw_value: Extracted or user-provided input value.
+            valid_opts: Optional list of acceptable options for option-based fields.
+
+        Returns:
+            tuple: (is_valid: bool, err_msg: Optional[str], clean_val: Any)
+
+        Side effects:
+            Updates draft[field_id], _failed_fields, _field_errors, and _raw_locality.
+        """
         field_def = next((f for f in FORM_FIELDS if f["id"] == field_id), {})
         is_valid, err_msg, clean_val = validate_field(field_def, raw_value, draft=draft, valid_options=valid_opts)
         if is_valid:
@@ -277,16 +291,17 @@ def extraction_node(state: GrievanceState):
                 draft["_failed_fields"].remove(field_id)
             draft.get("_field_errors", {}).pop(field_id, None)
 
-            # Sync description location with chosen MDMS locality
+            # Sync description location with chosen MDMS locality using word boundaries
             if field_id == "locality" and draft.get("description"):
                 old_loc = draft.get("_raw_locality")
                 if old_loc and str(old_loc).lower() != str(clean_val).lower():
-                    pattern = re.compile(re.escape(str(old_loc)), re.IGNORECASE)
+                    pattern = re.compile(r'\b' + re.escape(str(old_loc)) + r'\b', re.IGNORECASE)
                     if pattern.search(draft["description"]):
-                        draft["description"] = pattern.sub(clean_val, draft["description"])
+                        draft["description"] = pattern.sub(clean_val, draft["description"], count=1)
                 draft["_raw_locality"] = clean_val
         else:
-            draft[field_id] = None
+            if not draft.get(field_id):
+                draft[field_id] = None
             if field_id == "locality" and raw_value:
                 draft["_raw_locality"] = str(raw_value).strip()
             draft.setdefault("_failed_fields", [])
@@ -325,8 +340,6 @@ def extraction_node(state: GrievanceState):
                 if is_valid:
                     draft["_sub_options"] = cats[clean_val]
                     logger.info(f"[grievance extract] category matched: {clean_val}")
-            elif cleaned_input:
-                is_valid, err_msg, clean_val = _validate_and_set("category", cleaned_input, cat_keys)
 
     elif curr_field == "sub_category":
         cat_selected = draft.get("category", "")
@@ -356,8 +369,6 @@ def extraction_node(state: GrievanceState):
                 if is_valid:
                     draft["category_code"] = matched["code"]
                     logger.info(f"[grievance extract] sub_category matched: {clean_val}")
-            elif cleaned_input:
-                is_valid, err_msg, clean_val = _validate_and_set("sub_category", cleaned_input, sub_names)
 
     elif curr_field == "locality":
         loc_ops = draft.get("_locality_options") or _pgr_localities()
@@ -384,8 +395,6 @@ def extraction_node(state: GrievanceState):
                 if is_valid:
                     draft["locality_code"] = matched["code"]
                     logger.info(f"[grievance extract] locality matched: {clean_val}")
-            elif cleaned_input:
-                is_valid, err_msg, clean_val = _validate_and_set("locality", cleaned_input, loc_names)
 
     # Fallback to LLM multi-field extraction if any missing fields remain and LLM is available
     # Recheck after deterministic matching; only unresolved extractable fields go to the LLM.
@@ -544,18 +553,13 @@ def confirm_node(state: GrievanceState):
     user_msg     = messages[-1].content if messages else ""
     logger.info(f"[grievance.confirm_node] Prompting confirmation for phone={phone_number}")
 
-    # Ensure description is meaningful and location matches MDMS locality
+    # Ensure description is meaningful
     desc = str(draft.get("description", "")).strip()
     clean_loc = draft.get("locality")
-    old_loc = draft.get("_raw_locality")
     if not desc or len(desc) < 3:
         sub = draft.get('sub_category') or draft.get('category') or 'Complaint'
         loc = clean_loc or 'the specified locality'
         draft['description'] = f"{sub} issue reported at {loc}"
-    elif old_loc and clean_loc and str(old_loc).lower() != str(clean_loc).lower():
-        pattern = re.compile(re.escape(str(old_loc)), re.IGNORECASE)
-        if pattern.search(draft["description"]):
-            draft["description"] = pattern.sub(clean_loc, draft["description"])
 
     summary = (
         "**Review Your Complaint Details:**\n\n"

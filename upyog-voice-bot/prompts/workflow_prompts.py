@@ -96,7 +96,7 @@ Rules:
 1. Extract every missing field that can be determined from this message, even when several details are given together.
 2. Infer the complaint category from the meaning of the issue and return its exact name from the valid options. For example, water not reaching a home is a water-supply complaint if that option is available.
 3. For 'sub_category', return a value only when it exactly matches an option valid for the selected category. Never invent category or subcategory options.
-4. For 'locality', extract the clean base area or locality name without filler words or sub-block numbers (e.g. if the user says 'near link colony block A' or 'link colony phase 1', extract 'Link Colony'). If the user mentions any other area (e.g. 'Paschim Nagar'), extract the clean area name as text. Never return null if an area was mentioned.
+4. For 'locality', extract the clean base area or locality name without filler words or sub-block numbers (e.g. if the user says 'near Model Town block A' or 'Model Town phase 1', extract 'Model Town'). If the user mentions any other area (e.g. 'Sector 14'), extract the clean area name as text. Never return null if an area was mentioned.
 5. For 'description', rewrite the reported issue as one concise, standalone sentence in the user's language. Remove filing instructions, use collected details when relevant, and never add facts.
 6. Return null for a field that cannot be determined from the user's message.
 7. NEVER extract meta or navigation words like 'continue', 'resume', 'draft', 'show drafts', 'my drafts' as any field value.
