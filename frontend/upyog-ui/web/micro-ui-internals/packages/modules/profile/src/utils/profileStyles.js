@@ -386,4 +386,71 @@ export const profileStyles = {
     alignItems: "center",
     gap: "8px",
   },
+
+   addressModalPopup: {
+    backgroundColor: "#fff",
+    position: "relative",
+    width: "min(900px, 95vw)",
+    maxHeight: "90vh",
+    overflowY: "auto", // safety net for very small screens
+    padding: 24,
+    borderRadius: 12,
+    border: "1px solid #E8EAED",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.16)",
+  },
 };
+
+
+
+// Two-column layout for the library's AddressDetails form, scoped to the address modal.
+// Kept as a CSS string because selectors (:has, sibling, media query) can't be inline styles.
+export const addressModalCss = `
+  /* separator below the modal header */
+  .address-modal-grid {
+    border-top: 1px solid #E8EAED;
+    padding-top: 8px;
+  }
+
+  /* 2 columns, 5 fields each. Both columns share the same row tracks, so rows always align.
+     Each field = label + control, hence 10 rows for 5 fields per column. */
+  .address-modal-grid div:has(> .card-label) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(10, auto);
+    column-gap: 32px;
+    align-content: start;
+  }
+  .address-modal-grid .card-label {
+    font-size: 16px;
+    margin: 0;
+    padding: 12px 0 6px;
+    align-self: end;
+  }
+  .address-modal-grid .card-label + * {
+    align-self: start;
+    min-width: 0;
+  }
+
+  /* rounded inputs and dropdowns (no padding on wrappers, so widths stay equal) */
+  .address-modal-grid .employee-card-input,
+  .address-modal-grid .select,
+  .address-modal-grid .select-wrap {
+    border-radius: 8px;
+  }
+
+  .address-modal-grid .card {
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* mobile: single column */
+  @media (max-width: 640px) {
+    .address-modal-grid div:has(> .card-label) {
+      grid-auto-flow: row;
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+    }
+  }
+`;

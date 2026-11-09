@@ -27,17 +27,17 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
   const stateId = Digit.ULBService.getStateId();
   const userInfo = Digit.UserService.getUser()?.info || {};
   const [form, setForm] = useState({
-    name: userInfo?.name || userDetails?.name || "",
-    emailId: userInfo?.emailId || userDetails?.emailId || "",
-    mobileNumber: userInfo?.mobileNumber || userDetails?.mobileNumber || "",
-    altContactNumber: userInfo?.altContactNumber || userDetails?.altContactNumber || "",
-    city: userInfo?.permanentCity || cityDetails?.name || userDetails?.permanentCity || "",
+    name: userDetails?.name || userInfo?.name || "",
+    emailId: userDetails?.emailId || userInfo?.emailId || "",
+    mobileNumber: userDetails?.mobileNumber || userInfo?.mobileNumber || "",
+    altContactNumber: userDetails?.altContactNumber || userInfo?.altContactNumber || "",
+    city: userDetails?.permanentCity || userInfo?.permanentCity || cityDetails?.name || "",
     dob: userDetails?.dob || userInfo?.dob || "",
     gender: toGenderOption(userDetails?.gender || userInfo?.gender),
-    fatherName: userInfo?.fatherName || userDetails?.fatherName || "",
-    motherName: userInfo?.motherName || userDetails?.motherName || "",
-    spouseName: userInfo?.spouseName || userDetails?.spouseName || "",
-    guardianName: userInfo?.guardianName || userDetails?.guardianName || ""
+    fatherName: userDetails?.fatherName || userInfo?.fatherName || "",
+    motherName: userDetails?.motherName || userInfo?.motherName || "",
+    spouseName: userDetails?.spouseName || userInfo?.spouseName || "",
+    guardianName: userDetails?.guardianName || userInfo?.guardianName || ""
   });
 
   console.log("userDetailsuserDetails", userDetails)
@@ -92,6 +92,7 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
         const updatedUser = {
           ...userDetails,
           ...form,
+          gender: form.gender?.code || form.gender,
           photo: photoId
         };
         onProfileUpdate && onProfileUpdate(updatedUser);

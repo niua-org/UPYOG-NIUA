@@ -112,9 +112,13 @@ const FoundFamily = () => {
           optionKey="i18nKey"
           t={t}
           placeholder={t("COMMON_SELECT")}
+          optionCardStyles={{
+            maxHeight: "220px",
+            overflowY: "auto",
+          }}
         />
 
-        <Section title={t("PROFILE_JOINING_AS")}>{loading ? <Loader /> : <FieldGrid fields={applicantFields} t={t} />}</Section>
+        <Section /*title={t("PROFILE_JOINING_AS")}*/>{loading ? <Loader /> : <FieldGrid fields={applicantFields} t={t} />}</Section>
 
         <SubmitBar label={t("PROFILE_JOIN_FAMILY")} onSubmit={handleJoin} disabled={!relationship || submitting} />
       </Card>

@@ -246,7 +246,15 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
           tenantId: stateCode,
           userType: getUserType(),
         };
-        const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.UserService.authenticate(requestData);
+        const newRequestData = {
+          authType: "MOBILE",
+          tenantId: stateCode,
+          mobileNumber: mobileNumber ? mobileNumber : sessionStorage.getItem("userName"),
+          otp: otp,
+          scope: "read write" // TODO: Check if scope is needed for mobile login, as it is not present in the original requestData
+        }
+        // const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.UserService.authenticate(requestData);
+        const { ResponseInfo, UserRequest: info, ...tokens } = await Digit.UserService.newAuthenticateWithMobile(newRequestData);
 
         if (location.state?.role) {
           const roleInfo = info.roles.find((userRole) => userRole.code === location.state.role);

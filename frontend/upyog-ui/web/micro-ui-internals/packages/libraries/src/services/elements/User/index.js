@@ -314,5 +314,13 @@ export const UserService = {
       method: "POST",
       userService: true,
     }),
+  
+  newAuthenticateWithMobile: (details) =>
+    ServiceRequest({
+      url: Urls.loginV2.userLogin,
+      data: details,
+      auth: false,
+      method: "POST",
+    }),
 
 };
