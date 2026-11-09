@@ -78,9 +78,16 @@ const ProfileDetails = () => {
   let familyOptions = [];
   FamilyCreateOptions &&
     FamilyCreateOptions.forEach((family) => {
-      // Once family ID is created, remove "Create Family" option
-      if (user?.familyId && family.code === "PROFILE_CREATE_FAMILY") {
-        return;
+      if (user?.familyId) {
+        // If the citizen already has a familyId, hide Create Family and Join Existing Family
+        if (family.code === "PROFILE_CREATE_FAMILY" || family.code === "PROFILE_JOIN_EXISTING_FAMILY") {
+          return;
+        }
+      } else {
+        // If the citizen does not have a familyId, hide Family Dashboard
+        if (family.code === "PROFILE_FAMILY_DASHBOARD") {
+          return;
+        }
       }
       familyOptions.push({ i18nKey: `${family.code}`, code: `${family.code}`, name: `${family.name}` });
     });
@@ -106,7 +113,7 @@ const ProfileDetails = () => {
     if (!user?.isIdentityVerified) {
       setToast({
         error: true,
-        message: t("ERR_PROFILE_NOT_AADHAAR_VERIFIED"),
+        message: t("ERR_PROFILE_NOT_AADHAAR_VERIFIED", "Your Profile is not aadhaar verified, please verify"),
       });
       return;
     }
@@ -130,20 +137,20 @@ const ProfileDetails = () => {
           <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
           {user?.isIdentityVerified ? (
             <span
-              title={t("AADHAAR_VERIFIED")}
+              title={t("AADHAAR_VERIFIED", "Aadhaar Verified")}
               style={profileStyles.verifiedBadge}
             >
               <span style={profileStyles.verifiedIconWrap}>
                 <TickMark fillColor="white" />
               </span>
-              <span>{t("PROFILE_AADHAAR_VERIFIED")}</span>
+              <span>{t("PROFILE_AADHAAR_VERIFIED", "Aadhaar Verified")}</span>
             </span>
           ) : (
             <span
               role="button"
               tabIndex={0}
               onClick={() => navigate(PROFILE_ROUTES.VERIFY)}
-              title={t("CLICK_TO_VERIFY_AADHAAR")}
+              title={t("CLICK_TO_VERIFY_AADHAAR", "Click to verify Aadhaar")}
               style={profileStyles.unverifiedBadge}
             >
               <span style={profileStyles.unverifiedIconWrap}>
@@ -152,7 +159,7 @@ const ProfileDetails = () => {
                 </span>
               </span>
               <span style={profileStyles.unverifiedText}>
-                {t("PROFILE_AADHAAR_NOT_VERIFIED")}
+                {t("PROFILE_AADHAAR_NOT_VERIFIED", "Aadhaar Not Verified")}
               </span>
             </span>
           )}
@@ -168,8 +175,8 @@ const ProfileDetails = () => {
               </span>
             </div>
           )}
-          {/* Only show the My Family dropdown if the citizen does not have a Family ID yet */}
-          {!user?.familyId && (
+          {/* Show the My Family dropdown dynamically based on available options */}
+          {familyOptions.length > 0 && (
             <div>
               <Dropdown
                 option={familyOptions}

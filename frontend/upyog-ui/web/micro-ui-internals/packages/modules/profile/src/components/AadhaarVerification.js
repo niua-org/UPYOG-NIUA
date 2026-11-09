@@ -21,7 +21,7 @@ import { buildVerifiedMemberInfo } from "../utils/payloads";
  * 1. Formatted 12-digit Aadhaar input (XXXX XXXX XXXX).
  * 2. Informational consent callout banner.
  * 3. Triggers Aadhaar OTP via `Digit.UserService.sendAadhaarOtp`.
- * 4. Displays masked mobile number to which OTP was dispatched.
+ * 4. Displays simplified "Enter OTP" prompt and captures dispatch metadata.
  * 5. 30-second countdown timer for resending OTP.
  * 6. "Edit Aadhaar Number" action to cancel current OTP session and unlock the input.
  * 7. Verifies 6-digit OTP via `Digit.UserService.verifyAadhaarOtp` and triggers `onVerified`.
