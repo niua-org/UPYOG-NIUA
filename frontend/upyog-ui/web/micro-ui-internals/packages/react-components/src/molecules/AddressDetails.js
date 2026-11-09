@@ -146,6 +146,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
         optionKey="i18nKey"
         name="houseNo"
         value={houseNo}
+        disable={isEdit}
         style={inputStyles}
         placeholder={"Enter House No"}
         onChange={(e) => {
@@ -259,6 +260,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
             t={t}
             style={inputStyles}
             placeholder={"Select"}
+            disable={isEdit}
           />
         )}
       />
@@ -280,6 +282,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
             t={t}
             style={inputStyles}
             placeholder={"Select"}
+            disable={isEdit}
           />
         )}
       />
@@ -306,6 +309,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
           }}
           minlength={6}
           maxLength={6}
+          disable={isEdit}
       />
       <CardLabel>{t("PROFILE_ADDRESS_PROOF")}</CardLabel>
       <UploadFile

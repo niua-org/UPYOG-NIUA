@@ -194,7 +194,7 @@ const SelectLoginPage = ({ t, onSelect, mobileNumber = "",aadharNumber="", onMob
           </p>
           {error.field === "mobile" && <p className="login-error">{error.message}</p>}
         </div>
-        <span className="login-divider">{t("OR")}</span>
+        {/* <span className="login-divider">{t("OR")}</span>
         <div className="login-field-group">
           <label className="login-label">{t("CORE_COMMON_AADHAR_NUMBER")}</label>
           <div className="login-input-wrap">
@@ -237,7 +237,7 @@ const SelectLoginPage = ({ t, onSelect, mobileNumber = "",aadharNumber="", onMob
             {"We will send an OTP for verification"}
           </p>
           {error.field === "familyId" && <p className="login-error">{error.message}</p>}
-        </div>
+        </div> */}
          <button
           type="button"
           className="login-primary-button"

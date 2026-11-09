@@ -27,17 +27,17 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
   const stateId = Digit.ULBService.getStateId();
   const userInfo = Digit.UserService.getUser()?.info || {};
   const [form, setForm] = useState({
-    name: userInfo.name || "",
-    emailId: userDetails.emailId || "",
-    mobileNumber: userInfo.mobileNumber || "",
-    altContactNumber: userDetails.altContactNumber || "",
-    city: userInfo.permanentCity || cityDetails?.name || "",
-    dob: userDetails?.dob || "",
-    gender: toGenderOption(userDetails?.gender),
-    fatherName: userDetails?.fatherName || "",
-    motherName: userDetails?.motherName || "",
-    spouseName: userDetails?.spouseName || "",
-    guardianName: userDetails?.guardianName || ""
+    name: userInfo?.name || userDetails?.name || "",
+    emailId: userInfo?.emailId || userDetails?.emailId || "",
+    mobileNumber: userInfo?.mobileNumber || userDetails?.mobileNumber || "",
+    altContactNumber: userInfo?.altContactNumber || userDetails?.altContactNumber || "",
+    city: userInfo?.permanentCity || cityDetails?.name || userDetails?.permanentCity || "",
+    dob: userDetails?.dob || userInfo?.dob || "",
+    gender: toGenderOption(userDetails?.gender || userInfo?.gender),
+    fatherName: userInfo?.fatherName || userDetails?.fatherName || "",
+    motherName: userInfo?.motherName || userDetails?.motherName || "",
+    spouseName: userInfo?.spouseName || userDetails?.spouseName || "",
+    guardianName: userInfo?.guardianName || userDetails?.guardianName || ""
   });
 
   console.log("userDetailsuserDetails", userDetails)
@@ -95,6 +95,19 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
           photo: photoId
         };
         onProfileUpdate && onProfileUpdate(updatedUser);
+        // updateing the history state too so that every piece of information is in sync
+        if (window.history.state) {
+          window.history.replaceState(
+            {
+              ...window.history.state,
+              usr: {
+                ...window.history.state?.usr,
+                user: updatedUser,
+              },
+            },
+            ""
+          );
+        }
         showToast("success", t("CORE_COMMON_PROFILE_UPDATE_SUCCESS"));
       }
     } catch (error) {
