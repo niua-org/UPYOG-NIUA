@@ -9,6 +9,8 @@ import org.upyog.family.domain.service.FamilyHeadService;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.Family;
+import org.upyog.family.web.contract.FamilyHofCheckRequest;
+import org.upyog.family.web.contract.FamilyHofCheckResponse;
 import org.upyog.family.web.contract.FamilyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -78,6 +80,23 @@ public class FamilyHeadController {
                 .totalCount(1)
                 .build();
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Checks whether the authenticated caller in {@code RequestInfo} is the Head of Family (HoF).
+     *
+     * @param request the HoF check request envelope containing {@code RequestInfo}, {@code familyId}, and optional {@code tenantId};
+     *                must not be {@code null}.
+     * @return {@link ResponseEntity} wrapping {@link FamilyHofCheckResponse} stating whether the user is HoF,
+     *         with HTTP 200 OK status.
+     * @throws org.egov.tracer.model.CustomException if caller is unauthenticated or target family is not found.
+     */
+    @PostMapping("/_isHof")
+    @Operation(summary = "Check whether the authenticated caller is the Head of Family (HoF)")
+    public ResponseEntity<FamilyHofCheckResponse> isHeadOfFamily(@Valid @RequestBody FamilyHofCheckRequest request) {
+        log.info("[UPYOG-HEAD-CONTROLLER] Received /_isHof request for family: {}", request.getFamilyId());
+        FamilyHofCheckResponse response = headService.isHeadOfFamily(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

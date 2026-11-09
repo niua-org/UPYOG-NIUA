@@ -19,6 +19,9 @@ import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.advice.GlobalExceptionHandler;
 import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.Family;
+import org.upyog.family.web.contract.FamilyHofCheckRequest;
+import org.upyog.family.web.contract.FamilyHofCheckResponse;
+import org.egov.common.contract.request.User;
 
 import java.util.Collections;
 
@@ -80,5 +83,36 @@ class FamilyHeadControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.Families[0].headUserUuid").value("member-uuid-2"));
+    }
+
+    @Test
+    @DisplayName("POST /v1/head/_isHof should return HTTP 200 OK and HoF evaluation result")
+    void isHeadOfFamily_Success() throws Exception {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(User.builder().uuid("head-uuid-1").build())
+                .build();
+        FamilyHofCheckRequest request = FamilyHofCheckRequest.builder()
+                .requestInfo(requestInfo)
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .build();
+
+        FamilyHofCheckResponse response = FamilyHofCheckResponse.builder()
+                .responseInfo(new ResponseInfo())
+                .familyId("FAM-2026-0001")
+                .userUuid("head-uuid-1")
+                .headUserUuid("head-uuid-1")
+                .isHof(true)
+                .build();
+
+        when(headService.isHeadOfFamily(any(FamilyHofCheckRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/v1/head/_isHof")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.familyId").value("FAM-2026-0001"))
+                .andExpect(jsonPath("$.userUuid").value("head-uuid-1"))
+                .andExpect(jsonPath("$.isHof").value(true));
     }
 }
