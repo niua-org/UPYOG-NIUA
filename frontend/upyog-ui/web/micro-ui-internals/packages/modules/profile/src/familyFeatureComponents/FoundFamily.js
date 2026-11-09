@@ -21,7 +21,7 @@ const useProfileUser = () => {
         return;
       }
       try {
-        const response = await Digit.UserService.userSearch(tenantId, { uuid: [uuid], include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
+        const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
         if (isActive) setUser(response?.user?.[0] || null);
       } catch (e) {
         if (isActive) setError(true);
@@ -84,7 +84,7 @@ const FoundFamily = () => {
         tenantId,
         applicantUserUuid: userUuid,
         relationshipWithHead: relationship.code,
-        hofConsentOtp: verifiedData.consentToken,
+        txnId: verifiedData.txnId,
       });
       // if we get a response with status not equal to JOINED then we will show an error toast
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");

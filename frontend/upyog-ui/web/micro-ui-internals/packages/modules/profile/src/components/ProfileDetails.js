@@ -18,7 +18,7 @@ const useProfileUser = () => {
     const fetchUser = async () => {
       if (!uuid) { setLoading(false); return; }
       try {
-        const response = await Digit.UserService.userSearch(tenantId, { uuid: [uuid], include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
+        const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
         if (isActive) setUser(response?.user?.[0] || null);
       } catch (e) {
         if (isActive) setError(true);

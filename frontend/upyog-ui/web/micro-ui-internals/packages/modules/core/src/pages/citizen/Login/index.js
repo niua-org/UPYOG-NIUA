@@ -172,7 +172,7 @@ const Login = ({ stateCode, isUserRegistered = true, layout }) => {
       setParmas({ ...params, aadharNumber, txnId: res?.txnId });
       navigate(`${path}/otp`, { state: { from: getFromLocation(location.state, searchParams), role: location.state?.role, authType: "AADHAAR" } });
     } else {
-      setError(t("AADHAAR_OTP_SEND_FAILED"));
+      setError(err?.response?.data?.message || t("AADHAAR_OTP_SEND_FAILED"));
     }
   };
 
