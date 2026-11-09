@@ -145,4 +145,69 @@ class FamilyDashboardServiceImplTest {
         assertEquals("9876543211", secondMember.getMobileNumber());
         assertEquals("SON", secondMember.getRelationshipWithHead());
     }
+
+    @Test
+    @DisplayName("Should synthesize Head of Family into activeMembers when head is missing from member list")
+    void getFamilyDashboard_SynthesizesHeadWhenMissingFromMembers() {
+        FamilyMember memberOnly = FamilyMember.builder()
+                .id("MEM-001")
+                .userUuid("member-uuid-2")
+                .relationshipWithHead("FATHER")
+                .isHead(false)
+                .isVerified(true)
+                .active(true)
+                .build();
+
+        Family familyWithoutHeadInMembers = Family.builder()
+                .familyId("FAM-2026-0002")
+                .tenantId("pg")
+                .status(FamilyStatus.ACTIVE)
+                .headUserUuid("head-uuid-1")
+                .members(new java.util.ArrayList<>(Collections.singletonList(memberOnly)))
+                .documents(Collections.emptyList())
+                .build();
+
+        CitizenProfile headProfile = CitizenProfile.builder()
+                .name("Head Of Family")
+                .photo("photo-head")
+                .mobileNumber("9999999999")
+                .gender("FEMALE")
+                .build();
+
+        CitizenProfile memberProfile = CitizenProfile.builder()
+                .name("Father Member")
+                .mobileNumber("9716734311")
+                .gender("MALE")
+                .relationshipWithHead("FATHER")
+                .build();
+
+        Map<String, CitizenProfile> profileMap = new HashMap<>();
+        profileMap.put("head-uuid-1", headProfile);
+        profileMap.put("member-uuid-2", memberProfile);
+
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0002", "pg")).thenReturn(Optional.of(familyWithoutHeadInMembers));
+        when(familyRepository.findLineageByFamilyId("FAM-2026-0002")).thenReturn(Collections.emptyList());
+        when(userClient.searchUsersByUuids(anyList(), any())).thenReturn(profileMap);
+        when(responseInfoFactory.createResponseInfoFromRequestInfo(any(), any(Boolean.class))).thenReturn(new ResponseInfo());
+
+        FamilyDashboardResponse response = dashboardService.getFamilyDashboard("FAM-2026-0002", "pg", new RequestInfo());
+
+        assertNotNull(response);
+        assertNotNull(response.getDashboard());
+        assertEquals("Head Of Family", response.getDashboard().getHeadName());
+        assertEquals(2, response.getDashboard().getActiveMembersCount());
+        assertEquals(2, response.getDashboard().getActiveMembers().size());
+
+        // First member should be the synthesized Head of Family
+        FamilyMember head = response.getDashboard().getActiveMembers().get(0);
+        assertEquals("head-uuid-1", head.getUserUuid());
+        assertEquals("Head Of Family", head.getName());
+        assertEquals("HEAD", head.getRelationshipWithHead());
+        org.junit.jupiter.api.Assertions.assertTrue(Boolean.TRUE.equals(head.getIsHead()));
+
+        // Second member is the father
+        FamilyMember father = response.getDashboard().getActiveMembers().get(1);
+        assertEquals("member-uuid-2", father.getUserUuid());
+        assertEquals("Father Member", father.getName());
+    }
 }

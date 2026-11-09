@@ -23,8 +23,15 @@ public class FamilyQueryBuilder {
 
     public static final String INSERT_FAMILY_SQL =
             "INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, "
-            + "status, additional_details, created_by, created_time, last_modified_by, last_modified_time) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?)";
+            + "status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?)";
+
+    public static final String INSERT_FAMILY_AUDIT_SQL =
+            "INSERT INTO ug_family_audit (id, family_id, tenant_id, head_user_uuid, category, "
+            + "status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time) "
+            + "SELECT id, family_id, tenant_id, head_user_uuid, category, "
+            + "status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time "
+            + "FROM ug_family WHERE family_id = ?";
 
     public static final String INSERT_MEMBER_SQL =
             "INSERT INTO ug_family_member (id, family_id, tenant_id, user_uuid, relationship_with_head, "
@@ -40,7 +47,7 @@ public class FamilyQueryBuilder {
 
     public static final String UPDATE_FAMILY_SQL =
             "UPDATE ug_family SET head_user_uuid = ?, category = ?, "
-            + "status = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? "
+            + "status = ?, family_type = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? "
             + "WHERE family_id = ?";
 
     public static final String UPDATE_MEMBER_SQL =
@@ -67,10 +74,10 @@ public class FamilyQueryBuilder {
     public static final String EXISTS_DOC_SQL =
             "SELECT count(1) FROM ug_family_document WHERE id = ?";
 
-    private static final String BASE_FAMILY_QUERY =
+    private static final String BASE_FAMILY_SELECT_FIELDS =
             "SELECT f.id as f_id, f.family_id as f_family_id, f.tenant_id as f_tenant_id, "
             + "f.head_user_uuid as f_head_user_uuid, f.category as f_category, "
-            + "f.status as f_status, "
+            + "f.status as f_status, f.family_type as f_family_type, "
             + "f.additional_details as f_additional_details, f.created_by as f_created_by, "
             + "f.created_time as f_created_time, f.last_modified_by as f_last_modified_by, "
             + "f.last_modified_time as f_last_modified_time, "
@@ -86,10 +93,7 @@ public class FamilyQueryBuilder {
             + "d.id as d_id, d.family_id as d_family_id, d.tenant_id as d_tenant_id, "
             + "d.document_type as d_document_type, d.filestore_id as d_filestore_id, "
             + "d.active as d_active, d.created_by as d_created_by, d.created_time as d_created_time, "
-            + "d.last_modified_by as d_last_modified_by, d.last_modified_time as d_last_modified_time "
-            + "FROM ug_family f "
-            + "LEFT JOIN ug_family_member m ON f.family_id = m.family_id "
-            + "LEFT JOIN ug_family_document d ON f.family_id = d.family_id ";
+            + "d.last_modified_by as d_last_modified_by, d.last_modified_time as d_last_modified_time ";
 
     @Autowired
     /**
@@ -110,7 +114,9 @@ public class FamilyQueryBuilder {
      * @return parameterized SQL query string
      */
     public String getFamilySearchQuery(FamilySearchCriteria criteria, List<Object> preparedStmtList) {
-        StringBuilder query = new StringBuilder(BASE_FAMILY_QUERY);
+        StringBuilder query = new StringBuilder(BASE_FAMILY_SELECT_FIELDS);
+        query.append("FROM (SELECT f.* FROM ug_family f ");
+
         StringBuilder whereClause = new StringBuilder();
 
         if (StringUtils.isNotBlank(criteria.getTenantId())) {
@@ -156,6 +162,12 @@ public class FamilyQueryBuilder {
             preparedStmtList.add(criteria.getStatus().name());
         }
 
+        if (StringUtils.isNotBlank(criteria.getFamilyType())) {
+            addClause(whereClause);
+            whereClause.append("f.family_type = ? ");
+            preparedStmtList.add(criteria.getFamilyType());
+        }
+
         if (StringUtils.isNotBlank(criteria.getMemberUserUuid())) {
             addClause(whereClause);
             whereClause.append("f.family_id IN (SELECT family_id FROM ug_family_member WHERE user_uuid = ? AND active = true) ");
@@ -185,7 +197,11 @@ public class FamilyQueryBuilder {
                 ? criteria.getOffset()
                 : configuration.getDefaultOffset();
 
-        query.append("LIMIT ? OFFSET ? ");
+        query.append("LIMIT ? OFFSET ?) f ")
+             .append("LEFT JOIN ug_family_member m ON f.family_id = m.family_id ")
+             .append("LEFT JOIN ug_family_document d ON f.family_id = d.family_id ")
+             .append("ORDER BY f.created_time DESC, m.created_time ASC ");
+
         preparedStmtList.add(limit);
         preparedStmtList.add(offset);
 

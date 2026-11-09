@@ -246,6 +246,7 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 .familyId(original.getFamilyId())
                 .tenantId(original.getTenantId())
                 .status(original.getStatus())
+                .familyType(original.getFamilyType())
                 .headUserUuid(original.getHeadUserUuid())
                 .category(original.getCategory())
                 .members(sanitizedMembers)

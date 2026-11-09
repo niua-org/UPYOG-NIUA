@@ -50,7 +50,7 @@ public class ProfileResyncAndScdSecurityTest {
         private ProfileValidatorImpl validator;
 
         @BeforeEach
-        public void setUp() {
+        public void setUp() throws Exception {
             validator = new ProfileValidatorImpl();
         }
 
@@ -146,10 +146,12 @@ public class ProfileResyncAndScdSecurityTest {
         private AddressServiceImpl addressService;
 
         @BeforeEach
-        public void setUp() {
+        public void setUp() throws Exception {
             addressService = new AddressServiceImpl(addressRepository, userRepository, encryptionDecryptionUtil, fileStoreRepository);
             lenient().when(encryptionDecryptionUtil.encryptObject(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
             lenient().when(encryptionDecryptionUtil.decryptObject(any(), any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+            lenient().when(fileStoreRepository.getUrlByFileStoreId(any(), any()))
+                    .thenAnswer(inv -> Collections.singletonMap(String.valueOf(inv.getArgument(1, List.class).get(0)), "http://filestore/url"));
         }
 
         @Test
@@ -180,6 +182,7 @@ public class ProfileResyncAndScdSecurityTest {
                     .pinCode("143001")
                     .landmark("Near Park")
                     .tenantId("pb.amritsar")
+                    .filestoreId("filestore-addr-proof-1")
                     .build();
 
             when(userRepository.getUuidByUserId(1L)).thenReturn("user-1");
@@ -226,6 +229,7 @@ public class ProfileResyncAndScdSecurityTest {
                     .pinCode("143001")
                     .landmark("Near Metro")
                     .tenantId("pb.amritsar")
+                    .filestoreId("filestore-addr-proof-1")
                     .build();
 
             when(userRepository.getUuidByUserId(1L)).thenReturn("user-1");
@@ -317,7 +321,7 @@ public class ProfileResyncAndScdSecurityTest {
         private UserDocumentServiceImpl documentService;
 
         @BeforeEach
-        public void setUp() {
+        public void setUp() throws Exception {
             documentService = new UserDocumentServiceImpl(documentRepository, userRepository, fileStoreRepository);
         }
 
@@ -402,7 +406,7 @@ public class ProfileResyncAndScdSecurityTest {
         private MobileAuthStrategy mobileAuthStrategy;
 
         @BeforeEach
-        public void setUp() {
+        public void setUp() throws Exception {
             org.egov.user.config.UserConfiguration userConfig = org.egov.user.config.UserConfiguration.builder()
                     .citizenLoginPasswordOtpFixedEnabled(false)
                     .otpMaxInvalidAttempts(3)

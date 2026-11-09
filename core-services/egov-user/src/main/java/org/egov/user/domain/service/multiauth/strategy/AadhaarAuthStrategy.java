@@ -297,10 +297,11 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         // Auto-create verified citizen
         log.info("[AADHAAR-AUTH-STRATEGY] No profile matched for verified Aadhaar. Auto-provisioning verified citizen account.");
 
-        boolean hasMobile = StringUtils.isNotBlank(mobileNumber);
-        String baseUsername = hasMobile
-                ? mobileNumber
-                : (UserConstants.CITIZEN_USERNAME_PREFIX + UUID.randomUUID().toString().substring(0, 8));
+        if (StringUtils.isBlank(mobileNumber)) {
+            mobileNumber = generateUniqueRandomMobile(stateTenant, request.getRequestInfo());
+        }
+
+        String baseUsername = mobileNumber;
         String username = !userRepository.isUserPresent(baseUsername, stateTenant, UserType.CITIZEN)
                 ? baseUsername
                 : baseUsername + "_" + UUID.randomUUID().toString().substring(0, 8);
@@ -312,7 +313,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         User newUser = User.builder()
                 .username(username)
                 .name(citizenName)
-                .mobileNumber(hasMobile ? mobileNumber : null)
+                .mobileNumber(mobileNumber)
                 .gender(eKyc.getGender())
                 .dob(eKyc.getDob())
                 .aadhaarNumber(fullAadhaar)
@@ -326,7 +327,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 .type(UserType.CITIZEN)
                 .active(true)
                 .roles(Collections.singleton(Role.getCitizenRole()))
-                .mobileValidationMandatory(hasMobile)
+                .mobileValidationMandatory(false)
                 .otpValidationMandatory(false)
                 .build();
 
@@ -485,10 +486,6 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             masked = "XXXXXXXX" + (StringUtils.isNotBlank(refId) && refId.length() >= 4
                     ? refId.substring(refId.length() - 4) : "1234");
         }
-        String digitsOnly = rawAadhaar != null ? rawAadhaar.replaceAll("[^0-9]", "") : "";
-        String mockMobile = digitsOnly.length() >= 10
-                ? digitsOnly.substring(digitsOnly.length() - 10)
-                : "9999999999";
         String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
         return VerifiedAadhaarDemographics.builder()
                 .fullAadhaarNumber(fullAadhaar)
@@ -496,7 +493,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 .name(DEFAULT_AADHAAR_CITIZEN_NAME)
                 .gender(Gender.MALE)
                 .dob(parseDob("1990-01-01"))
-                .mobileNumber(mockMobile)
+                .mobileNumber(null)
                 .build();
     }
 
@@ -686,6 +683,46 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
             return tenantId.split("\\.")[0];
         }
         return tenantId;
+    }
+
+    /**
+     * Generates a unique 10-digit Indian mobile number that does not exist in eg_user database.
+     *
+     * @param stateTenant state tenant ID
+     * @param requestInfo request context
+     * @return unique 10-digit mobile number
+     */
+    private String generateUniqueRandomMobile(String stateTenant, RequestInfo requestInfo) {
+        for (int i = 0; i < 5; i++) {
+            String candidate = AadhaarNumberUtils.generateRandomIndianMobileNumber();
+            if (!isMobileInDatabase(candidate, stateTenant, requestInfo)) {
+                log.info("[AADHAAR-AUTH-STRATEGY] Generated unique random mobile number for verified citizen creation: {}",
+                        MaskUtils.maskMobile(candidate));
+                return candidate;
+            }
+        }
+        return AadhaarNumberUtils.generateRandomIndianMobileNumber();
+    }
+
+    /**
+     * Checks if a candidate mobile number already exists in the database for the given tenant.
+     *
+     * @param mobile candidate 10-digit mobile number
+     * @param stateTenant state tenant identifier
+     * @param requestInfo request context
+     * @return true if the mobile exists in eg_user, false otherwise
+     */
+    private boolean isMobileInDatabase(String mobile, String stateTenant, RequestInfo requestInfo) {
+        try {
+            if (userRepository.isUserPresent(mobile, stateTenant, UserType.CITIZEN)) {
+                return true;
+            }
+            List<User> existing = findUsersByMobile(mobile, stateTenant, requestInfo);
+            return !CollectionUtils.isEmpty(existing);
+        } catch (Exception e) {
+            log.warn("[AADHAAR-AUTH-STRATEGY] Non-blocking: Error checking candidate mobile: {}", e.getMessage());
+            return false;
+        }
     }
 
     @Getter

@@ -97,6 +97,9 @@ public class FamilyServiceImpl implements FamilyService {
         String familyId = idGenRepository.generateFamilyId(requestInfo, family.getTenantId());
         family.setFamilyId(familyId);
         family.setStatus(FamilyStatus.ACTIVE);
+        if (StringUtils.isBlank(family.getFamilyType())) {
+            family.setFamilyType(FamilyConstants.TYPE_UPYOG_INTERNAL);
+        }
 
         // 2. Enrich Audit Details
         AuditDetails auditDetails = AuditDetails.builder()
@@ -393,6 +396,7 @@ public class FamilyServiceImpl implements FamilyService {
                 .tenantId(request.getTenantId())
                 .headUserUuid(request.getNewFamilyHeadUserUuid())
                 .status(FamilyStatus.ACTIVE)
+                .familyType(parentFamily.getFamilyType() != null ? parentFamily.getFamilyType() : FamilyConstants.TYPE_UPYOG_INTERNAL)
                 .category(parentFamily.getCategory())
                 .members(splittingMembers)
                 .documents(request.getDocuments() != null ? request.getDocuments() : new ArrayList<>())
@@ -491,6 +495,9 @@ public class FamilyServiceImpl implements FamilyService {
         kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, mergingFamily));
 
         // Update surviving family with designated common HoF via Kafka persister
+        if (StringUtils.isBlank(survivingFamily.getFamilyType())) {
+            survivingFamily.setFamilyType(FamilyConstants.TYPE_UPYOG_INTERNAL);
+        }
         survivingFamily.setHeadUserUuid(request.getCommonHeadUserUuid());
         for (FamilyMember m : survivingFamily.getMembers()) {
             if (StringUtils.isBlank(m.getId())) {
@@ -543,6 +550,12 @@ public class FamilyServiceImpl implements FamilyService {
                 .distinct()
                 .collect(Collectors.toList());
 
+        for (Family f : families) {
+            if (StringUtils.isNotBlank(f.getHeadUserUuid()) && !allMemberUuids.contains(f.getHeadUserUuid())) {
+                allMemberUuids.add(f.getHeadUserUuid());
+            }
+        }
+
         if (allMemberUuids.isEmpty()) {
             return;
         }
@@ -556,6 +569,10 @@ public class FamilyServiceImpl implements FamilyService {
                     }
                 }
                 family.enrichHeadName();
+            }
+            if (StringUtils.isBlank(family.getHeadName()) && StringUtils.isNotBlank(family.getHeadUserUuid())
+                    && profileMap.containsKey(family.getHeadUserUuid()) && profileMap.get(family.getHeadUserUuid()) != null) {
+                family.setHeadName(profileMap.get(family.getHeadUserUuid()).getName());
             }
         }
     }

@@ -85,6 +85,9 @@ public final class UserConstants {
     public static final String ERROR_INVALID_SEARCH_CRITERIA = "INVALID_SEARCH_CRITERIA";
     public static final String ERROR_USER_UUID_REQUIRED = "USER_UUID_REQUIRED";
     public static final String ERROR_INVALID_REQUEST = "INVALID_REQUEST";
+    public static final String ERROR_FAMILY_NOT_SUPPORTED = "FAMILY_NOT_SUPPORTED";
+    public static final String ERROR_OPERATION_NOT_ALLOWED = "OPERATION_NOT_ALLOWED";
+    public static final String MDMS_MASTER_FAMILY_CONFIGURATION = "FamilyConfiguration";
     public static final String ERROR_INVALID_TENANT_ID = "INVALID_TENANT_ID";
     public static final String ERROR_INVALID_AADHAAR_IDENTIFIER = "INVALID_AADHAAR_IDENTIFIER";
     public static final String ERROR_AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
@@ -121,6 +124,7 @@ public final class UserConstants {
     public static final String UG_USER_ADDRESS_LANDMARK_MANDATORY = "UG_USER_ADDRESS_LANDMARK_MANDATORY";
     public static final String UG_USER_ADDRESS_PIN_CODE_MANDATORY = "UG_USER_ADDRESS_PIN_CODE_MANDATORY";
     public static final String UG_USER_ADDRESS_TYPE_MANDATORY = "UG_USER_ADDRESS_TYPE_MANDATORY";
+    public static final String UG_USER_ADDRESS_FILESTORE_ID_MANDATORY = "UG_USER_ADDRESS_FILESTORE_ID_MANDATORY";
 
     // Address Non-Editable Fields
     public static final String UG_USER_ADDRESS_NON_EDITABLE_CITY = "UG_USER_ADDRESS_NON_EDITABLE_CITY";
@@ -193,6 +197,7 @@ public final class UserConstants {
     public static final String MSG_PIN_CODE_MANDATORY = "Pin Code is mandatory for address creation.";
     public static final String MSG_ADDRESS_TYPE_MANDATORY = "Address Type is mandatory for address creation.";
     public static final String MSG_INVALID_ADDRESS_TYPE = "Address type is not valid according to configured master data.";
+    public static final String MSG_ADDRESS_FILESTORE_ID_MANDATORY = "Address Proof is mandatory for address creation.";
 
     // Section 8 Non-Editable Field Modification Messages
     public static final String MSG_NON_EDITABLE_MOBILE = "Mobile Number is non-editable and cannot be changed.";

@@ -36,8 +36,15 @@ public final class FamilyConstants {
     public static final String STATUS_READY_FOR_JIT = "READY_FOR_JIT_PROVISION";
 
     // ==========================================
+    // Family Types
+    // ==========================================
+    public static final String TYPE_UPYOG_INTERNAL = "UPYOG_INTERNAL";
+    public static final String TYPE_STATE_REGISTRY = "STATE_REGISTRY";
+
+    // ==========================================
     // Member Relationships with HoF
     // ==========================================
+    public static final String RELATIONSHIP_SELF = "SELF";
     public static final String RELATIONSHIP_HEAD = "HEAD";
     public static final String RELATIONSHIP_SPOUSE = "SPOUSE";
     public static final String RELATIONSHIP_SON = "SON";
@@ -80,6 +87,7 @@ public final class FamilyConstants {
     public static final String MDMS_MODULE_COMMON_MASTERS = "common-masters";
     public static final String MDMS_MASTER_FAMILY_RELATIONSHIP = "FamilyRelationship";
     public static final String MDMS_MASTER_FAMILY_CATEGORY = "FamilyCategory";
+    public static final String MDMS_MASTER_FAMILY_CONFIGURATION = "FamilyConfiguration";
 
     // ==========================================
     // Prefixes & Sources
@@ -94,6 +102,8 @@ public final class FamilyConstants {
     // Error Codes
     // ==========================================
     public static final String ERROR_INVALID_REQUEST = "INVALID_REQUEST";
+    public static final String ERROR_FAMILY_NOT_SUPPORTED = "FAMILY_NOT_SUPPORTED";
+    public static final String ERROR_OPERATION_NOT_ALLOWED = "OPERATION_NOT_ALLOWED";
     public static final String ERROR_FAMILY_NOT_FOUND = "FAMILY_NOT_FOUND";
     public static final String ERROR_HEAD_OF_FAMILY_REQUIRED = "HEAD_OF_FAMILY_REQUIRED";
     public static final String ERROR_DUPLICATE_HEAD = "DUPLICATE_HEAD_OF_FAMILY";

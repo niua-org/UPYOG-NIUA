@@ -66,6 +66,12 @@ public class AadhaarVerificationResponse {
     private String maskedMobile;
 
     /**
+     * 10-digit mobile number associated with the citizen.
+     */
+    @JsonProperty("mobileNumber")
+    private String mobileNumber;
+
+    /**
      * Boolean indicator stating whether Aadhaar verification succeeded.
      */
     @JsonProperty("isVerified")

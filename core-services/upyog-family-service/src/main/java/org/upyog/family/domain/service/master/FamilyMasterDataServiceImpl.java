@@ -41,7 +41,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     private final FamilyConfiguration configuration;
 
     private static final Set<String> DEFAULT_RELATIONSHIPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            FamilyConstants.RELATIONSHIP_HEAD, FamilyConstants.RELATIONSHIP_SPOUSE, FamilyConstants.RELATIONSHIP_SON,
+            FamilyConstants.RELATIONSHIP_SELF, FamilyConstants.RELATIONSHIP_HEAD, FamilyConstants.RELATIONSHIP_SPOUSE, FamilyConstants.RELATIONSHIP_SON,
             FamilyConstants.RELATIONSHIP_DAUGHTER, FamilyConstants.RELATIONSHIP_CHILD, FamilyConstants.RELATIONSHIP_FATHER,
             FamilyConstants.RELATIONSHIP_MOTHER, FamilyConstants.RELATIONSHIP_BROTHER, FamilyConstants.RELATIONSHIP_SISTER,
             FamilyConstants.RELATIONSHIP_GRANDFATHER, FamilyConstants.RELATIONSHIP_GRANDMOTHER, FamilyConstants.RELATIONSHIP_GRANDSON,

@@ -65,6 +65,9 @@ class RequesterDxClientImplTest {
 
         boolean mockOtpResult = client.verifyConsentToken("MOCK-OTP-9999", "user-1", "FAM-001", "pg.citya", requestInfo);
         assertFalse(mockOtpResult, "MOCK-OTP- token must be rejected when mockConsentEnabled is false");
+
+        boolean txnMockResult = client.verifyConsentToken("TXN-MOCK-12345", "user-1", "FAM-001", "pg.citya", requestInfo);
+        assertFalse(txnMockResult, "TXN-MOCK- token must be rejected when mockConsentEnabled is false");
     }
 
     @Test
@@ -74,6 +77,9 @@ class RequesterDxClientImplTest {
 
         boolean result = client.verifyConsentToken("CONSENT-VERIFIED-TEST", "user-1", "FAM-001", "pg.citya", requestInfo);
         assertTrue(result, "Mock token should pass when mockConsentEnabled is explicitly true");
+
+        boolean txnMockResult = client.verifyConsentToken("TXN-MOCK-TEST", "user-1", "FAM-001", "pg.citya", requestInfo);
+        assertTrue(txnMockResult, "TXN-MOCK token should pass when mockConsentEnabled is explicitly true");
     }
 
     @Test

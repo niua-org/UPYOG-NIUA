@@ -78,6 +78,12 @@ public class Family {
     private FamilyStatus status;
 
     /**
+     * Identifies the type of family unit: UPYOG_INTERNAL (native) or STATE_REGISTRY (state-synced e.g. Haryana PPP).
+     */
+    @JsonProperty("familyType")
+    private String familyType;
+
+    /**
      * Dynamic extensible JSON metadata (e.g. address details, state sync identifiers, ration card numbers).
      */
     @JsonProperty("additionalDetails")

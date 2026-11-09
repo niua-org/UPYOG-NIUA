@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.upyog.family.domain.service.config.FamilyConfigurationService;
 import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
@@ -24,15 +25,28 @@ import org.upyog.family.web.contract.LeaveFamilyRequest;
 public class LeaveFamilyValidator {
 
     private final UserClient userClient;
+    private final FamilyConfigurationService familyConfigurationService;
 
     /**
-     * Constructs a LeaveFamilyValidator with the required UserClient dependency.
+     * Constructs a LeaveFamilyValidator with the required UserClient and FamilyConfigurationService dependencies.
+     *
+     * @param userClient client for user profile lookups and identity verification
+     * @param familyConfigurationService service validating state family configuration policy
+     */
+    @Autowired
+    public LeaveFamilyValidator(UserClient userClient,
+                                @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
+        this.userClient = userClient;
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    /**
+     * Backward-compatible constructor without dynamic family configuration.
      *
      * @param userClient client for user profile lookups and identity verification
      */
-    @Autowired
     public LeaveFamilyValidator(UserClient userClient) {
-        this.userClient = userClient;
+        this(userClient, null);
     }
 
     /**
@@ -50,6 +64,11 @@ public class LeaveFamilyValidator {
 
         // Ensure caller is identity-verified in user registry database
         userClient.validateCallerIsVerified(request.getRequestInfo());
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), request.getTenantId());
+        }
 
         if (existingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,

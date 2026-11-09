@@ -15,6 +15,7 @@ import org.springframework.util.CollectionUtils;
 import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.model.MemberStatus;
 import org.upyog.family.domain.service.StateFamilySyncService;
+import org.upyog.family.domain.service.config.FamilyConfigurationService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.StateFamilySyncRepository;
 import org.upyog.family.util.FamilyConstants;
@@ -54,6 +55,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
     private final FamilyRepository familyRepository;
     private final ResponseInfoFactory responseInfoFactory;
     private final ObjectMapper objectMapper;
+    private final FamilyConfigurationService familyConfigurationService;
 
     /**
      * Constructs a StateFamilySyncServiceImpl with default Jackson ObjectMapper.
@@ -65,7 +67,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
     public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
                                       FamilyRepository familyRepository,
                                       ResponseInfoFactory responseInfoFactory) {
-        this(stateFamilySyncRepository, familyRepository, responseInfoFactory, new ObjectMapper());
+        this(stateFamilySyncRepository, familyRepository, responseInfoFactory, new ObjectMapper(), null);
     }
 
     /**
@@ -76,15 +78,33 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
      * @param responseInfoFactory factory creating standard UPYOG response headers
      * @param objectMapper Jackson ObjectMapper for JSON mapping
      */
-    @Autowired
     public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
                                       FamilyRepository familyRepository,
                                       ResponseInfoFactory responseInfoFactory,
                                       ObjectMapper objectMapper) {
+        this(stateFamilySyncRepository, familyRepository, responseInfoFactory, objectMapper, null);
+    }
+
+    /**
+     * Constructs a StateFamilySyncServiceImpl with all dependencies including FamilyConfigurationService.
+     *
+     * @param stateFamilySyncRepository repository for staging state family registry payloads
+     * @param familyRepository repository for UPYOG family persistence and exclusivity queries
+     * @param responseInfoFactory factory creating standard UPYOG response headers
+     * @param objectMapper Jackson ObjectMapper for JSON mapping
+     * @param familyConfigurationService service validating state family configuration policy
+     */
+    @Autowired
+    public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
+                                      FamilyRepository familyRepository,
+                                      ResponseInfoFactory responseInfoFactory,
+                                      ObjectMapper objectMapper,
+                                      @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.stateFamilySyncRepository = stateFamilySyncRepository;
         this.familyRepository = familyRepository;
         this.responseInfoFactory = responseInfoFactory;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+        this.familyConfigurationService = familyConfigurationService;
     }
 
     /**
@@ -112,6 +132,11 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
         }
         if (CollectionUtils.isEmpty(stateFamily.getMembers())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_MEMBERS_LIST, "State Family must contain at least one member");
+        }
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateStateRegistryFamily(request.getRequestInfo(), stateFamily.getTenantId());
         }
 
         // Generate unique reference ID for UPYOG UI ingestion and session binding
@@ -200,6 +225,11 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
 
         log.info("[STATE-FAMILY-SYNC-SVC] Executing JIT check & provision: stateFamilyId={}, userUuid={}, tenant={}",
                 stateFamilyId, userUuid, tenantId);
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateStateRegistryFamily(request.getRequestInfo(), tenantId);
+        }
 
         // Enforce Multi-Family Exclusivity: Verify citizen is not already an active member of another family
         if (StringUtils.isNotBlank(userUuid)) {
@@ -484,6 +514,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .headUserUuid(userUuid)
                 .category(stagedStateFamily != null && StringUtils.isNotBlank(stagedStateFamily.getCategory()) ? stagedStateFamily.getCategory() : FamilyConstants.CATEGORY_GENERAL)
                 .status(FamilyStatus.ACTIVE)
+                .familyType(FamilyConstants.TYPE_STATE_REGISTRY)
                 .additionalDetails(additionalDetails)
                 .members(members)
                 .auditDetails(AuditDetails.builder()

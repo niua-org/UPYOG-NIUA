@@ -116,6 +116,15 @@ public class FamilyConfiguration {
     @Value("${family.relationship.cache.ttl}")
     private Long relationshipCacheTtl;
 
+    @Value("${family.mdms.configuration.master}")
+    private String mdmsConfigurationMaster;
+
+    @Value("${family.mdms.configuration.filter}")
+    private String mdmsConfigurationFilter;
+
+    @Value("${family.configuration.cache.ttl}")
+    private Long configurationCacheTtl;
+
     @Value("${family.kafka.create.topic}")
     private String createFamilyTopic;
 
