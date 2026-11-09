@@ -406,7 +406,15 @@ export const profileStyles = {
 /**
  * Two-column layout for the library's AddressDetails form, scoped to the address modal.
  * Kept as a CSS string because selectors (:has, sibling, media query) can't be inline styles.
-*/
+
+ * Two-column layout for the library's AddressDetails form, scoped to the address modal.
+ * Row-by-Row pairs:
+ * Col 1: Address Type   | Col 2: House No.
+ * Col 1: Street Name    | Col 2: Address Line 1
+ * Col 1: Address Line 2 | Col 2: Landmark
+ * Col 1: City           | Col 2: Locality
+ * Col 1: Pincode        | Col 2: Address Proof
+ */
 export const addressModalCss = `
   /* separator below the modal header */
   .address-modal-grid {
@@ -414,16 +422,27 @@ export const addressModalCss = `
     padding-top: 8px;
   }
 
-  /* 2 columns, 5 fields each. Both columns share the same row tracks, so rows always align.
-     Each field = label + control, hence 10 rows for 5 fields per column. */
+  /* 2 columns, row-by-row dense placement */
   .address-modal-grid div:has(> .card-label) {
     display: grid;
-    grid-auto-flow: column;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(10, auto);
+    grid-auto-flow: row dense;
     column-gap: 32px;
     align-content: start;
   }
+
+  /* Odd fields (Address Type, Street Name, Address Line 2, City, Pincode) -> Column 1 */
+  .address-modal-grid div:has(> .card-label) > *:nth-child(4n + 1),
+  .address-modal-grid div:has(> .card-label) > *:nth-child(4n + 2) {
+    grid-column: 1;
+  }
+
+  /* Even fields (House No, Address Line 1, Landmark, Locality, Address Proof) -> Column 2 */
+  .address-modal-grid div:has(> .card-label) > *:nth-child(4n + 3),
+  .address-modal-grid div:has(> .card-label) > *:nth-child(4n + 4) {
+    grid-column: 2;
+  }
+
   .address-modal-grid .card-label {
     font-size: 16px;
     margin: 0;
@@ -435,7 +454,7 @@ export const addressModalCss = `
     min-width: 0;
   }
 
-  /* rounded inputs and dropdowns (no padding on wrappers, so widths stay equal) */
+  /* rounded inputs and dropdowns */
   .address-modal-grid .employee-card-input,
   .address-modal-grid .select,
   .address-modal-grid .select-wrap {
@@ -451,9 +470,10 @@ export const addressModalCss = `
   /* mobile: single column */
   @media (max-width: 640px) {
     .address-modal-grid div:has(> .card-label) {
-      grid-auto-flow: row;
       grid-template-columns: 1fr;
-      grid-template-rows: none;
+    }
+    .address-modal-grid div:has(> .card-label) > * {
+      grid-column: 1 !important;
     }
   }
 `;
