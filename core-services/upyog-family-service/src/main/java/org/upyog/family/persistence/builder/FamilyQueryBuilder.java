@@ -1,6 +1,8 @@
 package org.upyog.family.persistence.builder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,6 +92,11 @@ public class FamilyQueryBuilder {
             + "LEFT JOIN ug_family_document d ON f.family_id = d.family_id ";
 
     @Autowired
+    /**
+     * Constructs a FamilyQueryBuilder with the injected family service configuration.
+     *
+     * @param configuration family module configuration for limits and offsets
+     */
     public FamilyQueryBuilder(FamilyConfiguration configuration) {
         this.configuration = configuration;
     }
@@ -166,6 +173,10 @@ public class FamilyQueryBuilder {
 
         query.append("ORDER BY f.created_time DESC ");
 
+        if (configuration == null || configuration.getMaxLimit() == null || configuration.getDefaultLimit() == null || configuration.getDefaultOffset() == null) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Family pagination configurations are missing");
+        }
+
         int limit = (criteria.getLimit() != null && criteria.getLimit() > 0)
                 ? Math.min(criteria.getLimit(), configuration.getMaxLimit())
                 : configuration.getDefaultLimit();
@@ -195,12 +206,24 @@ public class FamilyQueryBuilder {
                 + "WHERE m.user_uuid = ? AND m.active = true AND f.status = 'ACTIVE'";
     }
 
+    /**
+     * Appends an 'AND' keyword to the WHERE clause builder if preceding conditions already exist.
+     *
+     * @param whereClause StringBuilder accumulating WHERE conditions
+     */
     private void addClause(StringBuilder whereClause) {
         if (whereClause.length() > 0) {
             whereClause.append("AND ");
         }
     }
 
+    /**
+     * Appends an IN clause filtering families having active members matching the given list of user UUIDs.
+     *
+     * @param whereClause StringBuilder accumulating WHERE conditions
+     * @param memberUserUuids list of citizen user UUIDs to filter on
+     * @param preparedStmtList list accumulating prepared statement parameters
+     */
     private void addMemberUserUuidsClause(StringBuilder whereClause, List<String> memberUserUuids, List<Object> preparedStmtList) {
         whereClause.append("f.family_id IN (SELECT family_id FROM ug_family_member WHERE user_uuid IN (");
         for (int i = 0; i < memberUserUuids.size(); i++) {

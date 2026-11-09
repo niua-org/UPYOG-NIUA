@@ -1,0 +1,112 @@
+// Synthetic monitor and on-demand smoke job.
+// Schedule forces SERVICE=ALL. Credential ids: smoke-base-url, smoke-user-credentials.
+// SMOKE_TENANT_ID is required by SmokeConfig and is a job parameter in addition to
+// ENVIRONMENT, SERVICE, and EXPECTED_VERSION.
+
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 10, unit: 'MINUTES')
+        timestamps()
+    }
+
+    triggers {
+        parameterizedCron('H/30 * * * * %SERVICE=ALL')
+    }
+
+    parameters {
+        string(name: 'ENVIRONMENT', defaultValue: 'dev', description: 'Environment name. Not a URL.')
+        string(name: 'SERVICE', defaultValue: 'ALL', description: 'Catalog service name, or ALL.')
+        string(name: 'EXPECTED_VERSION', defaultValue: '', description: 'Optional. Version equality runs only when this is set and versionPath is confirmed.')
+        string(name: 'SMOKE_TENANT_ID', defaultValue: '', description: 'Required by SmokeConfig. Smoke tenant code, not a secret URL.')
+    }
+
+    stages {
+        stage('checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('wait for health') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'smoke-base-url', variable: 'BASE_URL'),
+                    usernamePassword(credentialsId: 'smoke-user-credentials', usernameVariable: 'SMOKE_USER', passwordVariable: 'SMOKE_PASSWORD')
+                ]) {
+                    sh '''
+                        set -eu
+                        if [ -z "${BASE_URL}" ]; then
+                          echo "smoke-base-url did not provide BASE_URL"
+                          exit 1
+                        fi
+                        echo "Waiting up to 90s for BASE_URL to accept a connection"
+                        deadline=$((SECONDS + 90))
+                        ok=0
+                        while [ "${SECONDS}" -lt "${deadline}" ]; do
+                          code=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 10 "${BASE_URL}" || true)
+                          if [ -n "${code}" ] && [ "${code}" != "000" ]; then
+                            ok=1
+                            echo "BASE_URL responded with HTTP ${code}"
+                            break
+                          fi
+                          sleep 5
+                        done
+                        if [ "${ok}" != "1" ]; then
+                          echo "BASE_URL did not respond within 90s"
+                          exit 1
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('mvn -Psmoke verify') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'smoke-base-url', variable: 'BASE_URL'),
+                    usernamePassword(credentialsId: 'smoke-user-credentials', usernameVariable: 'SMOKE_USER', passwordVariable: 'SMOKE_PASSWORD')
+                ]) {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        sh '''
+                            set -eu
+                            if [ -z "${SMOKE_TENANT_ID}" ]; then
+                              echo "SMOKE_TENANT_ID is required"
+                              exit 1
+                            fi
+                            if [ -f pom.xml ]; then
+                              MOD=.
+                            elif [ -f core-smoke-tests/pom.xml ]; then
+                              MOD=core-smoke-tests
+                            elif [ -f core-services/core-smoke-tests/pom.xml ]; then
+                              MOD=core-services/core-smoke-tests
+                            else
+                              echo "core-smoke-tests/pom.xml not found"
+                              exit 1
+                            fi
+                            export ENVIRONMENT SERVICE EXPECTED_VERSION SMOKE_TENANT_ID BASE_URL SMOKE_USER SMOKE_PASSWORD
+                            cd "${MOD}"
+                            mvn -B -Psmoke verify -Dservice="${SERVICE:-ALL}"
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('publish JUnit') {
+            steps {
+                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml,**/target/failsafe-reports/*.xml'
+            }
+        }
+    }
+
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml,**/target/failsafe-reports/*.xml'
+        }
+        failure {
+            echo 'core-smoke-tests failed. core-services/Jenkinsfile has no notification step (it only calls ci-libs buildPipeline), so this job records the failure here instead of sending mail or chat.'
+        }
+    }
+}

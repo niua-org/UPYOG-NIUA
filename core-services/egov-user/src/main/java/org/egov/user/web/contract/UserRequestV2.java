@@ -122,25 +122,25 @@ public class UserRequestV2 {
 
     private Boolean isIdentityVerified;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date identityVerifiedDate;
 
     private String identityVerifiedSource;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastResyncDate;
 
     private Integer edittedCount;
     private String lastLoginMethod;
 
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date createdDate;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastModifiedDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DOB)
     private Date dob;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date pwdExpiryDate;
 
     /**

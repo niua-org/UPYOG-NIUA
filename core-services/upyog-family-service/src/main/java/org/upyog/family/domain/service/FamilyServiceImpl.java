@@ -111,19 +111,39 @@ public class FamilyServiceImpl implements FamilyService {
             family.setId(UUID.randomUUID().toString());
         }
 
-        for (FamilyMember member : family.getMembers()) {
-            if (StringUtils.isBlank(member.getId())) {
-                member.setId(UUID.randomUUID().toString());
+        List<FamilyMember> members = family.getMembers();
+        if (members != null && !members.isEmpty()) {
+            int unassignedCount = (int) members.stream()
+                    .filter(m -> StringUtils.isBlank(m.getId()))
+                    .count();
+            List<String> generatedMemberIds = Collections.emptyList();
+            if (unassignedCount > 0 && idGenRepository != null) {
+                try {
+                    generatedMemberIds = idGenRepository.generateMemberIds(requestInfo, family.getTenantId(), unassignedCount);
+                } catch (Exception e) {
+                    log.warn("[UPYOG-FAMILY-SERVICE] IdGen failed to generate member IDs, falling back to UUID: {}", e.getMessage());
+                }
             }
-            member.setFamilyId(familyId);
-            member.setTenantId(family.getTenantId());
-            if (member.getActive() == null) {
-                member.setActive(true);
+            int memberIdIdx = 0;
+            for (FamilyMember member : members) {
+                if (StringUtils.isBlank(member.getId())) {
+                    if (generatedMemberIds != null && memberIdIdx < generatedMemberIds.size()
+                            && StringUtils.isNotBlank(generatedMemberIds.get(memberIdIdx))) {
+                        member.setId(generatedMemberIds.get(memberIdIdx++));
+                    } else {
+                        member.setId(UUID.randomUUID().toString());
+                    }
+                }
+                member.setFamilyId(familyId);
+                member.setTenantId(family.getTenantId());
+                if (member.getActive() == null) {
+                    member.setActive(true);
+                }
+                if (member.getEffectiveFrom() == null) {
+                    member.setEffectiveFrom(now);
+                }
+                member.setAuditDetails(auditDetails);
             }
-            if (member.getEffectiveFrom() == null) {
-                member.setEffectiveFrom(now);
-            }
-            member.setAuditDetails(auditDetails);
         }
 
         if (family.getDocuments() != null) {
@@ -345,9 +365,26 @@ public class FamilyServiceImpl implements FamilyService {
 
         // 2. Create new child family unit via Kafka persister
         String newFamilyId = idGenRepository.generateFamilyId(requestInfo, request.getTenantId());
+        int unassignedSplitCount = (int) splittingMembers.stream()
+                .filter(m -> StringUtils.isBlank(m.getId()))
+                .count();
+        List<String> generatedSplitMemberIds = Collections.emptyList();
+        if (unassignedSplitCount > 0 && idGenRepository != null) {
+            try {
+                generatedSplitMemberIds = idGenRepository.generateMemberIds(requestInfo, request.getTenantId(), unassignedSplitCount);
+            } catch (Exception e) {
+                log.warn("[UPYOG-FAMILY-SERVICE] IdGen failed to generate split member IDs, falling back to UUID: {}", e.getMessage());
+            }
+        }
+        int splitMemberIdIdx = 0;
         for (FamilyMember m : splittingMembers) {
             if (StringUtils.isBlank(m.getId())) {
-                m.setId(UUID.randomUUID().toString());
+                if (generatedSplitMemberIds != null && splitMemberIdIdx < generatedSplitMemberIds.size()
+                        && StringUtils.isNotBlank(generatedSplitMemberIds.get(splitMemberIdIdx))) {
+                    m.setId(generatedSplitMemberIds.get(splitMemberIdIdx++));
+                } else {
+                    m.setId(UUID.randomUUID().toString());
+                }
             }
         }
         Family childFamily = Family.builder()
@@ -515,9 +552,10 @@ public class FamilyServiceImpl implements FamilyService {
             if (family.getMembers() != null) {
                 for (FamilyMember member : family.getMembers()) {
                     if (profileMap.containsKey(member.getUserUuid())) {
-                        member.setCitizenDetails(profileMap.get(member.getUserUuid()));
+                        member.enrichFromCitizenProfile(profileMap.get(member.getUserUuid()));
                     }
                 }
+                family.enrichHeadName();
             }
         }
     }

@@ -26,7 +26,8 @@ groq_client = None
 from services.chat_handlers import (
     resolve_auth_and_profile,
     dispatch_chat_request,
-    build_chat_error_response
+    build_chat_error_response,
+    detect_active_workflow
 )
 
 
@@ -145,8 +146,12 @@ def chat():
         logger.info(f"Query: '{user_input}' | Lang: {user_language} | Script: {detected_script}")
         logger.info(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-        # 6. Hard-block check for out-of-domain topics
-        if is_hard_blocked(user_input):
+        # 6. Hard-block check for out-of-domain topics (only when NOT actively filling a workflow form)
+        phone = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
+        active_wf = detect_active_workflow(phone, workflows)
+        has_active_wf = bool(active_wf)
+
+        if not has_active_wf and is_hard_blocked(user_input):
             logger.info(f"[CHAT FLOW] Query hard-blocked for out-of-domain topic.")
             sys_blocked = _SYSTEM_CONFIG.get("system_messages", {}).get("blocked", {})
             msg = (sys_blocked.get("response_hi", "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।")

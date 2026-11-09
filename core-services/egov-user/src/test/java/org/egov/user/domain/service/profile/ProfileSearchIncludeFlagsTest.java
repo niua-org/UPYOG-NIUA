@@ -13,6 +13,7 @@ import org.egov.user.domain.service.address.AddressService;
 import org.egov.user.domain.service.document.UserDocumentService;
 import org.egov.user.domain.service.identity.IdentityVerificationService;
 import org.egov.user.domain.service.profile.validator.ProfileValidator;
+import org.egov.user.domain.service.profile.validator.ProfileValidatorImpl;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.AddressRepository;
@@ -138,9 +139,10 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertEquals("Rohan Sharma", results.get(0).getName());
-        assertNull(results.get(0).getAddresses());
-        assertNull(results.get(0).getDocuments());
+        User result = results.get(0);
+        assertEquals("Rohan Sharma", result.getName());
+        assertNull(result.getAddresses());
+        assertNull(result.getDocuments());
 
         verify(addressService, never()).searchAddress(any(), any());
         verify(userDocumentService, never()).searchDocuments(any(), any());
@@ -226,6 +228,68 @@ public class ProfileSearchIncludeFlagsTest {
     }
 
     @Test
+    @DisplayName("Should serialize user in ProfileResponse as a JSON List of users")
+    public void testProfileResponseSerializesUserAsList() throws Exception {
+        User user = createSampleUser("uuid-single-obj");
+        UserSearchResponseContent content = new UserSearchResponseContent(user, Collections.singleton(ProfileIncludeEntity.PROFILE));
+
+        ProfileResponse response = ProfileResponse.builder()
+                .user(Collections.singletonList(content))
+                .build();
+
+        assertNotNull(response.getUser());
+        assertEquals("uuid-single-obj", response.getUser().get(0).getUuid());
+
+        String json = objectMapper.writeValueAsString(response);
+        // Ensure "user" is serialized as a list/array [{...}]
+        assertTrue(json.contains("\"user\":["), "Response JSON must format 'user' as a list/array");
+    }
+
+    @Test
+    @DisplayName("Should deserialize ProfileSearchRequest with string uuid and reject array uuid")
+    public void testProfileSearchRequestDeserialization_StringAndSingleListUuid() throws Exception {
+        String jsonStringUuid = "{\"tenantId\":\"pg.citya\",\"uuid\":\"uuid-plain-string\"}";
+        ProfileSearchRequest req1 = objectMapper.readValue(jsonStringUuid, ProfileSearchRequest.class);
+        assertEquals("uuid-plain-string", req1.getUuid());
+        assertFalse(req1.isMultipleUuidsProvided());
+
+        String jsonArrayUuid = "{\"tenantId\":\"pg.citya\",\"uuid\":[\"uuid-single-in-array\"]}";
+        ProfileSearchRequest req2 = objectMapper.readValue(jsonArrayUuid, ProfileSearchRequest.class);
+        assertTrue(req2.isMultipleUuidsProvided());
+
+        ProfileValidatorImpl validator = new ProfileValidatorImpl(null);
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateSearch(req2));
+        assertEquals(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, ex.getCode());
+        assertEquals(UserConstants.MSG_MULTIPLE_USERS_SEARCH_NOT_SUPPORTED, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should reject search when JSON contains multiple UUIDs in uuid array")
+    public void testProfileSearchRequestDeserialization_MultipleUuidsFailsValidation() throws Exception {
+        String jsonMultipleUuids = "{\"tenantId\":\"pg.citya\",\"uuid\":[\"uuid-1\",\"uuid-2\"]}";
+        ProfileSearchRequest req = objectMapper.readValue(jsonMultipleUuids, ProfileSearchRequest.class);
+        assertTrue(req.isMultipleUuidsProvided());
+
+        ProfileValidatorImpl validator = new ProfileValidatorImpl(null);
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateSearch(req));
+        assertEquals(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, ex.getCode());
+        assertEquals(UserConstants.MSG_MULTIPLE_USERS_SEARCH_NOT_SUPPORTED, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should reject search when JSON contains userIDs or userIds")
+    public void testProfileSearchRequestDeserialization_UserIdsFailsValidation() throws Exception {
+        String jsonUserIds = "{\"tenantId\":\"pg.citya\",\"userIDs\":[101]}";
+        ProfileSearchRequest req = objectMapper.readValue(jsonUserIds, ProfileSearchRequest.class);
+        assertTrue(req.hasUserIdCriteria());
+
+        ProfileValidatorImpl validator = new ProfileValidatorImpl(null);
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateSearch(req));
+        assertEquals(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, ex.getCode());
+        assertEquals(UserConstants.MSG_USER_ID_SEARCH_NOT_SUPPORTED, ex.getMessage());
+    }
+
+    @Test
     @DisplayName("Should support 'include' when deserializing ProfileSearchRequest")
     public void testDeserializationWithInclude() throws Exception {
         String json = "{\n" +
@@ -265,6 +329,38 @@ public class ProfileSearchIncludeFlagsTest {
                 "}";
 
         assertThrows(Exception.class, () -> objectMapper.readValue(json, ProfileSearchRequest.class));
+    }
+
+    @Test
+    @DisplayName("Should default active to true in ProfileSearchRequest constructor, builder, and deserialization")
+    public void testProfileSearchRequest_ActiveDefaultsToTrue() throws Exception {
+        // Constructor default
+        ProfileSearchRequest req1 = new ProfileSearchRequest();
+        assertEquals(Boolean.TRUE, req1.getActive());
+
+        // Builder default
+        ProfileSearchRequest req2 = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid("uuid-123")
+                .build();
+        assertEquals(Boolean.TRUE, req2.getActive());
+
+        // Deserialization when omitted
+        String jsonWithoutActive = "{\n" +
+                "  \"tenantId\": \"pg.citya\",\n" +
+                "  \"uuid\": \"uuid-123\"\n" +
+                "}";
+        ProfileSearchRequest req3 = objectMapper.readValue(jsonWithoutActive, ProfileSearchRequest.class);
+        assertEquals(Boolean.TRUE, req3.getActive());
+
+        // Deserialization when explicitly false
+        String jsonWithActiveFalse = "{\n" +
+                "  \"tenantId\": \"pg.citya\",\n" +
+                "  \"uuid\": \"uuid-123\",\n" +
+                "  \"active\": false\n" +
+                "}";
+        ProfileSearchRequest req4 = objectMapper.readValue(jsonWithActiveFalse, ProfileSearchRequest.class);
+        assertEquals(Boolean.FALSE, req4.getActive());
     }
 
     @Test
@@ -326,57 +422,58 @@ public class ProfileSearchIncludeFlagsTest {
     }
 
     @Test
-    @DisplayName("Should execute batch enrichment in a single query avoiding N+1 problem for multiple users")
-    public void testBatchEnrichmentSolvesNPlusOneProblemForMultipleUsers() {
+    @DisplayName("Should execute address and document enrichment for single user in searchProfile")
+    public void testEnrichmentForSingleUser() {
         User u1 = createSampleUser("uuid-1").toBuilder().id(101L).build();
-        User u2 = createSampleUser("uuid-2").toBuilder().id(102L).name("User Two").build();
-        User u3 = createSampleUser("uuid-3").toBuilder().id(103L).name("User Three").build();
 
         ProfileSearchRequest request = ProfileSearchRequest.builder()
                 .tenantId("pg.citya")
-                .uuid(Arrays.asList("uuid-1", "uuid-2", "uuid-3"))
+                .uuid(Collections.singletonList("uuid-1"))
                 .include(Arrays.asList(ProfileIncludeEntity.PROFILE, ProfileIncludeEntity.ADDRESS, ProfileIncludeEntity.DOCUMENT))
                 .build();
 
-        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Arrays.asList(u1, u2, u3));
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(u1));
 
         Address addr1 = Address.builder().id(201L).city("City 1").userUuid("uuid-1").build();
-        Address addr2 = Address.builder().id(202L).city("City 2").userUuid("uuid-2").build();
-        when(addressService.searchAddress(any(), any())).thenReturn(Arrays.asList(addr1, addr2));
+        when(addressService.searchAddress(any(), any())).thenReturn(Collections.singletonList(addr1));
 
         UserDocument doc1 = UserDocument.builder().id("doc-1").documentType("IDENTITY_PROOF").userUuid("uuid-1").build();
-        UserDocument doc3 = UserDocument.builder().id("doc-3").documentType("ADDRESS_PROOF").userUuid("uuid-3").build();
-        when(userDocumentService.searchDocuments(any(), any())).thenReturn(Arrays.asList(doc1, doc3));
+        when(userDocumentService.searchDocuments(any(), any())).thenReturn(Collections.singletonList(doc1));
 
         List<User> results = profileService.searchProfile(request);
 
         assertNotNull(results);
-        assertEquals(3, results.size());
+        assertEquals(1, results.size());
+        User res1 = results.get(0);
 
-        // Verify N+1 resolution: exactly 1 batch address search and 1 batch document search called (NOT 3)
         verify(addressService, times(1)).searchAddress(any(AddressSearchCriteria.class), any());
         verify(userDocumentService, times(1)).searchDocuments(any(UserDocumentSearchCriteria.class), any());
 
-        // Verify correct mapping per user
-        User res1 = results.stream().filter(u -> "uuid-1".equals(u.getUuid())).findFirst().orElse(null);
-        User res2 = results.stream().filter(u -> "uuid-2".equals(u.getUuid())).findFirst().orElse(null);
-        User res3 = results.stream().filter(u -> "uuid-3".equals(u.getUuid())).findFirst().orElse(null);
-
-        assertNotNull(res1);
         assertNotNull(res1.getAddresses());
         assertEquals(1, res1.getAddresses().size());
         assertNotNull(res1.getDocuments());
         assertEquals(1, res1.getDocuments().size());
+    }
 
-        assertNotNull(res2);
-        assertNotNull(res2.getAddresses());
-        assertEquals(1, res2.getAddresses().size());
-        assertNull(res2.getDocuments());
+    @Test
+    @DisplayName("Should return all matched users when multiple users match in database (e.g. mobile search)")
+    public void testSearchProfileReturnsMultipleUsersWhenMatched() {
+        User u1 = createSampleUser("uuid-1").toBuilder().id(101L).build();
+        User u2 = createSampleUser("uuid-2").toBuilder().id(102L).name("User Two").build();
 
-        assertNotNull(res3);
-        assertNull(res3.getAddresses());
-        assertNotNull(res3.getDocuments());
-        assertEquals(1, res3.getDocuments().size());
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .mobileNumber("9876543210")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Arrays.asList(u1, u2));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(2, results.size());
+        assertEquals("uuid-1", results.get(0).getUuid());
+        assertEquals("uuid-2", results.get(1).getUuid());
     }
 
     @Test
@@ -439,8 +536,9 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertEquals("uuid-123", results.get(0).getUuid());
-        assertNull(results.get(0).getAddresses());
+        User result = results.get(0);
+        assertEquals("uuid-123", result.getUuid());
+        assertNull(result.getAddresses());
         assertEquals(1, errors.size());
         assertEquals("ADDRESS_ENRICHMENT_FAILED", errors.get(0).getCode());
         assertTrue(errors.get(0).getMessage().contains("Database connection timeout"));
@@ -466,8 +564,9 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertEquals("uuid-123", results.get(0).getUuid());
-        assertNull(results.get(0).getDocuments());
+        User result = results.get(0);
+        assertEquals("uuid-123", result.getUuid());
+        assertNull(result.getDocuments());
         assertEquals(1, errors.size());
         assertEquals("DOCUMENT_ENRICHMENT_FAILED", errors.get(0).getCode());
         assertTrue(errors.get(0).getMessage().contains("Filestore unavailable"));
@@ -496,10 +595,11 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertNull(results.get(0).getAddresses());
-        assertNotNull(results.get(0).getDocuments());
-        assertEquals(1, results.get(0).getDocuments().size());
-        assertEquals("AADHAAR", results.get(0).getDocuments().get(0).getDocumentType());
+        User result = results.get(0);
+        assertNull(result.getAddresses());
+        assertNotNull(result.getDocuments());
+        assertEquals(1, result.getDocuments().size());
+        assertEquals("AADHAAR", result.getDocuments().get(0).getDocumentType());
 
         assertEquals(1, errors.size());
         assertEquals("ADDRESS_ENRICHMENT_FAILED", errors.get(0).getCode());
@@ -527,10 +627,11 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertNotNull(results.get(0).getDocuments());
-        assertEquals(1, results.get(0).getDocuments().size());
-        assertEquals("1", results.get(0).getDocuments().get(0).getId());
-        assertEquals(Boolean.TRUE, results.get(0).getDocuments().get(0).getActive());
+        User result = results.get(0);
+        assertNotNull(result.getDocuments());
+        assertEquals(1, result.getDocuments().size());
+        assertEquals("1", result.getDocuments().get(0).getId());
+        assertEquals(Boolean.TRUE, result.getDocuments().get(0).getActive());
     }
 
     @Test
@@ -554,9 +655,10 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertNotNull(results.get(0).getAddresses());
-        assertEquals(1, results.get(0).getAddresses().size());
-        Address resultAddr = results.get(0).getAddresses().iterator().next();
+        User result = results.get(0);
+        assertNotNull(result.getAddresses());
+        assertEquals(1, result.getAddresses().size());
+        Address resultAddr = result.getAddresses().iterator().next();
         assertEquals(201L, resultAddr.getId());
         assertEquals("active", resultAddr.getStatus());
     }
@@ -586,18 +688,19 @@ public class ProfileSearchIncludeFlagsTest {
 
         assertNotNull(results);
         assertEquals(1, results.size());
+        User result = results.get(0);
 
         // Verify active-only addresses
-        assertNotNull(results.get(0).getAddresses());
-        assertEquals(1, results.get(0).getAddresses().size());
-        Address resultAddr = results.get(0).getAddresses().iterator().next();
+        assertNotNull(result.getAddresses());
+        assertEquals(1, result.getAddresses().size());
+        Address resultAddr = result.getAddresses().iterator().next();
         assertEquals(201L, resultAddr.getId());
         assertEquals("active", resultAddr.getStatus());
 
         // Verify active-only documents
-        assertNotNull(results.get(0).getDocuments());
-        assertEquals(1, results.get(0).getDocuments().size());
-        UserDocument resultDoc = results.get(0).getDocuments().get(0);
+        assertNotNull(result.getDocuments());
+        assertEquals(1, result.getDocuments().size());
+        UserDocument resultDoc = result.getDocuments().get(0);
         assertEquals("1", resultDoc.getId());
         assertEquals(Boolean.TRUE, resultDoc.getActive());
     }
@@ -613,17 +716,34 @@ public class ProfileSearchIncludeFlagsTest {
 
         User user = createSampleUser("uuid-123");
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
-        when(familyRestRepository.getActiveFamilyIdsByUserUuids(anyList(), anyString(), any()))
-                .thenReturn(Collections.singletonMap("uuid-123", "FAM-2024-00123"));
+        when(familyRestRepository.getActiveFamilyIdByUserUuid(eq("uuid-123"), anyString(), any()))
+                .thenReturn("FAM-2024-00123");
 
         List<User> results = profileService.searchProfile(request);
 
         assertNotNull(results);
         assertEquals(1, results.size());
-        assertEquals("FAM-2024-00123", results.get(0).getFamilyId());
+        User result = results.get(0);
+        assertEquals("FAM-2024-00123", result.getFamilyId());
 
         // Verify mapping into UserSearchResponseContent
-        UserSearchResponseContent content = new UserSearchResponseContent(results.get(0), Collections.singleton(ProfileIncludeEntity.PROFILE));
+        UserSearchResponseContent content = new UserSearchResponseContent(result, Collections.singleton(ProfileIncludeEntity.PROFILE));
         assertEquals("FAM-2024-00123", content.getFamilyId());
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no user matches in database")
+    public void testProfileSearch_WhenNoUserMatches_ReturnsEmptyList() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-nonexistent"))
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.emptyList());
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertTrue(results.isEmpty());
     }
 }

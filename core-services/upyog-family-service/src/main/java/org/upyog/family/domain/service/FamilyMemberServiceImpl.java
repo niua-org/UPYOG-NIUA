@@ -10,6 +10,7 @@ import org.upyog.family.domain.validator.AddMemberValidator;
 import org.upyog.family.domain.validator.JoinFamilyValidator;
 import org.upyog.family.domain.validator.LeaveFamilyValidator;
 import org.upyog.family.persistence.repository.FamilyRepository;
+import org.upyog.family.persistence.repository.IdGenRepository;
 import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.KafkaProducer;
@@ -60,6 +61,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     private final UserClient userClient;
     private final KafkaProducer kafkaProducer;
     private final FamilyConfiguration configuration;
+    private final IdGenRepository idGenRepository;
 
     /**
      * Constructs {@link FamilyMemberServiceImpl} with all required repository and validator dependencies.
@@ -71,6 +73,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
      * @param userClient client communicating with {@code egov-user} for demographic lookups
      * @param kafkaProducer asynchronous messaging producer for DB persistence
      * @param configuration service configuration properties
+     * @param idGenRepository idgen repository for generating formatted member IDs
      */
     @Autowired
     public FamilyMemberServiceImpl(FamilyRepository familyRepository,
@@ -79,7 +82,8 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                                   LeaveFamilyValidator leaveFamilyValidator,
                                   UserClient userClient,
                                   KafkaProducer kafkaProducer,
-                                  FamilyConfiguration configuration) {
+                                  FamilyConfiguration configuration,
+                                  @Autowired(required = false) IdGenRepository idGenRepository) {
         this.familyRepository = familyRepository;
         this.addMemberValidator = addMemberValidator;
         this.joinFamilyValidator = joinFamilyValidator;
@@ -87,6 +91,20 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         this.userClient = userClient;
         this.kafkaProducer = kafkaProducer;
         this.configuration = configuration;
+        this.idGenRepository = idGenRepository;
+    }
+
+    /**
+     * Constructs {@link FamilyMemberServiceImpl} without optional IdGenRepository for testing/backwards compatibility.
+     */
+    public FamilyMemberServiceImpl(FamilyRepository familyRepository,
+                                  AddMemberValidator addMemberValidator,
+                                  JoinFamilyValidator joinFamilyValidator,
+                                  LeaveFamilyValidator leaveFamilyValidator,
+                                  UserClient userClient,
+                                  KafkaProducer kafkaProducer,
+                                  FamilyConfiguration configuration) {
+        this(familyRepository, addMemberValidator, joinFamilyValidator, leaveFamilyValidator, userClient, kafkaProducer, configuration, null);
     }
 
     /**
@@ -153,7 +171,7 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         }
 
         if (StringUtils.isBlank(newMember.getId())) {
-            newMember.setId(UUID.randomUUID().toString());
+            newMember.setId(generateMemberIdOrDefault(requestInfo, existingFamily.getTenantId()));
         }
         newMember.setFamilyId(existingFamily.getFamilyId());
         newMember.setTenantId(existingFamily.getTenantId());
@@ -217,16 +235,16 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         Long now = System.currentTimeMillis();
 
         FamilyMember joinedMember = FamilyMember.builder()
-                .id(UUID.randomUUID().toString())
+                .id(generateMemberIdOrDefault(requestInfo, existingFamily.getTenantId()))
                 .familyId(existingFamily.getFamilyId())
                 .tenantId(existingFamily.getTenantId())
                 .userUuid(request.getApplicantUserUuid())
                 .relationshipWithHead(request.getRelationshipWithHead())
                 .isHead(false)
-                .isVerified(StringUtils.isNotBlank(request.getHofConsentOtp()))
+                .isVerified(StringUtils.isNotBlank(request.getTxnId()))
                 .active(true)
                 .status(MemberStatus.JOINED)
-                .consentToken(maskOrHashConsentToken(request.getHofConsentOtp()))
+                .consentToken(maskOrHashConsentToken(request.getTxnId()))
                 .consentDate(now)
                 .effectiveFrom(now)
                 .auditDetails(AuditDetails.builder()
@@ -310,12 +328,26 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         return existingFamily;
     }
 
+    /**
+     * Retrieves a Family aggregate by familyId and tenantId, throwing a CustomException if not found.
+     *
+     * @param familyId unique family identifier
+     * @param tenantId tenant identifier representing jurisdiction
+     * @return Family aggregate
+     * @throws CustomException if family is not found (Code: {@code FAMILY_NOT_FOUND})
+     */
     private Family getFamilyByIdAndTenant(String familyId, String tenantId) {
         return familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
                 .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
                         "Family with ID " + familyId + " not found."));
     }
 
+    /**
+     * Enriches family members with live citizen demographic data retrieved from egov-user service.
+     *
+     * @param families list of Family domain aggregates to enrich
+     * @param requestInfo UPYOG request context envelope
+     */
     private void enrichCitizenDemographics(List<Family> families, RequestInfo requestInfo) {
         if (families == null || families.isEmpty()) {
             return;
@@ -338,13 +370,41 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
             if (family.getMembers() != null) {
                 for (FamilyMember member : family.getMembers()) {
                     if (profileMap.containsKey(member.getUserUuid())) {
-                        member.setCitizenDetails(profileMap.get(member.getUserUuid()));
+                        member.enrichFromCitizenProfile(profileMap.get(member.getUserUuid()));
                     }
                 }
+                family.enrichHeadName();
             }
         }
     }
 
+    /**
+     * Resolves an IDGen-formatted member ID or falls back to standard UUID if IDGen is unconfigured or unavailable.
+     *
+     * @param requestInfo request context
+     * @param tenantId    tenant identifier
+     * @return generated member identifier
+     */
+    private String generateMemberIdOrDefault(RequestInfo requestInfo, String tenantId) {
+        if (idGenRepository != null) {
+            try {
+                String memberId = idGenRepository.generateMemberId(requestInfo, tenantId);
+                if (StringUtils.isNotBlank(memberId)) {
+                    return memberId;
+                }
+            } catch (Exception e) {
+                log.warn("[UPYOG-MEMBER-SERVICE] IdGen failed to generate member ID, falling back to UUID: {}", e.getMessage());
+            }
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    /**
+     * Sanitizes or hashes raw OTP tokens to prevent leaking plain OTP codes in persistent storage.
+     *
+     * @param token raw consent token or OTP string
+     * @return sanitized reference token or masked hash string
+     */
     private String maskOrHashConsentToken(String token) {
         if (StringUtils.isBlank(token)) {
             return null;

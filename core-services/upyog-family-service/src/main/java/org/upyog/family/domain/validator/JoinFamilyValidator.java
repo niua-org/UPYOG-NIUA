@@ -7,6 +7,7 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.RequesterDxClient;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.JoinFamilyRequest;
@@ -30,14 +31,25 @@ public class JoinFamilyValidator {
     private final FamilyRepository familyRepository;
     private final FamilyMasterDataService masterDataService;
     private final RequesterDxClient requesterDxClient;
+    private final UserClient userClient;
 
+    /**
+     * Constructs a JoinFamilyValidator with required repository, master data, DX requester, and user client dependencies.
+     *
+     * @param familyRepository repository for family persistence and query lookups
+     * @param masterDataService service for MDMS relationship validation
+     * @param requesterDxClient client for validating consent tokens against DX requester
+     * @param userClient client for user profile lookups and identity verification
+     */
     @Autowired
     public JoinFamilyValidator(FamilyRepository familyRepository,
                                FamilyMasterDataService masterDataService,
-                               RequesterDxClient requesterDxClient) {
+                               RequesterDxClient requesterDxClient,
+                               UserClient userClient) {
         this.familyRepository = familyRepository;
         this.masterDataService = masterDataService;
         this.requesterDxClient = requesterDxClient;
+        this.userClient = userClient;
     }
 
     /**
@@ -52,6 +64,11 @@ public class JoinFamilyValidator {
     public void validate(JoinFamilyRequest request, Family existingFamily) {
         log.info("[UPYOG-JOIN-FAMILY-VALIDATOR] Validating join family request: applicant={}, familyId={}",
                 request.getApplicantUserUuid(), request.getFamilyId());
+
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+        // Ensure applicant is identity-verified in user registry database
+        userClient.validateUserIsVerified(request.getApplicantUserUuid(), request.getRequestInfo());
 
         if (existingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
@@ -90,13 +107,13 @@ public class JoinFamilyValidator {
         }
 
         // Validate HoF consent / OTP authorization
-        if (StringUtils.isBlank(request.getHofConsentOtp())) {
+        if (StringUtils.isBlank(request.getTxnId())) {
             throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Head of Family authorization OTP / consent token is mandatory to join this family.");
+                    "Head of Family authorization OTP / consent transaction identifier (txnId) is mandatory to join this family.");
         }
 
         boolean consentValid = requesterDxClient.verifyConsentToken(
-                request.getHofConsentOtp(),
+                request.getTxnId(),
                 request.getApplicantUserUuid(),
                 existingFamily.getFamilyId(),
                 request.getTenantId(),

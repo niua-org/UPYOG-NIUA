@@ -8,7 +8,9 @@ import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.upyog.family.persistence.repository.UserClient;
 
 /**
  * Specialized validator validating business rules for assigning/transferring Head of Family in UPYOG.
@@ -19,6 +21,18 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class AssignHofValidator {
+
+    private final UserClient userClient;
+
+    /**
+     * Constructs an AssignHofValidator with the required UserClient dependency.
+     *
+     * @param userClient client for user profile lookups and identity verification
+     */
+    @Autowired
+    public AssignHofValidator(UserClient userClient) {
+        this.userClient = userClient;
+    }
 
     /**
      * Validates transferring Head of Family leadership in UPYOG.
@@ -31,6 +45,11 @@ public class AssignHofValidator {
      */
     public void validate(AssignHofRequest request, Family existingFamily) {
         log.info("[UPYOG-ASSIGN-HOF-VALIDATOR] Validating HoF assignment for familyId: {}", request.getFamilyId());
+
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+        // Ensure new Head of Family candidate is identity-verified in user registry database
+        userClient.validateUserIsVerified(request.getNewHeadUserUuid(), request.getRequestInfo());
 
         if (existingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,

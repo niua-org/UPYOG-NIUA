@@ -348,11 +348,31 @@ public class ProfileValidatorImpl implements ProfileValidator {
             log.error("[PROFILE-VALIDATOR] Profile search failed: request body is null");
             throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_REQUEST, "Profile search request body cannot be null");
         }
+
+        // Rejection rule 1: searching by internal userId / userIDs / id is not supported
+        if (request.hasUserIdCriteria()) {
+            log.error("[PROFILE-VALIDATOR] Profile search failed: searching by userId/userIDs/id is not supported.");
+            throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA,
+                    UserConstants.MSG_USER_ID_SEARCH_NOT_SUPPORTED);
+        }
+
+        // Rejection rule 2: searching for multiple users at one time via array of UUIDs is not supported
+        if (request.isMultipleUuidsProvided()) {
+            log.error("[PROFILE-VALIDATOR] Profile search failed: UUID list provided. Only a single uuid string can be sent.");
+            throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA,
+                    UserConstants.MSG_MULTIPLE_USERS_SEARCH_NOT_SUPPORTED);
+        }
+
+        // Rejection rule 3: searching citizen by Aadhaar on general profile search endpoint is not permitted
+        if (StringUtils.isNotBlank(request.getAadhaarNumber())) {
+            log.error("[PROFILE-VALIDATOR] Profile search failed: searching by Aadhaar on general /profile/_search endpoint is not permitted");
+            throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA,
+                    "Searching citizen by Aadhaar is not permitted on this general endpoint. Please use the dedicated /profile/aadhaar/_search API.");
+        }
+
         boolean hasFilter = StringUtils.isNotBlank(request.getTenantId())
-                || !CollectionUtils.isEmpty(request.getUuid())
-                || !CollectionUtils.isEmpty(request.getId())
+                || StringUtils.isNotBlank(request.getUuid())
                 || StringUtils.isNotBlank(request.getMobileNumber())
-                || StringUtils.isNotBlank(request.getAadhaarNumber())
                 || StringUtils.isNotBlank(request.getName());
 
         if (!hasFilter) {
@@ -364,12 +384,12 @@ public class ProfileValidatorImpl implements ProfileValidator {
         if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null
                 && isCallerCitizen(request.getRequestInfo().getUserInfo())) {
             validateCitizenSelfSearch(request.getRequestInfo().getUserInfo(),
-                    request.getUuid(), request.getMobileNumber(), request.getId());
+                    request.getUuid(), request.getMobileNumber());
         }
     }
 
     private void validateCitizenSelfSearch(org.egov.common.contract.request.User caller,
-                                          List<String> uuidList, String mobileNumber, List<Long> idList) {
+                                          String targetUuid, String mobileNumber) {
         User callerDbUser = null;
         if (userRepository != null && StringUtils.isNotBlank(caller.getUuid())) {
             try {
@@ -392,32 +412,26 @@ public class ProfileValidatorImpl implements ProfileValidator {
                 ? caller.getMobileNumber().trim()
                 : (StringUtils.isNotBlank(caller.getUserName()) && StringUtils.isNumeric(caller.getUserName().trim())
                 ? caller.getUserName().trim() : null));
-        Long callerId = (callerDbUser != null && callerDbUser.getId() != null)
-                ? callerDbUser.getId() : caller.getId();
         String callerUserName = (callerDbUser != null && StringUtils.isNotBlank(callerDbUser.getUsername()))
                 ? callerDbUser.getUsername() : caller.getUserName();
 
-        boolean hasUuid = !CollectionUtils.isEmpty(uuidList);
+        boolean hasUuid = StringUtils.isNotBlank(targetUuid);
         boolean hasMobile = StringUtils.isNotBlank(mobileNumber);
-        boolean hasId = !CollectionUtils.isEmpty(idList);
 
-        // Citizen must supply at least one identifying criterion (uuid, mobileNumber, or id)
-        if (!hasUuid && !hasMobile && !hasId) {
+        // Citizen must supply at least one identifying criterion (uuid or mobileNumber)
+        if (!hasUuid && !hasMobile) {
             log.error("[PROFILE-VALIDATOR] Unauthorized search: Citizen caller must search using their own UUID or mobile number.");
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
         }
 
-        // Validate UUIDs: must match caller's UUID
+        // Validate UUID: must match caller's UUID
         if (hasUuid) {
             if (StringUtils.isBlank(callerUuid)) {
                 log.error("[PROFILE-VALIDATOR] Unauthorized search: Calling citizen has no UUID in request context.");
                 throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
             }
-            boolean anyMismatch = uuidList.stream()
-                    .filter(StringUtils::isNotBlank)
-                    .anyMatch(u -> !u.trim().equalsIgnoreCase(callerUuid.trim()));
-            if (anyMismatch) {
-                log.error("[PROFILE-VALIDATOR] Unauthorized search: Citizen caller {} attempted to search for uuid(s): {}", callerUuid, uuidList);
+            if (!targetUuid.trim().equalsIgnoreCase(callerUuid.trim())) {
+                log.error("[PROFILE-VALIDATOR] Unauthorized search: Citizen caller {} attempted to search for uuid: {}", callerUuid, targetUuid);
                 throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
             }
         }
@@ -429,21 +443,6 @@ public class ProfileValidatorImpl implements ProfileValidator {
                     || (callerUserName != null && trimmedMobile.equalsIgnoreCase(callerUserName.trim()));
             if (!matchesCaller) {
                 log.error("[PROFILE-VALIDATOR] Unauthorized search: Citizen caller {} attempted to search for mobile: {}", callerUuid, MaskUtils.maskMobile(trimmedMobile));
-                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
-            }
-        }
-
-        // Validate ID: must match caller's ID
-        if (hasId) {
-            if (callerId == null) {
-                log.error("[PROFILE-VALIDATOR] Unauthorized search: Calling citizen has no ID in request context.");
-                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
-            }
-            boolean anyMismatch = idList.stream()
-                    .filter(Objects::nonNull)
-                    .anyMatch(id -> !id.equals(callerId));
-            if (anyMismatch) {
-                log.error("[PROFILE-VALIDATOR] Unauthorized search: Citizen caller ID {} attempted to search for id(s): {}", callerId, idList);
                 throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, UserConstants.MSG_UNAUTHORIZED_CITIZEN_SEARCH);
             }
         }

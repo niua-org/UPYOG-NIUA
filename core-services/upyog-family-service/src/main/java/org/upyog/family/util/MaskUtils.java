@@ -15,6 +15,9 @@ public final class MaskUtils {
     /** Standard UIDAI Aadhaar 8-character mask prefix. */
     public static final String AADHAAR_MASK_PREFIX = "XXXXXXXX";
 
+    /**
+     * Private constructor to prevent instantiation of utility class.
+     */
     private MaskUtils() {
         // Prevent instantiation of utility class
     }

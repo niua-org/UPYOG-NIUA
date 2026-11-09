@@ -1,6 +1,7 @@
 package org.egov.user.domain.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.config.UserConfiguration;
@@ -76,18 +77,24 @@ public class DigiLockerService {
     }
 
     private String getRequesterServiceHost() {
-        return userConfiguration != null && userConfiguration.getRequesterServiceHost() != null
-                ? userConfiguration.getRequesterServiceHost() : "";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceHost())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.service.host is not configured");
+        }
+        return userConfiguration.getRequesterServiceHost();
     }
 
     private String getRequesterServiceEndpoint() {
-        return userConfiguration != null && userConfiguration.getRequesterServiceEndpoint() != null
-                ? userConfiguration.getRequesterServiceEndpoint() : "";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.service.endpoint is not configured");
+        }
+        return userConfiguration.getRequesterServiceEndpoint();
     }
 
     private int getDefaultSearchSize() {
-        return userConfiguration != null && userConfiguration.getDefaultSearchSize() != null
-                ? userConfiguration.getDefaultSearchSize() : 10;
+        if (userConfiguration == null || userConfiguration.getDefaultSearchSize() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "egov.user.search.default.size is not configured");
+        }
+        return userConfiguration.getDefaultSearchSize();
     }
 
     /**

@@ -142,7 +142,7 @@ public class CitizenSearchSecurityTest {
     }
 
     @Test
-    @DisplayName("ProfileSearch: Citizen searching for list containing another user's UUID should fail")
+    @DisplayName("ProfileSearch: Searching for multiple UUIDs should fail as only one user can be searched at a time")
     public void testProfileSearch_CitizenUuidListWithOtherUser_ThrowsUnauthorized() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
                 .tenantId("pb.amritsar")
@@ -151,7 +151,35 @@ public class CitizenSearchSecurityTest {
                 .build();
 
         CustomException ex = assertThrows(CustomException.class, () -> profileValidator.validateSearch(request));
-        assertEquals(UserConstants.ERROR_UNAUTHORIZED_CITIZEN_SEARCH, ex.getCode());
+        assertEquals(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, ex.getCode());
+        assertEquals(UserConstants.MSG_MULTIPLE_USERS_SEARCH_NOT_SUPPORTED, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("ProfileSearch: Searching with userId should fail as only uuid is supported")
+    public void testProfileSearch_WithUserId_ThrowsInvalidSearchCriteria() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pb.amritsar")
+                .userId(101L)
+                .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> profileValidator.validateSearch(request));
+        assertEquals(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, ex.getCode());
+        assertEquals(UserConstants.MSG_USER_ID_SEARCH_NOT_SUPPORTED, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("ProfileSearch: Searching with single String uuid using builder overload succeeds")
+    public void testProfileSearch_SingleStringUuid_Succeeds() {
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pb.amritsar")
+                .uuid("citizen-uuid-1")
+                .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
+                .build();
+
+        assertDoesNotThrow(() -> profileValidator.validateSearch(request));
+        assertEquals("citizen-uuid-1", request.getSingleUuid());
     }
 
     @Test

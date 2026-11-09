@@ -27,6 +27,7 @@ import org.egov.user.domain.service.identity.VerifiedAadhaarDemographics;
 import org.egov.user.domain.service.profile.validator.ProfileValidator;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.AadhaarNumberUtils;
 import org.egov.user.util.MaskUtils;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FamilyRestRepository;
@@ -38,6 +39,7 @@ import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -45,6 +47,7 @@ import org.egov.user.web.contract.profile.ProfileResyncRequest;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -631,8 +634,14 @@ public class ProfileServiceImpl implements ProfileService {
             if (eKyc.getGender() != null) {
                 userToUpdate.setGender(eKyc.getGender());
             }
-            if (StringUtils.isNotBlank(eKyc.getMaskedAadhaar())) {
-                userToUpdate.setAadhaarNumber(eKyc.getMaskedAadhaar());
+            String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(aadhaar);
+            String effectiveAadhaar = fullAadhaar != null
+                    ? fullAadhaar
+                    : (AadhaarNumberUtils.normalizeToTwelveDigits(existingUser.getAadhaarNumber()) != null
+                        ? existingUser.getAadhaarNumber()
+                        : eKyc.getMaskedAadhaar());
+            if (StringUtils.isNotBlank(effectiveAadhaar)) {
+                userToUpdate.setAadhaarNumber(effectiveAadhaar);
             }
             userToUpdate.setIsIdentityVerified(existingUser.getIsIdentityVerified());
             userToUpdate.setIdentityVerifiedDate(existingUser.getIdentityVerifiedDate());
@@ -704,7 +713,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     /**
-     * Searches citizen profiles based on supplied criteria filters (UUID, ID, mobile, Aadhaar, name).
+     * Searches citizen profiles based on supplied criteria filters (UUID, mobile, Aadhaar, name).
      * Automatically encrypts search criteria to query secure database indexes, decrypts the resulting
      * user records, and enriches related entities based on requested inclusion flags.
      *
@@ -756,10 +765,8 @@ public class ProfileServiceImpl implements ProfileService {
         String stateTenant = resolveStateTenant(request.getTenantId());
         UserSearchCriteria criteria = UserSearchCriteria.builder()
                 .tenantId(stateTenant)
-                .uuid(request.getUuid())
-                .id(request.getId())
+                .uuid(StringUtils.isNotBlank(request.getUuid()) ? Collections.singletonList(request.getUuid().trim()) : null)
                 .mobileNumber(request.getMobileNumber())
-                .aadhaarNumber(request.getAadhaarNumber())
                 .name(request.getName())
                 .active(request.getActive() != null ? request.getActive() : true)
                 .type(UserType.CITIZEN)
@@ -772,25 +779,28 @@ public class ProfileServiceImpl implements ProfileService {
             return Collections.emptyList();
         }
 
-        List<User> decryptedUsers = decryptUserList(userList, request.getRequestInfo());
+        List<User> decryptedUsers = new ArrayList<>();
+        for (User matchedUser : userList) {
+            decryptedUsers.add(decryptUser(matchedUser, request.getRequestInfo()));
+        }
+
         Boolean active = (request != null && request.getActive() != null) ? request.getActive() : Boolean.TRUE;
-        enrichRelatedEntities(decryptedUsers, stateTenant, includes, request != null ? request.getRequestInfo() : null, active, errors);
+        for (User user : decryptedUsers) {
+            enrichRelatedEntities(user, stateTenant, includes, request != null ? request.getRequestInfo() : null, active, errors);
+        }
 
         return decryptedUsers;
     }
 
     /**
-     * Enriches retrieved citizen user records with related entity collections (addresses, documents)
-     * based on requested inclusion flags using batch queries to avoid the N+1 query problem.
-     * <p>
-     * Executes at most 1 batch query for addresses and 1 batch query for documents across all users,
-     * and maps results back to respective user entities.
+     * Enriches retrieved citizen user record with related entity collections (addresses, documents)
+     * based on requested inclusion flags.
      * If {@code active} is specified (e.g. true), only matching active child records (addresses and documents)
      * are enriched and returned.
      * If an error occurs while enriching an included section and {@code errors} list is provided,
      * the error is captured into {@code errors} allowing partial degradation. Otherwise, a {@link CustomException} is thrown.
      *
-     * @param users        list of decrypted user entities to enrich
+     * @param user         decrypted user entity to enrich
      * @param stateTenant  resolved state-level tenant identifier
      * @param includes     set of entity sections to include (e.g. ADDRESS, DOCUMENT)
      * @param requestInfo  UPYOG request audit context
@@ -798,13 +808,13 @@ public class ProfileServiceImpl implements ProfileService {
      * @param errors       optional list to collect partial enrichment errors
      * @throws CustomException if enriching address or document entities fails and errors list is null
      */
-    private void enrichRelatedEntities(List<User> users, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, Boolean active, List<Error> errors) {
-        if (CollectionUtils.isEmpty(users)) {
+    private void enrichRelatedEntities(User user, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, Boolean active, List<Error> errors) {
+        if (user == null) {
             return;
         }
 
-        // Dynamically enrich familyId for citizens from upyog-family-service (Single Source of Truth)
-        enrichFamilyIds(users, stateTenant, requestInfo);
+        // Dynamically enrich familyId for citizen from upyog-family-service (Single Source of Truth)
+        enrichFamilyId(user, stateTenant, requestInfo);
 
         if (CollectionUtils.isEmpty(includes)) {
             return;
@@ -817,32 +827,12 @@ public class ProfileServiceImpl implements ProfileService {
             return;
         }
 
-        List<String> userUuids = users.stream()
-                .map(User::getUuid)
-                .filter(StringUtils::isNotBlank)
-                .distinct()
-                .collect(Collectors.toList());
-
-        List<Long> userIds = users.stream()
-                .map(User::getId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .collect(Collectors.toList());
-
         if (includeAddresses) {
             try {
                 AddressSearchCriteria addrCriteria = AddressSearchCriteria.builder()
-                        .userUuids(userUuids)
-                        .userIds(userIds)
+                        .uuid(user.getUuid())
                         .status(Boolean.TRUE.equals(active) ? UserConstants.ADDRESS_ACTIVE_STATUS : (Boolean.FALSE.equals(active) ? UserConstants.ADDRESS_INACTIVE_STATUS : null))
                         .build();
-
-                if (userUuids.size() == 1) {
-                    addrCriteria.setUuid(userUuids.get(0));
-                }
-                if (userIds.size() == 1) {
-                    addrCriteria.setUserId(userIds.get(0));
-                }
 
                 List<Address> addresses = null;
                 if (addressService != null) {
@@ -862,35 +852,13 @@ public class ProfileServiceImpl implements ProfileService {
                                 .collect(Collectors.toList());
                     }
 
-                    if (users.size() == 1) {
-                        User singleUser = users.get(0);
-                        for (Address addr : addresses) {
-                            if (StringUtils.isBlank(addr.getUserUuid()) && addr.getUserId() == null) {
-                                addr.setUserUuid(singleUser.getUuid());
-                                addr.setUserId(singleUser.getId());
-                            }
+                    for (Address addr : addresses) {
+                        if (StringUtils.isBlank(addr.getUserUuid())) {
+                            addr.setUserUuid(user.getUuid());
                         }
                     }
 
-                    Map<String, Set<Address>> addressMapByUuid = new HashMap<>();
-                    Map<Long, Set<Address>> addressMapById = new HashMap<>();
-                    for (Address addr : addresses) {
-                        if (StringUtils.isNotBlank(addr.getUserUuid())) {
-                            addressMapByUuid.computeIfAbsent(addr.getUserUuid(), k -> new LinkedHashSet<>()).add(addr);
-                        }
-                        if (addr.getUserId() != null) {
-                            addressMapById.computeIfAbsent(addr.getUserId(), k -> new LinkedHashSet<>()).add(addr);
-                        }
-                    }
-                    for (User user : users) {
-                        Set<Address> userAddrs = addressMapByUuid.get(user.getUuid());
-                        if (userAddrs == null && user.getId() != null) {
-                            userAddrs = addressMapById.get(user.getId());
-                        }
-                        if (userAddrs != null) {
-                            user.setAddresses(userAddrs);
-                        }
-                    }
+                    user.setAddresses(new LinkedHashSet<>(addresses));
                 }
             } catch (Exception e) {
                 log.error("[PROFILE-SERVICE] Error enriching addresses for profile search: {}", e.getMessage(), e);
@@ -912,18 +880,10 @@ public class ProfileServiceImpl implements ProfileService {
         if (includeDocuments) {
             try {
                 UserDocumentSearchCriteria docCriteria = UserDocumentSearchCriteria.builder()
-                        .userUuids(userUuids)
-                        .userIds(userIds)
+                        .uuid(user.getUuid())
                         .tenantId(stateTenant)
                         .active(active)
                         .build();
-
-                if (userUuids.size() == 1) {
-                    docCriteria.setUuid(userUuids.get(0));
-                }
-                if (userIds.size() == 1) {
-                    docCriteria.setUserId(userIds.get(0));
-                }
 
                 List<UserDocument> documents = null;
                 if (userDocumentService != null) {
@@ -943,35 +903,13 @@ public class ProfileServiceImpl implements ProfileService {
                                 .collect(Collectors.toList());
                     }
 
-                    if (users.size() == 1) {
-                        User singleUser = users.get(0);
-                        for (UserDocument doc : documents) {
-                            if (StringUtils.isBlank(doc.getUserUuid()) && doc.getUserId() == null) {
-                                doc.setUserUuid(singleUser.getUuid());
-                                doc.setUserId(singleUser.getId());
-                            }
+                    for (UserDocument doc : documents) {
+                        if (StringUtils.isBlank(doc.getUserUuid())) {
+                            doc.setUserUuid(user.getUuid());
                         }
                     }
 
-                    Map<String, List<UserDocument>> docMapByUuid = new HashMap<>();
-                    Map<Long, List<UserDocument>> docMapById = new HashMap<>();
-                    for (UserDocument doc : documents) {
-                        if (StringUtils.isNotBlank(doc.getUserUuid())) {
-                            docMapByUuid.computeIfAbsent(doc.getUserUuid(), k -> new ArrayList<>()).add(doc);
-                        }
-                        if (doc.getUserId() != null) {
-                            docMapById.computeIfAbsent(doc.getUserId(), k -> new ArrayList<>()).add(doc);
-                        }
-                    }
-                    for (User user : users) {
-                        List<UserDocument> userDocs = docMapByUuid.get(user.getUuid());
-                        if (userDocs == null && user.getId() != null) {
-                            userDocs = docMapById.get(user.getId());
-                        }
-                        if (userDocs != null) {
-                            user.setDocuments(userDocs);
-                        }
-                    }
+                    user.setDocuments(documents);
                 }
             } catch (Exception e) {
                 log.error("[PROFILE-SERVICE] Error enriching documents for profile search: {}", e.getMessage(), e);
@@ -988,39 +926,6 @@ public class ProfileServiceImpl implements ProfileService {
                     throw new CustomException("DOCUMENT_ENRICHMENT_FAILED", "Failed to enrich document proofs for citizen profile search: " + e.getMessage());
                 }
             }
-        }
-    }
-
-    /**
-     * Resolves and enriches active familyId from upyog-family-service for a batch of citizen users.
-     * Enforces fail-open resilience so any lookup failure never affects profile retrieval.
-     */
-    private void enrichFamilyIds(List<User> users, String stateTenant, RequestInfo requestInfo) {
-        if (familyRestRepository == null || CollectionUtils.isEmpty(users)) {
-            return;
-        }
-        try {
-            List<String> userUuids = users.stream()
-                    .map(User::getUuid)
-                    .filter(StringUtils::isNotBlank)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            if (!userUuids.isEmpty()) {
-                Map<String, String> familyIdMap = familyRestRepository.getActiveFamilyIdsByUserUuids(userUuids, stateTenant, requestInfo);
-                if (familyIdMap != null && !familyIdMap.isEmpty()) {
-                    for (User user : users) {
-                        if (user != null && StringUtils.isNotBlank(user.getUuid())) {
-                            String familyId = familyIdMap.get(user.getUuid());
-                            if (StringUtils.isNotBlank(familyId)) {
-                                user.setFamilyId(familyId);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.warn("[PROFILE-SERVICE] Non-blocking: Failed to enrich familyIds from family service: {}", e.getMessage());
         }
     }
 
@@ -1095,8 +1000,14 @@ public class ProfileServiceImpl implements ProfileService {
         if (eKyc.getGender() != null) {
             userToUpdate.setGender(eKyc.getGender());
         }
-        if (StringUtils.isNotBlank(eKyc.getMaskedAadhaar())) {
-            userToUpdate.setAadhaarNumber(eKyc.getMaskedAadhaar());
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(request.getAadhaarNumber());
+        String effectiveAadhaar = fullAadhaar != null
+                ? fullAadhaar
+                : (AadhaarNumberUtils.normalizeToTwelveDigits(existingUser.getAadhaarNumber()) != null
+                    ? existingUser.getAadhaarNumber()
+                    : eKyc.getMaskedAadhaar());
+        if (StringUtils.isNotBlank(effectiveAadhaar)) {
+            userToUpdate.setAadhaarNumber(effectiveAadhaar);
         }
 
         userToUpdate.setIsIdentityVerified(true);
@@ -1703,17 +1614,16 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, "Aadhaar OTP verification failed");
         }
 
-        String searchAadhaar = StringUtils.isNotBlank(eKyc.getMaskedAadhaar())
-                ? eKyc.getMaskedAadhaar()
-                : MaskUtils.maskAadhaar(rawAadhaar);
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(
+                StringUtils.firstNonBlank(rawAadhaar, eKyc.getFullAadhaarNumber()));
 
         // Security: only e-KYC verified mobile is trusted for existing account lookup to prevent account takeover
         String verifiedEkycMobile = StringUtils.isNotBlank(eKyc.getMobileNumber()) ? eKyc.getMobileNumber().trim() : null;
 
-        log.info("[PROFILE-SERVICE] e-KYC verified: maskedAadhaar={}", searchAadhaar);
+        log.info("[PROFILE-SERVICE] e-KYC verified for citizen resolution");
 
-        // 2. Search for existing citizen using only verified e-KYC credentials (Aadhaar or e-KYC mobile)
-        User existingUser = findExistingCitizen(searchAadhaar, rawAadhaar, verifiedEkycMobile, stateTenant, request.getRequestInfo());
+        // 2. Search for existing citizen using only verified e-KYC credentials (full Aadhaar or e-KYC mobile match)
+        User existingUser = findExistingCitizen(fullAadhaar, verifiedEkycMobile, stateTenant, request.getRequestInfo());
 
         if (existingUser != null) {
             log.info("[PROFILE-SERVICE] Found existing citizen UUID: {} for verified Aadhaar", existingUser.getUuid());
@@ -1730,8 +1640,14 @@ public class ProfileServiceImpl implements ProfileService {
             existingUser.setLastResyncDate(new Date());
             existingUser.setLastLoginMethod(AuthType.AADHAAR_NUMBER.name());
 
-            if (StringUtils.isNotBlank(searchAadhaar)) {
-                existingUser.setAadhaarNumber(searchAadhaar);
+            String effectiveAadhaar = fullAadhaar != null
+                    ? fullAadhaar
+                    : (AadhaarNumberUtils.normalizeToTwelveDigits(existingUser.getAadhaarNumber()) != null
+                        ? existingUser.getAadhaarNumber()
+                        : eKyc.getMaskedAadhaar());
+            if (StringUtils.isNotBlank(effectiveAadhaar)) {
+                // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
+                existingUser.setAadhaarNumber(effectiveAadhaar);
             }
             if (StringUtils.isNotBlank(eKyc.getName()) && ("Citizen".equalsIgnoreCase(existingUser.getName()) || StringUtils.isBlank(existingUser.getName()))) {
                 existingUser.setName(eKyc.getName());
@@ -1777,10 +1693,8 @@ public class ProfileServiceImpl implements ProfileService {
         String baseUsername;
         if (hasMobile) {
             baseUsername = mobileNumber;
-        } else if (searchAadhaar != null) {
-            baseUsername = "AADHAAR_" + searchAadhaar.replaceAll("\\D", "");
         } else {
-            baseUsername = "AADHAAR_" + UUID.randomUUID().toString().substring(0, 8);
+            baseUsername = UserConstants.CITIZEN_USERNAME_PREFIX + UUID.randomUUID().toString().substring(0, 8);
         }
         String username = !userRepository.isUserPresent(baseUsername, stateTenant, UserType.CITIZEN)
                 ? baseUsername
@@ -1790,13 +1704,15 @@ public class ProfileServiceImpl implements ProfileService {
 
         Long loggedInUserId = resolveLoggedInUserId(request.getRequestInfo(), 0L);
 
+        String effectiveAadhaar = fullAadhaar != null ? fullAadhaar : eKyc.getMaskedAadhaar();
+
         User newCitizen = User.builder()
                 .username(username)
                 .name(citizenName)
                 .mobileNumber(hasMobile ? mobileNumber : null)
                 .gender(eKyc.getGender())
                 .dob(eKyc.getDob())
-                .aadhaarNumber(searchAadhaar)
+                .aadhaarNumber(effectiveAadhaar)
                 .photo(eKyc.getPhoto())
                 .isIdentityVerified(true)
                 .identityVerifiedDate(new Date())
@@ -1883,16 +1799,25 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, "Aadhaar OTP verification failed");
         }
 
-        String searchAadhaar = StringUtils.isNotBlank(eKyc.getMaskedAadhaar())
-                ? eKyc.getMaskedAadhaar()
-                : MaskUtils.maskAadhaar(rawAadhaar);
+        String fullAadhaarForProfile = AadhaarNumberUtils.normalizeToTwelveDigits(
+                StringUtils.firstNonBlank(rawAadhaar, eKyc.getFullAadhaarNumber()));
 
         // 3. Aadhaar uniqueness validation across citizen accounts
-        validateAadhaarUniqueness(searchAadhaar, callerUuid, stateTenant);
+        validateAadhaarUniqueness(fullAadhaarForProfile, callerUuid, stateTenant);
 
         // 4. Strict mobile number matching check
         String loggedInMobile = resolveLoggedInMobile(existingUser, rawExistingUser, request.getRequestInfo());
+       
         String aadhaarMobile = eKyc.getMobileNumber();
+
+        if (userConfiguration != null && (Boolean.TRUE.equals(userConfiguration.getAadhaarMockEnabled()) || Boolean.TRUE.equals(userConfiguration.getAadhaarGatewayMockEnabled()))) {
+            log.info("[PROFILE-SERVICE] Mock Aadhaar verification enabled. Considering user mobile equal to eKyc.getMobileNumber() ({}) by default for UUID: {}",
+                    MaskUtils.maskMobile(loggedInMobile), callerUuid);
+            aadhaarMobile = loggedInMobile;
+            if (StringUtils.isNotBlank(loggedInMobile) && StringUtils.isBlank(eKyc.getMobileNumber())) {
+                eKyc.setMobileNumber(loggedInMobile);
+            }
+        }
 
         log.info("[PROFILE-SERVICE] Validating Aadhaar mobile match for UUID {}: loggedInMobile={}, aadhaarMobileFound={}",
                 callerUuid, MaskUtils.maskMobile(loggedInMobile), StringUtils.isNotBlank(aadhaarMobile));
@@ -1904,7 +1829,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         // 5. Update citizen profile with Aadhaar verification details and demographics
-        updateAadhaarVerifiedFields(existingUser, searchAadhaar, eKyc);
+        updateAadhaarVerifiedFields(existingUser, fullAadhaarForProfile, eKyc);
 
         try {
             User encryptedToUpdate = encryptUser(existingUser);
@@ -1964,15 +1889,16 @@ public class ProfileServiceImpl implements ProfileService {
         return null;
     }
 
-    private void updateAadhaarVerifiedFields(User existingUser, String searchAadhaar, VerifiedAadhaarDemographics eKyc) {
+    private void updateAadhaarVerifiedFields(User existingUser, String fullAadhaarTwelve, VerifiedAadhaarDemographics eKyc) {
         existingUser.setIsIdentityVerified(true);
         existingUser.setIdentityVerifiedDate(new Date());
         existingUser.setIdentityVerifiedSource(UserConstants.IDENTITY_SOURCE_AADHAAR);
         existingUser.setLastResyncDate(new Date());
         existingUser.setLastLoginMethod(AuthType.AADHAAR_NUMBER.name());
 
-        if (StringUtils.isNotBlank(searchAadhaar)) {
-            existingUser.setAadhaarNumber(searchAadhaar);
+        if (StringUtils.isNotBlank(fullAadhaarTwelve)) {
+            // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
+            existingUser.setAadhaarNumber(fullAadhaarTwelve);
         }
         if (StringUtils.isNotBlank(eKyc.getName())) {
             existingUser.setName(eKyc.getName());
@@ -2040,48 +1966,23 @@ public class ProfileServiceImpl implements ProfileService {
      * @param requestInfo   request context for decryption
      * @return matched {@link User} entity or null if not found
      */
-    private User findExistingCitizen(String maskedAadhaar, String rawAadhaar, String mobileNumber, String stateTenant, RequestInfo requestInfo) {
-        // 1. Match by maskedAadhaar
-        if (StringUtils.isNotBlank(maskedAadhaar)) {
-            User found = findCitizenByAadhaar(maskedAadhaar, stateTenant, requestInfo);
-            if (found != null) {
+    /**
+     * Resolves an existing citizen by full 12-digit Aadhaar equality (legacy masked-only DB values are not matched).
+     */
+    private User findExistingCitizen(String fullAadhaarTwelve, String mobileNumber, String stateTenant, RequestInfo requestInfo) {
+        if (StringUtils.isNotBlank(fullAadhaarTwelve)) {
+            User found = findCitizenByAadhaar(fullAadhaarTwelve, stateTenant, requestInfo);
+            if (found != null && AadhaarNumberUtils.sameTwelveDigits(found.getAadhaarNumber(), fullAadhaarTwelve)) {
                 return found;
             }
         }
 
-        // 2. Match by rawAadhaar if distinct
-        if (StringUtils.isNotBlank(rawAadhaar) && !rawAadhaar.equalsIgnoreCase(maskedAadhaar)) {
-            User found = findCitizenByAadhaar(rawAadhaar, stateTenant, requestInfo);
-            if (found != null) {
-                return found;
-            }
-        }
-
-        // 3. Match by mobileNumber
-        if (StringUtils.isNotBlank(mobileNumber)) {
+        if (StringUtils.isNotBlank(mobileNumber) && StringUtils.isNotBlank(fullAadhaarTwelve)) {
             List<User> matchedUsers = findCitizensByMobile(mobileNumber, stateTenant, requestInfo);
             if (!CollectionUtils.isEmpty(matchedUsers)) {
-                // If any matched account has matching Aadhaar, prioritize it
                 for (User u : matchedUsers) {
-                    if (StringUtils.isNotBlank(u.getAadhaarNumber()) &&
-                            (StringUtils.equalsIgnoreCase(u.getAadhaarNumber(), maskedAadhaar)
-                             || StringUtils.equalsIgnoreCase(MaskUtils.maskAadhaar(u.getAadhaarNumber()), maskedAadhaar)
-                             || (StringUtils.isNotBlank(rawAadhaar) && StringUtils.equalsIgnoreCase(u.getAadhaarNumber(), rawAadhaar)))) {
+                    if (AadhaarNumberUtils.sameTwelveDigits(u.getAadhaarNumber(), fullAadhaarTwelve)) {
                         return u;
-                    }
-                }
-                // If exactly 1 account exists on this mobile, match it ONLY if it does not already belong
-                // to a verified citizen or a citizen with a distinct Aadhaar. Otherwise, in a family multi-account
-                // setup, allow a new citizen account to be auto-provisioned under the shared mobile number.
-                if (matchedUsers.size() == 1) {
-                    User candidate = matchedUsers.get(0);
-                    boolean isCandidateVerified = Boolean.TRUE.equals(candidate.getIsIdentityVerified());
-                    boolean hasDistinctAadhaar = StringUtils.isNotBlank(candidate.getAadhaarNumber())
-                            && !StringUtils.equalsIgnoreCase(candidate.getAadhaarNumber(), maskedAadhaar)
-                            && !StringUtils.equalsIgnoreCase(MaskUtils.maskAadhaar(candidate.getAadhaarNumber()), maskedAadhaar);
-
-                    if (!isCandidateVerified && !hasDistinctAadhaar) {
-                        return candidate;
                     }
                 }
             }
@@ -2124,6 +2025,74 @@ public class ProfileServiceImpl implements ProfileService {
             log.warn("[PROFILE-SERVICE] Error searching citizen by Aadhaar: {}", e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Previously, {@code isIdentityVerified} could be set during citizen auto-provision via
+     * {@code /user/users/_createnovalidate}. That allowed public callers to self-assert verification.
+     * After OTP verification in requester-services-dx, this inter-service hook persists verified identity
+     * in egov-user with source {@code AADHAAR}.</p>
+     */
+    @Override
+    public void markCitizenVerifiedAfterAadhaarEkyc(String userUuid, String fullAadhaarTwelve, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(fullAadhaarTwelve)) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "userUuid and 12-digit aadhaarNumber are required");
+        }
+        String normalized = AadhaarNumberUtils.normalizeToTwelveDigits(fullAadhaarTwelve);
+        if (normalized == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_IDENTIFIER, "Aadhaar must be a 12-digit number");
+        }
+
+        UserSearchCriteria criteria = UserSearchCriteria.builder()
+                .uuid(Collections.singletonList(userUuid))
+                .build();
+        List<User> list = userRepository.findAll(criteria);
+        if (CollectionUtils.isEmpty(list)) {
+            throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, "Citizen not found for UUID: " + userUuid);
+        }
+        User existingUser = list.get(0);
+        if (existingUser == null) {
+            throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, "Citizen not found for UUID: " + userUuid);
+        }
+        if (!Boolean.TRUE.equals(existingUser.getActive())) {
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
+
+        // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
+        existingUser.setAadhaarNumber(normalized);
+        existingUser.setIsIdentityVerified(true);
+        existingUser.setIdentityVerifiedDate(new Date());
+        existingUser.setIdentityVerifiedSource(UserConstants.IDENTITY_SOURCE_AADHAAR);
+        existingUser.setLastResyncDate(new Date());
+        existingUser.setLastLoginMethod(AuthType.AADHAAR_NUMBER.name());
+
+        User encryptedToUpdate = encryptUser(existingUser);
+        userRepository.update(encryptedToUpdate, existingUser, existingUser.getId(), existingUser.getUuid());
+        log.info("[PROFILE-SERVICE] Marked citizen UUID {} as Aadhaar-verified after inter-service e-KYC", userUuid);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<User> searchProfileByAadhaar(AadhaarSearchRequest request) {
+        if (request == null || StringUtils.isBlank(request.getAadhaarNumber())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_IDENTIFIER, "Aadhaar number is mandatory for Aadhaar search");
+        }
+
+        String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(request.getAadhaarNumber());
+        String searchAadhaar = fullAadhaar != null ? fullAadhaar : request.getAadhaarNumber().trim();
+
+        String stateTenant = resolveStateTenant(request.getTenantId());
+        User citizen = findCitizenByAadhaar(searchAadhaar, stateTenant, request.getRequestInfo());
+        if (citizen == null) {
+            return Collections.emptyList();
+        }
+        // Aadhaar search participates in the same SSOT familyId enrichment as other profile endpoints
+        enrichFamilyId(citizen, stateTenant, request.getRequestInfo());
+        return Collections.singletonList(citizen);
     }
 
     /**

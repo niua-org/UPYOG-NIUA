@@ -2,6 +2,8 @@ package org.egov.wf.web.controllers;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,6 +60,8 @@ class EscalationControllerTest {
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
                 .andExpect(MockMvcResultMatchers.content()
                         .string("{\"apiId\":null,\"ver\":null,\"ts\":null,\"resMsgId\":null,\"msgId\":null,\"status\":null}"));
+
+        verify(this.escalationService).escalateApplications((RequestInfo) any(), eq("Business Service"));
     }
 
     @Test

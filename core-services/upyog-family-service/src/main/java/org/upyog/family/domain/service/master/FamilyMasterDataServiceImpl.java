@@ -49,19 +49,39 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
             FamilyConstants.RELATIONSHIP_DEPENDENT, FamilyConstants.RELATIONSHIP_GUARDIAN, FamilyConstants.RELATIONSHIP_OTHER
     )));
 
+    /**
+     * Immutable cache entry containing allowed relationship codes and entry creation timestamp.
+     */
     public static class CacheEntry {
         private final Set<String> allowedRelationships;
         private final long lastUpdatedTimestamp;
 
+        /**
+         * Constructs a new CacheEntry with allowed relationships and timestamp.
+         *
+         * @param allowedRelationships set of allowed uppercase relationship codes
+         * @param lastUpdatedTimestamp timestamp when the cache entry was created
+         */
         public CacheEntry(Set<String> allowedRelationships, long lastUpdatedTimestamp) {
             this.allowedRelationships = Collections.unmodifiableSet(new HashSet<>(allowedRelationships));
             this.lastUpdatedTimestamp = lastUpdatedTimestamp;
         }
 
+        /**
+         * Gets the unmodifiable set of allowed relationship codes.
+         *
+         * @return set of relationship codes
+         */
         public Set<String> getAllowedRelationships() {
             return allowedRelationships;
         }
 
+        /**
+         * Checks if this cache entry has expired beyond the configured TTL in milliseconds.
+         *
+         * @param ttlMillis time-to-live threshold in milliseconds
+         * @return true if current time exceeds timestamp + ttlMillis, false otherwise
+         */
         public boolean isExpired(long ttlMillis) {
             return (System.currentTimeMillis() - lastUpdatedTimestamp) > ttlMillis;
         }
@@ -69,18 +89,32 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
 
     private final Map<String, CacheEntry> tenantRelationshipCache = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs a FamilyMasterDataServiceImpl with RestTemplate and configuration.
+     *
+     * @param restTemplate Spring RestTemplate for remote HTTP calls to MDMS
+     * @param configuration family module configuration for MDMS endpoints and TTLs
+     */
     @Autowired
     public FamilyMasterDataServiceImpl(RestTemplate restTemplate, FamilyConfiguration configuration) {
         this.restTemplate = restTemplate;
         this.configuration = configuration;
     }
 
+    /**
+     * Retrieves allowed relationship codes for the specified tenant from cache or UPYOG MDMS.
+     *
+     * @param requestInfo caller's RequestInfo envelope
+     * @param tenantId tenant identifier
+     * @return set of valid uppercase relationship codes
+     */
     @Override
     public Set<String> getAllowedRelationships(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
-        long ttlMillis = configuration.getRelationshipCacheTtl() != null
-                ? configuration.getRelationshipCacheTtl()
-                : 86400000L;
+        if (configuration == null || configuration.getRelationshipCacheTtl() == null) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.relationship.cache.ttl is not configured");
+        }
+        long ttlMillis = configuration.getRelationshipCacheTtl();
 
         CacheEntry entry = tenantRelationshipCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis)) {
@@ -90,6 +124,14 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         return refreshCache(requestInfo, stateTenant);
     }
 
+    /**
+     * Validates that the provided relationship string is valid according to MDMS taxonomy for the tenant.
+     *
+     * @param requestInfo caller's RequestInfo envelope
+     * @param tenantId tenant identifier
+     * @param relationship relationship string to validate against MDMS taxonomy
+     * @throws CustomException if relationship is blank or not in allowed set
+     */
     @Override
     public void validateRelationship(RequestInfo requestInfo, String tenantId, String relationship) {
         if (StringUtils.isBlank(relationship)) {
@@ -105,6 +147,9 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         }
     }
 
+    /**
+     * Evicts cached relationship sets across all tenants.
+     */
     @Override
     public void clearCache() {
         log.info("[UPYOG-FAMILY-MASTER] Invalidate relationship master cache across all tenants");
@@ -135,7 +180,26 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         return relationships;
     }
 
+    /**
+     * Executes MDMS search request to fetch family relationships configured for the state tenant.
+     *
+     * @param requestInfo caller's RequestInfo envelope
+     * @param stateTenant state tenant identifier (e.g. "pg")
+     * @return set of normalized relationship codes, or empty set on failure
+     */
     private Set<String> fetchRelationshipsFromMdms(RequestInfo requestInfo, String stateTenant) {
+        if (configuration == null || StringUtils.isBlank(configuration.getMdmsHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.mdms.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getMdmsSearchPath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.mdms.search.path is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getMdmsFamilyModule())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.mdms.module is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getMdmsRelationshipMaster())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.mdms.relationship.master is not configured");
+        }
         String url = configuration.getMdmsHost() + configuration.getMdmsSearchPath();
         MdmsCriteriaReq request = buildMdmsRequest(requestInfo, stateTenant);
 
@@ -164,6 +228,13 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         return Collections.emptySet();
     }
 
+    /**
+     * Constructs the MDMS criteria request payload targeting the Family module's relationship master.
+     *
+     * @param requestInfo caller's RequestInfo envelope
+     * @param stateTenant state tenant identifier
+     * @return populated MdmsCriteriaReq object
+     */
     private MdmsCriteriaReq buildMdmsRequest(RequestInfo requestInfo, String stateTenant) {
         MasterDetail masterDetail = MasterDetail.builder()
                 .name(configuration.getMdmsRelationshipMaster())
@@ -186,9 +257,15 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
                 .build();
     }
 
+    /**
+     * Resolves the state-level tenant identifier from a city or sub-tenant string (e.g., 'pg.citya' -> 'pg').
+     *
+     * @param tenantId input tenant identifier
+     * @return resolved state tenant code, default 'pg' if blank
+     */
     private String resolveStateTenant(String tenantId) {
         if (StringUtils.isBlank(tenantId)) {
-            return "pg";
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "tenantId is mandatory");
         }
         return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
     }

@@ -34,4 +34,15 @@ public class AadhaarCitizenVerifyResponse implements Serializable {
     @Schema(description = "Flag indicating whether this citizen was newly created (true) or already existed in the system (false)")
     @JsonProperty("isNewUser")
     private Boolean isNewUser;
+
+    /**
+     * Resolves and exposes the citizen user UUID directly at the top level for convenient consumer access.
+     *
+     * @return citizen user UUID if user profile is present, null otherwise
+     */
+    @Schema(description = "Citizen user UUID of the verified or auto-provisioned user profile", example = "123e4567-e89b-12d3-a456-426614174000")
+    @JsonProperty("userUuid")
+    public String getUserUuid() {
+        return user != null ? user.getUuid() : null;
+    }
 }

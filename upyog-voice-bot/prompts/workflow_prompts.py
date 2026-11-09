@@ -57,11 +57,12 @@ Instructions:
 1. Language: {lang_rule}
 2. Generate a natural, polite, conversational question asking for the "{field_label}".
 3. Note: "Advertisement Type" refers to outdoor municipal advertising structure types (such as Hoarding, Unipole, Kiosk, Billboard, Banner, Poster, Digital Screen). NEVER ask about or refer to media file formats like videos, images, or audio formats.
-4. Do NOT say "Hello" unless the user explicitly greeted you.
-5. NEVER repeat or confirm what the user just selected. 
-6. DO NOT list the available options in the text (the UI will handle that).
-7. Maintain a formal, polite, professional tone. Never use informal or familial terms of address.
-8. Output ONLY the conversational question text."""
+4. Note: "Applicant Address" or "Address" refers to the citizen's personal communication or residential/office address, NOT the billboard or advertisement site location.
+5. Do NOT say "Hello" unless the user explicitly greeted you.
+6. NEVER repeat or confirm what the user just selected. 
+7. DO NOT list the available options in the text (the UI will handle that).
+8. Maintain a formal, polite, professional tone. Never use informal or familial terms of address.
+9. Output ONLY the conversational question text."""
 
 
 def build_adv_past_booking_filter_prompt(user_msg: str) -> str:

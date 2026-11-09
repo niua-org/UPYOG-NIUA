@@ -135,13 +135,27 @@ class FamilyServiceImplTest {
         when(familyRepository.search(criteria)).thenReturn(Collections.singletonList(family));
 
         Map<String, CitizenProfile> profileMap = new HashMap<>();
-        profileMap.put("user-uuid-head", CitizenProfile.builder().name("Rajesh Sharma").build());
+        profileMap.put("user-uuid-head", CitizenProfile.builder()
+                .name("Rajesh Sharma")
+                .photo("photo-head-001")
+                .mobileNumber("9876543210")
+                .gender("MALE")
+                .dob(631152000000L)
+                .relationshipWithHead("HEAD")
+                .build());
         when(userClient.searchUsersByUuids(anyList(), any())).thenReturn(profileMap);
 
         List<Family> results = familyService.searchFamilies(criteria, requestInfo);
 
         assertNotNull(results);
         assertEquals(1, results.size());
+        assertEquals("Rajesh Sharma", results.get(0).getHeadName());
+        assertEquals("Rajesh Sharma", results.get(0).getMembers().get(0).getName());
+        assertEquals("photo-head-001", results.get(0).getMembers().get(0).getPhoto());
+        assertEquals("9876543210", results.get(0).getMembers().get(0).getMobileNumber());
+        assertEquals("MALE", results.get(0).getMembers().get(0).getGender());
+        assertEquals(631152000000L, results.get(0).getMembers().get(0).getDob());
+        assertEquals("HEAD", results.get(0).getMembers().get(0).getRelationshipWithHead());
         assertEquals("Rajesh Sharma", results.get(0).getMembers().get(0).getCitizenDetails().getName());
     }
 

@@ -353,13 +353,18 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
             return;
         }
         try {
-            String host = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceHost()))
-                    ? userConfiguration.getFamilyServiceHost()
-                    : "http://localhost:8092/";
-            String endpoint = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceStateJitEndpoint()))
-                    ? userConfiguration.getFamilyServiceStateJitEndpoint()
-                    : "/family/v1/state/_jitProvision";
+            if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFamilyServiceHost())) {
+                throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "family.service.host is not configured");
+            }
+            if (StringUtils.isBlank(userConfiguration.getFamilyServiceStateJitEndpoint())) {
+                throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "family.service.state.jit.endpoint is not configured");
+            }
 
+            String host = userConfiguration.getFamilyServiceHost().trim();
+            if (!host.endsWith("/")) {
+                host += "/";
+            }
+            String endpoint = userConfiguration.getFamilyServiceStateJitEndpoint().trim();
             String url = host + (endpoint.startsWith("/") ? endpoint.substring(1) : endpoint);
 
             Map<String, Object> jitRequest = new HashMap<>();

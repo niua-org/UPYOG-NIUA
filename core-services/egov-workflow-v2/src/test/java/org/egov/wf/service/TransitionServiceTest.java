@@ -1,305 +1,297 @@
 package org.egov.wf.service;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.egov.tracer.model.CustomException;
-
 import org.egov.wf.repository.BusinessServiceRepository;
 import org.egov.wf.repository.WorKflowRepository;
 import org.egov.wf.util.WorkflowUtil;
 import org.egov.wf.web.models.Action;
-import org.egov.wf.web.models.AuditDetails;
 import org.egov.wf.web.models.BusinessService;
 import org.egov.wf.web.models.ProcessInstance;
+import org.egov.wf.web.models.ProcessStateAndAction;
 import org.egov.wf.web.models.State;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@ContextConfiguration(classes = {TransitionService.class})
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 class TransitionServiceTest {
-    @MockBean
+
+    private static final String TENANT = "pb.amritsar";
+    private static final String INITIAL_UUID = "11111111-1111-4111-8111-111111111111";
+    private static final String NEXT_UUID = "22222222-2222-4222-8222-222222222222";
+
+    @Mock
+    private WorKflowRepository repository;
+    @Mock
     private BusinessServiceRepository businessServiceRepository;
-
-    @Autowired
-    private TransitionService transitionService;
-
-    @MockBean
-    private WorKflowRepository worKflowRepository;
-
-    @MockBean
+    @Mock
     private WorkflowUtil workflowUtil;
 
+    private TransitionService transitionService;
 
-
-
-
-    @Test
-    void testGetProcessStateAndActionsWithTrue() {
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        assertThrows(CustomException.class,
-                () -> this.transitionService.getProcessStateAndActions(processInstanceList, true));
-        verify(this.businessServiceRepository)
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any());
+    @BeforeEach
+    void setUp() {
+        transitionService = new TransitionService(repository, businessServiceRepository, workflowUtil);
     }
 
     @Test
+    void getProcessStateAndActionsTransitionResolvesActionAndResultantStateForNewInstance() {
+        BusinessService businessService = businessServiceWithTransition();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(Collections.emptyList());
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-    void testGetProcessStateAndActionsWithBusinessServiceList() {
+        ProcessInstance request = processInstance("BIZ-1", "FORWARD");
+        List<ProcessStateAndAction> result = transitionService.getProcessStateAndActions(List.of(request), true);
 
-
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(new BusinessService());
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-
+        assertThat(result).hasSize(1);
+        ProcessStateAndAction psa = result.get(0);
+        assertThat(psa.getAction().getAction()).isEqualToIgnoringCase("FORWARD");
+        assertThat(psa.getResultantState().getUuid()).isEqualTo(NEXT_UUID);
+        assertThat(psa.getCurrentState().getUuid()).isEqualTo(INITIAL_UUID);
+        assertThat(request.getBusinesssServiceSla()).isEqualTo(5_000L);
+        assertThat(request.getModuleName()).isEqualTo("PT");
     }
 
-
     @Test
-    void testGetProcessStateAndActionsWithCodeError() {
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenThrow(new CustomException("Code", "An error occurred"));
+    void getProcessStateAndActionsTransitionUsesStateFromDatabaseWhenPresent() {
+        BusinessService businessService = businessServiceWithTransition();
+        State dbState = State.builder().uuid("db-state").state("INPROGRESS").build();
+        ProcessInstance fromDb = ProcessInstance.builder()
+                .businessId("BIZ-2")
+                .state(dbState)
+                .build();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(List.of(fromDb));
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(new BusinessService());
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
+        Action inProgressAction = Action.builder()
+                .action("FORWARD")
+                .nextState(NEXT_UUID)
+                .roles(List.of("EMPLOYEE"))
+                .build();
+        dbState.setActions(List.of(inProgressAction));
 
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        assertThrows(CustomException.class,
-                () -> this.transitionService.getProcessStateAndActions(processInstanceList, true));
-        verify(this.worKflowRepository).getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any());
-        verify(this.businessServiceRepository)
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any());
+        ProcessInstance request = processInstance("BIZ-2", "FORWARD");
+        List<ProcessStateAndAction> result = transitionService.getProcessStateAndActions(List.of(request), true);
+
+        assertThat(result.get(0).getCurrentState()).isSameAs(dbState);
+        assertThat(result.get(0).getProcessInstanceFromDb()).isSameAs(fromDb);
+        assertThat(request.getBusinesssServiceSla()).isNull();
     }
 
-
     @Test
+    void getProcessStateAndActionsSearchPrefersRequestStateEvenWhenDatabaseRecordExists() {
+        BusinessService businessService = businessServiceWithTransition();
+        State dbState = State.builder().uuid("db-state").state("INPROGRESS").build();
+        ProcessInstance fromDb = ProcessInstance.builder().businessId("BIZ-3").state(dbState).build();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(List.of(fromDb));
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-    void testGetProcessStateAndActions() {
+        State requestState = State.builder().uuid(INITIAL_UUID).state("").build();
+        requestState.setActions(List.of(Action.builder()
+                .action("FORWARD")
+                .nextState(NEXT_UUID)
+                .roles(List.of("EMPLOYEE"))
+                .build()));
+        ProcessInstance request = processInstance("BIZ-3", "FORWARD");
+        request.setState(requestState);
 
+        List<ProcessStateAndAction> result = transitionService.getProcessStateAndActions(List.of(request), false);
 
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(processInstanceList);
-
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(new BusinessService());
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
-
-        ArrayList<ProcessInstance> processInstanceList1 = new ArrayList<>();
-        processInstanceList1.add(new ProcessInstance());
-          }
-
-
-    @Test
-    void testGetProcessStateAndAction() {
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(new BusinessService());
-        businessServiceList.add(new BusinessService());
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        assertThrows(CustomException.class,
-                () -> this.transitionService.getProcessStateAndActions(processInstanceList, true));
-        verify(this.businessServiceRepository)
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any());
+        assertThat(result.get(0).getCurrentState()).isSameAs(requestState);
+        assertThat(result.get(0).getProcessInstanceFromDb()).isSameAs(fromDb);
     }
 
-
     @Test
-    void TestGetProcessStateAndActions() {
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
+    void getProcessStateAndActionsSearchUsesRequestState() {
+        BusinessService businessService = businessServiceWithTransition();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(Collections.emptyList());
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-        BusinessService businessService = new BusinessService();
-        businessService.addStatesItem(new State());
+        State requestState = State.builder().uuid(INITIAL_UUID).state("").build();
+        requestState.setActions(List.of(Action.builder()
+                .action("FORWARD")
+                .nextState(NEXT_UUID)
+                .roles(List.of("EMPLOYEE"))
+                .build()));
+        ProcessInstance request = processInstance("BIZ-4", "FORWARD");
+        request.setState(requestState);
 
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(businessService);
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
+        List<ProcessStateAndAction> result = transitionService.getProcessStateAndActions(List.of(request), false);
 
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        assertThrows(CustomException.class,
-                () -> this.transitionService.getProcessStateAndActions(processInstanceList, true));
-        verify(this.workflowUtil).rolesAllowedInService((BusinessService) any());
-        verify(this.worKflowRepository).getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any());
-        verify(this.businessServiceRepository)
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any());
+        assertThat(result.get(0).getCurrentState()).isSameAs(requestState);
+        assertThat(result.get(0).getAction()).isNotNull();
+        assertThat(result.get(0).getResultantState()).isNull();
     }
 
+    @Test
+    void getProcessStateAndActionsExpandsWildcardRoles() {
+        BusinessService businessService = businessServiceWithTransition();
+        businessService.getStates().get(0).getActions().get(0).setRoles(new ArrayList<>(List.of("*")));
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(Collections.emptyList());
+        List<String> allowed = List.of("CITIZEN", "EMPLOYEE");
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(allowed);
+
+        ProcessInstance request = processInstance("BIZ-5", "FORWARD");
+        transitionService.getProcessStateAndActions(List.of(request), true);
+
+        assertThat(businessService.getStates().get(0).getActions().get(0).getRoles()).containsExactlyElementsOf(allowed);
+    }
 
     @Test
+    void getProcessStateAndActionsThrowsWhenBusinessServiceMissing() {
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(Collections.emptyList());
+        ProcessInstance request = processInstance("BIZ-6", "FORWARD");
 
-    void testGetProcessStateAndActionsWithList() {
-
-
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        BusinessService businessService = new BusinessService();
-        businessService.setStates(new ArrayList<>());
-
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(businessService);
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-           }
-
+        assertThatThrownBy(() -> transitionService.getProcessStateAndActions(List.of(request), true))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("No bussinessService object found");
+    }
 
     @Test
+    void getProcessStateAndActionsThrowsWhenMultipleBusinessServicesReturned() {
+        when(businessServiceRepository.getBusinessServices(any()))
+                .thenReturn(List.of(new BusinessService(), new BusinessService()));
+        ProcessInstance request = processInstance("BIZ-7", "FORWARD");
 
-    void testGetProcessStateAndActionsWithDoc() {
-
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        ArrayList<State> stateList = new ArrayList<>();
-        ArrayList<Action> actions = new ArrayList<>();
-        stateList.add(new State("01234567-89AB-CDEF-FEDC-BA9876543210", "42", "42", 1L, "MD", "Application Status", true,
-                true, true, true, actions, new AuditDetails()));
-
-        BusinessService businessService = new BusinessService();
-        businessService.setStates(stateList);
-
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(businessService);
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-          }
-
+        assertThatThrownBy(() -> transitionService.getProcessStateAndActions(List.of(request), true))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("Multiple bussinessService object found");
+    }
 
     @Test
+    void getProcessStateAndActionsThrowsWhenTransitionActionIsInvalid() {
+        BusinessService businessService = businessServiceWithTransition();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(Collections.emptyList());
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-    void testGetProcessStateAndActionsWithBusinessListTrue() {
+        ProcessInstance request = processInstance("BIZ-8", "UNKNOWN");
 
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        ArrayList<State> stateList = new ArrayList<>();
-        ArrayList<Action> actions = new ArrayList<>();
-        stateList.add(new State("01234567-89AB-CDEF-FEDC-BA9876543210", "42", "42", 1L, "MD", "Application Status", true,
-                true, true, true, actions, new AuditDetails()));
-        BusinessService businessService = new BusinessService();
-        businessService.setStates(stateList);
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(businessService);
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
-
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(null);
-          }
-
+        assertThatThrownBy(() -> transitionService.getProcessStateAndActions(List.of(request), true))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("Action UNKNOWN not found");
+    }
 
     @Test
+    void getProcessStateAndActionsResolvesMultipleInstancesInOneRequest() {
+        BusinessService businessService = businessServiceWithTransition();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(Collections.emptyList());
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-    void testGetProcessStateAndActionsStateList() {
+        ProcessInstance first = processInstance("BIZ-9", "FORWARD");
+        ProcessInstance second = processInstance("BIZ-10", "FORWARD");
+        List<ProcessStateAndAction> result = transitionService.getProcessStateAndActions(List.of(first, second), true);
 
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
-
-        ArrayList<State> stateList = new ArrayList<>();
-        ArrayList<Action> actions = new ArrayList<>();
-        stateList.add(new State("01234567-89AB-CDEF-FEDC-BA9876543210", "42", "42", 1L, "MD", "Application Status", true,
-                true, true, true, actions, new AuditDetails()));
-
-        BusinessService businessService = new BusinessService();
-        businessService.setStates(stateList);
-
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(businessService);
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        processInstanceList.add(null);
-           }
-
+        assertThat(result).hasSize(2);
+    }
 
     @Test
+    void getProcessStateAndActionsSkipsNamedStatesWhenResolvingInitialState() {
+        State named = State.builder().uuid("named").state("DRAFT").build();
+        Action forward = Action.builder().action("FORWARD").nextState(NEXT_UUID).roles(List.of("EMPLOYEE")).build();
+        State initial = State.builder().uuid(INITIAL_UUID).state("").build();
+        initial.setActions(List.of(forward));
+        State next = State.builder().uuid(NEXT_UUID).state("APPROVED").build();
+        BusinessService businessService = BusinessService.builder()
+                .tenantId(TENANT)
+                .businessService("PT")
+                .business("PT")
+                .states(new ArrayList<>(List.of(named, initial, next)))
+                .build();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(Collections.emptyList());
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-    void testGetProcessStateAndActionsAddState() {
+        List<ProcessStateAndAction> result = transitionService.getProcessStateAndActions(
+                List.of(processInstance("BIZ-11", "FORWARD")), true);
 
-        when(this.workflowUtil.rolesAllowedInService((BusinessService) any())).thenReturn(new ArrayList<>());
-        when(this.worKflowRepository.getProcessInstances((org.egov.wf.web.models.ProcessInstanceSearchCriteria) any()))
-                .thenReturn(new ArrayList<>());
+        assertThat(result.get(0).getCurrentState().getUuid()).isEqualTo(INITIAL_UUID);
+    }
 
-        State state = new State();
-        state.addActionsItem(new Action());
+    @Test
+    void getProcessStateAndActionsSearchAllowsCurrentStateWithoutConfiguredActions() {
+        BusinessService businessService = businessServiceWithTransition();
+        businessService.getStates().get(0).setActions(Collections.emptyList());
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(Collections.emptyList());
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
 
-        ArrayList<State> stateList = new ArrayList<>();
-        stateList.add(state);
+        State requestState = State.builder().uuid(INITIAL_UUID).state("").build();
+        requestState.setActions(Collections.emptyList());
+        ProcessInstance request = processInstance("BIZ-12", "FORWARD");
+        request.setState(requestState);
 
-        BusinessService businessService = new BusinessService();
-        businessService.setStates(stateList);
+        List<ProcessStateAndAction> result = transitionService.getProcessStateAndActions(List.of(request), false);
 
-        ArrayList<BusinessService> businessServiceList = new ArrayList<>();
-        businessServiceList.add(businessService);
-        when(this.businessServiceRepository
-                .getBusinessServices((org.egov.wf.web.models.BusinessServiceSearchCriteria) any()))
-                .thenReturn(businessServiceList);
+        assertThat(result.get(0).getAction()).isNull();
+    }
 
-        ArrayList<ProcessInstance> processInstanceList = new ArrayList<>();
-        processInstanceList.add(new ProcessInstance());
-        }
+    @Test
+    void prepareProcessStateAndActionMapsInstancesFromRepository() {
+        BusinessService businessService = businessServiceWithTransition();
+        ProcessInstance fromDb = ProcessInstance.builder().businessId("BIZ-13").build();
+        when(businessServiceRepository.getBusinessServices(any())).thenReturn(List.of(businessService));
+        when(repository.getProcessInstances(any())).thenReturn(List.of(fromDb));
+        when(workflowUtil.rolesAllowedInService(businessService)).thenReturn(List.of("EMPLOYEE"));
+
+        ArgumentCaptor<org.egov.wf.web.models.ProcessInstanceSearchCriteria> captor =
+                ArgumentCaptor.forClass(org.egov.wf.web.models.ProcessInstanceSearchCriteria.class);
+        ProcessInstance request = processInstance("BIZ-13", "FORWARD");
+
+        transitionService.getProcessStateAndActions(List.of(request), true);
+
+        verify(repository).getProcessInstances(captor.capture());
+        assertThat(captor.getValue().getBusinessIds()).containsExactly("BIZ-13");
+        assertThat(captor.getValue().getTenantId()).isEqualTo(TENANT);
+    }
+
+    private static BusinessService businessServiceWithTransition() {
+        Action forward = Action.builder()
+                .action("FORWARD")
+                .nextState(NEXT_UUID)
+                .roles(new ArrayList<>(List.of("EMPLOYEE")))
+                .build();
+        State initial = State.builder()
+                .uuid(INITIAL_UUID)
+                .state("")
+                .sla(100L)
+                .build();
+        initial.setActions(new ArrayList<>(List.of(forward)));
+        State next = State.builder().uuid(NEXT_UUID).state("APPROVED").build();
+        return BusinessService.builder()
+                .tenantId(TENANT)
+                .businessService("PT")
+                .business("PT")
+                .businessServiceSla(5_000L)
+                .states(new ArrayList<>(List.of(initial, next)))
+                .build();
+    }
+
+    private static ProcessInstance processInstance(String businessId, String action) {
+        return ProcessInstance.builder()
+                .tenantId(TENANT)
+                .businessService("PT")
+                .businessId(businessId)
+                .action(action)
+                .build();
+    }
 }
-

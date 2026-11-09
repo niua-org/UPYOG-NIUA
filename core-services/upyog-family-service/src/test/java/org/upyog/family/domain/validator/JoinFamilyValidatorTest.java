@@ -12,6 +12,7 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.RequesterDxClient;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.JoinFamilyRequest;
 
@@ -34,6 +35,9 @@ class JoinFamilyValidatorTest {
 
     @Mock
     private RequesterDxClient requesterDxClient;
+
+    @Mock
+    private UserClient userClient;
 
     @InjectMocks
     private JoinFamilyValidator validator;
@@ -58,7 +62,7 @@ class JoinFamilyValidatorTest {
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
                 .relationshipWithHead("SON")
-                .hofConsentOtp("OTP-1234")
+                .txnId("OTP-1234")
                 .build();
 
         when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5")).thenReturn(Collections.emptyList());
@@ -75,7 +79,7 @@ class JoinFamilyValidatorTest {
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
                 .relationshipWithHead("SON")
-                .hofConsentOtp("OTP-1234")
+                .txnId("OTP-1234")
                 .build();
 
         when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5"))
