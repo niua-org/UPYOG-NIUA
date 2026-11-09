@@ -80,11 +80,11 @@ const FoundFamily = () => {
     setSubmitting(true);
     try {
       const res = await Digit.UserService.joinFamily({
-        familyId: verifiedData.familyId,
+        familyId: verifiedData?.familyId,
         tenantId,
         applicantUserUuid: userUuid,
         relationshipWithHead: relationship.code,
-        txnId: verifiedData.txnId,
+        txnId: verifiedData?.txnId || verifiedData?.consentToken,
       });
       // if we get a response with status not equal to JOINED then we will show an error toast
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");

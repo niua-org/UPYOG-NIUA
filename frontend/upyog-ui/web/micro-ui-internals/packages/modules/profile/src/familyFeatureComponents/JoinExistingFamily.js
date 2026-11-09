@@ -32,9 +32,9 @@ const JoinExistingFamily = () => {
   const showError = (label) => setToast({ error: true, label });
 
   const handleAadhaarChange = (e) => {
-    const value = e.target.value;
-    if (!/^\d{0,12}$/.test(value)) return;
-    setAadhaar(value);
+    const rawValue = e.target.value.replace(/\D/g, "").slice(0, 12);
+    if (!/^\d{0,12}$/.test(rawValue)) return;
+    setAadhaar(rawValue);
     setReferenceId(null); // aadhaar changed -> old OTP session is invalid
   };
 
@@ -109,7 +109,7 @@ const JoinExistingFamily = () => {
         <TextInput
           type="tel"
           name="aadhaar"
-          value={aadhaar}
+          value={aadhaar.replace(/(\d{4})(?=\d)/g, "$1 ")}
           onChange={handleAadhaarChange}
           disable={!!familyId}
           placeholder={t("PROFILE_ENTER_AADHAAR")}

@@ -210,13 +210,24 @@ export const openDocument = async (fileOrId, stateId) => {
 
 
 // when verify from aadhar, will show these details of the family head
-export const getFamilyHeadFields = (verifiedData,t) =>
-  withValues([
-    ["CORE_COMMON_PROFILE_NAME", verifiedData?.demographics?.name],
-    ["CORE_COMMON_PROFILE_GENDER", t(verifiedData?.demographics?.gender)],
-    ["CORE_COMMON_PROFILE_DOB", verifiedData?.demographics?.dob],
-    ["CORE_COMMON_VERIFIED_PROFILE", verifiedData?.isVerified ? t("CORE_COMMON_VERIFIED") : t("CORE_COMMON_NOT_VERIFIED")],
+export const getFamilyHeadFields = (verifiedData, t) => {
+  // Aadhaar flow — demographics object present
+  if (verifiedData?.demographics) {
+    return withValues([
+      ["CORE_COMMON_FAMILY_ID", verifiedData?.familyId],
+      ["CORE_COMMON_PROFILE_NAME", verifiedData?.demographics?.name],
+      ["CORE_COMMON_PROFILE_GENDER", t(verifiedData?.demographics?.gender)],
+      ["CORE_COMMON_PROFILE_DOB", verifiedData?.demographics?.dob],
+    ]);
+  }
+  // Family ID flow — find the head member from family.members
+  const headMember = verifiedData?.family?.members?.find((m) => m.isHead === true);
+  return withValues([
+    ["CORE_COMMON_FAMILY_ID", verifiedData?.familyId],
+    ["CORE_COMMON_PROFILE_NAME", headMember?.name],
+    ["CORE_COMMON_PROFILE_MOBILE_NUMBER", headMember?.mobileNumber],
   ]);
+};
 
 // when verify from family Id, will show these details of the family head
 export const getFamilyFields = (family) =>
