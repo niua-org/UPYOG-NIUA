@@ -92,7 +92,7 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
         const updatedUser = {
           ...userDetails,
           ...form,
-          gender: form.gender?.code || form.gender,
+          gender: form.gender?.code || form.gender, //avoids posting the whole dropdown option object
           photo: photoId
         };
         onProfileUpdate && onProfileUpdate(updatedUser);
