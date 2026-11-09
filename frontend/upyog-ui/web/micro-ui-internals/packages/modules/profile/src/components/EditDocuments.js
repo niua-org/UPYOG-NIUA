@@ -45,6 +45,21 @@ const INITIAL_FILES = {
   DOB_PROOF: null,
 };
 
+const styles = profileStyles.documentUpload;
+
+// Uploaded file preview: icon, file name below it, upload date and a view action
+const UploadedDocTile = ({ doc, onView, t }) => {
+  const isPdf = /\.pdf$/i.test(doc.fileName || "");
+  const uploadedOn = doc.lastModifiedDate?.split(" ")[0]; // "09-11-2026 13:38:46" -> "09-11-2026"
+
+  return (
+    <button type="button" style={styles.fileTile} onClick={onView} title={t("PROFILE_VIEW_DOC")}>
+      {isPdf ? <PDFSvg width={48} height={48} /> : <span style={styles.fileEmoji}>🖼️</span>}
+      <span style={styles.viewLink}>{t("PROFILE_VIEW_DOC")}</span>
+    </button>
+  );
+};
+
 const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   const { t } = useTranslation();
 
@@ -298,63 +313,46 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
     }
   };
 
+
   return (
     <>
-      <div style={profileStyles.card}>
+     
+      <div style={styles.grid}>
         {DOC_TYPES.map(({ key, label }) => {
           const existing = findExisting(key);
 
           return (
-            <div key={key} style={{ width: "100%" }}>
-              <div style={profileStyles.cardHeader}>
-                <div style={profileStyles.cardLabel}>
+            <div key={key} style={styles.card}>
+              <div style={styles.header}>
+                <div style={styles.title}>
                   {t(label)}
-
-                  {!existing && (
-                    <span style={profileStyles.required}>*</span>
-                  )}
+                  {!existing && <span style={profileStyles.required}> *</span>}
                 </div>
-
-                {existing && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      cursor: "pointer",
-                    }}
-                    onClick={() =>
-                      openDocument(existing.filestoreId, tenantId)
-                    }
-                    title="Click to view document"
-                  >
-                    <PDFSvg width={100} height={100} />
-
-                    <span
-                      style={{
-                        fontSize: 13,
-                        color: "#1D70B8",
-                        textDecoration: "underline",
-                      }}
-                    >
-                      {t("PROFILE_VIEW_DOC")}
-                    </span>
-                  </div>
-                )}
               </div>
 
+            {existing ? (
+              <UploadedDocTile
+                doc={existing}
+                t={t}
+                onView={() => openDocument(existing.filestoreId, tenantId)}
+              />
+            ) : (
+              <div style={styles.emptyTile}>{t("PROFILE_NO_DOC_UPLOADED")}</div>
+            )}
+
+            <div>
+              <div style={styles.uploadLabel}>
+                {existing ? t("PROFILE_REPLACE_DOC") : t("PROFILE_UPLOAD_DOC")}
+              </div>
               <UploadFile
                 accept={ACCEPTED}
                 onUpload={(e) => handleUpload(e, key)}
                 onDelete={() => handleDelete(key)}
                 file={files[key]}
-                message={
-                  existing
-                    ? t("PROFILE_REUPLOAD_DOC")
-                    : t("PROFILE_NO_FILE_SELECTED")
-                }
+                message={existing ? t("PROFILE_REUPLOAD_DOC") : t("PROFILE_NO_FILE_SELECTED")}
                 iserror={errors[key]}
               />
+            </div>
             </div>
           );
         })}
