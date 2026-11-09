@@ -24,6 +24,7 @@ import org.upyog.family.web.contract.FamilyOtpVerifyRequest;
 import org.upyog.family.web.contract.FamilyOtpVerifyResponse;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +197,37 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         // Enrich family with citizen demographics
         enrichCitizenDemographics(Collections.singletonList(family), request.getRequestInfo());
 
+        // Ensure Head of Family is present in members roster and has demographics
+        if (family.getMembers() != null && StringUtils.isNotBlank(headUserUuid)) {
+            boolean headPresent = family.getMembers().stream()
+                    .anyMatch(m -> headUserUuid.equals(m.getUserUuid()));
+            if (!headPresent && headProfile != null) {
+                FamilyMember headMember = FamilyMember.builder()
+                        .id("HEAD-" + (headUserUuid.length() >= 8 ? headUserUuid.substring(0, 8) : headUserUuid))
+                        .familyId(family.getFamilyId())
+                        .tenantId(family.getTenantId())
+                        .userUuid(headUserUuid)
+                        .relationshipWithHead(FamilyConstants.RELATIONSHIP_HEAD)
+                        .isHead(true)
+                        .isVerified(headProfile.getIsIdentityVerified() != null ? headProfile.getIsIdentityVerified() : true)
+                        .active(true)
+                        .status(org.upyog.family.domain.model.MemberStatus.ACTIVE)
+                        .name(headProfile.getName())
+                        .mobileNumber(headProfile.getMobileNumber())
+                        .gender(headProfile.getGender())
+                        .photo(headProfile.getPhoto())
+                        .dob(headProfile.getDob())
+                        .citizenDetails(headProfile)
+                        .build();
+                List<FamilyMember> membersWithHead = new ArrayList<>(family.getMembers());
+                membersWithHead.add(0, headMember);
+                family.setMembers(membersWithHead);
+            }
+        }
+        if (headProfile != null && StringUtils.isNotBlank(headProfile.getName()) && StringUtils.isBlank(family.getHeadName())) {
+            family.setHeadName(headProfile.getName());
+        }
+
         // Generate verified 128-bit HoF consent token bound to target family and applicant
         String consentToken = "CONSENT-VERIFIED-" + UUID.randomUUID().toString().replace("-", "");
         requesterDxClient.registerConsentToken(consentToken, family.getFamilyId(), callerUuid);
@@ -232,11 +264,16 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 copy.setTenantId(m.getTenantId());
                 copy.setUserUuid(m.getUserUuid());
                 copy.setName(m.getName());
+                copy.setGender(m.getGender());
+                copy.setDob(m.getDob());
+                copy.setPhoto(m.getPhoto());
                 copy.setRelationshipWithHead(m.getRelationshipWithHead());
                 copy.setStatus(m.getStatus());
                 copy.setIsHead(m.getIsHead());
+                copy.setIsVerified(m.getIsVerified());
                 copy.setActive(m.getActive());
                 copy.setMobileNumber(MaskUtils.maskMobile(m.getMobileNumber()));
+                copy.setCitizenDetails(m.getCitizenDetails());
                 return copy;
             }).collect(Collectors.toList());
         }
@@ -245,11 +282,14 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 .id(original.getId())
                 .familyId(original.getFamilyId())
                 .tenantId(original.getTenantId())
+                .headName(original.getHeadName())
+                .headUserUuid(original.getHeadUserUuid())
                 .status(original.getStatus())
                 .familyType(original.getFamilyType())
-                .headUserUuid(original.getHeadUserUuid())
                 .category(original.getCategory())
                 .members(sanitizedMembers)
+                .additionalDetails(original.getAdditionalDetails())
+                .auditDetails(original.getAuditDetails())
                 .build();
     }
 
