@@ -382,7 +382,228 @@ export const profileStyles = {
       lineHeight: 1,
     },
   },
+  
+myFamilyDashboard: {
+  pageCard: {
+    maxWidth: "355px",
+    minHeight: "710px",
+    margin: "0 auto",
+    padding: "24px 20px 20px",
+    boxSizing: "border-box",
+  },
 
+  stepText: {
+    fontSize: "12px",
+    fontWeight: "700",
+    color: "#6B7280",
+    letterSpacing: "0.4px",
+    marginBottom: "14px",
+  },
+
+  /* ==============================
+     HEADER
+  ============================== */
+
+  headerRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "8px",
+    marginBottom: "8px",
+  },
+
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "700",
+    color: "#172033",
+    lineHeight: "1.2",
+  },
+
+  familyIdBadge: {
+    background: "#D9F7E1",
+    color: "#087A36",
+    borderRadius: "8px",
+    padding: "5px 9px",
+    fontSize: "11px",
+    fontWeight: "700",
+    whiteSpace: "nowrap",
+  },
+
+  /* ==============================
+     FAMILY SUMMARY
+  ============================== */
+
+  familySummary: {
+    marginBottom: "28px",
+  },
+
+  summaryLine: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: "4px",
+    flexWrap: "wrap",
+    lineHeight: "1.45",
+  },
+
+  summaryLabel: {
+    fontSize: "15px",
+    color: "#65758B",
+    fontWeight: "400",
+  },
+
+  summaryValue: {
+    fontSize: "15px",
+    color: "#65758B",
+    fontWeight: "400",
+  },
+
+  /* ==============================
+     REGISTERED MEMBERS HEADER
+  ============================== */
+
+  membersHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: "14px",
+  },
+
+  membersTitle: {
+    fontSize: "11px",
+    fontWeight: "700",
+    color: "#65758B",
+    letterSpacing: "0.2px",
+  },
+
+  addMemberLink: {
+    border: "none",
+    background: "transparent",
+    padding: "0",
+    color: "#1769E0",
+    fontSize: "13px",
+    fontWeight: "600",
+    textDecoration: "underline",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "5px",
+  },
+
+  addMemberPlus: {
+    fontSize: "18px",
+    fontWeight: "700",
+    lineHeight: "1",
+    textDecoration: "none",
+  },
+
+  /* ==============================
+     MEMBER GRID
+  ============================== */
+
+  membersGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "8px 20px",
+    marginBottom: "28px",
+  },
+
+  memberCard: {
+    minHeight: "166px",
+    border: "1px solid #DCE3EC",
+    borderRadius: "12px",
+    background: "#FFFFFF",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    padding: "16px 10px 14px",
+    boxSizing: "border-box",
+  },
+
+  /* ==============================
+     AVATAR
+  ============================== */
+
+  avatar: {
+    width: "44px",
+    height: "44px",
+    borderRadius: "50%",
+    background: "#292929",
+    color: "#FFFFFF",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "17px",
+    fontWeight: "400",
+    marginBottom: "12px",
+  },
+
+  /* ==============================
+     MEMBER DETAILS
+  ============================== */
+
+  memberName: {
+    fontSize: "14px",
+    fontWeight: "700",
+    color: "#172033",
+    textAlign: "center",
+    marginBottom: "5px",
+  },
+
+  memberRelationship: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "3px",
+    color: "#65758B",
+    fontSize: "12px",
+    textAlign: "center",
+    lineHeight: "1.3",
+    minHeight: "18px",
+  },
+
+  bullet: {
+    fontSize: "12px",
+    lineHeight: "1",
+  },
+
+  youText: {
+    color: "#65758B",
+  },
+
+  /* ==============================
+     VERIFIED BADGE
+  ============================== */
+
+  verifiedBadge: {
+    marginTop: "10px",
+    background: "#D9F7E1",
+    color: "#087A36",
+    borderRadius: "4px",
+    padding: "4px 9px",
+    fontSize: "10px",
+    fontWeight: "700",
+    letterSpacing: "0.1px",
+  },
+
+  /* ==============================
+     BOTTOM CTA
+  ============================== */
+
+  dashboardButton: {
+    width: "100%",
+    height: "46px",
+    border: "none",
+    borderRadius: "7px",
+    background: "#292929",
+    color: "#FFFFFF",
+    fontSize: "16px",
+    fontWeight: "500",
+    cursor: "pointer",
+    padding: "0 18px",
+    boxSizing: "border-box",
+  },
+},
   aadhaarVerification: {
     consentBox: {
       background: "#F8F9FA",
@@ -470,72 +691,6 @@ export const profileStyles = {
     borderRadius: 12,
     border: "1px solid #E8EAED",
     boxShadow: "0 8px 24px rgba(0, 0, 0, 0.16)",
-  },
-
-   // Documents tab (EditDocuments)
-  documentUpload: {
-    grid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-      gap: 20,
-      width: "100%",
-    },
-    card: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 16,
-      padding: 20,
-      border: "1px solid #E8EAED",
-      borderRadius: 12,
-      background: "#FFFFFF",
-    },
-    header: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 },
-    title: { fontWeight: 600, fontSize: 16, color: "#0B0C0C" },
-
-    badge: { fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 999, whiteSpace: "nowrap" },
-    badgeVerified: { background: "#F0FDF4", color: "#166534", border: "1px solid #BBF7D0" },
-    badgePending: { background: "#FFF7ED", color: "#9A3412", border: "1px solid #FED7AA" },
-
-    // uploaded file tile: icon, file name below it, meta, view link
-    fileTile: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: 8,
-      width: "100%",
-      padding: "20px 16px",
-      border: "1px solid #E8EAED",
-      borderRadius: 10,
-      background: "#FAFAFB",
-      cursor: "pointer",
-      font: "inherit",
-    },
-    fileEmoji: { fontSize: 40, lineHeight: 1 },
-    fileName: {
-      display: "block",
-      maxWidth: "100%",
-      fontSize: 14,
-      fontWeight: 600,
-      color: "#0B0C0C",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap",
-    },
-    fileMeta: { fontSize: 12, color: "#6B7280" },
-    viewLink: { fontSize: 13, color: "#1D70B8", textDecoration: "underline" },
-
-    emptyTile: {
-      padding: "28px 16px",
-      border: "1px dashed #C9CDD2",
-      borderRadius: 10,
-      background: "#FAFAFB",
-      color: "#6B7280",
-      fontSize: 14,
-      textAlign: "center",
-    },
-
-    uploadLabel: { fontSize: 14, fontWeight: 500, color: "#505A5F", marginBottom: 6 },
-    hint: { fontSize: 12, color: "#6B7280", marginTop: 6 },
   },
 };
 
