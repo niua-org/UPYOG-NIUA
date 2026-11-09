@@ -229,7 +229,7 @@ const AadhaarVerification = ({
       {/* OTP Verification Section (appears inline below upon OTP dispatch) */}
       {isOtpSent && (
         <div style={styles.otpSection}>
-          <CardLabel>{`${t("CS_ENTER_OTP_SENT_TO")} ${maskedMobile}`}</CardLabel>
+          <CardLabel>{t("CORE_COMMON_ENTER_OTP")}</CardLabel>
           <OTPInput
             length={6}
             onChange={(val) => {
