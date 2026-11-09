@@ -143,8 +143,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
         actionCancelOnSubmit();
       }
     } catch (error) {
-      let message = t("CORE_COMMON_PROFILE_UPDATE_ERROR");
-      console.log("error", error)
+      let message = error?.response?.data?.Errors?.[0]?.code || t("CORE_COMMON_PROFILE_UPDATE_ERROR");
       try {
         const errorObj = JSON.parse(error);
         message = errorObj?.message || message;
