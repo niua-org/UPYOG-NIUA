@@ -54,7 +54,10 @@ const EditAddress = ({ initialAddresses = [] }) => {
           </div>
           <div style={profileStyles.grid}>
             {ADDRESS_FIELDS.map(([key, prop]) => {
-              const val = prop === "addressProof" ? (address.filestoreId) : address[prop];
+              if (prop === "addressProof" && !address.filestoreId) {
+                return null;
+              }
+              const val = prop === "addressProof" ? address.filestoreId : address[prop];
               return (
                 <Field
                   key={key}

@@ -76,8 +76,11 @@ export const getInitials = (name = "") =>
   name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("");
 
 // Converts a gender code string into the Dropdown option shape
-export const toGenderOption = (code) =>
-  code ? { i18nKey: `PT_COMMON_GENDER_${code}`, code, value: code } : null;
+export const toGenderOption = (gender) => {
+  if (!gender) return null;
+  const code = typeof gender === "object" ? (gender.code || gender.value) : gender;
+  return code ? { i18nKey: `PT_COMMON_GENDER_${code}`, code, value: code } : null;
+};
 
 // photo field from API is comma-separated S3 URLs: original, large, medium, small
 export const extractThumb = (photo) => {

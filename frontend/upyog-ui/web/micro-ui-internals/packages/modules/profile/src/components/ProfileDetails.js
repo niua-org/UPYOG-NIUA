@@ -5,8 +5,6 @@ import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, 
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
 
-const EDIT_PROFILE_URL = "/upyog-ui/citizen/profile/edit-details";
-
 // Function to get user Details
 const useProfileUser = () => {
   const [user, setUser] = useState(null);
