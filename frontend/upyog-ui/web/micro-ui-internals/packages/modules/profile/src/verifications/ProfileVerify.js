@@ -45,11 +45,9 @@ const ProfileVerify = () => {
   const showError = (label) => setToast({ error: true, label });
 
   const handleAadhaarChange = (e) => {
-    const value = e.target.value;
+    const rawValue = e.target.value.replace(/\D/g, "").slice(0, 12);
 
-    if (!/^\d{0,12}$/.test(value)) return;
-
-    setAadhaar(value);
+    setAadhaar(rawValue);
     setReferenceId(null);
     setOtp("");
   };
@@ -96,6 +94,32 @@ const ProfileVerify = () => {
       if (res?.user?.isIdentityVerified !== true) {
         throw new Error("PROFILE_VERIFICATION_FAILED");
       }
+      // Update session and local storage with the verified user data
+      const sessionUser = Digit.UserService.getUser();
+      if (sessionUser && res?.user) {
+        const fullUpdatedUser = {
+          ...sessionUser,
+          info: {
+            ...sessionUser.info,
+            ...res.user, // update the user info with the verified data
+          },
+        };
+        // 1. Session Storage update
+        Digit.UserService.setUser(fullUpdatedUser);
+        Digit.SessionStorage.set("citizen.userRequestObject", fullUpdatedUser);
+        // 2. Local Storage update (Upyog auth keys)
+        localStorage.setItem("user-info", JSON.stringify(fullUpdatedUser.info));
+        localStorage.setItem("Citizen.user-info", JSON.stringify(fullUpdatedUser.info));
+        localStorage.setItem("citizen.userRequestObject", JSON.stringify(fullUpdatedUser.info));
+      }
+      setToast({
+        error: false,
+        label: t("PROFILE_VERIFICATION_SUCCESS"),
+      });
+      // 3. Clean full navigation so that user is redirected to profile details page after verification with sync info
+      navigationTimerRef.current = setTimeout(() => {
+        window.location.href = "/upyog-ui/citizen/profile/profile-details";
+      }, 2000);
 
       setToast({
         error: false,
@@ -118,7 +142,7 @@ const ProfileVerify = () => {
       <Card>
         <CardLabel>{t("CORE_COMMON_AADHAR_NUMBER")}</CardLabel>
 
-        <TextInput type="tel" name="aadhaar" value={aadhaar} onChange={handleAadhaarChange} placeholder={t("PROFILE_AADHAR_PLACEHOLDER")} />
+        <TextInput type="tel" name="aadhaar" value={aadhaar.replace(/(\d{4})(?=\d)/g, "$1 ")} onChange={handleAadhaarChange} placeholder={t("PROFILE_AADHAR_PLACEHOLDER")} />
 
         <SubmitBar label={t("COMMON_SEARCH")} onSubmit={sendAadhaarOtp} disabled={loading || aadhaar.length !== 12 || !!referenceId} />
 

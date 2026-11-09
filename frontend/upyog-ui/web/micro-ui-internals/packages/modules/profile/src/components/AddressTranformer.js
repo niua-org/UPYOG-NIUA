@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal, AddressDetails } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
+import {profileStyles, addressModalCss} from "../utils/profileStyles";
 
 const Heading = ({ t }) => <h1 className="heading-m">{t("FILL_ADDRESS_DETAILS")}</h1>;
 /**
@@ -158,12 +159,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
   return (
     <Modal
       headerBarMain={<Heading t={t} />}
-      popupStyles={{
-        backgroundColor: "#fff",
-        position: "relative",
-        maxHeight: "90vh",
-        overflowY: "auto",
-      }}
+      popupStyles={profileStyles.addressModalPopup}
       actionSaveLabel={isEdit ? t("CS_COMMON_UPDATE") : t("CS_COMMON_SUBMIT")}
       actionCancelLabel={t("BACK")}
       actionCancelOnSubmit={actionCancelOnSubmit}
@@ -172,15 +168,16 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
       setError={setShowToast}
       error={showToast?.label}
     >
-      <div className="core-address-details-wrapper">
-        <AddressDetails
-          t={t}
-          formData={formData}
-          onSelect={setFormData}
-          isEdit={isEdit}
-          config={{ inputs: [], canDisable: false, key: "address" }}
-        />
-      </div>
+      <div className="core-address-details-wrapper address-modal-grid">
+      <style>{addressModalCss}</style>
+      <AddressDetails
+        t={t}
+        formData={formData}
+        onSelect={setFormData}
+        isEdit={isEdit}
+        config={{ inputs: [], canDisable: false, key: "address" }}
+      />
+    </div>
     </Modal>
   );
 };

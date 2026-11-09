@@ -285,6 +285,7 @@ export const UserService = {
       data: details,
       auth: true,
       method: "POST",
+      userService: true,
     }),
 
   sendFamilyOtp: (details) =>
@@ -304,6 +305,7 @@ export const UserService = {
       data: details,
       auth: true,
       method: "POST",
+      userService: true,
     }),
 
   verifyProfile: (details) =>
@@ -313,6 +315,14 @@ export const UserService = {
       auth: true,
       method: "POST",
       userService: true,
+    }),
+  
+  newAuthenticateWithMobile: (details) =>
+    ServiceRequest({
+      url: Urls.loginV2.userLogin,
+      data: details,
+      auth: false,
+      method: "POST",
     }),
 
 };
