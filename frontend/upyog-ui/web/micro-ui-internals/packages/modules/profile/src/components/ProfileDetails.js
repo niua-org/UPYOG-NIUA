@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Loader, EditIcon, Dropdown, ArrowDown } from "@nudmcdgnpm/digit-ui-react-components";
+import { Card, Loader, EditIcon, Dropdown, ArrowDown, TickMark, CloseSvg, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument, clearFamilyMembers } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
@@ -41,6 +41,13 @@ const ProfileDetails = () => {
   const stateId = Digit.ULBService.getStateId();
   const { user, loading, error } = useProfileUser();
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     const fetchPhoto = async () => {
@@ -71,9 +78,16 @@ const ProfileDetails = () => {
   let familyOptions = [];
   FamilyCreateOptions &&
     FamilyCreateOptions.forEach((family) => {
-      // Once family ID is created, remove "Create Family" option
-      if (user?.familyId && family.code === "PROFILE_CREATE_FAMILY") {
-        return;
+      if (user?.familyId) {
+        // If the citizen already has a familyId, hide Create Family and Join Existing Family
+        if (family.code === "PROFILE_CREATE_FAMILY" || family.code === "PROFILE_JOIN_EXISTING_FAMILY") {
+          return;
+        }
+      } else {
+        // If the citizen does not have a familyId, hide Family Dashboard
+        if (family.code === "PROFILE_FAMILY_DASHBOARD") {
+          return;
+        }
       }
       familyOptions.push({ i18nKey: `${family.code}`, code: `${family.code}`, name: `${family.name}` });
     });
@@ -90,10 +104,20 @@ const ProfileDetails = () => {
   const documentBlocks = getDocumentBlocks(user.documents)
 
   /**
-   * Handle family dropdown action selection
-   * Navigates to the corresponding route based on the selected MDMS code
+   * Handle family dropdown action selection.
+   * If citizen is not Aadhaar verified, displays an error toast notification and blocks navigation.
+   * If verified, navigates to the corresponding route based on selected MDMS code.
    */
   const handleFamilySelection = (option) => {
+    // Intercept if citizen is not Aadhaar verified
+    if (!user?.isIdentityVerified) {
+      setToast({
+        error: true,
+        message: t("ERR_PROFILE_NOT_AADHAAR_VERIFIED", "Your Profile is not aadhaar verified, please verify"),
+      });
+      return;
+    }
+
     const targetRoute = PROFILE_ROUTES[option?.code];
     if (targetRoute) {
       if (option?.code === "PROFILE_CREATE_FAMILY") {
@@ -103,31 +127,56 @@ const ProfileDetails = () => {
     }
   };
 
-  const handleVerifyProfile = () => {
-    // Navigate to the profile verification page
-    navigate(PROFILE_ROUTES.VERIFY);
-  };
-
   return (
-    <Card>
+    <React.Fragment>
+      <Card>
       {/* Header: icon + title, edit button */}
       <div style={profileStyles.header}>
         <div style={profileStyles.headerLeft}>
           <div style={profileStyles.headerIcon}>👤</div>
           <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
+          {user?.isIdentityVerified ? (
+            <span
+              title={t("AADHAAR_VERIFIED", "Aadhaar Verified")}
+              style={profileStyles.verifiedBadge}
+            >
+              <span style={profileStyles.verifiedIconWrap}>
+                <TickMark fillColor="white" />
+              </span>
+              <span>{t("PROFILE_AADHAAR_VERIFIED", "Aadhaar Verified")}</span>
+            </span>
+          ) : (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(PROFILE_ROUTES.VERIFY)}
+              title={t("CLICK_TO_VERIFY_AADHAAR", "Click to verify Aadhaar")}
+              style={profileStyles.unverifiedBadge}
+            >
+              <span style={profileStyles.unverifiedIconWrap}>
+                <span style={profileStyles.closeSvgWrap}>
+                  <CloseSvg />
+                </span>
+              </span>
+              <span style={profileStyles.unverifiedText}>
+                {t("PROFILE_AADHAAR_NOT_VERIFIED", "Aadhaar Not Verified")}
+              </span>
+            </span>
+          )}
         </div>
         <div style={profileStyles.headerActions} >
           {user?.familyId && (
             <div style={profileStyles.familyIdBadge}>
-              <span style={{ fontSize: "14px", color: "#505A5F", fontWeight: 500 }}>
+              <span style={profileStyles.familyIdLabel}>
                 {t("CORE_COMMON_FAMILY_ID", "Family ID")}:
               </span>
-              <span style={{ fontSize: "15px", color: "#0B0C0C", fontWeight: 700 }}>
+              <span style={profileStyles.familyIdValue}>
                 {user.familyId}
               </span>
             </div>
           )}
-          {user?.isIdentityVerified ? (
+          {/* Show the My Family dropdown dynamically based on available options */}
+          {familyOptions.length > 0 && (
             <div>
               <Dropdown
                 option={familyOptions}
@@ -143,11 +192,7 @@ const ProfileDetails = () => {
                 }
               />
             </div>
-          )
-            :
-            (
-              <button type="button" onClick={handleVerifyProfile} style={profileStyles.editButton}>{t("VERIFY_PROFILE")}</button>
-            )}
+          )}
           <button type="button" onClick={() => navigate(PROFILE_ROUTES.EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
             <EditIcon /> {t("CORE_COMMON_EDIT")}
           </button>
@@ -183,12 +228,12 @@ const ProfileDetails = () => {
               {documentBlocks.map((doc, index) => (
                 <div
                   key={doc.id || index}
-                  style={{ ...profileStyles.documentCard, cursor: "pointer" }}
+                  style={profileStyles.documentCard}
                   onClick={() => openDocument(doc.filestoreId, stateId)}
                   title="Click to view document"
                 >
                   <PDFSvg width={40} height={40} />
-                  <div style={{ flex: 1 }}>
+                  <div style={profileStyles.documentContent}>
                     <div style={profileStyles.documentTitle}>
                       {t(doc.documentType)}
                     </div>
@@ -203,6 +248,18 @@ const ProfileDetails = () => {
         </Section>
       )}
     </Card>
+
+    {/* Floating Toast Notification */}
+    {toast && (
+      <div className="profile-toast-container">
+        <Toast
+          error={toast.error}
+          label={toast.message}
+          onClose={() => setToast(null)}
+        />
+      </div>
+    )}
+  </React.Fragment>
   );
 };
 
