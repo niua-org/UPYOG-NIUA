@@ -22,11 +22,19 @@ public class LoginV2ValidatorImpl implements LoginV2Validator {
 
     private final FamilyConfigurationService familyConfigurationService;
 
+    /**
+     * Constructs a LoginV2ValidatorImpl with optional State Family Configuration Service.
+     *
+     * @param familyConfigurationService optional service to validate state family policy
+     */
     @Autowired
     public LoginV2ValidatorImpl(@Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.familyConfigurationService = familyConfigurationService;
     }
 
+    /**
+     * Default no-arg constructor for standalone instantiation without dynamic family configuration.
+     */
     public LoginV2ValidatorImpl() {
         this(null);
     }

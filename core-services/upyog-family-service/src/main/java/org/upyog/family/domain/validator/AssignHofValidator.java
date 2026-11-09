@@ -39,6 +39,11 @@ public class AssignHofValidator {
         this.familyConfigurationService = familyConfigurationService;
     }
 
+    /**
+     * Backward-compatible constructor without dynamic family configuration.
+     *
+     * @param userClient client for user profile lookups and identity verification
+     */
     public AssignHofValidator(UserClient userClient) {
         this(userClient, null);
     }

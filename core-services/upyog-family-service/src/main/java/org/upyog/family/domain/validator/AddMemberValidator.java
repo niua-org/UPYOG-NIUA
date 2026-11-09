@@ -58,6 +58,14 @@ public class AddMemberValidator {
         this.familyConfigurationService = familyConfigurationService;
     }
 
+    /**
+     * Backward-compatible constructor without dynamic family configuration service.
+     *
+     * @param familyRepository repository for family persistence and query lookups
+     * @param masterDataService service for MDMS relationship validation
+     * @param requesterDxClient client for validating consent tokens against DX requester
+     * @param userClient client for user profile lookups and identity verification
+     */
     public AddMemberValidator(FamilyRepository familyRepository,
                               FamilyMasterDataService masterDataService,
                               RequesterDxClient requesterDxClient,

@@ -174,6 +174,12 @@ public class AadhaarSessionManagerImpl implements AadhaarSessionManager {
         return aadhaarByRefId.get(refId);
     }
 
+    /**
+     * Stores the citizen's mobile number keyed by session reference ID in Redis (or in-memory fallback).
+     *
+     * @param refId session reference ID
+     * @param mobileNumber 10-digit mobile number
+     */
     @Override
     public void storeMobileForReferenceId(String refId, String mobileNumber) {
         if (StringUtils.isBlank(refId) || StringUtils.isBlank(mobileNumber)) return;
@@ -189,6 +195,12 @@ public class AadhaarSessionManagerImpl implements AadhaarSessionManager {
         mobileByRefId.put(refId, mobileNumber);
     }
 
+    /**
+     * Retrieves the citizen's mobile number for the given session reference ID from Redis (or in-memory fallback).
+     *
+     * @param refId session reference ID
+     * @return mobile number or null if expired or not found
+     */
     @Override
     public String getMobileForReferenceId(String refId) {
         if (StringUtils.isBlank(refId)) return null;

@@ -704,6 +704,14 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         return AadhaarNumberUtils.generateRandomIndianMobileNumber();
     }
 
+    /**
+     * Checks if a candidate mobile number already exists in the database for the given tenant.
+     *
+     * @param mobile candidate 10-digit mobile number
+     * @param stateTenant state tenant identifier
+     * @param requestInfo request context
+     * @return true if the mobile exists in eg_user, false otherwise
+     */
     private boolean isMobileInDatabase(String mobile, String stateTenant, RequestInfo requestInfo) {
         try {
             if (userRepository.isUserPresent(mobile, stateTenant, UserType.CITIZEN)) {

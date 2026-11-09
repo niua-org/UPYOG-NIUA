@@ -52,10 +52,21 @@ public class MdmsFamilyConfigurationServiceImpl implements FamilyConfigurationSe
             this.lastUpdatedTimestamp = lastUpdatedTimestamp;
         }
 
+        /**
+         * Returns the cached family configuration.
+         *
+         * @return cached {@link FamilyConfig}
+         */
         public FamilyConfig getFamilyConfig() {
             return familyConfig;
         }
 
+        /**
+         * Checks whether this cache entry has exceeded the given time-to-live in milliseconds.
+         *
+         * @param ttlMillis cache time-to-live in milliseconds
+         * @return true if expired, false otherwise
+         */
         public boolean isExpired(long ttlMillis) {
             return (System.currentTimeMillis() - lastUpdatedTimestamp) > ttlMillis;
         }
