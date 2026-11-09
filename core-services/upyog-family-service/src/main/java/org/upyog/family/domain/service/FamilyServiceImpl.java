@@ -550,6 +550,12 @@ public class FamilyServiceImpl implements FamilyService {
                 .distinct()
                 .collect(Collectors.toList());
 
+        for (Family f : families) {
+            if (StringUtils.isNotBlank(f.getHeadUserUuid()) && !allMemberUuids.contains(f.getHeadUserUuid())) {
+                allMemberUuids.add(f.getHeadUserUuid());
+            }
+        }
+
         if (allMemberUuids.isEmpty()) {
             return;
         }
@@ -563,6 +569,10 @@ public class FamilyServiceImpl implements FamilyService {
                     }
                 }
                 family.enrichHeadName();
+            }
+            if (StringUtils.isBlank(family.getHeadName()) && StringUtils.isNotBlank(family.getHeadUserUuid())
+                    && profileMap.containsKey(family.getHeadUserUuid()) && profileMap.get(family.getHeadUserUuid()) != null) {
+                family.setHeadName(profileMap.get(family.getHeadUserUuid()).getName());
             }
         }
     }

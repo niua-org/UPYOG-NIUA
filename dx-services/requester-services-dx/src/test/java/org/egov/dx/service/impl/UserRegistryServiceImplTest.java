@@ -251,4 +251,71 @@ public class UserRegistryServiceImplTest {
         String familyId = userRegistryService.searchFamilyIdByUserUuid("usr-123", "pg.citya", new RequestInfo());
         assertEquals("FAM-FROM-PROFILE-456", familyId);
     }
+
+    @Test
+    void testResolveOrCreateUserUuid_CitizenCreatedWithoutMobile_AssignsRandomMobile() {
+        // Aadhaar search returns no existing user
+        when(restTemplate.postForObject(contains("/user/profile/aadhaar/_search"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn("{\"user\": []}");
+
+        // /user/_search check returns no user (candidate mobile is unique)
+        when(restTemplate.postForObject(contains("/user/_search"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn("{\"user\": []}");
+
+        // /user/users/_createnovalidate returns newly provisioned user
+        String createResponse = "{\"user\": [{\"uuid\": \"new-uuid-random-mobile\", \"active\": true}]}";
+        when(restTemplate.postForObject(contains("/user/users/_createnovalidate"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(createResponse);
+
+        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+                .name("Test Citizen")
+                .build();
+
+        String uuid = userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo());
+        assertEquals("new-uuid-random-mobile", uuid);
+
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).postForObject(contains("/user/users/_createnovalidate"), captor.capture(), eq(String.class));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> reqBody = (Map<String, Object>) captor.getValue().getBody();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> userMap = (Map<String, Object>) reqBody.get("user");
+
+        String assignedMobile = (String) userMap.get("mobileNumber");
+        org.junit.jupiter.api.Assertions.assertNotNull(assignedMobile, "Mobile number must not be null");
+        org.junit.jupiter.api.Assertions.assertTrue(assignedMobile.matches("^[6-9][0-9]{9}$"),
+                "Generated mobile must be a valid 10-digit Indian mobile number");
+        assertEquals(assignedMobile, userMap.get("userName"));
+        assertEquals(assignedMobile, demographics.getMobileNumber());
+    }
+
+    @Test
+    void testResolveOrCreateUserUuid_CitizenCreatedWithMobile_AssignsProvidedMobile() {
+        when(restTemplate.postForObject(contains("/user/profile/aadhaar/_search"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn("{\"user\": []}");
+
+        String createResponse = "{\"user\": [{\"uuid\": \"new-uuid-provided-mobile\", \"active\": true}]}";
+        when(restTemplate.postForObject(contains("/user/users/_createnovalidate"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(createResponse);
+
+        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+                .name("Test Citizen")
+                .mobileNumber("9876543210")
+                .build();
+
+        String uuid = userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo());
+        assertEquals("new-uuid-provided-mobile", uuid);
+
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).postForObject(contains("/user/users/_createnovalidate"), captor.capture(), eq(String.class));
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> reqBody = (Map<String, Object>) captor.getValue().getBody();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> userMap = (Map<String, Object>) reqBody.get("user");
+
+        assertEquals("9876543210", userMap.get("mobileNumber"));
+        assertEquals("9876543210", userMap.get("userName"));
+    }
 }

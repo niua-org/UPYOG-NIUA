@@ -44,6 +44,7 @@ public final class FamilyConstants {
     // ==========================================
     // Member Relationships with HoF
     // ==========================================
+    public static final String RELATIONSHIP_SELF = "SELF";
     public static final String RELATIONSHIP_HEAD = "HEAD";
     public static final String RELATIONSHIP_SPOUSE = "SPOUSE";
     public static final String RELATIONSHIP_SON = "SON";

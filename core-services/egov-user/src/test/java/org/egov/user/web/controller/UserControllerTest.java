@@ -9,6 +9,7 @@ import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.TokenService;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.SecureUser;
 import org.egov.user.domain.model.UserDetail;
@@ -139,6 +140,30 @@ class UserControllerTest {
         verify(userService).createUser(userCaptor.capture(), eq(requestInfo));
         assertThat(userCaptor.getValue().isMobileValidationMandatory()).isFalse();
         assertThat(userCaptor.getValue().isOtpValidationMandatory()).isFalse();
+    }
+
+    @Test
+    void createUserWithoutValidation_nullMobile_setsCitizenUsernamePrefix() {
+        RequestInfo requestInfo = RequestInfo.builder().build();
+        User persisted = User.builder().username("random-user").uuid("uuid-random").active(true).type(UserType.CITIZEN).build();
+        when(userService.createUser(any(User.class), eq(requestInfo))).thenReturn(persisted);
+
+        UserRequest reqWithoutMobile = UserRequest.builder()
+                .name("Citizen Without Mobile")
+                .tenantId("pb")
+                .type(UserType.CITIZEN)
+                .active(true)
+                .build();
+        CreateUserRequest createReq = new CreateUserRequest(requestInfo, reqWithoutMobile, null);
+
+        controller.createUserWithoutValidation(createReq, new HttpHeaders());
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userService).createUser(userCaptor.capture(), eq(requestInfo));
+        User capturedUser = userCaptor.getValue();
+
+        assertThat(capturedUser.getMobileNumber()).isNull();
+        assertThat(capturedUser.getUsername()).startsWith(UserConstants.CITIZEN_USERNAME_PREFIX);
     }
 
     @Test

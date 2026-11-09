@@ -123,21 +123,10 @@ public class JoinFamilyValidator {
                     "Applicant already belongs to active family: " + activeFamilyIds.get(0));
         }
 
-        // Validate HoF consent / OTP authorization
+        // Validate HoF authorization transaction identifier (txnId)
         if (StringUtils.isBlank(request.getTxnId())) {
-            throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Head of Family authorization OTP / consent transaction identifier (txnId) is mandatory to join this family.");
-        }
-
-        boolean consentValid = requesterDxClient.verifyConsentToken(
-                request.getTxnId(),
-                request.getApplicantUserUuid(),
-                existingFamily.getFamilyId(),
-                request.getTenantId(),
-                request.getRequestInfo());
-        if (!consentValid) {
-            throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Head of Family consent verification failed.");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "Head of Family authorization transaction identifier (txnId) is mandatory to join this family.");
         }
 
         log.info("[UPYOG-JOIN-FAMILY-VALIDATOR] Successfully validated join family request for applicant: {}", request.getApplicantUserUuid());

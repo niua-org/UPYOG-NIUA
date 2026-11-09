@@ -184,7 +184,7 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         }
 
         // 1. Mock Prefix Handling: Strictly gated behind family.consent.mock.enabled flag
-        if (trimmedToken.startsWith("CONSENT-VERIFIED-") || trimmedToken.startsWith("MOCK-OTP-")) {
+        if (trimmedToken.startsWith("CONSENT-VERIFIED-") || trimmedToken.startsWith("MOCK-OTP-") || trimmedToken.startsWith("TXN-MOCK-")) {
             if (Boolean.TRUE.equals(configuration.getMockConsentEnabled())) {
                 log.info("[UPYOG-DX-CLIENT] Mock consent mode enabled (family.consent.mock.enabled=true). "
                         + "Accepting mock consent token: '{}' for member: '{}', family: '{}'",

@@ -2,8 +2,11 @@ package org.egov.user.util;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.security.SecureRandom;
+
 /**
- * Normalization and equality helpers for 12-digit Aadhaar numbers stored in {@code eg_user}.
+ * Normalization and equality helpers for 12-digit Aadhaar numbers stored in {@code eg_user},
+ * and utilities for generating valid 10-digit Indian mobile numbers.
  *
  * <p>TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI.</p>
  *
@@ -11,6 +14,8 @@ import org.apache.commons.lang3.StringUtils;
  * @since 1.0.0
  */
 public final class AadhaarNumberUtils {
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private AadhaarNumberUtils() {
     }
@@ -57,5 +62,16 @@ public final class AadhaarNumberUtils {
             return false;
         }
         return normalizedLeft.equals(normalizedRight);
+    }
+
+    /**
+     * Generates a random valid 10-digit Indian mobile number matching {@code ^[6-9][0-9]{9}$}.
+     *
+     * @return 10-digit Indian mobile number string
+     */
+    public static String generateRandomIndianMobileNumber() {
+        int firstDigit = 6 + SECURE_RANDOM.nextInt(4); // 6, 7, 8, or 9
+        long remaining9Digits = (long) (SECURE_RANDOM.nextDouble() * 1_000_000_000L);
+        return String.format("%d%09d", firstDigit, remaining9Digits);
     }
 }

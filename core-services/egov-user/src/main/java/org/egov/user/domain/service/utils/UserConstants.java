@@ -124,6 +124,7 @@ public final class UserConstants {
     public static final String UG_USER_ADDRESS_LANDMARK_MANDATORY = "UG_USER_ADDRESS_LANDMARK_MANDATORY";
     public static final String UG_USER_ADDRESS_PIN_CODE_MANDATORY = "UG_USER_ADDRESS_PIN_CODE_MANDATORY";
     public static final String UG_USER_ADDRESS_TYPE_MANDATORY = "UG_USER_ADDRESS_TYPE_MANDATORY";
+    public static final String UG_USER_ADDRESS_FILESTORE_ID_MANDATORY = "UG_USER_ADDRESS_FILESTORE_ID_MANDATORY";
 
     // Address Non-Editable Fields
     public static final String UG_USER_ADDRESS_NON_EDITABLE_CITY = "UG_USER_ADDRESS_NON_EDITABLE_CITY";
@@ -196,6 +197,7 @@ public final class UserConstants {
     public static final String MSG_PIN_CODE_MANDATORY = "Pin Code is mandatory for address creation.";
     public static final String MSG_ADDRESS_TYPE_MANDATORY = "Address Type is mandatory for address creation.";
     public static final String MSG_INVALID_ADDRESS_TYPE = "Address type is not valid according to configured master data.";
+    public static final String MSG_ADDRESS_FILESTORE_ID_MANDATORY = "Address Proof is mandatory for address creation.";
 
     // Section 8 Non-Editable Field Modification Messages
     public static final String MSG_NON_EDITABLE_MOBILE = "Mobile Number is non-editable and cannot be changed.";

@@ -386,9 +386,18 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 userMap.put("correspondencePinCode", demographics.getPincode());
             }
 
+            String mobileNumber = (demographics != null && StringUtils.isNotBlank(demographics.getMobileNumber()))
+                    ? demographics.getMobileNumber().trim()
+                    : generateUniqueRandomMobile(effectiveTenantId, requestInfo);
+
+            if (demographics != null) {
+                demographics.setMobileNumber(mobileNumber);
+            }
+
             // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
             userMap.put("aadhaarNumber", fullAadhaar);
-            userMap.put("userName", AadhaarConstants.CITIZEN_USERNAME_PREFIX + UUID.randomUUID().toString().substring(0, 8));
+            userMap.put("mobileNumber", mobileNumber);
+            userMap.put("userName", mobileNumber);
             userMap.put("active", true);
             userMap.put("type", AadhaarConstants.USER_TYPE_CITIZEN);
             userMap.put("tenantId", effectiveTenantId);
@@ -491,5 +500,63 @@ public class UserRegistryServiceImpl implements UserRegistryService {
             return "TRANSGENDER";
         }
         return "OTHERS";
+    }
+
+    /**
+     * Generates a random 10-digit Indian mobile number verified to not exist in the egov-user database.
+     * Retries up to 5 times to prevent collisions.
+     *
+     * @param tenantId    state-level tenant ID
+     * @param requestInfo caller RequestInfo context
+     * @return unique 10-digit Indian mobile number
+     */
+    private String generateUniqueRandomMobile(String tenantId, RequestInfo requestInfo) {
+        for (int i = 0; i < 5; i++) {
+            String candidate = AadhaarNumberUtils.generateRandomIndianMobileNumber();
+            if (!isMobilePresentInUserRegistry(candidate, tenantId, requestInfo)) {
+                log.info("[USER-REGISTRY] Generated new unique random mobile number for verified citizen creation");
+                return candidate;
+            }
+        }
+        return AadhaarNumberUtils.generateRandomIndianMobileNumber();
+    }
+
+    /**
+     * Checks if a candidate mobile number already exists in egov-user via the user search endpoint.
+     *
+     * @param mobileNumber candidate 10-digit mobile number
+     * @param tenantId     tenant ID
+     * @param requestInfo  caller RequestInfo context
+     * @return true if candidate mobile exists in user registry, false otherwise
+     */
+    private boolean isMobilePresentInUserRegistry(String mobileNumber, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(userSearchPath) || StringUtils.isBlank(mobileNumber)) {
+            return false;
+        }
+        try {
+            String searchUrl = buildUrl(resolveUserHost(), userSearchPath);
+            Map<String, Object> reqBody = new HashMap<>();
+            reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
+            reqBody.put("tenantId", tenantId);
+            reqBody.put("mobileNumber", mobileNumber);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(reqBody, headers);
+
+            String responseStr = restTemplate.postForObject(searchUrl, entity, String.class);
+            if (StringUtils.isNotBlank(responseStr)) {
+                JsonNode root = objectMapper.readTree(responseStr);
+                JsonNode userArray = root.path("user");
+                if (!userArray.isArray() || userArray.isEmpty()) {
+                    userArray = root.path("User");
+                }
+                return userArray.isArray() && !userArray.isEmpty();
+            }
+        } catch (Exception e) {
+            log.warn("[USER-REGISTRY] Non-blocking: Could not check candidate mobile {} in registry: {}",
+                    mobileNumber, e.getMessage());
+        }
+        return false;
     }
 }

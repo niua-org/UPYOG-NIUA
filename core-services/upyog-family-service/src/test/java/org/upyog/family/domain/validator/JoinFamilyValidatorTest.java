@@ -55,7 +55,7 @@ class JoinFamilyValidatorTest {
     }
 
     @Test
-    @DisplayName("Should pass when citizen joins with valid relationship and HoF consent")
+    @DisplayName("Should pass when citizen joins with valid relationship and txnId")
     void validate_Success() {
         JoinFamilyRequest request = JoinFamilyRequest.builder()
                 .familyId("FAM-2026-0001")
@@ -66,9 +66,25 @@ class JoinFamilyValidatorTest {
                 .build();
 
         when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5")).thenReturn(Collections.emptyList());
-        when(requesterDxClient.verifyConsentToken(eq("OTP-1234"), eq("applicant-uuid-5"), eq("FAM-2026-0001"), eq("pg.citya"), any())).thenReturn(true);
 
         assertDoesNotThrow(() -> validator.validate(request, activeFamily));
+    }
+
+    @Test
+    @DisplayName("Should throw exception if txnId is missing")
+    void validate_MissingTxnId_ThrowsException() {
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-5")
+                .relationshipWithHead("SON")
+                .txnId(null)
+                .build();
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5")).thenReturn(Collections.emptyList());
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validate(request, activeFamily));
+        org.junit.jupiter.api.Assertions.assertEquals(org.upyog.family.util.FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
     }
 
     @Test

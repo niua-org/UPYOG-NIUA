@@ -91,6 +91,8 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedTime() : null
         );
 
+        jdbcTemplate.update(FamilyQueryBuilder.INSERT_FAMILY_AUDIT_SQL, family.getFamilyId());
+
         if (family.getMembers() != null) {
             for (FamilyMember member : family.getMembers()) {
                 if (StringUtils.isBlank(member.getId())) {
@@ -178,6 +180,8 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedTime() : null,
                 family.getFamilyId()
         );
+
+        jdbcTemplate.update(FamilyQueryBuilder.INSERT_FAMILY_AUDIT_SQL, family.getFamilyId());
 
         if (family.getMembers() != null) {
             for (FamilyMember member : family.getMembers()) {

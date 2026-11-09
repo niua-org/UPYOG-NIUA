@@ -137,6 +137,9 @@ public class AadhaarVerificationController {
 
         if (StringUtils.isNotBlank(referenceId) && StringUtils.isNotBlank(aadhaarNumber)) {
             sessionManager.storeAadhaarForReferenceId(referenceId, aadhaarNumber);
+            if (StringUtils.isNotBlank(request.getMobileNumber())) {
+                sessionManager.storeMobileForReferenceId(referenceId, request.getMobileNumber().trim());
+            }
         }
 
         log.info("Aadhaar OTP dispatched successfully. maskedAadhaar: {}, referenceId: {}, txnId: {}",
@@ -267,6 +270,13 @@ public class AadhaarVerificationController {
                 ? request.getAadhaarNumber()
                 : storedAadhaar;
 
+        String storedMobile = (StringUtils.isNotBlank(referenceId))
+                ? sessionManager.getMobileForReferenceId(referenceId)
+                : null;
+        String effectiveMobile = StringUtils.isNotBlank(request.getMobileNumber())
+                ? request.getMobileNumber().trim()
+                : storedMobile;
+
         if (StringUtils.isNotBlank(effectiveAadhaar)) {
             if (StringUtils.isBlank(details.getAadhaarNumber()) || "XXXXXXXX1234".equals(details.getAadhaarNumber())) {
                 details.setAadhaarNumber(maskAadhaar(effectiveAadhaar));
@@ -280,6 +290,7 @@ public class AadhaarVerificationController {
                 .careOf(details.getCareOf())
                 .fullAddress(details.getFullAddress())
                 .photo(details.getPhoto())
+                .mobileNumber(effectiveMobile)
                 .doorNo(addr != null && StringUtils.isNotBlank(addr.getHouse()) ? addr.getHouse() : "N/A")
                 .street(addr != null && StringUtils.isNotBlank(addr.getStreet()) ? addr.getStreet() : "N/A")
                 .landmark(addr != null && StringUtils.isNotBlank(addr.getLandmark()) ? addr.getLandmark() : "N/A")
@@ -343,6 +354,7 @@ public class AadhaarVerificationController {
                 .userUuid(existingUserUuid)
                 .familyId(resolvedFamilyId)
                 .demographics(demographics)
+                .mobileNumber(demographics != null ? demographics.getMobileNumber() : effectiveMobile)
                 .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
                 .build();
 
