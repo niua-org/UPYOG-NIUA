@@ -13,6 +13,7 @@ const FamilyDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const loggedInUserUuid = Digit.UserService.getUser()?.info?.uuid;
 
   useEffect(() => {
     const fetchFamilyDashboard = async () => {
@@ -69,7 +70,7 @@ const FamilyDashboard = () => {
         console.error( "Family Dashboard Error:", error);
         setToast({
           error: true,
-          label: error.message === "FAMILY_ID_NOT_FOUND" ? "Family ID not found" : "Unable to fetch family details",
+          label: error.message === "FAMILY_ID_NOT_FOUND" ? "FAMILY_ID_NOT_FOUND" : "FAMILY_ID_NOT_FOUND_FETCH_DETAILS",
         });
       } finally {
         setLoading(false);
@@ -108,7 +109,7 @@ const FamilyDashboard = () => {
   if (!dashboard) {
     return (
       <Card style={styles.pageCard}>
-        <div style={styles.pageTitle}>{t("PROFILE_MY_FAMILY", "My Family")}</div>
+        <div style={styles.pageTitle}>{t("PROFILE_MY_FAMILY")}</div>
         <div style={styles.familySummary}> Unable to load family details. </div>
         {toast && (
           <Toast error={toast.error} label={toast.label} onClose={() => setToast(null)} />
@@ -125,27 +126,27 @@ const FamilyDashboard = () => {
     <React.Fragment>
       <Card style={styles.pageCard}>
         <div style={styles.headerRow}>
-          <div style={styles.pageTitle}> {t("PROFILE_MY_FAMILY", "My Family")} </div>
+          <div style={styles.pageTitle}>{t("PROFILE_MY_FAMILY")} </div>
           <div style={styles.familyIdBadge}>{dashboard.familyId} </div>
         </div>
 
         <div style={styles.familySummary}>
           <div style={styles.summaryLine}>
-            <span style={styles.summaryLabel}>{t("PROFILE_HEAD_OF_FAMILY", "Head of Family")}:</span>
+            <span style={styles.summaryLabel}>{t("PROFILE_HEAD_OF_FAMILY")}:</span>
             <span style={styles.summaryValue}>{headOfFamily?.name ||dashboard.headName}
             </span>
           </div>
 
           <div style={styles.summaryLine}>
             <span style={styles.summaryLabel}>
-              {t( "PROFILE_TOTAL_REGISTERED_MEMBERS", "Total Registered Members")}:
+              {t("PROFILE_TOTAL_REGISTERED_MEMBERS")}:
             </span>
             <span style={styles.summaryValue}> {dashboard.totalMembersCount} </span>
           </div>
         </div>
         <div style={styles.membersHeader}>
           <div style={styles.membersTitle}>
-            {t("PROFILE_REGISTERED_MEMBERS", "REGISTERED MEMBERS")}
+            {t("PROFILE_REGISTERED_MEMBERS")}
           </div>
           {/* <button type="button" onClick={handleAddNewMember} style={styles.addMemberLink}>
             <span style={styles.addMemberPlus}> +</span>
@@ -158,10 +159,11 @@ const FamilyDashboard = () => {
               member.name ||
               member.citizenDetails?.name ||
               "";
-            const relationship =
-              member.relationshipWithHead || member.citizenDetails?.relationshipWithHead ||"";
+            const relationship = member.relationshipWithHead || member.citizenDetails?.relationshipWithHead ||"";
+            const isCurrentUser = member.userUuid === loggedInUserUuid;
             const isHead = member.isHead === true;
             const isVerified = member.isVerified === true;
+            
             return (
               <div key={member.id}   style={styles.memberCard}>
                 <div style={styles.avatar}>{getInitials(name)} </div>
@@ -169,11 +171,10 @@ const FamilyDashboard = () => {
                 <div style={styles.memberRelationship}>
                   <span style={styles.bullet}>•</span>
                   <span>
-                    {relationship}
-                    {isHead && (
-                      <span style={styles.youText}>
-                        {" "}({t("CORE_COMMON_YOU")})
-                      </span>
+                     {isCurrentUser ? (
+                      <span style={styles.youText}>{t("CORE_COMMON_YOU")}</span>
+                    ) : (
+                      relationship
                     )}
                   </span>
                 </div>
