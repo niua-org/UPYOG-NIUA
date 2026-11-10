@@ -14,6 +14,7 @@ from prompts.workflow_prompts import (
     build_grievance_extract_prompt,
     build_grievance_question_prompt,
 )
+from services.validator import validate_field
 from workflow.base_state import BaseAgentState
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,14 @@ FIELD_HINTS   = {f["id"]: f.get("label", f["id"]) for f in FORM_FIELDS}
 def get_next_step(draft: dict) -> dict:
     if not isinstance(draft, dict):
         draft = {}
+
+    # Prioritize any field that failed validation and is still missing
+    for f_id in draft.get("_failed_fields", []):
+        if not draft.get(f_id):
+            failed_step = next((f for f in FORM_FIELDS if f["id"] == f_id), None)
+            if failed_step:
+                return failed_step
+
     for field in FORM_FIELDS:
         if not draft.get(field["id"]):
             return field
@@ -259,6 +268,48 @@ def extraction_node(state: GrievanceState):
     next_step = get_next_step(draft)
     curr_field = next_step.get("id")
 
+    def _validate_and_set(field_id: str, raw_value: Any, valid_opts: list = None) -> tuple:
+        """
+        Validate a field value using validator.py and update the draft state.
+
+        Args:
+            field_id: Form field identifier being validated.
+            raw_value: Extracted or user-provided input value.
+            valid_opts: Optional list of acceptable options for option-based fields.
+
+        Returns:
+            tuple: (is_valid: bool, err_msg: Optional[str], clean_val: Any)
+
+        Side effects:
+            Updates draft[field_id], _failed_fields, _field_errors, and _raw_locality.
+        """
+        field_def = next((f for f in FORM_FIELDS if f["id"] == field_id), {})
+        is_valid, err_msg, clean_val = validate_field(field_def, raw_value, draft=draft, valid_options=valid_opts)
+        if is_valid:
+            draft[field_id] = clean_val
+            if field_id in draft.get("_failed_fields", []):
+                draft["_failed_fields"].remove(field_id)
+            draft.get("_field_errors", {}).pop(field_id, None)
+
+            # Sync description location with chosen MDMS locality using word boundaries
+            if field_id == "locality" and draft.get("description"):
+                old_loc = draft.get("_raw_locality")
+                if old_loc and str(old_loc).lower() != str(clean_val).lower():
+                    pattern = re.compile(r'\b' + re.escape(str(old_loc)) + r'\b', re.IGNORECASE)
+                    if pattern.search(draft["description"]):
+                        draft["description"] = pattern.sub(clean_val, draft["description"], count=1)
+                draft["_raw_locality"] = clean_val
+        else:
+            if not draft.get(field_id):
+                draft[field_id] = None
+            if field_id == "locality" and raw_value:
+                draft["_raw_locality"] = str(raw_value).strip()
+            draft.setdefault("_failed_fields", [])
+            if field_id not in draft["_failed_fields"]:
+                draft["_failed_fields"].append(field_id)
+            draft.setdefault("_field_errors", {})[field_id] = err_msg
+        return is_valid, err_msg, clean_val
+
     # Deterministic extraction based on the active step being answered
     cleaned_input = re.sub(r'^\d+[\.\)]\s*', '', user_msg).strip() # Strip leading numbering e.g. "1. PropertyTax" -> "PropertyTax"
 
@@ -273,9 +324,10 @@ def extraction_node(state: GrievanceState):
             idx = int(idx_match.group(1)) - 1
             if 0 <= idx < len(cat_keys):
                 chosen_cat = cat_keys[idx]
-                draft["category"] = chosen_cat
-                draft["_sub_options"] = cats[chosen_cat]
-                logger.info(f"[grievance extract] category resolved by index {idx+1}: {chosen_cat}")
+                is_valid, err_msg, clean_val = _validate_and_set("category", chosen_cat, cat_keys)
+                if is_valid:
+                    draft["_sub_options"] = cats[clean_val]
+                    logger.info(f"[grievance extract] category resolved by index {idx+1}: {clean_val}")
         
         if not draft.get("category"):
             norm_input = re.sub(r'[\s_]+', '', cleaned_input.lower())
@@ -284,15 +336,17 @@ def extraction_node(state: GrievanceState):
                 matched_cat = next((k for k in cat_keys if norm_input in re.sub(r'[\s_]+', '', k.lower()) or re.sub(r'[\s_]+', '', k.lower()) in norm_input), None)
             
             if matched_cat:
-                draft["category"] = matched_cat
-                draft["_sub_options"] = cats[matched_cat]
-                logger.info(f"[grievance extract] category matched: {matched_cat}")
+                is_valid, err_msg, clean_val = _validate_and_set("category", matched_cat, cat_keys)
+                if is_valid:
+                    draft["_sub_options"] = cats[clean_val]
+                    logger.info(f"[grievance extract] category matched: {clean_val}")
 
     elif curr_field == "sub_category":
         cat_selected = draft.get("category", "")
         cats = draft.get("_category_options") or _pgr_categories()
         sub_ops = draft.get("_sub_options") or cats.get(cat_selected, [])
         draft["_sub_options"] = sub_ops
+        sub_names = [s["name"] for s in sub_ops]
 
         # Check option index matching
         idx_match = re.match(r'^(?:option\s*)?(\d+)$', ui_lower)
@@ -300,9 +354,10 @@ def extraction_node(state: GrievanceState):
             idx = int(idx_match.group(1)) - 1
             if 0 <= idx < len(sub_ops):
                 chosen_sub = sub_ops[idx]
-                draft["sub_category"] = chosen_sub["name"]
-                draft["category_code"] = chosen_sub["code"]
-                logger.info(f"[grievance extract] sub_category resolved by index {idx+1}: {chosen_sub['name']}")
+                is_valid, err_msg, clean_val = _validate_and_set("sub_category", chosen_sub["name"], sub_names)
+                if is_valid:
+                    draft["category_code"] = chosen_sub["code"]
+                    logger.info(f"[grievance extract] sub_category resolved by index {idx+1}: {clean_val}")
 
         if not draft.get("sub_category") and sub_ops:
             norm_input = re.sub(r'[\s_]+', '', cleaned_input.lower())
@@ -310,22 +365,25 @@ def extraction_node(state: GrievanceState):
             if not matched:
                 matched = next((s for s in sub_ops if norm_input in re.sub(r'[\s_]+', '', s["name"].lower()) or re.sub(r'[\s_]+', '', s["name"].lower()) in norm_input), None)
             if matched:
-                draft["sub_category"] = matched["name"]
-                draft["category_code"] = matched["code"]
-                logger.info(f"[grievance extract] sub_category matched: {matched['name']}")
+                is_valid, err_msg, clean_val = _validate_and_set("sub_category", matched["name"], sub_names)
+                if is_valid:
+                    draft["category_code"] = matched["code"]
+                    logger.info(f"[grievance extract] sub_category matched: {clean_val}")
 
     elif curr_field == "locality":
         loc_ops = draft.get("_locality_options") or _pgr_localities()
         draft["_locality_options"] = loc_ops
+        loc_names = [l["name"] for l in loc_ops]
 
         idx_match = re.match(r'^(?:option\s*)?(\d+)$', ui_lower)
         if idx_match and loc_ops:
             idx = int(idx_match.group(1)) - 1
             if 0 <= idx < len(loc_ops):
                 chosen_loc = loc_ops[idx]
-                draft["locality"] = chosen_loc["name"]
-                draft["locality_code"] = chosen_loc["code"]
-                logger.info(f"[grievance extract] locality resolved by index {idx+1}: {chosen_loc['name']}")
+                is_valid, err_msg, clean_val = _validate_and_set("locality", chosen_loc["name"], loc_names)
+                if is_valid:
+                    draft["locality_code"] = chosen_loc["code"]
+                    logger.info(f"[grievance extract] locality resolved by index {idx+1}: {clean_val}")
 
         if not draft.get("locality") and loc_ops:
             norm_input = re.sub(r'[\s_]+', '', cleaned_input.lower())
@@ -333,11 +391,10 @@ def extraction_node(state: GrievanceState):
             if not matched:
                 matched = next((l for l in loc_ops if norm_input in re.sub(r'[\s_]+', '', l["name"].lower()) or re.sub(r'[\s_]+', '', l["name"].lower()) in norm_input), None)
             if matched:
-                draft["locality"] = matched["name"]
-                draft["locality_code"] = matched["code"]
-                logger.info(f"[grievance extract] locality matched: {matched['name']}")
-            else:
-                logger.info(f"[grievance extract] Unrecognized locality input: '{cleaned_input}', rejecting verbatim acceptance")
+                is_valid, err_msg, clean_val = _validate_and_set("locality", matched["name"], loc_names)
+                if is_valid:
+                    draft["locality_code"] = matched["code"]
+                    logger.info(f"[grievance extract] locality matched: {clean_val}")
 
     # Fallback to LLM multi-field extraction if any missing fields remain and LLM is available
     # Recheck after deterministic matching; only unresolved extractable fields go to the LLM.
@@ -353,9 +410,7 @@ def extraction_node(state: GrievanceState):
                 sub_ops = [s["name"] for s in (draft.get("_sub_options") or [])]
                 schema_hints[f] = f"MUST MATCH one of: {sub_ops}" if sub_ops else "Specific complaint type"
             elif f == "locality":
-                loc_ops = draft.get("_locality_options") or _pgr_localities()
-                loc_names = [l["name"] for l in loc_ops[:25]]
-                schema_hints[f] = f"MUST STRICTLY MATCH one of: {loc_names}" if loc_names else "Area or locality name"
+                schema_hints[f] = "Extract whatever area or locality the user mentioned as text."
             elif f == "description":
                 schema_hints[f] = "Detailed description of the issue provided by the citizen (e.g. 'i want a refund', 'dirty water from tap', 'pothole on road')"
 
@@ -379,28 +434,29 @@ def extraction_node(state: GrievanceState):
                         val_str = str(val).strip()
                         if val_str.lower() in meta_commands:
                             continue
-                        if field == "description" and len(val_str) >= 3:
-                            draft["description"] = val_str
-                            logger.info(f"[grievance LLM extract] description = {val_str}")
+                        if field == "description":
+                            is_valid, err_msg, clean_val = _validate_and_set("description", val_str)
+                            if is_valid:
+                                logger.info(f"[grievance LLM extract] description = {clean_val}")
                         elif field == "category" and not draft.get("category"):
                             cats = draft.get("_category_options") or _pgr_categories()
-                            matched_cat = next((k for k in cats.keys() if k.lower() == val_str.lower()), None)
-                            if matched_cat:
-                                draft["category"] = matched_cat
-                                draft["_sub_options"] = cats[matched_cat]
+                            is_valid, err_msg, clean_val = _validate_and_set("category", val_str, list(cats.keys()))
+                            if is_valid:
+                                draft["_sub_options"] = cats[clean_val]
                         elif field == "sub_category" and not draft.get("sub_category"):
                             sub_ops = draft.get("_sub_options") or []
-                            matched = next((s for s in sub_ops if s["name"].lower() == val_str.lower()), None)
-                            if matched:
-                                draft["sub_category"] = matched["name"]
+                            is_valid, err_msg, clean_val = _validate_and_set("sub_category", val_str, [s["name"] for s in sub_ops])
+                            if is_valid:
+                                matched = next((s for s in sub_ops if s["name"] == clean_val), None)
+                                if matched:
+                                    draft["category_code"] = matched["code"]
                         elif field == "locality" and not draft.get("locality"):
                             loc_ops = draft.get("_locality_options") or _pgr_localities()
-                            matched = next((l for l in loc_ops if l["name"].lower() == val_str.lower() or val_str.lower() in l["name"].lower()), None)
-                            if matched:
-                                draft["locality"] = matched["name"]
-                                draft["locality_code"] = matched["code"]
-                            else:
-                                logger.info(f"[grievance LLM extract] locality '{val_str}' not found in valid options, keeping as None")
+                            is_valid, err_msg, clean_val = _validate_and_set("locality", val_str, [l["name"] for l in loc_ops])
+                            if is_valid:
+                                matched = next((l for l in loc_ops if l["name"] == clean_val), None)
+                                if matched:
+                                    draft["locality_code"] = matched["code"]
         except Exception as e:
             logger.error(f"[grievance] LLM extraction error: {e}")
 
@@ -465,6 +521,10 @@ def ask_next_node(state: GrievanceState):
         except Exception:
             pass
 
+    val_err = draft.get("_field_errors", {}).pop(field_id, None)
+    if val_err:
+        text = f"⚠️ {val_err}\n\n{text}"
+
     if field_type == "dropdown" and options:
         opts_str = ", ".join(f"'{o}'" for o in options)
         resp = f"{text}\n<ui-dropdown options=[{opts_str}] />"
@@ -495,9 +555,10 @@ def confirm_node(state: GrievanceState):
 
     # Ensure description is meaningful
     desc = str(draft.get("description", "")).strip()
+    clean_loc = draft.get("locality")
     if not desc or len(desc) < 3:
         sub = draft.get('sub_category') or draft.get('category') or 'Complaint'
-        loc = draft.get('locality') or 'the specified locality'
+        loc = clean_loc or 'the specified locality'
         draft['description'] = f"{sub} issue reported at {loc}"
 
     summary = (
