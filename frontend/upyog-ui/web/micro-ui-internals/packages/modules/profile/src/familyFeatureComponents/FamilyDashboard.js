@@ -160,21 +160,24 @@ const FamilyDashboard = () => {
               "";
             const relationship =
               member.relationshipWithHead || member.citizenDetails?.relationshipWithHead ||"";
-            const isYou = member.userUuid === Digit.UserService.getUser()?.info?.uuid;
+            const isHead = member.isHead === true;
+            const isVerified = member.isVerified === true;
             return (
               <div key={member.id}   style={styles.memberCard}>
                 <div style={styles.avatar}>{getInitials(name)} </div>
                 <div style={styles.memberName}>{name}</div>
                 <div style={styles.memberRelationship}>
-                  <span style={styles.bullet}>• </span>
-                  <span> {relationship} {isYou && (
-                      <span style={styles.youText}>{" "}
-                        ({t("CORE_COMMON_YOU", "You")})
+                  <span style={styles.bullet}>•</span>
+                  <span>
+                    {relationship}
+                    {isHead && (
+                      <span style={styles.youText}>
+                        {" "}({t("CORE_COMMON_YOU") || "You"})
                       </span>
                     )}
                   </span>
                 </div>
-                {member.isVerified && (
+                {isVerified && (
                   <div style={styles.verifiedBadge}>
                     {t("PROFILE_VERIFIED") || "VERIFIED"}
                   </div>
