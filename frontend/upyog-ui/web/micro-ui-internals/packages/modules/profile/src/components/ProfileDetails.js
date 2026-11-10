@@ -42,6 +42,31 @@ const ProfileDetails = () => {
   const { user, loading, error } = useProfileUser();
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isHof, setIsHof] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+    const checkHofStatus = async () => {
+      if (user?.familyId && tenantId) {
+        try {
+          const res = await Digit.UserService.isHof(
+            { familyId: user.familyId, tenantId },
+            { tenantId }
+          );
+          if (isActive && res?.isHof) {
+            setIsHof(true);
+          }
+        } catch (err) {
+          console.error("Error checking HOF status:", err);
+        }
+      }
+    };
+
+    checkHofStatus();
+    return () => {
+      isActive = false;
+    };
+  }, [user?.familyId, tenantId]);
 
   useEffect(() => {
     if (!toast) return;
@@ -113,7 +138,7 @@ const ProfileDetails = () => {
     if (!user?.isIdentityVerified) {
       setToast({
         error: true,
-        message: t("ERR_PROFILE_NOT_AADHAAR_VERIFIED", "Your Profile is not aadhaar verified, please verify"),
+        message: t("ERR_PROFILE_NOT_AADHAAR_VERIFIED"),
       });
       return;
     }
@@ -150,7 +175,7 @@ const ProfileDetails = () => {
               role="button"
               tabIndex={0}
               onClick={() => navigate(PROFILE_ROUTES.VERIFY)}
-              title={t("CLICK_TO_VERIFY_AADHAAR", "Click to verify Aadhaar")}
+              title={t("CLICK_TO_VERIFY_AADHAAR")}
               style={profileStyles.unverifiedBadge}
             >
               <span style={profileStyles.unverifiedIconWrap}>
@@ -173,6 +198,11 @@ const ProfileDetails = () => {
               <span style={profileStyles.familyIdValue}>
                 {user.familyId}
               </span>
+              {isHof && (
+                <span style={profileStyles.hofBadge}>
+                  {t("CORE_COMMON_HOF", "HOF")}
+                </span>
+              )}
             </div>
           )}
           {/* Show the My Family dropdown dynamically based on available options */}

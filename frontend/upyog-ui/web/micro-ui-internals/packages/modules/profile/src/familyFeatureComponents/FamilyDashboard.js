@@ -147,10 +147,10 @@ const FamilyDashboard = () => {
           <div style={styles.membersTitle}>
             {t("PROFILE_REGISTERED_MEMBERS", "REGISTERED MEMBERS")}
           </div>
-          <button type="button" onClick={handleAddNewMember} style={styles.addMemberLink}>
+          {/* <button type="button" onClick={handleAddNewMember} style={styles.addMemberLink}>
             <span style={styles.addMemberPlus}> +</span>
             <span> {t("PROFILE_ADD_NEW_MEMBER") || "Add New Member"}</span>
-          </button>
+          </button> */}
         </div>
         <div style={styles.membersGrid}>
           {members.map((member) => {
@@ -160,23 +160,26 @@ const FamilyDashboard = () => {
               "";
             const relationship =
               member.relationshipWithHead || member.citizenDetails?.relationshipWithHead ||"";
-            const isYou = member.userUuid === Digit.UserService.getUser()?.info?.uuid;
+            const isHead = member.isHead === true;
+            const isVerified = member.isVerified === true;
             return (
               <div key={member.id}   style={styles.memberCard}>
                 <div style={styles.avatar}>{getInitials(name)} </div>
                 <div style={styles.memberName}>{name}</div>
                 <div style={styles.memberRelationship}>
-                  <span style={styles.bullet}>• </span>
-                  <span> {relationship} {isYou && (
-                      <span style={styles.youText}>{" "}
-                        ({t("CORE_COMMON_YOU", "You")})
+                  <span style={styles.bullet}>•</span>
+                  <span>
+                    {relationship}
+                    {isHead && (
+                      <span style={styles.youText}>
+                        {" "}({t("CORE_COMMON_YOU")})
                       </span>
                     )}
                   </span>
                 </div>
-                {member.isVerified && (
+                {isVerified && (
                   <div style={styles.verifiedBadge}>
-                    {t("PROFILE_VERIFIED") || "VERIFIED"}
+                    {t("PROFILE_VERIFIED")}
                   </div>
                 )}
               </div>
