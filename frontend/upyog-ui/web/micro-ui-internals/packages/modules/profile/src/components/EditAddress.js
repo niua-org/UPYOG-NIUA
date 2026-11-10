@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { EditIcon, LinkButton, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { EditIcon, LinkButton, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import AddressTranformer from "./AddressTranformer";
 import { ADDRESS_FIELDS, Field } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
@@ -23,6 +23,14 @@ const EditAddress = ({ initialAddresses = [] }) => {
 
   const [addresses, setAddresses] = useState(initialAddresses);
   const [addressModal, setAddressModal] = useState({ open: false, address: null });
+  const [toast, setToast] = useState(null);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   // callback to fetch the new address once updated
   const refreshAddresses = useCallback(async () => {
@@ -32,6 +40,11 @@ const EditAddress = ({ initialAddresses = [] }) => {
   }, [userInfo.uuid, tenantId]);
 
   const closeAddressModal = () => setAddressModal({ open: false, address: null });
+
+  // Called by AddressTranformer on successful create/update
+  const handleSuccess = (message) => {
+    setToast({ error: false, label: message });
+  };
 
   return (
     <>
@@ -77,6 +90,15 @@ const EditAddress = ({ initialAddresses = [] }) => {
           {...(addressModal.address ? { isEdit: true, address: addressModal.address } : {})}
           refreshAddresses={refreshAddresses}
           actionCancelOnSubmit={closeAddressModal}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          error={toast.error}
+          label={toast.label}
+          onClose={() => setToast(null)}
         />
       )}
     </>
