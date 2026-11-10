@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -16,9 +16,6 @@ import { Link } from "react-router-dom";
 const GCApplication = ({ application, tenantId }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-
-  const [billData, setBillData] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const applicant = application?.applicantDetails?.[0] || {};
   const name = applicant?.name || applicant?.applicantName || t("CS_NA");
@@ -39,47 +36,24 @@ const GCApplication = ({ application, tenantId }) => {
   const paymentStatus = application?.paymentStatus;
   const paymentAmount = application?.paymentAmount;
 
-  // Helper to safely resolve i18n keys and fallback when untranslated
-  const getLabel = (key, fallback) => {
-    const val = t(key);
-    if (!val || val === key) return fallback;
-    return val;
-  };
-
-  // Fetch bill data matching Property Tax Assessment -> My Properties
-  const fetchBillData = async () => {
-    if (!appNo || appNo === t("CS_NA")) return;
-    setLoading(true);
-    try {
-      const result = await Digit.PaymentService.fetchBill(tenantId || application?.tenantId, {
-        businessService: "garbage-service",
-        consumerCode: appNo,
-      });
-      setBillData(result);
-    } catch (e) {
-      // Fallback silently to application.paymentAmount
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBillData();
-  }, [tenantId, application?.tenantId, appNo]);
-
-  const billTotal = billData?.Bill?.[0]?.totalAmount;
   const totalDue =
-    billTotal !== undefined && billTotal !== null
-      ? billTotal
-      : paymentAmount !== undefined && paymentAmount !== null
+    paymentAmount !== undefined && paymentAmount !== null && !Number.isNaN(Number(paymentAmount))
       ? Number(paymentAmount)
       : null;
 
-  const hasDue = totalDue !== null && Number(totalDue) > 0;
-  const isPaid = paymentStatus === "PAID" || (totalDue !== null && Number(totalDue) === 0);
+  const isApplicationApproved = [
+    "APPROVED",
+    "ACTIVE",
+    "PENDING_FOR_PAYMENT",
+    "PAID",
+    "DISCONNECTED",
+    "PERMANENTLY_DISCONNECTED",
+  ].includes(appStatus);
+
+  const hasDue = totalDue !== null && totalDue > 0;
 
   const handleMakePayment = () => {
-    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
+    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${encodeURIComponent(appNo)}`);
   };
 
   const handleEditApplication = () => {
@@ -107,7 +81,7 @@ const GCApplication = ({ application, tenantId }) => {
       <div className="pt-citizen-prop-card-header">
         <div className="pt-citizen-prop-card-id-wrap">
           <div className="pt-citizen-prop-id-block">
-            <span className="pt-citizen-prop-id-label">{getLabel("GC_APPLICATION_NUMBER_LABEL", "Application Number")}</span>
+            <span className="pt-citizen-prop-id-label">{t("GC_APPLICATION_NUMBER_LABEL")}</span>
             <span className="pt-citizen-prop-id-value">{appNo}</span>
           </div>
         </div>
@@ -131,7 +105,7 @@ const GCApplication = ({ application, tenantId }) => {
               borderColor: getStatusColor(appStatus),
             }}
           >
-            {getLabel(`GC_STATUS_${appStatus}`, appStatus)}
+            {t(`GC_STATUS_${appStatus}`)}
           </span>
         </div>
       </div>
@@ -139,14 +113,14 @@ const GCApplication = ({ application, tenantId }) => {
       {/* Card Body: Info Grid matching specified sequence */}
       <div className="pt-citizen-prop-card-body">
         <div className="pt-citizen-prop-info-grid">
-          {/* a. Garbage number (shows "Garbage Number" instead of literal GC_GARBAGE_NUMBER_LABEL) */}
+          {/* a. Garbage number */}
           <div className="pt-citizen-prop-info-item">
             <span className="pt-citizen-prop-info-label">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
               </svg>
-              {getLabel("GC_GARBAGE_NUMBER", getLabel("GC_GARBAGE_NUMBER_LABEL", "Garbage Number"))}
+              {t("GC_GARBAGE_NUMBER_LABEL")}
             </span>
             <span className="pt-citizen-prop-info-value">{garbageNo || t("CS_NA")}</span>
           </div>
@@ -159,7 +133,7 @@ const GCApplication = ({ application, tenantId }) => {
                   <polyline points="1 4 1 10 7 10" />
                   <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                 </svg>
-                {getLabel("GC_OLD_GARBAGE_ID", "Old Garbage Number")}
+                {t("GC_OLD_GARBAGE_ID")}
               </span>
               <span className="pt-citizen-prop-info-value">{oldGarbageNo}</span>
             </div>
@@ -172,7 +146,7 @@ const GCApplication = ({ application, tenantId }) => {
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              {getLabel("GC_APPLICANT_NAME", "Applicant Name")}
+              {t("GC_APPLICANT_NAME")}
             </span>
             <span className="pt-citizen-prop-info-value">{name}</span>
           </div>
@@ -183,7 +157,7 @@ const GCApplication = ({ application, tenantId }) => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
-              {getLabel("GC_MOBILE_NUMBER", "Mobile Number")}
+              {t("GC_MOBILE_NUMBER")}
             </span>
             <span className="pt-citizen-prop-info-value">{mobileNumber}</span>
           </div>
@@ -196,7 +170,7 @@ const GCApplication = ({ application, tenantId }) => {
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
-                {getLabel("GC_PROPERTY_ID", "Property ID")}
+                {t("GC_PROPERTY_ID")}
               </span>
               <span className="pt-citizen-prop-info-value">{propertyId}</span>
             </div>
@@ -214,7 +188,7 @@ const GCApplication = ({ application, tenantId }) => {
                   <rect x="14" y="14" width="7" height="7" />
                   <rect x="3" y="14" width="7" height="7" />
                 </svg>
-                {getLabel("GC_CATEGORY", "Category")}
+                {t("GC_CATEGORY")}
               </span>
               <span className="pt-citizen-prop-info-value">{t(category)}</span>
             </div>
@@ -230,28 +204,24 @@ const GCApplication = ({ application, tenantId }) => {
                   <circle cx="5.5" cy="18.5" r="2.5" />
                   <circle cx="18.5" cy="18.5" r="2.5" />
                 </svg>
-                {getLabel("GC_TYPE_OF_COLLECTION", "Type of Collection")}
+                {t("GC_TYPE_OF_COLLECTION")}
               </span>
               <span className="pt-citizen-prop-info-value">{t(typeOfCollection)}</span>
             </div>
           )}
 
-          {/* h. Garbage Collection Amount & Payment Amount - shown BEFORE Connection Status (like PT Assessment -> My Properties) */}
+          {/* h. Payment Amount - placed BEFORE Connection Status, shows NA until approved and amount only once approved */}
           <div className="pt-citizen-prop-info-item pt-due-item">
             <span className="pt-citizen-prop-info-label">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="1" x2="12" y2="23" />
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
               </svg>
-              {dueDate ? `${getLabel("GC_DUE_DATE", "Due Date")}: ${dueDate}` : getLabel("GC_COLLECTION_AMOUNT", getLabel("CS_COMMON_TOTAL_AMOUNT_DUE", "Garbage Collection Amount"))}
+              {isApplicationApproved && dueDate ? `${t("GC_DUE_DATE")}: ${dueDate}` : t("CS_COMMON_TOTAL_AMOUNT_DUE")}
             </span>
             <span className="pt-citizen-prop-info-value">
-              {loading ? (
-                <span className="pt-prop-amount-loading">{t("CS_COMMON_LOADING")}...</span>
-              ) : hasDue ? (
-                <span className="pt-prop-amount-pill due">₹{totalDue}</span>
-              ) : isPaid ? (
-                <span className="pt-prop-amount-pill paid">{getLabel("PT_PAID_STATUS", "₹0 (Paid)")}</span>
+              {isApplicationApproved && totalDue !== null ? (
+                <span className={`pt-prop-amount-pill ${hasDue ? "due" : "paid"}`}>{`₹${totalDue}`}</span>
               ) : (
                 <span className="pt-prop-amount-pill na">{t("CS_NA")}</span>
               )}
@@ -266,11 +236,11 @@ const GCApplication = ({ application, tenantId }) => {
                   <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                   <line x1="1" y1="10" x2="23" y2="10" />
                 </svg>
-                {getLabel("GC_PAYMENT_STATUS", "Payment Status")}
+                {t("GC_PAYMENT_STATUS")}
               </span>
               <span className="pt-citizen-prop-info-value">
                 <span className={`pt-prop-amount-pill ${paymentStatus === "PAID" ? "paid" : "due"}`}>
-                  {getLabel(`GC_PAYMENT_${paymentStatus}`, paymentStatus)}
+                  {t(`GC_PAYMENT_${paymentStatus}`)}
                 </span>
               </span>
             </div>
@@ -285,7 +255,7 @@ const GCApplication = ({ application, tenantId }) => {
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
-                {getLabel("GC_CONNECTION_STATUS", "Connection Status")}
+                {t("GC_CONNECTION_STATUS")}
               </span>
               <span
                 className="pt-citizen-prop-info-value"
@@ -294,7 +264,7 @@ const GCApplication = ({ application, tenantId }) => {
                   fontWeight: "bold",
                 }}
               >
-                {getLabel(`GC_STATUS_${connectionStatus}`, connectionStatus)}
+                {t(`GC_STATUS_${connectionStatus}`)}
               </span>
             </div>
           )}

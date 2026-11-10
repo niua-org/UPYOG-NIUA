@@ -53,16 +53,11 @@ const GCApplicationDetails = () => {
   const [comments, setComments] = useState("");
   const [showToast, setShowToast] = useState(null);
 
-  const getLabel = (key, fallback) => {
-    const val = t(key);
-    return val && val !== key ? val : fallback;
-  };
-
   const formatFloor = (floor) => {
-    if (floor === null || floor === undefined || floor === "") return getLabel("CS_NA", "NA");
+    if (floor === null || floor === undefined || floor === "") return t("CS_NA");
     const floorStr = String(floor).trim();
     if (floorStr === "0") {
-      return getLabel("GC_FLOOR_GROUND", "Ground Floor");
+      return t("GC_FLOOR_GROUND");
     }
     const fNum = parseInt(floorStr, 10);
     if (!isNaN(fNum)) {
@@ -99,13 +94,13 @@ const GCApplicationDetails = () => {
   const { tenants } = storeData || {};
 
   const { data: reciept_data, isLoading: recieptDataLoading } = Digit.Hooks.useRecieptSearch(
-    { tenantId, businessService: "garbage-service", consumerCodes: applicationNo, isEmployee: false },
+    { tenantId, businessService: "garbage-service", consumerCodes: applicationNo },
     { enabled: !!applicationNo }
   );
 
   const GCDocuments = Digit?.ComponentRegistryService?.getComponent("GCDocuments");
 
-  const { isLoading: isWorkflowLoading } = Digit.Hooks.useWorkflowDetails({
+  const { isLoading: isWorkflowLoading, data: workflowDetails } = Digit.Hooks.useWorkflowDetails({
     tenantId: tenantId,
     id: applicationNo,
     moduleCode: businessService,
@@ -329,13 +324,7 @@ const GCApplicationDetails = () => {
             </div>
             {appData?.garbageNo && (
               <div className="app-details-kv-cell">
-                <p className="app-details-kv-label">
-                  {t("GC_GARBAGE_NUMBER") && t("GC_GARBAGE_NUMBER") !== "GC_GARBAGE_NUMBER"
-                    ? t("GC_GARBAGE_NUMBER")
-                    : t("GC_GARBAGE_NUMBER_LABEL") && t("GC_GARBAGE_NUMBER_LABEL") !== "GC_GARBAGE_NUMBER_LABEL"
-                    ? t("GC_GARBAGE_NUMBER_LABEL")
-                    : "Garbage Number"}
-                </p>
+                <p className="app-details-kv-label">{t("GC_GARBAGE_NUMBER_LABEL")}</p>
                 <p className="app-details-kv-value">{appData.garbageNo}</p>
               </div>
             )}
@@ -364,7 +353,7 @@ const GCApplicationDetails = () => {
             </div>
             {floorNo && (
               <div className="app-details-kv-cell">
-                <p className="app-details-kv-label">{getLabel("GC_FLOOR_UNIT", "Assigned Floor")}</p>
+                <p className="app-details-kv-label">{t("GC_FLOOR_UNIT")}</p>
                 <p className="app-details-kv-value">
                   {formatFloor(floorNo)}
                 </p>
