@@ -92,7 +92,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
   const userSearchNewV2 = async () => {
     const uuid = userInfo?.uuid;
     if (uuid) {
-      const usersResponse = await Digit.UserService.userSearchNewV2(tenant, { uuid: [uuid] }, {});
+      const usersResponse = await Digit.UserService.userSearchNewV2(tenant, { uuid: uuid }, {});
       if (usersResponse && usersResponse.user && usersResponse.user.length) {
         setUserAddresses(usersResponse.user[0]?.addresses || []); // Set addresses separately
       }
@@ -102,7 +102,7 @@ const UserProfile = ({ stateCode, userType, cityDetails }) => {
   const getUserInfo = async () => {
     const uuid = userInfo?.uuid;
     if (uuid) {
-      const usersResponse = await Digit.UserService.userSearch(tenant, { uuid: [uuid] }, {});
+      const usersResponse = await Digit.UserService.userSearch(tenant, { uuid: uuid }, {});
       if (usersResponse?.user?.[0]?.photo) {
         try {
           const file = await Digit.UploadServices.Filefetch([usersResponse?.user?.[0]?.photo], "pg");

@@ -34,7 +34,7 @@ const TopBar = ({
       const tenant = Digit.ULBService.getCurrentTenantId();
       const uuid = userDetails?.info?.uuid;
       if (uuid) {
-        const usersResponse = await Digit.UserService.userSearch(tenant, { uuid: [uuid] }, {});
+        const usersResponse = await Digit.UserService.userSearch(tenant, { uuid: uuid }, {});
         if (usersResponse?.user?.[0]?.photo) {
           try {
             const file = await Digit.UploadServices.Filefetch([usersResponse?.user?.[0]?.photo], "pg");
