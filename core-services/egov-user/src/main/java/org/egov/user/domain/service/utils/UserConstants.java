@@ -319,6 +319,34 @@ public final class UserConstants {
     public static final String CITIZEN_USERNAME_PREFIX = "CITIZEN_";
     public static final String DEFAULT_AADHAAR_CITIZEN_NAME = "Aadhaar Verified Citizen";
 
+    public static final List<String> MOCK_CITIZEN_NAMES = Collections.unmodifiableList(Arrays.asList(
+            "Aarav Sharma",
+            "Priya Patel",
+            "Rohan Verma",
+            "Ananya Gupta",
+            "Vikram Singh",
+            "Sneha Reddy",
+            "Rahul Kumar",
+            "Pooja Joshi",
+            "Amitabh Das",
+            "Neha Malhotra",
+            "Rajesh Iyer",
+            "Sunita Meena",
+            "Suresh Nair",
+            "Kavita Rao",
+            "Manish Choudhary",
+            "Deepika Sen",
+            "Aditya Mishra",
+            "Divya Bhat",
+            "Arjun Kapoor",
+            "Ritu Mukherjee"
+    ));
+
+    public static String getRandomCitizenName() {
+        int index = java.util.concurrent.ThreadLocalRandom.current().nextInt(MOCK_CITIZEN_NAMES.size());
+        return MOCK_CITIZEN_NAMES.get(index);
+    }
+
     // =========================================================================
     // 9. Family Service Integration Constants
     // =========================================================================

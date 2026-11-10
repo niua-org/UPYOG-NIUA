@@ -242,7 +242,7 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
         }
         return VerifiedAadhaarDemographics.builder()
                 .maskedAadhaar(masked)
-                .name("Aadhaar Verified Citizen")
+                .name(UserConstants.getRandomCitizenName())
                 .gender(Gender.MALE)
                 .dob(parseDob("1990-01-01"))
                 .mobileNumber(mockMobile)
