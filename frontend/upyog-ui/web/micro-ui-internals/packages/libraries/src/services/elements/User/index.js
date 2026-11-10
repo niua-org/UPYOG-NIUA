@@ -228,6 +228,27 @@ export const UserService = {
       userService: false,
     }),
 
+  /**
+   * Checks whether the authenticated user is the designated Head of Family (HOF) for a given familyId.
+   * @param {Object} data - Expected payload shape { familyId, tenantId }.
+   * @param {Object} [params] - Optional query parameters, e.g. { tenantId }.
+   * @returns {Promise<{ isHof: boolean, familyId: string, userUuid: string, headUserUuid: string }>}
+   */
+  isHof: (data, params) =>
+    ServiceRequest({
+      url: Urls.profile.isHof,
+      data: {
+        RequestInfo: {
+          action: "_isHof",
+        },
+        ...data,
+      },
+      params: params,
+      auth: true,
+      method: "POST",
+      userService: true,
+    }),
+
   createUserDocument: async (documents, tenantId) =>
     ServiceRequest({
       serviceName: "createUserDocument",

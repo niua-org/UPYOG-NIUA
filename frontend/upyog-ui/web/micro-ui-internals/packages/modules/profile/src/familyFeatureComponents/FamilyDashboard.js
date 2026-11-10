@@ -147,10 +147,10 @@ const FamilyDashboard = () => {
           <div style={styles.membersTitle}>
             {t("PROFILE_REGISTERED_MEMBERS", "REGISTERED MEMBERS")}
           </div>
-          <button type="button" onClick={handleAddNewMember} style={styles.addMemberLink}>
+          {/* <button type="button" onClick={handleAddNewMember} style={styles.addMemberLink}>
             <span style={styles.addMemberPlus}> +</span>
             <span> {t("PROFILE_ADD_NEW_MEMBER") || "Add New Member"}</span>
-          </button>
+          </button> */}
         </div>
         <div style={styles.membersGrid}>
           {members.map((member) => {
