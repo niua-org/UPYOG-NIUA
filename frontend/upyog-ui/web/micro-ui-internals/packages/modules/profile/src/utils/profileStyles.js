@@ -591,7 +591,7 @@ myFamilyDashboard: {
   ============================== */
 
   dashboardButton: {
-    width: "100%",
+    width: "30%",
     height: "46px",
     border: "none",
     borderRadius: "7px",
@@ -769,4 +769,76 @@ export const addressModalCss = `
       grid-column: 1 !important;
     }
   }
+    //  Documents tab (EditDocuments)
+
+     documentUpload: {
+   grid: {
+     display: "grid",
+     gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+     gap: 20,
+     width: "100%",
+   },
+   card: {
+     display: "flex",
+     flexDirection: "column",
+     gap: 16,
+     padding: 20,
+     border: "1px solid #E8EAED",
+     borderRadius: 12,
+     background: "#FFFFFF",
+   },
+   header: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 },
+   title: { fontWeight: 600, fontSize: 16, color: "#0B0C0C" },
+
+
+   badge: { fontSize: 12, fontWeight: 600, padding: "4px 10px", borderRadius: 999, whiteSpace: "nowrap" },
+   badgeVerified: { background: "#F0FDF4", color: "#166534", border: "1px solid #BBF7D0" },
+   badgePending: { background: "#FFF7ED", color: "#9A3412", border: "1px solid #FED7AA" },
+
+
+   // uploaded file tile: icon, file name below it, meta, view link
+   fileTile: {
+     display: "flex",
+     flexDirection: "column",
+     alignItems: "center",
+     gap: 8,
+     width: "100%",
+     padding: "20px 16px",
+     border: "1px solid #E8EAED",
+     borderRadius: 10,
+     background: "#FAFAFB",
+     cursor: "pointer",
+     font: "inherit",
+   },
+   fileEmoji: { fontSize: 40, lineHeight: 1 },
+   fileName: {
+     display: "block",
+     maxWidth: "100%",
+     fontSize: 14,
+     fontWeight: 600,
+     color: "#0B0C0C",
+     overflow: "hidden",
+     textOverflow: "ellipsis",
+     whiteSpace: "nowrap",
+   },
+   fileMeta: { fontSize: 12, color: "#6B7280" },
+   viewLink: { fontSize: 13, color: "#1D70B8", textDecoration: "underline" },
+
+
+   emptyTile: {
+     padding: "28px 16px",
+     border: "1px dashed #C9CDD2",
+     borderRadius: 10,
+     background: "#FAFAFB",
+     color: "#6B7280",
+     fontSize: 14,
+     textAlign: "center",
+   },
+
+
+   uploadLabel: { fontSize: 14, fontWeight: 500, color: "#505A5F", marginBottom: 6 },
+   hint: { fontSize: 12, color: "#6B7280", marginTop: 6 },
+ },
+};
+
 `;
