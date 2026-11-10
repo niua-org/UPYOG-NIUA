@@ -769,6 +769,8 @@ export const addressModalCss = `
       grid-column: 1 !important;
     }
   }
+    //  Documents tab (EditDocuments)
+
      documentUpload: {
    grid: {
      display: "grid",

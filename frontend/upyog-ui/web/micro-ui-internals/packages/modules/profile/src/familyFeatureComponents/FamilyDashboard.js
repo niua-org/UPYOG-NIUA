@@ -183,9 +183,6 @@ const FamilyDashboard = () => {
             );
           })}
         </div>
-        <button type="button" onClick={handleGoToDashboard} style={styles.dashboardButton}>
-          {t("PROFILE_GO_TO_MY_FAMILY_DASHBOARD" , "Go to My Family Dashboard")}
-        </button>
       </Card>
       {toast && (
         <Toast error={toast.error}  label={toast.label} onClose={() => setToast(null)} />
