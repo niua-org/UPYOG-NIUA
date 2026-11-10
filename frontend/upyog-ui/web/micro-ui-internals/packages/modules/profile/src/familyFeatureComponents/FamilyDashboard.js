@@ -169,7 +169,7 @@ const FamilyDashboard = () => {
                   <span style={styles.bullet}>• </span>
                   <span> {relationship} {isYou && (
                       <span style={styles.youText}>{" "}
-                        ({t("CORE_COMMON_YOU") || "You"})
+                        ({t("CORE_COMMON_YOU", "You")})
                       </span>
                     )}
                   </span>
