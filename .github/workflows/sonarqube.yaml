@@ -66,9 +66,10 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Affected services: $(echo "$services" | tr '\n' ' ')" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
 
-          # Frontend apps are Node projects at frontend/<app>/web (no pom.xml).
+          # Frontend apps are the Node projects at frontend/<app> (no pom.xml).
+          # Any change under the app dir (README, Jenkinsfile, web/src, ...) maps to it.
           if [ -d frontend ]; then
-            find frontend -mindepth 3 -maxdepth 3 -name package.json -not -path '*/node_modules/*' -print \
+            find frontend -mindepth 2 -maxdepth 2 -name package.json -not -path '*/node_modules/*' -print \
               | sed 's#/package.json$##' | sort -u > "$RUNNER_TEMP/fe-roots.txt"
           else
             : > "$RUNNER_TEMP/fe-roots.txt"
@@ -139,9 +140,12 @@ jobs:
 
           while read -r app; do
             [ -n "$app" ] || continue
+            # The project lives in <app>/web when present, otherwise at the app root.
+            workdir="$app/web"
+            [ -d "$workdir" ] || workdir="$app"
             echo "::group::scan $app"
             (
-              cd "$app"
+              cd "$workdir"
               project_key=$(printf '%s' "$app" | tr '/_' '-' | tr -cd '[:alnum:]-')
               npx --yes @sonar/scan \
                 -Dsonar.host.url="$SONAR_HOST_URL" \
