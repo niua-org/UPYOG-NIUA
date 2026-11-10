@@ -172,14 +172,14 @@ const FamilyDashboard = () => {
                     {relationship}
                     {isHead && (
                       <span style={styles.youText}>
-                        {" "}({t("CORE_COMMON_YOU") || "You"})
+                        {" "}({t("CORE_COMMON_YOU")})
                       </span>
                     )}
                   </span>
                 </div>
                 {isVerified && (
                   <div style={styles.verifiedBadge}>
-                    {t("PROFILE_VERIFIED") || "VERIFIED"}
+                    {t("PROFILE_VERIFIED")}
                   </div>
                 )}
               </div>
