@@ -490,7 +490,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         return VerifiedAadhaarDemographics.builder()
                 .fullAadhaarNumber(fullAadhaar)
                 .maskedAadhaar(masked)
-                .name(DEFAULT_AADHAAR_CITIZEN_NAME)
+                .name(UserConstants.getRandomCitizenName())
                 .gender(Gender.MALE)
                 .dob(parseDob("1990-01-01"))
                 .mobileNumber(null)
