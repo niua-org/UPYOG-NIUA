@@ -12,7 +12,7 @@ const LicenseDetails = ({ t, config, onSelect, userType, formData, ownerIndex })
   const uuid = userInfo?.info?.uuid;
       const {data: userDetails, isLoading:isUserLoading} = Digit.Hooks.useUserSearch(
         tenantId,
-        { uuid: [uuid] },
+        { uuid: uuid },
         {},
         { enabled: uuid ? true : false }
       );

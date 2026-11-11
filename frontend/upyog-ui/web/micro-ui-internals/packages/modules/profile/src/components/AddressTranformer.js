@@ -19,7 +19,7 @@ const Heading = ({ t }) => <h1 className="heading-m">{t("FILL_ADDRESS_DETAILS")}
  */
 
 
-const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddresses }) => {
+const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddresses, onSuccess }) => {
   const { t } = useTranslation();
   const stateCode = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId();
@@ -90,6 +90,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
       if (responseInfo?.status === "201 CREATED") {
         await refreshAddresses?.();
         actionCancelOnSubmit();
+        onSuccess(t("CORE_ADDRESS_ADDED"))
       }
     } catch (error) {
       console.log("error", error)
@@ -142,6 +143,7 @@ const AddressTranformer = ({ address, actionCancelOnSubmit, isEdit, refreshAddre
       if (responseInfo?.status === "200") {
         await refreshAddresses?.();
         actionCancelOnSubmit();
+        onSuccess(t("CORE_ADDRESS_UPDATED"))
       }
     } catch (error) {
       let message = error?.response?.data?.Errors?.[0]?.code || t("CORE_COMMON_PROFILE_UPDATE_ERROR");

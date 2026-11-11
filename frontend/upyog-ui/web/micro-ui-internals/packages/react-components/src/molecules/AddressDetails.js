@@ -311,7 +311,7 @@ const AddressDetails = ({t, config, onSelect, formData, isEdit}) => {
           maxLength={6}
           disable={isEdit}
       />
-      <CardLabel>{t("PROFILE_ADDRESS_PROOF")}</CardLabel>
+      <CardLabel>{t("PROFILE_ADDRESS_PROOF")} <span className="check-page-link-button">*</span></CardLabel>
       <UploadFile
         accept=".jpg,.jpeg,.png,.pdf"
         onUpload={handleProofUpload}

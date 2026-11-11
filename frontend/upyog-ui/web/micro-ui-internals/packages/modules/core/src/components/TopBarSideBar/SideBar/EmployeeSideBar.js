@@ -399,7 +399,7 @@ const EmployeeSideBar = ({ isSidebarCollapsed = false, closeMobileSidebar }) => 
 
         const usersResponse = await Digit.UserService.userSearch(
           user?.info?.tenantId || tenantId,
-          { uuid: [uuid] },
+          { uuid: uuid },
           {}
         );
 

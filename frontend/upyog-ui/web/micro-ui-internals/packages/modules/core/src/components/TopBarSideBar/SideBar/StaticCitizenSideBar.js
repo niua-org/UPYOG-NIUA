@@ -125,7 +125,7 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed,
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
   useEffect(() => {
     const fetchPhoto = async () => {
-      const usersResponse = await Digit.UserService.userSearch(user?.info?.tenantId, { uuid: [user?.info?.uuid||user?.user?.[0]?.uuid] }, {});
+      const usersResponse = await Digit.UserService.userSearch(user?.info?.tenantId, { uuid: user?.info?.uuid||user?.user?.[0]?.uuid }, {});
       if (usersResponse?.user?.[0]?.photo) {
         try {
           const file = await Digit.UploadServices.Filefetch([usersResponse?.user?.[0]?.photo], "pg");
