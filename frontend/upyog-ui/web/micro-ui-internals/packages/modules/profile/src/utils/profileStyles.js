@@ -773,6 +773,42 @@ myFamilyDashboard: {
     uploadLabel: { fontSize: 14, fontWeight: 500, color: "#505A5F", marginBottom: 6 },
     hint: { fontSize: 12, color: "#6B7280", marginTop: 6 },
   },
+
+  componentBottomMargin:{
+    marginBottom:"20px"
+  },
+
+  familyCreateTabs:{
+    wrapper: {
+      display: "flex",
+      gap: "8px",
+      flexWrap: "wrap",
+      marginBottom: "24px",
+      borderBottom: "2px solid #E8EAED",
+      paddingBottom: "0",
+    },
+    tab: {
+      padding: "10px 20px",
+      border: "none",
+      borderBottom: "3px solid transparent",
+      background: "transparent",
+      fontSize: "14px",
+      fontWeight: "500",
+      color: "#505A5F",
+      cursor: "pointer",
+      marginBottom: "-2px",
+      transition: "all 0.2s ease",
+    },
+    active: {
+      color: "#A82227",
+      borderBottom: "3px solid #A82227",
+      fontWeight: "700",
+    },
+    completed: {
+      color: "#00703C",
+      borderBottom: "3px solid #00703C",
+    },
+  }
   
 };
 

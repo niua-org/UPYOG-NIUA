@@ -301,3 +301,11 @@ export const clearFamilyMembers = () => {
         console.error("Failed to clear family members from sessionStorage", e);
     }
 };
+
+
+// Validation as per Selections
+export const TAX_VALIDATORS = {
+  PAN: { pattern: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, placeholder: "ABCDE1234F",    maxLength: 10 },
+  TAN: { pattern: /^[A-Z]{4}[0-9]{5}[A-Z]{1}$/, placeholder: "ABCD12345E",    maxLength: 10 },
+  GST: { pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, placeholder: "22ABCDE1234F1Z5", maxLength: 15 },
+};

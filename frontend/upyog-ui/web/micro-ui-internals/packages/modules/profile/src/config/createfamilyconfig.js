@@ -4,7 +4,7 @@
  * 
  * 
  * @usage
- * Used to define steps and navigation in the citizen's PTR application.
+ * Used to define steps and navigation in the PPP.
  */
 
 
@@ -24,6 +24,8 @@ export const createfamilyconfig =
                     "isMandatory": true,
                     "texts": {
                         "submitBarLabel": "COMMON_NEXT",
+                        "header": "ES_TITILE_PROFILE_DETAILS",
+                        "cardText": "",
                     }
                 },
             ],
@@ -42,6 +44,8 @@ export const createfamilyconfig =
                     "nextStep": "vehicles",
                     "texts": {
                         "submitBarLabel": "COMMON_NEXT",
+                        "header": "ES_TITILE_PROFILE_DETAILS",
+                        "cardText": "",
                     }
                 },
             ],

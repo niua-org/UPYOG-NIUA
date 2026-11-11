@@ -17,6 +17,7 @@ import FamilyCreatedResponse from "./familyFeatureComponents/FamilyCreatedRespon
 import FamilyDashboard from "./familyFeatureComponents/FamilyDashboard";
 import FamilyCreate from "./ppp";
 import CreateProfile from "./ppp/CreateProfile";
+import IncomeDetails from "./ppp/IncomeDetails";
 
 
 
@@ -50,7 +51,8 @@ FamilyMemberAdded,
 FamilyCreatedResponse,
 FamilyDashboard,
 FamilyCreate,
-CreateProfile
+CreateProfile,
+IncomeDetails
 };
 
 export const initPROFILEComponents = () => {
