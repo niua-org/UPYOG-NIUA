@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardText, Toast } from "@nudmcdgnpm/digit-ui-react-components";
-import AadhaarVerification from "../components/AadhaarVerification";
+import AadhaarVerification from "../verifications/AadhaarVerification";
 
 /**
  * AddFamilyMember Component

@@ -5,7 +5,7 @@ import EditProfile from "./components/EditProfile";
 import EditProfileForm from "./components/EditProfileForm";
 import EditAddress from "./components/EditAddress";
 import EditDocuments from "./components/EditDocuments";
-import AadhaarVerification from "./components/AadhaarVerification";
+import AadhaarVerification from "./verifications/AadhaarVerification";
 import JoinExistingFamily from "./familyFeatureComponents/JoinExistingFamily";
 import FamilyJoinedResponse from "./familyFeatureComponents/FamilyJoinedResponse";
 import FoundFamily from "./familyFeatureComponents/FoundFamily";
