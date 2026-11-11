@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { Dropdown, MobileNumber, TextInput, Toast, Loader, DatePicker, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import UploadDrawer from "./UploadDrawer";
@@ -21,7 +21,7 @@ import { profileStyles } from "../utils/profileStyles";
 
 
 
-const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProfileUpdate }) => {
+const EditProfileForm = forwardRef(({ stateCode, userType, cityDetails, userDetails, onProfileUpdate, hideSave = false }, ref) => {
   const { t } = useTranslation();
   const isEmployee = userType === "employee";
   const stateId = Digit.ULBService.getStateId();
@@ -80,7 +80,7 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
     setErrors(validationErrors);
     if (hasErrors(validationErrors)) {
       showToast("error", t(Object.values(validationErrors).find(Boolean)));
-      return;
+      return false;
     }
     setSaving(true);
     try {
@@ -110,13 +110,19 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
           );
         }
         showToast("success", t("CORE_COMMON_PROFILE_UPDATE_SUCCESS"));
+        return true;
       }
+      return false;
     } catch (error) {
       showToast("error", error?.Errors?.[0]?.description || t("CORE_COMMON_PROFILE_UPDATE_ERROR"));
+      return false;
     } finally {
       setSaving(false);
     }
   };
+
+  // Lets a parent step (e.g. Create Family "Save & Next") trigger the save; resolves to true on success
+  useImperativeHandle(ref, () => ({ save: handleSave }));
 
   return (
     <>
@@ -160,13 +166,15 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
           )}
         </div>
       </div>
-      <div style={profileStyles.actions}>
-        <SubmitBar
-          label={t("CORE_COMMON_SAVE")}
-          onSubmit={handleSave}
-          disabled={saving}
-        />
-      </div>
+      {!hideSave && (
+        <div style={profileStyles.actions}>
+          <SubmitBar
+            label={t("CORE_COMMON_SAVE")}
+            onSubmit={handleSave}
+            disabled={saving}
+          />
+        </div>
+      )}
 
       {toast && (
         <div className="profile-toast-container">
@@ -189,6 +197,6 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
       )}
     </>
   );
-};
+});
 
 export default EditProfileForm;

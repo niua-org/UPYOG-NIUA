@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CameraIcon, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import { profileStyles } from "./profileStyles";
 
@@ -97,6 +97,35 @@ export const extractThumb = (photo) => {
 export const fetchThumbnail = async (fileStoreId, tenantId) => {
   const res = await Digit.UploadServices.Filefetch([fileStoreId], tenantId);
   return res?.data?.fileStoreIds?.[0]?.url?.split(",")?.[3]?.trim() || null;
+};
+
+// Fetches the logged-in user with address, profile and document details
+export const useProfileUser = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const uuid = Digit.UserService.getUser()?.info?.uuid;
+  const tenantId = Digit.ULBService.getCurrentTenantId();
+
+  useEffect(() => {
+    let isActive = true; // avoids state update after unmount
+    const fetchUser = async () => {
+      if (!uuid) { setLoading(false); return; }
+      try {
+        // The updated /user/profile/_search endpoint expects a single uuid string rather than a list of UUIDs
+        const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
+        if (isActive) setUser(response?.user?.[0] || null);
+      } catch (e) {
+        if (isActive) setError(true);
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+    fetchUser();
+    return () => { isActive = false; };
+  }, [uuid, tenantId]);
+
+  return { user, loading, error };
 };
 
 // --- Shared presentational components ---

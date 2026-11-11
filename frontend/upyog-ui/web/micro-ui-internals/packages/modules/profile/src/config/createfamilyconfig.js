@@ -24,8 +24,6 @@ export const createfamilyconfig =
                     "isMandatory": true,
                     "texts": {
                         "submitBarLabel": "COMMON_NEXT",
-                        "header": "ES_TITILE_PROFILE_DETAILS",
-                        "cardText": "",
                     }
                 },
             ],

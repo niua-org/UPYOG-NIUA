@@ -21,4 +21,8 @@ export const PROFILE_ROUTES = {
   FAMILY_CREATED: "/upyog-ui/citizen/profile/family-created",
 };
 
+// Create Family → Profile step: option codes (see casteOptions / speciallyAbledOptions in CreateProfile) that decide whether a proof upload is shown
+export const DEFAULT_CASTE = "General";
+export const SPECIALLY_ABLED_YES = "Yes";
+
 export const getFamilyIdLength = (value = "") => value.replace(/-/g, "").length;
