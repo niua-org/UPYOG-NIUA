@@ -58,7 +58,7 @@ const FamilyCreateTabs = ({ t }) => {
             style={{
               ...profileStyles.tab,
               ...(isActive ? profileStyles.tabActive : {}),
-              ...(index > activeTabIndex ? { opacity: 0.5, cursor: "not-allowed" } : {}),
+              ...(index > activeTabIndex ? { opacity: 0.5, cursor: "not-allowed" } : {}), // TODO: romve later when remove if condition of handleTabClick
             }}
             onClick={() => handleTabClick(tab, index)}
           >

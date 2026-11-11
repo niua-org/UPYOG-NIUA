@@ -87,7 +87,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   return (
     <React.Fragment>
     <div>
-      <FamilyCreateTabs t={t} params={formData} />
+      <FamilyCreateTabs t={t} />
     </div>
       <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={isDisabled}>
         <div style={profileStyles.componentBottomMargin}>
