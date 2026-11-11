@@ -158,7 +158,7 @@ const FamilyMemberVerified = () => {
     }
 
     // 7. Navigate to family members table view (replace: true to keep history stack clean)
-    navigate(PROFILE_ROUTES.PROFILE_CREATE_FAMILY, { replace: true });
+    navigate(PROFILE_ROUTES.FAMILY_MEMBER_ADDED, { replace: true });
   };
 
   // Prevent transient rendering of NA fields while redirecting

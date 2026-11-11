@@ -357,6 +357,7 @@ export const profileStyles = {
     actionDisabled: {
       color: "#9CA3AF",
     },
+    actionsWrap: { display: "flex", alignItems: "center", gap: "12px" },
     deleteBtn: {
       background: "none",
       border: "none",

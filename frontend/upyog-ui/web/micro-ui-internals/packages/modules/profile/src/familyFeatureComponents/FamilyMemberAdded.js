@@ -11,9 +11,12 @@ import {
   Table,
   Dropdown,
   DeleteIcon,
+  EditIcon,
+  ViewsIcon,
+  Modal,
 } from "@nudmcdgnpm/digit-ui-react-components";
 
-import { getFamilyMembers, clearFamilyMembers, setFamilyMembers } from "../utils";
+import { getFamilyMembers, clearFamilyMembers, setFamilyMembers, FieldGrid, withValues } from "../utils";
 import { buildCreateFamilyPayload } from "../utils/payloads";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
@@ -102,6 +105,8 @@ const FamilyMemberAdded = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
+  // Row action dialog: { mode: "view" | "edit", member }
+  const [actionModal, setActionModal] = useState(null);
 
   // Toast notification helper
   const showToast = (type, message, duration = 4000) => {
@@ -159,6 +164,10 @@ const FamilyMemberAdded = () => {
       return updated;
     });
   };
+
+  // Edit: applicant re-opens the Create Family profile step; other members edit their relationship in a dialog
+  const handleEditMember = (member, isApplicant) =>
+    isApplicant ? navigate(PROFILE_ROUTES.PROFILE_CREATE_FAMILY) : setActionModal({ mode: "edit", member });
 
   // Table column specifications conforming to Digit UI <Table>
   const columns = useMemo(() => [
@@ -248,21 +257,20 @@ const FamilyMemberAdded = () => {
         const member = row.original;
         const isApplicant = member.userUuid === loggedInUuid;
 
-        // Applicant row cannot be deleted
-        if (isApplicant) {
-          return <span style={styles.actionDisabled}>-</span>;
-        }
-
-        // Delete button for added family members
         return (
-          <button
-            type="button"
-            onClick={() => handleRemoveMember(member.userUuid)}
-            style={styles.deleteBtn}
-            title={t("REMOVE")}
-          >
-            <DeleteIcon fill={styles.deleteIconFill} style={styles.deleteIcon} />
-          </button>
+          <div style={styles.actionsWrap}>
+            <button type="button" style={styles.deleteBtn} title={t("CORE_COMMON_VIEW")} onClick={() => setActionModal({ mode: "view", member })}>
+              <ViewsIcon />
+            </button>
+            {/* Applicant edits the profile steps; added members only have their relationship editable */}
+            <button type="button" style={styles.deleteBtn} title={t("CORE_COMMON_EDIT")} onClick={() => handleEditMember(member, isApplicant)}>
+              <EditIcon />
+            </button>
+            {/* Applicant (Member #1) cannot be removed */}
+            <button type="button" style={styles.deleteBtn} title={t("REMOVE")} disabled={isApplicant} onClick={() => handleRemoveMember(member.userUuid)}>
+              <DeleteIcon fill={isApplicant ? "#9CA3AF" : styles.deleteIconFill} style={styles.deleteIcon} />
+            </button>
+          </div>
         );
       },
     },
@@ -400,6 +408,41 @@ const FamilyMemberAdded = () => {
         />
         {submitting && <Loader />}
       </Card>
+
+      {actionModal && (
+        <Modal
+          headerBarMain={<h1 className="heading-m">{t(actionModal.mode === "view" ? "CORE_COMMON_VIEW" : "CORE_COMMON_EDIT")}</h1>}
+          actionCancelLabel={t("BACK")}
+          actionCancelOnSubmit={() => setActionModal(null)}
+          hideSubmit
+          formId="family-member-action"
+        >
+          {actionModal.mode === "view" ? (
+            <FieldGrid
+              t={t}
+              fields={withValues([
+                ["CORE_COMMON_NAME", actionModal.member.name],
+                ["CORE_COMMON_RELATIONSHIP", actionModal.member.relationshipWithHead],
+                ["CORE_COMMON_PROFILE_MOBILE_NUMBER", actionModal.member.mobileNumber],
+                ["CORE_COMMON_PROFILE_GENDER", actionModal.member.gender],
+                ["CORE_COMMON_AADHAR_NUMBER", actionModal.member.aadhaarLast4 && `XXXX-XXXX-${actionModal.member.aadhaarLast4}`],
+              ])}
+            />
+          ) : (
+            <Dropdown
+              t={t}
+              option={familyRelationShips}
+              optionKey="name"
+              selected={familyRelationShips.find((r) => r.code === actionModal.member.relationshipWithHead) || null}
+              select={(val) => {
+                handleRelationshipChange(actionModal.member.userUuid, val);
+                setActionModal(null);
+              }}
+              placeholder={t("SELECT_RELATIONSHIP")}
+            />
+          )}
+        </Modal>
+      )}
 
       {/* Toast Notification Container */}
       {toast && (
