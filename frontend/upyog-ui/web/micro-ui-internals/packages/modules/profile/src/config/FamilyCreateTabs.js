@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { createfamilyconfig } from "./createfamilyconfig";
 import { profileStyles } from "../utils/profileStyles";
 
-const TABS = createfamilyconfig.map((section) => (console.log(section),{
+const TABS = createfamilyconfig.map((section) => ({
   head: section.head || section.body[0].texts?.header,
   route: section.body[0].route,
   allRoutes: section.body.map((b) => b.route),
