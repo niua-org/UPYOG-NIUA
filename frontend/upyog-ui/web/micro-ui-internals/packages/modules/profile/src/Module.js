@@ -15,6 +15,8 @@ import FamilyMemberVerified from "./familyFeatureComponents/FamilyMemberVerified
 import FamilyMemberAdded from "./familyFeatureComponents/FamilyMemberAdded";
 import FamilyCreatedResponse from "./familyFeatureComponents/FamilyCreatedResponse";
 import FamilyDashboard from "./familyFeatureComponents/FamilyDashboard";
+import FamilyCreate from "./ppp";
+import CreateProfile from "./ppp/CreateProfile";
 
 
 
@@ -47,6 +49,8 @@ FamilyMemberVerified,
 FamilyMemberAdded,
 FamilyCreatedResponse,
 FamilyDashboard,
+FamilyCreate,
+CreateProfile
 };
 
 export const initPROFILEComponents = () => {

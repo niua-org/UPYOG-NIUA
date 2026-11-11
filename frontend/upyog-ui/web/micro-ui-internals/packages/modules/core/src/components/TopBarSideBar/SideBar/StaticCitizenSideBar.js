@@ -172,7 +172,8 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed,
   };
   const showProfilePage = () => {
     if (closeMobileSidebar) closeMobileSidebar();
-    navigate(`${APPLICATION_PATH}/citizen/profile/profile-details`);
+    // navigate(`${APPLICATION_PATH}/citizen/profile/profile-details`);
+    navigate(`${APPLICATION_PATH}/citizen/profile/create-family`);
   };
   //const tenantId = Digit.ULBService.getCitizenCurrentTenant();
   const filteredTenantContact = storeData?.tenants.filter((e) => e.code === tenantId)[0]?.contactNumber || storeData?.tenants[0]?.contactNumber;
@@ -223,14 +224,14 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed,
     menuItems = menuItems.filter((item) => item?.id !== "login-btn" && item?.id !== "help-line");
     menuItems = [
       ...menuItems,
-      {
-        text: t("EDIT_PROFILE"),
-        element: "PROFILE",
-        icon: "EditPencilIcon",
-        populators: {
-          onClick: showProfilePage,
-        },
-      },
+      // {
+      //   text: t("EDIT_PROFILE"),
+      //   element: "PROFILE",
+      //   icon: "EditPencilIcon",
+      //   populators: {
+      //     onClick: showProfilePage,
+      //   },
+      // },
       {
         text: (
           <React.Fragment>
@@ -259,6 +260,13 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed,
           link: linkData[key][0]?.sidebarURL,
         });
       }
+    });
+
+    menuItems.splice(1, 0, {
+      text: t("CREATE_FAMILY"),
+      element: "PROFILE",
+      icon: "EditPencilIcon",
+      populators: { onClick: showProfilePage },
     });
 
   return (
