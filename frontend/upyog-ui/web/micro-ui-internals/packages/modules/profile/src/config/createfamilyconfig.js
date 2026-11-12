@@ -11,7 +11,7 @@
 export const createfamilyconfig =
     [
         {
-            "head": "ES_TITILE_PROFILE_DETAILS",
+            "head": "ES_TITLE_PROFILE_DETAILS",
             "body": [
                 {
                     "route": "profileDetails",
@@ -24,12 +24,14 @@ export const createfamilyconfig =
                     "isMandatory": true,
                     "texts": {
                         "submitBarLabel": "COMMON_NEXT",
+                        "header": "ES_TITLE_PROFILE_DETAILS",
+                        "cardText": "",
                     }
                 },
             ],
         },
         {
-            "head": "ES_TITILE_INCOME_DETAILS",
+            "head": "ES_TITLE_INCOME_DETAILS",
             "body": [
                 {
                     "route": "incomeDetails",
@@ -42,7 +44,7 @@ export const createfamilyconfig =
                     "nextStep": "vehicles",
                     "texts": {
                         "submitBarLabel": "COMMON_NEXT",
-                        "header": "ES_TITILE_PROFILE_DETAILS",
+                        "header": "ES_TITLE_INCOME_DETAILS",
                         "cardText": "",
                     }
                 },
@@ -58,6 +60,7 @@ export const createfamilyconfig =
                         "withoutLabel": true,
                         "texts": {
                             "submitBarLabel": "COMMON_NEXT",
+                            "header": "ES_TITLE_VEHICLE_DETAILS",
                         },
                         "key": "vehicles",
                         "nextStep": "documents",
@@ -67,7 +70,7 @@ export const createfamilyconfig =
                 ],
         },
         {
-            "head": "ES_TITILE_DOCUMENT_DETAILS",
+            "head": "ES_TITLE_DOCUMENT_DETAILS",
             "body": [
                 {
                     "route": "documents",
@@ -78,6 +81,7 @@ export const createfamilyconfig =
                     "nextStep": null,
                     "texts": {
                         "submitBarLabel": "COMMON_NEXT",
+                        "header": "ES_TITLE_DOCUMENT_DETAILS",
                     },
                 }
             ],

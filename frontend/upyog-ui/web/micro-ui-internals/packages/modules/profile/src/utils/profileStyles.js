@@ -170,7 +170,7 @@ export const profileStyles = {
   tabs: { display: "flex", gap: 8, marginBottom: 16 },
   tab: {
     margin: 0,
-    background: "#F4F5F7",
+    background: "#D6D6D6",
     padding: "0 28px",
     height: 44,
     color: "#0B0C0C",

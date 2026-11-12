@@ -18,6 +18,7 @@ import FamilyDashboard from "./familyFeatureComponents/FamilyDashboard";
 import FamilyCreate from "./ppp";
 import CreateProfile from "./ppp/CreateProfile";
 import IncomeDetails from "./ppp/IncomeDetails";
+import VehicleDetails from "./ppp/VehicleDetails";
 
 
 
@@ -52,7 +53,8 @@ FamilyCreatedResponse,
 FamilyDashboard,
 FamilyCreate,
 CreateProfile,
-IncomeDetails
+IncomeDetails,
+VehicleDetails
 };
 
 export const initPROFILEComponents = () => {

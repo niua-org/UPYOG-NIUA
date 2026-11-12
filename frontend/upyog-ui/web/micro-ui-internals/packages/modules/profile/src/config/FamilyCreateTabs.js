@@ -26,10 +26,6 @@ const TABS = createfamilyconfig.map((section) => ({
  * - Uses the same `profileStyles.tab / tabActive` as `EditProfile` tabs
  *   so the design stays consistent across the profile module.
  *
- * @todo
- * When free tab navigation is needed later:
- * 1. Remove the `if (index > activeTabIndex) return;` guard in handleTabClick.
- * 2. Remove the `opacity: 0.5, cursor: "not-allowed"` from the future-tab style.
  *
  * @param {Function} props.t - i18n translation function
  */
@@ -42,8 +38,8 @@ const FamilyCreateTabs = ({ t }) => {
   const currentRoute = pathname.split("/").pop();
   const activeTabIndex = TABS.findIndex((tab) => tab.allRoutes.includes(currentRoute));
 
+  // Handle the tab navigation, clicking on tab, user navigated as per the register route
   const handleTabClick = (tab, index) => {
-    if (index > activeTabIndex) return; // will remove this later so whenever user will click on tab will get navigated accordingly
     navigate(`${basePath}/${tab.route}`);
   };
 
@@ -58,7 +54,6 @@ const FamilyCreateTabs = ({ t }) => {
             style={{
               ...profileStyles.tab,
               ...(isActive ? profileStyles.tabActive : {}),
-              ...(index > activeTabIndex ? { opacity: 0.5, cursor: "not-allowed" } : {}), // TODO: romve later when remove if condition of handleTabClick
             }}
             onClick={() => handleTabClick(tab, index)}
           >

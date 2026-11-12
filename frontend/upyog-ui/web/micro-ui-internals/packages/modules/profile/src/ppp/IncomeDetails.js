@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FormStep, CardLabel, Dropdown, TextInput, UploadFile } from "@nudmcdgnpm/digit-ui-react-components";
+import { FormStep, CardLabel, Dropdown, TextInput, UploadFile, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import { TAX_VALIDATORS } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
@@ -41,6 +41,8 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [occupation, setOccupation] = useState(saved.occupation || null);
   const [fileError, setFileError] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(saved.uploadedFile || null);
+  const [taxIdError, setTaxIdError] = useState(null);
+
 
   const goNext = () => {
     onSelect(config.key, { incomeProof, uploadedFile, taxIdType, taxIdNumber, annualIncome, occupation }, false);
@@ -52,6 +54,19 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   useEffect(() => {
     if (userType === "citizen") goNext();
   }, [taxIdType, taxIdNumber, annualIncome, occupation, uploadedFile]);
+
+  const handleTaxIdNumberChange = (e) => {
+    const val = e.target.value.toUpperCase();
+    const maxLen = TAX_VALIDATORS[taxIdType.code]?.maxLength;
+    
+    // maxLength enforce karo — agar limit se zyada ho to ignore karo
+    if (maxLen && val.length > maxLen) return;
+
+    setTaxIdNumber(val);
+    const isValid = TAX_VALIDATORS[taxIdType.code].pattern.test(val);
+    setTaxIdError(val && !isValid ? t("PROFILE_INVALID_TAX_ID") : null);
+  };
+
 
   const handleTaxIdTypeChange = (val) => {
     setTaxIdType(val);
@@ -82,7 +97,8 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
     })();
   };
 
-  const isDisabled = !incomeProof || !taxIdType || !taxIdType || !annualIncome || !occupation;
+  const isDisabled = !annualIncome || !occupation || !!taxIdError || (taxIdType && !taxIdNumber);
+
 
   return (
     <React.Fragment>
@@ -110,7 +126,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               type="text"
               name="taxIdNumber"
               value={taxIdNumber}
-              onChange={(e) => setTaxIdNumber(e.target.value.toUpperCase())}
+              onChange={handleTaxIdNumberChange}
               placeholder={TAX_VALIDATORS[taxIdType.code]?.placeholder}
               maxLength={TAX_VALIDATORS[taxIdType.code]?.maxLength}
               ValidationRequired={true}
@@ -121,6 +137,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                 title: t("PROFILE_INVALID_TAX_ID"),
               }}
             />
+            {taxIdError && <CardLabelError>{taxIdError}</CardLabelError>}
           </>
         )}
 
