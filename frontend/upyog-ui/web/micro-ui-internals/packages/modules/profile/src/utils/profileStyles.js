@@ -620,6 +620,193 @@ myFamilyDashboard: {
     boxSizing: "border-box",
   },
 },
+propertyDetails: {
+  container: {
+    width: "100%",
+  },
+
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "600",
+    marginBottom: "24px",
+  },
+
+   actions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: "12px",
+    marginTop: "32px",
+    paddingTop: "24px",
+    borderTop: "1px solid #e0e0e0",
+  },
+
+  cancelButton: {
+    minWidth: "100px",
+    padding: "10px 20px",
+    border: "1px solid #D6D6D6",
+    cursor: "pointer",
+    fontSize: "14px",
+  },
+},
+urbanPropertyForm: {
+  container: {
+    width: "100%",
+  },
+
+  field: {
+    marginBottom: "24px",
+  },
+
+  searchInput: {
+    width: "100%",
+  },
+
+  results: {
+    width: "60%",
+    marginTop: "16px",
+  },
+
+  propertyCard: {
+    position: "relative",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "16px",
+    padding: "12px 44px 12px 16px",
+    marginBottom: "12px",
+    backgroundColor: "#F7F7F7",
+    border: "1px solid #E8E8E8",
+    borderRadius: "8px",
+    boxShadow: "none",
+  },
+
+  propertyDetails: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: "8px",
+  },
+
+  propertyField: {
+    fontSize: "12px",
+  },
+
+  propertyLabel: {
+    color: "#505A5F",
+    fontWeight: "600",
+  },
+
+  propertyValue: {
+    color: "#0B0C0C",
+    marginTop: "2px",
+    overflowWrap: "anywhere",
+  },
+
+  selectRadio: {
+    position: "absolute",
+    top: "12px",
+    right: "16px",
+    width: "18px",
+    height: "18px",
+    accentColor: "#D7353A",
+    cursor: "pointer",
+  },
+
+  noProperty: {
+    marginTop: "16px",
+    fontSize: "14px",
+  },
+
+  createProperty: {
+    marginTop: "20px",
+    marginBottom:"10px",
+  },
+
+  createPropertyButton: {
+    padding: "8px 0",
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+  },
+},
+ruralPropertyForm: {
+  container: {
+    width: "100%",
+  },
+  fieldRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    columnGap: "24px",
+    alignItems: "start",
+  },
+
+  field: {
+    marginBottom: "20px",
+  },
+
+  header: {
+    marginBottom: "24px",
+  },
+
+  quickRegistration: {
+    fontSize: "12px",
+    fontWeight: "600",
+    marginBottom: "8px",
+  },
+
+  title: {
+    fontSize: "24px",
+    fontWeight: "600",
+    marginBottom: "8px",
+  },
+
+  description: {
+    fontSize: "14px",
+    lineHeight: "20px",
+    marginBottom: "24px",
+  },
+
+  section: {
+    marginBottom: "32px",
+  },
+
+  sectionTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    marginBottom: "20px",
+  },
+
+  // field: {
+  //   marginBottom: "20px",
+  // },
+
+radioGroup: {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: "24px",
+  width: "100%",
+  flexWrap: "nowrap",
+},
+  jointOwnerSection: {
+    marginTop: "20px",
+    padding: "20px",
+    border: "1px solid #E0E0E0",
+  },
+
+  jointOwnerTitle: {
+    fontSize: "14px",
+    fontWeight: "600",
+    marginBottom: "20px",
+  },
+
+  hint: {
+    fontSize: "12px",
+    marginTop: "8px",
+  },
+},
   aadhaarVerification: {
     consentBox: {
       background: "#F8F9FA",

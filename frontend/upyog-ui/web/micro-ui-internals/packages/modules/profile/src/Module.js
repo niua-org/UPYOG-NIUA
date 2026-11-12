@@ -19,6 +19,8 @@ import FamilyCreate from "./ppp";
 import CreateProfile from "./ppp/CreateProfile";
 import IncomeDetails from "./ppp/IncomeDetails";
 import VehicleDetails from "./ppp/VehicleDetails";
+import PropertyDetails from "./ppp/PropertyDetails/PropertyDetails";
+
 
 
 
@@ -54,7 +56,8 @@ FamilyDashboard,
 FamilyCreate,
 CreateProfile,
 IncomeDetails,
-VehicleDetails
+VehicleDetails,
+PropertyDetails,
 };
 
 export const initPROFILEComponents = () => {

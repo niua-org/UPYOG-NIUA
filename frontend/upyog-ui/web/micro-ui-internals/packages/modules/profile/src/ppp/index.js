@@ -68,10 +68,14 @@ const FamilyCreate = ({ parentRoute }) => {
     if (!isNaN(lastchar)) {
       isMultiple = true;
     }
-    // let { nextStep = {} } = config.find((routeObj) => routeObj.route === currentPath);
-    let { nextStep = {} } = config.find((routeObj) => routeObj.route === (currentPath || '0'));
-
-
+    const currentRoute =
+      config.find((routeObj) => routeObj.route === (currentPath || "0")) ||
+      config.find((routeObj) => routeObj.key === key);
+    if (!currentRoute) {
+      console.error(`Unable to find profile step configuration for route "${currentPath}" or key "${key}".`);
+      return;
+    }
+    let nextStep = currentRoute.nextStep;
 
     let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
     if (skipStep) {
@@ -82,6 +86,10 @@ const FamilyCreate = ({ parentRoute }) => {
     }
     if (nextStep === null) {
       return redirectWithHistory(`check`);
+    }
+    if (typeof nextStep !== "string") {
+      console.error(`Profile step "${currentRoute.route}" does not have a valid nextStep configured.`);
+      return;
     }
     if (!isNaN(nextStep.split("/").pop())) {
       nextPage = `${nextStep}`;

@@ -19,12 +19,32 @@ export const createfamilyconfig =
                     "withoutLabel": true,
                     "key": "profileDetails",
                     "type": "component",
-                    "nextStep": "incomeDetails",
+                    "nextStep": "propertyDetails",
                     "hideInEmployee": true,
                     "isMandatory": true,
                     "texts": {
                         "submitBarLabel": "COMMON_SAVE_NEXT",
                         "header": "ES_TITLE_PROFILE_DETAILS",
+                        "cardText": "",
+                    }
+                },
+            ],
+        },
+        {
+            "head": "ES_TITILE_PROPERTY_DETAILS",
+            "body": [
+                {
+                    "route": "propertyDetails",
+                    "component": "PropertyDetails",
+                    "withoutLabel": true,
+                    "key": "property",
+                    "type": "component",
+                    "isMandatory": true,
+                    "hideInEmployee": true,
+                    "nextStep": "incomeDetails",
+                    "texts": {
+                        "submitBarLabel": "COMMON_SAVE_NEXT",
+                        "header": "ES_TITILE_PROPERTY_DETAILS",
                         "cardText": "",
                     }
                 },
