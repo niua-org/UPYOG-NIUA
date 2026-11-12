@@ -17,14 +17,14 @@ const VEHICLE_NO_REGEX = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$/;
 const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   const saved = formData?.[config?.key] || {};
   const [vehicleRc, setVehicleRc] = useState(saved.vehicleRc || null);
-  const [buyingYear, setBuyingYear] = useState(saved.buyingYear || "");
+  const [purchaseYear, setPurchaseYear] = useState(saved.purchaseYear || "");
   const [vehicleNo, setVehicleNo] = useState(saved.vehicleNo || "");
   const [fileError, setFileError] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(saved.uploadedFile || null);
   const [vehicleNoError, setVehicleNoError] = useState(null);
 
   const goNext = () => {
-    onSelect(config.key, { vehicleRc, uploadedFile, buyingYear, vehicleNo }, false);
+    onSelect(config.key, { vehicleRc, uploadedFile, purchaseYear, vehicleNo }, false);
   };
 
   const onSkip = () => onSelect();
@@ -32,7 +32,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   // auto-save on field change for citizen (same pattern as PTRCitizenDetails)
   useEffect(() => {
     if (userType === "citizen") goNext();
-  }, [vehicleNo, buyingYear, uploadedFile]);
+  }, [vehicleNo, purchaseYear, uploadedFile]);
 
 
   const handleVehicleNoChange = (e) => {
@@ -66,7 +66,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
     })();
   };
 
-  const isDisabled = !vehicleRc || !vehicleNo || !buyingYear || !!vehicleNoError
+  const isDisabled = !vehicleRc || !vehicleNo || !purchaseYear || !!vehicleNoError
 
   return (
     <React.Fragment>
@@ -88,13 +88,13 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
             />
         {vehicleNoError && <CardLabelError>{vehicleNoError}</CardLabelError>}
 
-        <CardLabel>{t("PROFILE_VEHICLE_YEAR")} <span className="astericColor">*</span></CardLabel>
+        <CardLabel>{t("PROFILE_VEHICLE_PURCHASE_YEAR")} <span className="astericColor">*</span></CardLabel>
         <TextInput
             t={t}
             type="text"
-            name="buyingYear"
-            value={buyingYear}
-            onChange={(e) => setBuyingYear(e.target.value)}
+            name="purchaseYear"
+            value={purchaseYear}
+            onChange={(e) => setPurchaseYear(e.target.value)}
             placeholder="PROFILE_VEHICLE_BUYING_YEAR_PLACEHOLDER"
             maxLength={4}
             ValidationRequired={true}

@@ -40,7 +40,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [annualIncome, setAnnualIncome] = useState(saved.annualIncome || "");
   const [occupation, setOccupation] = useState(saved.occupation || null);
   const [fileError, setFileError] = useState(null);
-  const [uploadedFile, setUploadedFile] = useState(saved.uploadedFile || null);
+  const [uploadedIncomeFile, setUploadedIncomeFile] = useState(saved.uploadedIncomeFile || null);
   const [taxIdError, setTaxIdError] = useState(null);
   const [taxProof, setTaxProof] = useState(saved.taxProof || null);
   const [uploadedTaxProof, setUploadedTaxProof] = useState(saved.uploadedTaxProof || null);
@@ -53,7 +53,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
       config.key,
       {
         incomeProof,
-        uploadedFile,
+        uploadedIncomeFile,
         taxIdType,
         taxIdNumber,
         taxIdValidated,
@@ -70,7 +70,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
 
   useEffect(() => {
     if (userType === "citizen") goNext();
-  }, [taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, uploadedFile, uploadedTaxProof]);
+  }, [taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, uploadedIncomeFile, uploadedTaxProof]);
 
   const handleTaxIdNumberChange = (e) => {
     const val = e.target.value.toUpperCase();
@@ -110,6 +110,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   };
 
   const handleFileSelect = (e) => {
+    console.log("eeeee",e)
     const file = e.target.files[0];
     if (!file) return;
     if (file.size >= 5242880) {
@@ -121,7 +122,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
     (async () => {
       try {
         const response = await Digit.UploadServices.Filestorage("profile", file, Digit.ULBService.getStateId());
-        if (response?.data?.files?.length > 0) setUploadedFile(response.data.files[0].fileStoreId);
+        if (response?.data?.files?.length > 0) setUploadedIncomeFile(response.data.files[0].fileStoreId);
         else setFileError(t("CS_FILE_UPLOAD_ERROR"));
       } catch {
         setFileError(t("CS_FILE_UPLOAD_ERROR"));
@@ -233,12 +234,12 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                     ...(isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
                   }}
                 >
-                  {taxIdValidated ? `✓ ${t("PROFILE_VALIDATED") || "Validated"}` : t("PROFILE_VALIDATE") || "Validate"}
+                  {taxIdValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
                 </button>
               </div>
               {taxIdError && <CardLabelError>{taxIdError}</CardLabelError>}
               {validateStatus === "success" && (
-                <p style={profileStyles.validateSuccessMsg}>{t("PROFILE_TAX_ID_VALID") || "Tax ID format is valid ✓"}</p>
+                <p style={profileStyles.validateSuccessMsg}>{t("PROFILE_TAX_ID_VALID")}</p>
               )}
             </GridFields>
           ) : (
@@ -268,7 +269,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               onUpload={handleFileSelect}
               onDelete={() => {
                 setIncomeProof(null);
-                setUploadedFile(null);
+                setUploadedIncomeFile(null);
                 setFileError(null);
               }}
               message={incomeProof ? incomeProof.name : t("PROFILE_NO_FILE_SELECTED")}
