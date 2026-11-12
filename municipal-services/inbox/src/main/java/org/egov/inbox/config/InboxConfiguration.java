@@ -176,4 +176,13 @@ public class InboxConfiguration {
 
 	@Value("${egov.searcher.fn.count.path}")
 	private String firenocInboxSearcherCountEndpoint;
+
+	@Value("${egov.searcher.family.search.path}")
+	private String familyInboxSearcherEndpoint;
+
+	@Value("${egov.searcher.family.search.desc.path}")
+	private String familyInboxSearcherDescEndpoint;
+
+	@Value("${egov.searcher.family.count.path}")
+	private String familyInboxSearcherCountEndpoint;
 }
