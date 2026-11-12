@@ -23,7 +23,7 @@ const NewNDCStepFormTwo = ({ config, onGoNext, onBackClick, t }) => {
 
   const { isLoading, data } = Digit.Hooks.ndc.useNDCDoc(stateId, "NDC", "Documents");
 
-  const id = window.location.pathname.split("/").pop();
+  const id = window.location.pathname.match(/(NDC-[A-Za-z0-9\-_]+)/)?.[1] || window.location.pathname.split("/").pop();
 
   const user = Digit.UserService.getUser();
 

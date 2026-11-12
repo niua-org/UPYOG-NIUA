@@ -40,6 +40,7 @@ const App = () => {
       <AppContainer>
         {!isResponse ? (
           <div className={window.location.href.includes("application-overview") || isMobile ? 'ndc-margin-left-10' : ''}>
+            <BackButton>{t("CS_COMMON_BACK")}</BackButton>
             <NDCBreadCrumbs location={location} />
           </div>
         ) : null}
