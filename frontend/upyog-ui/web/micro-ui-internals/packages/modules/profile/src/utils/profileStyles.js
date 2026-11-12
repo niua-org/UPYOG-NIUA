@@ -809,7 +809,54 @@ myFamilyDashboard: {
       color: "#00703C",
       borderBottom: "3px solid #00703C",
     },
-  }
+  },
+   gridFieldsDetails: {
+    grid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", // 2 columns on wide screens, 1 on narrow
+      columnGap: 32,
+      rowGap: 4,
+      marginBottom: 20,
+    },
+    field: { display: "flex", flexDirection: "column", minWidth: 0, marginBottom: 12 },
+  },
+    // Tax ID validate button (IncomeDetails)
+  taxIdInputRow: {
+    display: "flex",
+    gap: "8px",
+    alignItems: "flex-start",
+  },
+  taxIdInputWrap: {
+    flex: 1,
+  },
+  validateBtn: {
+    height: "40px",
+    padding: "0 16px",
+    borderRadius: "4px",
+    border: "none",
+    background: "var(--app-btn-primary-gradient, linear-gradient(90deg, #6A4A91 0%, #3E285F 100%))",
+    color: "#ffffff",
+    fontWeight: 600,
+    fontSize: "13px",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
+    transition: "all 0.2s ease",
+  },
+  validateBtnSuccess: {
+    background: "linear-gradient(90deg, #00703C 0%, #005a30 100%)",
+  },
+  validateBtnDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
+  },
+  validateSuccessMsg: {
+    color: "#00703C",
+    fontSize: "12px",
+    margin: "4px 0 0",
+    fontWeight: 500,
+  },
+
   
 };
 
@@ -890,4 +937,17 @@ export const addressModalCss = `
   }
 };
 
+`;
+
+export const GridFieldsCss = `
+  .income-details-form .card-label {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+  .income-details-form .employee-card-input,
+  .income-details-form .select,
+  .income-details-form .select-wrap {
+    border-radius: 10px;
+  }
 `;

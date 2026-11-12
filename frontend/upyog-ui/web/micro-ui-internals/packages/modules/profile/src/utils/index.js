@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { CameraIcon, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
+import { CameraIcon, CardLabelError ,CardLabel } from "@nudmcdgnpm/digit-ui-react-components";
 import { profileStyles } from "./profileStyles";
 
 /**
@@ -338,3 +338,15 @@ export const TAX_VALIDATORS = {
   TAN: { pattern: /^[A-Z]{4}[0-9]{5}[A-Z]{1}$/, placeholder: "ABCD12345E",    maxLength: 10 },
   GST: { pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, placeholder: "22ABCDE1234F1Z5", maxLength: 15 },
 };
+
+
+
+// Label + control pair, so the grid always keeps them together
+export const GridFields = ({ label, required, children }) => (
+  <div style={profileStyles.gridFieldsDetails.field}>
+    <CardLabel>
+      {label} {required && <span className="astericColor">*</span>}
+    </CardLabel>
+    {children}
+  </div>
+);
