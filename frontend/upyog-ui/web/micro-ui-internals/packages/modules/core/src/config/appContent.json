@@ -666,7 +666,7 @@
     "theme": "upyogPurple",
     "layout": {
       "loginUI": {
-        "backgroundUrl": "/upyog-ui/images/empbg.png",
+        "backgroundUrl": "/upyog-ui/images/citizen-metro-bg.jpg",
         "isEmployeeV2": true,
         "mainlogo": {
           "dualLogo": false,
@@ -687,6 +687,7 @@
           "enabled": true,
           "showIcons": true,
           "hasBackground": true,
+          "isWhiteCard": true, 
           "data": [
             {
               "title": "Apply for Services",
