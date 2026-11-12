@@ -373,4 +373,31 @@ public class UserSearchResponseContent {
 
         return user;
     }
+
+    /**
+     * Gets the alternate mobile number (camelCase getter for JSON serialization).
+     *
+     * @return alternate mobile number
+     */
+    public String getAlternateMobileNumber() {
+        return this.alternatemobilenumber;
+    }
+
+    /**
+     * Gets the guardian name.
+     *
+     * @return guardian name
+     */
+    public String getGuardian() {
+        return this.fatherOrHusbandName;
+    }
+
+    /**
+     * Gets the guardian relation string.
+     *
+     * @return guardian relation string
+     */
+    public String getGuardianRelation() {
+        return this.relationship != null ? this.relationship.name() : null;
+    }
 }

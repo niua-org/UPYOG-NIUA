@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -158,7 +159,26 @@ public class UserPropertyRepository {
      */
     public void savePropertyOwner(PropertyOwner owner) {
         if (StringUtils.isBlank(owner.getId())) {
-            owner.setId(UUID.randomUUID().toString());
+            if (StringUtils.isNotBlank(owner.getPropertyId()) && StringUtils.isNotBlank(owner.getUserUuid())) {
+                try {
+                    Map<String, Object> lookupParams = new HashMap<>();
+                    lookupParams.put("property_id", owner.getPropertyId());
+                    lookupParams.put("user_uuid", owner.getUserUuid());
+                    List<String> existingIds = namedParameterJdbcTemplate.query(
+                            UserPropertyQueryBuilder.SELECT_PROPERTY_OWNER_ID_BY_PROPERTY_AND_USER_SQL,
+                            lookupParams,
+                            (rs, rowNum) -> rs.getString("id")
+                    );
+                    if (existingIds != null && !existingIds.isEmpty()) {
+                        owner.setId(existingIds.get(0));
+                    }
+                } catch (Exception e) {
+                    log.debug("[USER-PROP-REPO] Unable to lookup existing property owner ID: {}", e.getMessage());
+                }
+            }
+            if (StringUtils.isBlank(owner.getId())) {
+                owner.setId(UUID.randomUUID().toString());
+            }
         }
         long now = System.currentTimeMillis();
         if (owner.getCreatedTime() == null) {

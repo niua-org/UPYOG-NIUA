@@ -98,6 +98,10 @@ public class UserPropertyQueryBuilder {
             ":created_by, :created_time, :last_modified_by, :last_modified_time" +
             ")";
 
+    public static final String SELECT_PROPERTY_OWNER_ID_BY_PROPERTY_AND_USER_SQL =
+            "SELECT id FROM ug_user_property_owner " +
+            "WHERE property_id = :property_id AND user_uuid = :user_uuid AND active = true LIMIT 1";
+
     /**
      * Default constructor for Spring component lifecycle.
      */

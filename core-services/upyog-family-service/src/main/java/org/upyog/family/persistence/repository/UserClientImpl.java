@@ -388,6 +388,29 @@ public class UserClientImpl implements UserClient {
             isIdentityVerified = Boolean.valueOf(String.valueOf(idVerifiedObj));
         }
 
+        Boolean isSpeciallyAbled = null;
+        Object speciallyAbledObj = map.get(FamilyConstants.JSON_KEY_IS_SPECIALLY_ABLED);
+        if (speciallyAbledObj instanceof Boolean) {
+            isSpeciallyAbled = (Boolean) speciallyAbledObj;
+        } else if (speciallyAbledObj != null) {
+            isSpeciallyAbled = Boolean.valueOf(String.valueOf(speciallyAbledObj));
+        }
+
+        String altMobile = (String) map.get(FamilyConstants.JSON_KEY_ALTERNATE_MOBILE_NUMBER);
+        if (StringUtils.isBlank(altMobile)) {
+            altMobile = (String) map.get("alternatemobilenumber");
+        }
+
+        String guardian = (String) map.get(FamilyConstants.JSON_KEY_GUARDIAN);
+        if (StringUtils.isBlank(guardian)) {
+            guardian = (String) map.get("fatherOrHusbandName");
+        }
+
+        String guardianRelation = (String) map.get(FamilyConstants.JSON_KEY_GUARDIAN_RELATION);
+        if (StringUtils.isBlank(guardianRelation)) {
+            guardianRelation = (String) map.get("relationship");
+        }
+
         return CitizenProfile.builder()
                 .uuid((String) map.get(FamilyConstants.JSON_KEY_UUID))
                 .userName((String) map.get(FamilyConstants.JSON_KEY_USER_NAME))
@@ -397,6 +420,14 @@ public class UserClientImpl implements UserClient {
                 .dob(dob)
                 .photo((String) map.get(FamilyConstants.JSON_KEY_PHOTO))
                 .emailId((String) map.get(FamilyConstants.JSON_KEY_EMAIL_ID))
+                .alternateMobileNumber(altMobile)
+                .fatherName((String) map.get(FamilyConstants.JSON_KEY_FATHER_NAME))
+                .motherName((String) map.get(FamilyConstants.JSON_KEY_MOTHER_NAME))
+                .spouseName((String) map.get(FamilyConstants.JSON_KEY_SPOUSE_NAME))
+                .guardian(guardian)
+                .guardianRelation(guardianRelation)
+                .caste((String) map.get(FamilyConstants.JSON_KEY_CASTE))
+                .isSpeciallyAbled(isSpeciallyAbled)
                 .isIdentityVerified(isIdentityVerified)
                 .build();
     }

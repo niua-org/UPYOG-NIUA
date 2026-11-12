@@ -185,6 +185,12 @@ public final class FamilyConstants {
     public static final String JSON_KEY_PHOTO = "photo";
     public static final String JSON_KEY_EMAIL_ID = "emailId";
     public static final String JSON_KEY_STATUS = "status";
+    public static final String JSON_KEY_FATHER_NAME = "fatherName";
+    public static final String JSON_KEY_MOTHER_NAME = "motherName";
+    public static final String JSON_KEY_SPOUSE_NAME = "spouseName";
+    public static final String JSON_KEY_GUARDIAN = "guardian";
+    public static final String JSON_KEY_GUARDIAN_RELATION = "guardianRelation";
+    public static final String JSON_KEY_ALTERNATE_MOBILE_NUMBER = "alternateMobileNumber";
 
     public static final String USER_TYPE_CITIZEN = "CITIZEN";
     public static final String USER_TYPE_EMPLOYEE = "EMPLOYEE";

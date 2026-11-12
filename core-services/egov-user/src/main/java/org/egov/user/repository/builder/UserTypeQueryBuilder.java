@@ -67,7 +67,7 @@ public class UserTypeQueryBuilder {
             ".lastmodifieddate,  userdata.createdby,userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber, " +
-            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
+            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.caste, userdata.is_specially_abled, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
             "addr.id as addr_id, addr.type as " +
             "addr_type, addr .address as addr_address,  addr.city as addr_city, addr.pincode as addr_pincode, addr" +
             ".tenantid as " +
