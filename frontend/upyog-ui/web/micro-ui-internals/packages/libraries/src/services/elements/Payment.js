@@ -159,6 +159,13 @@ export const PaymentService = {
         auth: true,
         params: { tenantId, ...params },
       }),
+    useFamilyQrCodeService: (tenantId, params) =>
+      Request({
+        url: Urls.profile.familySearch,
+        method: "POST",
+        auth: true,
+        params: { tenantId, ...params },
+      }),
   getBulkPdfRecordsDetails: (filters) =>
     Request({
       url: Urls.payment.getBulkPdfRecordsDetails,

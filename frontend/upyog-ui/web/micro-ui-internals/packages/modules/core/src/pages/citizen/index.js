@@ -21,6 +21,7 @@ import Search from "./SearchApp";
 import QRCode from "./QRCode";
 import VSearchCertificate from "./CMSearchCertificate";
 import AssetsQRCode from "./AssetsQRCode";
+import FamilyQRCode from "./FamilyQRCode";
 import ChallanQRCode from "./ChallanQRCode";
 import { newConfig as newConfigEDCR } from "../../config/edcrConfig";
 import CreateAnonymousEDCR from "./Home/EDCR";
@@ -314,6 +315,7 @@ const Home = (props) => {
               <Route path="user/profile" element={<PrivateRoute><UserProfile stateCode={stateCode} userType={"citizen"} cityDetails={cityDetails} /></PrivateRoute>} />
               <Route path="verificationsearch-home" element={<VSearchCertificate />} />
               <Route path="assets/services" element={<AssetsQRCode />} />
+              <Route path="family/services" element={<FamilyQRCode />} />
               <Route path="challan/details" element={<ChallanQRCode />} />
               <Route path={`${APPLICATION_PATH}/citizen/core/edcr/scrutiny`} element={<CreateAnonymousEDCR />} />
               <Route path={`${APPLICATION_PATH}/citizen/core/edcr/scrutiny/acknowledgement`} element={<EDCRAcknowledgement />} />
