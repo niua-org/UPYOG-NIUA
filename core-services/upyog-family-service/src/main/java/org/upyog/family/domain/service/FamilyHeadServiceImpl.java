@@ -89,7 +89,7 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
      *
      * <p>Enforces that the caller is the current HoF, the target member is active in the family, and the family
      * is {@code ACTIVE}. Revokes head status from the current head, assigns {@code isHead = true} and
-     * {@code relationshipWithHead = "HEAD"} to the successor, updates audit details, and pushes the event to Kafka.</p>
+     * {@code relationshipWithHead = "SELF"} to the successor, updates audit details, and pushes the event to Kafka.</p>
      *
      * @param request HoF assignment payload containing family ID, new head UUID, and optional justification; must not be {@code null}.
      * @return the updated {@link Family} aggregate reflecting the succession.
@@ -119,7 +119,7 @@ public class FamilyHeadServiceImpl implements FamilyHeadService {
                 boolean isNewHead = request.getNewHeadUserUuid().equals(member.getUserUuid());
                 member.setIsHead(isNewHead);
                 if (isNewHead) {
-                    member.setRelationshipWithHead(FamilyConstants.RELATIONSHIP_HEAD);
+                    member.setRelationshipWithHead(FamilyConstants.RELATIONSHIP_SELF);
                 }
                 if (member.getAuditDetails() != null) {
                     member.getAuditDetails().setLastModifiedBy(userUuid);

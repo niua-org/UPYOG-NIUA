@@ -45,6 +45,11 @@ public final class FamilyConstants {
     // Member Relationships with HoF
     // ==========================================
     public static final String RELATIONSHIP_SELF = "SELF";
+    /**
+     * @deprecated In accordance with MDMS taxonomy (#356), {@code HEAD} relationship is deactivated
+     *             and {@code SELF} is used for Head of Family. Retained for backwards compatibility.
+     */
+    @Deprecated
     public static final String RELATIONSHIP_HEAD = "HEAD";
     public static final String RELATIONSHIP_SPOUSE = "SPOUSE";
     public static final String RELATIONSHIP_SON = "SON";

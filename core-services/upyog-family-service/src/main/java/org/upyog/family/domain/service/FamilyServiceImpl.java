@@ -349,7 +349,7 @@ public class FamilyServiceImpl implements FamilyService {
                         .userUuid(member.getUserUuid())
                         .tenantId(request.getTenantId())
                         .relationshipWithHead(member.getUserUuid().equals(request.getNewFamilyHeadUserUuid())
-                                ? FamilyConstants.RELATIONSHIP_HEAD
+                                ? FamilyConstants.RELATIONSHIP_SELF
                                 : member.getRelationshipWithHead())
                         .isHead(member.getUserUuid().equals(request.getNewFamilyHeadUserUuid()))
                         .isVerified(member.getIsVerified())
@@ -476,7 +476,7 @@ public class FamilyServiceImpl implements FamilyService {
                         .userUuid(member.getUserUuid())
                         .tenantId(request.getTenantId())
                         .relationshipWithHead(member.getUserUuid().equals(request.getCommonHeadUserUuid())
-                                ? FamilyConstants.RELATIONSHIP_HEAD
+                                ? FamilyConstants.RELATIONSHIP_SELF
                                 : member.getRelationshipWithHead())
                         .isHead(member.getUserUuid().equals(request.getCommonHeadUserUuid()))
                         .isVerified(member.getIsVerified())

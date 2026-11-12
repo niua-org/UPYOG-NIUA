@@ -76,7 +76,7 @@ public class FamilyMember {
     private String gender;
 
     /**
-     * Relationship with the Head of Family, dynamically validated against MDMS (e.g. {@code HEAD}, {@code SPOUSE}, {@code SON}, {@code FATHER}).
+     * Relationship with the Head of Family, dynamically validated against MDMS (e.g. {@code SELF}, {@code SPOUSE}, {@code SON}, {@code FATHER}).
      */
     @JsonProperty("relationshipWithHead")
     private String relationshipWithHead;

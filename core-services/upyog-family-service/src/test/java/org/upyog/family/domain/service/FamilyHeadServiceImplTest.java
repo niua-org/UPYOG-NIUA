@@ -15,6 +15,7 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.validator.AssignHofValidator;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.UserClient;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.KafkaProducer;
 import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.AuditDetails;
@@ -116,7 +117,7 @@ class FamilyHeadServiceImplTest {
         assertNotNull(newHead);
         assertFalse(oldHead.getIsHead());
         assertTrue(newHead.getIsHead());
-        assertEquals("HEAD", newHead.getRelationshipWithHead());
+        assertEquals(FamilyConstants.RELATIONSHIP_SELF, newHead.getRelationshipWithHead());
         verify(kafkaProducer).push(any(), any());
     }
 

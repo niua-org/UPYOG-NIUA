@@ -48,6 +48,12 @@ public class MdmsFamilyConfigurationServiceImpl implements FamilyConfigurationSe
         private final FamilyConfig familyConfig;
         private final long lastUpdatedTimestamp;
 
+        /**
+         * Constructs a new {@code CacheEntry} holding the family configuration and its fetch timestamp.
+         *
+         * @param familyConfig          the family configuration to cache
+         * @param lastUpdatedTimestamp  the timestamp (in epoch milliseconds) when the configuration was cached
+         */
         public CacheEntry(FamilyConfig familyConfig, long lastUpdatedTimestamp) {
             this.familyConfig = familyConfig;
             this.lastUpdatedTimestamp = lastUpdatedTimestamp;
@@ -196,7 +202,7 @@ public class MdmsFamilyConfigurationServiceImpl implements FamilyConfigurationSe
         if (config == null) {
             log.info("[FAMILY-CONFIG-MDMS] No active FamilyConfiguration in MDMS for tenant {}. Using default UPYOG_INTERNAL config.",
                     stateTenant);
-            config = FamilyConfig.createDefault(stateTenant);
+            config = FamilyConfig.createDefault();
         }
 
         tenantConfigCache.put(stateTenant, new CacheEntry(config, System.currentTimeMillis()));

@@ -13,6 +13,7 @@ import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.model.LineageActionType;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.UserClient;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.CitizenProfile;
 import org.upyog.family.web.contract.Family;
@@ -30,6 +31,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
@@ -202,7 +204,8 @@ class FamilyDashboardServiceImplTest {
         FamilyMember head = response.getDashboard().getActiveMembers().get(0);
         assertEquals("head-uuid-1", head.getUserUuid());
         assertEquals("Head Of Family", head.getName());
-        assertEquals("HEAD", head.getRelationshipWithHead());
+        assertEquals(FamilyConstants.RELATIONSHIP_SELF, head.getRelationshipWithHead());
+        assertNull(head.getId());
         org.junit.jupiter.api.Assertions.assertTrue(Boolean.TRUE.equals(head.getIsHead()));
 
         // Second member is the father

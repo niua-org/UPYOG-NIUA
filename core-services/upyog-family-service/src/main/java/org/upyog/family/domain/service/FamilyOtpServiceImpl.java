@@ -203,11 +203,11 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                     .anyMatch(m -> headUserUuid.equals(m.getUserUuid()));
             if (!headPresent && headProfile != null) {
                 FamilyMember headMember = FamilyMember.builder()
-                        .id("HEAD-" + (headUserUuid.length() >= 8 ? headUserUuid.substring(0, 8) : headUserUuid))
+                        .id(null)
                         .familyId(family.getFamilyId())
                         .tenantId(family.getTenantId())
                         .userUuid(headUserUuid)
-                        .relationshipWithHead(FamilyConstants.RELATIONSHIP_HEAD)
+                        .relationshipWithHead(FamilyConstants.RELATIONSHIP_SELF)
                         .isHead(true)
                         .isVerified(headProfile.getIsIdentityVerified() != null ? headProfile.getIsIdentityVerified() : true)
                         .active(true)

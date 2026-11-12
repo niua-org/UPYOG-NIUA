@@ -90,11 +90,11 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
             CitizenProfile headProfile = headProfileMap != null ? headProfileMap.get(family.getHeadUserUuid()) : null;
 
             FamilyMember headMember = FamilyMember.builder()
-                    .id("HEAD-" + (family.getHeadUserUuid().length() >= 8 ? family.getHeadUserUuid().substring(0, 8) : family.getHeadUserUuid()))
+                    .id(null)
                     .familyId(family.getFamilyId())
                     .tenantId(family.getTenantId())
                     .userUuid(family.getHeadUserUuid())
-                    .relationshipWithHead("HEAD")
+                    .relationshipWithHead(FamilyConstants.RELATIONSHIP_SELF)
                     .isHead(true)
                     .isVerified(headProfile != null && Boolean.TRUE.equals(headProfile.getIsIdentityVerified()))
                     .active(true)
