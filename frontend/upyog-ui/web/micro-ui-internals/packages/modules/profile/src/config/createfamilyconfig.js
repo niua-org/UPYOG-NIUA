@@ -23,7 +23,7 @@ export const createfamilyconfig =
                     "hideInEmployee": true,
                     "isMandatory": true,
                     "texts": {
-                        "submitBarLabel": "COMMON_NEXT",
+                        "submitBarLabel": "COMMON_SAVE_NEXT",
                         "header": "ES_TITLE_PROFILE_DETAILS",
                         "cardText": "",
                     }
@@ -43,7 +43,7 @@ export const createfamilyconfig =
                     "hideInEmployee": true,
                     "nextStep": "vehicles",
                     "texts": {
-                        "submitBarLabel": "COMMON_NEXT",
+                        "submitBarLabel": "COMMON_SAVE_NEXT",
                         "header": "ES_TITLE_INCOME_DETAILS",
                         "cardText": "",
                     }
@@ -59,7 +59,7 @@ export const createfamilyconfig =
                         "component": "VehicleDetails",
                         "withoutLabel": true,
                         "texts": {
-                            "submitBarLabel": "COMMON_NEXT",
+                            "submitBarLabel": "COMMON_SAVE_NEXT",
                             "header": "ES_TITLE_VEHICLE_DETAILS",
                         },
                         "key": "vehicles",
@@ -80,7 +80,7 @@ export const createfamilyconfig =
                     "type": "component",
                     "nextStep": null,
                     "texts": {
-                        "submitBarLabel": "COMMON_NEXT",
+                        "submitBarLabel": "COMMON_SAVE_NEXT",
                         "header": "ES_TITLE_DOCUMENT_DETAILS",
                     },
                 }
