@@ -128,6 +128,23 @@ const formatDateForInput = (dob) => {
 };
 
 /**
+ * Normalizes gender value from user profile to standard Dropdown shape with display name
+ */
+const normalizeGender = (gender) => {
+  if (!gender) return null;
+  const rawCode = typeof gender === "object" ? (gender.code || gender.value || gender.name) : gender;
+  if (!rawCode) return null;
+  const code = String(rawCode).toUpperCase();
+  const name = code.charAt(0) + code.slice(1).toLowerCase();
+  return {
+    i18nKey: `PT_COMMON_GENDER_${code}`,
+    code,
+    value: code,
+    name,
+  };
+};
+
+/**
  * Document Upload Card: matches Figma design with Type Dropdown on top and
  * styled file upload button below ([Choose file] File uploaded).
  */
@@ -307,7 +324,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   // Form Fields State
   const [form, setForm] = useState({
     name: saved.name || user?.name || "",
-    gender: saved.gender || toGenderOption(user?.gender),
+    gender: saved.gender || normalizeGender(user?.gender) || toGenderOption(user?.gender),
     dob: saved.dob || formatDateForInput(user?.dob) || "",
     mobileNumber: saved.mobileNumber || user?.mobileNumber || "",
     altContactNumber: saved.altContactNumber || user?.altContactNumber || "",
@@ -355,7 +372,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     if (user && !form.name) {
       setForm((prev) => ({
         name: prev.name || user.name || "",
-        gender: prev.gender || toGenderOption(user.gender),
+        gender: prev.gender || normalizeGender(user.gender) || toGenderOption(user.gender),
         dob: prev.dob || formatDateForInput(user.dob) || "",
         mobileNumber: prev.mobileNumber || user.mobileNumber || "",
         altContactNumber: prev.altContactNumber || user.altContactNumber || "",
@@ -386,6 +403,12 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   // Derived state for conditional proofs
   const isSpeciallyAbled = speciallyAbled?.code === "Yes" || speciallyAbled?.code === SPECIALLY_ABLED_YES;
   const needsCasteProof = caste && caste.code !== "General" && caste.code !== DEFAULT_CASTE;
+
+  const setFieldValue = (field, valueOrEvent) => {
+    const value = valueOrEvent && valueOrEvent.target !== undefined ? valueOrEvent.target.value : valueOrEvent;
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: null }));
+  };
 
   const handleCasteChange = (val) => {
     setCaste(val);
@@ -648,6 +671,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               t={t}
               name="gender"
               placeholder={t("SELECT_GENDER", "Select gender")}
+              disable={true}
             />
           </FormField>
 
@@ -656,6 +680,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               date={form.dob}
               onChange={(v) => setFieldValue("dob", v)}
               placeholder="DD/MM/YYYY"
+              disabled={true}
             />
           </FormField>
 
