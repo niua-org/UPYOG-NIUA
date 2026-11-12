@@ -3,8 +3,8 @@
 	margin: auto;
 	display: flex;
 	overflow: hidden;
-	background-size: cover;
-	background-position: center;
+	background-size: 100% 100%;
+  background-position: center;
 	background-repeat: no-repeat;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .login-feature {
-	background: hsla(0, 0%, 100%, 0.6);
+	background: rgba(255, 255, 255, 0.15) !important;
 	min-width: 360px;
 	max-width: 460px;
 	border-radius: 15px;
@@ -991,7 +991,7 @@
 		overflow-y: auto !important;
 		box-sizing: border-box !important;
 		.login-features-emp {
-			background: #FFFFFFE5;
+			background: rgba(216, 201, 201, 0.15) !important;;
 			padding: 20px 30px;
 			width: 60%;
 			border-radius: 8px;
@@ -1060,7 +1060,7 @@
 
 	.login-hero {
 		flex: 1 !important;
-		background-size: cover !important;
+		background-size: 100% 100% !important;
 		background-position: center !important;
 		background-repeat: no-repeat !important;
 		display: flex !important;
@@ -1123,7 +1123,7 @@
 }
 
 .login-hero-header-box {
-	background: rgba(255, 255, 255, 0.96) !important;
+	background: rgba(255, 255, 255, 0.15) !important;
 	backdrop-filter: blur(16px) !important;
 	-webkit-backdrop-filter: blur(16px) !important;
 	padding: 20px 26px !important;
@@ -1150,7 +1150,7 @@
 }
 
 .login-features--white-card {
-	background: rgba(255, 255, 255, 0.96) !important;
+	background: rgba(255, 255, 255, 0.15) !important;
 	backdrop-filter: blur(16px) !important;
 	-webkit-backdrop-filter: blur(16px) !important;
 	padding: 22px 26px !important;
@@ -1165,7 +1165,7 @@
 	margin-top: 14px !important;
 
 	.login-feature {
-		background: #ffffff !important;
+		background: rgba(255, 255, 255, 0.2) !important;;
 		border-radius: 12px !important;
 		padding: 10px 14px !important;
 		border: 1px solid #E2E8F0 !important;
