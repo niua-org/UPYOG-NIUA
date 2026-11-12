@@ -3,6 +3,7 @@ package org.upyog.family.web.contract;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +13,9 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.upyog.family.domain.model.ExitReason;
 import org.upyog.family.domain.model.MemberStatus;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Contract representing an individual family member mapped to a citizen account in UPYOG.
@@ -164,6 +168,29 @@ public class FamilyMember {
      */
     @JsonProperty("citizenDetails")
     private CitizenProfile citizenDetails;
+
+    /**
+     * Property declarations (Rural/Urban) owned individually or jointly by this member.
+     */
+    @Valid
+    @JsonProperty("properties")
+    @Builder.Default
+    private List<UserProperty> properties = new ArrayList<>();
+
+    /**
+     * Income declaration and employment verification details for this member.
+     */
+    @Valid
+    @JsonProperty("income")
+    private UserIncomeDetail income;
+
+    /**
+     * Vehicle ownership declarations for this member.
+     */
+    @Valid
+    @JsonProperty("vehicles")
+    @Builder.Default
+    private List<UserVehicleDetail> vehicles = new ArrayList<>();
 
     /**
      * Standard UPYOG audit metadata recording actor UUIDs and epoch creation/modification timestamps.

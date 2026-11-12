@@ -62,6 +62,12 @@ public class UserDocumentSearchCriteria {
     @Schema(description = "Active status filter (true = active only)", example = "true")
     private Boolean active;
 
+    @Schema(description = "Entity reference type (e.g. CITIZEN_PROFILE, PROPERTY, INCOME_SALARY, INCOME_TAX, VEHICLE_RC)", example = "CITIZEN_PROFILE")
+    private String referenceType;
+
+    @Schema(description = "Entity reference ID", example = "ref-uuid-1234")
+    private String referenceId;
+
     /**
      * Compatibility getter for {@code userUuid} mapping to {@code uuid}.
      *

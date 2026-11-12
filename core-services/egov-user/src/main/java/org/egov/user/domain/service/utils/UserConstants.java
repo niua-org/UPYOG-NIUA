@@ -1,5 +1,7 @@
 package org.egov.user.domain.service.utils;
 
+import org.egov.user.domain.service.multiauth.MockAadhaarRecordService;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +16,9 @@ import java.util.List;
  */
 public final class UserConstants {
 
+    /**
+     * Private constructor to prevent direct instantiation of constant utility class.
+     */
     private UserConstants() {
         // Utility class - prevent instantiation
     }
@@ -33,6 +38,7 @@ public final class UserConstants {
     // 2. Status Constants
     // =========================================================================
     public static final String STATUS_ACTIVE = "active";
+    public static final String STATUS_ACTIVE_UPPERCASE = "ACTIVE";
     public static final String STATUS_INACTIVE = "inactive";
     public static final String STATUS_SUCCESS = "SUCCESS";
     public static final String STATUS_PARTIAL_SUCCESS = "PARTIAL_SUCCESS";
@@ -342,9 +348,14 @@ public final class UserConstants {
             "Ritu Mukherjee"
     ));
 
+    /**
+     * Retrieves a sequential citizen name from the 500+ mock Aadhaar dataset.
+     * Guaranteed to cycle through all records before repeating.
+     *
+     * @return next citizen name string
+     */
     public static String getRandomCitizenName() {
-        int index = java.util.concurrent.ThreadLocalRandom.current().nextInt(MOCK_CITIZEN_NAMES.size());
-        return MOCK_CITIZEN_NAMES.get(index);
+        return MockAadhaarRecordService.getNextRecord().getName();
     }
 
     // =========================================================================
@@ -370,4 +381,50 @@ public final class UserConstants {
     public static final String DATE_FORMAT_DOB = "dd/MM/yyyy";
     public static final String JSON_PROPERTY_FATHER_OR_HUSBAND_NAME = "fatherOrHusbandName";
     public static final String JSON_PROPERTY_RELATIONSHIP = "relationship";
+
+    // =========================================================================
+    // 11. Member Asset Synchronization & Document Reference Types
+    // =========================================================================
+    public static final String DOC_REF_TYPE_CITIZEN_PROFILE = "CITIZEN_PROFILE";
+    public static final String DOC_REF_TYPE_PROPERTY = "PROPERTY";
+    public static final String DOC_REF_TYPE_INCOME_SALARY = "INCOME_SALARY";
+    public static final String DOC_REF_TYPE_INCOME_TAX = "INCOME_TAX";
+    public static final String DOC_REF_TYPE_VEHICLE_RC = "VEHICLE_RC";
+
+    public static final String LOCALITY_TYPE_URBAN = "URBAN";
+    public static final String LOCALITY_TYPE_RURAL = "RURAL";
+
+    public static final String UNKNOWN_USER_UUID = "UNKNOWN";
+    public static final String DEFAULT_TENANT_ID = "pg.citya";
+    public static final String DEFAULT_CITIZEN_NAME = "Citizen";
+
+    // =========================================================================
+    // 12. Additional JSON Keys & Verification Messages
+    // =========================================================================
+    public static final String JSON_KEY_REQUEST_INFO = "RequestInfo";
+    public static final String JSON_KEY_TXN_ID = "txnId";
+    public static final String JSON_KEY_REFERENCE_ID = "referenceId";
+    public static final String JSON_KEY_OTP = "otp";
+    public static final String JSON_KEY_IS_RESYNC = "isResync";
+    public static final String JSON_KEY_IS_VERIFIED = "isVerified";
+
+    public static final String ERROR_SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE";
+    public static final String MSG_SERVICE_UNAVAILABLE_MEMBER_ASSET = "MemberAssetService is not configured";
+    public static final String MSG_INTER_SERVICE_REQUIRED = "Inter-service call required";
+    public static final String MSG_SEARCH_CITIZEN_BY_AADHAAR_RESTRICTED = "Searching citizen by Aadhaar is restricted to trusted internal services";
+    public static final String MSG_TENANT_ID_UNDETERMINED = "Tenant ID cannot be determined: state-level tenant ID is not configured";
+
+    public static final String MSG_MEMBER_ASSET_SYNC_PAYLOAD_NULL = "MemberAssetSyncRequest payload cannot be null";
+    public static final String MSG_CITIZEN_USER_UUID_REQUIRED = "Citizen userUuid is required for asset synchronization";
+    public static final String MSG_MEMBER_ASSETS_SYNC_SUCCESS = "Member demographics and assets synchronized successfully";
+    public static final String MSG_USER_RECORD_NOT_FOUND_PREFIX = "User record with UUID ";
+    public static final String MSG_USER_RECORD_NOT_FOUND_SUFFIX = " does not exist in eg_user";
+    public static final String MSG_SYNC_ERROR_PREFIX = "Synchronization error: ";
+    public static final String MSG_DOCUMENT_NOT_FOUND_PREFIX = "Document not found with ID: ";
+    public static final String MSG_REQUESTER_HOST_NOT_CONFIGURED = "requester.service.host is not configured";
+    public static final String MSG_REQUESTER_VERIFY_ENDPOINT_NOT_CONFIGURED = "requester.aadhaar.verify.endpoint is not configured";
+    public static final String MSG_ROLES_STATE_LEVEL_NOT_CONFIGURED = "roles.state.level.enabled is not configured";
+    public static final String MSG_AADHAAR_OTP_MAX_ATTEMPTS_NOT_CONFIGURED = "aadhaar.otp.max.attempts is not configured";
+    public static final String GENDER_FEMALE_CODE = "F";
+    public static final String DEFAULT_MOCK_DOB = "1990-01-01";
 }

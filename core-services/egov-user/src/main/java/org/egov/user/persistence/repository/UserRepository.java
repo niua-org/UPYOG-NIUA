@@ -3,6 +3,7 @@ package org.egov.user.persistence.repository;
 import lombok.extern.slf4j.Slf4j;
 
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
@@ -21,7 +22,6 @@ import org.egov.user.repository.rowmapper.UserResultSetExtractor;
 import org.egov.user.repository.rowmapper.UserResultSetExtractorV2;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -68,14 +68,41 @@ public class UserRepository {
     private UserResultSetExtractor userResultSetExtractor;
     private UserResultSetExtractorV2 userResultSetExtractorV2;
 
-    @Value("${user.address.mandatory.fields.enabled}")
-    private boolean addressMandatoryFieldsEnabled;
-
-    @Value("${user.address.update.strategy}")
-    private Boolean addressSoftUpdateFlag;
+    private UserConfiguration userConfiguration;
 
     /**
-     * Constructs a new {@link UserRepository} with full dependency injection including V2 result set extraction.
+     * Constructs a new {@link UserRepository} with full dependency injection including V2 result set extraction and configuration.
+     *
+     * @param roleRepository             repository for querying role definitions
+     * @param userTypeQueryBuilder       dynamic SQL query builder for user search criteria
+     * @param addressRepository          repository for managing user addresses
+     * @param userResultSetExtractor     Spring JDBC extractor for legacy user rows
+     * @param jdbcTemplate               standard Spring JDBC template
+     * @param namedParameterJdbcTemplate named parameter JDBC template for parameterized queries
+     * @param auditRepository            repository for logging historical user modifications
+     * @param userResultSetExtractorV2   Spring JDBC extractor for V2 user rows with nested address collections
+     * @param userConfiguration          centralized application configuration properties
+     */
+    @Autowired
+    UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
+                   AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
+                   JdbcTemplate jdbcTemplate,
+                   NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository,
+                   @Autowired(required = false) UserResultSetExtractorV2 userResultSetExtractorV2,
+                   @Autowired(required = false) UserConfiguration userConfiguration) {
+        this.addressRepository = addressRepository;
+        this.roleRepository = roleRepository;
+        this.userTypeQueryBuilder = userTypeQueryBuilder;
+        this.userResultSetExtractor = userResultSetExtractor;
+        this.jdbcTemplate = jdbcTemplate;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.auditRepository = auditRepository;
+        this.userResultSetExtractorV2 = userResultSetExtractorV2;
+        this.userConfiguration = userConfiguration;
+    }
+
+    /**
+     * Overloaded constructor for {@link UserRepository} with V2 extractor support.
      *
      * @param roleRepository             repository for querying role definitions
      * @param userTypeQueryBuilder       dynamic SQL query builder for user search criteria
@@ -86,20 +113,13 @@ public class UserRepository {
      * @param auditRepository            repository for logging historical user modifications
      * @param userResultSetExtractorV2   Spring JDBC extractor for V2 user rows with nested address collections
      */
-    @Autowired
-    UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
-                   AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
-                   JdbcTemplate jdbcTemplate,
-                   NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository,
-                   @Autowired(required = false) UserResultSetExtractorV2 userResultSetExtractorV2) {
-        this.addressRepository = addressRepository;
-        this.roleRepository = roleRepository;
-        this.userTypeQueryBuilder = userTypeQueryBuilder;
-        this.userResultSetExtractor = userResultSetExtractor;
-        this.jdbcTemplate = jdbcTemplate;
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.auditRepository = auditRepository;
-        this.userResultSetExtractorV2 = userResultSetExtractorV2;
+    public UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
+                          AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
+                          JdbcTemplate jdbcTemplate,
+                          NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository,
+                          UserResultSetExtractorV2 userResultSetExtractorV2) {
+        this(roleRepository, userTypeQueryBuilder, addressRepository, userResultSetExtractor,
+             jdbcTemplate, namedParameterJdbcTemplate, auditRepository, userResultSetExtractorV2, null);
     }
 
     /**
@@ -379,6 +399,8 @@ public class UserRepository {
         updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
         updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
         updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
+        updateuserInputs.put("Caste", user.getCaste() != null ? user.getCaste() : (oldUser != null ? oldUser.getCaste() : null));
+        updateuserInputs.put("IsSpeciallyAbled", user.getIsSpeciallyAbled() != null ? user.getIsSpeciallyAbled() : (oldUser != null ? oldUser.getIsSpeciallyAbled() : false));
         boolean isIdentityAuthSource = user.getIdentityVerifiedSource() != null &&
                 (UserConstants.IDENTITY_SOURCE_AADHAAR.equalsIgnoreCase(user.getIdentityVerifiedSource())
                         || UserConstants.IDENTITY_SOURCE_DIGILOCKER.equalsIgnoreCase(user.getIdentityVerifiedSource())
@@ -504,6 +526,12 @@ public class UserRepository {
         return validatedRoles;
     }
 
+    /**
+     * Validates that all assigned user roles exist in MDMS master data and enriches their descriptive fields.
+     *
+     * @param users list of domain users whose roles must be validated
+     * @throws CustomException if any assigned role code is missing from MDMS
+     */
     private void validateAndEnrichRoles(List<User> users) {
 
         if (users.isEmpty())
@@ -528,6 +556,11 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Enriches roles on the retrieved user entities with human-readable names and descriptions from MDMS.
+     *
+     * @param users list of domain users whose roles require enrichment
+     */
     private void enrichRoles(List<User> users) {
         log.info("enrichRoles called with {} users", users.size());
 
@@ -564,6 +597,12 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Queries MDMS master data service to retrieve all active role definitions for the tenants present in user list.
+     *
+     * @param users list of domain users
+     * @return map of role code to corresponding {@link Role} definition
+     */
     private Map<String, Role> fetchRolesFromMdms(List<User> users) {
 
         Set<String> roleCodes = new HashSet<>();
@@ -702,6 +741,8 @@ public class UserRepository {
         userInputs.put("father_name", entityUser.getFatherName());
         userInputs.put("mother_name", entityUser.getMotherName());
         userInputs.put("spouse_name", entityUser.getSpouseName());
+        userInputs.put("caste", entityUser.getCaste());
+        userInputs.put("is_specially_abled", entityUser.getIsSpeciallyAbled() != null ? entityUser.getIsSpeciallyAbled() : false);
         userInputs.put("is_identity_verified", entityUser.getIsIdentityVerified() != null ? entityUser.getIsIdentityVerified() : false);
         userInputs.put("identity_verified_date", entityUser.getIdentityVerifiedDate());
         userInputs.put("identity_verified_source", entityUser.getIdentityVerifiedSource());
@@ -752,12 +793,24 @@ public class UserRepository {
         saveUserRoles(user);
     }
 
+    /**
+     * Extracts root state level tenant prefix from a dotted tenant string.
+     *
+     * @param tenantId compound tenant identifier (e.g. "pb.amritsar")
+     * @return root state tenant identifier (e.g. "pb")
+     */
     private String getStateLevelTenant(String tenantId) {
         return tenantId.split("\\.")[0];
     }
 
-	
-	private void updateAuditDetails(User oldUser, long userId, String uuid) {
+    /**
+     * Writes snapshot audit entry for modified user into audit table.
+     *
+     * @param oldUser prior user domain state before update
+     * @param userId  numeric ID of the user performing change
+     * @param uuid    UUID of user entity being audited
+     */
+    private void updateAuditDetails(User oldUser, long userId, String uuid) {
 		auditRepository.auditUser(oldUser,userId,uuid);
 		
 	}
@@ -946,6 +999,8 @@ public class UserRepository {
         updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
         updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
         updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
+        updateuserInputs.put("Caste", user.getCaste() != null ? user.getCaste() : (oldUser != null ? oldUser.getCaste() : null));
+        updateuserInputs.put("IsSpeciallyAbled", user.getIsSpeciallyAbled() != null ? user.getIsSpeciallyAbled() : (oldUser != null ? oldUser.getIsSpeciallyAbled() : false));
         boolean isIdentityAuthSource = user.getIdentityVerifiedSource() != null &&
                 (UserConstants.IDENTITY_SOURCE_AADHAAR.equalsIgnoreCase(user.getIdentityVerifiedSource())
                         || UserConstants.IDENTITY_SOURCE_DIGILOCKER.equalsIgnoreCase(user.getIdentityVerifiedSource())
@@ -1132,6 +1187,19 @@ public class UserRepository {
     }
 
     /**
+     * Determines whether mandatory address fields (city, pincode, address) are strictly enforced.
+     * Fetches configuration from {@link UserConfiguration} if available, defaulting to true.
+     *
+     * @return true if mandatory address field validation is active, false otherwise
+     */
+    private boolean isAddressMandatoryFieldsEnabled() {
+        if (userConfiguration != null && userConfiguration.getAddressMandatoryFieldsEnabled() != null) {
+            return userConfiguration.getAddressMandatoryFieldsEnabled();
+        }
+        return true;
+    }
+
+    /**
      * Helper method to save address if it has valid required fields.
      *
      * @param address     the address object to persist
@@ -1139,7 +1207,7 @@ public class UserRepository {
      * @param addressType address classification (e.g. correspondence or permanent)
      */
     private void saveAddressIfValid(Address address, User savedUser, String addressType) {
-        if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
+        if (address != null && (isAddressMandatoryFieldsEnabled() ? address.isNotEmpty() : true)) {
             log.info("Saving {} address for user: {}", addressType, MaskUtils.maskIdentifier(savedUser.getUsername()));
             Address savedAddress = saveAddress(address, savedUser.getId(), savedUser.getTenantId());
             if ("correspondence".equals(addressType)) {
@@ -1160,7 +1228,7 @@ public class UserRepository {
      * @param savedUser the parent user entity
      */
     private void saveAddressV2IfValid(Address address, User savedUser) {
-        if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
+        if (address != null && (isAddressMandatoryFieldsEnabled() ? address.isNotEmpty() : true)) {
             log.info("Saving address with type: {} for user: {}", address.getType(), MaskUtils.maskIdentifier(savedUser.getUsername()));
             Address responseAddress = saveAddressV2(address, savedUser.getId(), savedUser.getTenantId());
             savedUser.addAddressItem(responseAddress);

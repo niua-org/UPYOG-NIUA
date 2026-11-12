@@ -90,6 +90,8 @@ public class UserSearchResponseContent {
     private String fatherName;
     private String motherName;
     private String spouseName;
+    private String caste;
+    private Boolean isSpeciallyAbled;
     private Boolean isIdentityVerified;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -207,6 +209,8 @@ public class UserSearchResponseContent {
             this.fatherName = user.getFatherName();
             this.motherName = user.getMotherName();
             this.spouseName = user.getSpouseName();
+            this.caste = user.getCaste();
+            this.isSpeciallyAbled = user.getIsSpeciallyAbled();
             this.isIdentityVerified = user.getIsIdentityVerified();
             this.identityVerifiedDate = user.getIdentityVerifiedDate();
             this.identityVerifiedSource = user.getIdentityVerifiedSource();
@@ -225,6 +229,11 @@ public class UserSearchResponseContent {
         }
     }
 
+    /**
+     * Extracts and maps correspondence address attributes from domain user to response fields.
+     *
+     * @param user source domain user
+     */
     private void mapCorrespondenceAddress(User user) {
         if (user.getCorrespondenceAddress() != null) {
             this.correspondenceAddress = user.getCorrespondenceAddress().getAddress();
@@ -233,6 +242,11 @@ public class UserSearchResponseContent {
         }
     }
 
+    /**
+     * Extracts and maps permanent address attributes from domain user to response fields.
+     *
+     * @param user source domain user
+     */
     private void mapPermanentAddress(User user) {
         if (user.getPermanentAddress() != null) {
             this.permanentAddress = user.getPermanentAddress().getAddress();
@@ -241,7 +255,12 @@ public class UserSearchResponseContent {
         }
     }
 
-
+    /**
+     * Converts domain roles collection into contract {@link RoleRequest} DTOs.
+     *
+     * @param roleEntities set of domain role entities
+     * @return non-null set of role contract objects
+     */
     private Set<RoleRequest> convertDomainRolesToContract(Set<Role> roleEntities) {
         if (roleEntities == null) return new HashSet<>();
         return roleEntities.stream().map(RoleRequest::new).collect(Collectors.toSet());

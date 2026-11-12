@@ -8,6 +8,7 @@ import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.MaskUtils;
 import org.upyog.family.web.contract.CitizenProfile;
+import org.upyog.family.web.contract.FamilyMember;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -62,17 +64,17 @@ public class UserClientImpl implements UserClient {
         }
 
         if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.host is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_HOST_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getUserSearchPath())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.search.path is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_SEARCH_PATH_NOT_CONFIGURED);
         }
         String url = buildUrl(configuration.getUserHost(), configuration.getUserSearchPath());
         log.debug("[UPYOG-USER-CLIENT] Querying user service for {} UUIDs from: {}", uuids.size(), url);
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("RequestInfo", requestInfo);
-        requestBody.put("uuid", uuids);
+        requestBody.put(FamilyConstants.JSON_KEY_REQUEST_INFO, requestInfo);
+        requestBody.put(FamilyConstants.JSON_KEY_UUID, uuids);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -80,8 +82,8 @@ public class UserClientImpl implements UserClient {
 
         try {
             Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
-            if (response != null && response.containsKey("user")) {
-                List<Map<String, Object>> userList = (List<Map<String, Object>>) response.get("user");
+            if (response != null && response.containsKey(FamilyConstants.JSON_KEY_USER)) {
+                List<Map<String, Object>> userList = (List<Map<String, Object>>) response.get(FamilyConstants.JSON_KEY_USER);
                 if (userList != null) {
                     return userList.stream()
                             .map(this::mapToCitizenProfile)
@@ -112,19 +114,19 @@ public class UserClientImpl implements UserClient {
         }
 
         if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.host is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_HOST_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getUserSearchPath())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.search.path is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_SEARCH_PATH_NOT_CONFIGURED);
         }
         String url = buildUrl(configuration.getUserHost(), configuration.getUserSearchPath());
         log.debug("[UPYOG-USER-CLIENT] Querying user service for mobile: {} from: {}", MaskUtils.maskMobile(mobileNumber), url);
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("RequestInfo", requestInfo);
-        requestBody.put("mobileNumber", mobileNumber);
+        requestBody.put(FamilyConstants.JSON_KEY_REQUEST_INFO, requestInfo);
+        requestBody.put(FamilyConstants.JSON_KEY_MOBILE_NUMBER, mobileNumber);
         if (StringUtils.isNotBlank(tenantId)) {
-            requestBody.put("tenantId", tenantId);
+            requestBody.put(FamilyConstants.PARAM_TENANT_ID, tenantId);
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -133,8 +135,8 @@ public class UserClientImpl implements UserClient {
 
         try {
             Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
-            if (response != null && response.containsKey("user")) {
-                List<Map<String, Object>> userList = (List<Map<String, Object>>) response.get("user");
+            if (response != null && response.containsKey(FamilyConstants.JSON_KEY_USER)) {
+                List<Map<String, Object>> userList = (List<Map<String, Object>>) response.get(FamilyConstants.JSON_KEY_USER);
                 if (userList != null) {
                     return userList.stream()
                             .map(this::mapToCitizenProfile)
@@ -163,26 +165,26 @@ public class UserClientImpl implements UserClient {
         }
 
         if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.host is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_HOST_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getUserCreatePath())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.user.create.path is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_CREATE_PATH_NOT_CONFIGURED);
         }
         String url = buildUrl(configuration.getUserHost(), configuration.getUserCreatePath());
         log.info("[UPYOG-USER-CLIENT] Auto-creating citizen user for mobile: {} at: {}", MaskUtils.maskMobile(profile.getMobileNumber()), url);
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("RequestInfo", requestInfo);
+        requestBody.put(FamilyConstants.JSON_KEY_REQUEST_INFO, requestInfo);
 
         Map<String, Object> userMap = new HashMap<>();
-        userMap.put("name", StringUtils.isNotBlank(profile.getName()) ? profile.getName() : "Citizen");
-        userMap.put("userName", profile.getMobileNumber());
-        userMap.put("mobileNumber", profile.getMobileNumber());
-        userMap.put("gender", StringUtils.isNotBlank(profile.getGender()) ? profile.getGender() : "OTHERS");
-        userMap.put("type", "CITIZEN");
-        userMap.put("active", true);
+        userMap.put(FamilyConstants.JSON_KEY_NAME, StringUtils.isNotBlank(profile.getName()) ? profile.getName() : FamilyConstants.DEFAULT_CITIZEN_NAME);
+        userMap.put(FamilyConstants.JSON_KEY_USER_NAME, profile.getMobileNumber());
+        userMap.put(FamilyConstants.JSON_KEY_MOBILE_NUMBER, profile.getMobileNumber());
+        userMap.put(FamilyConstants.JSON_KEY_GENDER, StringUtils.isNotBlank(profile.getGender()) ? profile.getGender() : FamilyConstants.GENDER_OTHERS);
+        userMap.put(FamilyConstants.JSON_KEY_TYPE, FamilyConstants.USER_TYPE_CITIZEN);
+        userMap.put(FamilyConstants.JSON_KEY_ACTIVE, true);
 
-        requestBody.put("user", userMap);
+        requestBody.put(FamilyConstants.JSON_KEY_USER, userMap);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -190,8 +192,8 @@ public class UserClientImpl implements UserClient {
 
         try {
             Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
-            if (response != null && response.containsKey("user")) {
-                List<Map<String, Object>> userList = (List<Map<String, Object>>) response.get("user");
+            if (response != null && response.containsKey(FamilyConstants.JSON_KEY_USER)) {
+                List<Map<String, Object>> userList = (List<Map<String, Object>>) response.get(FamilyConstants.JSON_KEY_USER);
                 if (userList != null && !userList.isEmpty()) {
                     return mapToCitizenProfile(userList.get(0));
                 }
@@ -220,18 +222,18 @@ public class UserClientImpl implements UserClient {
     public CitizenProfile validateCallerIsVerified(RequestInfo requestInfo) {
         if (requestInfo == null || requestInfo.getUserInfo() == null || StringUtils.isBlank(requestInfo.getUserInfo().getUuid())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                    "Authenticated caller information (RequestInfo.userInfo.uuid) is required.");
+                    FamilyConstants.MSG_CALLER_INFO_REQUIRED_VERIFY);
         }
 
         String callerUuid = requestInfo.getUserInfo().getUuid().trim();
         // Allow internal system users to proceed
-        if (FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid) || "SYSTEM".equalsIgnoreCase(callerUuid)) {
+        if (FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
             return null;
         }
 
         // Allow official employees to proceed
         String userType = requestInfo.getUserInfo().getType();
-        if ("EMPLOYEE".equalsIgnoreCase(userType)) {
+        if (FamilyConstants.USER_TYPE_EMPLOYEE.equalsIgnoreCase(userType)) {
             return null;
         }
 
@@ -250,10 +252,10 @@ public class UserClientImpl implements UserClient {
     public CitizenProfile validateUserIsVerified(String userUuid, RequestInfo requestInfo) {
         if (StringUtils.isBlank(userUuid)) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                    "User UUID is required for identity verification check.");
+                    FamilyConstants.MSG_USER_UUID_REQUIRED_VERIFY);
         }
 
-        if (FamilyConstants.SYSTEM_USER.equalsIgnoreCase(userUuid) || "SYSTEM".equalsIgnoreCase(userUuid)) {
+        if (FamilyConstants.SYSTEM_USER.equalsIgnoreCase(userUuid)) {
             return null;
         }
 
@@ -262,7 +264,7 @@ public class UserClientImpl implements UserClient {
         if (profile == null) {
             log.error("[UPYOG-USER-CLIENT] User not found in database for UUID: {}", userUuid);
             throw new CustomException(FamilyConstants.ERROR_USER_NOT_FOUND,
-                    "Citizen profile not found in user registry for UUID: " + userUuid);
+                    FamilyConstants.MSG_CITIZEN_NOT_FOUND_REGISTRY_PREFIX + userUuid);
         }
 
         if (!Boolean.TRUE.equals(profile.getIsIdentityVerified())) {
@@ -275,6 +277,97 @@ public class UserClientImpl implements UserClient {
     }
 
     /**
+     * Synchronizes family member demographic profiles and asset declarations (properties, income,
+     * vehicles, attached documents) to the core UPYOG registry in {@code egov-user}.
+     *
+     * @param members list of family members with asset declarations
+     * @param tenantId tenant identifier
+     * @param requestInfo UPYOG request context envelope
+     * @return true if synchronization succeeded, false otherwise
+     */
+    @Override
+    public boolean syncMemberAssets(List<FamilyMember> members, String tenantId, RequestInfo requestInfo) {
+        if (members == null || members.isEmpty()) {
+            return false;
+        }
+
+        if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
+            log.warn("[UPYOG-USER-CLIENT] egov.user.host is not configured; skipping member asset synchronization");
+            return false;
+        }
+
+        String syncPath = StringUtils.isNotBlank(configuration.getUserMemberAssetSyncPath())
+                ? configuration.getUserMemberAssetSyncPath()
+                : FamilyConstants.DEFAULT_MEMBER_ASSET_SYNC_PATH;
+        String url = buildUrl(configuration.getUserHost(), syncPath);
+
+        log.info("[UPYOG-USER-CLIENT] Synchronizing assets for {} member(s) to egov-user at: {}", members.size(), url);
+
+        List<Map<String, Object>> memberPayloadList = new ArrayList<>();
+        for (FamilyMember m : members) {
+            if (m == null || StringUtils.isBlank(m.getUserUuid())) {
+                continue;
+            }
+
+            Map<String, Object> memberMap = new HashMap<>();
+            memberMap.put(FamilyConstants.JSON_KEY_USER_UUID, m.getUserUuid());
+            memberMap.put(FamilyConstants.PARAM_TENANT_ID, StringUtils.isNotBlank(m.getTenantId()) ? m.getTenantId() : tenantId);
+            if (StringUtils.isNotBlank(m.getFamilyId())) {
+                memberMap.put(FamilyConstants.JSON_KEY_FAMILY_ID, m.getFamilyId());
+            }
+
+            // Demographics & Documents from citizenDetails if present
+            if (m.getCitizenDetails() != null) {
+                CitizenProfile cp = m.getCitizenDetails();
+                if (StringUtils.isNotBlank(cp.getCaste())) {
+                    memberMap.put(FamilyConstants.JSON_KEY_CASTE, cp.getCaste());
+                }
+                if (cp.getIsSpeciallyAbled() != null) {
+                    memberMap.put(FamilyConstants.JSON_KEY_IS_SPECIALLY_ABLED, cp.getIsSpeciallyAbled());
+                }
+                if (cp.getDocuments() != null && !cp.getDocuments().isEmpty()) {
+                    memberMap.put(FamilyConstants.JSON_KEY_DOCUMENTS, cp.getDocuments());
+                }
+            }
+
+            // Directly declared properties, income, vehicles on member
+            if (m.getProperties() != null && !m.getProperties().isEmpty()) {
+                memberMap.put(FamilyConstants.JSON_KEY_PROPERTIES, m.getProperties());
+            }
+            if (m.getIncome() != null) {
+                memberMap.put(FamilyConstants.JSON_KEY_INCOME, m.getIncome());
+            }
+            if (m.getVehicles() != null && !m.getVehicles().isEmpty()) {
+                memberMap.put(FamilyConstants.JSON_KEY_VEHICLES, m.getVehicles());
+            }
+
+            memberPayloadList.add(memberMap);
+        }
+
+        if (memberPayloadList.isEmpty()) {
+            return false;
+        }
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put(FamilyConstants.JSON_KEY_REQUEST_INFO, requestInfo);
+        requestBody.put(FamilyConstants.JSON_KEY_MEMBERS, memberPayloadList);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            Map<?, ?> response = restTemplate.postForObject(url, entity, Map.class);
+            log.info("[UPYOG-USER-CLIENT] Successfully synchronized member assets with egov-user. Response: {}",
+                    response != null ? response.get(FamilyConstants.JSON_KEY_STATUS) : FamilyConstants.STATUS_OK);
+            return true;
+        } catch (Exception e) {
+            log.warn("[UPYOG-USER-CLIENT] Member asset synchronization to egov-user failed or unreachable: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Maps a raw user map returned by the user service into a strongly-typed CitizenProfile object.
      *
      * @param map raw user attributes map
@@ -282,13 +375,13 @@ public class UserClientImpl implements UserClient {
      */
     private CitizenProfile mapToCitizenProfile(Map<String, Object> map) {
         Long dob = null;
-        Object dobObj = map.get("dob");
+        Object dobObj = map.get(FamilyConstants.JSON_KEY_DOB);
         if (dobObj instanceof Number) {
             dob = ((Number) dobObj).longValue();
         }
 
         Boolean isIdentityVerified = null;
-        Object idVerifiedObj = map.get("isIdentityVerified");
+        Object idVerifiedObj = map.get(FamilyConstants.JSON_KEY_IS_IDENTITY_VERIFIED);
         if (idVerifiedObj instanceof Boolean) {
             isIdentityVerified = (Boolean) idVerifiedObj;
         } else if (idVerifiedObj != null) {
@@ -296,14 +389,14 @@ public class UserClientImpl implements UserClient {
         }
 
         return CitizenProfile.builder()
-                .uuid((String) map.get("uuid"))
-                .userName((String) map.get("userName"))
-                .name((String) map.get("name"))
-                .mobileNumber((String) map.get("mobileNumber"))
-                .gender((String) map.get("gender"))
+                .uuid((String) map.get(FamilyConstants.JSON_KEY_UUID))
+                .userName((String) map.get(FamilyConstants.JSON_KEY_USER_NAME))
+                .name((String) map.get(FamilyConstants.JSON_KEY_NAME))
+                .mobileNumber((String) map.get(FamilyConstants.JSON_KEY_MOBILE_NUMBER))
+                .gender((String) map.get(FamilyConstants.JSON_KEY_GENDER))
                 .dob(dob)
-                .photo((String) map.get("photo"))
-                .emailId((String) map.get("emailId"))
+                .photo((String) map.get(FamilyConstants.JSON_KEY_PHOTO))
+                .emailId((String) map.get(FamilyConstants.JSON_KEY_EMAIL_ID))
                 .isIdentityVerified(isIdentityVerified)
                 .build();
     }

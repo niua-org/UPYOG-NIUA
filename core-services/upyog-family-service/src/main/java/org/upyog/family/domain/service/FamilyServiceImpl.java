@@ -24,6 +24,8 @@ import org.upyog.family.web.contract.FamilyMergeRequest;
 import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.upyog.family.web.contract.FamilySplitRequest;
+import org.upyog.family.web.contract.UserProperty;
+import org.upyog.family.web.contract.UserVehicleDetail;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -97,6 +99,9 @@ public class FamilyServiceImpl implements FamilyService {
         String familyId = idGenRepository.generateFamilyId(requestInfo, family.getTenantId());
         family.setFamilyId(familyId);
         family.setStatus(FamilyStatus.ACTIVE);
+        if (StringUtils.isBlank(family.getFamilySource())) {
+            family.setFamilySource(FamilyConstants.SOURCE_CITIZEN_PORTAL);
+        }
         if (StringUtils.isBlank(family.getFamilyType())) {
             family.setFamilyType(FamilyConstants.TYPE_UPYOG_INTERNAL);
         }
@@ -146,6 +151,33 @@ public class FamilyServiceImpl implements FamilyService {
                     member.setEffectiveFrom(now);
                 }
                 member.setAuditDetails(auditDetails);
+
+                // Inherit common tenantId and userUuid across declared assets
+                if (member.getProperties() != null) {
+                    for (UserProperty prop : member.getProperties()) {
+                        prop.setTenantId(family.getTenantId());
+                        if (StringUtils.isBlank(prop.getUserUuid())) {
+                            prop.setUserUuid(member.getUserUuid());
+                        }
+                        prop.setAuditDetails(auditDetails);
+                    }
+                }
+                if (member.getIncome() != null) {
+                    member.getIncome().setTenantId(family.getTenantId());
+                    if (StringUtils.isBlank(member.getIncome().getUserUuid())) {
+                        member.getIncome().setUserUuid(member.getUserUuid());
+                    }
+                    member.getIncome().setAuditDetails(auditDetails);
+                }
+                if (member.getVehicles() != null) {
+                    for (UserVehicleDetail vehicle : member.getVehicles()) {
+                        vehicle.setTenantId(family.getTenantId());
+                        if (StringUtils.isBlank(vehicle.getUserUuid())) {
+                            vehicle.setUserUuid(member.getUserUuid());
+                        }
+                        vehicle.setAuditDetails(auditDetails);
+                    }
+                }
             }
         }
 
@@ -166,7 +198,12 @@ public class FamilyServiceImpl implements FamilyService {
         // 3. Persist to Database via Kafka Persister (standard UPYOG pattern)
         kafkaProducer.push(configuration.getCreateFamilyTopic(), request);
 
-        // 4. Enrich citizen demographics
+        // 4. Synchronize member demographics and assets to core egov-user registry
+        if (members != null && !members.isEmpty()) {
+            userClient.syncMemberAssets(members, family.getTenantId(), requestInfo);
+        }
+
+        // 5. Enrich citizen demographics
         enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
 
         log.info("[UPYOG-FAMILY-SERVICE] Successfully queued family creation to Kafka persister: {}", family.getFamilyId());
@@ -241,7 +278,7 @@ public class FamilyServiceImpl implements FamilyService {
 
         List<Family> existingList = familyRepository.search(criteria);
         if (existingList.isEmpty()) {
-            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Family not found: " + updatePayload.getFamilyId());
+            throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, FamilyConstants.MSG_FAMILY_NOT_FOUND_PREFIX + updatePayload.getFamilyId());
         }
 
         Family existingFamily = existingList.get(0);
@@ -297,6 +334,11 @@ public class FamilyServiceImpl implements FamilyService {
         // Asynchronously persist via Kafka Persister (standard UPYOG pattern)
         kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, existingFamily));
 
+        // Synchronize updated member demographics and assets to core egov-user registry
+        if (existingFamily.getMembers() != null && !existingFamily.getMembers().isEmpty()) {
+            userClient.syncMemberAssets(existingFamily.getMembers(), existingFamily.getTenantId(), requestInfo);
+        }
+
         enrichCitizenDemographics(Collections.singletonList(existingFamily), requestInfo);
         return existingFamily;
     }
@@ -324,7 +366,7 @@ public class FamilyServiceImpl implements FamilyService {
         log.info("[UPYOG-FAMILY-SERVICE] Splitting family: parent={}", request.getParentFamilyId());
 
         Family parentFamily = familyRepository.findByFamilyIdAndTenantId(request.getParentFamilyId(), request.getTenantId())
-                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, "Parent family not found: " + request.getParentFamilyId()));
+                .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, FamilyConstants.MSG_PARENT_FAMILY_NOT_FOUND_PREFIX + request.getParentFamilyId()));
         familyValidator.validateSplit(request, parentFamily);
 
         RequestInfo requestInfo = request.getRequestInfo();

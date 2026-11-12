@@ -14,6 +14,10 @@ import org.upyog.family.web.contract.FamilyMember;
 import org.upyog.family.web.contract.FamilyMergeRequest;
 import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySplitRequest;
+import org.upyog.family.web.contract.RuralPropertyDetail;
+import org.upyog.family.web.contract.UserIncomeDetail;
+import org.upyog.family.web.contract.UserProperty;
+import org.upyog.family.web.contract.UserVehicleDetail;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,6 +39,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -230,6 +236,68 @@ class FamilyValidatorTest {
                 .build();
 
         assertDoesNotThrow(() -> validator.validateMerge(mergeRequest, family, mergingFamily));
+    }
+
+    @Test
+    @DisplayName("validateCreate should fail when any member's identity is not verified via Aadhaar/e-KYC")
+    void validateCreate_MemberIdentityNotVerified() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+        lenient().doThrow(new CustomException(FamilyConstants.ERROR_USER_NOT_VERIFIED, FamilyConstants.MSG_USER_NOT_VERIFIED))
+                .when(userClient).validateUserIsVerified(eq("user-uuid-spouse"), any());
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_USER_NOT_VERIFIED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateCreate should fail when rural property detail is missing for RURAL locality")
+    void validateCreate_RuralPropertyMissingDetail() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+
+        UserProperty prop = UserProperty.builder()
+                .localityType("RURAL")
+                .ruralPropertyDetail(null)
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(prop));
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateCreate should succeed with rich composite payload (Rural/Urban property, Income, Vehicles)")
+    void validateCreate_FullCompositePayload_Success() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+
+        UserProperty ruralProp = UserProperty.builder()
+                .localityType("RURAL")
+                .ownershipType("JOINT")
+                .ruralPropertyDetail(RuralPropertyDetail.builder()
+                        .gramPanchayat("Rampur GP")
+                        .villageName("Rampur Khas")
+                        .surveyNumber("KHASRA-842/1")
+                        .build())
+                .build();
+
+        UserIncomeDetail income = UserIncomeDetail.builder()
+                .occupation("SALARIED")
+                .annualIncome(new BigDecimal("850000.00"))
+                .identifierType("PAN")
+                .identifierValue("AFZPK7190K")
+                .build();
+
+        UserVehicleDetail vehicle = UserVehicleDetail.builder()
+                .vehicleNumber("DL01AB1234")
+                .vehicleType("4_WHEELER")
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(ruralProp));
+        family.getMembers().get(0).setIncome(income);
+        family.getMembers().get(0).setVehicles(Collections.singletonList(vehicle));
+        family.setFamilyAddressPropertyId("KHASRA-842/1");
+
+        assertDoesNotThrow(() -> validator.validateCreate(request));
     }
 
     @Test

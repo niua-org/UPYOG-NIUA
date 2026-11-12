@@ -8,6 +8,7 @@ import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
 import org.springframework.stereotype.Service;
 import org.upyog.family.domain.model.FamilyStatus;
+import org.upyog.family.domain.model.MemberStatus;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.OtpClient;
 import org.upyog.family.persistence.repository.RequesterDxClient;
@@ -75,16 +76,16 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 : null;
         if (StringUtils.isBlank(callerUuid)) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                    "Authenticated caller information is required to send family OTP.");
+                    FamilyConstants.MSG_CALLER_INFO_REQUIRED_SEND_OTP);
         }
 
         Family family = familyRepository.findByFamilyIdAndTenantId(request.getFamilyId(), request.getTenantId())
                 .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                        "Family with ID " + request.getFamilyId() + " not found."));
+                        FamilyConstants.MSG_FAMILY_ID_PREFIX + request.getFamilyId() + FamilyConstants.MSG_NOT_FOUND_SUFFIX));
 
         if (family.getStatus() != FamilyStatus.ACTIVE) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                    "Cannot send OTP for inactive or closed family: " + family.getStatus());
+                    FamilyConstants.MSG_CANNOT_SEND_OTP_INACTIVE_FAMILY_PREFIX + family.getStatus());
         }
 
         if (family.getMembers() != null) {
@@ -92,14 +93,14 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                     .anyMatch(m -> m.getUserUuid() != null && m.getUserUuid().equals(callerUuid));
             if (alreadyMember) {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                        "Caller " + callerUuid + " is already an active member of family " + family.getFamilyId());
+                        FamilyConstants.MSG_CALLER_ALREADY_MEMBER_PREFIX + callerUuid + FamilyConstants.MSG_CALLER_ALREADY_MEMBER_SUFFIX + family.getFamilyId());
             }
         }
 
         String headUserUuid = family.getHeadUserUuid();
         if (StringUtils.isBlank(headUserUuid)) {
             throw new CustomException(FamilyConstants.ERROR_USER_NOT_FOUND,
-                    "Head of family record not associated with family: " + request.getFamilyId());
+                    FamilyConstants.MSG_HOF_RECORD_NOT_ASSOCIATED_PREFIX + request.getFamilyId());
         }
 
         Map<String, CitizenProfile> profileMap = userClient.searchUsersByUuids(
@@ -107,7 +108,7 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         CitizenProfile headProfile = profileMap.get(headUserUuid);
         if (headProfile == null || StringUtils.isBlank(headProfile.getMobileNumber())) {
             throw new CustomException(FamilyConstants.ERROR_USER_NOT_FOUND,
-                    "Mobile number for Head of Family " + headUserUuid + " not found.");
+                    FamilyConstants.MSG_HOF_RECORD_NOT_ASSOCIATED_PREFIX + headUserUuid + FamilyConstants.MSG_NOT_FOUND_SUFFIX);
         }
 
         String mobileNumber = headProfile.getMobileNumber();
@@ -149,20 +150,20 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 : null;
         if (StringUtils.isBlank(callerUuid)) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                    "Authenticated caller information is required to verify family OTP.");
+                    FamilyConstants.MSG_CALLER_INFO_REQUIRED_VERIFY_OTP);
         }
 
         if (StringUtils.isBlank(request.getReferenceId())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                    "referenceId is mandatory for OTP verification.");
+                    FamilyConstants.MSG_OTP_REFERENCE_ID_MANDATORY);
         }
 
         Family family = familyRepository.findByFamilyIdAndTenantId(request.getFamilyId(), request.getTenantId())
                 .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                        "Family with ID " + request.getFamilyId() + " not found."));
+                        FamilyConstants.MSG_FAMILY_ID_PREFIX + request.getFamilyId() + FamilyConstants.MSG_NOT_FOUND_SUFFIX));
         if (family.getStatus() != FamilyStatus.ACTIVE) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                    "Cannot verify OTP for inactive family: " + family.getStatus());
+                    FamilyConstants.MSG_CANNOT_VERIFY_OTP_INACTIVE_FAMILY_PREFIX + family.getStatus());
         }
 
         if (family.getMembers() != null) {
@@ -170,7 +171,7 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                     .anyMatch(m -> m.getUserUuid() != null && m.getUserUuid().equals(callerUuid));
             if (alreadyMember) {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                        "Caller " + callerUuid + " is already an active member of family " + family.getFamilyId());
+                        FamilyConstants.MSG_CALLER_ALREADY_MEMBER_PREFIX + callerUuid + FamilyConstants.MSG_CALLER_ALREADY_MEMBER_SUFFIX + family.getFamilyId());
             }
         }
 
@@ -180,7 +181,7 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         CitizenProfile headProfile = profileMap.get(headUserUuid);
         if (headProfile == null || StringUtils.isBlank(headProfile.getMobileNumber())) {
             throw new CustomException(FamilyConstants.ERROR_USER_NOT_FOUND,
-                    "Mobile number for Head of Family not found.");
+                    FamilyConstants.MSG_HOF_MOBILE_NOT_FOUND);
         }
 
         boolean isValid = otpClient.validateOtp(
@@ -191,7 +192,7 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                 request.getRequestInfo());
         if (!isValid) {
             throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Invalid or expired OTP entered.");
+                    FamilyConstants.MSG_INVALID_EXPIRED_OTP);
         }
 
         // Enrich family with citizen demographics
@@ -211,7 +212,7 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
                         .isHead(true)
                         .isVerified(headProfile.getIsIdentityVerified() != null ? headProfile.getIsIdentityVerified() : true)
                         .active(true)
-                        .status(org.upyog.family.domain.model.MemberStatus.ACTIVE)
+                        .status(MemberStatus.ACTIVE)
                         .name(headProfile.getName())
                         .mobileNumber(headProfile.getMobileNumber())
                         .gender(headProfile.getGender())
@@ -229,7 +230,7 @@ public class FamilyOtpServiceImpl implements FamilyOtpService {
         }
 
         // Generate verified 128-bit HoF consent token bound to target family and applicant
-        String consentToken = "CONSENT-VERIFIED-" + UUID.randomUUID().toString().replace("-", "");
+        String consentToken = FamilyConstants.CONSENT_TOKEN_PREFIX + UUID.randomUUID().toString().replace("-", "");
         requesterDxClient.registerConsentToken(consentToken, family.getFamilyId(), callerUuid);
 
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);

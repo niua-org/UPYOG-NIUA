@@ -56,6 +56,9 @@ public class FamilyConfiguration {
     @Value("${egov.user.create.path}")
     private String userCreatePath;
 
+    @Value("${egov.user.member.asset.sync.path}")
+    private String userMemberAssetSyncPath;
+
     @Value("${egov.filestore.host}")
     private String fileStoreHost;
 

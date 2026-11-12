@@ -121,6 +121,7 @@ class FamilyServiceImplTest {
         assertEquals("FAM-2026-0001", result.getFamilyId());
         assertEquals(FamilyStatus.ACTIVE, result.getStatus());
         verify(kafkaProducer).push(eq("save-ug-family"), eq(request));
+        verify(userClient).syncMemberAssets(eq(family.getMembers()), eq("pg.citya"), eq(requestInfo));
     }
 
     @Test

@@ -55,11 +55,21 @@ public class RequesterDxClientImpl implements RequesterDxClient {
      */
     private final Map<String, TokenBinding> registeredFamilyConsentTokens = new ConcurrentHashMap<>();
 
+    /**
+     * Inner binding record associating an Aadhaar token with a member, family, and generation timestamp.
+     */
     private static class TokenBinding {
         private final String memberId;
         private final String familyId;
         private final long timestamp;
 
+        /**
+         * Constructs a token binding record.
+         *
+         * @param memberId member UUID or identifier
+         * @param familyId family UUID or identifier
+         * @param timestamp epoch millisecond creation time
+         */
         TokenBinding(String memberId, String familyId, long timestamp) {
             this.memberId = memberId;
             this.familyId = familyId;
@@ -149,7 +159,7 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         if (registeredBinding != null) {
             // Check TTL expiration (configurable via family.consent.token.ttl.minutes, defaults to 15 minutes)
             if (configuration == null) {
-                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "FamilyConfiguration is required");
+                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_FAMILY_CONFIGURATION_REQUIRED);
             }
             long ttlMs = configuration.getConsentTokenTtlMs();
             long elapsed = System.currentTimeMillis() - registeredBinding.timestamp;
@@ -209,13 +219,13 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         } else if (trimmedToken.startsWith("{") && trimmedToken.endsWith("}")) {
             try {
                 JsonNode root = objectMapper.readTree(trimmedToken);
-                if (root.has("referenceId")) {
-                    referenceId = root.get("referenceId").asText();
-                } else if (root.has("txnId")) {
-                    referenceId = root.get("txnId").asText();
+                if (root.has(FamilyConstants.JSON_KEY_REFERENCE_ID)) {
+                    referenceId = root.get(FamilyConstants.JSON_KEY_REFERENCE_ID).asText();
+                } else if (root.has(FamilyConstants.JSON_KEY_TXN_ID)) {
+                    referenceId = root.get(FamilyConstants.JSON_KEY_TXN_ID).asText();
                 }
-                if (root.has("otp")) {
-                    otp = root.get("otp").asText();
+                if (root.has(FamilyConstants.JSON_KEY_OTP)) {
+                    otp = root.get(FamilyConstants.JSON_KEY_OTP).asText();
                 }
             } catch (Exception e) {
                 log.warn("[UPYOG-DX-CLIENT] Failed to parse JSON consent token payload: {}", e.getMessage());
@@ -236,24 +246,24 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         }
 
         if (configuration == null || StringUtils.isBlank(configuration.getRequesterDxHost())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "requester.services.dx.host is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_REQUESTER_DX_HOST_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getRequesterDxVerifyOtpPath())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "requester.services.dx.verify.otp.path is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_REQUESTER_DX_VERIFY_PATH_NOT_CONFIGURED);
         }
         String url = configuration.getRequesterDxHost() + configuration.getRequesterDxVerifyOtpPath();
         log.info("[UPYOG-DX-CLIENT] Calling requester-services-dx at: {} for referenceId: {}", url, MaskUtils.maskIdentifier(referenceId));
 
         Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("RequestInfo", requestInfo);
-        requestBody.put("referenceId", referenceId);
+        requestBody.put(FamilyConstants.JSON_KEY_REQUEST_INFO, requestInfo);
+        requestBody.put(FamilyConstants.JSON_KEY_REFERENCE_ID, referenceId);
         if (StringUtils.isNotBlank(otp)) {
-            requestBody.put("otp", otp);
+            requestBody.put(FamilyConstants.JSON_KEY_OTP, otp);
         }
         if (StringUtils.isNotBlank(memberUuidOrAadhaar)) {
-            requestBody.put("userUuid", memberUuidOrAadhaar);
+            requestBody.put(FamilyConstants.JSON_KEY_USER_UUID, memberUuidOrAadhaar);
             if (memberUuidOrAadhaar.matches("^[2-9]{1}[0-9]{11}$")) {
-                requestBody.put("aadhaarNumber", memberUuidOrAadhaar);
+                requestBody.put(FamilyConstants.JSON_KEY_AADHAAR_NUMBER, memberUuidOrAadhaar);
             }
         }
 
@@ -263,13 +273,13 @@ public class RequesterDxClientImpl implements RequesterDxClient {
 
         try {
             Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
-            if (response == null || !response.containsKey("isVerified")) {
+            if (response == null || !response.containsKey(FamilyConstants.JSON_KEY_IS_VERIFIED)) {
                 log.warn("[UPYOG-DX-CLIENT] requester-services-dx returned invalid or empty verification response for referenceId: {}",
                         MaskUtils.maskIdentifier(referenceId));
                 return false;
             }
 
-            Object isVerifiedObj = response.get("isVerified");
+            Object isVerifiedObj = response.get(FamilyConstants.JSON_KEY_IS_VERIFIED);
             boolean isVerified = Boolean.TRUE.equals(isVerifiedObj) || "true".equalsIgnoreCase(String.valueOf(isVerifiedObj));
             if (!isVerified) {
                 log.warn("[UPYOG-DX-CLIENT] requester-services-dx reported isVerified=false for referenceId: {}",
@@ -278,7 +288,7 @@ public class RequesterDxClientImpl implements RequesterDxClient {
             }
 
             // 5. Verify the token against member's Aadhaar reference if present
-            Object maskedAadhaarObj = response.get("maskedAadhaar");
+            Object maskedAadhaarObj = response.get(FamilyConstants.JSON_KEY_MASKED_AADHAAR);
             String responseMaskedAadhaar = maskedAadhaarObj != null ? String.valueOf(maskedAadhaarObj) : null;
             if (StringUtils.isNotBlank(memberUuidOrAadhaar) && StringUtils.isNotBlank(responseMaskedAadhaar)) {
                 if (memberUuidOrAadhaar.matches("^[2-9]{1}[0-9]{11}$")) {

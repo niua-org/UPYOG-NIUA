@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,12 +44,12 @@ class FamilyMasterDataServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        org.mockito.Mockito.lenient().when(configuration.getMdmsHost()).thenReturn("https://upyog.niua.org");
-        org.mockito.Mockito.lenient().when(configuration.getMdmsSearchPath()).thenReturn("/egov-mdms-service/v1/_search");
-        org.mockito.Mockito.lenient().when(configuration.getMdmsFamilyModule()).thenReturn("common-masters");
-        org.mockito.Mockito.lenient().when(configuration.getMdmsRelationshipMaster()).thenReturn("FamilyRelationship");
-        org.mockito.Mockito.lenient().when(configuration.getMdmsRelationshipFilter()).thenReturn("[?(@.active==true)]");
-        org.mockito.Mockito.lenient().when(configuration.getRelationshipCacheTtl()).thenReturn(86400000L);
+        lenient().when(configuration.getMdmsHost()).thenReturn("https://upyog.niua.org");
+        lenient().when(configuration.getMdmsSearchPath()).thenReturn("/egov-mdms-service/v1/_search");
+        lenient().when(configuration.getMdmsFamilyModule()).thenReturn("common-masters");
+        lenient().when(configuration.getMdmsRelationshipMaster()).thenReturn("FamilyRelationship");
+        lenient().when(configuration.getMdmsRelationshipFilter()).thenReturn("[?(@.active==true)]");
+        lenient().when(configuration.getRelationshipCacheTtl()).thenReturn(86400000L);
     }
 
     @Test
@@ -130,18 +131,133 @@ class FamilyMasterDataServiceImplTest {
     }
 
     @Test
-    @DisplayName("getAllowedRelationships should fallback to default relationships when MDMS call fails")
+    @DisplayName("getAllowedRelationships should return empty set when MDMS call fails")
     void getAllowedRelationships_FallbackOnException() {
         when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenThrow(new RuntimeException("Connection timed out"));
 
         Set<String> result = masterDataService.getAllowedRelationships(new RequestInfo(), "pg.citya");
 
         assertNotNull(result);
-        assertTrue(result.contains("HEAD"));
-        assertTrue(result.contains("SPOUSE"));
-        assertTrue(result.contains("SON"));
-        assertTrue(result.contains("CHILD"));
-        assertTrue(result.contains("DEPENDENT"));
-        assertTrue(result.contains("GUARDIAN"));
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("validateCategory should succeed with MDMS returned category codes")
+    void validateCategory_Mdms_Success() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> catList = new ArrayList<>();
+
+        Map<String, Object> c1 = new HashMap<>();
+        c1.put("code", "GENERAL");
+        catList.add(c1);
+
+        Map<String, Object> c2 = new HashMap<>();
+        c2.put("code", "OBC");
+        catList.add(c2);
+
+        commonMasters.put("FamilyCategory", catList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        assertDoesNotThrow(() -> masterDataService.validateCategory(new RequestInfo(), "pg.citya", "GENERAL"));
+        assertDoesNotThrow(() -> masterDataService.validateCategory(new RequestInfo(), "pg.citya", "OBC"));
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateCategory(new RequestInfo(), "pg.citya", "INVALID_CAT"));
+        assertEquals(FamilyConstants.ERROR_INVALID_CATEGORY, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateOccupation should succeed with MDMS returned master codes")
+    void validateOccupation_Mdms_Success() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> occList = new ArrayList<>();
+
+        Map<String, Object> o1 = new HashMap<>();
+        o1.put("code", "SALARIED");
+        occList.add(o1);
+
+        Map<String, Object> o2 = new HashMap<>();
+        o2.put("code", "BUSINESS");
+        occList.add(o2);
+
+        commonMasters.put("Occupation", occList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        assertDoesNotThrow(() -> masterDataService.validateOccupation(new RequestInfo(), "pg.citya", "SALARIED"));
+        assertDoesNotThrow(() -> masterDataService.validateOccupation(new RequestInfo(), "pg.citya", "BUSINESS"));
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateOccupation(new RequestInfo(), "pg.citya", "ASTRONAUT_INVALID"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validatePropertyType should succeed with MDMS returned master codes")
+    void validatePropertyType_Mdms_Success() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> ptMasters = new HashMap<>();
+        List<Map<String, Object>> ptList = new ArrayList<>();
+
+        Map<String, Object> p1 = new HashMap<>();
+        p1.put("code", "RESIDENTIAL");
+        ptList.add(p1);
+
+        Map<String, Object> p2 = new HashMap<>();
+        p2.put("code", "BUILTUP.SHAREDPROPERTY");
+        ptList.add(p2);
+
+        ptMasters.put("PropertyType", ptList);
+        mdmsRes.put("PropertyTax", ptMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        assertDoesNotThrow(() -> masterDataService.validatePropertyType(new RequestInfo(), "pg.citya", "RESIDENTIAL"));
+        assertDoesNotThrow(() -> masterDataService.validatePropertyType(new RequestInfo(), "pg.citya", "BUILTUP.SHAREDPROPERTY"));
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validatePropertyType(new RequestInfo(), "pg.citya", "SPACE_STATION_INVALID"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validatePropertyUsage should succeed with MDMS returned master codes")
+    void validatePropertyUsage_Mdms_Success() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> ptMasters = new HashMap<>();
+        List<Map<String, Object>> usageList = new ArrayList<>();
+
+        Map<String, Object> u1 = new HashMap<>();
+        u1.put("code", "SELF_OCCUPIED");
+        usageList.add(u1);
+
+        Map<String, Object> u2 = new HashMap<>();
+        u2.put("code", "RENTED");
+        usageList.add(u2);
+
+        ptMasters.put("UsageCategory", usageList);
+        mdmsRes.put("PropertyTax", ptMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        assertDoesNotThrow(() -> masterDataService.validatePropertyUsage(new RequestInfo(), "pg.citya", "SELF_OCCUPIED"));
+        assertDoesNotThrow(() -> masterDataService.validatePropertyUsage(new RequestInfo(), "pg.citya", "RENTED"));
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validatePropertyUsage(new RequestInfo(), "pg.citya", "UNKNOWN_USAGE"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
     }
 }

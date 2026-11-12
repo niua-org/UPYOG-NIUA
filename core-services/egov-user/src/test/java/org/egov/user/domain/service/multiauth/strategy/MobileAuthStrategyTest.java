@@ -2,6 +2,7 @@ package org.egov.user.domain.service.multiauth.strategy;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.Gender;
@@ -55,7 +56,7 @@ public class MobileAuthStrategyTest {
 
     @BeforeEach
     public void setUp() {
-        org.egov.user.config.UserConfiguration config = new org.egov.user.config.UserConfiguration();
+        UserConfiguration config = new UserConfiguration();
         config.setCitizenLoginPasswordOtpFixedEnabled(false);
         config.setRolesStateLevelEnabled(true);
         config.setOtpMaxInvalidAttempts(3);
@@ -84,7 +85,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -113,7 +114,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -143,7 +144,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -174,7 +175,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -199,7 +200,7 @@ public class MobileAuthStrategyTest {
     @Test
     @DisplayName("Should flag multipleUsersFound and return list when multi-account selection is enabled")
     public void testAuthenticate_WhenMultipleUsersFound_SelectionEnabled_ReturnsMultipleUsersResult() {
-        org.egov.user.config.UserConfiguration config = new org.egov.user.config.UserConfiguration();
+        UserConfiguration config = new UserConfiguration();
         config.setCitizenLoginPasswordOtpFixedEnabled(false);
         config.setRolesStateLevelEnabled(true);
         config.setOtpMaxInvalidAttempts(3);
@@ -209,7 +210,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -241,7 +242,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .selectedUserUuid("uuid-son")
                 .requestInfo(new RequestInfo())
                 .build();
@@ -270,7 +271,7 @@ public class MobileAuthStrategyTest {
                 .mobileNumber("9876543210")
                 .otp("123456")
                 .name("New Citizen")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -299,7 +300,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -316,8 +317,8 @@ public class MobileAuthStrategyTest {
         when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
                 .thenReturn(userList);
 
-        org.egov.tracer.model.CustomException ex = org.junit.jupiter.api.Assertions.assertThrows(
-                org.egov.tracer.model.CustomException.class,
+        CustomException ex = assertThrows(
+                CustomException.class,
                 () -> mobileAuthStrategy.authenticateAndResolveUser(request)
         );
 
@@ -331,7 +332,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -345,8 +346,8 @@ public class MobileAuthStrategyTest {
         when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
                 .thenReturn(Collections.singletonList(user1));
 
-        org.egov.tracer.model.CustomException ex = org.junit.jupiter.api.Assertions.assertThrows(
-                org.egov.tracer.model.CustomException.class,
+        CustomException ex = assertThrows(
+                CustomException.class,
                 () -> mobileAuthStrategy.authenticateAndResolveUser(request)
         );
 
@@ -359,7 +360,7 @@ public class MobileAuthStrategyTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .selectedUserUuid("uuid-inactive")
                 .requestInfo(new RequestInfo())
                 .build();
@@ -372,8 +373,8 @@ public class MobileAuthStrategyTest {
         when(encryptionDecryptionUtil.decryptObject(any(), any(), eq(User.class), any()))
                 .thenReturn(Collections.singletonList(inactiveUser));
 
-        org.egov.tracer.model.CustomException ex = org.junit.jupiter.api.Assertions.assertThrows(
-                org.egov.tracer.model.CustomException.class,
+        CustomException ex = assertThrows(
+                CustomException.class,
                 () -> mobileAuthStrategy.authenticateAndResolveUser(request)
         );
 

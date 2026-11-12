@@ -115,6 +115,11 @@ public class User {
     @Size(max = 100)
     private String spouseName;
 
+    @Size(max = 32)
+    private String caste;
+
+    private Boolean isSpeciallyAbled;
+
     private Boolean isIdentityVerified;
     private Date identityVerifiedDate;
     private String identityVerifiedSource;
@@ -311,6 +316,13 @@ public class User {
         }
     }
 
+    /**
+     * Determines whether an incoming string field has been modified relative to the existing record.
+     *
+     * @param incoming the incoming field value
+     * @param existing the existing field value from database
+     * @return {@code true} if both values are non-blank and differ ignoring case; {@code false} otherwise
+     */
     private boolean isFieldModified(String incoming, String existing) {
         if (StringUtils.isBlank(existing)) {
             return false;
@@ -321,16 +333,31 @@ public class User {
         return !incoming.trim().equalsIgnoreCase(existing.trim());
     }
 
+    /**
+     * Validates whether the correspondence address is invalid.
+     *
+     * @return {@code true} if correspondence address is provided and fails validity check; {@code false} otherwise
+     */
     @JsonIgnore
     public boolean isCorrespondenceAddressInvalid() {
         return correspondenceAddress != null && correspondenceAddress.isInvalid();
     }
 
+    /**
+     * Validates whether the permanent address is invalid.
+     *
+     * @return {@code true} if permanent address is provided and fails validity check; {@code false} otherwise
+     */
     @JsonIgnore
     public boolean isPermanentAddressInvalid() {
         return permanentAddress != null && permanentAddress.isInvalid();
     }
 
+    /**
+     * Validates whether any attached address in the collection is invalid.
+     *
+     * @return {@code true} if any address in the list is non-null and invalid; {@code false} otherwise
+     */
     @JsonIgnore
     public boolean isAddressesInvalid() {
         if (addresses == null || addresses.isEmpty()) {
@@ -339,51 +366,101 @@ public class User {
         return addresses.stream().anyMatch(address -> address != null && address.isInvalid());
     }
 
+    /**
+     * Checks if OTP reference is absent when OTP validation is configured as mandatory.
+     *
+     * @return {@code true} if OTP validation is required but reference token is empty
+     */
     @JsonIgnore
     public boolean isOtpReferenceAbsent() {
         return otpValidationMandatory && isEmpty(otpReference);
     }
 
+    /**
+     * Checks if the user classification type (e.g., CITIZEN, EMPLOYEE) is absent.
+     *
+     * @return {@code true} if user type is null or empty
+     */
     @JsonIgnore
     public boolean isTypeAbsent() {
         return isEmpty(type);
     }
 
+    /**
+     * Checks if the active account status flag is absent.
+     *
+     * @return {@code true} if active flag is null
+     */
     @JsonIgnore
     public boolean isActiveIndicatorAbsent() {
         return isEmpty(active);
     }
 
+    /**
+     * Checks if the mobile number is absent when mobile validation is mandatory.
+     *
+     * @return {@code true} if mobile validation is mandatory and mobile number is empty
+     */
     @JsonIgnore
     public boolean isMobileNumberAbsent() {
         return mobileValidationMandatory && isEmpty(mobileNumber);
     }
 
+    /**
+     * Checks if the user primary display name is absent.
+     *
+     * @return {@code true} if name is null or empty
+     */
     @JsonIgnore
     public boolean isNameAbsent() {
         return isEmpty(name);
     }
 
+    /**
+     * Checks if the unique login username is absent.
+     *
+     * @return {@code true} if username is null or empty
+     */
     @JsonIgnore
     public boolean isUsernameAbsent() {
         return isEmpty(username);
     }
 
+    /**
+     * Checks if the tenant identifier is absent.
+     *
+     * @return {@code true} if tenantId is null or empty
+     */
     @JsonIgnore
     public boolean isTenantIdAbsent() {
         return isEmpty(tenantId);
     }
 
+    /**
+     * Checks if the credential password is absent.
+     *
+     * @return {@code true} if password is null or empty
+     */
     @JsonIgnore
     public boolean isPasswordAbsent() {
         return isEmpty(password);
     }
 
+    /**
+     * Checks if user authorization roles are absent or contain empty codes.
+     *
+     * @return {@code true} if roles collection is empty or any role code is missing
+     */
     @JsonIgnore
     public boolean isRolesAbsent() {
         return CollectionUtils.isEmpty(roles) || roles.stream().anyMatch(r -> isEmpty(r.getCode()));
     }
 
+    /**
+     * Checks if the numeric primary key id is absent.
+     *
+     * @return {@code true} if id is null
+     */
     @JsonIgnore
     public boolean isIdAbsent() {
         return id == null;

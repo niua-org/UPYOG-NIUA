@@ -77,12 +77,25 @@ public class UserDocumentServiceImpl implements UserDocumentService {
      * @param userRepository      repository for user lookups
      * @param fileStoreRepository repository for file store download URL resolution
      */
+    /**
+     * Backward-compatible constructor for {@link UserDocumentServiceImpl} without IDGen or configuration dependencies.
+     *
+     * @param documentRepository the repository handling user document persistence
+     * @param userRepository     the repository handling user entity lookups
+     * @param fileStoreRepository the client repository communicating with egov-filestore
+     */
     public UserDocumentServiceImpl(UserDocumentRepository documentRepository,
                                   UserRepository userRepository,
                                   FileStoreRepository fileStoreRepository) {
         this(documentRepository, userRepository, fileStoreRepository, null, null);
     }
 
+    /**
+     * Creates and persists new citizen identity and municipal document records.
+     *
+     * @param request the document request payload containing document items and user identity
+     * @return list of newly created and persisted {@link UserDocument} domain instances
+     */
     @Override
     public List<UserDocument> createDocuments(UserDocumentRequest request) {
         if (request == null || CollectionUtils.isEmpty(request.getEffectiveDocuments())) {
@@ -90,24 +103,40 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             throw new CustomException(UserConstants.ERROR_INVALID_DOCUMENTS_REQUEST, UserConstants.MSG_DOCUMENTS_PAYLOAD_EMPTY);
         }
 
-        Long resolvedUserId = resolveUserId(request);
-        String userTenant = userRepository.getTenantIdByUserId(resolvedUserId);
-        String defaultTenant = StringUtils.isNotBlank(userTenant)
-                ? userTenant
-                : (StringUtils.isNotBlank(request.getTenantId()) ? request.getTenantId() : "pb.amritsar");
-        Long operatorId = resolveOperatorId(request.getRequestInfo(), resolvedUserId);
-
-        log.info("[USER-DOC-SERVICE] Creating {} document(s) for userId: {}, tenant: {}",
-                request.getEffectiveDocuments().size(), resolvedUserId, defaultTenant);
-
         String resolvedUuid = resolveUserUuid(request);
-        if (StringUtils.isBlank(resolvedUuid)) {
+        Long resolvedUserId = request.getUserId();
+        if (resolvedUserId == null && !CollectionUtils.isEmpty(request.getEffectiveDocuments())) {
+            resolvedUserId = request.getEffectiveDocuments().get(0).getUserId();
+        }
+        if (StringUtils.isBlank(resolvedUuid) && resolvedUserId != null) {
             resolvedUuid = userRepository.getUuidByUserId(resolvedUserId);
         }
+        if (StringUtils.isBlank(resolvedUuid)) {
+            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_DOCUMENT_USER_UUID_MANDATORY);
+        }
+
+        String userTenant = null;
+        try {
+            userTenant = userRepository.getTenantIdByUuid(resolvedUuid);
+        } catch (Exception e) {
+            log.trace("[USER-DOC-SERVICE] Could not resolve tenant by userUuid: {}", e.getMessage());
+        }
+        if (StringUtils.isBlank(userTenant) && resolvedUserId != null) {
+            userTenant = userRepository.getTenantIdByUserId(resolvedUserId);
+        }
+        String defaultTenant = StringUtils.isNotBlank(userTenant)
+                ? userTenant
+                : (StringUtils.isNotBlank(request.getTenantId()) ? request.getTenantId() : UserConstants.DEFAULT_TENANT_ID);
+        Long operatorId = resolveOperatorId(request.getRequestInfo(), resolvedUserId);
+
+        log.info("[USER-DOC-SERVICE] Creating {} document(s) for userUuid: {}, tenant: {}",
+                request.getEffectiveDocuments().size(), resolvedUuid, defaultTenant);
 
         List<UserDocument> createdList = new ArrayList<>();
         for (UserDocument doc : request.getEffectiveDocuments()) {
-            doc.setUserId(resolvedUserId);
+            if (resolvedUserId != null) {
+                doc.setUserId(resolvedUserId);
+            }
             doc.setUserUuid(resolvedUuid);
             if (StringUtils.isNotBlank(userTenant)) {
                 doc.setTenantId(userTenant);
@@ -133,6 +162,12 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         return createdList;
     }
 
+    /**
+     * Updates an existing citizen document record with new metadata or verification status.
+     *
+     * @param request the document request containing the modified document attributes
+     * @return the updated {@link UserDocument} record
+     */
     @Override
     public UserDocument updateDocument(UserDocumentRequest request) {
         if (request == null || request.getDocument() == null) {
@@ -152,7 +187,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         List<UserDocument> existing = documentRepository.search(criteria);
         if (CollectionUtils.isEmpty(existing)) {
             log.error("[USER-DOC-SERVICE] Document not found with ID: {}", doc.getId());
-            throw new CustomException(UserConstants.ERROR_DOCUMENT_NOT_FOUND, "Document not found with ID: " + doc.getId());
+            throw new CustomException(UserConstants.ERROR_DOCUMENT_NOT_FOUND, UserConstants.MSG_DOCUMENT_NOT_FOUND_PREFIX + doc.getId());
         }
 
         UserDocument existingDoc = existing.get(0);
@@ -191,18 +226,18 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         return saved;
     }
 
+    /**
+     * Searches citizen documents matching criteria and enriches results with egov-filestore URLs.
+     *
+     * @param criteria    the filter criteria including userId, userUuid, documentType, and tenantId
+     * @param requestInfo standard UPYOG request metadata envelope
+     * @return list of matching {@link UserDocument} records
+     */
     @Override
     public List<UserDocument> searchDocuments(UserDocumentSearchCriteria criteria, RequestInfo requestInfo) {
         if (criteria == null) {
             log.error("[USER-DOC-SERVICE] Search documents failed: criteria is null");
             throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, UserConstants.MSG_DOCUMENT_SEARCH_CRITERIA_NULL);
-        }
-
-        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null && CollectionUtils.isEmpty(criteria.getUserUuids())) {
-            Long userId = userRepository.getUserIdByUuid(criteria.getUserUuid());
-            if (userId != null) {
-                criteria.setUserId(userId);
-            }
         }
 
         log.info("[USER-DOC-SERVICE] Searching documents: userId={}, userUuid={}, docType={}, tenantId={}",
@@ -238,6 +273,12 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         return documents;
     }
 
+    /**
+     * Soft-deletes a citizen document by updating active status to false.
+     *
+     * @param request the document request identifying document to delete
+     * @return the deleted {@link UserDocument} record with active=false
+     */
     @Override
     public UserDocument deleteDocument(UserDocumentRequest request) {
         if (request == null) {
@@ -260,7 +301,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         List<UserDocument> existing = documentRepository.search(criteria);
         if (CollectionUtils.isEmpty(existing)) {
             log.error("[USER-DOC-SERVICE] Document not found with ID: {}", documentId);
-            throw new CustomException(UserConstants.ERROR_DOCUMENT_NOT_FOUND, "Document not found with ID: " + documentId);
+            throw new CustomException(UserConstants.ERROR_DOCUMENT_NOT_FOUND, UserConstants.MSG_DOCUMENT_NOT_FOUND_PREFIX + documentId);
         }
 
         Long operatorId = resolveOperatorId(request.getRequestInfo(), existing.get(0).getUserId());
@@ -321,6 +362,12 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         }
     }
 
+    /**
+     * Resolves the root state-level tenant identifier from a given ULB or compound tenant ID.
+     *
+     * @param tenantId compound or specific tenant ID (e.g., "pb.amritsar")
+     * @return the top-level state tenant ID (e.g., "pb")
+     */
     private String resolveTenant(String tenantId) {
         if (StringUtils.isNotBlank(tenantId)) {
             return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId.trim();
@@ -329,7 +376,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             return userConfiguration.getStateLevelTenantId().trim();
         }
         log.error("[USER-DOC-SERVICE] Tenant ID cannot be determined: state-level tenant ID is not configured");
-        throw new CustomException(UserConstants.ERROR_TENANT_ID_REQUIRED, "Tenant ID cannot be determined: state-level tenant ID is not configured");
+        throw new CustomException(UserConstants.ERROR_TENANT_ID_REQUIRED, UserConstants.MSG_TENANT_ID_UNDETERMINED);
     }
 
     /**
@@ -407,10 +454,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         }
         if (!CollectionUtils.isEmpty(request.getEffectiveDocuments())) {
             for (UserDocument doc : request.getEffectiveDocuments()) {
-                if (StringUtils.isNotBlank(doc.getUuid())) {
-                    return doc.getUuid();
-                }
-                if (StringUtils.isNotBlank(doc.getUserUuid())) {
+                if (doc != null && StringUtils.isNotBlank(doc.getUserUuid())) {
                     return doc.getUserUuid();
                 }
             }

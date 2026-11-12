@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang3.StringUtils;
 
+import org.upyog.family.util.FamilyConstants;
+
 /**
  * Enumeration representing the membership status of an individual within a Family Unit in UPYOG.
  *
  * @author UPYOG Team
  * @since 1.0.0
  */
-import org.upyog.family.util.FamilyConstants;
-
 public enum MemberStatus {
     ACTIVE(FamilyConstants.STATUS_ACTIVE),
     EXITED(FamilyConstants.STATUS_EXITED),
@@ -20,6 +20,11 @@ public enum MemberStatus {
 
     private final String value;
 
+    /**
+     * Constructs a {@code MemberStatus} enum constant with its backing string value.
+     *
+     * @param value serialized string code
+     */
     MemberStatus(String value) {
         this.value = value;
     }

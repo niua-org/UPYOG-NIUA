@@ -7,7 +7,11 @@ import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpSuccessResponse;
 import org.egov.dx.adapter.vendor.impl.MockAadhaarGatewayAdapter;
 import org.egov.dx.util.AadhaarConstants;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,22 +58,34 @@ public class MockAadhaarGatewayAdapterTest {
         assertNotNull(response.getData().getName());
         assertFalse(response.getData().getName().isEmpty());
         assertNotNull(response.getData().getAddress());
-        assertEquals("Amritsar", response.getData().getAddress().getVtc());
+        assertNotNull(response.getData().getAddress().getVtc());
     }
 
     @Test
-    void testVerifyOtp_GeneratesRandomNames() {
-        java.util.Set<String> names = new java.util.HashSet<>();
-        for (int i = 0; i < 50; i++) {
+    @DisplayName("Should dispense distinct new records sequentially until all 520 records are used")
+    void testVerifyOtp_DispensesAllRecordsSequentiallyUntilAllUsed() {
+        Set<String> dispensedNames = new HashSet<>();
+        int totalExpected = 520;
+
+        for (int i = 0; i < totalExpected; i++) {
             VendorVerifyOtpRequest request = VendorVerifyOtpRequest.builder()
                     .referenceId(100000L + i)
                     .otp("123456")
                     .build();
             VendorVerifyOtpSuccessResponse response = mockAdapter.verifyOtp(request);
             assertNotNull(response.getData().getName());
-            names.add(response.getData().getName());
+            dispensedNames.add(response.getData().getName());
         }
-        // With 50 iterations and 20 pool names, more than 1 distinct name should be observed
-        assertTrue(names.size() > 1, "Expected multiple random citizen names across OTP verifications");
+
+        // All 520 records in the first pass must be unique
+        assertEquals(totalExpected, dispensedNames.size(), "Expected 520 unique names dispensed sequentially");
+
+        // Next invocation wraps around to the beginning
+        VendorVerifyOtpRequest wrapRequest = VendorVerifyOtpRequest.builder()
+                .referenceId(999999L)
+                .otp("123456")
+                .build();
+        VendorVerifyOtpSuccessResponse wrapResponse = mockAdapter.verifyOtp(wrapRequest);
+        assertTrue(dispensedNames.contains(wrapResponse.getData().getName()), "Should wrap around after all used");
     }
 }

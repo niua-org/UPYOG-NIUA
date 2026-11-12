@@ -24,6 +24,7 @@ import org.upyog.family.web.contract.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -244,5 +245,30 @@ public class UserIdentityVerificationSecurityTest {
         );
 
         assertEquals(FamilyConstants.ERROR_USER_NOT_VERIFIED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("UserClient: syncMemberAssets successfully dispatches member payload to egov-user")
+    void testSyncMemberAssets_Success() {
+        when(configuration.getUserHost()).thenReturn("http://localhost:8085");
+        when(configuration.getUserMemberAssetSyncPath()).thenReturn("/user/profile/_sync-member-assets");
+
+        FamilyMember member = FamilyMember.builder()
+                .userUuid("member-uuid-1")
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(UserProperty.builder().localityType("URBAN").ownershipType("INDIVIDUAL").build()))
+                .income(UserIncomeDetail.builder().annualIncome(new BigDecimal("500000")).build())
+                .vehicles(Collections.singletonList(UserVehicleDetail.builder().vehicleNumber("PB02AB1234").build()))
+                .citizenDetails(CitizenProfile.builder().caste("GENERAL").isSpeciallyAbled(false).build())
+                .build();
+
+        Map<String, Object> mockResponse = new HashMap<>();
+        mockResponse.put("status", "SUCCESS");
+        when(restTemplate.postForObject(eq("http://localhost:8085/user/profile/_sync-member-assets"), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockResponse);
+
+        boolean synced = userClient.syncMemberAssets(Collections.singletonList(member), "pg.citya", RequestInfo.builder().build());
+        assertTrue(synced);
+        verify(restTemplate).postForObject(eq("http://localhost:8085/user/profile/_sync-member-assets"), any(HttpEntity.class), eq(Map.class));
     }
 }

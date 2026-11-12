@@ -16,13 +16,13 @@ public class AuditQueryBuilder {
             "id, uuid, tenantid, salutation, dob, locale, username, password, pwdexpirydate, " +
             "mobilenumber, altcontactnumber, emailid, active, name, gender, pan, aadhaarnumber, " +
             "type, guardian, guardianrelation, signature, accountlocked, bloodgroup, photo, identificationmark, " +
-            "auditcreatedby, auditcreatedtime, father_name, mother_name, spouse_name, " +
+            "auditcreatedby, auditcreatedtime, father_name, mother_name, spouse_name, caste, is_specially_abled, " +
             "is_identity_verified, identity_verified_date, identity_verified_source, last_resync_date, editted_count, last_login_method" +
             ") values (" +
             ":id, :uuid, :tenantid, :salutation, :dob, :locale, :username, :password, :pwdexpirydate, " +
             ":mobilenumber, :alternatemobilenumber, :emailid, :active, :name, :gender, :pan, :aadhaarnumber, " +
             ":type, :guardian, :guardianrelation, :signature, :accountlocked, :bloodgroup, :photo, :identificationmark, " +
-            ":auditcreatedby, :auditcreatedtime, :father_name, :mother_name, :spouse_name, " +
+            ":auditcreatedby, :auditcreatedtime, :father_name, :mother_name, :spouse_name, :caste, :is_specially_abled, " +
             ":is_identity_verified, :identity_verified_date, :identity_verified_source, :last_resync_date, :editted_count, :last_login_method" +
             ")";
 

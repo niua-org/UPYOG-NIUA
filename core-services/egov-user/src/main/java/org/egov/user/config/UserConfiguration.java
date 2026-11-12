@@ -50,6 +50,12 @@ public class UserConfiguration {
     @Value("${address.types.allowed}")
     private String allowedAddressTypes;
 
+    @Value("${user.address.mandatory.fields.enabled}")
+    private Boolean addressMandatoryFieldsEnabled;
+
+    @Value("${user.address.update.strategy}")
+    private Boolean addressSoftUpdateFlag;
+
     // Cache Configuration
     @Value("${address.type.cache.ttl.millis}")
     private Long addressTypeCacheTtlMillis;
@@ -141,6 +147,33 @@ public class UserConfiguration {
 
     @Value("${egov.user.oauth.token.endpoint}")
     private String userOauthTokenEndpoint;
+
+    @Value("${egov.user.host}")
+    private String userHost;
+
+    @Value("${account.unlock.cool.down.period.minutes}")
+    private Long accountUnlockCoolDownPeriod;
+
+    @Value("${max.invalid.login.attempts.period.minutes}")
+    private Long maxInvalidLoginAttemptsPeriod;
+
+    @Value("${create.user.validate.name}")
+    private Boolean createUserValidateName;
+
+    @Value("${max.invalid.login.attempts}")
+    private Long maxInvalidLoginAttempts;
+
+    @Value("${egov.user.pwd.pattern}")
+    private String pwdRegex;
+
+    @Value("${egov.user.pwd.pattern.min.length}")
+    private Integer pwdMinLength;
+
+    @Value("${egov.user.pwd.pattern.max.length}")
+    private Integer pwdMaxLength;
+
+    @Value("${default.password.expiry.in.days}")
+    private Integer defaultPasswordExpiryInDays;
 
     // DigiLocker Configuration
     @Value("${digilocker.register}")

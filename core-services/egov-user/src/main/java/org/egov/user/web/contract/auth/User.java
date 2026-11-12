@@ -16,7 +16,7 @@ import java.util.Set;
 @Getter
 @Builder
 //This class is serialized to Redis
-public class User implements Serializable {
+public class User implements Serializable, AuthUserAccount {
     private static final long serialVersionUID = -1053170163821651014L;
     private Long id;
     private String uuid;

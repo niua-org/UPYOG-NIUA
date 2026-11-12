@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.UserDocument;
+import org.egov.user.repository.builder.UserDocumentQueryBuilder;
 import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -24,12 +25,19 @@ public class UserDocumentRepository {
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final ObjectMapper objectMapper;
-    private final org.egov.user.repository.builder.UserDocumentQueryBuilder queryBuilder;
+    private final UserDocumentQueryBuilder queryBuilder;
 
+    /**
+     * Constructs a {@code UserDocumentRepository} with required JDBC templates and helpers.
+     *
+     * @param namedParameterJdbcTemplate named parameter JDBC operations template
+     * @param objectMapper Jackson JSON mapper for JSONB column handling
+     * @param queryBuilder dynamic SQL query builder for user document search criteria
+     */
     @Autowired
     public UserDocumentRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate,
                                   ObjectMapper objectMapper,
-                                  org.egov.user.repository.builder.UserDocumentQueryBuilder queryBuilder) {
+                                  UserDocumentQueryBuilder queryBuilder) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.objectMapper = objectMapper;
         this.queryBuilder = queryBuilder;
@@ -56,9 +64,11 @@ public class UserDocumentRepository {
             document.setIsVerified(false);
         }
 
+        String userUuid = document.getUserUuid();
+
         Map<String, Object> params = new HashMap<>();
         params.put("id", document.getId());
-        params.put("user_id", document.getUserId());
+        params.put("user_uuid", userUuid);
         params.put("tenant_id", document.getTenantId());
         params.put("document_type", document.getDocumentType());
         params.put("document_uid", document.getDocumentUid());
@@ -66,14 +76,16 @@ public class UserDocumentRepository {
         params.put("file_name", document.getFileName());
         params.put("is_verified", document.getIsVerified());
         params.put("active", document.getActive());
+        params.put("reference_type", document.getReferenceType());
+        params.put("reference_id", document.getReferenceId());
         params.put("createdby", document.getCreatedBy());
         params.put("createddate", document.getCreatedDate());
         params.put("lastmodifiedby", document.getLastModifiedBy());
         params.put("lastmodifieddate", document.getLastModifiedDate());
         params.put("additional_details", serializeJson(document.getAdditionalDetails()));
 
-        log.debug("[USER-DOC-REPO] Executing insert for document ID: {}, userId: {}", document.getId(), document.getUserId());
-        namedParameterJdbcTemplate.update(org.egov.user.repository.builder.UserDocumentQueryBuilder.INSERT_QUERY, params);
+        log.debug("[USER-DOC-REPO] Executing insert for document ID: {}, userUuid: {}", document.getId(), userUuid);
+        namedParameterJdbcTemplate.update(queryBuilder.getInsertQuery(), params);
         return document;
     }
 
@@ -93,12 +105,14 @@ public class UserDocumentRepository {
         params.put("file_name", document.getFileName());
         params.put("is_verified", document.getIsVerified() != null ? document.getIsVerified() : false);
         params.put("active", document.getActive() != null ? document.getActive() : true);
+        params.put("reference_type", document.getReferenceType());
+        params.put("reference_id", document.getReferenceId());
         params.put("lastmodifiedby", document.getLastModifiedBy());
         params.put("lastmodifieddate", document.getLastModifiedDate());
         params.put("additional_details", serializeJson(document.getAdditionalDetails()));
 
         log.debug("[USER-DOC-REPO] Executing update for document ID: {}", document.getId());
-        namedParameterJdbcTemplate.update(org.egov.user.repository.builder.UserDocumentQueryBuilder.UPDATE_QUERY, params);
+        namedParameterJdbcTemplate.update(queryBuilder.getUpdateQuery(), params);
     }
 
     /**
@@ -114,7 +128,7 @@ public class UserDocumentRepository {
         params.put("lastmodifieddate", new Date());
 
         log.debug("[USER-DOC-REPO] Executing soft delete for document ID: {}", id);
-        namedParameterJdbcTemplate.update(org.egov.user.repository.builder.UserDocumentQueryBuilder.SOFT_DELETE_QUERY, params);
+        namedParameterJdbcTemplate.update(queryBuilder.getSoftDeleteQuery(), params);
     }
 
     /**
@@ -129,6 +143,14 @@ public class UserDocumentRepository {
         return namedParameterJdbcTemplate.query(query, params, this::mapRow);
     }
 
+    /**
+     * Maps a single SQL {@link ResultSet} row from {@code ug_user_document} to a {@link UserDocument} model.
+     *
+     * @param rs     the active database result set
+     * @param rowNum index of current row
+     * @return constructed {@link UserDocument} entity
+     * @throws SQLException if column extraction fails
+     */
     private UserDocument mapRow(ResultSet rs, int rowNum) throws SQLException {
         String userUuid = null;
         try {
@@ -137,9 +159,28 @@ public class UserDocumentRepository {
             log.trace("[USER-DOC-REPO] user_uuid column not present in result set: {}", e.getMessage());
         }
 
+        Long userId = null;
+        try {
+            long uid = rs.getLong("user_id");
+            if (!rs.wasNull()) {
+                userId = uid;
+            }
+        } catch (SQLException e) {
+            log.trace("[USER-DOC-REPO] user_id column not present in result set: {}", e.getMessage());
+        }
+
+        String referenceType = null;
+        String referenceId = null;
+        try {
+            referenceType = rs.getString("reference_type");
+            referenceId = rs.getString("reference_id");
+        } catch (SQLException e) {
+            log.trace("[USER-DOC-REPO] reference columns not present in result set: {}", e.getMessage());
+        }
+
         return UserDocument.builder()
                 .id(rs.getString("id"))
-                .userId(rs.getLong("user_id"))
+                .userId(userId)
                 .userUuid(userUuid)
                 .tenantId(rs.getString("tenant_id"))
                 .documentType(rs.getString("document_type"))
@@ -148,6 +189,8 @@ public class UserDocumentRepository {
                 .fileName(rs.getString("file_name"))
                 .isVerified(rs.getBoolean("is_verified"))
                 .active(rs.getBoolean("active"))
+                .referenceType(referenceType)
+                .referenceId(referenceId)
                 .createdBy(rs.getLong("createdby"))
                 .createdDate(rs.getTimestamp("createddate"))
                 .lastModifiedBy(rs.getLong("lastmodifiedby"))
@@ -156,6 +199,12 @@ public class UserDocumentRepository {
                 .build();
     }
 
+    /**
+     * Serializes an arbitrary object to a JSON string representation for JSONB column storage.
+     *
+     * @param obj object to serialize
+     * @return JSON string or null if object is null or serialization fails
+     */
     private String serializeJson(Object obj) {
         if (obj == null) return null;
         try {
@@ -166,6 +215,12 @@ public class UserDocumentRepository {
         }
     }
 
+    /**
+     * Deserializes a raw JSON string from a JSONB database column into an arbitrary object hierarchy.
+     *
+     * @param json raw JSON string
+     * @return deserialized Object or null if string is blank or invalid
+     */
     private Object deserializeJson(String json) {
         if (StringUtils.isBlank(json)) return null;
         try {

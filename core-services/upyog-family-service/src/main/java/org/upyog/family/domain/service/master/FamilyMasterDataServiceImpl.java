@@ -40,15 +40,6 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     private final RestTemplate restTemplate;
     private final FamilyConfiguration configuration;
 
-    private static final Set<String> DEFAULT_RELATIONSHIPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            FamilyConstants.RELATIONSHIP_SELF, FamilyConstants.RELATIONSHIP_HEAD, FamilyConstants.RELATIONSHIP_SPOUSE, FamilyConstants.RELATIONSHIP_SON,
-            FamilyConstants.RELATIONSHIP_DAUGHTER, FamilyConstants.RELATIONSHIP_CHILD, FamilyConstants.RELATIONSHIP_FATHER,
-            FamilyConstants.RELATIONSHIP_MOTHER, FamilyConstants.RELATIONSHIP_BROTHER, FamilyConstants.RELATIONSHIP_SISTER,
-            FamilyConstants.RELATIONSHIP_GRANDFATHER, FamilyConstants.RELATIONSHIP_GRANDMOTHER, FamilyConstants.RELATIONSHIP_GRANDSON,
-            FamilyConstants.RELATIONSHIP_GRANDDAUGHTER, FamilyConstants.RELATIONSHIP_DAUGHTER_IN_LAW, FamilyConstants.RELATIONSHIP_SON_IN_LAW,
-            FamilyConstants.RELATIONSHIP_DEPENDENT, FamilyConstants.RELATIONSHIP_GUARDIAN, FamilyConstants.RELATIONSHIP_OTHER
-    )));
-
     /**
      * Immutable cache entry containing allowed relationship codes and entry creation timestamp.
      */
@@ -88,6 +79,10 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     }
 
     private final Map<String, CacheEntry> tenantRelationshipCache = new ConcurrentHashMap<>();
+    private final Map<String, CacheEntry> tenantCategoryCache = new ConcurrentHashMap<>();
+    private final Map<String, CacheEntry> tenantOccupationCache = new ConcurrentHashMap<>();
+    private final Map<String, CacheEntry> tenantPropertyTypeCache = new ConcurrentHashMap<>();
+    private final Map<String, CacheEntry> tenantPropertyUsageCache = new ConcurrentHashMap<>();
 
     /**
      * Constructs a FamilyMasterDataServiceImpl with RestTemplate and configuration.
@@ -112,7 +107,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     public Set<String> getAllowedRelationships(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
         if (configuration == null || configuration.getRelationshipCacheTtl() == null) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.relationship.cache.ttl is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_RELATIONSHIP_CACHE_TTL_NOT_CONFIGURED);
         }
         long ttlMillis = configuration.getRelationshipCacheTtl();
 
@@ -135,7 +130,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     @Override
     public void validateRelationship(RequestInfo requestInfo, String tenantId, String relationship) {
         if (StringUtils.isBlank(relationship)) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_RELATIONSHIP, "Relationship with Head of Family cannot be blank");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_RELATIONSHIP, FamilyConstants.MSG_RELATIONSHIP_CANNOT_BE_BLANK);
         }
 
         Set<String> allowed = getAllowedRelationships(requestInfo, tenantId);
@@ -143,17 +138,198 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
             log.error("[UPYOG-FAMILY-MASTER] Invalid relationship '{}' for tenant '{}'. Allowed: {}",
                     relationship, tenantId, allowed);
             throw new CustomException(FamilyConstants.ERROR_INVALID_RELATIONSHIP,
-                    "Invalid relationship: '" + relationship + "'. Must be one of: " + allowed);
+                    FamilyConstants.MSG_INVALID_RELATIONSHIP_PREFIX + relationship + FamilyConstants.MSG_MUST_BE_ONE_OF_SUFFIX + allowed);
         }
     }
 
     /**
-     * Evicts cached relationship sets across all tenants.
+     * Retrieves the set of allowed socio-economic category codes configured in MDMS for the specified tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @return set of valid upper-case category codes
+     */
+    @Override
+    public Set<String> getAllowedCategories(RequestInfo requestInfo, String tenantId) {
+        String stateTenant = resolveStateTenant(tenantId);
+        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
+                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        CacheEntry entry = tenantCategoryCache.get(stateTenant);
+        if (entry != null && !entry.isExpired(ttlMillis)) {
+            return entry.getAllowedRelationships();
+        }
+        Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
+                FamilyConstants.MDMS_MODULE_COMMON_MASTERS, FamilyConstants.MDMS_MASTER_FAMILY_CATEGORY);
+        Set<String> categories = (fromMdms != null) ? fromMdms : Collections.emptySet();
+        tenantCategoryCache.put(stateTenant, new CacheEntry(categories, System.currentTimeMillis()));
+        return categories;
+    }
+
+    /**
+     * Validates whether the supplied socio-economic category is defined within MDMS for the tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @param category category code to validate
+     * @throws CustomException if category is invalid
+     */
+    @Override
+    public void validateCategory(RequestInfo requestInfo, String tenantId, String category) {
+        if (StringUtils.isNotBlank(category)) {
+            String normalized = category.trim().toUpperCase();
+            Set<String> allowed = getAllowedCategories(requestInfo, tenantId);
+            if (!allowed.contains(normalized)) {
+                log.error("[UPYOG-FAMILY-MASTER] Invalid category '{}' for tenant '{}'. Allowed: {}",
+                        category, tenantId, allowed);
+                throw new CustomException(FamilyConstants.ERROR_INVALID_CATEGORY,
+                        FamilyConstants.MSG_INVALID_CATEGORY_PREFIX + category + FamilyConstants.MSG_ALLOWED_SUFFIX + allowed);
+            }
+        }
+    }
+
+    /**
+     * Retrieves the set of allowed occupation codes configured in MDMS for the specified tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @return set of valid upper-case occupation codes
+     */
+    @Override
+    public Set<String> getAllowedOccupations(RequestInfo requestInfo, String tenantId) {
+        String stateTenant = resolveStateTenant(tenantId);
+        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
+                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        CacheEntry entry = tenantOccupationCache.get(stateTenant);
+        if (entry != null && !entry.isExpired(ttlMillis)) {
+            return entry.getAllowedRelationships();
+        }
+        Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
+                FamilyConstants.MDMS_MODULE_COMMON_MASTERS, FamilyConstants.MDMS_MASTER_OCCUPATION);
+        Set<String> occupations = (fromMdms != null) ? fromMdms : Collections.emptySet();
+        tenantOccupationCache.put(stateTenant, new CacheEntry(occupations, System.currentTimeMillis()));
+        return occupations;
+    }
+
+    /**
+     * Validates whether the supplied occupation is defined within MDMS for the tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @param occupation occupation code to validate
+     * @throws CustomException if occupation is invalid
+     */
+    @Override
+    public void validateOccupation(RequestInfo requestInfo, String tenantId, String occupation) {
+        if (StringUtils.isNotBlank(occupation)) {
+            Set<String> allowed = getAllowedOccupations(requestInfo, tenantId);
+            if (!allowed.contains(occupation.trim().toUpperCase())) {
+                log.error("[UPYOG-FAMILY-MASTER] Invalid occupation '{}' for tenant '{}'. Allowed: {}",
+                        occupation, tenantId, allowed);
+                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                        FamilyConstants.MSG_INVALID_OCCUPATION_PREFIX + occupation + FamilyConstants.MSG_ALLOWED_SUFFIX + allowed);
+            }
+        }
+    }
+
+    /**
+     * Retrieves the set of allowed property types configured in MDMS for the specified tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @return set of valid upper-case property types
+     */
+    @Override
+    public Set<String> getAllowedPropertyTypes(RequestInfo requestInfo, String tenantId) {
+        String stateTenant = resolveStateTenant(tenantId);
+        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
+                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        CacheEntry entry = tenantPropertyTypeCache.get(stateTenant);
+        if (entry != null && !entry.isExpired(ttlMillis)) {
+            return entry.getAllowedRelationships();
+        }
+        Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
+                FamilyConstants.MDMS_MODULE_PROPERTY_TAX, FamilyConstants.MDMS_MASTER_PROPERTY_TYPE);
+        Set<String> propertyTypes = (fromMdms != null) ? fromMdms : Collections.emptySet();
+        tenantPropertyTypeCache.put(stateTenant, new CacheEntry(propertyTypes, System.currentTimeMillis()));
+        return propertyTypes;
+    }
+
+    /**
+     * Validates whether the supplied property type is defined within MDMS for the tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @param propertyType property type to validate
+     * @throws CustomException if property type is invalid
+     */
+    @Override
+    public void validatePropertyType(RequestInfo requestInfo, String tenantId, String propertyType) {
+        if (StringUtils.isNotBlank(propertyType)) {
+            Set<String> allowed = getAllowedPropertyTypes(requestInfo, tenantId);
+            if (!allowed.contains(propertyType.trim().toUpperCase())) {
+                log.error("[UPYOG-FAMILY-MASTER] Invalid propertyType '{}' for tenant '{}'. Allowed: {}",
+                        propertyType, tenantId, allowed);
+                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                        FamilyConstants.MSG_INVALID_PROPERTY_TYPE_PREFIX + propertyType + FamilyConstants.MSG_ALLOWED_SUFFIX + allowed);
+            }
+        }
+    }
+
+    /**
+     * Retrieves the set of allowed property usage categories configured in MDMS for the specified tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @return set of valid upper-case property usage categories
+     */
+    @Override
+    public Set<String> getAllowedPropertyUsages(RequestInfo requestInfo, String tenantId) {
+        String stateTenant = resolveStateTenant(tenantId);
+        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
+                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        CacheEntry entry = tenantPropertyUsageCache.get(stateTenant);
+        if (entry != null && !entry.isExpired(ttlMillis)) {
+            return entry.getAllowedRelationships();
+        }
+        Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
+                FamilyConstants.MDMS_MODULE_PROPERTY_TAX, FamilyConstants.MDMS_MASTER_USAGE_CATEGORY);
+        Set<String> propertyUsages = (fromMdms != null) ? fromMdms : Collections.emptySet();
+        tenantPropertyUsageCache.put(stateTenant, new CacheEntry(propertyUsages, System.currentTimeMillis()));
+        return propertyUsages;
+    }
+
+    /**
+     * Validates whether the supplied property usage category is defined within MDMS for the tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @param propertyUsage property usage category to validate
+     * @throws CustomException if property usage category is invalid
+     */
+    @Override
+    public void validatePropertyUsage(RequestInfo requestInfo, String tenantId, String propertyUsage) {
+        if (StringUtils.isNotBlank(propertyUsage)) {
+            Set<String> allowed = getAllowedPropertyUsages(requestInfo, tenantId);
+            if (!allowed.contains(propertyUsage.trim().toUpperCase())) {
+                log.error("[UPYOG-FAMILY-MASTER] Invalid propertyUsage '{}' for tenant '{}'. Allowed: {}",
+                        propertyUsage, tenantId, allowed);
+                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                        FamilyConstants.MSG_INVALID_PROPERTY_USAGE_PREFIX + propertyUsage + FamilyConstants.MSG_ALLOWED_SUFFIX + allowed);
+            }
+        }
+    }
+
+    /**
+     * Evicts cached relationship, occupation, and property sets across all tenants.
      */
     @Override
     public void clearCache() {
-        log.info("[UPYOG-FAMILY-MASTER] Invalidate relationship master cache across all tenants");
+        log.info("[UPYOG-FAMILY-MASTER] Invalidate master caches across all tenants");
         tenantRelationshipCache.clear();
+        tenantCategoryCache.clear();
+        tenantOccupationCache.clear();
+        tenantPropertyTypeCache.clear();
+        tenantPropertyUsageCache.clear();
     }
 
     /**
@@ -171,13 +347,72 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
 
         Set<String> relationships = fetchRelationshipsFromMdms(requestInfo, stateTenant);
         if (relationships == null || relationships.isEmpty()) {
-            log.error("[UPYOG-FAMILY-MASTER] MDMS returned empty relationships for tenant {}. Falling back to default taxonomy: {}",
-                    stateTenant, DEFAULT_RELATIONSHIPS);
-            relationships = DEFAULT_RELATIONSHIPS;
+            log.warn("[UPYOG-FAMILY-MASTER] MDMS returned empty relationships for tenant: {}", stateTenant);
+            relationships = Collections.emptySet();
         }
 
         tenantRelationshipCache.put(stateTenant, new CacheEntry(relationships, System.currentTimeMillis()));
         return relationships;
+    }
+
+    /**
+     * Executes MDMS search request to fetch master codes for the specified module and master name.
+     *
+     * @param requestInfo caller's RequestInfo envelope
+     * @param stateTenant state tenant identifier (e.g. "pg")
+     * @param moduleName MDMS module name (e.g. "common-masters", "PropertyTax")
+     * @param masterName MDMS master name (e.g. "Occupation", "PropertyType", "UsageCategory")
+     * @return set of normalized uppercase codes, or empty set on failure
+     */
+    private Set<String> fetchMasterCodesFromMdms(RequestInfo requestInfo, String stateTenant, String moduleName, String masterName) {
+        if (configuration == null || StringUtils.isBlank(configuration.getMdmsHost()) || StringUtils.isBlank(configuration.getMdmsSearchPath())) {
+            log.warn("[UPYOG-FAMILY-MASTER] MDMS host or search path is not configured");
+            return Collections.emptySet();
+        }
+        String url = configuration.getMdmsHost() + configuration.getMdmsSearchPath();
+
+        MasterDetail masterDetail = MasterDetail.builder()
+                .name(masterName)
+                .filter("[?(@.active==true)]")
+                .build();
+
+        ModuleDetail moduleDetail = ModuleDetail.builder()
+                .moduleName(moduleName)
+                .masterDetails(Collections.singletonList(masterDetail))
+                .build();
+
+        MdmsCriteria criteria = MdmsCriteria.builder()
+                .tenantId(stateTenant)
+                .moduleDetails(Collections.singletonList(moduleDetail))
+                .build();
+
+        MdmsCriteriaReq request = MdmsCriteriaReq.builder()
+                .requestInfo(requestInfo != null ? requestInfo : new RequestInfo())
+                .mdmsCriteria(criteria)
+                .build();
+
+        try {
+            Object response = restTemplate.postForObject(url, request, Map.class);
+            if (response != null) {
+                String jsonPath = "$.MdmsRes." + moduleName + "." + masterName + "[*].code";
+                List<String> rawCodes = JsonPath.read(response, jsonPath);
+                if (rawCodes != null && !rawCodes.isEmpty()) {
+                    Set<String> normalized = rawCodes.stream()
+                            .filter(StringUtils::isNotBlank)
+                            .map(String::trim)
+                            .map(String::toUpperCase)
+                            .collect(Collectors.toSet());
+                    log.info("[UPYOG-FAMILY-MASTER] Successfully loaded {} codes from MDMS for {}.{}: {}",
+                            normalized.size(), moduleName, masterName, normalized);
+                    return normalized;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[UPYOG-FAMILY-MASTER] Failed to fetch {}.{} from MDMS at {}: {}. Falling back to default.",
+                    moduleName, masterName, url, e.getMessage());
+        }
+
+        return Collections.emptySet();
     }
 
     /**
@@ -189,43 +424,18 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
      */
     private Set<String> fetchRelationshipsFromMdms(RequestInfo requestInfo, String stateTenant) {
         if (configuration == null || StringUtils.isBlank(configuration.getMdmsHost())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.mdms.host is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_MDMS_HOST_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getMdmsSearchPath())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.mdms.search.path is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_MDMS_SEARCH_PATH_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getMdmsFamilyModule())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.mdms.module is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_FAMILY_MDMS_MODULE_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getMdmsRelationshipMaster())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "family.mdms.relationship.master is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_FAMILY_MDMS_RELATIONSHIP_MASTER_NOT_CONFIGURED);
         }
-        String url = configuration.getMdmsHost() + configuration.getMdmsSearchPath();
-        MdmsCriteriaReq request = buildMdmsRequest(requestInfo, stateTenant);
-
-        try {
-            Object response = restTemplate.postForObject(url, request, Map.class);
-            if (response != null) {
-                String jsonPath = "$.MdmsRes." + configuration.getMdmsFamilyModule() + "."
-                        + configuration.getMdmsRelationshipMaster() + "[*].code";
-                List<String> rawCodes = JsonPath.read(response, jsonPath);
-                if (rawCodes != null && !rawCodes.isEmpty()) {
-                    Set<String> normalized = rawCodes.stream()
-                            .filter(StringUtils::isNotBlank)
-                            .map(String::trim)
-                            .map(String::toUpperCase)
-                            .collect(Collectors.toSet());
-                    log.info("[UPYOG-FAMILY-MASTER] Successfully loaded {} relationships from UPYOG MDMS: {}",
-                            normalized.size(), normalized);
-                    return normalized;
-                }
-            }
-        } catch (Exception e) {
-            log.error("[UPYOG-FAMILY-MASTER] Error calling UPYOG MDMS service at {}: {}. Falling back to default taxonomy.",
-                    url, e.getMessage(), e);
-        }
-
-        return Collections.emptySet();
+        return fetchMasterCodesFromMdms(requestInfo, stateTenant, configuration.getMdmsFamilyModule(), configuration.getMdmsRelationshipMaster());
     }
 
     /**
@@ -265,7 +475,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
      */
     private String resolveStateTenant(String tenantId) {
         if (StringUtils.isBlank(tenantId)) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "tenantId is mandatory");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_TENANT_ID_MANDATORY);
         }
         return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
     }
