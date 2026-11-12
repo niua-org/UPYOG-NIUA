@@ -15,6 +15,7 @@ export const PROFILE_ROUTES = {
   // PROFILE_CREATE_FAMILY: "/upyog-ui/citizen/profile/family-member-added",
   PROFILE_CREATE_FAMILY: "/upyog-ui/citizen/profile/create-family",
   PROFILE_FAMILY_DASHBOARD: "/upyog-ui/citizen/profile/family-dashboard",
+  FAMILY_MEMBER_ADDED: "/upyog-ui/citizen/profile/family-member-added",
   ADD_FAMILY_MEMBER: "/upyog-ui/citizen/profile/add-family-member",
   VERIFY: "/upyog-ui/citizen/profile/verify-profile",
   EDIT_PROFILE_URL: "/upyog-ui/citizen/profile/edit-details",

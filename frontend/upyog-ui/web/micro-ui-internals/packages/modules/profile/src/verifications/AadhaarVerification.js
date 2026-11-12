@@ -51,6 +51,7 @@ const AadhaarVerification = ({
   const [referenceId, setReferenceId] = useState(null);
   const [txnId, setTxnId] = useState(null);
   const [maskedMobile, setMaskedMobile] = useState("+91 ******XXXX");
+  const [linkedMobile, setLinkedMobile] = useState(""); // full number, only if the send-OTP API returns one
   const [otp, setOtp] = useState("");
   const [error, setError] = useState(null);
 
@@ -103,6 +104,7 @@ const AadhaarVerification = ({
 
       if (res?.mobileNumber) {
         setMaskedMobile(`+91 ******${res.mobileNumber.slice(-4)}`);
+        setLinkedMobile(/^\d{10}$/.test(String(res.mobileNumber)) ? String(res.mobileNumber) : "");
       }
       setTimeLeft(30);
       setTimerActive(true);
@@ -173,6 +175,8 @@ const AadhaarVerification = ({
       const response = await Digit.UserService.verifyAadhaarOtp(requestData);
       const aadhaarLast4 = cleanAadhaar ? cleanAadhaar.slice(-4) : "";
       const verifiedMember = buildVerifiedMemberInfo({ response, aadhaarLast4 });
+      // Lets the Create Family profile step prefill the member's mobile number when it is available
+      if (!verifiedMember.mobileNumber && linkedMobile) verifiedMember.mobileNumber = linkedMobile;
 
       onVerified?.({ verifiedMember, aadhaarLast4, maskedMobile });
     } catch (err) {

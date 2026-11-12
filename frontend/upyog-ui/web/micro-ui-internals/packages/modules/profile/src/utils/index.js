@@ -338,3 +338,49 @@ export const TAX_VALIDATORS = {
   TAN: { pattern: /^[A-Z]{4}[0-9]{5}[A-Z]{1}$/, placeholder: "ABCD12345E",    maxLength: 10 },
   GST: { pattern: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, placeholder: "22ABCDE1234F1Z5", maxLength: 15 },
 };
+
+// --- Aadhaar-verified member (Add Another Member → Create Family flow) ---
+
+// Verified member cached by AddFamilyMember after Aadhaar OTP verification (null when absent)
+export const getVerifiedMember = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem("Digit.family.verifiedMember") || "null");
+    } catch {
+        return null;
+    }
+};
+
+// Removes the single-member verification cache once the member is staged (or the flow is abandoned)
+export const clearVerifiedMember = () => {
+    try {
+        ["verifiedMember", "aadhaarLast4", "cleanAadhaar", "maskedMobile"].forEach((k) => sessionStorage.removeItem(`Digit.family.${k}`));
+    } catch (e) {
+        console.error("Failed to clear verified member cache", e);
+    }
+};
+
+/**
+ * Stages the verified member (with the relationship chosen in the Profile step) into the family member list
+ * shown on the Family Members page. No-op if the cache does not match `memberId`.
+ */
+export const stageVerifiedMember = (memberId, relationship) => {
+    const relationshipWithHead = String(relationship?.code || relationship || "").toUpperCase().replace(/\s+/g, "_");
+    // Editing an already staged member: just refresh the relationship
+    const staged = getFamilyMembers();
+    if (staged.some((m) => m.userUuid === memberId)) {
+        setFamilyMembers(staged.map((m) => (m.userUuid === memberId ? { ...m, relationshipWithHead } : m)));
+        return true;
+    }
+    const verified = getVerifiedMember();
+    if (!verified || verified.userUuid !== memberId) return false;
+    addFamilyMember({
+        userUuid: verified.userUuid,
+        name: verified.demographics?.name || verified.name,
+        relationshipWithHead,
+        isHead: false,
+        aadhaarLast4: sessionStorage.getItem("Digit.family.aadhaarLast4") || verified.aadhaarLast4 || undefined,
+        gender: verified.gender || verified.demographics?.gender,
+    });
+    clearVerifiedMember();
+    return true;
+};

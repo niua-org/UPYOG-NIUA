@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardText, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import AadhaarVerification from "../verifications/AadhaarVerification";
+import { PROFILE_ROUTES } from "../utils/constants";
 
 /**
  * AddFamilyMember Component
@@ -52,14 +53,8 @@ const AddFamilyMember = () => {
       console.error("sessionStorage write error:", storageErr);
     }
 
-    // Navigate to the verification review and relationship selection screen
-    navigate("/upyog-ui/citizen/profile/family-member-verified", {
-      state: {
-        verifiedMember,
-        aadhaarLast4,
-        maskedMobile,
-      },
-    });
+    // Continue with the same Create Family steps as the first member, scoped to this member via ?member=
+    navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
   };
 
   return (

@@ -18,20 +18,29 @@ import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 // import { PetDataConvert } from "../../../utils";
-import { Route, useLocation,  Routes, Navigate } from "react-router-dom";
+import { Route, useLocation, useSearchParams, Routes, Navigate } from "react-router-dom";
 import { createfamilyconfig } from "../config/createfamilyconfig";
+import { PROFILE_ROUTES } from "../utils/constants";
+import { stageVerifiedMember } from "../utils";
 
 
 const FamilyCreate = ({ parentRoute }) => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const [searchParams] = useSearchParams();
   const navigate = Digit.Hooks.useCustomNavigate();
 
   let config = [];
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();; 
   const mutation = Digit.Hooks.ptr.usePTRCreateAPI(tenantId);
-  const [params, setParams, clearParams] = Digit.Hooks.useSessionStorage("Family_Details", {});
+  // Step data is kept per family member: Family_Details = { [memberId]: { profileDetails, income, vehicles } }.
+  // memberId comes from `?member=<userUuid>` (defaults to the logged-in applicant), so filling in another
+  // member never overwrites the details already stored for someone else.
+  const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
+  const memberId = searchParams.get("member") || loggedInUuid;
+  const [allParams, setAllParams, clearParams] = Digit.Hooks.useSessionStorage("Family_Details", {});
+  const params = allParams?.[memberId] || {};
 
   // Fetches common field configurations from MDMS
   ///TODO - Need to remove it later / add Profile Details
@@ -77,15 +86,20 @@ const FamilyCreate = ({ parentRoute }) => {
     }
     let nextStep = currentRoute.nextStep;
 
-    let redirectWithHistory = (to, state) => navigate(to, state != null ? { state } : undefined);
+    // Keep `?member=` on step-to-step navigation (absolute routes such as the Family Members page are left as is)
+    const withMember = (to) => (to.startsWith("/") ? to : `${to}${search}`);
+    let redirectWithHistory = (to, state) => navigate(withMember(to), state != null ? { state } : undefined);
     if (skipStep) {
-      redirectWithHistory = (to, state) => navigate(to, state != null ? { replace: true, state } : { replace: true });
+      redirectWithHistory = (to, state) => navigate(withMember(to), state != null ? { replace: true, state } : { replace: true });
     }
     if (isAddMultiple) {
       nextStep = key;
     }
+    // Last step: the Family Members page (FamilyMemberAdded) is the summary of this flow
     if (nextStep === null) {
-      return redirectWithHistory(`check`);
+      // A member added via Aadhaar joins the family list only once all their steps are done
+      if (memberId !== loggedInUuid) stageVerifiedMember(memberId, params.profileDetails?.relationshipWithHof);
+      return redirectWithHistory(PROFILE_ROUTES.FAMILY_MEMBER_ADDED);
     }
     if (typeof nextStep !== "string") {
       console.error(`Profile step "${currentRoute.route}" does not have a valid nextStep configured.`);
@@ -148,7 +162,7 @@ const FamilyCreate = ({ parentRoute }) => {
 // };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
-    setParams({ ...params, ...{ [key]: { ...params[key], ...data } } });
+    setAllParams({ ...allParams, [memberId]: { ...params, [key]: { ...params[key], ...data } } });
     goNext(skipStep, index, isAddMultiple, key);
   }
 

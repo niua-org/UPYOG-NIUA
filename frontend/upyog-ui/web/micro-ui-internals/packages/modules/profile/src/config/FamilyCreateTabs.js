@@ -31,7 +31,7 @@ const TABS = createfamilyconfig.map((section) => ({
  */
 
 const FamilyCreateTabs = ({ t }) => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = Digit.Hooks.useCustomNavigate();
 
   const basePath = pathname.substring(0, pathname.lastIndexOf("/"));
@@ -40,7 +40,7 @@ const FamilyCreateTabs = ({ t }) => {
 
   // Handle the tab navigation, clicking on tab, user navigated as per the register route
   const handleTabClick = (tab, index) => {
-    navigate(`${basePath}/${tab.route}`);
+    navigate(`${basePath}/${tab.route}${search}`); // keep ?member= so the tab opens the same member's data
   };
 
   return (

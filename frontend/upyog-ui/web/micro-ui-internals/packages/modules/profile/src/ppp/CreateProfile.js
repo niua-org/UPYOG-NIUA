@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import {
   Dropdown,
   FormStep,
@@ -12,7 +13,7 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 import UploadDrawer from "../components/UploadDrawer";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
-import { FormField, AvatarUpload, toGenderOption, fetchThumbnail, useProfileUser } from "../utils";
+import { FormField, AvatarUpload, toGenderOption, fetchThumbnail, useProfileUser, getVerifiedMember } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import { DEFAULT_CASTE, SPECIALLY_ABLED_YES } from "../utils/constants";
 import { buildUpdateUserPayload, buildSessionUser } from "../utils/payloads";
@@ -313,8 +314,26 @@ const DocumentUploadCard = ({
 const CreateProfile = ({ config, onSelect, formData }) => {
   const { t } = useTranslation();
   const stateId = Digit.ULBService.getStateId();
-  const { user, loading } = useProfileUser();
+  const { user: loggedInUser, loading } = useProfileUser();
   const saved = formData?.[config?.key] || {};
+
+  // `?member=<uuid>` = a member added through Aadhaar; no param (or own uuid) = the applicant themself.
+  // Everything below prefills from `user`: the logged-in user's profile, or the Aadhaar-verified details of the member.
+  const [searchParams] = useSearchParams();
+  const memberParam = searchParams.get("member");
+  const isSelf = !memberParam || memberParam === Digit.UserService.getUser()?.info?.uuid;
+  const user = useMemo(() => {
+    if (isSelf) return loggedInUser;
+    const verified = getVerifiedMember();
+    if (verified?.userUuid !== memberParam) return {};
+    const gender = verified.gender || verified.demographics?.gender;
+    return {
+      name: verified.demographics?.name || verified.name,
+      dob: verified.demographics?.dob || verified.dob,
+      mobileNumber: /^\d{10}$/.test(String(verified.mobileNumber)) ? String(verified.mobileNumber) : "",
+      gender: String(gender || "").length === 1 ? { M: "MALE", F: "FEMALE", T: "TRANSGENDER" }[String(gender).toUpperCase()] : gender,
+    };
+  }, [isSelf, memberParam, loggedInUser]);
 
   // Profile Avatar State
   const [photoId, setPhotoId] = useState(saved.photo || user?.photo || "");
@@ -357,6 +376,13 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // Auto-dismiss the toast after a few seconds
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   // Fetch thumbnail for initial photo
   useEffect(() => {
@@ -446,8 +472,8 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     setToast({ error: false, label: t("PROFILE_PHOTO_REMOVED", "Profile photo removed") });
   };
 
-  // Validation function
-  const validateForm = () => {
+  // Collects every validation error for the current values (pure: does not touch state)
+  const collectErrors = () => {
     const nextErrors = {};
 
     if (!form.name?.trim()) nextErrors.name = "CORE_COMMON_PROFILE_NAME_REQUIRED";
@@ -471,6 +497,9 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     if (!caste) nextErrors.caste = "PROFILE_CASTE_REQUIRED";
     if (!speciallyAbled) nextErrors.speciallyAbled = "PROFILE_SPECIALLY_ABLED_REQUIRED";
 
+    // A member added through Aadhaar must state how they relate to the head of the family
+    if (!isSelf && !relationshipWithHof) nextErrors.relationshipWithHof = "ERR_SELECT_RELATIONSHIP";
+
     // Identity Proof validation
     if (!identityProofType) nextErrors.identityProofType = "PROFILE_SELECT_DOC_TYPE";
     if (!identityProofFile?.fileStoreId) nextErrors.identityProofFile = "PROFILE_PROOF_REQUIRED";
@@ -489,6 +518,15 @@ const CreateProfile = ({ config, onSelect, formData }) => {
       nextErrors.disabilityProofFile = "PROFILE_PROOF_REQUIRED";
     }
 
+    return nextErrors;
+  };
+
+  // Save & Next stays disabled until every mandatory field / document is filled and valid
+  const isFormComplete = Object.keys(collectErrors()).length === 0;
+
+  // Validation on submit: shows the inline errors
+  const validateForm = () => {
+    const nextErrors = collectErrors();
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -523,30 +561,33 @@ const CreateProfile = ({ config, onSelect, formData }) => {
       return;
     }
 
-    setSaving(true);
-    try {
-      const userInfo = Digit.UserService.getUser()?.info || {};
-      const payload = buildUpdateUserPayload({
-        userInfo,
-        form: {
-          ...form,
-          gender: form.gender?.value || form.gender?.code || form.gender,
-        },
-        photoId: photoId || user?.photo || "",
-        locale: Digit.StoreData.getCurrentLanguage(),
-      });
+    // Only the applicant's own profile is updated; another member's details are kept in the flow data only
+    if (isSelf) {
+      setSaving(true);
+      try {
+        const userInfo = Digit.UserService.getUser()?.info || {};
+        const payload = buildUpdateUserPayload({
+          userInfo,
+          form: {
+            ...form,
+            gender: form.gender?.value || form.gender?.code || form.gender,
+          },
+          photoId: photoId || user?.photo || "",
+          locale: Digit.StoreData.getCurrentLanguage(),
+        });
 
-      const { responseInfo } = await Digit.UserService.updateUser(payload, stateId);
-      if (responseInfo?.status === "SUCCESS") {
-        const sessionUser = Digit.UserService.getUser();
-        if (sessionUser) {
-          Digit.UserService.setUser(buildSessionUser({ sessionUser, form, photoThumb }));
+        const { responseInfo } = await Digit.UserService.updateUser(payload, stateId);
+        if (responseInfo?.status === "SUCCESS") {
+          const sessionUser = Digit.UserService.getUser();
+          if (sessionUser) {
+            Digit.UserService.setUser(buildSessionUser({ sessionUser, form, photoThumb }));
+          }
         }
+      } catch (err) {
+        console.warn("User update background error:", err);
+      } finally {
+        setSaving(false);
       }
-    } catch (err) {
-      console.warn("User update background error:", err);
-    } finally {
-      setSaving(false);
     }
 
     onSelect(config.key, compilePayload());
@@ -570,7 +611,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           },
         }}
         onSelect={handleNext}
-        isDisabled={saving}
+        isDisabled={saving || !isFormComplete}
         t={t}
       >
         {/* Profile Avatar / Photo Upload Card */}
@@ -689,9 +730,8 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             <MobileNumber
               value={form.mobileNumber}
               name="mobileNumber"
-              placeholder="6894526358"
               onChange={(v) => setFieldValue("mobileNumber", v)}
-              disable={true}
+              disable={isSelf || !!user?.mobileNumber} // locked when known (applicant, or returned by Aadhaar); otherwise typed in
             />
           </FormField>
 

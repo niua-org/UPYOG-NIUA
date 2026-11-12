@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardLabel,
   SubmitBar,
+  CheckBox,
   Toast,
   Loader,
   Table,
@@ -104,8 +105,10 @@ const FamilyMemberAdded = () => {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  // Declaration must be ticked before the family can be submitted
+  const [agree, setAgree] = useState(false);
   const [toast, setToast] = useState(null);
-  // Row action dialog: { mode: "view" | "edit", member }
+  // View dialog: { mode: "view", member }
   const [actionModal, setActionModal] = useState(null);
 
   // Toast notification helper
@@ -165,9 +168,9 @@ const FamilyMemberAdded = () => {
     });
   };
 
-  // Edit: applicant re-opens the Create Family profile step; other members edit their relationship in a dialog
+  // Edit re-opens the Create Family steps for that member; their saved details are prefilled from the flow data
   const handleEditMember = (member, isApplicant) =>
-    isApplicant ? navigate(PROFILE_ROUTES.PROFILE_CREATE_FAMILY) : setActionModal({ mode: "edit", member });
+    navigate(isApplicant ? PROFILE_ROUTES.PROFILE_CREATE_FAMILY : `${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${member.userUuid}`);
 
   // Table column specifications conforming to Digit UI <Table>
   const columns = useMemo(() => [
@@ -332,6 +335,7 @@ const FamilyMemberAdded = () => {
 
       // Clear cached family data and temporary verification tokens from session
       clearFamilyMembers();
+      Digit.SessionStorage.del("Family_Details"); // per-member step data of the Create Family flow
       try {
         sessionStorage.removeItem("Digit.family.verifiedMember");
         sessionStorage.removeItem("Digit.family.aadhaarLast4");
@@ -401,10 +405,16 @@ const FamilyMemberAdded = () => {
         </div>
 
         {/* Final Submit Bar */}
+        <CheckBox
+          label={t("FAMILY_FINAL_DECLARATION_MESSAGE")}
+          onChange={(e) => setAgree(e.target.checked)}
+          checked={agree}
+          styles={{ height: "auto" }}
+        />
         <SubmitBar
           label={t("CREATE_FAMILY_ID_BTN")}
           onSubmit={handleCreateFamilyId}
-          disabled={submitting || !selectedHeadUuid}
+          disabled={submitting || !selectedHeadUuid || !agree}
         />
         {submitting && <Loader />}
       </Card>
@@ -417,8 +427,7 @@ const FamilyMemberAdded = () => {
           hideSubmit
           formId="family-member-action"
         >
-          {actionModal.mode === "view" ? (
-            <FieldGrid
+          <FieldGrid
               t={t}
               fields={withValues([
                 ["CORE_COMMON_NAME", actionModal.member.name],
@@ -428,19 +437,6 @@ const FamilyMemberAdded = () => {
                 ["CORE_COMMON_AADHAR_NUMBER", actionModal.member.aadhaarLast4 && `XXXX-XXXX-${actionModal.member.aadhaarLast4}`],
               ])}
             />
-          ) : (
-            <Dropdown
-              t={t}
-              option={familyRelationShips}
-              optionKey="name"
-              selected={familyRelationShips.find((r) => r.code === actionModal.member.relationshipWithHead) || null}
-              select={(val) => {
-                handleRelationshipChange(actionModal.member.userUuid, val);
-                setActionModal(null);
-              }}
-              placeholder={t("SELECT_RELATIONSHIP")}
-            />
-          )}
         </Modal>
       )}
 

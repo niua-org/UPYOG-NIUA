@@ -20,7 +20,7 @@ import CreateProfile from "./ppp/CreateProfile";
 import IncomeDetails from "./ppp/IncomeDetails";
 import VehicleDetails from "./ppp/VehicleDetails";
 import PropertyDetails from "./ppp/PropertyDetails/PropertyDetails";
-
+import DocumentDetails from "./ppp/DocumentDetails";
 
 
 
@@ -58,6 +58,7 @@ CreateProfile,
 IncomeDetails,
 VehicleDetails,
 PropertyDetails,
+DocumentDetails
 };
 
 export const initPROFILEComponents = () => {

@@ -83,27 +83,29 @@ export const createfamilyconfig =
                             "header": "ES_TITLE_VEHICLE_DETAILS",
                         },
                         "key": "vehicles",
-                        "nextStep": "documents",
+                        "nextStep": null, // last step now; was "documents" (see commented Documents step below)
                         "isMandatory": true,
                         "type": "component",
                     },
                 ],
         },
-        {
-            "head": "ES_TITLE_DOCUMENT_DETAILS",
-            "body": [
-                {
-                    "route": "documents",
-                    "component": "EditDocuments",
-                    "withoutLabel": true,
-                    "key": "documents",
-                    "type": "component",
-                    "nextStep": null,
-                    "texts": {
-                        "submitBarLabel": "COMMON_SAVE_NEXT",
-                        "header": "ES_TITLE_DOCUMENT_DETAILS",
-                    },
-                }
-            ],
-        },
+        // Documents step is not needed for now; kept for future use.
+        // When re-enabling: uncomment this block and set vehicles `nextStep` back to "documents".
+//        {
+//            "head": "ES_TITLE_DOCUMENT_DETAILS",
+//            "body": [
+//                {
+//                    "route": "documents",
+//                    "component": "DocumentDetails",
+//                    "withoutLabel": true,
+//                    "key": "documents",
+//                    "type": "component",
+//                    "nextStep": null,
+//                    "texts": {
+//                        "submitBarLabel": "COMMON_SAVE_NEXT",
+//                        "header": "ES_TITLE_DOCUMENT_DETAILS",
+//                    },
+//                }
+//            ],
+//        },
     ];

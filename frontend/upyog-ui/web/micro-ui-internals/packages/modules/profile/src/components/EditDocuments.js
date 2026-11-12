@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { UploadFile, Toast, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { profileStyles } from "../utils/profileStyles";
@@ -60,7 +60,7 @@ const UploadedDocTile = ({ doc, onView, t }) => {
   );
 };
 
-const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
+const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = false }, ref) => {
   const { t } = useTranslation();
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
@@ -207,8 +207,9 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   };
 
   // Save documents
-  const handleSave = async () => {
-    if (saving) return;
+  // Resolves to true when the documents are saved (or already complete and `proceedIfUnchanged` is set)
+  const handleSave = async ({ proceedIfUnchanged = false } = {}) => {
+    if (saving) return false;
 
     const isInitialCreation = !DOC_TYPES.some(({ key }) =>
       findExisting(key)
@@ -222,18 +223,20 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
       DOC_TYPES.some(({ key }) => !files[key])
     ) {
       showToast("error", t("PROFILE_BOTH_DOCS_REQUIRED"));
-      return;
+      return false;
     }
 
     // At least one document must be selected for re-upload
     if (!toUpload.length) {
+      // Create Family flow: nothing new to upload but both documents already exist, so just continue
+      if (proceedIfUnchanged && DOC_TYPES.every(({ key }) => findExisting(key))) return true;
       showToast("error", t("PROFILE_NO_DOC_SELECTED"));
-      return;
+      return false;
     }
 
     if (!userInfo.uuid) {
       showToast("error", t("CORE_COMMON_PROFILE_UPDATE_ERROR"));
-      return;
+      return false;
     }
 
     setSaving(true);
@@ -301,6 +304,7 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
       setErrors({});
 
       showToast("success", t("PROFILE_DOCS_SAVED"));
+      return true;
     } catch (error) {
       console.error("Error saving profile documents:", error);
 
@@ -308,11 +312,15 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
         "error",
         t("CORE_COMMON_PROFILE_UPDATE_ERROR")
       );
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
+
+  // Lets a parent step (Create Family "Save & Next") trigger the save
+  useImperativeHandle(ref, () => ({ save: handleSave }));
 
   return (
     <>
@@ -358,13 +366,15 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
         })}
       </div>
 
-      <div style={profileStyles.actions}>
-        <SubmitBar
-          label={t("CORE_COMMON_SAVE")}
-          onSubmit={handleSave}
-          disabled={saving}
-        />
-      </div>
+      {!hideSave && (
+        <div style={profileStyles.actions}>
+          <SubmitBar
+            label={t("CORE_COMMON_SAVE")}
+            onSubmit={handleSave}
+            disabled={saving}
+          />
+        </div>
+      )}
 
       {toast && (
         <div className="profile-toast-container">
@@ -384,6 +394,6 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
       )}
     </>
   );
-};
+});
 
 export default EditDocuments;
