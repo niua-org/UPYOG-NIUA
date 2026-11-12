@@ -4,6 +4,7 @@ import { TAX_VALIDATORS, FormField } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 
+/// TODO - Need to Add all these in MDMS
 const TAX_ID_OPTIONS = [
   { i18nKey: "PROFILE_PAN_NUMBER", code: "PAN" },
   { i18nKey: "PROFILE_TAN_NUMBER", code: "TAN" },
@@ -150,7 +151,8 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
 
   const isValidateBtnDisabled = !taxIdNumber || !!taxIdError;
   const showTaxProof = validateStatus === "error";
-  const isDisabled = !annualIncome || !occupation || !uploadedIncomeFile || !!taxIdError || (taxIdType && !taxIdNumber);
+  const taxIdSatisfied = !taxIdType || taxIdValidated || !!uploadedTaxProof;
+  const isDisabled = !annualIncome || !occupation || !uploadedIncomeFile || !!taxIdError || (taxIdType && !taxIdNumber) || !taxIdSatisfied;
 
   return (
     <React.Fragment>
