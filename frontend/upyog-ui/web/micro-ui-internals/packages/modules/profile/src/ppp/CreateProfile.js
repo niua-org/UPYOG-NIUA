@@ -128,7 +128,9 @@ const CreateProfile = ({ config, onSelect, formData }) => {
 
   return (
     <React.Fragment>
+      <div>
       <FamilyCreateTabs t={t} />
+      </div>
       <FormStep
         config={{ ...config, texts: { ...config.texts, header: "ES_TITILE_PROFILE_DETAILS" } }}
         onSelect={handleNext}
