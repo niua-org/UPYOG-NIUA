@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { FormStep, CardLabel, Dropdown, TextInput, UploadFile, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
+import { FormStep, Dropdown, TextInput, UploadFile, DatePicker } from "@nudmcdgnpm/digit-ui-react-components";
+import { FormField } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 
@@ -13,6 +14,7 @@ import FamilyCreateTabs from "../config/FamilyCreateTabs";
  */
 
 const VEHICLE_NO_REGEX = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$/;
+const fullWidth = { width: "100%" };
 
 const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   const saved = formData?.[config?.key] || {};
@@ -29,15 +31,13 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
 
   const onSkip = () => onSelect();
 
-  // auto-save on field change for citizen (same pattern as PTRCitizenDetails)
   useEffect(() => {
     if (userType === "citizen") goNext();
   }, [vehicleNo, purchaseYear, uploadedFile]);
 
-
   const handleVehicleNoChange = (e) => {
     const val = e.target.value.toUpperCase();
-    if (val.length > 10) return;  // ← add karo
+    if (val.length > 10) return;
     setVehicleNo(val);
     setVehicleNoError(val && !VEHICLE_NO_REGEX.test(val) ? t("PROFILE_INVALID_VEHICLE_NO") : null);
   };
@@ -51,33 +51,26 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
     }
     setFileError(null);
     setVehicleRc(file);
-    // upload to filestore (same pattern as PTRSelectProofIdentity)
     (async () => {
       try {
         const response = await Digit.UploadServices.Filestorage("profile", file, Digit.ULBService.getStateId());
-        if (response?.data?.files?.length > 0) {
-          setUploadedFile(response.data.files[0].fileStoreId);
-        } else {
-          setFileError(t("CS_FILE_UPLOAD_ERROR"));
-        }
+        if (response?.data?.files?.length > 0) setUploadedFile(response.data.files[0].fileStoreId);
+        else setFileError(t("CS_FILE_UPLOAD_ERROR"));
       } catch {
         setFileError(t("CS_FILE_UPLOAD_ERROR"));
       }
     })();
   };
 
-  const isDisabled = !vehicleRc || !vehicleNo || !purchaseYear || !!vehicleNoError
+  const isDisabled = !vehicleRc || !vehicleNo || !purchaseYear || !!vehicleNoError;
 
   return (
     <React.Fragment>
-    <div>
       <FamilyCreateTabs t={t} />
-    </div>
       <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={isDisabled}>
-        <div style={profileStyles.componentBottomMargin}>
-        
-        <CardLabel>{t("PROFILE_VEHICLE_NO")} <span className="astericColor">*</span></CardLabel>
-        <TextInput
+        <div style={profileStyles.gridStyle}>
+          <FormField label={t("PROFILE_VEHICLE_NO")} required t={t} error={vehicleNoError}>
+          <TextInput
             t={t}
             type="text"
             name="vehicleNo"
@@ -85,28 +78,19 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
             onChange={handleVehicleNoChange}
             placeholder="MH12AB1234"
             maxLength={10}
-            />
-        {vehicleNoError && <CardLabelError>{vehicleNoError}</CardLabelError>}
+            style={fullWidth}
+          />
+        </FormField>
 
-        <CardLabel>{t("PROFILE_VEHICLE_PURCHASE_YEAR")} <span className="astericColor">*</span></CardLabel>
-        <TextInput
-            t={t}
-            type="text"
-            name="purchaseYear"
-            value={purchaseYear}
-            onChange={(e) => setPurchaseYear(e.target.value)}
-            placeholder="PROFILE_VEHICLE_BUYING_YEAR_PLACEHOLDER"
-            maxLength={4}
-            ValidationRequired={true}
-            {...{
-            isRequired: true,
-            pattern: "",
-            type: "text",
-            title: t("PROFILE_INVALID_YEAR"),
-            }}
-        />
+        <FormField label={t("PROFILE_VEHICLE_PURCHASE_YEAR")} required t={t}>
+          <DatePicker
+            date={purchaseYear}
+            onChange={setPurchaseYear}
+            max={new Date().toISOString().split("T")[0]}
+          />
+        </FormField>
 
-        <CardLabel>{t("PROFILE_VEHICLE_RC")} <span className="astericColor">*</span></CardLabel>
+      <FormField label={t("PROFILE_VEHICLE_RC")} required t={t} error={fileError}>
         <UploadFile
           onUpload={handleFileSelect}
           onDelete={() => {
@@ -116,8 +100,9 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
           }}
           message={vehicleRc ? vehicleRc.name : t("PROFILE_NO_FILE_SELECTED")}
           accept=".pdf,.jpg,.jpeg,.png"
-          error={fileError}
+          iserror={fileError}
         />
+      </FormField>
         </div>
       </FormStep>
     </React.Fragment>

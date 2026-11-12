@@ -810,16 +810,6 @@ myFamilyDashboard: {
       borderBottom: "3px solid #00703C",
     },
   },
-   gridFieldsDetails: {
-    grid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", // 2 columns on wide screens, 1 on narrow
-      columnGap: 32,
-      rowGap: 4,
-      marginBottom: 20,
-    },
-    field: { display: "flex", flexDirection: "column", minWidth: 0, marginBottom: 12 },
-  },
     // Tax ID validate button (IncomeDetails)
   taxIdInputRow: {
     display: "flex",
@@ -856,6 +846,14 @@ myFamilyDashboard: {
     margin: "4px 0 0",
     fontWeight: 500,
   },
+
+  gridStyle: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: "20px 24px",
+    width: "100%",
+    boxSizing: "border-box",
+  }
 
   
 };
@@ -937,17 +935,4 @@ export const addressModalCss = `
   }
 };
 
-`;
-
-export const GridFieldsCss = `
-  .income-details-form .card-label {
-    font-size: 14px;
-    font-weight: 700;
-    margin: 0 0 8px;
-  }
-  .income-details-form .employee-card-input,
-  .income-details-form .select,
-  .income-details-form .select-wrap {
-    border-radius: 10px;
-  }
 `;

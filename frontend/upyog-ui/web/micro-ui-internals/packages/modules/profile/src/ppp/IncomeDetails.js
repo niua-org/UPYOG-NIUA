@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { FormStep, CardLabel, Dropdown, TextInput, UploadFile, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
-import { TAX_VALIDATORS, GridFields } from "../utils";
-import { profileStyles, GridFieldsCss } from "../utils/profileStyles";
+import { FormStep, Dropdown, TextInput, UploadFile } from "@nudmcdgnpm/digit-ui-react-components";
+import { TAX_VALIDATORS, FormField } from "../utils";
+import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 
 const TAX_ID_OPTIONS = [
@@ -46,7 +46,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [uploadedTaxProof, setUploadedTaxProof] = useState(saved.uploadedTaxProof || null);
   const [taxProofError, setTaxProofError] = useState(null);
   const [taxIdValidated, setTaxIdValidated] = useState(saved.taxIdValidated || false);
-  const [validateStatus, setValidateStatus] = useState(null); // "success" | "error" | null
+  const [validateStatus, setValidateStatus] = useState(null);
 
   const goNext = () => {
     onSelect(
@@ -98,7 +98,6 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
       setTaxIdValidated(true);
       setValidateStatus("success");
       setTaxIdError(null);
-      // reset proof if previously uploaded on a failed attempt
       setTaxProof(null);
       setUploadedTaxProof(null);
       setTaxProofError(null);
@@ -110,7 +109,6 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   };
 
   const handleFileSelect = (e) => {
-    console.log("eeeee",e)
     const file = e.target.files[0];
     if (!file) return;
     if (file.size >= 5242880) {
@@ -151,20 +149,17 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   };
 
   const isValidateBtnDisabled = !taxIdNumber || !!taxIdError;
-  const showTaxProof = validateStatus === "error"; // sirf fail pe dikhao
-
-  const isDisabled = !annualIncome || !occupation || !!taxIdError || (taxIdType && !taxIdNumber);
+  const showTaxProof = validateStatus === "error";
+  const isDisabled = !annualIncome || !occupation || !uploadedIncomeFile || !!taxIdError || (taxIdType && !taxIdNumber);
 
   return (
     <React.Fragment>
       <FamilyCreateTabs t={t} />
-      <style>{GridFieldsCss}</style>
 
       <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={isDisabled}>
-        <div className="income-details-form" style={profileStyles.gridFieldsDetails.grid}>
-          <GridFields label={t("PROFILE_OCCUPATION")} required>
+        <div style={profileStyles.gridStyle}>
+          <FormField label={t("PROFILE_OCCUPATION")} required t={t}>
             <Dropdown
-              className="form-field"
               selected={occupation}
               select={setOccupation}
               option={OCCUPATION_OPTIONS}
@@ -173,9 +168,9 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               style={fullWidth}
               placeholder={t("PROFILE_SELECT_OCCUPATION")}
             />
-          </GridFields>
+          </FormField>
 
-          <GridFields label={t("PROFILE_ANNUAL_INCOME")} required>
+          <FormField label={t("PROFILE_ANNUAL_INCOME")} required t={t}>
             <TextInput
               t={t}
               type="number"
@@ -184,14 +179,11 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               onChange={(e) => setAnnualIncome(e.target.value)}
               placeholder="0"
               style={fullWidth}
-              ValidationRequired={true}
-              {...{ isRequired: true, pattern: "^[0-9]+$", type: "number", title: t("PROFILE_ANNUAL_INCOME_INVALID") }}
             />
-          </GridFields>
+          </FormField>
 
-          <GridFields label={t("PROFILE_TAX_ID_TYPE")} required>
+          <FormField label={t("PROFILE_TAX_ID_TYPE")} required t={t}>
             <Dropdown
-              className="form-field"
               selected={taxIdType}
               select={handleTaxIdTypeChange}
               option={TAX_ID_OPTIONS}
@@ -200,10 +192,10 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               style={fullWidth}
               placeholder={t("PROFILE_SELECT_TAX_ID_TYPE")}
             />
-          </GridFields>
+          </FormField>
 
-          {taxIdType ? (
-            <GridFields label={t(taxIdType.i18nKey)} required>
+          {taxIdType && (
+            <FormField label={t(taxIdType.i18nKey)} required error={taxIdError} t={t}>
               <div style={profileStyles.taxIdInputRow}>
                 <div style={profileStyles.taxIdInputWrap}>
                   <TextInput
@@ -215,13 +207,6 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                     placeholder={TAX_VALIDATORS[taxIdType.code]?.placeholder}
                     maxLength={TAX_VALIDATORS[taxIdType.code]?.maxLength}
                     style={fullWidth}
-                    ValidationRequired={true}
-                    {...{
-                      isRequired: true,
-                      pattern: TAX_VALIDATORS[taxIdType.code]?.pattern?.source,
-                      type: "text",
-                      title: t("PROFILE_INVALID_TAX_ID"),
-                    }}
                   />
                 </div>
                 <button
@@ -237,18 +222,14 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                   {taxIdValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
                 </button>
               </div>
-              {taxIdError && <CardLabelError>{taxIdError}</CardLabelError>}
               {validateStatus === "success" && (
                 <p style={profileStyles.validateSuccessMsg}>{t("PROFILE_TAX_ID_VALID")}</p>
               )}
-            </GridFields>
-          ) : (
-            <div />
+            </FormField>
           )}
 
-          {/* PAN/TAN/GST Proof — sirf validate fail hone par dikhao */}
           {showTaxProof && (
-            <GridFields label={t("PROFILE_TAX_PROOF") || "PAN / TAN / GST Proof"} required>
+            <FormField label={t("PROFILE_TAX_PROOF")} required t={t} error={taxProofError}>
               <UploadFile
                 onUpload={handleTaxProofSelect}
                 onDelete={() => {
@@ -260,11 +241,10 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                 accept=".pdf,.jpg,.jpeg,.png"
                 iserror={taxProofError}
               />
-              {taxProofError && <CardLabelError>{taxProofError}</CardLabelError>}
-            </GridFields>
+            </FormField>
           )}
 
-          <GridFields label={t("PROFILE_INCOME_PROOF")} required>
+          <FormField label={t("PROFILE_INCOME_PROOF")} required t={t} error={fileError}>
             <UploadFile
               onUpload={handleFileSelect}
               onDelete={() => {
@@ -276,7 +256,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               accept=".pdf,.jpg,.jpeg,.png"
               iserror={fileError}
             />
-          </GridFields>
+          </FormField>
         </div>
       </FormStep>
     </React.Fragment>
