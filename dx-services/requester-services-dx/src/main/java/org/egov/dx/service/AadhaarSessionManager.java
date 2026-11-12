@@ -83,4 +83,20 @@ public interface AadhaarSessionManager {
      * @return Aadhaar number or null if not found/expired
      */
     String getAadhaarForReferenceId(String refId);
+
+    /**
+     * Associates the citizen's mobile number with the active session reference ID.
+     *
+     * @param refId session reference ID
+     * @param mobileNumber 10-digit mobile number
+     */
+    void storeMobileForReferenceId(String refId, String mobileNumber);
+
+    /**
+     * Retrieves the mobile number associated with the active session reference ID.
+     *
+     * @param refId session reference ID
+     * @return mobile number or null if not found/expired
+     */
+    String getMobileForReferenceId(String refId);
 }

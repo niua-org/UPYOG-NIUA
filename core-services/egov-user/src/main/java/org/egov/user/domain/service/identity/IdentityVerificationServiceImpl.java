@@ -54,15 +54,17 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
     }
 
     private String getRequesterServiceHost() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getRequesterServiceHost()))
-                ? userConfiguration.getRequesterServiceHost()
-                : "https://upyog.niua.org/";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceHost())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.service.host is not configured");
+        }
+        return userConfiguration.getRequesterServiceHost();
     }
 
     private String getRequesterVerifyEndpoint() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint()))
-                ? userConfiguration.getRequesterAadhaarVerifyEndpoint()
-                : "requester-services-dx/aadhaar/v1/_verifyOtp";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.aadhaar.verify.endpoint is not configured");
+        }
+        return userConfiguration.getRequesterAadhaarVerifyEndpoint();
     }
 
     private boolean isFixedOTPEnabled() {
@@ -70,15 +72,17 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
     }
 
     private String getFixedOTPPassword() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFixedOtpPassword()))
-                ? userConfiguration.getFixedOtpPassword()
-                : "123456";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFixedOtpPassword())) {
+            throw new CustomException(UserConstants.ERROR_FIXED_OTP_NOT_CONFIGURED, UserConstants.MSG_FIXED_OTP_NOT_CONFIGURED);
+        }
+        return userConfiguration.getFixedOtpPassword();
     }
 
     private int getMaxOtpAttempts() {
-        return (userConfiguration != null && userConfiguration.getAadhaarOtpMaxAttempts() != null)
-                ? userConfiguration.getAadhaarOtpMaxAttempts()
-                : 3;
+        if (userConfiguration == null || userConfiguration.getAadhaarOtpMaxAttempts() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "aadhaar.otp.max.attempts is not configured");
+        }
+        return userConfiguration.getAadhaarOtpMaxAttempts();
     }
 
     @Override
@@ -114,6 +118,7 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
             reqBody.put("txnId", refId);
             reqBody.put("referenceId", refId);
             reqBody.put("otp", otp);
+            reqBody.put("tenantId", tenantId);
             reqBody.put("isResync", isResync);
 
             HttpHeaders headers = new HttpHeaders();
@@ -237,7 +242,7 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
         }
         return VerifiedAadhaarDemographics.builder()
                 .maskedAadhaar(masked)
-                .name("Aadhaar Verified Citizen")
+                .name(UserConstants.getRandomCitizenName())
                 .gender(Gender.MALE)
                 .dob(parseDob("1990-01-01"))
                 .mobileNumber(mockMobile)

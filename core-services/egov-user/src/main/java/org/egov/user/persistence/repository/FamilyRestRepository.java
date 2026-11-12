@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.user.config.UserConfiguration;
+import org.egov.user.domain.service.config.FamilyConfigurationService;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.web.contract.config.FamilyConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,14 +39,23 @@ public class FamilyRestRepository {
     private final RestTemplate restTemplate;
     private final UserConfiguration userConfiguration;
     private final ObjectMapper objectMapper;
+    private final FamilyConfigurationService familyConfigurationService;
 
     @Autowired
     public FamilyRestRepository(@Autowired(required = false) RestTemplate restTemplate,
                                 @Autowired(required = false) UserConfiguration userConfiguration,
-                                @Autowired(required = false) ObjectMapper objectMapper) {
+                                @Autowired(required = false) ObjectMapper objectMapper,
+                                @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.restTemplate = restTemplate;
         this.userConfiguration = userConfiguration;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    public FamilyRestRepository(RestTemplate restTemplate,
+                                UserConfiguration userConfiguration,
+                                ObjectMapper objectMapper) {
+        this(restTemplate, userConfiguration, objectMapper, null);
     }
 
     /**
@@ -59,11 +71,15 @@ public class FamilyRestRepository {
             return null;
         }
 
-        String host = userConfiguration != null ? userConfiguration.getFamilyServiceHost() : null;
-        if (StringUtils.isBlank(host)) {
-            log.warn("[FAMILY-REST-REPO] upyog-family-service host configuration is missing. Skipping family ID lookup.");
-            return null;
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping family resolution.", tenantId);
+                return null;
+            }
         }
+
+        String host = resolveHost();
 
         try {
             String endpoint = resolveEndpoint();
@@ -119,11 +135,15 @@ public class FamilyRestRepository {
             return Collections.emptyMap();
         }
 
-        String host = userConfiguration != null ? userConfiguration.getFamilyServiceHost() : null;
-        if (StringUtils.isBlank(host)) {
-            log.warn("[FAMILY-REST-REPO] upyog-family-service host configuration is missing. Skipping batch family resolution.");
-            return Collections.emptyMap();
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping batch family resolution.", tenantId);
+                return Collections.emptyMap();
+            }
         }
+
+        String host = resolveHost();
 
         try {
             String endpoint = resolveEndpoint();
@@ -151,10 +171,21 @@ public class FamilyRestRepository {
         }
     }
 
+    private String resolveHost() {
+        String host = userConfiguration != null ? userConfiguration.getFamilyServiceHost() : null;
+        if (StringUtils.isBlank(host)) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "family.service.host is not configured");
+        }
+        return host;
+    }
+
     private String resolveEndpoint() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceSearchEndpoint()))
-                ? userConfiguration.getFamilyServiceSearchEndpoint()
-                : UserConstants.DEFAULT_FAMILY_SEARCH_ENDPOINT;
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFamilyServiceSearchEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "family.service.search.endpoint is not configured");
+        }
+        return userConfiguration.getFamilyServiceSearchEndpoint();
     }
 
     private UriComponentsBuilder buildBaseUri(String host, String endpoint) {

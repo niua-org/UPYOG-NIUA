@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 import org.upyog.family.config.FamilyConfiguration;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.MaskUtils;
 
 import java.util.HashMap;
@@ -146,9 +148,10 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         TokenBinding registeredBinding = registeredFamilyConsentTokens.get(trimmedToken);
         if (registeredBinding != null) {
             // Check TTL expiration (configurable via family.consent.token.ttl.minutes, defaults to 15 minutes)
-            long ttlMs = (configuration != null && configuration.getConsentTokenTtlMs() > 0)
-                    ? configuration.getConsentTokenTtlMs()
-                    : 15 * 60 * 1000L;
+            if (configuration == null) {
+                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "FamilyConfiguration is required");
+            }
+            long ttlMs = configuration.getConsentTokenTtlMs();
             long elapsed = System.currentTimeMillis() - registeredBinding.timestamp;
             if (elapsed > ttlMs) {
                 registeredFamilyConsentTokens.remove(trimmedToken);
@@ -181,7 +184,7 @@ public class RequesterDxClientImpl implements RequesterDxClient {
         }
 
         // 1. Mock Prefix Handling: Strictly gated behind family.consent.mock.enabled flag
-        if (trimmedToken.startsWith("CONSENT-VERIFIED-") || trimmedToken.startsWith("MOCK-OTP-")) {
+        if (trimmedToken.startsWith("CONSENT-VERIFIED-") || trimmedToken.startsWith("MOCK-OTP-") || trimmedToken.startsWith("TXN-MOCK-")) {
             if (Boolean.TRUE.equals(configuration.getMockConsentEnabled())) {
                 log.info("[UPYOG-DX-CLIENT] Mock consent mode enabled (family.consent.mock.enabled=true). "
                         + "Accepting mock consent token: '{}' for member: '{}', family: '{}'",
@@ -223,27 +226,21 @@ public class RequesterDxClientImpl implements RequesterDxClient {
             referenceId = trimmedToken;
         }
 
-        // 3. Replay Prevention: Check if token has already been consumed for a different citizen or family
+        // 3. Replay Prevention: Check if token has already been consumed
         String tokenKey = StringUtils.isNotBlank(referenceId) ? referenceId : trimmedToken;
         TokenBinding existingBinding = consumedTokens.get(tokenKey);
         if (existingBinding != null) {
-            boolean memberMismatch = StringUtils.isNotBlank(memberUuidOrAadhaar)
-                    && StringUtils.isNotBlank(existingBinding.memberId)
-                    && !Objects.equals(existingBinding.memberId, memberUuidOrAadhaar);
-            boolean familyMismatch = StringUtils.isNotBlank(familyId)
-                    && StringUtils.isNotBlank(existingBinding.familyId)
-                    && !Objects.equals(existingBinding.familyId, familyId);
-
-            if (memberMismatch || familyMismatch) {
-                log.error("[UPYOG-DX-CLIENT] Replay attack detected! Token '{}' was previously consumed for member: '{}', family: '{}'. "
-                        + "Cannot reuse for member: '{}', family: '{}'.",
-                        MaskUtils.maskToken(tokenKey), MaskUtils.maskAadhaar(existingBinding.memberId), existingBinding.familyId,
-                        MaskUtils.maskAadhaar(memberUuidOrAadhaar), familyId);
-                return false;
-            }
+            log.warn("[UPYOG-DX-CLIENT] Replay attack prevented! Token '{}' was previously consumed for member: '{}', family: '{}'.",
+                    MaskUtils.maskToken(tokenKey), MaskUtils.maskAadhaar(existingBinding.memberId), existingBinding.familyId);
+            return false;
         }
 
-        // 4. Construct DX _verifyOtp request body matching AadhaarVerificationRequest
+        if (configuration == null || StringUtils.isBlank(configuration.getRequesterDxHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "requester.services.dx.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getRequesterDxVerifyOtpPath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "requester.services.dx.verify.otp.path is not configured");
+        }
         String url = configuration.getRequesterDxHost() + configuration.getRequesterDxVerifyOtpPath();
         log.info("[UPYOG-DX-CLIENT] Calling requester-services-dx at: {} for referenceId: {}", url, MaskUtils.maskIdentifier(referenceId));
 

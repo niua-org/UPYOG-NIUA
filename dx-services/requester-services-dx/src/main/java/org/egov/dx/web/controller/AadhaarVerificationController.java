@@ -18,6 +18,7 @@ import org.egov.dx.web.models.AadhaarVerificationRequest;
 import org.egov.dx.web.models.AadhaarVerificationResponse;
 import org.egov.dx.web.models.ResponseInfoFactory;
 import org.egov.dx.web.models.UserDemographics;
+import org.egov.dx.web.models.UserRegistryRecord;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -62,7 +63,7 @@ public class AadhaarVerificationController {
     public AadhaarVerificationController(AadhaarGatewayAdapter gatewayAdapter,
                                          AadhaarVerificationValidator validator,
                                          AadhaarSessionManager sessionManager,
-                                         @Autowired(required = false) UserRegistryService userRegistryService) {
+                                         UserRegistryService userRegistryService) {
         this.gatewayAdapter = gatewayAdapter;
         this.validator = validator;
         this.sessionManager = sessionManager;
@@ -99,8 +100,10 @@ public class AadhaarVerificationController {
 
         String aadhaarNumber = request.getAadhaarNumber();
         String maskedAadhaar = maskAadhaar(aadhaarNumber);
-        log.info("Processing Aadhaar Send OTP for masked Aadhaar: {}, apiId: {}, isResync: {}, userUuid: {}",
+        log.debug("Processing Aadhaar Send OTP for masked Aadhaar: {}, apiId: {}, isResync: {}, userUuid: {}",
                 maskedAadhaar, request.getRequestInfo().getApiId(), request.getIsResync(), request.getUserUuid());
+        log.info("Processing Aadhaar Send OTP for masked Aadhaar: {}, apiId: {}, isResync: {}, hasUserUuid: {}",
+                maskedAadhaar, request.getRequestInfo().getApiId(), request.getIsResync(), StringUtils.isNotBlank(request.getUserUuid()));
 
         // 2. Map to Vendor DTO
         VendorSendOtpRequest vendorReq = VendorSendOtpRequest.builder()
@@ -134,6 +137,9 @@ public class AadhaarVerificationController {
 
         if (StringUtils.isNotBlank(referenceId) && StringUtils.isNotBlank(aadhaarNumber)) {
             sessionManager.storeAadhaarForReferenceId(referenceId, aadhaarNumber);
+            if (StringUtils.isNotBlank(request.getMobileNumber())) {
+                sessionManager.storeMobileForReferenceId(referenceId, request.getMobileNumber().trim());
+            }
         }
 
         log.info("Aadhaar OTP dispatched successfully. maskedAadhaar: {}, referenceId: {}, txnId: {}",
@@ -186,8 +192,10 @@ public class AadhaarVerificationController {
             return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_MAX_OTP_ATTEMPTS_EXCEEDED, AadhaarConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED), HttpStatus.BAD_REQUEST);
         }
 
-        log.info("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, userUuid: {}",
+        log.debug("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, userUuid: {}",
                 referenceId, request.getRequestInfo().getApiId(), request.getIsResync(), request.getUserUuid());
+        log.info("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, hasUserUuid: {}",
+                referenceId, request.getRequestInfo().getApiId(), request.getIsResync(), StringUtils.isNotBlank(request.getUserUuid()));
 
         // 3. Map to Vendor DTO
         Long vendorRefId = null;
@@ -262,6 +270,13 @@ public class AadhaarVerificationController {
                 ? request.getAadhaarNumber()
                 : storedAadhaar;
 
+        String storedMobile = (StringUtils.isNotBlank(referenceId))
+                ? sessionManager.getMobileForReferenceId(referenceId)
+                : null;
+        String effectiveMobile = StringUtils.isNotBlank(request.getMobileNumber())
+                ? request.getMobileNumber().trim()
+                : storedMobile;
+
         if (StringUtils.isNotBlank(effectiveAadhaar)) {
             if (StringUtils.isBlank(details.getAadhaarNumber()) || "XXXXXXXX1234".equals(details.getAadhaarNumber())) {
                 details.setAadhaarNumber(maskAadhaar(effectiveAadhaar));
@@ -275,6 +290,7 @@ public class AadhaarVerificationController {
                 .careOf(details.getCareOf())
                 .fullAddress(details.getFullAddress())
                 .photo(details.getPhoto())
+                .mobileNumber(effectiveMobile)
                 .doorNo(addr != null && StringUtils.isNotBlank(addr.getHouse()) ? addr.getHouse() : "N/A")
                 .street(addr != null && StringUtils.isNotBlank(addr.getStreet()) ? addr.getStreet() : "N/A")
                 .landmark(addr != null && StringUtils.isNotBlank(addr.getLandmark()) ? addr.getLandmark() : "N/A")
@@ -286,7 +302,9 @@ public class AadhaarVerificationController {
                 .country(addr != null ? addr.getCountry() : null)
                 .build();
 
-        // 8. Resolve existing citizen userUuid from egov-user service or auto-provision if not found
+        // 8. Resolve existing citizen userUuid from egov-user (full Aadhaar match) or auto-provision if not found.
+        // UserRegistryService is a required Spring bean; verified flag is set via markCitizenAadhaarVerifiedAfterEkyc
+        // because public user create no longer accepts isIdentityVerified from callers.
         String searchAadhaar = StringUtils.isNotBlank(effectiveAadhaar)
                 ? effectiveAadhaar
                 : details.getAadhaarNumber();
@@ -298,16 +316,30 @@ public class AadhaarVerificationController {
                    : null);
 
         String existingUserUuid = null;
+        String resolvedFamilyId = null;
+
         if (userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
-            existingUserUuid = userRegistryService.searchUserUuidByAadhaar(
+            UserRegistryRecord userRecord = userRegistryService.searchCitizenByAadhaar(
                     searchAadhaar, tenantId, request.getRequestInfo());
+            if (userRecord != null) {
+                existingUserUuid = userRecord.getUserUuid();
+                resolvedFamilyId = userRecord.getFamilyId();
+            }
         }
-        if (StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(request.getUserUuid())) {
-            existingUserUuid = request.getUserUuid();
-        }
-        if (StringUtils.isBlank(existingUserUuid) && userRegistryService != null && StringUtils.isNotBlank(searchAadhaar)) {
+        if (userRegistryService != null && StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(searchAadhaar)) {
             existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
                     searchAadhaar, demographics, tenantId, request.getRequestInfo());
+        }
+
+        if (userRegistryService != null && StringUtils.isBlank(resolvedFamilyId) && StringUtils.isNotBlank(existingUserUuid)) {
+            resolvedFamilyId = userRegistryService.searchFamilyIdByUserUuid(
+                    existingUserUuid, tenantId, request.getRequestInfo());
+        }
+
+        // Persist verified identity in egov-user after successful OTP (not via public create payload)
+        if (userRegistryService != null && StringUtils.isNotBlank(existingUserUuid)) {
+            userRegistryService.markCitizenAadhaarVerifiedAfterEkyc(
+                    existingUserUuid, searchAadhaar, tenantId, request.getRequestInfo());
         }
 
         ResponseInfo successResponseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
@@ -320,12 +352,16 @@ public class AadhaarVerificationController {
                 .isVerified(true)
                 .maskedAadhaar(details.getAadhaarNumber())
                 .userUuid(existingUserUuid)
+                .familyId(resolvedFamilyId)
                 .demographics(demographics)
+                .mobileNumber(demographics != null ? demographics.getMobileNumber() : effectiveMobile)
                 .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
                 .build();
 
-        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}",
-                referenceId, details.getAadhaarNumber(), existingUserUuid);
+        log.debug("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}, familyId: {}",
+                referenceId, details.getAadhaarNumber(), existingUserUuid, resolvedFamilyId);
+        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userResolved: {}, familyIdPresent: {}",
+                referenceId, details.getAadhaarNumber(), StringUtils.isNotBlank(existingUserUuid), StringUtils.isNotBlank(resolvedFamilyId));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

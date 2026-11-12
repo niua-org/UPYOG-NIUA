@@ -75,21 +75,27 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
     }
 
     private int getAccessTokenValidityInMinutes() {
-        return (userConfiguration != null && userConfiguration.getAccessTokenValidityInMinutes() != null)
-                ? userConfiguration.getAccessTokenValidityInMinutes()
-                : 10080;
+        if (userConfiguration == null || userConfiguration.getAccessTokenValidityInMinutes() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "access.token.validity.in.minutes is not configured");
+        }
+        return userConfiguration.getAccessTokenValidityInMinutes();
     }
 
     private int getRefreshTokenValidityInMinutes() {
-        return (userConfiguration != null && userConfiguration.getRefreshTokenValidityInMinutes() != null)
-                ? userConfiguration.getRefreshTokenValidityInMinutes()
-                : 20160;
+        if (userConfiguration == null || userConfiguration.getRefreshTokenValidityInMinutes() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "refresh.token.validity.in.minutes is not configured");
+        }
+        return userConfiguration.getRefreshTokenValidityInMinutes();
     }
 
     private String getTokenFormat() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getOauth2TokenFormat()))
-                ? userConfiguration.getOauth2TokenFormat()
-                : "opaque";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getOauth2TokenFormat())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "oauth2.token.format is not configured");
+        }
+        return userConfiguration.getOauth2TokenFormat();
     }
 
     /**

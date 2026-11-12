@@ -1,5 +1,7 @@
 package org.egov.dx.adapter.vendor.impl;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.dx.adapter.vendor.AadhaarGatewayAdapter;
 import org.egov.dx.adapter.vendor.dto.VendorSendOtpRequest;
@@ -9,6 +11,10 @@ import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpSuccessResponse;
 import org.egov.dx.util.AadhaarConstants;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Mock / simulated implementation of {@link AadhaarGatewayAdapter} for local development,
@@ -27,6 +33,42 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "aadhaar.gateway.mock.enabled", havingValue = "true", matchIfMissing = true)
 @Slf4j
 public class MockAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
+
+    @Getter
+    @AllArgsConstructor
+    private static class MockCitizenPersona {
+        private final String name;
+        private final String gender;
+        private final String careOf;
+    }
+
+    private static final List<MockCitizenPersona> MOCK_CITIZEN_PERSONAS = Arrays.asList(
+            new MockCitizenPersona("Aarav Sharma", "M", "S/O Rajesh Sharma"),
+            new MockCitizenPersona("Priya Patel", "F", "D/O Suresh Patel"),
+            new MockCitizenPersona("Rohan Verma", "M", "S/O Ramesh Verma"),
+            new MockCitizenPersona("Ananya Gupta", "F", "D/O Manoj Gupta"),
+            new MockCitizenPersona("Vikram Singh", "M", "S/O Harpreet Singh"),
+            new MockCitizenPersona("Sneha Reddy", "F", "D/O Venkat Reddy"),
+            new MockCitizenPersona("Rahul Kumar", "M", "S/O Ashok Kumar"),
+            new MockCitizenPersona("Pooja Joshi", "F", "D/O Dinesh Joshi"),
+            new MockCitizenPersona("Amitabh Das", "M", "S/O Subhash Das"),
+            new MockCitizenPersona("Neha Malhotra", "F", "D/O Sunil Malhotra"),
+            new MockCitizenPersona("Rajesh Iyer", "M", "S/O Narayanan Iyer"),
+            new MockCitizenPersona("Sunita Meena", "F", "W/O Ram Meena"),
+            new MockCitizenPersona("Suresh Nair", "M", "S/O Madhavan Nair"),
+            new MockCitizenPersona("Kavita Rao", "F", "D/O Krishna Rao"),
+            new MockCitizenPersona("Manish Choudhary", "M", "S/O Jagdish Choudhary"),
+            new MockCitizenPersona("Deepika Sen", "F", "D/O Pradip Sen"),
+            new MockCitizenPersona("Aditya Mishra", "M", "S/O Alok Mishra"),
+            new MockCitizenPersona("Divya Bhat", "F", "D/O Ganesh Bhat"),
+            new MockCitizenPersona("Arjun Kapoor", "M", "S/O Anil Kapoor"),
+            new MockCitizenPersona("Ritu Mukherjee", "F", "D/O Sourav Mukherjee")
+    );
+
+    private MockCitizenPersona getRandomCitizenPersona() {
+        int index = ThreadLocalRandom.current().nextInt(MOCK_CITIZEN_PERSONAS.size());
+        return MOCK_CITIZEN_PERSONAS.get(index);
+    }
 
     @Override
     public VendorSendOtpResponse sendOtp(VendorSendOtpRequest request) {
@@ -57,6 +99,7 @@ public class MockAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
         long timestamp = System.currentTimeMillis();
         String txnId = "TXN-MOCK-" + timestamp;
         String refIdStr = (referenceId != null) ? String.valueOf(referenceId) : String.valueOf(timestamp);
+        MockCitizenPersona persona = getRandomCitizenPersona();
 
         return VendorVerifyOtpSuccessResponse.builder()
                 .code(200)
@@ -67,10 +110,10 @@ public class MockAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
                         .referenceId(refIdStr)
                         .status(AadhaarConstants.STATUS_VALID)
                         .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
-                        .name("Citizen Name")
+                        .name(persona.getName())
                         .dob("1995-05-15")
-                        .gender("M")
-                        .careOf("S/O Parent Name")
+                        .gender(persona.getGender())
+                        .careOf(persona.getCareOf())
                         .aadhaarNumber("XXXXXXXX1234")
                         .fullAddress("123, Model Town, City, State, 143001")
                         .address(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.AddressDetails.builder()

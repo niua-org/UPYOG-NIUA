@@ -2,6 +2,7 @@ package org.egov.user.persistence.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
 import org.egov.user.config.UserConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,10 +21,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -83,13 +86,12 @@ class FamilyRestRepositoryTest {
      * Tests the functionality of testgetactivefamilyid missinghost failsfast.
      */
     @Test
-    @DisplayName("getActiveFamilyIdByUserUuid: Returns null when host config is blank (fails fast without localhost)")
+    @DisplayName("getActiveFamilyIdByUserUuid: Throws CustomException when host config is blank")
     void testGetActiveFamilyId_MissingHost_FailsFast() {
         when(userConfiguration.getFamilyServiceHost()).thenReturn(null);
 
-        String result = familyRestRepository.getActiveFamilyIdByUserUuid("user-uuid-1", "pg", requestInfo);
-
-        assertNull(result);
+        assertThrows(CustomException.class, () ->
+                familyRestRepository.getActiveFamilyIdByUserUuid("user-uuid-1", "pg", requestInfo));
         verify(restTemplate, never()).postForObject(any(String.class), any(), any());
     }
 
@@ -142,14 +144,32 @@ class FamilyRestRepositoryTest {
      * Tests the functionality of testgetactivefamilyidsbyuseruuids emptyormissingconfig.
      */
     @Test
-    @DisplayName("getActiveFamilyIdsByUserUuids: Returns empty map when list is empty or host is missing")
+    @DisplayName("getActiveFamilyIdsByUserUuids: Returns empty map when list is empty, throws when host is missing")
     void testGetActiveFamilyIdsByUserUuids_EmptyOrMissingConfig() {
         Map<String, String> emptyListResult = familyRestRepository.getActiveFamilyIdsByUserUuids(Collections.emptyList(), "pg", requestInfo);
         assertTrue(emptyListResult.isEmpty());
 
         when(userConfiguration.getFamilyServiceHost()).thenReturn(null);
-        Map<String, String> missingHostResult = familyRestRepository.getActiveFamilyIdsByUserUuids(Collections.singletonList("u1"), "pg", requestInfo);
-        assertTrue(missingHostResult.isEmpty());
+        assertThrows(CustomException.class, () ->
+                familyRestRepository.getActiveFamilyIdsByUserUuids(Collections.singletonList("u1"), "pg", requestInfo));
+        verify(restTemplate, never()).postForObject(any(String.class), any(), any());
+    }
+
+    @Test
+    @DisplayName("getActiveFamilyIdByUserUuid: Skips REST call when family concept is disabled for tenant")
+    void testGetActiveFamilyId_FamilyDisabled_SkipsRestCall() {
+        org.egov.user.domain.service.config.FamilyConfigurationService configService =
+                mock(org.egov.user.domain.service.config.FamilyConfigurationService.class);
+        org.egov.user.web.contract.config.FamilyConfig disabledConfig = org.egov.user.web.contract.config.FamilyConfig.builder()
+                .isFamilySupported(false)
+                .familyType("NONE")
+                .build();
+        when(configService.getActiveFamilyConfiguration(any(), eq("ul"))).thenReturn(disabledConfig);
+
+        FamilyRestRepository repoWithConfig = new FamilyRestRepository(restTemplate, userConfiguration, objectMapper, configService);
+        String result = repoWithConfig.getActiveFamilyIdByUserUuid("u1", "ul", requestInfo);
+
+        assertNull(result);
         verify(restTemplate, never()).postForObject(any(String.class), any(), any());
     }
 }

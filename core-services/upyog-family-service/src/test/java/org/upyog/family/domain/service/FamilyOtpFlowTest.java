@@ -97,6 +97,8 @@ class FamilyOtpFlowTest {
                 .uuid("head-uuid-1")
                 .name("Ramesh Kumar")
                 .mobileNumber("9876543210")
+                .gender("MALE")
+                .dob(631152000000L)
                 .build();
     }
 
@@ -166,7 +168,7 @@ class FamilyOtpFlowTest {
                 .thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByUuids(eq(Collections.singletonList("head-uuid-1")), any()))
                 .thenReturn(Collections.singletonMap("head-uuid-1", headProfile));
-        when(otpClient.validateOtp(eq("9876543210"), eq("123456"), eq("pg.citya"), any()))
+        when(otpClient.validateOtp(eq("9876543210"), eq("123456"), eq("pg.citya"), eq("REF-OTP-9988"), any()))
                 .thenReturn(true);
 
         FamilyOtpVerifyRequest request = FamilyOtpVerifyRequest.builder()
@@ -183,6 +185,13 @@ class FamilyOtpFlowTest {
         assertTrue(response.getIsVerified());
         assertNotNull(response.getFamily());
         assertEquals("FAM-2026-0001", response.getFamily().getFamilyId());
+        assertEquals("Ramesh Kumar", response.getFamily().getHeadName());
+        assertNotNull(response.getFamily().getMembers());
+        assertEquals(1, response.getFamily().getMembers().size());
+        FamilyMember member = response.getFamily().getMembers().get(0);
+        assertEquals("MALE", member.getGender());
+        assertEquals(631152000000L, member.getDob());
+        assertEquals("98******10", member.getMobileNumber());
         assertNotNull(response.getConsentToken());
         assertTrue(response.getConsentToken().startsWith("CONSENT-VERIFIED-"));
 
@@ -196,7 +205,7 @@ class FamilyOtpFlowTest {
                 .thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByUuids(eq(Collections.singletonList("head-uuid-1")), any()))
                 .thenReturn(Collections.singletonMap("head-uuid-1", headProfile));
-        when(otpClient.validateOtp(eq("9876543210"), eq("000000"), eq("pg.citya"), any()))
+        when(otpClient.validateOtp(eq("9876543210"), eq("000000"), eq("pg.citya"), eq("REF-OTP-9988"), any()))
                 .thenReturn(false);
 
         FamilyOtpVerifyRequest request = FamilyOtpVerifyRequest.builder()

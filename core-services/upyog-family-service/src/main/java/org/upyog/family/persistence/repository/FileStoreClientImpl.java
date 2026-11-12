@@ -2,6 +2,8 @@ package org.upyog.family.persistence.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.config.FamilyConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -48,6 +50,13 @@ public class FileStoreClientImpl implements FileStoreClient {
             return false;
         }
 
+        if (configuration == null || StringUtils.isBlank(configuration.getFileStoreHost())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.filestore.host is not configured");
+        }
+        if (StringUtils.isBlank(configuration.getFileStoreUrlPath())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.filestore.url.path is not configured");
+        }
+
         String stateTenant = tenantId != null && tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
         String url = configuration.getFileStoreHost() + configuration.getFileStoreUrlPath()
                 + "?tenantId=" + stateTenant + "&fileStoreIds=" + fileStoreId;
@@ -60,9 +69,11 @@ public class FileStoreClientImpl implements FileStoreClient {
                 String fileUrl = (String) response.get(fileStoreId);
                 return StringUtils.isNotBlank(fileUrl);
             }
+        } catch (CustomException ce) {
+            throw ce;
         } catch (Exception e) {
-            log.warn("[UPYOG-FILESTORE-CLIENT] filestore verification failed: {}. Permitting creation in offline/mock mode.", e.getMessage());
-            return true;
+            log.error("[UPYOG-FILESTORE-CLIENT] filestore verification failed: {}", e.getMessage(), e);
+            throw new CustomException(FamilyConstants.ERROR_FILESTORE_NOT_FOUND, "Failed to verify document in filestore: " + e.getMessage());
         }
 
         return false;

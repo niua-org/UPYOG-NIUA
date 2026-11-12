@@ -6,7 +6,7 @@ serviceMaps:
       fromTopic: save-ug-family
       isTransaction: true
       queryMaps:
-        - query: INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, status, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
+        - query: INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.id
@@ -15,6 +15,7 @@ serviceMaps:
             - jsonPath: $.Family.headUserUuid
             - jsonPath: $.Family.category
             - jsonPath: $.Family.status
+            - jsonPath: $.Family.familyType
             - jsonPath: $.Family.additionalDetails
               type: JSON
               dbType: JSONB
@@ -22,6 +23,11 @@ serviceMaps:
             - jsonPath: $.Family.auditDetails.createdTime
             - jsonPath: $.Family.auditDetails.lastModifiedBy
             - jsonPath: $.Family.auditDetails.lastModifiedTime
+
+        - query: INSERT INTO ug_family_audit (id, family_id, tenant_id, head_user_uuid, category, status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time) SELECT id, family_id, tenant_id, head_user_uuid, category, status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time FROM ug_family WHERE family_id = ?;
+          basePath: Family
+          jsonMaps:
+            - jsonPath: $.Family.familyId
 
         - query: INSERT INTO ug_family_member (id, family_id, tenant_id, user_uuid, relationship_with_head, is_head, is_verified, active, status, exit_reason, exit_date, consent_token, consent_date, effective_from, effective_to, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
           basePath: Family.members.*
@@ -54,17 +60,23 @@ serviceMaps:
       fromTopic: update-ug-family
       isTransaction: true
       queryMaps:
-        - query: UPDATE ug_family SET head_user_uuid = ?, category = ?, status = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? WHERE family_id = ?;
+        - query: UPDATE ug_family SET head_user_uuid = ?, category = ?, status = ?, family_type = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? WHERE family_id = ?;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.headUserUuid
             - jsonPath: $.Family.category
             - jsonPath: $.Family.status
+            - jsonPath: $.Family.familyType
             - jsonPath: $.Family.additionalDetails
               type: JSON
               dbType: JSONB
             - jsonPath: $.Family.auditDetails.lastModifiedBy
             - jsonPath: $.Family.auditDetails.lastModifiedTime
+            - jsonPath: $.Family.familyId
+
+        - query: INSERT INTO ug_family_audit (id, family_id, tenant_id, head_user_uuid, category, status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time) SELECT id, family_id, tenant_id, head_user_uuid, category, status, family_type, additional_details, created_by, created_time, last_modified_by, last_modified_time FROM ug_family WHERE family_id = ?;
+          basePath: Family
+          jsonMaps:
             - jsonPath: $.Family.familyId
 
         - query: INSERT INTO ug_family_member (id, family_id, tenant_id, user_uuid, relationship_with_head, is_head, is_verified, active, status, exit_reason, exit_date, consent_token, consent_date, effective_from, effective_to, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET relationship_with_head = EXCLUDED.relationship_with_head, is_head = EXCLUDED.is_head, is_verified = EXCLUDED.is_verified, active = EXCLUDED.active, status = EXCLUDED.status, exit_reason = EXCLUDED.exit_reason, exit_date = EXCLUDED.exit_date, consent_token = EXCLUDED.consent_token, consent_date = EXCLUDED.consent_date, effective_from = EXCLUDED.effective_from, effective_to = EXCLUDED.effective_to, additional_details = EXCLUDED.additional_details, last_modified_by = EXCLUDED.last_modified_by, last_modified_time = EXCLUDED.last_modified_time;

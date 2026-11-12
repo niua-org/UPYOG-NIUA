@@ -78,10 +78,46 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
                         "Family with ID " + familyId + " not found."));
         enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
 
-        List<FamilyMember> members = family.getMembers() != null ? family.getMembers() : Collections.emptyList();
+        List<FamilyMember> members = family.getMembers() != null ? new java.util.ArrayList<>(family.getMembers()) : new java.util.ArrayList<>();
+
+        // Ensure the Head of Family is present in the members roster
+        boolean headPresentInMembers = members.stream()
+                .anyMatch(m -> StringUtils.isNotBlank(family.getHeadUserUuid()) && family.getHeadUserUuid().equals(m.getUserUuid()));
+
+        if (!headPresentInMembers && StringUtils.isNotBlank(family.getHeadUserUuid())) {
+            Map<String, CitizenProfile> headProfileMap = userClient.searchUsersByUuids(
+                    Collections.singletonList(family.getHeadUserUuid()), requestInfo);
+            CitizenProfile headProfile = headProfileMap != null ? headProfileMap.get(family.getHeadUserUuid()) : null;
+
+            FamilyMember headMember = FamilyMember.builder()
+                    .id("HEAD-" + (family.getHeadUserUuid().length() >= 8 ? family.getHeadUserUuid().substring(0, 8) : family.getHeadUserUuid()))
+                    .familyId(family.getFamilyId())
+                    .tenantId(family.getTenantId())
+                    .userUuid(family.getHeadUserUuid())
+                    .relationshipWithHead("HEAD")
+                    .isHead(true)
+                    .isVerified(headProfile != null && Boolean.TRUE.equals(headProfile.getIsIdentityVerified()))
+                    .active(true)
+                    .status(org.upyog.family.domain.model.MemberStatus.ACTIVE)
+                    .name(headProfile != null ? headProfile.getName() : null)
+                    .mobileNumber(headProfile != null ? headProfile.getMobileNumber() : null)
+                    .gender(headProfile != null ? headProfile.getGender() : null)
+                    .photo(headProfile != null ? headProfile.getPhoto() : null)
+                    .dob(headProfile != null ? headProfile.getDob() : null)
+                    .citizenDetails(headProfile)
+                    .build();
+
+            members.add(0, headMember);
+            family.setMembers(members);
+            if (headProfile != null && StringUtils.isNotBlank(headProfile.getName())) {
+                family.setHeadName(headProfile.getName());
+            }
+        }
+
         int totalMembers = members.size();
         List<FamilyMember> activeMembers = members.stream()
                 .filter(m -> Boolean.TRUE.equals(m.getActive()))
+                .sorted((m1, m2) -> Boolean.compare(Boolean.TRUE.equals(m2.getIsHead()), Boolean.TRUE.equals(m1.getIsHead())))
                 .collect(Collectors.toList());
         int activeCount = activeMembers.size();
         int verifiedCount = (int) members.stream()
@@ -103,7 +139,7 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
                 if (family.getHeadUserUuid().equals(m.getUserUuid())) {
                     if (StringUtils.isNotBlank(m.getName())) {
                         headName = m.getName();
-                    } else if (m.getCitizenDetails() != null) {
+                    } else if (m.getCitizenDetails() != null && StringUtils.isNotBlank(m.getCitizenDetails().getName())) {
                         headName = m.getCitizenDetails().getName();
                     }
                     break;
@@ -152,6 +188,12 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
                 .distinct()
                 .collect(Collectors.toList());
 
+        for (Family f : families) {
+            if (StringUtils.isNotBlank(f.getHeadUserUuid()) && !allMemberUuids.contains(f.getHeadUserUuid())) {
+                allMemberUuids.add(f.getHeadUserUuid());
+            }
+        }
+
         if (allMemberUuids.isEmpty()) {
             return;
         }
@@ -165,6 +207,10 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
                     }
                 }
                 family.enrichHeadName();
+            }
+            if (StringUtils.isBlank(family.getHeadName()) && StringUtils.isNotBlank(family.getHeadUserUuid())
+                    && profileMap.containsKey(family.getHeadUserUuid()) && profileMap.get(family.getHeadUserUuid()) != null) {
+                family.setHeadName(profileMap.get(family.getHeadUserUuid()).getName());
             }
         }
     }

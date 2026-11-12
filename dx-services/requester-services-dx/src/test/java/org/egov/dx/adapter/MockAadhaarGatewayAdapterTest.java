@@ -52,7 +52,24 @@ public class MockAadhaarGatewayAdapterTest {
         assertEquals("VALID", response.getData().getStatus());
         assertEquals("XXXXXXXX1234", response.getData().getAadhaarNumber());
         assertNotNull(response.getData().getName());
+        assertFalse(response.getData().getName().isEmpty());
         assertNotNull(response.getData().getAddress());
         assertEquals("Amritsar", response.getData().getAddress().getVtc());
+    }
+
+    @Test
+    void testVerifyOtp_GeneratesRandomNames() {
+        java.util.Set<String> names = new java.util.HashSet<>();
+        for (int i = 0; i < 50; i++) {
+            VendorVerifyOtpRequest request = VendorVerifyOtpRequest.builder()
+                    .referenceId(100000L + i)
+                    .otp("123456")
+                    .build();
+            VendorVerifyOtpSuccessResponse response = mockAdapter.verifyOtp(request);
+            assertNotNull(response.getData().getName());
+            names.add(response.getData().getName());
+        }
+        // With 50 iterations and 20 pool names, more than 1 distinct name should be observed
+        assertTrue(names.size() > 1, "Expected multiple random citizen names across OTP verifications");
     }
 }

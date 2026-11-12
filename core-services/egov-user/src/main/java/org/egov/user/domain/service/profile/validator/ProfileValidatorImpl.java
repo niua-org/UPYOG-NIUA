@@ -363,10 +363,16 @@ public class ProfileValidatorImpl implements ProfileValidator {
                     UserConstants.MSG_MULTIPLE_USERS_SEARCH_NOT_SUPPORTED);
         }
 
+        // Rejection rule 3: searching citizen by Aadhaar on general profile search endpoint is not permitted
+        if (StringUtils.isNotBlank(request.getAadhaarNumber())) {
+            log.error("[PROFILE-VALIDATOR] Profile search failed: searching by Aadhaar on general /profile/_search endpoint is not permitted");
+            throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA,
+                    "Searching citizen by Aadhaar is not permitted on this general endpoint. Please use the dedicated /profile/aadhaar/_search API.");
+        }
+
         boolean hasFilter = StringUtils.isNotBlank(request.getTenantId())
                 || StringUtils.isNotBlank(request.getUuid())
                 || StringUtils.isNotBlank(request.getMobileNumber())
-                || StringUtils.isNotBlank(request.getAadhaarNumber())
                 || StringUtils.isNotBlank(request.getName());
 
         if (!hasFilter) {

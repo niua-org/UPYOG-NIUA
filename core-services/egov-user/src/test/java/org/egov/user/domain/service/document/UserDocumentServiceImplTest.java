@@ -90,4 +90,40 @@ class UserDocumentServiceImplTest {
         assertThatThrownBy(() -> service.searchDocuments(null, RequestInfo.builder().build()))
                 .isInstanceOf(CustomException.class);
     }
+
+    @Test
+    void createDocuments_withIDGen_generatesFormattedDocId() throws Exception {
+        org.egov.user.persistence.repository.IdGenRepository idGenRepository = org.mockito.Mockito.mock(org.egov.user.persistence.repository.IdGenRepository.class);
+        when(idGenRepository.generateUserDocumentId(any(), eq("pb.amritsar"))).thenReturn("DOC-2026-000001");
+
+        UserDocumentServiceImpl serviceWithIdGen = new UserDocumentServiceImpl(
+                documentRepository, userRepository, fileStoreRepository, null, idGenRepository);
+
+        UserDocument doc = UserDocument.builder()
+                .documentType("AADHAAR")
+                .filestoreId("fs-1")
+                .documentUid("1234")
+                .build();
+        UserDocumentRequest request = UserDocumentRequest.builder()
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder().id(99L).uuid("op-uuid").build())
+                        .build())
+                .userId(10L)
+                .uuid("user-uuid")
+                .tenantId("pb.amritsar")
+                .documents(List.of(doc))
+                .build();
+
+        when(userRepository.getUserIdByUuid("user-uuid")).thenReturn(10L);
+        when(userRepository.getTenantIdByUserId(10L)).thenReturn("pb.amritsar");
+        doReturn(Collections.singletonMap("fs-1", "http://filestore/fs-1"))
+                .when(fileStoreRepository).getUrlByFileStoreId(eq("pb.amritsar"), eq(Collections.singletonList("fs-1")));
+        when(documentRepository.create(any(UserDocument.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<UserDocument> created = serviceWithIdGen.createDocuments(request);
+
+        assertThat(created).hasSize(1);
+        assertThat(created.get(0).getId()).isEqualTo("DOC-2026-000001");
+        verify(idGenRepository).generateUserDocumentId(any(), eq("pb.amritsar"));
+    }
 }

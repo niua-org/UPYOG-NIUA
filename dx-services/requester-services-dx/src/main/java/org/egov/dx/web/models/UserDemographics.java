@@ -117,4 +117,10 @@ public class UserDemographics {
      */
     @JsonProperty("photo")
     private String photo;
+
+    /**
+     * 10-digit mobile number associated with the citizen.
+     */
+    @JsonProperty("mobileNumber")
+    private String mobileNumber;
 }

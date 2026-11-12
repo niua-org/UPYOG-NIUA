@@ -91,6 +91,10 @@ Examples: "how to login", "login kaise kare", "where is login button", "sign in 
 "login_claim" — User is stating that they have finished logging in, already logged in, or verified their session.
 Examples: "login done", "logged in", "maine login kar liya", "login complete", "signed in", "done login"
 
+"end_conversation" — User explicitly says goodbye, bye, see you later, exit, or expresses that they are finished and want to leave.
+Examples: "bye", "goodbye", "alvida", "exit", "quit", "tata", "that is all for now", "band karo"
+NOTE: Never classify typos, short names, addresses, or form answers as end_conversation.
+
 "out_of_domain" — User is asking about topics completely outside municipal/UPYOG citizen services, such as general entertainment, movies, actors, sports/cricket, cooking recipes, personal relationships, non-ULB finance (crypto/stocks), fitness routines, or general trivia.
 Examples:
 → "who won the cricket match yesterday"
@@ -98,6 +102,7 @@ Examples:
 → "tell me about bitcoin"
 → "best bollywood movies"
 → "mujhe chai ki recipe batao"
+CRITICAL: Never classify municipal/urban questions (e.g., trade license, property tax), or form inputs (addresses, localities, dates, names like "south ex 1") as out_of_domain.
 
 ━━━ IMPORTANT RULES ━━━
 1. Look at the last message and context. If the user says "yes" or "haan":
@@ -107,7 +112,10 @@ Examples:
 4. Set "is_question": true if the user is asking an informational question, explanation, help, rules, meaning, charges, or asking "what/how/where/why/fees/charges/procedure/kya/kaise/kahan/kyun/batao" (e.g. seeking information or asking an FAQ).
    CRITICAL: If the user asks for INFORMATION, questions, explanations, rules, documents, or procedures regarding advertisements or grievances (e.g. "what is advertisement booking", "advertisement booking charges", "how does grievance redressal work", "what is pgr"), classify as "faq" with "is_question": true. Do NOT classify general questions or inquiries as "adv_candidate" or "grievance_candidate".
    Set "is_question": false if the user is answering a form prompt, selecting an option, providing a name/locality/category, or answering a workflow question.
-5. If the query is asking about movies, sports, recipes, crypto, or other non-urban topics with NO municipal context, classify as "out_of_domain". NOTE: If a place or business type is mentioned in a municipal context (e.g. "trade license for my restaurant" or "waterlogging near cricket ground"), classify into the appropriate municipal service, NOT out_of_domain.
+5. If the user is answering a form prompt or question (e.g. providing an address, locality, landmark, area, date, name, number, problem description, or option):
+   - Set "is_question": false.
+   - If the previous turn asked for form details, classify under the ongoing candidate intent (e.g. "adv_candidate" or "grievance_candidate").
+6. Municipal & Urban Domain Rule: Queries about business licenses, trade licenses (e.g. "trade license for my restaurant"), property taxes, birth/death certificates, water/sewerage, streetlights, garbage, or municipal administration are WITHIN municipal domain (classify as "faq", NEVER "out_of_domain").
 
 ━━━ CONVERSATION CONTEXT (last 3 turns) ━━━
 {history_text}
@@ -118,7 +126,7 @@ Language: {lang}
 
 Respond ONLY with this JSON, no other text:
 {{
-  "intent": "greeting" | "faq" | "profile" | "out_of_domain" | "login_query" | "login_claim" | "grievance_candidate" | "grievance_confirm" | "grievance_cancel" | "grievance_status_candidate" | "booking_candidate" | "booking_confirm" | "booking_cancel" | "adv_candidate" | "adv_confirm" | "adv_cancel" | "adv_status_candidate" | "draft_resume" | "draft_delete" | "draft_save" | "draft_continue_application" | "end_conversation",
+  "intent": "greeting" | "faq" | "profile" | "login_query" | "login_claim" | "grievance_candidate" | "grievance_confirm" | "grievance_cancel" | "grievance_status_candidate" | "booking_candidate" | "booking_confirm" | "booking_cancel" | "adv_candidate" | "adv_confirm" | "adv_cancel" | "adv_status_candidate" | "draft_resume" | "draft_delete" | "draft_save" | "draft_continue_application" | "end_conversation" | "out_of_domain",
   "is_question": true | false,
   "extracted_name": "string or null",
   "reasoning": "one sentence why",

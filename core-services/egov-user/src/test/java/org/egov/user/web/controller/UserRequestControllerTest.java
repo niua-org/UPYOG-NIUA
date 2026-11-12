@@ -1,6 +1,7 @@
 package org.egov.user.web.controller;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.UpdateResponse;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.UserType;
@@ -35,7 +36,10 @@ class UserRequestControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new UserController(userService, tokenService);
+        UserConfiguration config = UserConfiguration.builder()
+                .mobileValidationWorkaroundEnabled("false")
+                .build();
+        controller = new UserController(userService, tokenService, null, config);
     }
 
     @Test

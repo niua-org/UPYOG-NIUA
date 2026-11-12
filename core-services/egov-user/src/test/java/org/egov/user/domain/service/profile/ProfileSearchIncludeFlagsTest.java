@@ -332,6 +332,38 @@ public class ProfileSearchIncludeFlagsTest {
     }
 
     @Test
+    @DisplayName("Should default active to true in ProfileSearchRequest constructor, builder, and deserialization")
+    public void testProfileSearchRequest_ActiveDefaultsToTrue() throws Exception {
+        // Constructor default
+        ProfileSearchRequest req1 = new ProfileSearchRequest();
+        assertEquals(Boolean.TRUE, req1.getActive());
+
+        // Builder default
+        ProfileSearchRequest req2 = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid("uuid-123")
+                .build();
+        assertEquals(Boolean.TRUE, req2.getActive());
+
+        // Deserialization when omitted
+        String jsonWithoutActive = "{\n" +
+                "  \"tenantId\": \"pg.citya\",\n" +
+                "  \"uuid\": \"uuid-123\"\n" +
+                "}";
+        ProfileSearchRequest req3 = objectMapper.readValue(jsonWithoutActive, ProfileSearchRequest.class);
+        assertEquals(Boolean.TRUE, req3.getActive());
+
+        // Deserialization when explicitly false
+        String jsonWithActiveFalse = "{\n" +
+                "  \"tenantId\": \"pg.citya\",\n" +
+                "  \"uuid\": \"uuid-123\",\n" +
+                "  \"active\": false\n" +
+                "}";
+        ProfileSearchRequest req4 = objectMapper.readValue(jsonWithActiveFalse, ProfileSearchRequest.class);
+        assertEquals(Boolean.FALSE, req4.getActive());
+    }
+
+    @Test
     @DisplayName("Should reject citizen search for another citizen's UUID when fetching ADDRESS and DOCUMENT")
     public void testCitizenCannotFetchAddressOrDocumentForAnotherCitizen() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()

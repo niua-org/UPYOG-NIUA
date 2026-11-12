@@ -2,6 +2,8 @@ package org.upyog.family.domain.service;
 
 import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.Family;
+import org.upyog.family.web.contract.FamilyHofCheckRequest;
+import org.upyog.family.web.contract.FamilyHofCheckResponse;
 
 /**
  * Domain service contract governing Head of Family (HoF) succession and leadership transfer flows in UPYOG.
@@ -43,4 +45,14 @@ public interface FamilyHeadService {
      *         </ul>
      */
     Family assignHeadOfFamily(AssignHofRequest request);
+
+    /**
+     * Checks whether the authenticated caller in {@link RequestInfo} is the designated Head of Family (HoF)
+     * for the specified family.
+     *
+     * @param request the HoF check request containing RequestInfo, familyId, and optional tenantId; must not be {@code null}.
+     * @return {@link FamilyHofCheckResponse} containing {@code isHof} flag, caller {@code userUuid}, and {@code headUserUuid}.
+     * @throws org.egov.tracer.model.CustomException if RequestInfo or user UUID is missing, or family is not found.
+     */
+    FamilyHofCheckResponse isHeadOfFamily(FamilyHofCheckRequest request);
 }

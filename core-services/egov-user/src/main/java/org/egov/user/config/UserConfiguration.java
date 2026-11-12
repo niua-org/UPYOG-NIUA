@@ -92,7 +92,7 @@ public class UserConfiguration {
     @Value("${aadhaar.otp.max.attempts}")
     private Integer aadhaarOtpMaxAttempts;
 
-    @Value("${aadhaar.mock.enabled:false}")
+    @Value("${aadhaar.mock.enabled}")
     private Boolean aadhaarMockEnabled;
 
     public Boolean getAadhaarGatewayMockEnabled() {
@@ -126,6 +126,22 @@ public class UserConfiguration {
     @Value("${family.service.search.endpoint}")
     private String familyServiceSearchEndpoint;
 
+    // Family MDMS Configuration
+    @Value("${family.mdms.module}")
+    private String mdmsFamilyModule;
+
+    @Value("${family.mdms.configuration.master}")
+    private String mdmsFamilyConfigurationMaster;
+
+    @Value("${family.mdms.configuration.filter}")
+    private String mdmsFamilyConfigurationFilter;
+
+    @Value("${family.configuration.cache.ttl}")
+    private Long familyConfigurationCacheTtl;
+
+    @Value("${egov.user.oauth.token.endpoint}")
+    private String userOauthTokenEndpoint;
+
     // DigiLocker Configuration
     @Value("${digilocker.register}")
     private Boolean digilockerRegister;
@@ -148,4 +164,23 @@ public class UserConfiguration {
 
     @Value("${citizen.registration.withlogin.enabled}")
     private Boolean citizenRegistrationWithLoginEnabled;
+
+    // IDGen Configuration
+    @Value("${egov.idgen.host}")
+    private String idGenHost;
+
+    @Value("${egov.idgen.path}")
+    private String idGenPath;
+
+    @Value("${egov.idgen.citizen.id.name}")
+    private String idGenCitizenIdName;
+
+    @Value("${egov.idgen.citizen.id.format}")
+    private String idGenCitizenIdFormat;
+
+    @Value("${egov.idgen.user.doc.id.name}")
+    private String idGenUserDocIdName;
+
+    @Value("${egov.idgen.user.doc.id.format}")
+    private String idGenUserDocIdFormat;
 }

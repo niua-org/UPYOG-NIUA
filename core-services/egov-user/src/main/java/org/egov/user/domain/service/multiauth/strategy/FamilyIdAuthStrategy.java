@@ -7,6 +7,8 @@ import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.service.config.FamilyConfigurationService;
+import org.egov.user.web.contract.config.FamilyConfig;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.persistence.repository.OtpRepository;
 import org.egov.user.persistence.repository.UserRepository;
@@ -57,6 +59,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
     private final RestTemplate restTemplate;
 
     private final org.egov.user.config.UserConfiguration userConfiguration;
+    private final FamilyConfigurationService familyConfigurationService;
     private final Map<String, Integer> invalidOtpAttempts = new ConcurrentHashMap<>();
 
     /**
@@ -68,6 +71,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
      * @param encryptionDecryptionUtil utility for encrypted criteria and decryption
      * @param restTemplate             HTTP client for invoking state JIT family provisioning
      * @param userConfiguration        application configuration properties
+     * @param familyConfigurationService dynamic state family configuration service
      */
     @Autowired
     public FamilyIdAuthStrategy(UserService userService,
@@ -75,13 +79,24 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                                 OtpRepository otpRepository,
                                 EncryptionDecryptionUtil encryptionDecryptionUtil,
                                 @Autowired(required = false) RestTemplate restTemplate,
-                                @Autowired(required = false) org.egov.user.config.UserConfiguration userConfiguration) {
+                                @Autowired(required = false) org.egov.user.config.UserConfiguration userConfiguration,
+                                @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.restTemplate = restTemplate;
         this.userConfiguration = userConfiguration;
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    public FamilyIdAuthStrategy(UserService userService,
+                                UserRepository userRepository,
+                                OtpRepository otpRepository,
+                                EncryptionDecryptionUtil encryptionDecryptionUtil,
+                                RestTemplate restTemplate,
+                                org.egov.user.config.UserConfiguration userConfiguration) {
+        this(userService, userRepository, otpRepository, encryptionDecryptionUtil, restTemplate, userConfiguration, null);
     }
 
     /**
@@ -180,6 +195,11 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         if (StringUtils.isBlank(otp)) {
             log.error("[FAMILY-AUTH-STRATEGY] Validation failed: OTP is blank for family: {}", familyId);
             throw new CustomException(UserConstants.ERROR_INVALID_OTP, UserConstants.MSG_LOGIN_OTP_REQUIRED);
+        }
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateFamilySupported(request.getRequestInfo(), tenantId);
         }
 
         // Determine effective identifier for OTP and user resolution: mobileNumber OR aadhaarNumber OR familyId
@@ -348,18 +368,34 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         if (user == null || (StringUtils.isBlank(request.getFamilyId()) && StringUtils.isBlank(request.getReferenceId()))) {
             return;
         }
+
+        // Only invoke State JIT provision endpoint if tenant policy is configured for STATE_REGISTRY
+        if (familyConfigurationService != null) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(request.getRequestInfo(), request.getTenantId());
+            if (config != null && !config.isStateRegistry()) {
+                log.info("[FAMILY-AUTH-STRATEGY] Skipping State Family JIT provision: tenant {} is configured as {}",
+                        request.getTenantId(), config.getFamilyType());
+                return;
+            }
+        }
+
         if (restTemplate == null) {
             log.debug("[FAMILY-AUTH-STRATEGY] RestTemplate not configured, skipping JIT family notification");
             return;
         }
         try {
-            String host = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceHost()))
-                    ? userConfiguration.getFamilyServiceHost()
-                    : "http://localhost:8092/";
-            String endpoint = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceStateJitEndpoint()))
-                    ? userConfiguration.getFamilyServiceStateJitEndpoint()
-                    : "/family/v1/state/_jitProvision";
+            if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFamilyServiceHost())) {
+                throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "family.service.host is not configured");
+            }
+            if (StringUtils.isBlank(userConfiguration.getFamilyServiceStateJitEndpoint())) {
+                throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "family.service.state.jit.endpoint is not configured");
+            }
 
+            String host = userConfiguration.getFamilyServiceHost().trim();
+            if (!host.endsWith("/")) {
+                host += "/";
+            }
+            String endpoint = userConfiguration.getFamilyServiceStateJitEndpoint().trim();
             String url = host + (endpoint.startsWith("/") ? endpoint.substring(1) : endpoint);
 
             Map<String, Object> jitRequest = new HashMap<>();

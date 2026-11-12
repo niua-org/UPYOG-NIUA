@@ -80,6 +80,12 @@ public class FamilySearchCriteria {
     private FamilyStatus status;
 
     /**
+     * Filter households by family type (e.g. {@code UPYOG_INTERNAL}, {@code STATE_REGISTRY}).
+     */
+    @JsonProperty("familyType")
+    private String familyType;
+
+    /**
      * Pagination offset index for SQL query.
      */
     @JsonProperty("offset")
@@ -100,6 +106,6 @@ public class FamilySearchCriteria {
         boolean hasIdent = StringUtils.isNotBlank(familyId) || !CollectionUtils.isEmpty(familyIds) || StringUtils.isNotBlank(tenantId);
         boolean hasMembers = StringUtils.isNotBlank(headUserUuid) || StringUtils.isNotBlank(memberUserUuid)
                 || !CollectionUtils.isEmpty(memberUserUuids) || StringUtils.isNotBlank(mobileNumber);
-        return !hasIdent && !hasMembers && StringUtils.isBlank(category) && status == null;
+        return !hasIdent && !hasMembers && StringUtils.isBlank(category) && status == null && StringUtils.isBlank(familyType);
     }
 }

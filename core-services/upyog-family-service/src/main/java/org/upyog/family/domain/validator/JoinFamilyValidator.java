@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
 import org.upyog.family.domain.model.FamilyStatus;
+import org.upyog.family.domain.service.config.FamilyConfigurationService;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.RequesterDxClient;
@@ -32,24 +33,43 @@ public class JoinFamilyValidator {
     private final FamilyMasterDataService masterDataService;
     private final RequesterDxClient requesterDxClient;
     private final UserClient userClient;
+    private final FamilyConfigurationService familyConfigurationService;
 
     /**
-     * Constructs a JoinFamilyValidator with required repository, master data, DX requester, and user client dependencies.
+     * Constructs a JoinFamilyValidator with required repository, master data, DX requester, user client, and configuration service.
+     *
+     * @param familyRepository repository for family persistence and query lookups
+     * @param masterDataService service for MDMS relationship validation
+     * @param requesterDxClient client for validating consent tokens against DX requester
+     * @param userClient client for user profile lookups and identity verification
+     * @param familyConfigurationService service validating state family configuration policy
+     */
+    @Autowired
+    public JoinFamilyValidator(FamilyRepository familyRepository,
+                               FamilyMasterDataService masterDataService,
+                               RequesterDxClient requesterDxClient,
+                               UserClient userClient,
+                               @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
+        this.familyRepository = familyRepository;
+        this.masterDataService = masterDataService;
+        this.requesterDxClient = requesterDxClient;
+        this.userClient = userClient;
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    /**
+     * Backward-compatible constructor without dynamic family configuration service.
      *
      * @param familyRepository repository for family persistence and query lookups
      * @param masterDataService service for MDMS relationship validation
      * @param requesterDxClient client for validating consent tokens against DX requester
      * @param userClient client for user profile lookups and identity verification
      */
-    @Autowired
     public JoinFamilyValidator(FamilyRepository familyRepository,
                                FamilyMasterDataService masterDataService,
                                RequesterDxClient requesterDxClient,
                                UserClient userClient) {
-        this.familyRepository = familyRepository;
-        this.masterDataService = masterDataService;
-        this.requesterDxClient = requesterDxClient;
-        this.userClient = userClient;
+        this(familyRepository, masterDataService, requesterDxClient, userClient, null);
     }
 
     /**
@@ -67,6 +87,11 @@ public class JoinFamilyValidator {
 
         // Ensure caller is identity-verified in user registry database
         userClient.validateCallerIsVerified(request.getRequestInfo());
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), request.getTenantId());
+        }
         // Ensure applicant is identity-verified in user registry database
         userClient.validateUserIsVerified(request.getApplicantUserUuid(), request.getRequestInfo());
 
@@ -106,21 +131,10 @@ public class JoinFamilyValidator {
                     "Applicant already belongs to active family: " + activeFamilyIds.get(0));
         }
 
-        // Validate HoF consent / OTP authorization
-        if (StringUtils.isBlank(request.getHofConsentOtp())) {
-            throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Head of Family authorization OTP / consent token is mandatory to join this family.");
-        }
-
-        boolean consentValid = requesterDxClient.verifyConsentToken(
-                request.getHofConsentOtp(),
-                request.getApplicantUserUuid(),
-                existingFamily.getFamilyId(),
-                request.getTenantId(),
-                request.getRequestInfo());
-        if (!consentValid) {
-            throw new CustomException(FamilyConstants.ERROR_CONSENT_INVALID,
-                    "Head of Family consent verification failed.");
+        // Validate HoF authorization transaction identifier (txnId)
+        if (StringUtils.isBlank(request.getTxnId())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "Head of Family authorization transaction identifier (txnId) is mandatory to join this family.");
         }
 
         log.info("[UPYOG-JOIN-FAMILY-VALIDATOR] Successfully validated join family request for applicant: {}", request.getApplicantUserUuid());

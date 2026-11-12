@@ -115,6 +115,25 @@ class AddressServiceImplTest {
                 .isEqualTo(UserConstants.ERROR_DUPLICATE_ADDRESS);
     }
 
+    @Test
+    void createAddress_missingAddressProof_throwsMandatoryError() {
+        Address address = validAddress();
+        address.setFilestoreId(null);
+        AddressRequest request = AddressRequest.builder()
+                .uuid("citizen-uuid")
+                .requestInfo(RequestInfo.builder().build())
+                .address(address)
+                .build();
+
+        when(userRepository.getUserIdByUuid("citizen-uuid")).thenReturn(42L);
+        when(userRepository.getTenantIdByUserId(42L)).thenReturn("pb.amritsar");
+
+        assertThatThrownBy(() -> service.createAddress(request))
+                .isInstanceOf(CustomException.class)
+                .extracting(ex -> ((CustomException) ex).getCode())
+                .isEqualTo(UserConstants.UG_USER_ADDRESS_FILESTORE_ID_MANDATORY);
+    }
+
     private static Address validAddress() {
         return Address.builder()
                 .city("Amritsar")
@@ -123,6 +142,7 @@ class AddressServiceImplTest {
                 .houseNumber("Flat 402")
                 .landmark("Near Golden Temple")
                 .pinCode("143001")
+                .filestoreId("filestore-addr-proof-001")
                 .type(AddressType.CORRESPONDENCE)
                 .addressType("CORRESPONDENCE")
                 .tenantId("pb.amritsar")

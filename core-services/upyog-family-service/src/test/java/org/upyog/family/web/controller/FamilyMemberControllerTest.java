@@ -100,7 +100,7 @@ class FamilyMemberControllerTest {
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-3")
                 .relationshipWithHead("DAUGHTER")
-                .hofConsentOtp("OTP-1234")
+                .txnId("OTP-1234")
                 .build();
 
         when(memberService.joinFamily(any(JoinFamilyRequest.class))).thenReturn(family);

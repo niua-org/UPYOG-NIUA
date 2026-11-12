@@ -17,6 +17,8 @@ import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarEkycMarkVerifiedRequest;
+import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -25,13 +27,18 @@ import org.egov.user.web.contract.profile.ProfileResponse;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.egov.tracer.model.CustomException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.egov.tracer.http.HttpUtils.isInterServiceCall;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -203,6 +210,10 @@ public class ProfileController {
                 MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getInclude() : null);
 
+        if (request != null && request.getActive() == null) {
+            request.setActive(true);
+        }
+
         Set<ProfileIncludeEntity> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
         List<Error> enrichmentErrors = new ArrayList<>();
         List<User> users = profileService.searchProfile(request, normalizedIncludes, enrichmentErrors);
@@ -301,6 +312,27 @@ public class ProfileController {
             @ApiResponse(responseCode = "401", description = "Unauthorized caller context"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+    /**
+     * Inter-service endpoint invoked after requester-services-dx Aadhaar OTP verification to persist verified identity.
+     *
+     * @param request inter-service mark-verified payload
+     * @param headers HTTP headers used to validate inter-service origin
+     * @return empty OK response
+     */
+    @PostMapping("/aadhaar/_markVerifiedAfterEkyc")
+    public ResponseEntity<Void> markVerifiedAfterEkyc(@RequestBody @Valid AadhaarEkycMarkVerifiedRequest request,
+                                                      @RequestHeader HttpHeaders headers) {
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, "Inter-service call required");
+        }
+        profileService.markCitizenVerifiedAfterAadhaarEkyc(
+                request.getUserUuid(),
+                request.getAadhaarNumber(),
+                request.getTenantId(),
+                request.getRequestInfo());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PostMapping("/aadhaar/_verifyProfile")
     public ResponseEntity<AadhaarCitizenVerifyResponse> verifyProfileWithAadhaar(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
         log.info("[PROFILE-CONTROLLER] Received profile Aadhaar verification request. refId: {}, aadhaar: {}",
@@ -308,6 +340,48 @@ public class ProfileController {
                 MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
 
         AadhaarCitizenVerifyResponse response = profileService.verifyLoggedInCitizenProfile(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Dedicated secure endpoint to look up a citizen by Aadhaar number.
+     * Access is restricted strictly to trusted internal microservices.
+     *
+     * @param request Aadhaar search request payload containing 12-digit Aadhaar number
+     * @param headers HTTP headers used to validate inter-service origin
+     * @return {@link ProfileResponse} containing the resolved citizen profile, or empty list if not found
+     */
+    @Operation(
+            summary = "Search Citizen by Aadhaar (Internal Services Only)",
+            description = "Dedicated secure endpoint to lookup a citizen profile by UIDAI Aadhaar number. Strictly restricted to trusted internal microservices."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Citizen profile resolved successfully",
+                    content = @Content(schema = @Schema(implementation = ProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid Aadhaar number or missing parameters"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context - inter-service call required"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/aadhaar/_search")
+    public ResponseEntity<ProfileResponse> searchByAadhaar(@RequestBody @Valid AadhaarSearchRequest request,
+                                                           @RequestHeader HttpHeaders headers) {
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, "Searching citizen by Aadhaar is restricted to trusted internal services");
+        }
+        log.info("[PROFILE-CONTROLLER] Received dedicated Aadhaar citizen search request. tenant: {}, aadhaar: {}",
+                request != null ? request.getTenantId() : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        List<User> users = profileService.searchProfileByAadhaar(request);
+        List<UserSearchResponseContent> contents = users != null
+                ? users.stream().map(UserSearchResponseContent::new).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        ProfileResponse response = ProfileResponse.builder()
+                .responseInfo(ResponseInfo.builder().status(UserConstants.STATUS_SUCCESS).build())
+                .user(contents)
+                .build();
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

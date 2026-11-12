@@ -85,6 +85,9 @@ public final class UserConstants {
     public static final String ERROR_INVALID_SEARCH_CRITERIA = "INVALID_SEARCH_CRITERIA";
     public static final String ERROR_USER_UUID_REQUIRED = "USER_UUID_REQUIRED";
     public static final String ERROR_INVALID_REQUEST = "INVALID_REQUEST";
+    public static final String ERROR_FAMILY_NOT_SUPPORTED = "FAMILY_NOT_SUPPORTED";
+    public static final String ERROR_OPERATION_NOT_ALLOWED = "OPERATION_NOT_ALLOWED";
+    public static final String MDMS_MASTER_FAMILY_CONFIGURATION = "FamilyConfiguration";
     public static final String ERROR_INVALID_TENANT_ID = "INVALID_TENANT_ID";
     public static final String ERROR_INVALID_AADHAAR_IDENTIFIER = "INVALID_AADHAAR_IDENTIFIER";
     public static final String ERROR_AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
@@ -121,6 +124,7 @@ public final class UserConstants {
     public static final String UG_USER_ADDRESS_LANDMARK_MANDATORY = "UG_USER_ADDRESS_LANDMARK_MANDATORY";
     public static final String UG_USER_ADDRESS_PIN_CODE_MANDATORY = "UG_USER_ADDRESS_PIN_CODE_MANDATORY";
     public static final String UG_USER_ADDRESS_TYPE_MANDATORY = "UG_USER_ADDRESS_TYPE_MANDATORY";
+    public static final String UG_USER_ADDRESS_FILESTORE_ID_MANDATORY = "UG_USER_ADDRESS_FILESTORE_ID_MANDATORY";
 
     // Address Non-Editable Fields
     public static final String UG_USER_ADDRESS_NON_EDITABLE_CITY = "UG_USER_ADDRESS_NON_EDITABLE_CITY";
@@ -193,6 +197,7 @@ public final class UserConstants {
     public static final String MSG_PIN_CODE_MANDATORY = "Pin Code is mandatory for address creation.";
     public static final String MSG_ADDRESS_TYPE_MANDATORY = "Address Type is mandatory for address creation.";
     public static final String MSG_INVALID_ADDRESS_TYPE = "Address type is not valid according to configured master data.";
+    public static final String MSG_ADDRESS_FILESTORE_ID_MANDATORY = "Address Proof is mandatory for address creation.";
 
     // Section 8 Non-Editable Field Modification Messages
     public static final String MSG_NON_EDITABLE_MOBILE = "Mobile Number is non-editable and cannot be changed.";
@@ -293,9 +298,6 @@ public final class UserConstants {
     // =========================================================================
     // 7. External Service Endpoints & Integration Keys
     // =========================================================================
-    public static final String AADHAAR_SEND_OTP_PATH = "/aadhaar/v1/_sendOtp";
-    public static final String AADHAAR_VERIFY_OTP_PATH = "/aadhaar/v1/_verifyOtp";
-
     public static final String JSON_KEY_DEMOGRAPHICS = "demographics";
     public static final String JSON_KEY_NAME = "name";
     public static final String JSON_KEY_GENDER = "gender";
@@ -316,7 +318,34 @@ public final class UserConstants {
     public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
     public static final String CITIZEN_USERNAME_PREFIX = "CITIZEN_";
     public static final String DEFAULT_AADHAAR_CITIZEN_NAME = "Aadhaar Verified Citizen";
-    public static final String DEFAULT_REQUESTER_AADHAAR_VERIFY_ENDPOINT = "requester-services-dx/aadhaar/v1/_verifyOtp";
+
+    public static final List<String> MOCK_CITIZEN_NAMES = Collections.unmodifiableList(Arrays.asList(
+            "Aarav Sharma",
+            "Priya Patel",
+            "Rohan Verma",
+            "Ananya Gupta",
+            "Vikram Singh",
+            "Sneha Reddy",
+            "Rahul Kumar",
+            "Pooja Joshi",
+            "Amitabh Das",
+            "Neha Malhotra",
+            "Rajesh Iyer",
+            "Sunita Meena",
+            "Suresh Nair",
+            "Kavita Rao",
+            "Manish Choudhary",
+            "Deepika Sen",
+            "Aditya Mishra",
+            "Divya Bhat",
+            "Arjun Kapoor",
+            "Ritu Mukherjee"
+    ));
+
+    public static String getRandomCitizenName() {
+        int index = java.util.concurrent.ThreadLocalRandom.current().nextInt(MOCK_CITIZEN_NAMES.size());
+        return MOCK_CITIZEN_NAMES.get(index);
+    }
 
     // =========================================================================
     // 9. Family Service Integration Constants
@@ -325,7 +354,6 @@ public final class UserConstants {
     public static final String FAMILY_STATUS_ACTIVE = "ACTIVE";
     public static final String FIELD_FAMILY_ID = "familyId";
     public static final String FIELD_FAMILY_STATUS = "status";
-    public static final String DEFAULT_FAMILY_SEARCH_ENDPOINT = "family/v1/family/_search";
     public static final String FAMILY_PARAM_MEMBER_USER_UUID = "memberUserUuid";
     public static final String FAMILY_PARAM_MEMBER_USER_UUIDS = "memberUserUuids";
     public static final String PARAM_TENANT_ID = "tenantId";
