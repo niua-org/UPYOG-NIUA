@@ -54,79 +54,98 @@ public class MemberAssetDetail {
      * Nested citizen demographic profile details if provided in structured format.
      */
     @Valid
+    @ToString.Exclude
     @JsonProperty("citizenDetails")
     private CitizenProfileDetail citizenDetails;
 
-    // Direct / flat demographic attribute fallbacks
+    // Direct / flat demographic attribute fallbacks (all PII excluded from toString)
+    @ToString.Exclude
     @JsonProperty("name")
     private String name;
 
+    @ToString.Exclude
     @JsonProperty("mobileNumber")
     private String mobileNumber;
 
+    @ToString.Exclude
     @JsonProperty("gender")
     private String gender;
 
+    @ToString.Exclude
     @JsonProperty("dob")
     private Long dob;
 
+    @ToString.Exclude
     @JsonProperty("photo")
     private String photo;
 
+    @ToString.Exclude
     @JsonProperty("emailId")
     private String emailId;
 
+    @ToString.Exclude
     @JsonProperty("alternateMobileNumber")
     private String alternateMobileNumber;
 
+    @ToString.Exclude
     @JsonProperty("fatherName")
     private String fatherName;
 
+    @ToString.Exclude
     @JsonProperty("motherName")
     private String motherName;
 
+    @ToString.Exclude
     @JsonProperty("spouseName")
     private String spouseName;
 
+    @ToString.Exclude
     @JsonProperty("guardian")
     private String guardian;
 
+    @ToString.Exclude
     @JsonProperty("guardianRelation")
     private String guardianRelation;
 
+    @ToString.Exclude
     @JsonProperty("caste")
     private String caste;
 
+    @ToString.Exclude
     @JsonProperty("isSpeciallyAbled")
     private Boolean isSpeciallyAbled;
 
     /**
-     * Attached citizen identity and proof documents.
+     * Attached citizen identity and proof documents (PII excluded from toString).
      */
     @Valid
+    @ToString.Exclude
     @JsonProperty("documents")
     @Builder.Default
     private List<UserDocument> documents = new ArrayList<>();
 
     /**
-     * Declared property assets (Rural and Urban) owned by this member.
+     * Declared property assets (Rural and Urban) owned by this member (excluded from toString).
      */
     @Valid
+    @ToString.Exclude
     @JsonProperty("properties")
     @Builder.Default
     private List<UserProperty> properties = new ArrayList<>();
 
     /**
-     * Declared income and tax identifier details for this member.
+     * Declared income and tax identifier details for this member (financial PII excluded from toString).
      */
     @Valid
+    @ToString.Exclude
     @JsonProperty("income")
     private UserIncome income;
 
     /**
-     * Declared vehicle ownerships for this member.
+     * Declared vehicle ownerships for this member (asset details excluded from toString).
      */
     @Valid
+    @ToString.Exclude
     @JsonProperty("vehicles")
     @Builder.Default
     private List<UserVehicle> vehicles = new ArrayList<>();

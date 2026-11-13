@@ -4,16 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
-import org.egov.user.domain.model.User;
-import org.egov.user.domain.model.UserDocument;
-import org.egov.user.domain.model.UserSearchCriteria;
-import org.egov.user.domain.model.asset.PropertyOwner;
-import org.egov.user.domain.model.asset.RuralPropertyDetail;
-import org.egov.user.domain.model.asset.UrbanPropertyDetail;
-import org.egov.user.domain.model.asset.UserIncome;
-import org.egov.user.domain.model.asset.UserProperty;
-import org.egov.user.domain.model.asset.UserVehicle;
-import org.egov.user.domain.model.enums.GuardianRelation;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserIncomeRepository;
@@ -26,24 +17,19 @@ import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
 import org.egov.user.web.contract.asset.MemberAssetSyncResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 /**
- * Implementation of {@link MemberAssetService} orchestrating transactional synchronization of
- * citizen profile demographics, attached KYC/identity proofs, properties, income, and vehicle declarations.
+ * Service implementation managing citizen profile demographics, attached identity documents,
+ * and declared assets synchronization in the {@code egov-user} core registry.
  *
- * <p>Strictly adheres to SOLID principles:</p>
- * <ul>
- *   <li><b>Single Responsibility Principle (SRP):</b> Coordinates cross-table persistence across user and asset repositories.</li>
- *   <li><b>Open/Closed Principle (OCP):</b> Extensible to further asset specializations without modifying contract shapes.</li>
- *   <li><b>Dependency Inversion Principle (DIP):</b> Relies strictly on injected repository abstractions.</li>
- * </ul>
+ * <p>Coordinates batch synchronization across family members, delegating each member to an isolated
+ * transactional processor ({@link MemberAssetProcessor}) with {@code REQUIRES_NEW} propagation to prevent
+ * partial database writes on failure.</p>
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -52,46 +38,67 @@ import java.util.UUID;
 @Slf4j
 public class MemberAssetServiceImpl implements MemberAssetService {
 
-    private final UserRepository userRepository;
-    private final UserPropertyRepository propertyRepository;
-    private final UserIncomeRepository incomeRepository;
-    private final UserVehicleRepository vehicleRepository;
-    private final UserDocumentRepository documentRepository;
+    private final MemberAssetProcessor memberAssetProcessor;
+    private final UserConfiguration userConfiguration;
 
     /**
-     * Constructs a {@code MemberAssetServiceImpl} with repositories for users, properties, income, vehicles, and documents.
+     * Primary constructor injecting the isolated transactional {@link MemberAssetProcessor} and configuration.
      *
-     * @param userRepository repository for querying and updating user demographic records
-     * @param propertyRepository repository for persisting 3NF property assets and ownership
-     * @param incomeRepository repository for persisting citizen income declarations
-     * @param vehicleRepository repository for persisting declared vehicle assets
-     * @param documentRepository repository for persisting user documents and verification statuses
+     * @param memberAssetProcessor per-member isolated transactional processor
+     * @param userConfiguration   centralized user configuration
      */
     @Autowired
+    public MemberAssetServiceImpl(MemberAssetProcessor memberAssetProcessor,
+                                 @Autowired(required = false) UserConfiguration userConfiguration) {
+        this.memberAssetProcessor = memberAssetProcessor;
+        this.userConfiguration = userConfiguration;
+    }
+
+    public MemberAssetServiceImpl(MemberAssetProcessor memberAssetProcessor) {
+        this(memberAssetProcessor, null);
+    }
+
+    /**
+     * Backwards-compatible constructor for existing tests and components.
+     *
+     * @param userRepository     repository for querying and updating user demographic records
+     * @param propertyRepository repository for persisting 3NF property assets and ownership
+     * @param incomeRepository   repository for persisting citizen income declarations
+     * @param vehicleRepository  repository for persisting declared vehicle assets
+     * @param documentRepository repository for persisting user documents and verification statuses
+     */
     public MemberAssetServiceImpl(UserRepository userRepository,
-                                 UserPropertyRepository propertyRepository,
-                                 UserIncomeRepository incomeRepository,
-                                 UserVehicleRepository vehicleRepository,
-                                 UserDocumentRepository documentRepository) {
-        this.userRepository = userRepository;
-        this.propertyRepository = propertyRepository;
-        this.incomeRepository = incomeRepository;
-        this.vehicleRepository = vehicleRepository;
-        this.documentRepository = documentRepository;
+                                  UserPropertyRepository propertyRepository,
+                                  UserIncomeRepository incomeRepository,
+                                  UserVehicleRepository vehicleRepository,
+                                  UserDocumentRepository documentRepository) {
+        this(new MemberAssetProcessor(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository), null);
     }
 
     /**
      * Synchronizes demographics and declared assets for all members in the incoming sync request.
      *
+     * <p>Each member is processed in an independent {@code REQUIRES_NEW} transaction. If any member fails,
+     * their database writes are cleanly rolled back without affecting other members. Top-level status reflects
+     * the aggregated result ({@code SUCCESS}, {@code PARTIAL_SUCCESS}, or {@code FAILED}) and internal errors
+     * are sanitized before reaching API callers.</p>
+     *
      * @param request the member asset sync request payload
-     * @return synchronization response envelope detailing per-member results
-     * @throws CustomException if request payload is null
+     * @return synchronization response envelope detailing per-member results and overall status
+     * @throws CustomException if request payload is null or caller is missing when required
      */
     @Override
-    @Transactional
     public MemberAssetSyncResponse syncMemberAssets(MemberAssetSyncRequest request) {
         if (request == null) {
             throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_MEMBER_ASSET_SYNC_PAYLOAD_NULL);
+        }
+
+        // Fix for PR Comment #4 (Audit actor): Validate caller presence if configured to require caller
+        if (userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getRequireCallerForSync())) {
+            if (request.getRequestInfo() == null || request.getRequestInfo().getUserInfo() == null) {
+                log.error("[MEMBER-ASSET-SERVICE] Caller userInfo in RequestInfo is mandatory but was not provided");
+                throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
+            }
         }
 
         List<MemberAssetDetail> members = request.getNormalizedMembers();
@@ -106,10 +113,13 @@ public class MemberAssetServiceImpl implements MemberAssetService {
 
         List<MemberAssetSyncResult> results = new ArrayList<>();
 
+        int memberIndex = 0;
         for (MemberAssetDetail memberDetail : members) {
-            String userUuid = memberDetail.resolveUserUuid();
+            memberIndex++;
+            String userUuid = memberDetail != null ? memberDetail.resolveUserUuid() : null;
             if (StringUtils.isBlank(userUuid)) {
-                log.error("[MEMBER-ASSET-SERVICE] Missing userUuid for member payload: {}", memberDetail);
+                // Security / PII protection: Log only the member payload index, never log the entire payload or PII
+                log.error("[MEMBER-ASSET-SERVICE] Missing userUuid for member at index {}", memberIndex);
                 results.add(MemberAssetSyncResult.builder()
                         .userUuid(UserConstants.UNKNOWN_USER_UUID)
                         .status(UserConstants.STATUS_FAILED)
@@ -119,407 +129,58 @@ public class MemberAssetServiceImpl implements MemberAssetService {
             }
 
             try {
-                MemberAssetSyncResult result = processSingleMember(memberDetail, request);
+                // Delegate to isolated transaction processor (REQUIRES_NEW per member)
+                MemberAssetSyncResult result = memberAssetProcessor.processSingleMember(memberDetail, request);
                 results.add(result);
             } catch (Exception e) {
                 log.error("[MEMBER-ASSET-SERVICE] Synchronization failed for user UUID {}: {}", userUuid, e.getMessage(), e);
+                // Sanitize error message to prevent leaking raw SQL/internal exception details
+                String safeMessage = sanitizeErrorMessage(e, userUuid);
                 results.add(MemberAssetSyncResult.builder()
                         .userUuid(userUuid)
                         .status(UserConstants.STATUS_FAILED)
-                        .message(UserConstants.MSG_SYNC_ERROR_PREFIX + e.getMessage())
+                        .message(safeMessage)
                         .build());
             }
         }
 
+        // Determine accurate top-level status based on member results: SUCCESS, PARTIAL_SUCCESS, or FAILED
+        long successCount = results.stream().filter(r -> UserConstants.STATUS_SUCCESS.equalsIgnoreCase(r.getStatus())).count();
+        long failedCount = results.stream().filter(r -> UserConstants.STATUS_FAILED.equalsIgnoreCase(r.getStatus())).count();
+
+        String overallStatus;
+        if (failedCount == 0) {
+            overallStatus = UserConstants.STATUS_SUCCESS;
+        } else if (successCount == 0) {
+            overallStatus = UserConstants.STATUS_FAILED;
+        } else {
+            overallStatus = UserConstants.STATUS_PARTIAL_SUCCESS;
+        }
+
+        log.info("[MEMBER-ASSET-SERVICE] Synchronization completed with overall status: {}. Total: {}, Success: {}, Failed: {}",
+                overallStatus, results.size(), successCount, failedCount);
+
         return MemberAssetSyncResponse.builder()
-                .responseInfo(ResponseInfo.builder().status(UserConstants.STATUS_SUCCESS).build())
-                .status(UserConstants.STATUS_SUCCESS)
+                .responseInfo(ResponseInfo.builder().status(overallStatus).build())
+                .status(overallStatus)
                 .results(results)
                 .build();
     }
 
     /**
-     * Processes asset and demographic synchronization for an individual family member.
+     * Sanitizes exception details to prevent leaking internal SQL syntax or database metadata to clients.
      *
-     * @param memberDetail member payload containing citizen UUID, demographics, and assets
-     * @param request      original request context envelope
-     * @return result object summarizing synced asset counts and status
+     * @param e        thrown exception
+     * @param userUuid citizen user UUID
+     * @return safe, human-readable error description
      */
-    private MemberAssetSyncResult processSingleMember(MemberAssetDetail memberDetail, MemberAssetSyncRequest request) {
-        String userUuid = memberDetail.resolveUserUuid();
-        log.info("[MEMBER-ASSET-SERVICE] Beginning asset synchronization for citizen UUID: {}", userUuid);
-
-        UserSearchCriteria criteria = UserSearchCriteria.builder()
-                .uuid(Collections.singletonList(userUuid))
-                .excludeAddressDetails(true)
-                .build();
-        List<User> foundUsers = userRepository.findAll(criteria);
-        if (CollectionUtils.isEmpty(foundUsers)) {
-            log.warn("[MEMBER-ASSET-SERVICE] Citizen with UUID {} not found in eg_user", userUuid);
-            return MemberAssetSyncResult.builder()
-                    .userUuid(userUuid)
-                    .status(UserConstants.STATUS_FAILED)
-                    .message(UserConstants.MSG_USER_RECORD_NOT_FOUND_PREFIX + userUuid + UserConstants.MSG_USER_RECORD_NOT_FOUND_SUFFIX)
-                    .build();
+    private String sanitizeErrorMessage(Exception e, String userUuid) {
+        if (e instanceof CustomException ce) {
+            return StringUtils.isNotBlank(ce.getMessage()) ? ce.getMessage() : ce.getCode();
         }
-
-        User existingUser = foundUsers.get(0);
-        User oldUser = existingUser.toBuilder().build();
-        Long userId = existingUser.getId();
-
-        Long actorId = (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null && request.getRequestInfo().getUserInfo().getId() != null)
-                ? request.getRequestInfo().getUserInfo().getId()
-                : (userId != null ? userId : 1L);
-
-        String actorUuid = (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null && StringUtils.isNotBlank(request.getRequestInfo().getUserInfo().getUuid()))
-                ? request.getRequestInfo().getUserInfo().getUuid()
-                : existingUser.getUuid();
-
-        // 1. Update demographics on eg_user
-        boolean demographicModified = updateDemographics(existingUser, memberDetail);
-        if (demographicModified) {
-            userRepository.update(existingUser, oldUser, actorId, actorUuid);
-            log.info("[MEMBER-ASSET-SERVICE] Updated demographics in eg_user for UUID: {}", userUuid);
+        if (e instanceof IllegalArgumentException) {
+            return e.getMessage();
         }
-
-        // 2. Persist attached citizen documents (e.g. Caste certificate, Aadhaar, DOB proof)
-        int docsSynced = persistCitizenDocuments(memberDetail, existingUser, actorId);
-
-        // 3. Persist declared property assets (Rural and Urban with co-owners)
-        List<String> propertyIds = persistProperties(memberDetail, existingUser, actorId, actorUuid);
-
-        // 4. Persist income and fiscal identity declarations
-        String incomeId = persistIncome(memberDetail, existingUser, actorId, actorUuid);
-
-        // 5. Persist vehicle declarations
-        List<String> vehicleIds = persistVehicles(memberDetail, existingUser, actorId, actorUuid);
-
-        log.info("[MEMBER-ASSET-SERVICE] Successfully completed asset sync for citizen UUID: {}. Properties: {}, Vehicles: {}, Income: {}",
-                userUuid, propertyIds.size(), vehicleIds.size(), incomeId != null);
-
-        return MemberAssetSyncResult.builder()
-                .userUuid(userUuid)
-                .status(UserConstants.STATUS_SUCCESS)
-                .message(UserConstants.MSG_MEMBER_ASSETS_SYNC_SUCCESS)
-                .propertiesSynced(propertyIds.size())
-                .propertyIds(propertyIds)
-                .incomeSynced(incomeId != null)
-                .incomeId(incomeId)
-                .vehiclesSynced(vehicleIds.size())
-                .vehicleIds(vehicleIds)
-                .documentsSynced(docsSynced)
-                .build();
-    }
-
-    /**
-     * Updates mutable citizen demographic fields on the existing user entity if changes are present.
-     *
-     * @param existingUser the existing citizen user domain entity
-     * @param detail       the incoming member asset detail
-     * @return {@code true} if at least one demographic field was modified; {@code false} otherwise
-     */
-    private boolean updateDemographics(User existingUser, MemberAssetDetail detail) {
-        boolean modified = false;
-
-        String fatherName = detail.resolveFatherName();
-        if (StringUtils.isNotBlank(fatherName) && !StringUtils.equals(fatherName, existingUser.getFatherName())) {
-            existingUser.setFatherName(fatherName);
-            modified = true;
-        }
-
-        String motherName = detail.resolveMotherName();
-        if (StringUtils.isNotBlank(motherName) && !StringUtils.equals(motherName, existingUser.getMotherName())) {
-            existingUser.setMotherName(motherName);
-            modified = true;
-        }
-
-        String spouseName = detail.resolveSpouseName();
-        if (StringUtils.isNotBlank(spouseName) && !StringUtils.equals(spouseName, existingUser.getSpouseName())) {
-            existingUser.setSpouseName(spouseName);
-            modified = true;
-        }
-
-        String guardian = detail.resolveGuardian();
-        if (StringUtils.isNotBlank(guardian) && !StringUtils.equals(guardian, existingUser.getGuardian())) {
-            existingUser.setGuardian(guardian);
-            modified = true;
-        }
-
-        String guardianRelation = detail.resolveGuardianRelation();
-        if (StringUtils.isNotBlank(guardianRelation)) {
-            try {
-                GuardianRelation rel = GuardianRelation.valueOf(guardianRelation.trim().toUpperCase());
-                if (!rel.equals(existingUser.getGuardianRelation())) {
-                    existingUser.setGuardianRelation(rel);
-                    modified = true;
-                }
-            } catch (Exception e) {
-                log.debug("[MEMBER-ASSET-SERVICE] Unrecognized guardian relation: {}", guardianRelation);
-            }
-        }
-
-        String caste = detail.resolveCaste();
-        if (StringUtils.isNotBlank(caste) && !StringUtils.equals(caste, existingUser.getCaste())) {
-            existingUser.setCaste(caste);
-            modified = true;
-        }
-
-        Boolean speciallyAbled = detail.resolveIsSpeciallyAbled();
-        if (speciallyAbled != null && !speciallyAbled.equals(existingUser.getIsSpeciallyAbled())) {
-            existingUser.setIsSpeciallyAbled(speciallyAbled);
-            modified = true;
-        }
-
-        String altMobile = detail.resolveAlternateMobileNumber();
-        if (StringUtils.isNotBlank(altMobile) && !StringUtils.equals(altMobile, existingUser.getAlternateMobileNumber())) {
-            existingUser.setAlternateMobileNumber(altMobile);
-            modified = true;
-        }
-
-        String email = detail.resolveEmailId();
-        if (StringUtils.isNotBlank(email) && !StringUtils.equals(email, existingUser.getEmailId())) {
-            existingUser.setEmailId(email);
-            modified = true;
-        }
-
-        String photo = detail.resolvePhoto();
-        if (StringUtils.isNotBlank(photo) && !StringUtils.equals(photo, existingUser.getPhoto())) {
-            existingUser.setPhoto(photo);
-            modified = true;
-        }
-
-        return modified;
-    }
-
-    /**
-     * Persists citizen identity and proof documents into {@code ug_user_document}.
-     *
-     * @param detail       member asset detail containing attached documents
-     * @param existingUser existing citizen user
-     * @param actorId      numeric user ID of the updater
-     * @return count of successfully persisted documents
-     */
-    private int persistCitizenDocuments(MemberAssetDetail detail, User existingUser, Long actorId) {
-        List<UserDocument> documents = detail.resolveAllDocuments();
-        if (CollectionUtils.isEmpty(documents)) {
-            return 0;
-        }
-
-        int count = 0;
-        for (UserDocument doc : documents) {
-            if (doc == null || StringUtils.isBlank(doc.getFilestoreId())) {
-                continue;
-            }
-            doc.setUserId(existingUser.getId());
-            doc.setUserUuid(existingUser.getUuid());
-            if (StringUtils.isBlank(doc.getTenantId())) {
-                doc.setTenantId(detail.getTenantId() != null ? detail.getTenantId() : existingUser.getTenantId());
-            }
-            if (StringUtils.isBlank(doc.getReferenceType())) {
-                doc.setReferenceType(UserConstants.DOC_REF_TYPE_CITIZEN_PROFILE);
-            }
-            if (StringUtils.isBlank(doc.getReferenceId())) {
-                doc.setReferenceId(existingUser.getUuid());
-            }
-            doc.setCreatedBy(actorId);
-            doc.setLastModifiedBy(actorId);
-            documentRepository.create(doc);
-            count++;
-        }
-        return count;
-    }
-
-    /**
-     * Persists declared properties, urban/rural specializations, and co-owners into normalized 3NF tables.
-     *
-     * @param detail       member asset detail containing property list
-     * @param existingUser existing citizen user
-     * @param actorId      numeric ID of the updater
-     * @param actorUuid    UUID of the updater
-     * @return list of generated property primary key IDs
-     */
-    private List<String> persistProperties(MemberAssetDetail detail, User existingUser, Long actorId, String actorUuid) {
-        List<UserProperty> properties = detail.getProperties();
-        if (CollectionUtils.isEmpty(properties)) {
-            return Collections.emptyList();
-        }
-
-        List<String> propertyIds = new ArrayList<>();
-        String effectiveTenant = StringUtils.isNotBlank(detail.getTenantId()) ? detail.getTenantId() : existingUser.getTenantId();
-
-        for (UserProperty prop : properties) {
-            if (prop == null) continue;
-
-            if (StringUtils.isBlank(prop.getId())) {
-                prop.setId(UUID.randomUUID().toString());
-            }
-            prop.setUserUuid(existingUser.getUuid());
-            if (StringUtils.isBlank(prop.getTenantId())) {
-                prop.setTenantId(effectiveTenant);
-            }
-            prop.setCreatedBy(actorUuid);
-            prop.setLastModifiedBy(actorUuid);
-
-            // Document proof attachment
-            if (prop.getDocument() != null && StringUtils.isNotBlank(prop.getDocument().getFilestoreId())) {
-                UserDocument doc = prop.getDocument();
-                doc.setUserId(existingUser.getId());
-                doc.setUserUuid(existingUser.getUuid());
-                doc.setTenantId(prop.getTenantId());
-                doc.setReferenceType(UserConstants.DOC_REF_TYPE_PROPERTY);
-                doc.setReferenceId(prop.getId());
-                doc.setCreatedBy(actorId);
-                doc.setLastModifiedBy(actorId);
-                documentRepository.create(doc);
-                prop.setDocumentId(doc.getId());
-            }
-
-            propertyRepository.saveProperty(prop);
-            propertyIds.add(prop.getId());
-
-            // Urban property specialization
-            if (UserConstants.LOCALITY_TYPE_URBAN.equalsIgnoreCase(prop.getLocalityType()) && prop.getUrbanPropertyDetail() != null) {
-                UrbanPropertyDetail urban = prop.getUrbanPropertyDetail();
-                urban.setPropertyRecordId(prop.getId());
-                urban.setTenantId(prop.getTenantId());
-                urban.setCreatedBy(actorUuid);
-                urban.setLastModifiedBy(actorUuid);
-                propertyRepository.saveUrbanProperty(urban);
-            }
-
-            // Rural property specialization
-            if (UserConstants.LOCALITY_TYPE_RURAL.equalsIgnoreCase(prop.getLocalityType()) && prop.getRuralPropertyDetail() != null) {
-                RuralPropertyDetail rural = prop.getRuralPropertyDetail();
-                rural.setPropertyRecordId(prop.getId());
-                rural.setTenantId(prop.getTenantId());
-                rural.setCreatedBy(actorUuid);
-                rural.setLastModifiedBy(actorUuid);
-                propertyRepository.saveRuralProperty(rural);
-            }
-
-            // Normalized co-owners (strictly 3NF)
-            if (!CollectionUtils.isEmpty(prop.getOwners())) {
-                for (PropertyOwner owner : prop.getOwners()) {
-                    if (owner == null) continue;
-                    if (StringUtils.isBlank(owner.getId())) {
-                        owner.setId(UUID.randomUUID().toString());
-                    }
-                    owner.setPropertyId(prop.getId());
-                    owner.setTenantId(prop.getTenantId());
-                    owner.setCreatedBy(actorUuid);
-                    owner.setLastModifiedBy(actorUuid);
-                    propertyRepository.savePropertyOwner(owner);
-                }
-            }
-        }
-        return propertyIds;
-    }
-
-    /**
-     * Persists fiscal income declarations and attached tax/salary proof documents into {@code ug_user_income}.
-     *
-     * @param detail       member asset detail containing income declaration
-     * @param existingUser existing citizen user
-     * @param actorId      numeric ID of the updater
-     * @param actorUuid    UUID of the updater
-     * @return generated income primary key ID or null if no income was declared
-     */
-    private String persistIncome(MemberAssetDetail detail, User existingUser, Long actorId, String actorUuid) {
-        UserIncome income = detail.getIncome();
-        if (income == null) {
-            return null;
-        }
-
-        if (StringUtils.isBlank(income.getId())) {
-            income.setId(UUID.randomUUID().toString());
-        }
-        income.setUserUuid(existingUser.getUuid());
-        if (StringUtils.isBlank(income.getTenantId())) {
-            income.setTenantId(StringUtils.isNotBlank(detail.getTenantId()) ? detail.getTenantId() : existingUser.getTenantId());
-        }
-        income.setCreatedBy(actorUuid);
-        income.setLastModifiedBy(actorUuid);
-
-        // Salary proof document
-        if (income.getSalaryProofDocument() != null && StringUtils.isNotBlank(income.getSalaryProofDocument().getFilestoreId())) {
-            UserDocument sDoc = income.getSalaryProofDocument();
-            sDoc.setUserId(existingUser.getId());
-            sDoc.setUserUuid(existingUser.getUuid());
-            sDoc.setTenantId(income.getTenantId());
-            sDoc.setReferenceType(UserConstants.DOC_REF_TYPE_INCOME_SALARY);
-            sDoc.setReferenceId(income.getId());
-            sDoc.setCreatedBy(actorId);
-            sDoc.setLastModifiedBy(actorId);
-            documentRepository.create(sDoc);
-            income.setSalaryProofDocId(sDoc.getId());
-        }
-
-        // Tax proof document
-        if (income.getTaxProofDocument() != null && StringUtils.isNotBlank(income.getTaxProofDocument().getFilestoreId())) {
-            UserDocument tDoc = income.getTaxProofDocument();
-            tDoc.setUserId(existingUser.getId());
-            tDoc.setUserUuid(existingUser.getUuid());
-            tDoc.setTenantId(income.getTenantId());
-            tDoc.setReferenceType(UserConstants.DOC_REF_TYPE_INCOME_TAX);
-            tDoc.setReferenceId(income.getId());
-            tDoc.setCreatedBy(actorId);
-            tDoc.setLastModifiedBy(actorId);
-            documentRepository.create(tDoc);
-            income.setTaxProofDocId(tDoc.getId());
-        }
-
-        incomeRepository.saveIncome(income);
-        return income.getId();
-    }
-
-    /**
-     * Persists declared vehicles and RC proof documents into {@code ug_user_vehicle}.
-     *
-     * @param detail       member asset detail containing vehicle declarations
-     * @param existingUser existing citizen user
-     * @param actorId      numeric ID of the updater
-     * @param actorUuid    UUID of the updater
-     * @return list of generated vehicle primary key IDs
-     */
-    private List<String> persistVehicles(MemberAssetDetail detail, User existingUser, Long actorId, String actorUuid) {
-        List<UserVehicle> vehicles = detail.getVehicles();
-        if (CollectionUtils.isEmpty(vehicles)) {
-            return Collections.emptyList();
-        }
-
-        List<String> vehicleIds = new ArrayList<>();
-        String effectiveTenant = StringUtils.isNotBlank(detail.getTenantId()) ? detail.getTenantId() : existingUser.getTenantId();
-
-        for (UserVehicle veh : vehicles) {
-            if (veh == null) continue;
-
-            if (StringUtils.isBlank(veh.getId())) {
-                veh.setId(UUID.randomUUID().toString());
-            }
-            veh.setUserUuid(existingUser.getUuid());
-            if (StringUtils.isBlank(veh.getTenantId())) {
-                veh.setTenantId(effectiveTenant);
-            }
-            veh.setCreatedBy(actorUuid);
-            veh.setLastModifiedBy(actorUuid);
-
-            // Registration Certificate (RC) document
-            if (veh.getRcDocument() != null && StringUtils.isNotBlank(veh.getRcDocument().getFilestoreId())) {
-                UserDocument rcDoc = veh.getRcDocument();
-                rcDoc.setUserId(existingUser.getId());
-                rcDoc.setUserUuid(existingUser.getUuid());
-                rcDoc.setTenantId(veh.getTenantId());
-                rcDoc.setReferenceType(UserConstants.DOC_REF_TYPE_VEHICLE_RC);
-                rcDoc.setReferenceId(veh.getId());
-                rcDoc.setCreatedBy(actorId);
-                rcDoc.setLastModifiedBy(actorId);
-                documentRepository.create(rcDoc);
-                veh.setRcDocId(rcDoc.getId());
-            }
-
-            vehicleRepository.saveVehicle(veh);
-            vehicleIds.add(veh.getId());
-        }
-        return vehicleIds;
+        return "Synchronization failed for citizen " + userUuid + " due to an internal processing error";
     }
 }

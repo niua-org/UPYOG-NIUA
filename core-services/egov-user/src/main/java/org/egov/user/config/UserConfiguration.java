@@ -216,4 +216,15 @@ public class UserConfiguration {
 
     @Value("${egov.idgen.user.doc.id.format}")
     private String idGenUserDocIdFormat;
+
+    // Fix for PR Comment #4: Audit actor configuration for member asset synchronization
+    // Explicit property bindings loaded strictly from application.properties without inline fallback values
+    @Value("${user.system.actor.id}")
+    private Long systemActorId;
+
+    @Value("${user.system.actor.uuid}")
+    private String systemActorUuid;
+
+    @Value("${user.member.asset.sync.require.caller}")
+    private Boolean requireCallerForSync;
 }

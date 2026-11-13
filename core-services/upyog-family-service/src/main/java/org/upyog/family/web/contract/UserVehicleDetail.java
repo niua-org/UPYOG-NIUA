@@ -79,6 +79,18 @@ public class UserVehicleDetail {
     private String makerModel;
 
     /**
+     * Fuel type of the vehicle (e.g. PETROL, DIESEL, ELECTRIC, CNG, HYBRID).
+     */
+    @JsonProperty("fuelType")
+    private String fuelType;
+
+    /**
+     * Vehicle classification category (e.g. 2_WHEELER, 4_WHEELER, COMMERCIAL, LMV, HMV).
+     */
+    @JsonProperty("category")
+    private String category;
+
+    /**
      * Attached Registration Certificate (RC) proof document.
      */
     @Valid

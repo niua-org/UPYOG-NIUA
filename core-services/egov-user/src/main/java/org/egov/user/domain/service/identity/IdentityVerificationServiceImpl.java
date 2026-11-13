@@ -317,7 +317,10 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
         } else {
             mockMobile = "9876543210";
         }
-        MockCitizenRecord record = MockAadhaarRecordService.getNextRecord();
+        // Fix for PR Comment #16 (MockAadhaarRecordService.java:144):
+        // Deterministically select mock citizen persona based on Aadhaar number hash.
+        String aadhaarKey = StringUtils.isNotBlank(rawAadhaar) ? rawAadhaar : refId;
+        MockCitizenRecord record = MockAadhaarRecordService.getRecordForAadhaar(aadhaarKey);
         Gender gender = UserConstants.GENDER_FEMALE_CODE.equalsIgnoreCase(record.getGender()) ? Gender.FEMALE : Gender.MALE;
         Date dob = parseDob(record.getDob() != null ? record.getDob() : UserConstants.DEFAULT_MOCK_DOB);
         return VerifiedAadhaarDemographics.builder()

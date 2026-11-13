@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -18,18 +20,21 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Service managing sequential dispensing of mock Aadhaar citizen demographics
+ * Service managing sequential and deterministic dispensing of mock Aadhaar citizen demographics
  * for local development and mock mode testing.
  *
  * <p>Loads 500+ realistic citizen records from {@code mock/aadhaar-mock-citizens.json}
- * and serves them sequentially (round-robin) so that each successive test or OTP invocation
- * receives a distinct new citizen persona until all records are consumed.</p>
+ * when {@code aadhaar.mock.enabled=true}. Supports deterministic lookup based on Aadhaar hash
+ * as well as sequential round-robin dispensing.</p>
  *
  * @author UPYOG Team
  * @since 1.0.0
  */
 @Service
 @Slf4j
+// Fix for PR Comment #16 (MockAadhaarRecordService.java:144):
+// Conditionally load mock bean only when aadhaar.mock.enabled is true, preventing unnecessary loading in prod.
+@ConditionalOnProperty(name = "aadhaar.mock.enabled", havingValue = "true")
 public class MockAadhaarRecordService {
 
     /**
@@ -53,7 +58,11 @@ public class MockAadhaarRecordService {
         private String careOf;
         /** Father or guardian name */
         private String fatherName;
-        /** Simulated 10-digit mobile number */
+        /**
+         * Fix for PR Comment #17 (MockAadhaarRecordService.java:57):
+         * Reserved dummy 10-digit mobile number in non-routable test range (99999XXXXX)
+         * to prevent triggering SMS/OTPs to real citizens if sent downstream.
+         */
         private String mobileNumber;
         /** House or flat number */
         private String house;
@@ -119,6 +128,39 @@ public class MockAadhaarRecordService {
         } catch (Exception e) {
             log.error("[MOCK-AADHAAR-SERVICE] Failed to load mock Aadhaar citizens: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * Fix for PR Comment #16 (MockAadhaarRecordService.java:144):
+     * Retrieves a deterministic mock citizen record derived deterministically from the Aadhaar number hash.
+     * Guarantees that the same Aadhaar number always resolves to the exact same citizen persona
+     * across repeated calls, preventing non-deterministic test failures in verification and deduplication flows.
+     *
+     * @param aadhaar plain or masked Aadhaar number
+     * @return deterministic {@link MockCitizenRecord} persona
+     */
+    public static MockCitizenRecord getRecordForAadhaar(String aadhaar) {
+        if (StringUtils.isBlank(aadhaar)) {
+            return getNextRecord();
+        }
+        if (RECORDS.isEmpty()) {
+            loadRecords();
+        }
+
+        if (RECORDS.isEmpty()) {
+            return MockCitizenRecord.builder()
+                    .name(DEFAULT_NAME)
+                    .gender(DEFAULT_GENDER)
+                    .dob(DEFAULT_DOB)
+                    .careOf(DEFAULT_CARE_OF)
+                    .build();
+        }
+
+        int index = Math.floorMod(aadhaar.trim().hashCode(), RECORDS.size());
+        MockCitizenRecord record = RECORDS.get(index);
+        log.info("[MOCK-AADHAAR-SERVICE] Deterministically dispensing mock citizen record [{}/{}]: {} ({}) for Aadhaar hash",
+                index + 1, RECORDS.size(), record.getName(), record.getGender());
+        return record;
     }
 
     /**

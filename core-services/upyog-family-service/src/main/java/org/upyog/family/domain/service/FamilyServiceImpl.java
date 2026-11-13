@@ -1,5 +1,6 @@
 package org.upyog.family.domain.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,8 +34,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -58,7 +61,6 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class FamilyServiceImpl implements FamilyService {
 
     private final FamilyRepository familyRepository;
@@ -67,6 +69,33 @@ public class FamilyServiceImpl implements FamilyService {
     private final UserClient userClient;
     private final KafkaProducer kafkaProducer;
     private final FamilyConfiguration configuration;
+    private final ObjectMapper objectMapper;
+
+    @Autowired
+    public FamilyServiceImpl(FamilyRepository familyRepository,
+                             FamilyValidator familyValidator,
+                             IdGenRepository idGenRepository,
+                             UserClient userClient,
+                             KafkaProducer kafkaProducer,
+                             FamilyConfiguration configuration,
+                             @Autowired(required = false) ObjectMapper objectMapper) {
+        this.familyRepository = familyRepository;
+        this.familyValidator = familyValidator;
+        this.idGenRepository = idGenRepository;
+        this.userClient = userClient;
+        this.kafkaProducer = kafkaProducer;
+        this.configuration = configuration;
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+    }
+
+    public FamilyServiceImpl(FamilyRepository familyRepository,
+                             FamilyValidator familyValidator,
+                             IdGenRepository idGenRepository,
+                             UserClient userClient,
+                             KafkaProducer kafkaProducer,
+                             FamilyConfiguration configuration) {
+        this(familyRepository, familyValidator, idGenRepository, userClient, kafkaProducer, configuration, null);
+    }
 
     /**
      * Creates a new household Family Unit in UPYOG with sequential ID generation, audit logging, and persistence.
@@ -195,13 +224,32 @@ public class FamilyServiceImpl implements FamilyService {
             }
         }
 
-        // 3. Persist to Database via Kafka Persister (standard UPYOG pattern)
-        kafkaProducer.push(configuration.getCreateFamilyTopic(), request);
-
-        // 4. Synchronize member demographics and assets to core egov-user registry
+        // 3. Fix for PR Comment #10: Synchronize member demographics and declared assets to egov-user BEFORE Kafka push.
+        // If declared asset synchronization fails:
+        // - Records assetSyncStatus = "FAILED" on the family additionalDetails.
+        // - If failOnAssetSyncError is enabled (default true), throws CustomException to abort family creation so the family
+        //   is not created with missing/unattached assets.
         if (members != null && !members.isEmpty()) {
-            userClient.syncMemberAssets(members, family.getTenantId(), requestInfo);
+            boolean hasAssets = hasDeclaredAssets(members);
+            log.info("[UPYOG-FAMILY-SERVICE] Synchronizing member assets to egov-user for family: {}, hasDeclaredAssets: {}", familyId, hasAssets);
+            boolean syncSuccess = userClient.syncMemberAssets(members, family.getTenantId(), requestInfo);
+            if (!syncSuccess) {
+                recordAssetSyncStatus(family, FamilyConstants.STATUS_FAILED);
+                log.error("[UPYOG-FAMILY-SERVICE] Member asset synchronization failed for family: {}. Members: {}, hasAssets: {}",
+                        familyId, members.size(), hasAssets);
+                if (hasAssets && configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
+                    throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+                }
+            } else {
+                recordAssetSyncStatus(family, FamilyConstants.STATUS_SUCCESS);
+                log.info("[UPYOG-FAMILY-SERVICE] Successfully synchronized member assets for family: {}", familyId);
+            }
+        } else {
+            recordAssetSyncStatus(family, FamilyConstants.ASSET_SYNC_STATUS_NOT_APPLICABLE);
         }
+
+        // 4. Persist to Database via Kafka Persister (standard UPYOG pattern)
+        kafkaProducer.push(configuration.getCreateFamilyTopic(), request);
 
         // 5. Enrich citizen demographics
         enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
@@ -303,6 +351,13 @@ public class FamilyServiceImpl implements FamilyService {
             existingFamily.setAdditionalDetails(updatePayload.getAdditionalDetails());
         }
 
+        // Fix for PR Comment #11 (FamilyServiceImpl.java:338):
+        // Capture existing members before updatePayload overwrites existingFamily.members.
+        // Used to detect which members were actually modified and avoid full re-synchronization of unchanged members.
+        List<FamilyMember> previousMembers = existingFamily.getMembers() != null
+                ? new ArrayList<>(existingFamily.getMembers())
+                : Collections.emptyList();
+
         if (updatePayload.getMembers() != null) {
             existingFamily.setMembers(updatePayload.getMembers());
             for (FamilyMember m : existingFamily.getMembers()) {
@@ -331,13 +386,36 @@ public class FamilyServiceImpl implements FamilyService {
             }
         }
 
+        // Fix for PR Comment #10 & #11:
+        // - Comment #10: Synchronize member demographics and assets BEFORE Kafka persister push.
+        // - Comment #11: Optimize updateFamily to ONLY synchronize newly added members or existing members whose
+        //   asset declarations or demographics were actually modified, rather than triggering a full re-sync
+        //   of every household member on every family update.
+        List<FamilyMember> membersToSync = getMembersRequiringAssetSync(updatePayload.getMembers(), previousMembers);
+        if (!membersToSync.isEmpty()) {
+            log.info("[UPYOG-FAMILY-SERVICE] Synchronizing {} modified/new member(s) with declared assets to egov-user for family: {}",
+                    membersToSync.size(), existingFamily.getFamilyId());
+            boolean syncSuccess = userClient.syncMemberAssets(membersToSync, existingFamily.getTenantId(), requestInfo);
+            if (!syncSuccess) {
+                recordAssetSyncStatus(existingFamily, FamilyConstants.STATUS_FAILED);
+                log.error("[UPYOG-FAMILY-SERVICE] Member asset update synchronization failed for family: {}. Modified members: {}",
+                        existingFamily.getFamilyId(), membersToSync.size());
+                if (configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
+                    throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+                }
+            } else {
+                recordAssetSyncStatus(existingFamily, FamilyConstants.STATUS_SUCCESS);
+                log.info("[UPYOG-FAMILY-SERVICE] Successfully synchronized {} modified member(s) declared assets for family: {}",
+                        membersToSync.size(), existingFamily.getFamilyId());
+            }
+        } else {
+            recordAssetSyncStatus(existingFamily, FamilyConstants.ASSET_SYNC_STATUS_NOT_APPLICABLE);
+            log.debug("[UPYOG-FAMILY-SERVICE] No modified members with declared assets to synchronize for family update: {}",
+                    existingFamily.getFamilyId());
+        }
+
         // Asynchronously persist via Kafka Persister (standard UPYOG pattern)
         kafkaProducer.push(configuration.getUpdateFamilyTopic(), new FamilyRequest(requestInfo, existingFamily));
-
-        // Synchronize updated member demographics and assets to core egov-user registry
-        if (existingFamily.getMembers() != null && !existingFamily.getMembers().isEmpty()) {
-            userClient.syncMemberAssets(existingFamily.getMembers(), existingFamily.getTenantId(), requestInfo);
-        }
 
         enrichCitizenDemographics(Collections.singletonList(existingFamily), requestInfo);
         return existingFamily;
@@ -617,5 +695,201 @@ public class FamilyServiceImpl implements FamilyService {
                 family.setHeadName(profileMap.get(family.getHeadUserUuid()).getName());
             }
         }
+    }
+
+    /**
+     * Inspects family member roster to check if any member has declared assets or demographic documents.
+     * Fix for PR Comment #10: Distinguishes between basic membership and declarations requiring egov-user sync.
+     *
+     * @param members list of family members
+     * @return true if at least one member declares properties, vehicles, income, or demographic proof documents
+     */
+    private boolean hasDeclaredAssets(List<FamilyMember> members) {
+        if (members == null || members.isEmpty()) {
+            return false;
+        }
+        for (FamilyMember m : members) {
+            if (hasDeclaredAssets(m)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if an individual family member declares properties, vehicles, income, or demographic proof documents.
+     * Fix for PR Comment #10 & #11: Used for targeted synchronization filtering.
+     *
+     * @param m family member contract
+     * @return true if member contains declared assets or demographic documents
+     */
+    private boolean hasDeclaredAssets(FamilyMember m) {
+        if (m == null) {
+            return false;
+        }
+        if (m.getCitizenDetails() != null) {
+            if (m.getCitizenDetails().getDocuments() != null && !m.getCitizenDetails().getDocuments().isEmpty()) return true;
+            if (StringUtils.isNotBlank(m.getCitizenDetails().getCaste())) return true;
+            if (m.getCitizenDetails().getIsSpeciallyAbled() != null) return true;
+        }
+        if (m.getProperties() != null && !m.getProperties().isEmpty()) return true;
+        if (m.getIncome() != null) return true;
+        if (m.getVehicles() != null && !m.getVehicles().isEmpty()) return true;
+        return false;
+    }
+
+    /**
+     * Identifies members from an update request that require asset/demographic synchronization to egov-user.
+     * Fix for PR Comment #11 (FamilyServiceImpl.java:338):
+     * Instead of re-syncing every member in the household on every family update (which causes duplicate
+     * processing and excessive inter-service calls), this filters only for:
+     * 1) Newly added members with declared assets or demographic documents, or
+     * 2) Existing members whose asset declarations or demographic documents are explicitly supplied/modified in the update.
+     *
+     * @param incomingMembers list of members in the update payload
+     * @param previousMembers existing members from the database prior to update
+     * @return list of modified/new members requiring asset synchronization
+     */
+    private List<FamilyMember> getMembersRequiringAssetSync(List<FamilyMember> incomingMembers, List<FamilyMember> previousMembers) {
+        if (incomingMembers == null || incomingMembers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, FamilyMember> existingMemberMap = new HashMap<>();
+        if (previousMembers != null) {
+            for (FamilyMember em : previousMembers) {
+                if (em != null && StringUtils.isNotBlank(em.getUserUuid())) {
+                    existingMemberMap.put(em.getUserUuid(), em);
+                }
+            }
+        }
+
+        List<FamilyMember> membersToSync = new ArrayList<>();
+        for (FamilyMember incoming : incomingMembers) {
+            if (incoming == null || StringUtils.isBlank(incoming.getUserUuid())) {
+                continue;
+            }
+
+            // Only members with declared assets or demographic documents need egov-user sync
+            if (!hasDeclaredAssets(incoming)) {
+                continue;
+            }
+
+            FamilyMember existing = existingMemberMap.get(incoming.getUserUuid());
+            if (existing == null) {
+                // New member added during update with declared assets -> must sync
+                membersToSync.add(incoming);
+            } else if (isMemberAssetModified(incoming, existing)) {
+                // Existing member with modified or newly supplied asset declarations
+                membersToSync.add(incoming);
+            }
+        }
+        return membersToSync;
+    }
+
+    /**
+     * Checks if an incoming member's declared assets or demographic declarations differ from the existing member.
+     * Fix for PR Comment #11: Avoids re-syncing unmodified existing members during family update.
+     *
+     * @param incoming incoming member contract from the update request
+     * @param existing existing member contract from the database
+     * @return true if asset declarations or demographics are modified or newly provided
+     */
+    private boolean isMemberAssetModified(FamilyMember incoming, FamilyMember existing) {
+        if (incoming == null) {
+            return false;
+        }
+        if (existing == null) {
+            return true;
+        }
+
+        try {
+            // Check properties
+            boolean incomingHasProps = incoming.getProperties() != null && !incoming.getProperties().isEmpty();
+            boolean existingHasProps = existing.getProperties() != null && !existing.getProperties().isEmpty();
+            if (incomingHasProps != existingHasProps) {
+                return true;
+            }
+            if (incomingHasProps && !objectMapper.valueToTree(incoming.getProperties()).equals(objectMapper.valueToTree(existing.getProperties()))) {
+                return true;
+            }
+
+            // Check vehicles
+            boolean incomingHasVehicles = incoming.getVehicles() != null && !incoming.getVehicles().isEmpty();
+            boolean existingHasVehicles = existing.getVehicles() != null && !existing.getVehicles().isEmpty();
+            if (incomingHasVehicles != existingHasVehicles) {
+                return true;
+            }
+            if (incomingHasVehicles && !objectMapper.valueToTree(incoming.getVehicles()).equals(objectMapper.valueToTree(existing.getVehicles()))) {
+                return true;
+            }
+
+            // Check income
+            boolean incomingHasIncome = incoming.getIncome() != null;
+            boolean existingHasIncome = existing.getIncome() != null;
+            if (incomingHasIncome != existingHasIncome) {
+                return true;
+            }
+            if (incomingHasIncome && !objectMapper.valueToTree(incoming.getIncome()).equals(objectMapper.valueToTree(existing.getIncome()))) {
+                return true;
+            }
+
+            // Check citizen details / documents
+            if (incoming.getCitizenDetails() != null) {
+                if (existing.getCitizenDetails() == null) {
+                    return true;
+                }
+                if (!objectMapper.valueToTree(incoming.getCitizenDetails()).equals(objectMapper.valueToTree(existing.getCitizenDetails()))) {
+                    return true;
+                }
+            }
+
+            // Check if member audit timestamp indicates client-side modification
+            if (incoming.getAuditDetails() != null && existing.getAuditDetails() != null
+                    && incoming.getAuditDetails().getLastModifiedTime() != null
+                    && existing.getAuditDetails().getLastModifiedTime() != null) {
+                if (incoming.getAuditDetails().getLastModifiedTime() > existing.getAuditDetails().getLastModifiedTime()) {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[UPYOG-FAMILY-SERVICE] Error comparing member asset declarations for userUuid: {}. Defaulting to modified=true",
+                    incoming.getUserUuid(), e);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Records member asset synchronization status and timestamp into family additionalDetails.
+     * Fix for PR Comment #10: Ensures sync status is visible in audit trails and query responses.
+     *
+     * @param family family aggregate entity
+     * @param status synchronization status code (SUCCESS, FAILED, or NOT_APPLICABLE)
+     */
+    private void recordAssetSyncStatus(Family family, String status) {
+        if (family == null) return;
+        Map<String, Object> details;
+        if (family.getAdditionalDetails() instanceof Map<?, ?> map) {
+            details = new HashMap<>((Map<String, Object>) map);
+        } else if (family.getAdditionalDetails() != null) {
+            try {
+                details = objectMapper.convertValue(family.getAdditionalDetails(), Map.class);
+                if (details == null) {
+                    details = new HashMap<>();
+                }
+            } catch (Exception e) {
+                details = new HashMap<>();
+            }
+        } else {
+            details = new HashMap<>();
+        }
+        if (details == null) {
+            details = new HashMap<>();
+        }
+        details.put(FamilyConstants.KEY_MEMBER_ASSET_SYNC_STATUS, status);
+        details.put(FamilyConstants.KEY_MEMBER_ASSET_SYNC_TIMESTAMP, System.currentTimeMillis());
+        family.setAdditionalDetails(details);
     }
 }

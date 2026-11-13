@@ -91,6 +91,8 @@ public final class UserConstants {
     public static final String ERROR_INVALID_SEARCH_CRITERIA = "INVALID_SEARCH_CRITERIA";
     public static final String ERROR_USER_UUID_REQUIRED = "USER_UUID_REQUIRED";
     public static final String ERROR_INVALID_REQUEST = "INVALID_REQUEST";
+    public static final String ERROR_CALLER_INFO_REQUIRED = "CALLER_INFO_REQUIRED";
+    public static final String MSG_CALLER_INFO_REQUIRED = "Authenticated caller details in RequestInfo.userInfo are required for member asset synchronization.";
     public static final String ERROR_FAMILY_NOT_SUPPORTED = "FAMILY_NOT_SUPPORTED";
     public static final String ERROR_OPERATION_NOT_ALLOWED = "OPERATION_NOT_ALLOWED";
     public static final String MDMS_MASTER_FAMILY_CONFIGURATION = "FamilyConfiguration";

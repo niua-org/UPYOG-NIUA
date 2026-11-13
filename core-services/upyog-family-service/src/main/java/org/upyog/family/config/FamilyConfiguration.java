@@ -59,6 +59,14 @@ public class FamilyConfiguration {
     @Value("${egov.user.member.asset.sync.path}")
     private String userMemberAssetSyncPath;
 
+    // Fix for PR Comment #10: Controls whether family creation/update fails if member asset sync fails
+    @Value("${family.member.asset.sync.fail.on.error}")
+    private Boolean failOnAssetSyncError;
+
+    // Fix for PR Comment #14: Whether identity verification is mandatory for all members (including minors/dependents)
+    @Value("${family.member.verification.mandatory.for.all}")
+    private Boolean memberVerificationMandatoryForAll;
+
     @Value("${egov.filestore.host}")
     private String fileStoreHost;
 

@@ -112,7 +112,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         long ttlMillis = configuration.getRelationshipCacheTtl();
 
         CacheEntry entry = tenantRelationshipCache.get(stateTenant);
-        if (entry != null && !entry.isExpired(ttlMillis)) {
+        if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
         }
 
@@ -155,14 +155,25 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
                 ? configuration.getRelationshipCacheTtl() : 86400000L;
         CacheEntry entry = tenantCategoryCache.get(stateTenant);
-        if (entry != null && !entry.isExpired(ttlMillis)) {
+        if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
         }
         Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
                 FamilyConstants.MDMS_MODULE_COMMON_MASTERS, FamilyConstants.MDMS_MASTER_FAMILY_CATEGORY);
-        Set<String> categories = (fromMdms != null) ? fromMdms : Collections.emptySet();
-        tenantCategoryCache.put(stateTenant, new CacheEntry(categories, System.currentTimeMillis()));
-        return categories;
+        if (fromMdms != null && !fromMdms.isEmpty()) {
+            tenantCategoryCache.put(stateTenant, new CacheEntry(fromMdms, System.currentTimeMillis()));
+            return fromMdms;
+        }
+
+        // Fix for PR Comment #13 / High 5 (FamilyMasterDataServiceImpl.java:351):
+        // Avoid 24h negative cache on MDMS outage or empty response.
+        // Do not cache empty/failed MDMS results for 24h. Fallback to existing valid cache if available.
+        log.warn("[UPYOG-FAMILY-MASTER] Failed to resolve categories from MDMS for tenant: {}. Skipping negative cache.", stateTenant);
+        if (entry != null && !entry.getAllowedRelationships().isEmpty()) {
+            log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached categories for tenant: {}", stateTenant);
+            return entry.getAllowedRelationships();
+        }
+        return Collections.emptySet();
     }
 
     /**
@@ -200,14 +211,25 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
                 ? configuration.getRelationshipCacheTtl() : 86400000L;
         CacheEntry entry = tenantOccupationCache.get(stateTenant);
-        if (entry != null && !entry.isExpired(ttlMillis)) {
+        if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
         }
         Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
                 FamilyConstants.MDMS_MODULE_COMMON_MASTERS, FamilyConstants.MDMS_MASTER_OCCUPATION);
-        Set<String> occupations = (fromMdms != null) ? fromMdms : Collections.emptySet();
-        tenantOccupationCache.put(stateTenant, new CacheEntry(occupations, System.currentTimeMillis()));
-        return occupations;
+        if (fromMdms != null && !fromMdms.isEmpty()) {
+            tenantOccupationCache.put(stateTenant, new CacheEntry(fromMdms, System.currentTimeMillis()));
+            return fromMdms;
+        }
+
+        // Fix for PR Comment #13 / High 5 (FamilyMasterDataServiceImpl.java:351):
+        // Avoid 24h negative cache on MDMS outage or empty response.
+        // Do not cache empty/failed MDMS results for 24h. Fallback to existing valid cache if available.
+        log.warn("[UPYOG-FAMILY-MASTER] Failed to resolve occupations from MDMS for tenant: {}. Skipping negative cache.", stateTenant);
+        if (entry != null && !entry.getAllowedRelationships().isEmpty()) {
+            log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached occupations for tenant: {}", stateTenant);
+            return entry.getAllowedRelationships();
+        }
+        return Collections.emptySet();
     }
 
     /**
@@ -244,14 +266,25 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
                 ? configuration.getRelationshipCacheTtl() : 86400000L;
         CacheEntry entry = tenantPropertyTypeCache.get(stateTenant);
-        if (entry != null && !entry.isExpired(ttlMillis)) {
+        if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
         }
         Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
                 FamilyConstants.MDMS_MODULE_PROPERTY_TAX, FamilyConstants.MDMS_MASTER_PROPERTY_TYPE);
-        Set<String> propertyTypes = (fromMdms != null) ? fromMdms : Collections.emptySet();
-        tenantPropertyTypeCache.put(stateTenant, new CacheEntry(propertyTypes, System.currentTimeMillis()));
-        return propertyTypes;
+        if (fromMdms != null && !fromMdms.isEmpty()) {
+            tenantPropertyTypeCache.put(stateTenant, new CacheEntry(fromMdms, System.currentTimeMillis()));
+            return fromMdms;
+        }
+
+        // Fix for PR Comment #13 / High 5 (FamilyMasterDataServiceImpl.java:351):
+        // Avoid 24h negative cache on MDMS outage or empty response.
+        // Do not cache empty/failed MDMS results for 24h. Fallback to existing valid cache if available.
+        log.warn("[UPYOG-FAMILY-MASTER] Failed to resolve property types from MDMS for tenant: {}. Skipping negative cache.", stateTenant);
+        if (entry != null && !entry.getAllowedRelationships().isEmpty()) {
+            log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached property types for tenant: {}", stateTenant);
+            return entry.getAllowedRelationships();
+        }
+        return Collections.emptySet();
     }
 
     /**
@@ -288,14 +321,25 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
                 ? configuration.getRelationshipCacheTtl() : 86400000L;
         CacheEntry entry = tenantPropertyUsageCache.get(stateTenant);
-        if (entry != null && !entry.isExpired(ttlMillis)) {
+        if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
         }
         Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
                 FamilyConstants.MDMS_MODULE_PROPERTY_TAX, FamilyConstants.MDMS_MASTER_USAGE_CATEGORY);
-        Set<String> propertyUsages = (fromMdms != null) ? fromMdms : Collections.emptySet();
-        tenantPropertyUsageCache.put(stateTenant, new CacheEntry(propertyUsages, System.currentTimeMillis()));
-        return propertyUsages;
+        if (fromMdms != null && !fromMdms.isEmpty()) {
+            tenantPropertyUsageCache.put(stateTenant, new CacheEntry(fromMdms, System.currentTimeMillis()));
+            return fromMdms;
+        }
+
+        // Fix for PR Comment #13 / High 5 (FamilyMasterDataServiceImpl.java:351):
+        // Avoid 24h negative cache on MDMS outage or empty response.
+        // Do not cache empty/failed MDMS results for 24h. Fallback to existing valid cache if available.
+        log.warn("[UPYOG-FAMILY-MASTER] Failed to resolve property usages from MDMS for tenant: {}. Skipping negative cache.", stateTenant);
+        if (entry != null && !entry.getAllowedRelationships().isEmpty()) {
+            log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached property usages for tenant: {}", stateTenant);
+            return entry.getAllowedRelationships();
+        }
+        return Collections.emptySet();
     }
 
     /**
@@ -345,14 +389,29 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         String stateTenant = resolveStateTenant(tenantId);
         log.info("[UPYOG-FAMILY-MASTER] Fetching FamilyRelationship master from UPYOG MDMS for tenant: {}", stateTenant);
 
-        Set<String> relationships = fetchRelationshipsFromMdms(requestInfo, stateTenant);
-        if (relationships == null || relationships.isEmpty()) {
-            log.warn("[UPYOG-FAMILY-MASTER] MDMS returned empty relationships for tenant: {}", stateTenant);
-            relationships = Collections.emptySet();
+        Set<String> relationships = null;
+        try {
+            relationships = fetchRelationshipsFromMdms(requestInfo, stateTenant);
+        } catch (Exception e) {
+            log.warn("[UPYOG-FAMILY-MASTER] Exception fetching FamilyRelationship from MDMS for tenant {}: {}", stateTenant, e.getMessage());
         }
 
-        tenantRelationshipCache.put(stateTenant, new CacheEntry(relationships, System.currentTimeMillis()));
-        return relationships;
+        if (relationships != null && !relationships.isEmpty()) {
+            tenantRelationshipCache.put(stateTenant, new CacheEntry(relationships, System.currentTimeMillis()));
+            return relationships;
+        }
+
+        // Fix for PR Comment #13 / High 5 (FamilyMasterDataServiceImpl.java:351):
+        // Avoid 24h negative cache on MDMS outage. If MDMS returned empty or failed,
+        // do not cache the empty set for 24 hours. Fallback to existing valid cache if available.
+        log.warn("[UPYOG-FAMILY-MASTER] MDMS returned empty or unreachable relationships for tenant: {}. Skipping negative cache.", stateTenant);
+        CacheEntry existing = tenantRelationshipCache.get(stateTenant);
+        if (existing != null && !existing.getAllowedRelationships().isEmpty()) {
+            log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached relationships for tenant: {}", stateTenant);
+            return existing.getAllowedRelationships();
+        }
+
+        return Collections.emptySet();
     }
 
     /**
@@ -365,9 +424,14 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
      * @return set of normalized uppercase codes, or empty set on failure
      */
     private Set<String> fetchMasterCodesFromMdms(RequestInfo requestInfo, String stateTenant, String moduleName, String masterName) {
-        if (configuration == null || StringUtils.isBlank(configuration.getMdmsHost()) || StringUtils.isBlank(configuration.getMdmsSearchPath())) {
-            log.warn("[UPYOG-FAMILY-MASTER] MDMS host or search path is not configured");
-            return Collections.emptySet();
+        // Fix for PR Comment #13 / High 5: Fail-fast on MDMS host/path misconfiguration rather than swallowing silently
+        if (configuration == null || StringUtils.isBlank(configuration.getMdmsHost())) {
+            log.error("[UPYOG-FAMILY-MASTER] MDMS host is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_MDMS_HOST_NOT_CONFIGURED);
+        }
+        if (StringUtils.isBlank(configuration.getMdmsSearchPath())) {
+            log.error("[UPYOG-FAMILY-MASTER] MDMS search path is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_MDMS_SEARCH_PATH_NOT_CONFIGURED);
         }
         String url = configuration.getMdmsHost() + configuration.getMdmsSearchPath();
 

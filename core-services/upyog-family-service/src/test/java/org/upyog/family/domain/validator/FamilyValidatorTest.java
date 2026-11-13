@@ -2,6 +2,7 @@ package org.upyog.family.domain.validator;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
+import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.service.master.FamilyMasterDataService;
 import org.upyog.family.persistence.repository.FamilyRepository;
@@ -40,6 +41,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,6 +59,9 @@ class FamilyValidatorTest {
 
     @Mock
     private UserClient userClient;
+
+    @Mock
+    private FamilyConfiguration configuration;
 
     @InjectMocks
     private FamilyValidator validator;
@@ -300,6 +306,49 @@ class FamilyValidatorTest {
         assertDoesNotThrow(() -> validator.validateCreate(request));
     }
 
+    /**
+     * Fix for PR Comment #15 (FamilyValidator.java:210):
+     * Verifies that validateCreate throws an exception when familyAddressPropertyId does not match
+     * any of the declared properties of the family members.
+     */
+    @Test
+    @DisplayName("validateCreate should fail when familyAddressPropertyId does not match declared properties")
+    void validateCreate_InvalidResidencePropertyId_ThrowsException() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+
+        UserProperty ruralProp = UserProperty.builder()
+                .localityType("RURAL")
+                .ruralPropertyDetail(RuralPropertyDetail.builder()
+                        .gramPanchayat("Rampur GP")
+                        .villageName("Rampur Khas")
+                        .surveyNumber("KHASRA-842/1")
+                        .build())
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(ruralProp));
+        family.setFamilyAddressPropertyId("UNMATCHED-PROPERTY-999");
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_INVALID_RESIDENCE_PROPERTY_PREFIX + "UNMATCHED-PROPERTY-999"
+                + FamilyConstants.MSG_INVALID_RESIDENCE_PROPERTY_SUFFIX, ex.getMessage());
+    }
+
+    /**
+     * Fix for PR Comment #15 (FamilyValidator.java:210):
+     * Verifies that validateCreate succeeds when familyAddressPropertyId is provided
+     * but no member properties are declared (e.g. rented / external residence).
+     */
+    @Test
+    @DisplayName("validateCreate should succeed with residence property ID when no member properties declared")
+    void validateCreate_ResidencePropertyIdWithoutDeclaredProperties_Success() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+
+        family.setFamilyAddressPropertyId("RENTED-MUNICIPAL-PROP-101");
+
+        assertDoesNotThrow(() -> validator.validateCreate(request));
+    }
+
     @Test
     @DisplayName("validateMerge should fail when merging family into itself")
     void validateMerge_SelfMergeFails() {
@@ -313,5 +362,103 @@ class FamilyValidatorTest {
 
         CustomException ex = assertThrows(CustomException.class, () -> validator.validateMerge(mergeRequest, family, family));
         assertEquals(FamilyConstants.ERROR_INVALID_MERGE, ex.getCode());
+    }
+
+    /**
+     * Fix for PR Comment #12 (FamilyServiceImpl.java:394):
+     * Verifies that validateUpdate auto-normalizes legacy HoF relationship 'HEAD' to 'SELF' before MDMS validation.
+     */
+    @Test
+    @DisplayName("validateUpdate should normalize legacy HEAD relationship to SELF for Head of Family")
+    void validateUpdate_NormalizesHeadToSelf() {
+        family.setFamilyId("FAM-001");
+        FamilyMember head = family.getMembers().get(0);
+        head.setRelationshipWithHead("HEAD");
+        head.setIsHead(true);
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.singletonList("FAM-001"));
+
+        assertDoesNotThrow(() -> validator.validateUpdate(request, family));
+
+        // Verify HoF relationship is normalized to SELF
+        assertEquals(FamilyConstants.RELATIONSHIP_SELF, head.getRelationshipWithHead());
+        verify(familyMasterDataService).validateRelationship(any(), eq("pg.citya"), eq(FamilyConstants.RELATIONSHIP_SELF));
+    }
+
+    /**
+     * Fix for PR Comment #14 (FamilyValidator.java:180):
+     * Verifies that minors (< 18 yrs or CHILD) are exempt from individual e-KYC verification
+     * when memberVerificationMandatoryForAll is false.
+     */
+    @Test
+    @DisplayName("validateCreate should exempt minor child from individual verification")
+    void validateCreate_MinorChild_ExemptFromVerification() {
+        FamilyMember child = FamilyMember.builder()
+                .userUuid("user-uuid-child")
+                .relationshipWithHead("CHILD")
+                .isHead(false)
+                .active(true)
+                .dob(System.currentTimeMillis() - (10L * 365L * 24L * 60L * 60L * 1000L))
+                .build();
+        family.getMembers().add(child);
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+        when(configuration.getMemberVerificationMandatoryForAll()).thenReturn(false);
+
+        assertDoesNotThrow(() -> validator.validateCreate(request));
+
+        // Head and adult spouse are verified, but minor child is exempt
+        verify(userClient).validateUserIsVerified(eq("user-uuid-head"), any());
+        verify(userClient, never()).validateUserIsVerified(eq("user-uuid-child"), any());
+    }
+
+    /**
+     * Fix for PR Comment #14 (FamilyValidator.java:180):
+     * Verifies that dependents carrying HoF consent tokens are exempt from individual verification.
+     */
+    @Test
+    @DisplayName("validateCreate should exempt dependent with HoF consent token from individual verification")
+    void validateCreate_DependentWithConsent_ExemptFromVerification() {
+        FamilyMember dependent = FamilyMember.builder()
+                .userUuid("user-uuid-dependent")
+                .relationshipWithHead("DEPENDENT")
+                .isHead(false)
+                .active(true)
+                .consentToken("HOF-CONSENT-TOKEN-12345")
+                .build();
+        family.getMembers().add(dependent);
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+        when(configuration.getMemberVerificationMandatoryForAll()).thenReturn(false);
+
+        assertDoesNotThrow(() -> validator.validateCreate(request));
+
+        // Dependent with consent token is exempt
+        verify(userClient, never()).validateUserIsVerified(eq("user-uuid-dependent"), any());
+    }
+
+    /**
+     * Fix for PR Comment #14 (FamilyValidator.java:180):
+     * Verifies that when memberVerificationMandatoryForAll is true, even minors must be verified.
+     */
+    @Test
+    @DisplayName("validateCreate should require verification for minor when memberVerificationMandatoryForAll is true")
+    void validateCreate_MinorRequiresVerification_WhenMandatoryForAll() {
+        FamilyMember child = FamilyMember.builder()
+                .userUuid("user-uuid-child")
+                .relationshipWithHead("CHILD")
+                .isHead(false)
+                .active(true)
+                .dob(System.currentTimeMillis() - (10L * 365L * 24L * 60L * 60L * 1000L))
+                .build();
+        family.getMembers().add(child);
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+        when(configuration.getMemberVerificationMandatoryForAll()).thenReturn(true);
+        lenient().doThrow(new CustomException("USER_NOT_VERIFIED", "User is not verified"))
+                .when(userClient).validateUserIsVerified(eq("user-uuid-child"), any());
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals("USER_NOT_VERIFIED", ex.getCode());
     }
 }

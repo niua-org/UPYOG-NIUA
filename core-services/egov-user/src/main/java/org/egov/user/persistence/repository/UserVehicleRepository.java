@@ -12,7 +12,9 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,12 +51,30 @@ public class UserVehicleRepository {
 
     /**
      * Persists declared vehicle record into {@code ug_user_vehicle} and writes an audit row.
+     * Enforces natural key deduplication on vehicle registration number and foreign record ownership boundary.
      *
      * @param vehicle vehicle declaration entity
      */
     public void saveVehicle(UserVehicle vehicle) {
+        // Natural key deduplication: if id is blank, lookup existing active vehicle by (user_uuid, vehicle_number)
         if (StringUtils.isBlank(vehicle.getId())) {
-            vehicle.setId(UUID.randomUUID().toString());
+            if (StringUtils.isNotBlank(vehicle.getVehicleNumber())) {
+                String existingId = findVehicleIdByUserAndNumber(vehicle.getUserUuid(), vehicle.getVehicleNumber());
+                if (existingId != null) {
+                    vehicle.setId(existingId);
+                }
+            }
+            if (StringUtils.isBlank(vehicle.getId())) {
+                vehicle.setId(UUID.randomUUID().toString());
+            }
+        } else {
+            // Ownership boundary check: verify client-supplied id does not belong to another citizen
+            String existingOwner = findUserUuidByVehicleId(vehicle.getId());
+            if (existingOwner != null && !existingOwner.equals(vehicle.getUserUuid())) {
+                log.warn("[USER-VEHICLE-REPO] Blocked attempt to overwrite foreign vehicle ID {} owned by {} with data for {}",
+                        vehicle.getId(), existingOwner, vehicle.getUserUuid());
+                vehicle.setId(UUID.randomUUID().toString());
+            }
         }
         long now = System.currentTimeMillis();
         if (vehicle.getCreatedTime() == null) {
@@ -79,6 +99,8 @@ public class UserVehicleRepository {
         params.put("rc_doc_id", vehicle.getRcDocId());
         params.put("vehicle_type", vehicle.getVehicleType());
         params.put("maker_model", vehicle.getMakerModel());
+        params.put("fuel_type", vehicle.getFuelType());
+        params.put("category", vehicle.getCategory());
         params.put("status", vehicle.getStatus());
         params.put("additional_details", serializeJson(vehicle.getAdditionalDetails()));
         params.put("created_by", vehicle.getCreatedBy());
@@ -130,6 +152,57 @@ public class UserVehicleRepository {
             return objectMapper.writeValueAsString(obj);
         } catch (Exception e) {
             log.warn("[USER-VEHICLE-REPO] Failed to serialize additionalDetails: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up existing active vehicle ID by citizen user UUID and vehicle registration number.
+     *
+     * @param userUuid citizen user UUID
+     * @param vehicleNumber registration plate number
+     * @return existing vehicle record ID or null
+     */
+    public String findVehicleIdByUserAndNumber(String userUuid, String vehicleNumber) {
+        if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(vehicleNumber)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("user_uuid", userUuid);
+            params.put("vehicle_number", vehicleNumber.trim());
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserVehicleQueryBuilder.SELECT_ACTIVE_VEHICLE_ID_BY_USER_AND_NUMBER_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("id")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-VEHICLE-REPO] Failed to lookup existing vehicle by number: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up user_uuid of existing vehicle record by primary key ID.
+     *
+     * @param vehicleId vehicle primary key ID
+     * @return userUuid owning the vehicle or null
+     */
+    public String findUserUuidByVehicleId(String vehicleId) {
+        if (StringUtils.isBlank(vehicleId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("id", vehicleId);
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserVehicleQueryBuilder.SELECT_VEHICLE_USER_UUID_BY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("user_uuid")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-VEHICLE-REPO] Failed to lookup vehicle owner userUuid: {}", e.getMessage());
             return null;
         }
     }

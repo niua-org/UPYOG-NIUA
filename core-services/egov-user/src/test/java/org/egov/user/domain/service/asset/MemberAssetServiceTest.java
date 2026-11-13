@@ -2,6 +2,7 @@ package org.egov.user.domain.service.asset;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.UserSearchCriteria;
@@ -63,13 +64,21 @@ class MemberAssetServiceTest {
 
     @BeforeEach
     void setUp() {
-        memberAssetService = new MemberAssetServiceImpl(
+        // Fix for PR Comment #4: Explicitly configure system actor credentials without inline fallback defaults
+        UserConfiguration userConfig = UserConfiguration.builder()
+                .systemActorId(1L)
+                .systemActorUuid("SYSTEM")
+                .requireCallerForSync(false)
+                .build();
+        MemberAssetProcessor processor = new MemberAssetProcessor(
                 userRepository,
                 propertyRepository,
                 incomeRepository,
                 vehicleRepository,
-                documentRepository
+                documentRepository,
+                userConfig
         );
+        memberAssetService = new MemberAssetServiceImpl(processor, userConfig);
     }
 
     @Test
@@ -112,6 +121,41 @@ class MemberAssetServiceTest {
         MemberAssetSyncResult result = response.getResults().get(0);
         assertEquals("FAILED", result.getStatus());
         assertTrue(result.getMessage().contains("does not exist"));
+    }
+
+    @Test
+    void syncMemberAssets_tenantMismatch_returnsFailedResult() {
+        // Given an existing user in tenant 'pg.citya'
+        String citizenUuid = "citizen-uuid-tenant-test";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        // When a payload supplies an incompatible tenant 'pb.amritsar'
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pb.amritsar") // Incompatible tenant state root
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(new RequestInfo())
+                .member(detail)
+                .build();
+
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        // Then synchronization should fail for that member with tenant mismatch error
+        assertNotNull(response);
+        assertEquals(1, response.getResults().size());
+        MemberAssetSyncResult result = response.getResults().get(0);
+        assertEquals("FAILED", result.getStatus());
+        assertTrue(result.getMessage().contains("Tenant ID mismatch"));
     }
 
     @Test
@@ -201,6 +245,8 @@ class MemberAssetServiceTest {
                 .purchaseDate("2022-04-15")
                 .vehicleType("4_WHEELER")
                 .makerModel("Maruti Brezza")
+                .fuelType("PETROL")
+                .category("LMV")
                 .rcDocument(UserDocument.builder()
                         .documentType("RC_BOOK")
                         .filestoreId("file-rc-999")
@@ -256,9 +302,329 @@ class MemberAssetServiceTest {
         verify(incomeRepository, times(1)).saveIncome(any(UserIncome.class));
 
         // Verify vehicle repository interactions
-        verify(vehicleRepository, times(1)).saveVehicle(any(UserVehicle.class));
+        org.mockito.ArgumentCaptor<UserVehicle> vehicleCaptor = org.mockito.ArgumentCaptor.forClass(UserVehicle.class);
+        verify(vehicleRepository, times(1)).saveVehicle(vehicleCaptor.capture());
+        assertEquals("PETROL", vehicleCaptor.getValue().getFuelType());
+        assertEquals("LMV", vehicleCaptor.getValue().getCategory());
 
         // Verify documents persisted with referenceType and referenceId
         verify(documentRepository, atLeast(4)).create(any(UserDocument.class));
+    }
+
+    @Test
+    void syncMemberAssets_idempotency_reusesExistingIdsOnResync() {
+        // Given an existing user and pre-existing asset records in the database
+        String citizenUuid = "citizen-uuid-resync-001";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        // Mock existing record lookups returning existing IDs
+        when(propertyRepository.findUrbanPropertyId(citizenUuid, "UPYOG-PROP-001"))
+                .thenReturn("existing-prop-id-123");
+        when(incomeRepository.findActiveIncomeIdByUserUuid(citizenUuid))
+                .thenReturn("existing-income-id-456");
+        when(vehicleRepository.findVehicleIdByUserAndNumber(citizenUuid, "DL01AB1234"))
+                .thenReturn("existing-veh-id-789");
+
+        UserProperty urbanProp = UserProperty.builder()
+                .localityType("URBAN")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("UPYOG-PROP-001")
+                        .build())
+                .build();
+
+        UserIncome income = UserIncome.builder()
+                .occupation("SALARIED")
+                .annualIncome(new BigDecimal("500000.00"))
+                .build();
+
+        UserVehicle vehicle = UserVehicle.builder()
+                .vehicleNumber("DL01AB1234")
+                .build();
+
+        MemberAssetDetail memberDetail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(urbanProp))
+                .income(income)
+                .vehicles(Collections.singletonList(vehicle))
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(RequestInfo.builder().build())
+                .members(Collections.singletonList(memberDetail))
+                .build();
+
+        // When re-syncing assets without client-supplied IDs
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        // Then verify existing IDs were reused, preserving idempotency
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+        MemberAssetSyncResult result = response.getResults().get(0);
+        assertEquals("existing-income-id-456", result.getIncomeId());
+        assertTrue(result.getPropertyIds().contains("existing-prop-id-123"));
+        assertTrue(result.getVehicleIds().contains("existing-veh-id-789"));
+    }
+
+    @Test
+    void syncMemberAssets_foreignIdSupplied_blocksCrossUserOverwrite() {
+        // Given an existing user
+        String citizenUuid = "citizen-uuid-legit";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        // Mock ownership checks: the provided property ID belongs to a foreign user
+        when(propertyRepository.findUserUuidByPropertyId("foreign-prop-id-999"))
+                .thenReturn("victim-user-uuid-888");
+
+        UserProperty maliciousProp = UserProperty.builder()
+                .id("foreign-prop-id-999") // Client maliciously supplies foreign property ID
+                .localityType("URBAN")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("UPYOG-PROP-ATTACK")
+                        .build())
+                .build();
+
+        MemberAssetDetail memberDetail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(maliciousProp))
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(RequestInfo.builder().build())
+                .members(Collections.singletonList(memberDetail))
+                .build();
+
+        // When sync is performed
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        // Then the foreign property ID is blocked from overwrite and a new UUID is generated
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+        MemberAssetSyncResult result = response.getResults().get(0);
+        assertFalse(result.getPropertyIds().contains("foreign-prop-id-999"),
+                "Foreign property ID must not be reused to prevent cross-user overwrite");
+    }
+
+    @Test
+    void syncMemberAssets_singleMemberException_setsTopLevelStatusFailedAndSanitizesError() {
+        // Given a member whose processing encounters an internal database/SQL exception
+        String citizenUuid = "citizen-uuid-crash";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        // Simulate database exception during property save
+        doThrow(new org.springframework.dao.DataIntegrityViolationException("ERROR: duplicate key value violates unique constraint 'pg_catalog.idx_raw_sql'"))
+                .when(propertyRepository).saveProperty(any(UserProperty.class));
+
+        UserProperty prop = UserProperty.builder()
+                .localityType("URBAN")
+                .build();
+
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(prop))
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(RequestInfo.builder().build())
+                .members(Collections.singletonList(detail))
+                .build();
+
+        // When sync is performed
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        // Then overall status is FAILED (not SUCCESS) and raw SQL text is sanitized
+        assertNotNull(response);
+        assertEquals("FAILED", response.getStatus());
+        assertEquals("FAILED", response.getResponseInfo().getStatus());
+        assertEquals(1, response.getResults().size());
+
+        MemberAssetSyncResult result = response.getResults().get(0);
+        assertEquals("FAILED", result.getStatus());
+        assertFalse(result.getMessage().contains("pg_catalog.idx_raw_sql"), "Raw SQL exception text must not leak");
+        assertTrue(result.getMessage().contains("internal processing error"));
+    }
+
+    @Test
+    void syncMemberAssets_partialFailure_setsTopLevelStatusPartialSuccess() {
+        // Given two members: member 1 succeeds, member 2 fails with tenant mismatch
+        String uuidSuccess = "citizen-uuid-success";
+        String uuidFail = "citizen-uuid-fail";
+
+        User userSuccess = User.builder()
+                .id(101L)
+                .uuid(uuidSuccess)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .build();
+
+        User userFail = User.builder()
+                .id(102L)
+                .uuid(uuidFail)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenAnswer(invocation -> {
+                    UserSearchCriteria criteria = invocation.getArgument(0);
+                    if (criteria.getUuid() != null && criteria.getUuid().contains(uuidSuccess)) {
+                        return Collections.singletonList(userSuccess);
+                    } else if (criteria.getUuid() != null && criteria.getUuid().contains(uuidFail)) {
+                        return Collections.singletonList(userFail);
+                    }
+                    return Collections.emptyList();
+                });
+
+        MemberAssetDetail detail1 = MemberAssetDetail.builder()
+                .userUuid(uuidSuccess)
+                .tenantId("pg.citya")
+                .build();
+
+        MemberAssetDetail detail2 = MemberAssetDetail.builder()
+                .userUuid(uuidFail)
+                .tenantId("pb.amritsar") // Incompatible tenant -> will fail
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(RequestInfo.builder().build())
+                .members(List.of(detail1, detail2))
+                .build();
+
+        // When sync is performed
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        // Then overall status is PARTIAL_SUCCESS
+        assertNotNull(response);
+        assertEquals("PARTIAL_SUCCESS", response.getStatus());
+        assertEquals("PARTIAL_SUCCESS", response.getResponseInfo().getStatus());
+        assertEquals(2, response.getResults().size());
+
+        assertEquals("SUCCESS", response.getResults().get(0).getStatus());
+        assertEquals("FAILED", response.getResults().get(1).getStatus());
+    }
+
+    @Test
+    void syncMemberAssets_auditActor_usesCallerUserInfoWhenPresent() {
+        // Fix for PR Comment #4: Ensure caller credentials from RequestInfo.userInfo are strictly used
+        String citizenUuid = "citizen-uuid-actor-001";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .fatherName("Old Father")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingUser));
+
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .fatherName("New Father")
+                .build();
+
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(org.egov.common.contract.request.User.builder()
+                        .id(777L)
+                        .uuid("caller-employee-uuid")
+                        .build())
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(requestInfo)
+                .members(Collections.singletonList(detail))
+                .build();
+
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+
+        // Verify that userRepository.update received the caller's ID and UUID, not the citizen's
+        verify(userRepository).update(any(User.class), any(User.class), eq(777L), eq("caller-employee-uuid"));
+    }
+
+    @Test
+    void syncMemberAssets_auditActor_usesConfiguredSystemActorWhenUserInfoAbsent() {
+        // Fix for PR Comment #4: Missing userInfo must fall back to configured system actor, NEVER citizen's own ID
+        String citizenUuid = "citizen-uuid-actor-002";
+        User existingUser = User.builder()
+                .id(999L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .type(UserType.CITIZEN)
+                .fatherName("Old Father")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingUser));
+
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .fatherName("New Father")
+                .build();
+
+        // RequestInfo without userInfo
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(RequestInfo.builder().build())
+                .members(Collections.singletonList(detail))
+                .build();
+
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+
+        // Verify that userRepository.update received DEFAULT_SYSTEM_ACTOR_ID (1L) and "SYSTEM", NOT citizen's 999L / citizenUuid
+        verify(userRepository).update(any(User.class), any(User.class), eq(1L), eq("SYSTEM"));
+    }
+
+    @Test
+    void syncMemberAssets_auditActor_rejectsRequestWhenCallerRequiredAndMissing() {
+        // Fix for PR Comment #4: When requireCallerForSync is configured, missing userInfo must be rejected
+        UserConfiguration config = UserConfiguration.builder()
+                .requireCallerForSync(true)
+                .build();
+
+        MemberAssetProcessor processor = new MemberAssetProcessor(userRepository, propertyRepository,
+                incomeRepository, vehicleRepository, documentRepository, config);
+        MemberAssetServiceImpl serviceWithEnforcement = new MemberAssetServiceImpl(processor, config);
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(RequestInfo.builder().build())
+                .members(Collections.singletonList(MemberAssetDetail.builder().userUuid("some-uuid").build()))
+                .build();
+
+        CustomException exception = assertThrows(CustomException.class, () ->
+                serviceWithEnforcement.syncMemberAssets(request)
+        );
+
+        assertEquals("CALLER_INFO_REQUIRED", exception.getCode());
     }
 }

@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
@@ -215,5 +217,38 @@ public class AadhaarAuthStrategyTest {
         assertTrue(capturedUser.getMobileNumber().matches("^[6-9][0-9]{9}$"),
                 "Generated mobile must match 10-digit Indian mobile format");
         assertEquals(capturedUser.getMobileNumber(), capturedUser.getUsername());
+    }
+
+    /**
+     * Fix for PR Comment #18 (AadhaarAuthStrategy.java:463):
+     * Verifies that when the adapter response is missing 'isVerified', it defaults to false (fail-closed)
+     * and throws CustomException rather than allowing unverified access.
+     */
+    @Test
+    @DisplayName("Should fail closed with CustomException when adapter response omits isVerified flag")
+    public void testLogin_WhenAdapterOmitsIsVerified_FailsClosed() {
+        userConfiguration.setCitizenLoginPasswordOtpFixedEnabled(false);
+        userConfiguration.setAadhaarMockEnabled(false);
+        userConfiguration.setAadhaarOtpMaxAttempts(3);
+        userConfiguration.setRequesterServiceHost("http://mock-dx:8080/");
+        userConfiguration.setRequesterAadhaarVerifyEndpoint("aadhaar/v1/_verifyOtp");
+
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.AADHAAR_NUMBER)
+                .aadhaarNumber("123456789012")
+                .otp("654321")
+                .tenantId("pg.citya")
+                .referenceId("ref-1234")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        // Response payload missing 'isVerified'
+        String responseJson = "{\"status\":\"OK\",\"maskedAadhaar\":\"XXXXXXXX9012\"}";
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(responseJson, HttpStatus.OK);
+        when(restTemplate.postForEntity(anyString(), any(), eq(String.class))).thenReturn(responseEntity);
+
+        CustomException ex = assertThrows(CustomException.class,
+                () -> aadhaarAuthStrategy.authenticateAndResolveUser(request));
+        assertEquals(UserConstants.ERROR_AADHAAR_VERIFICATION_FAILED, ex.getCode());
     }
 }

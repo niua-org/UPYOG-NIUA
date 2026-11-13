@@ -460,7 +460,10 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
-                boolean isVerified = root.path(UserConstants.JSON_KEY_IS_VERIFIED).asBoolean(true);
+                // Fix for PR Comment #18 (AadhaarAuthStrategy.java:463):
+                // Fail-closed security fix: Default missing 'isVerified' flag to false instead of true
+                // to prevent malformed or missing verification payloads from bypassing authentication.
+                boolean isVerified = root.path(UserConstants.JSON_KEY_IS_VERIFIED).asBoolean(false);
                 if (!isVerified) {
                     recordFailedOtpAttempt(refId);
                     log.error("[AADHAAR-AUTH-STRATEGY] Identity provider reported verification unsuccessful");
@@ -535,7 +538,10 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                     ? refId.substring(refId.length() - 4) : "1234");
         }
         String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
-        MockCitizenRecord record = MockAadhaarRecordService.getNextRecord();
+        // Fix for PR Comment #16 (MockAadhaarRecordService.java:144):
+        // Deterministically select mock citizen persona based on Aadhaar number hash.
+        String aadhaarKey = StringUtils.isNotBlank(fullAadhaar) ? fullAadhaar : (StringUtils.isNotBlank(rawAadhaar) ? rawAadhaar : refId);
+        MockCitizenRecord record = MockAadhaarRecordService.getRecordForAadhaar(aadhaarKey);
         Gender gender = UserConstants.GENDER_FEMALE_CODE.equalsIgnoreCase(record.getGender()) ? Gender.FEMALE : Gender.MALE;
         Date dob = parseDob(record.getDob() != null ? record.getDob() : UserConstants.DEFAULT_MOCK_DOB);
         return VerifiedAadhaarDemographics.builder()

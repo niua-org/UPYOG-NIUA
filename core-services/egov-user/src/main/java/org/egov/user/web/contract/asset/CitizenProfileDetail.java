@@ -47,6 +47,7 @@ public class CitizenProfileDetail {
     /**
      * Primary 10-digit mobile number.
      */
+    @ToString.Exclude
     @JsonProperty("mobileNumber")
     private String mobileNumber;
 
@@ -59,48 +60,56 @@ public class CitizenProfileDetail {
     /**
      * Date of birth represented as epoch milliseconds or timestamp.
      */
+    @ToString.Exclude
     @JsonProperty("dob")
     private Long dob;
 
     /**
      * Profile photograph FileStore ID or URL.
      */
+    @ToString.Exclude
     @JsonProperty("photo")
     private String photo;
 
     /**
      * Primary email address.
      */
+    @ToString.Exclude
     @JsonProperty("emailId")
     private String emailId;
 
     /**
      * Alternate contact mobile number.
      */
+    @ToString.Exclude
     @JsonProperty("alternateMobileNumber")
     private String alternateMobileNumber;
 
     /**
      * Father's full legal name.
      */
+    @ToString.Exclude
     @JsonProperty("fatherName")
     private String fatherName;
 
     /**
      * Mother's full legal name.
      */
+    @ToString.Exclude
     @JsonProperty("motherName")
     private String motherName;
 
     /**
      * Spouse's full legal name if married.
      */
+    @ToString.Exclude
     @JsonProperty("spouseName")
     private String spouseName;
 
     /**
      * Guardian's full legal name if applicable.
      */
+    @ToString.Exclude
     @JsonProperty("guardian")
     private String guardian;
 
@@ -113,6 +122,7 @@ public class CitizenProfileDetail {
     /**
      * Socio-economic caste classification code.
      */
+    @ToString.Exclude
     @JsonProperty("caste")
     private String caste;
 
@@ -125,6 +135,7 @@ public class CitizenProfileDetail {
     /**
      * Attached demographic and identity verification documents.
      */
+    @ToString.Exclude
     @JsonProperty("documents")
     @Builder.Default
     private List<UserDocument> documents = new ArrayList<>();

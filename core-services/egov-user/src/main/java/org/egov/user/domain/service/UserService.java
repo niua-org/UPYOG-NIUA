@@ -97,9 +97,6 @@ public class UserService {
     private UserRepository userRepository;
     private OtpRepository otpRepository;
     private PasswordEncoder passwordEncoder;
-    private int defaultPasswordExpiryInDays;
-    private boolean isCitizenLoginOtpBased;
-    private boolean isEmployeeLoginOtpBased;
     private FileStoreRepository fileRepository;
     private EncryptionDecryptionUtil encryptionDecryptionUtil;
     //private TokenStore tokenStore;
@@ -108,21 +105,10 @@ public class UserService {
     // CHANGED: TokenStore -> OAuth2AuthorizationService
     private OAuth2AuthorizationService authorizationService;
 
-    private String userHost;
-    private String userOauthTokenEndpoint;
-    private Long accountUnlockCoolDownPeriod;
-    private Long maxInvalidLoginAttemptsPeriod;
-    private Boolean createUserValidateName;
-    private Long maxInvalidLoginAttempts;
-    private Boolean isDigiLockerSearch;
-    private String pwdRegex;
-    private Integer pwdMinLength;
-    private Integer pwdMaxLength;
-    private Boolean fixedOTPEnabled;
-    private String fixedOTPPassword;
-    private Boolean addressMandatoryFieldsEnabled;
-
-    @Autowired(required = false)
+    // Fix for PR Comment #19 (UserService.java:156):
+    // Removed legacy fallback fields (pwdRegex, maxInvalidLoginAttempts, etc.) and made
+    // UserConfiguration mandatory (no required = false) to eliminate degraded config fallbacks.
+    @Autowired
     private UserConfiguration userConfiguration;
 
     @Autowired
@@ -140,6 +126,8 @@ public class UserService {
 
     /**
      * Primary constructor injecting repositories and centralized configuration.
+     * Fix for PR Comment #19 (UserService.java:156):
+     * UserConfiguration injected as mandatory bean (removed required = false) to prevent degraded config fallback.
      *
      * @param userRepository repository for user persistence operations
      * @param otpRepository repository for validating OTPs
@@ -153,7 +141,7 @@ public class UserService {
     public UserService(UserRepository userRepository, OtpRepository otpRepository, FileStoreRepository fileRepository,
                        PasswordEncoder passwordEncoder, EncryptionDecryptionUtil encryptionDecryptionUtil,
                        AddressRepository addressRepository,
-                       @Autowired(required = false) UserConfiguration userConfiguration) {
+                       UserConfiguration userConfiguration) {
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.passwordEncoder = passwordEncoder;
@@ -165,7 +153,7 @@ public class UserService {
 
 	/**
 	 * Constructs a new {@link UserService} with all required repository, security, and configuration dependencies.
-	 * Legacy constructor preserved for unit test suites.
+	 * Legacy constructor preserved for unit test suites; initializes internal {@link UserConfiguration} cleanly.
 	 *
 	 * @param userRepository              repository for user persistence operations and queries
 	 * @param otpRepository               repository for validating one-time passwords with egov-otp service
@@ -191,165 +179,159 @@ public class UserService {
 		this.userRepository = userRepository;
 		this.otpRepository = otpRepository;
 		this.passwordEncoder = passwordEncoder;
-		this.defaultPasswordExpiryInDays = defaultPasswordExpiryInDays;
-		this.isCitizenLoginOtpBased = isCitizenLoginOtpBased;
-		this.isEmployeeLoginOtpBased = isEmployeeLoginOtpBased;
 		this.fileRepository = fileRepository;
 		this.encryptionDecryptionUtil = encryptionDecryptionUtil;
-		this.pwdRegex = pwdRegex;
-		this.pwdMaxLength = pwdMaxLength;
-		this.pwdMinLength = pwdMinLength;
 		this.addressRepository = addressRepository;
+		this.userConfiguration = UserConfiguration.builder()
+				.defaultPasswordExpiryInDays(defaultPasswordExpiryInDays)
+				.citizenLoginPasswordOtpEnabled(isCitizenLoginOtpBased)
+				.employeeLoginPasswordOtpEnabled(isEmployeeLoginOtpBased)
+				.pwdRegex(pwdRegex)
+				.pwdMaxLength(pwdMaxLength)
+				.pwdMinLength(pwdMinLength)
+				.accountUnlockCoolDownPeriod(30L)
+				.maxInvalidLoginAttemptsPeriod(30L)
+				.maxInvalidLoginAttempts(5L)
+				.createUserValidateName(true)
+				.digilockerSearch(false)
+				.citizenLoginPasswordOtpFixedEnabled(false)
+				.build();
 	}
 
     /**
-     * Resolves the configured egov-user host, falling back to instance field if unconfigured.
+     * Resolves the configured egov-user host directly from centralized UserConfiguration.
      *
      * @return configured user service host URL
      */
     private String getUserHost() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getUserHost()))
-                ? userConfiguration.getUserHost() : this.userHost;
+        return userConfiguration != null ? userConfiguration.getUserHost() : null;
     }
 
     /**
-     * Resolves the configured OAuth token endpoint, falling back to instance field if unconfigured.
+     * Resolves the configured OAuth token endpoint directly from centralized UserConfiguration.
      *
      * @return OAuth token endpoint path
      */
     private String getUserOauthTokenEndpoint() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getUserOauthTokenEndpoint()))
-                ? userConfiguration.getUserOauthTokenEndpoint() : this.userOauthTokenEndpoint;
+        return userConfiguration != null ? userConfiguration.getUserOauthTokenEndpoint() : null;
     }
 
     /**
-     * Resolves the account unlock cooldown period in minutes.
+     * Resolves the account unlock cooldown period in minutes from centralized UserConfiguration.
      *
      * @return cooldown period in minutes
      */
     private Long getAccountUnlockCoolDownPeriod() {
-        return (userConfiguration != null && userConfiguration.getAccountUnlockCoolDownPeriod() != null)
-                ? userConfiguration.getAccountUnlockCoolDownPeriod() : (accountUnlockCoolDownPeriod != null ? accountUnlockCoolDownPeriod : 30L);
+        return userConfiguration != null ? userConfiguration.getAccountUnlockCoolDownPeriod() : null;
     }
 
     /**
-     * Resolves the evaluation window in minutes for tracking invalid login attempts.
+     * Resolves the evaluation window in minutes for tracking invalid login attempts from UserConfiguration.
      *
      * @return evaluation window in minutes
      */
     private Long getMaxInvalidLoginAttemptsPeriod() {
-        return (userConfiguration != null && userConfiguration.getMaxInvalidLoginAttemptsPeriod() != null)
-                ? userConfiguration.getMaxInvalidLoginAttemptsPeriod() : (maxInvalidLoginAttemptsPeriod != null ? maxInvalidLoginAttemptsPeriod : 30L);
+        return userConfiguration != null ? userConfiguration.getMaxInvalidLoginAttemptsPeriod() : null;
     }
 
     /**
-     * Resolves whether user name validation is enforced during new user creation.
+     * Resolves whether user name validation is enforced during new user creation from UserConfiguration.
      *
      * @return true if user name validation is enabled
      */
     private boolean isCreateUserValidateName() {
-        return (userConfiguration != null && userConfiguration.getCreateUserValidateName() != null)
-                ? userConfiguration.getCreateUserValidateName() : (createUserValidateName != null ? createUserValidateName : true);
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCreateUserValidateName());
     }
 
     /**
-     * Resolves the maximum invalid login attempts before locking user account.
+     * Resolves the maximum invalid login attempts before locking user account from UserConfiguration.
      *
      * @return maximum invalid login attempts threshold
      */
     private Long getMaxInvalidLoginAttempts() {
-        return (userConfiguration != null && userConfiguration.getMaxInvalidLoginAttempts() != null)
-                ? userConfiguration.getMaxInvalidLoginAttempts() : (maxInvalidLoginAttempts != null ? maxInvalidLoginAttempts : 5L);
+        return userConfiguration != null ? userConfiguration.getMaxInvalidLoginAttempts() : null;
     }
 
     /**
-     * Resolves whether DigiLocker search is enabled.
+     * Resolves whether DigiLocker search is enabled from UserConfiguration.
      *
      * @return true if DigiLocker search is enabled
      */
     private boolean isDigiLockerSearch() {
-        return (userConfiguration != null && userConfiguration.getDigilockerSearch() != null)
-                ? userConfiguration.getDigilockerSearch() : (isDigiLockerSearch != null ? isDigiLockerSearch : false);
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getDigilockerSearch());
     }
 
     /**
-     * Resolves the password complexity regular expression pattern.
+     * Resolves the password complexity regular expression pattern from UserConfiguration.
      *
      * @return password pattern regex string
      */
     private String getPwdRegex() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getPwdRegex()))
-                ? userConfiguration.getPwdRegex() : (pwdRegex != null ? pwdRegex : "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$");
+        return userConfiguration != null ? userConfiguration.getPwdRegex() : null;
     }
 
     /**
-     * Resolves the minimum allowed character length for passwords.
+     * Resolves the minimum allowed character length for passwords from UserConfiguration.
      *
      * @return minimum password length
      */
     private Integer getPwdMinLength() {
-        return (userConfiguration != null && userConfiguration.getPwdMinLength() != null)
-                ? userConfiguration.getPwdMinLength() : (pwdMinLength != null ? pwdMinLength : 8);
+        return userConfiguration != null ? userConfiguration.getPwdMinLength() : null;
     }
 
     /**
-     * Resolves the maximum allowed character length for passwords.
+     * Resolves the maximum allowed character length for passwords from UserConfiguration.
      *
      * @return maximum password length
      */
     private Integer getPwdMaxLength() {
-        return (userConfiguration != null && userConfiguration.getPwdMaxLength() != null)
-                ? userConfiguration.getPwdMaxLength() : (pwdMaxLength != null ? pwdMaxLength : 15);
+        return userConfiguration != null ? userConfiguration.getPwdMaxLength() : null;
     }
 
     /**
-     * Resolves whether fixed OTP testing is enabled for citizen login.
+     * Resolves whether fixed OTP testing is enabled for citizen login from UserConfiguration.
      *
      * @return true if fixed OTP testing is enabled
      */
     private boolean isFixedOTPEnabled() {
-        return (userConfiguration != null && userConfiguration.getCitizenLoginPasswordOtpFixedEnabled() != null)
-                ? userConfiguration.getCitizenLoginPasswordOtpFixedEnabled() : (fixedOTPEnabled != null ? fixedOTPEnabled : false);
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpFixedEnabled());
     }
 
     /**
-     * Resolves the configured fixed OTP password value for testing.
+     * Resolves the configured fixed OTP password value for testing from UserConfiguration.
      *
      * @return fixed OTP password string
      */
     private String getFixedOTPPassword() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getCitizenLoginPasswordOtpFixedValue()))
-                ? userConfiguration.getCitizenLoginPasswordOtpFixedValue() : this.fixedOTPPassword;
+        return userConfiguration != null ? userConfiguration.getCitizenLoginPasswordOtpFixedValue() : null;
     }
 
     /**
-     * Resolves the default password expiry duration in days.
+     * Resolves the default password expiry duration in days from UserConfiguration.
      *
      * @return duration in days before password expires
      */
     private int getDefaultPasswordExpiryInDays() {
-        return (userConfiguration != null && userConfiguration.getDefaultPasswordExpiryInDays() != null)
-                ? userConfiguration.getDefaultPasswordExpiryInDays() : this.defaultPasswordExpiryInDays;
+        return userConfiguration != null && userConfiguration.getDefaultPasswordExpiryInDays() != null
+                ? userConfiguration.getDefaultPasswordExpiryInDays() : 90;
     }
 
     /**
-     * Resolves whether citizen login requires OTP verification.
+     * Resolves whether citizen login requires OTP verification from UserConfiguration.
      *
      * @return true if citizen login requires OTP
      */
     private boolean isCitizenLoginOtpBased() {
-        return (userConfiguration != null && userConfiguration.getCitizenLoginPasswordOtpEnabled() != null)
-                ? userConfiguration.getCitizenLoginPasswordOtpEnabled() : this.isCitizenLoginOtpBased;
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpEnabled());
     }
 
     /**
-     * Resolves whether employee login requires OTP verification.
+     * Resolves whether employee login requires OTP verification from UserConfiguration.
      *
      * @return true if employee login requires OTP
      */
     private boolean isEmployeeLoginOtpBased() {
-        return (userConfiguration != null && userConfiguration.getEmployeeLoginPasswordOtpEnabled() != null)
-                ? userConfiguration.getEmployeeLoginPasswordOtpEnabled() : this.isEmployeeLoginOtpBased;
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getEmployeeLoginPasswordOtpEnabled());
     }
 
     /**
@@ -443,35 +425,37 @@ public class UserService {
         }
 
         try {
-            // CRITICAL FIX: Create RequestInfo without encrypted fields
-            // The RequestInfo.userInfo should NOT contain encrypted data (userName, mobileNumber, emailId, name)
-            // because the egov-enc-service ABAC policy evaluator cannot work with encrypted data in RequestInfo.
-            // For CITIZEN users, userName and mobileNumber come from encrypted Redis token data.
-            // For EMPLOYEE users, these are already decrypted (which is why EMPLOYEE searches work).
-            // By only including non-encrypted identifiers (uuid, id, type, tenantId, roles),
-            // the ABAC policy can properly identify the user and validate "Self" purpose decryption.
-            Map<String, Object> userInfoMap = new HashMap<>();
-            userInfoMap.put("uuid", authenticatedUser.getUuid());
-            userInfoMap.put("id", authenticatedUser.getId());
-            userInfoMap.put("type", authenticatedUser.getType());
-            userInfoMap.put("tenantId", authenticatedUser.getTenantId());
+            // Fix for PR Comment #20 (UserService.java:459):
+            // Use typed RequestInfo and Role builders via AuthUserAccount getters instead of raw Map.
+            // Preserves actual null values on role attributes (rather than forcing empty strings)
+            // and retains the roles collection structure required for ABAC policy evaluation.
+            List<Role> contractRoles = new ArrayList<>();
             if (authenticatedUser.getRoles() != null) {
-                userInfoMap.put("roles", authenticatedUser.getRoles().stream()
-                        .map(role -> Map.of(
-                                "code", role.getCode() != null ? role.getCode() : "",
-                                "name", role.getName() != null ? role.getName() : "",
-                                "tenantId", role.getTenantId() != null ? role.getTenantId() : ""
-                        ))
-                        .collect(Collectors.toList()));
+                for (org.egov.user.web.contract.auth.Role role : authenticatedUser.getRoles()) {
+                    if (role != null) {
+                        contractRoles.add(Role.builder()
+                                .code(role.getCode())
+                                .name(role.getName())
+                                .tenantId(role.getTenantId())
+                                .build());
+                    }
+                }
             }
 
-            Map<String, Object> reqInfoMap = new HashMap<>();
-            reqInfoMap.put("action", "token_generation");
-            reqInfoMap.put("ts", System.currentTimeMillis());
-            reqInfoMap.put("userInfo", userInfoMap);
+            org.egov.common.contract.request.User contractUser =
+                    org.egov.common.contract.request.User.builder()
+                            .uuid(authenticatedUser.getUuid())
+                            .id(authenticatedUser.getId())
+                            .type(authenticatedUser.getType())
+                            .tenantId(authenticatedUser.getTenantId())
+                            .roles(contractRoles)
+                            .build();
 
-            ObjectMapper mapper = (objectMapper != null) ? objectMapper : new ObjectMapper();
-            RequestInfo requestInfo = mapper.convertValue(reqInfoMap, RequestInfo.class);
+            RequestInfo requestInfo = RequestInfo.builder()
+                    .action("token_generation")
+                    .ts(System.currentTimeMillis())
+                    .userInfo(contractUser)
+                    .build();
 
             // The encryption service expects a List<User>, not a single User
             // Wrap in list, decrypt, then extract the single user (same pattern as searchUsers)
@@ -1347,10 +1331,8 @@ public class UserService {
      * @return true if mandatory address fields are required, false otherwise
      */
     private boolean isAddressMandatoryFieldsEnabled() {
-        if (userConfiguration != null && userConfiguration.getAddressMandatoryFieldsEnabled() != null) {
-            return userConfiguration.getAddressMandatoryFieldsEnabled();
-        }
-        return addressMandatoryFieldsEnabled != null ? addressMandatoryFieldsEnabled : true;
+        return userConfiguration == null || userConfiguration.getAddressMandatoryFieldsEnabled() == null
+                || Boolean.TRUE.equals(userConfiguration.getAddressMandatoryFieldsEnabled());
     }
 
     /**

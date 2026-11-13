@@ -44,15 +44,32 @@ public class UserDocumentRepository {
     }
 
     /**
-     * Persists a new {@link UserDocument} record in the database.
-     * Generates a random UUID for the document if not already provided.
+     * Persists a new {@link UserDocument} record in the database using idempotent upsert.
+     * Enforces natural key deduplication and foreign document ownership validation.
      *
-     * @param document the document entity to insert
+     * @param document the document entity to insert or update
      * @return the persisted {@link UserDocument}
      */
     public UserDocument create(UserDocument document) {
+        // Natural key deduplication: if id is blank, lookup existing document for this citizen
         if (StringUtils.isBlank(document.getId())) {
-            document.setId(UUID.randomUUID().toString());
+            String existingId = findDocumentId(document.getUserUuid(), document.getReferenceType(), document.getReferenceId(), document.getFilestoreId());
+            if (existingId == null && StringUtils.isNotBlank(document.getFilestoreId())) {
+                existingId = findDocumentIdByFilestoreId(document.getUserUuid(), document.getFilestoreId());
+            }
+            if (existingId != null) {
+                document.setId(existingId);
+            } else {
+                document.setId(UUID.randomUUID().toString());
+            }
+        } else {
+            // Ownership boundary check: verify client-supplied id does not belong to another citizen
+            String existingOwner = findUserUuidByDocumentId(document.getId());
+            if (existingOwner != null && !existingOwner.equals(document.getUserUuid())) {
+                log.warn("[USER-DOC-REPO] Blocked attempt to overwrite foreign document ID {} owned by {} with data for {}",
+                        document.getId(), existingOwner, document.getUserUuid());
+                document.setId(UUID.randomUUID().toString());
+            }
         }
         Date now = new Date();
         document.setCreatedDate(now);
@@ -65,9 +82,20 @@ public class UserDocumentRepository {
         }
 
         String userUuid = document.getUserUuid();
+        Long userId = document.getUserId();
+
+        // Fix for PR Comment #8: Populate both user_id (bigint) and user_uuid (varchar) for rolling deployment safety
+        if (userId == null && StringUtils.isNotBlank(userUuid)) {
+            userId = resolveUserIdByUuid(userUuid);
+            document.setUserId(userId);
+        } else if (StringUtils.isBlank(userUuid) && userId != null) {
+            userUuid = resolveUserUuidById(userId);
+            document.setUserUuid(userUuid);
+        }
 
         Map<String, Object> params = new HashMap<>();
         params.put("id", document.getId());
+        params.put("user_id", userId);
         params.put("user_uuid", userUuid);
         params.put("tenant_id", document.getTenantId());
         params.put("document_type", document.getDocumentType());
@@ -97,8 +125,22 @@ public class UserDocumentRepository {
     public void update(UserDocument document) {
         document.setLastModifiedDate(new Date());
 
+        String userUuid = document.getUserUuid();
+        Long userId = document.getUserId();
+
+        // Fix for PR Comment #8: Ensure both user_id and user_uuid are supplied during rolling deployment updates
+        if (userId == null && StringUtils.isNotBlank(userUuid)) {
+            userId = resolveUserIdByUuid(userUuid);
+            document.setUserId(userId);
+        } else if (StringUtils.isBlank(userUuid) && userId != null) {
+            userUuid = resolveUserUuidById(userId);
+            document.setUserUuid(userUuid);
+        }
+
         Map<String, Object> params = new HashMap<>();
         params.put("id", document.getId());
+        params.put("user_id", userId);
+        params.put("user_uuid", userUuid);
         params.put("document_type", document.getDocumentType());
         params.put("document_uid", document.getDocumentUid());
         params.put("filestore_id", document.getFilestoreId());
@@ -227,6 +269,132 @@ public class UserDocumentRepository {
             return objectMapper.readValue(json, Object.class);
         } catch (Exception e) {
             log.warn("[USER-DOC-REPO] Could not deserialize additional details: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up existing active document ID by reference and filestore ID for natural key deduplication.
+     *
+     * @param userUuid citizen user UUID
+     * @param referenceType entity category (e.g. CITIZEN_PROFILE, PROPERTY, INCOME_SALARY, VEHICLE_RC)
+     * @param referenceId associated entity record ID
+     * @param filestoreId file storage system ID
+     * @return document ID or null
+     */
+    public String findDocumentId(String userUuid, String referenceType, String referenceId, String filestoreId) {
+        if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(filestoreId) || StringUtils.isBlank(referenceType) || StringUtils.isBlank(referenceId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("user_uuid", userUuid);
+            params.put("reference_type", referenceType);
+            params.put("reference_id", referenceId);
+            params.put("filestore_id", filestoreId);
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserDocumentQueryBuilder.SELECT_DOCUMENT_ID_BY_USER_AND_REF_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("id")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-DOC-REPO] Failed to lookup existing document by reference: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up existing active document ID by citizen UUID and filestore ID.
+     *
+     * @param userUuid citizen user UUID
+     * @param filestoreId file storage system ID
+     * @return document ID or null
+     */
+    public String findDocumentIdByFilestoreId(String userUuid, String filestoreId) {
+        if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(filestoreId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("user_uuid", userUuid);
+            params.put("filestore_id", filestoreId);
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserDocumentQueryBuilder.SELECT_DOCUMENT_ID_BY_USER_AND_FILESTORE_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("id")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-DOC-REPO] Failed to lookup existing document by filestoreId: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up user_uuid of existing document record by primary key ID.
+     *
+     * @param documentId document primary key ID
+     * @return userUuid owning the document or null
+     */
+    public String findUserUuidByDocumentId(String documentId) {
+        if (StringUtils.isBlank(documentId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("id", documentId);
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserDocumentQueryBuilder.SELECT_DOCUMENT_USER_UUID_BY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("user_uuid")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-DOC-REPO] Failed to lookup document owner userUuid: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Resolves the numeric eg_user ID for a given user UUID.
+     * Fixes PR Comment #8 by facilitating dual-write on rolling deployments.
+     *
+     * @param userUuid the citizen or employee UUID
+     * @return numeric user ID or null if not found
+     */
+    public Long resolveUserIdByUuid(String userUuid) {
+        if (StringUtils.isBlank(userUuid)) return null;
+        try {
+            List<Long> ids = namedParameterJdbcTemplate.query(
+                    "SELECT id FROM eg_user WHERE uuid = :uuid LIMIT 1",
+                    Collections.singletonMap("uuid", userUuid),
+                    (rs, rowNum) -> rs.getLong("id")
+            );
+            return CollectionUtils.isEmpty(ids) ? null : ids.get(0);
+        } catch (Exception e) {
+            log.trace("[USER-DOC-REPO] Could not resolve user_id for uuid {}: {}", userUuid, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Resolves the citizen or employee UUID for a given numeric eg_user ID.
+     * Fixes PR Comment #8 by facilitating dual-write on rolling deployments.
+     *
+     * @param userId the numeric user ID
+     * @return user UUID string or null if not found
+     */
+    public String resolveUserUuidById(Long userId) {
+        if (userId == null) return null;
+        try {
+            List<String> uuids = namedParameterJdbcTemplate.query(
+                    "SELECT uuid FROM eg_user WHERE id = :id LIMIT 1",
+                    Collections.singletonMap("id", userId),
+                    (rs, rowNum) -> rs.getString("uuid")
+            );
+            return CollectionUtils.isEmpty(uuids) ? null : uuids.get(0);
+        } catch (Exception e) {
+            log.trace("[USER-DOC-REPO] Could not resolve user_uuid for id {}: {}", userId, e.getMessage());
             return null;
         }
     }

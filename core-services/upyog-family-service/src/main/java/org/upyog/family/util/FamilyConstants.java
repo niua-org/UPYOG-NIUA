@@ -136,6 +136,7 @@ public final class FamilyConstants {
     public static final String ERROR_MEMBER_INACTIVE = "FAMILY_MEMBER_ALREADY_INACTIVE";
     public static final String ERROR_UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS";
     public static final String ERROR_USER_NOT_VERIFIED = "USER_NOT_VERIFIED";
+    public static final String ERROR_MEMBER_ASSET_SYNC_FAILED = "MEMBER_ASSET_SYNC_FAILED";
 
     // State Registry Integration Error Codes
     public static final String ERROR_INVALID_STATE_FAMILY_REQUEST = "INVALID_STATE_FAMILY_REQUEST";
@@ -197,10 +198,16 @@ public final class FamilyConstants {
     public static final String GENDER_OTHERS = "OTHERS";
     public static final String STATUS_OK = "OK";
     public static final String DEFAULT_MEMBER_ASSET_SYNC_PATH = "/user/profile/_sync-member-assets";
+    public static final String KEY_MEMBER_ASSET_SYNC_STATUS = "memberAssetSyncStatus";
+    public static final String KEY_MEMBER_ASSET_SYNC_TIMESTAMP = "memberAssetSyncTimestamp";
+    public static final String STATUS_SUCCESS = "SUCCESS";
+    public static final String STATUS_FAILED = "FAILED";
+    public static final String ASSET_SYNC_STATUS_NOT_APPLICABLE = "NOT_APPLICABLE";
 
     // ==========================================
     // Validation & Error Messages
     // ==========================================
+    public static final String MSG_MEMBER_ASSET_SYNC_FAILED = "Failed to synchronize declared member assets to core user registry. Please retry or contact system administrator.";
     public static final String MSG_HEAD_OF_FAMILY_MANDATORY = "A family unit must have exactly one Head of Family (HoF) with is_head=true";
     public static final String MSG_FAMILY_TENANT_REQUIRED = "Tenant ID is mandatory for family operations";
     public static final String MSG_FAMILY_ID_REQUIRED = "Family ID is mandatory";
@@ -276,4 +283,6 @@ public final class FamilyConstants {
     public static final String MSG_FAMILY_MDMS_MODULE_NOT_CONFIGURED = "family.mdms.module is not configured";
     public static final String MSG_FAMILY_MDMS_RELATIONSHIP_MASTER_NOT_CONFIGURED = "family.mdms.relationship.master is not configured";
     public static final String MSG_TENANT_ID_MANDATORY = "tenantId is mandatory";
+    public static final String MSG_INVALID_RESIDENCE_PROPERTY_PREFIX = "Family residence property ID '";
+    public static final String MSG_INVALID_RESIDENCE_PROPERTY_SUFFIX = "' does not match any declared property or survey number of family members";
 }

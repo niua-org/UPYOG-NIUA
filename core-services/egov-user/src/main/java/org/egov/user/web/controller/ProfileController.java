@@ -408,24 +408,31 @@ public class ProfileController {
     }
 
     /**
-     * Synchronizes member profile demographics, attached documents, and asset declarations
+     * Inter-service endpoint to synchronize member profile demographics, attached documents, and asset declarations
      * (properties, income, vehicles) into egov-user core registry.
      *
      * @param request member asset sync request payload
+     * @param headers HTTP headers used to validate inter-service origin
      * @return response summarizing synchronization results for each member
      */
     @Operation(
             summary = "Synchronize Member Assets and Demographics",
-            description = "Synchronizes member profile demographics (father/mother/spouse name, caste, specially-abled status), attached documents, and declarations (properties, income, vehicles) into egov-user core registry."
+            description = "Synchronizes member profile demographics (father/mother/spouse name, caste, specially-abled status), attached documents, and declarations (properties, income, vehicles) into egov-user core registry. Restricted to trusted internal services."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Member assets synchronized successfully",
                     content = @Content(schema = @Schema(implementation = MemberAssetSyncResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context - inter-service call required"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/_sync-member-assets")
-    public ResponseEntity<MemberAssetSyncResponse> syncMemberAssets(@RequestBody @Valid MemberAssetSyncRequest request) {
+    public ResponseEntity<MemberAssetSyncResponse> syncMemberAssets(@RequestBody @Valid MemberAssetSyncRequest request,
+                                                                   @RequestHeader HttpHeaders headers) {
+        // Enforce inter-service access guard: reject external ingress calls forwarded through API gateway
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_INTER_SERVICE_REQUIRED);
+        }
         log.info("[PROFILE-CONTROLLER] Received member asset sync request with {} member(s)",
                 request != null ? request.getNormalizedMembers().size() : 0);
         if (memberAssetService == null) {

@@ -29,7 +29,9 @@ public class UserPropertyQueryBuilder {
             "status = EXCLUDED.status, " +
             "additional_details = EXCLUDED.additional_details, " +
             "last_modified_by = EXCLUDED.last_modified_by, " +
-            "last_modified_time = EXCLUDED.last_modified_time";
+            "last_modified_time = EXCLUDED.last_modified_time " +
+            // Security: scope conflict update to owner user_uuid to prevent cross-user property overwrites
+            "WHERE ug_user_property.user_uuid = EXCLUDED.user_uuid";
 
     public static final String INSERT_PROPERTY_AUDIT_SQL =
             "INSERT INTO ug_user_property_audit (" +
@@ -83,11 +85,12 @@ public class UserPropertyQueryBuilder {
             ":created_by, :created_time, :last_modified_by, :last_modified_time" +
             ") ON CONFLICT (id) DO UPDATE SET " +
             "owner_type = EXCLUDED.owner_type, " +
-            "user_uuid = EXCLUDED.user_uuid, " +
             "active = EXCLUDED.active, " +
             "additional_details = EXCLUDED.additional_details, " +
             "last_modified_by = EXCLUDED.last_modified_by, " +
-            "last_modified_time = EXCLUDED.last_modified_time";
+            "last_modified_time = EXCLUDED.last_modified_time " +
+            // Security: scope conflict update to matching property and owner user_uuid to prevent reassigning ownership
+            "WHERE ug_user_property_owner.property_id = EXCLUDED.property_id AND ug_user_property_owner.user_uuid = EXCLUDED.user_uuid";
 
     public static final String INSERT_PROPERTY_OWNER_AUDIT_SQL =
             "INSERT INTO ug_user_property_owner_audit (" +
@@ -101,6 +104,17 @@ public class UserPropertyQueryBuilder {
     public static final String SELECT_PROPERTY_OWNER_ID_BY_PROPERTY_AND_USER_SQL =
             "SELECT id FROM ug_user_property_owner " +
             "WHERE property_id = :property_id AND user_uuid = :user_uuid AND active = true LIMIT 1";
+
+    public static final String SELECT_PROPERTY_USER_UUID_BY_ID_SQL =
+            "SELECT user_uuid FROM ug_user_property WHERE id = :id";
+
+    public static final String SELECT_URBAN_PROPERTY_RECORD_ID_SQL =
+            "SELECT p.id FROM ug_user_property p JOIN ug_user_urban_property u ON p.id = u.property_record_id " +
+            "WHERE p.user_uuid = :user_uuid AND u.upyog_property_id = :upyog_property_id AND p.status = 'ACTIVE' LIMIT 1";
+
+    public static final String SELECT_RURAL_PROPERTY_RECORD_ID_SQL =
+            "SELECT p.id FROM ug_user_property p JOIN ug_user_rural_property r ON p.id = r.property_record_id " +
+            "WHERE p.user_uuid = :user_uuid AND r.survey_number = :survey_number AND p.status = 'ACTIVE' LIMIT 1";
 
     /**
      * Default constructor for Spring component lifecycle.

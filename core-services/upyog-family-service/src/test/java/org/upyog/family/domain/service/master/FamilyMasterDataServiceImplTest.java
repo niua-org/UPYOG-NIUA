@@ -260,4 +260,85 @@ class FamilyMasterDataServiceImplTest {
                 masterDataService.validatePropertyUsage(new RequestInfo(), "pg.citya", "UNKNOWN_USAGE"));
         assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
     }
+
+    /**
+     * Fix for PR Comment #13 / High 5 (FamilyMasterDataServiceImpl.java:351):
+     * Verifies that empty/failed MDMS responses are NOT negatively cached for 24h,
+     * allowing subsequent calls to successfully fetch codes once MDMS recovers.
+     */
+    @Test
+    @DisplayName("getAllowedRelationships should not cache empty results when MDMS fails, allowing subsequent recovery")
+    void getAllowedRelationships_DoesNotCacheNegativeEmptyResult() {
+        // First call fails
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class)))
+                .thenThrow(new RuntimeException("MDMS temporary outage"))
+                .thenReturn(createValidRelationshipResponse("SELF", "SPOUSE"));
+
+        Set<String> firstAttempt = masterDataService.getAllowedRelationships(new RequestInfo(), "pg.citya");
+        assertTrue(firstAttempt.isEmpty());
+
+        // Second call immediately succeeds because the empty failure was NOT cached
+        Set<String> secondAttempt = masterDataService.getAllowedRelationships(new RequestInfo(), "pg.citya");
+        assertNotNull(secondAttempt);
+        assertEquals(2, secondAttempt.size());
+        assertTrue(secondAttempt.contains("SELF"));
+        assertTrue(secondAttempt.contains("SPOUSE"));
+    }
+
+    /**
+     * Fix for PR Comment #13 / High 5 (FamilyMasterDataServiceImpl.java:351):
+     * Verifies that when MDMS fails during cache refresh, previous valid cached results are retained.
+     */
+    @Test
+    @DisplayName("refreshCache should retain previous valid cache when MDMS fails")
+    void refreshCache_RetainsPreviousValidCacheOnFailure() {
+        // Populate cache with valid response
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class)))
+                .thenReturn(createValidRelationshipResponse("SELF", "SON"));
+
+        Set<String> initial = masterDataService.getAllowedRelationships(new RequestInfo(), "pg.citya");
+        assertEquals(2, initial.size());
+
+        // Next refresh fails
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class)))
+                .thenThrow(new RuntimeException("Network timeout"));
+
+        Set<String> refreshed = masterDataService.refreshCache(new RequestInfo(), "pg.citya");
+        // Must retain previous valid cached relationships rather than returning/caching empty
+        assertEquals(2, refreshed.size());
+        assertTrue(refreshed.contains("SELF"));
+        assertTrue(refreshed.contains("SON"));
+    }
+
+    /**
+     * Fix for PR Comment #13 / High 5:
+     * Verifies that missing MDMS host configuration throws CustomException rather than silently swallowing.
+     */
+    @Test
+    @DisplayName("getAllowedCategories should throw CustomException when mdmsHost is not configured")
+    void getAllowedCategories_ThrowsExceptionWhenHostNotConfigured() {
+        when(configuration.getMdmsHost()).thenReturn(null);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.getAllowedCategories(new RequestInfo(), "pg.citya"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    private Map<String, Object> createValidRelationshipResponse(String... codes) {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> relList = new ArrayList<>();
+
+        for (String code : codes) {
+            Map<String, Object> r = new HashMap<>();
+            r.put("code", code);
+            relList.add(r);
+        }
+
+        commonMasters.put("FamilyRelationship", relList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+        return response;
+    }
 }

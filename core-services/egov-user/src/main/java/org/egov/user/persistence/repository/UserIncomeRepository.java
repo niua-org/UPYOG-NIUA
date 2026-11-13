@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -47,12 +49,27 @@ public class UserIncomeRepository {
 
     /**
      * Persists citizen income record into {@code ug_user_income} and writes an audit row.
+     * Enforces natural key deduplication and foreign income record ownership validation.
      *
      * @param income income declaration entity
      */
     public void saveIncome(UserIncome income) {
+        // Natural key deduplication: if id is blank, reuse existing active income record ID for this citizen
         if (StringUtils.isBlank(income.getId())) {
-            income.setId(UUID.randomUUID().toString());
+            String existingId = findActiveIncomeIdByUserUuid(income.getUserUuid());
+            if (existingId != null) {
+                income.setId(existingId);
+            } else {
+                income.setId(UUID.randomUUID().toString());
+            }
+        } else {
+            // Ownership boundary check: verify client-supplied id does not belong to another citizen
+            String existingOwner = findUserUuidByIncomeId(income.getId());
+            if (existingOwner != null && !existingOwner.equals(income.getUserUuid())) {
+                log.warn("[USER-INCOME-REPO] Blocked attempt to overwrite foreign income ID {} owned by {} with data for {}",
+                        income.getId(), existingOwner, income.getUserUuid());
+                income.setId(UUID.randomUUID().toString());
+            }
         }
         long now = System.currentTimeMillis();
         if (income.getCreatedTime() == null) {
@@ -110,6 +127,54 @@ public class UserIncomeRepository {
             return objectMapper.writeValueAsString(obj);
         } catch (Exception e) {
             log.warn("[USER-INCOME-REPO] Failed to serialize additionalDetails: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up existing active income record ID for a citizen to enable idempotent re-sync.
+     *
+     * @param userUuid citizen user UUID
+     * @return active income record ID or null
+     */
+    public String findActiveIncomeIdByUserUuid(String userUuid) {
+        if (StringUtils.isBlank(userUuid)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("user_uuid", userUuid);
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserIncomeQueryBuilder.SELECT_ACTIVE_INCOME_ID_BY_USER_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("id")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-INCOME-REPO] Failed to lookup active income ID: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up user_uuid of existing income record by primary key ID.
+     *
+     * @param incomeId income record ID
+     * @return userUuid owning the income record or null
+     */
+    public String findUserUuidByIncomeId(String incomeId) {
+        if (StringUtils.isBlank(incomeId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("id", incomeId);
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserIncomeQueryBuilder.SELECT_INCOME_USER_UUID_BY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("user_uuid")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-INCOME-REPO] Failed to lookup income owner userUuid: {}", e.getMessage());
             return null;
         }
     }

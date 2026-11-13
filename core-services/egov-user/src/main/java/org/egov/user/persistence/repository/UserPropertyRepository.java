@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,12 +53,35 @@ public class UserPropertyRepository {
 
     /**
      * Persists base property record into {@code ug_user_property} and writes an audit row.
+     * Enforces natural key deduplication and foreign property ownership validation.
      *
      * @param property property entity to persist
      */
     public void saveProperty(UserProperty property) {
+        // Natural key deduplication: if id is blank, attempt to reuse existing property id for the citizen
         if (StringUtils.isBlank(property.getId())) {
-            property.setId(UUID.randomUUID().toString());
+            if (property.getUrbanPropertyDetail() != null && StringUtils.isNotBlank(property.getUrbanPropertyDetail().getUpyogPropertyId())) {
+                String existingId = findUrbanPropertyId(property.getUserUuid(), property.getUrbanPropertyDetail().getUpyogPropertyId());
+                if (existingId != null) {
+                    property.setId(existingId);
+                }
+            } else if (property.getRuralPropertyDetail() != null && StringUtils.isNotBlank(property.getRuralPropertyDetail().getSurveyNumber())) {
+                String existingId = findRuralPropertyId(property.getUserUuid(), property.getRuralPropertyDetail().getSurveyNumber());
+                if (existingId != null) {
+                    property.setId(existingId);
+                }
+            }
+            if (StringUtils.isBlank(property.getId())) {
+                property.setId(UUID.randomUUID().toString());
+            }
+        } else {
+            // Ownership boundary check: verify client-supplied id does not belong to another citizen
+            String existingOwner = findUserUuidByPropertyId(property.getId());
+            if (existingOwner != null && !existingOwner.equals(property.getUserUuid())) {
+                log.warn("[USER-PROP-REPO] Blocked attempt to overwrite foreign property ID {} owned by {} with data for {}",
+                        property.getId(), existingOwner, property.getUserUuid());
+                property.setId(UUID.randomUUID().toString());
+            }
         }
         long now = System.currentTimeMillis();
         if (property.getCreatedTime() == null) {
@@ -222,6 +246,84 @@ public class UserPropertyRepository {
             return objectMapper.writeValueAsString(obj);
         } catch (Exception e) {
             log.warn("[USER-PROP-REPO] Failed to serialize additionalDetails: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up existing property owner user_uuid to enforce ownership boundary.
+     *
+     * @param propertyId property primary key ID
+     * @return owner userUuid if record exists, or null
+     */
+    public String findUserUuidByPropertyId(String propertyId) {
+        if (StringUtils.isBlank(propertyId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("id", propertyId);
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserPropertyQueryBuilder.SELECT_PROPERTY_USER_UUID_BY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("user_uuid")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-PROP-REPO] Failed to lookup property owner UUID: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Finds existing active property ID for a citizen by UPYOG property ID (natural key deduplication).
+     *
+     * @param userUuid citizen user UUID
+     * @param upyogPropertyId municipal property assessment ID
+     * @return existing property ID or null
+     */
+    public String findUrbanPropertyId(String userUuid, String upyogPropertyId) {
+        if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(upyogPropertyId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("user_uuid", userUuid);
+            params.put("upyog_property_id", upyogPropertyId.trim());
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserPropertyQueryBuilder.SELECT_URBAN_PROPERTY_RECORD_ID_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("id")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-PROP-REPO] Failed to lookup existing urban property by upyogPropertyId: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Finds existing active rural property ID for a citizen by survey/khasra number (natural key deduplication).
+     *
+     * @param userUuid citizen user UUID
+     * @param surveyNumber khasra or survey number
+     * @return existing property ID or null
+     */
+    public String findRuralPropertyId(String userUuid, String surveyNumber) {
+        if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(surveyNumber)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("user_uuid", userUuid);
+            params.put("survey_number", surveyNumber.trim());
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserPropertyQueryBuilder.SELECT_RURAL_PROPERTY_RECORD_ID_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("id")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-PROP-REPO] Failed to lookup existing rural property by surveyNumber: {}", e.getMessage());
             return null;
         }
     }

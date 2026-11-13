@@ -2,6 +2,7 @@ package org.egov.user.domain.service;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.exception.DuplicateUserNameException;
 import org.egov.user.domain.exception.InvalidUpdatePasswordRequestException;
 import org.egov.user.domain.exception.InvalidUserCreateException;
@@ -77,11 +78,27 @@ class UserServiceTest {
     private NotificationUtil notificationUtil;
 
     private UserService userService;
+    private UserConfiguration userConfiguration;
 
     @BeforeEach
     void setUp() {
+        userConfiguration = UserConfiguration.builder()
+                .defaultPasswordExpiryInDays(90)
+                .citizenLoginPasswordOtpEnabled(true)
+                .employeeLoginPasswordOtpEnabled(false)
+                .pwdRegex(PWD_REGEX)
+                .pwdMaxLength(32)
+                .pwdMinLength(8)
+                .accountUnlockCoolDownPeriod(30L)
+                .maxInvalidLoginAttemptsPeriod(30L)
+                .maxInvalidLoginAttempts(5L)
+                .createUserValidateName(true)
+                .digilockerSearch(false)
+                .citizenLoginPasswordOtpFixedEnabled(false)
+                .addressMandatoryFieldsEnabled(true)
+                .build();
         userService = new UserService(userRepository, otpRepository, fileRepository, passwordEncoder,
-                encryptionDecryptionUtil, 90, true, false, PWD_REGEX, 32, 8, addressRepository);
+                encryptionDecryptionUtil, addressRepository, userConfiguration);
         ReflectionTestUtils.setField(userService, "notificationUtil", notificationUtil);
         lenient().when(encryptionDecryptionUtil.encryptObject(any(), any(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -256,7 +273,7 @@ class UserServiceTest {
 
     @Test
     void createUser_nameRequiredAndMissing_throwsInvalidUserCreateException() {
-        ReflectionTestUtils.setField(userService, "createUserValidateName", true);
+        userConfiguration.setCreateUserValidateName(true);
         User user = validNewUser();
         user.setName(null);
 
@@ -322,6 +339,51 @@ class UserServiceTest {
         verifyNoInteractions(encryptionDecryptionUtil);
     }
 
+    /**
+     * Fix for PR Comment #20 (UserService.java:459):
+     * Verifies that decryptUserWithContext builds RequestInfo with typed User and Role contract objects,
+     * preserving null role attributes rather than forcing empty strings.
+     */
+    @Test
+    void decryptUserWithContext_validUserAndAccount_constructsTypedRequestInfo() {
+        User encryptedUser = User.builder()
+                .id(101L)
+                .uuid("uuid-101")
+                .username("enc_username")
+                .build();
+
+        org.egov.user.web.contract.auth.Role authRole = new org.egov.user.web.contract.auth.Role();
+        authRole.setCode("CITIZEN");
+        authRole.setName(null); // Explicit null attribute to verify it is NOT converted to ""
+        authRole.setTenantId("pg");
+
+        org.egov.user.web.contract.auth.User authAccount = org.egov.user.web.contract.auth.User.builder()
+                .id(101L)
+                .uuid("uuid-101")
+                .type("CITIZEN")
+                .tenantId("pg")
+                .roles(Collections.singleton(authRole))
+                .build();
+
+        ArgumentCaptor<RequestInfo> requestInfoCaptor = ArgumentCaptor.forClass(RequestInfo.class);
+        when(encryptionDecryptionUtil.decryptObject(any(), eq("User"), eq(User.class), requestInfoCaptor.capture()))
+                .thenReturn(Collections.singletonList(encryptedUser));
+
+        User result = userService.decryptUserWithContext(encryptedUser, authAccount);
+
+        assertThat(result).isNotNull();
+        RequestInfo capturedReqInfo = requestInfoCaptor.getValue();
+        assertThat(capturedReqInfo).isNotNull();
+        assertThat(capturedReqInfo.getUserInfo()).isNotNull();
+        assertThat(capturedReqInfo.getUserInfo().getUuid()).isEqualTo("uuid-101");
+        assertThat(capturedReqInfo.getUserInfo().getRoles()).hasSize(1);
+
+        org.egov.common.contract.request.Role capturedRole = capturedReqInfo.getUserInfo().getRoles().get(0);
+        assertThat(capturedRole.getCode()).isEqualTo("CITIZEN");
+        assertThat(capturedRole.getName()).isNull(); // Must remain null, NOT converted to ""
+        assertThat(capturedRole.getTenantId()).isEqualTo("pg");
+    }
+
     @Test
     void isAccountUnlockAble_notLocked_returnsTrue() {
         User user = User.builder().accountLocked(false).build();
@@ -331,7 +393,7 @@ class UserServiceTest {
 
     @Test
     void isAccountUnlockAble_lockInsideCooldown_returnsFalse() {
-        ReflectionTestUtils.setField(userService, "accountUnlockCoolDownPeriod", 30L);
+        userConfiguration.setAccountUnlockCoolDownPeriod(30L);
         User user = User.builder()
                 .accountLocked(true)
                 .accountLockedDate(System.currentTimeMillis())
@@ -342,7 +404,7 @@ class UserServiceTest {
 
     @Test
     void isAccountUnlockAble_lockOlderThanCooldown_returnsTrue() {
-        ReflectionTestUtils.setField(userService, "accountUnlockCoolDownPeriod", 1L);
+        userConfiguration.setAccountUnlockCoolDownPeriod(1L);
         User user = User.builder()
                 .accountLocked(true)
                 .accountLockedDate(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5))
@@ -374,8 +436,8 @@ class UserServiceTest {
 
     @Test
     void handleFailedLogin_belowThreshold_recordsAttempt() {
-        ReflectionTestUtils.setField(userService, "maxInvalidLoginAttempts", 3L);
-        ReflectionTestUtils.setField(userService, "maxInvalidLoginAttemptsPeriod", 30L);
+        userConfiguration.setMaxInvalidLoginAttempts(3L);
+        userConfiguration.setMaxInvalidLoginAttemptsPeriod(30L);
         when(userRepository.fetchFailedAttemptsByUserAndTime(eq("uuid-1"), anyLong()))
                 .thenReturn(Collections.emptyList());
 
@@ -386,9 +448,9 @@ class UserServiceTest {
 
     @Test
     void handleFailedLogin_attemptsAtThreshold_throwsBadCredentialsException() {
-        ReflectionTestUtils.setField(userService, "maxInvalidLoginAttempts", 1L);
-        ReflectionTestUtils.setField(userService, "maxInvalidLoginAttemptsPeriod", 30L);
-        ReflectionTestUtils.setField(userService, "accountUnlockCoolDownPeriod", 15L);
+        userConfiguration.setMaxInvalidLoginAttempts(1L);
+        userConfiguration.setMaxInvalidLoginAttemptsPeriod(30L);
+        userConfiguration.setAccountUnlockCoolDownPeriod(15L);
         when(userRepository.fetchFailedAttemptsByUserAndTime(eq("uuid-1"), anyLong()))
                 .thenReturn(Collections.emptyList());
         UserService spyService = spy(userService);
@@ -429,7 +491,7 @@ class UserServiceTest {
 
     @Test
     void createAddress_mandatoryFieldsMissing_throwsCustomException() {
-        ReflectionTestUtils.setField(userService, "addressMandatoryFieldsEnabled", true);
+        userConfiguration.setAddressMandatoryFieldsEnabled(true);
         when(userRepository.getUserIdByUuid("uuid-1")).thenReturn(5L);
 
         assertThatThrownBy(() -> userService.createAddress("uuid-1", Address.builder().build()))
@@ -476,7 +538,7 @@ class UserServiceTest {
 
     @Test
     void updatePasswordForLoggedInUser_validEmployee_updatesRepository() {
-        ReflectionTestUtils.setField(userService, "isCitizenLoginOtpBased", false);
+        userConfiguration.setCitizenLoginPasswordOtpEnabled(false);
         User stored = storedUser("alice", UserType.EMPLOYEE).toBuilder().password("existing-hash").build();
         when(userRepository.findAll(any())).thenReturn(Collections.singletonList(stored));
         when(passwordEncoder.matches("Oldpass1@", "existing-hash")).thenReturn(true);
@@ -495,7 +557,7 @@ class UserServiceTest {
 
     @Test
     void updatePasswordForLoggedInUser_wrongExistingPassword_throwsPasswordMismatchException() {
-        ReflectionTestUtils.setField(userService, "isCitizenLoginOtpBased", false);
+        userConfiguration.setCitizenLoginPasswordOtpEnabled(false);
         User stored = storedUser("alice", UserType.EMPLOYEE).toBuilder().password("existing-hash").build();
         when(userRepository.findAll(any())).thenReturn(Collections.singletonList(stored));
         when(passwordEncoder.matches(anyString(), eq("existing-hash"))).thenReturn(false);
@@ -514,7 +576,7 @@ class UserServiceTest {
 
     @Test
     void updatePasswordForNonLoggedInUser_validOtp_updatesEncryptedUser() {
-        ReflectionTestUtils.setField(userService, "isCitizenLoginOtpBased", false);
+        userConfiguration.setCitizenLoginPasswordOtpEnabled(false);
         User stored = storedUser("alice", UserType.EMPLOYEE).toBuilder().password("existing-hash").build();
         when(userRepository.findAll(any())).thenReturn(Collections.singletonList(stored));
         when(otpRepository.validateOtp(any())).thenReturn(true);
@@ -593,7 +655,7 @@ class UserServiceTest {
 
     @Test
     void createAddress_validRequest_persistsAddress() {
-        ReflectionTestUtils.setField(userService, "addressMandatoryFieldsEnabled", false);
+        userConfiguration.setAddressMandatoryFieldsEnabled(false);
         when(userRepository.getUserIdByUuid("uuid-1")).thenReturn(5L);
         Address saved = Address.builder().city("City").build();
         when(addressRepository.createAddressV2(any(), eq(5L), any())).thenReturn(saved);

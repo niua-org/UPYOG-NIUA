@@ -78,6 +78,8 @@ public class UserClientImpl implements UserClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        // Explicitly ensure inter-service context by omitting or removing gateway pass-through header
+        headers.remove("x-pass-through-gateway");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
@@ -131,6 +133,8 @@ public class UserClientImpl implements UserClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        // Explicitly ensure inter-service context by omitting or removing gateway pass-through header
+        headers.remove("x-pass-through-gateway");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
@@ -188,6 +192,8 @@ public class UserClientImpl implements UserClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        // Explicitly ensure inter-service context by omitting or removing gateway pass-through header
+        headers.remove("x-pass-through-gateway");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
@@ -354,6 +360,8 @@ public class UserClientImpl implements UserClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        // Explicitly ensure inter-service context by omitting or removing gateway pass-through header
+        headers.remove("x-pass-through-gateway");
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {

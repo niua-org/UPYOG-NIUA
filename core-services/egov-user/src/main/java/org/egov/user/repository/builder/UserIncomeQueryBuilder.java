@@ -36,7 +36,9 @@ public class UserIncomeQueryBuilder {
             "status = EXCLUDED.status, " +
             "additional_details = EXCLUDED.additional_details, " +
             "last_modified_by = EXCLUDED.last_modified_by, " +
-            "last_modified_time = EXCLUDED.last_modified_time";
+            "last_modified_time = EXCLUDED.last_modified_time " +
+            // Security: scope conflict update to owner user_uuid to prevent cross-user income overwrites
+            "WHERE ug_user_income.user_uuid = EXCLUDED.user_uuid";
 
     public static final String INSERT_INCOME_AUDIT_SQL =
             "INSERT INTO ug_user_income_audit (" +
@@ -48,6 +50,12 @@ public class UserIncomeQueryBuilder {
             ":is_verified, :verification_source, :verification_date, :otp_verified, :salary_proof_doc_id, " +
             ":tax_proof_doc_id, :status, cast(:additional_details as jsonb), :created_by, :created_time, :last_modified_by, :last_modified_time" +
             ")";
+
+    public static final String SELECT_ACTIVE_INCOME_ID_BY_USER_SQL =
+            "SELECT id FROM ug_user_income WHERE user_uuid = :user_uuid AND status = 'ACTIVE' LIMIT 1";
+
+    public static final String SELECT_INCOME_USER_UUID_BY_ID_SQL =
+            "SELECT user_uuid FROM ug_user_income WHERE id = :id";
 
     /**
      * Default constructor for Spring component lifecycle.

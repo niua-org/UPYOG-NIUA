@@ -55,6 +55,7 @@ public class FamilyValidator {
     private final FamilyMasterDataService familyMasterDataService;
     private final UserClient userClient;
     private final FamilyConfigurationService familyConfigurationService;
+    private final org.upyog.family.config.FamilyConfiguration configuration;
 
     /**
      * Constructs {@link FamilyValidator} with repository, filestore, master data, user client, and configuration service.
@@ -64,18 +65,32 @@ public class FamilyValidator {
      * @param familyMasterDataService service providing MDMS relationship master data
      * @param userClient client communicating with user service to verify citizen identity
      * @param familyConfigurationService service validating state family configuration policy
+     * @param configuration family module configuration for verification rules
      */
     @Autowired
     public FamilyValidator(FamilyRepository familyRepository,
                            FileStoreClient fileStoreClient,
                            FamilyMasterDataService familyMasterDataService,
                            UserClient userClient,
-                           @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
+                           @Autowired(required = false) FamilyConfigurationService familyConfigurationService,
+                           @Autowired(required = false) org.upyog.family.config.FamilyConfiguration configuration) {
         this.familyRepository = familyRepository;
         this.fileStoreClient = fileStoreClient;
         this.familyMasterDataService = familyMasterDataService;
         this.userClient = userClient;
         this.familyConfigurationService = familyConfigurationService;
+        this.configuration = configuration;
+    }
+
+    /**
+     * Backward-compatible constructor for testing without FamilyConfiguration.
+     */
+    public FamilyValidator(FamilyRepository familyRepository,
+                           FileStoreClient fileStoreClient,
+                           FamilyMasterDataService familyMasterDataService,
+                           UserClient userClient,
+                           FamilyConfigurationService familyConfigurationService) {
+        this(familyRepository, fileStoreClient, familyMasterDataService, userClient, familyConfigurationService, null);
     }
 
     /**
@@ -85,7 +100,7 @@ public class FamilyValidator {
                            FileStoreClient fileStoreClient,
                            FamilyMasterDataService familyMasterDataService,
                            UserClient userClient) {
-        this(familyRepository, fileStoreClient, familyMasterDataService, userClient, null);
+        this(familyRepository, fileStoreClient, familyMasterDataService, userClient, null, null);
     }
 
     /**
@@ -176,8 +191,21 @@ public class FamilyValidator {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_DUPLICATE_MEMBER_UUID_PREFIX + member.getUserUuid());
             }
 
-            // Ensure EVERY member is identity-verified (Aadhaar / e-KYC verified in user registry)
-            userClient.validateUserIsVerified(member.getUserUuid(), request.getRequestInfo());
+            // Fix for PR Comment #14 (FamilyValidator.java:180):
+            // Minors and dependents lacking independent Aadhaar/e-KYC profiles are exempt from mandatory
+            // individual identity verification when family.member.verification.mandatory.for.all is false,
+            // provided the Head of Family and applicant caller are verified.
+            boolean isHoF = Boolean.TRUE.equals(member.getIsHead());
+            boolean requireVerification = isHoF
+                    || (configuration != null && Boolean.TRUE.equals(configuration.getMemberVerificationMandatoryForAll()))
+                    || !isMinorOrDependent(member);
+
+            if (requireVerification) {
+                userClient.validateUserIsVerified(member.getUserUuid(), request.getRequestInfo());
+            } else {
+                log.info("[UPYOG-FAMILY-VALIDATOR] Member {} is a minor/dependent under HoF guardianship; individual e-KYC verification exempt.",
+                        member.getUserUuid());
+            }
 
             // Dynamic MDMS validation for relationshipWithHead
             if (StringUtils.isNotBlank(member.getRelationshipWithHead())) {
@@ -206,7 +234,18 @@ public class FamilyValidator {
         }
 
         // 3. Validate residence property linkage
+        // Fix for PR Comment #15 (FamilyValidator.java:210):
+        // Validate residence property linkage against declared member properties.
+        // If members have declared properties, ensure the family residence property
+        // matches one of the declared property or survey identifiers, avoiding misleading no-op log.
         if (StringUtils.isNotBlank(family.getFamilyAddressPropertyId())) {
+            if (!declaredPropertyIds.isEmpty() && !declaredPropertyIds.contains(family.getFamilyAddressPropertyId())) {
+                log.error("[UPYOG-FAMILY-VALIDATOR] Family address property ID '{}' does not match any declared member property: {}",
+                        family.getFamilyAddressPropertyId(), declaredPropertyIds);
+                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                        FamilyConstants.MSG_INVALID_RESIDENCE_PROPERTY_PREFIX + family.getFamilyAddressPropertyId()
+                                + FamilyConstants.MSG_INVALID_RESIDENCE_PROPERTY_SUFFIX);
+            }
             log.info("[UPYOG-FAMILY-VALIDATOR] Validated family residence property linkage: {}", family.getFamilyAddressPropertyId());
         }
 
@@ -298,6 +337,13 @@ public class FamilyValidator {
                 declaredPropertyIds.add(urban.getUpyogPropertyId());
             } else {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_INVALID_LOCALITY_TYPE_PREFIX + prop.getLocalityType() + FamilyConstants.MSG_INVALID_LOCALITY_TYPE_SUFFIX);
+            }
+
+            if (StringUtils.isNotBlank(prop.getPropertyId())) {
+                declaredPropertyIds.add(prop.getPropertyId());
+            }
+            if (StringUtils.isNotBlank(prop.getId())) {
+                declaredPropertyIds.add(prop.getId());
             }
 
             if (prop.getDocument() != null) {
@@ -424,6 +470,15 @@ public class FamilyValidator {
             }
 
             for (FamilyMember member : family.getMembers()) {
+                // Fix for PR Comment #12 (FamilyServiceImpl.java:394):
+                // HoF relationship was renamed from 'HEAD' to 'SELF' to match active MDMS taxonomy.
+                // Normalize legacy 'HEAD' to 'SELF' for HoF before MDMS validation so existing records/payloads do not fail.
+                if (Boolean.TRUE.equals(member.getIsHead()) && FamilyConstants.RELATIONSHIP_HEAD.equalsIgnoreCase(member.getRelationshipWithHead())) {
+                    log.info("[UPYOG-FAMILY-VALIDATOR] Normalizing legacy HoF relationship 'HEAD' to 'SELF' on update for userUuid: {}",
+                            member.getUserUuid());
+                    member.setRelationshipWithHead(FamilyConstants.RELATIONSHIP_SELF);
+                }
+
                 // Dynamic MDMS validation for relationshipWithHead
                 if (StringUtils.isNotBlank(member.getRelationshipWithHead())) {
                     familyMasterDataService.validateRelationship(request.getRequestInfo(), existingFamily.getTenantId(), member.getRelationshipWithHead());
@@ -574,5 +629,35 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_INVALID_MERGE,
                     FamilyConstants.MSG_COMMON_HOF_MUST_BELONG_PREFIX + request.getCommonHeadUserUuid() + FamilyConstants.MSG_COMMON_HOF_MUST_BELONG_SUFFIX);
         }
+    }
+
+    /**
+     * Fix for PR Comment #14 (FamilyValidator.java:180):
+     * Check if a family member is a minor or dependent, qualifying for exemption
+     * from mandatory individual Aadhaar/e-KYC verification under HoF guardianship.
+     *
+     * @param member family member to evaluate
+     * @return true if member is a minor (< 18 yrs), child, dependent, or has HoF consent token
+     */
+    private boolean isMinorOrDependent(FamilyMember member) {
+        if (member == null) {
+            return false;
+        }
+        String rel = member.getRelationshipWithHead();
+        if (StringUtils.isNotBlank(rel)) {
+            String upperRel = rel.trim().toUpperCase();
+            if (FamilyConstants.RELATIONSHIP_DEPENDENT.equals(upperRel)
+                    || FamilyConstants.RELATIONSHIP_CHILD.equals(upperRel)) {
+                return true;
+            }
+        }
+        if (member.getDob() != null && member.getDob() > 0) {
+            long ageInMillis = System.currentTimeMillis() - member.getDob();
+            long eighteenYearsInMillis = 18L * 365L * 24L * 60L * 60L * 1000L;
+            if (ageInMillis < eighteenYearsInMillis) {
+                return true;
+            }
+        }
+        return StringUtils.isNotBlank(member.getConsentToken());
     }
 }
