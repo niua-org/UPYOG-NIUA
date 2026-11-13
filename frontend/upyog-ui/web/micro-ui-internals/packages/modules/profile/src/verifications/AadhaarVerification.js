@@ -161,10 +161,6 @@ const AadhaarVerification = ({
     try {
       const userInfo = Digit.UserService.getUser()?.info || {};
       const requestData = {
-        RequestInfo: {
-          apiId: "org.upyog.dx",
-          action: "_verifyOtp",
-        },
         referenceId: referenceId || txnId,
         otp: otp,
         isResync: false,
