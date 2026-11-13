@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { UploadFile, Toast, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { profileStyles } from "../utils/profileStyles";
@@ -47,20 +47,15 @@ const INITIAL_FILES = {
 
 const styles = profileStyles.documentUpload;
 
-// Uploaded file preview: icon, file name below it, upload date and a view action
-const UploadedDocTile = ({ doc, onView, t }) => {
-  const isPdf = /\.pdf$/i.test(doc.fileName || "");
-  const uploadedOn = doc.lastModifiedDate?.split(" ")[0]; // "09-11-2026 13:38:46" -> "09-11-2026"
+// Uploaded file preview: icon
+const UploadedDocTile = ({ doc, onView, t }) => (
+  <button type="button" style={styles.fileTile} onClick={onView} title={t("PROFILE_VIEW_DOC")}>
+    <PDFSvg width={48} height={48} />
+    <span style={styles.viewLink}>{t("PROFILE_VIEW_DOC")}</span>
+  </button>
+);
 
-  return (
-    <button type="button" style={styles.fileTile} onClick={onView} title={t("PROFILE_VIEW_DOC")}>
-      {isPdf ? <PDFSvg width={48} height={48} /> : <span style={styles.fileEmoji}>🖼️</span>}
-      <span style={styles.viewLink}>{t("PROFILE_VIEW_DOC")}</span>
-    </button>
-  );
-};
-
-const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = false }, ref) => {
+const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   const { t } = useTranslation();
 
   const tenantId = Digit.ULBService.getCurrentTenantId();
@@ -76,6 +71,14 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
   const [toast, setToast] = useState(null);
 
   const toastTimerRef = useRef(null);
+
+
+  // it will sync detail from userdetail when refresh page
+  useEffect(() => {
+  if (userDetails?.documents?.length) {
+    setDocuments(userDetails.documents.filter((doc) => doc.active === true));
+  }
+}, [userDetails?.documents]);
 
   // Cleanup toast timer on unmount
   useEffect(() => {
@@ -208,8 +211,8 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
 
   // Save documents
   // Resolves to true when the documents are saved (or already complete and `proceedIfUnchanged` is set)
-  const handleSave = async ({ proceedIfUnchanged = false } = {}) => {
-    if (saving) return false;
+  const handleSave = async () => {
+    if (saving) return;
 
     const isInitialCreation = !DOC_TYPES.some(({ key }) =>
       findExisting(key)
@@ -223,7 +226,7 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
       DOC_TYPES.some(({ key }) => !files[key])
     ) {
       showToast("error", t("PROFILE_BOTH_DOCS_REQUIRED"));
-      return false;
+      return;
     }
 
     // At least one document must be selected for re-upload
@@ -231,12 +234,12 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
       // Create Family flow: nothing new to upload but both documents already exist, so just continue
       if (proceedIfUnchanged && DOC_TYPES.every(({ key }) => findExisting(key))) return true;
       showToast("error", t("PROFILE_NO_DOC_SELECTED"));
-      return false;
+      return;
     }
 
     if (!userInfo.uuid) {
       showToast("error", t("CORE_COMMON_PROFILE_UPDATE_ERROR"));
-      return false;
+      return;
     }
 
     setSaving(true);
@@ -304,7 +307,6 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
       setErrors({});
 
       showToast("success", t("PROFILE_DOCS_SAVED"));
-      return true;
     } catch (error) {
       console.error("Error saving profile documents:", error);
 
@@ -312,15 +314,10 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
         "error",
         t("CORE_COMMON_PROFILE_UPDATE_ERROR")
       );
-      return false;
     } finally {
       setSaving(false);
     }
   };
-
-
-  // Lets a parent step (Create Family "Save & Next") trigger the save
-  useImperativeHandle(ref, () => ({ save: handleSave }));
 
   return (
     <>
@@ -366,15 +363,13 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
         })}
       </div>
 
-      {!hideSave && (
-        <div style={profileStyles.actions}>
-          <SubmitBar
-            label={t("CORE_COMMON_SAVE")}
-            onSubmit={handleSave}
-            disabled={saving}
-          />
-        </div>
-      )}
+      <div style={profileStyles.actions}>
+        <SubmitBar
+          label={t("CORE_COMMON_SAVE")}
+          onSubmit={handleSave}
+          disabled={saving}
+        />
+      </div>
 
       {toast && (
         <div className="profile-toast-container">
@@ -394,6 +389,6 @@ const EditDocuments = forwardRef(({ userDetails, onDocumentsUpdate, hideSave = f
       )}
     </>
   );
-});
+};
 
 export default EditDocuments;

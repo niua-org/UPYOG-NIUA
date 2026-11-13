@@ -1,6 +1,6 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Dropdown, MobileNumber, TextInput, Toast, Loader, DatePicker, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { Dropdown, MobileNumber, TextInput, Toast, DatePicker, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import UploadDrawer from "./UploadDrawer";
 import { AvatarUpload, FormField, toGenderOption, fetchThumbnail } from "../utils";
 import { buildUpdateUserPayload, buildSessionUser } from "../utils/payloads";
@@ -21,7 +21,7 @@ import { profileStyles } from "../utils/profileStyles";
 
 
 
-const EditProfileForm = forwardRef(({ stateCode, userType, cityDetails, userDetails, onProfileUpdate, hideSave = false }, ref) => {
+const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProfileUpdate }) => {
   const { t } = useTranslation();
   const isEmployee = userType === "employee";
   const stateId = Digit.ULBService.getStateId();
@@ -80,7 +80,7 @@ const EditProfileForm = forwardRef(({ stateCode, userType, cityDetails, userDeta
     setErrors(validationErrors);
     if (hasErrors(validationErrors)) {
       showToast("error", t(Object.values(validationErrors).find(Boolean)));
-      return false;
+      return;
     }
     setSaving(true);
     try {
@@ -110,19 +110,14 @@ const EditProfileForm = forwardRef(({ stateCode, userType, cityDetails, userDeta
           );
         }
         showToast("success", t("CORE_COMMON_PROFILE_UPDATE_SUCCESS"));
-        return true;
       }
-      return false;
     } catch (error) {
       showToast("error", error?.Errors?.[0]?.description || t("CORE_COMMON_PROFILE_UPDATE_ERROR"));
-      return false;
     } finally {
       setSaving(false);
     }
   };
 
-  // Lets a parent step (e.g. Create Family "Save & Next") trigger the save; resolves to true on success
-  useImperativeHandle(ref, () => ({ save: handleSave }));
 
   return (
     <>
@@ -166,15 +161,13 @@ const EditProfileForm = forwardRef(({ stateCode, userType, cityDetails, userDeta
           )}
         </div>
       </div>
-      {!hideSave && (
-        <div style={profileStyles.actions}>
-          <SubmitBar
-            label={t("CORE_COMMON_SAVE")}
-            onSubmit={handleSave}
-            disabled={saving}
-          />
-        </div>
-      )}
+      <div style={profileStyles.actions}>
+        <SubmitBar
+          label={t("CORE_COMMON_SAVE")}
+          onSubmit={handleSave}
+          disabled={saving}
+        />
+      </div>
 
       {toast && (
         <div className="profile-toast-container">
@@ -197,6 +190,6 @@ const EditProfileForm = forwardRef(({ stateCode, userType, cityDetails, userDeta
       )}
     </>
   );
-});
+};
 
 export default EditProfileForm;
