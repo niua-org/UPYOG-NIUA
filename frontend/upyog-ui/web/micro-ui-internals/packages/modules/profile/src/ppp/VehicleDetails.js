@@ -43,7 +43,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
-  const [vehicleRc, setVehicleRc] = useState(saved.vehicleRc || null);
+  const [vehicleRc, setVehicleRc] = useState(saved.uploadedRCFile ? { name: t("PROFILE_FILE_UPLOADED") } : null);
   const [purchaseYear, setPurchaseYear] = useState(saved.purchaseYear || "");
   const [vehicleNo, setVehicleNo] = useState(saved.vehicleNo || "");
   const [fileError, setFileError] = useState(null);
@@ -112,7 +112,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   };
 
   const isValidateBtnDisabled = !vehicleNo || !!vehicleNoError;
-  const isDisabled = !vehicleRc || !purchaseYear || !fuelType || !vehicleCategory || !vehicleType || !vehicleNoValidated;
+  const isDisabled = !uploadedRCFile || !purchaseYear || !fuelType || !vehicleCategory || !vehicleType || !vehicleNoValidated;
 
   return (
     <React.Fragment>

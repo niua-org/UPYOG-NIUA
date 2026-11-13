@@ -38,7 +38,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
-  const [incomeProof, setIncomeProof] = useState(saved.incomeProof || null);
+  const [incomeProof, setIncomeProof] = useState(saved.uploadedIncomeFile ? { name: t("PROFILE_FILE_UPLOADED") } : null);
   const [taxIdType, setTaxIdType] = useState(saved.taxIdType || null);
   const [taxIdNumber, setTaxIdNumber] = useState(saved.taxIdNumber || "");
   const [annualIncome, setAnnualIncome] = useState(saved.annualIncome || "");
@@ -46,7 +46,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [fileError, setFileError] = useState(null);
   const [uploadedIncomeFile, setUploadedIncomeFile] = useState(saved.uploadedIncomeFile || null);
   const [taxIdError, setTaxIdError] = useState(null);
-  const [taxProof, setTaxProof] = useState(saved.taxProof || null);
+  const [taxProof, setTaxProof] = useState(saved.uploadedTaxProof ? { name: t("PROFILE_FILE_UPLOADED") } : null);
   const [uploadedTaxProof, setUploadedTaxProof] = useState(saved.uploadedTaxProof || null);
   const [taxProofError, setTaxProofError] = useState(null);
   const [taxIdValidated, setTaxIdValidated] = useState(saved.taxIdValidated || false);
