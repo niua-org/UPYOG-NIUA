@@ -177,12 +177,21 @@ public class InboxConfiguration {
 	@Value("${egov.searcher.fn.count.path}")
 	private String firenocInboxSearcherCountEndpoint;
 
+	/**
+	 * Searcher endpoint for ascending order search on family records.
+	 */
 	@Value("${egov.searcher.family.search.path}")
 	private String familyInboxSearcherEndpoint;
 
+	/**
+	 * Searcher endpoint for descending order search on family records.
+	 */
 	@Value("${egov.searcher.family.search.desc.path}")
 	private String familyInboxSearcherDescEndpoint;
 
+	/**
+	 * Searcher endpoint for total count retrieval on family records.
+	 */
 	@Value("${egov.searcher.family.count.path}")
 	private String familyInboxSearcherCountEndpoint;
 }

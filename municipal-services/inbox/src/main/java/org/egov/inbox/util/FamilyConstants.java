@@ -1,5 +1,10 @@
 package org.egov.inbox.util;
 
+/**
+ * Constants used across the Family Service Inbox integration.
+ * Defines module identifiers, parameter keys, and status attributes
+ * used for querying and aggregating family records within the Inbox service.
+ */
 public class FamilyConstants extends CommonConstants {
 
     public static final String FAMILY_SERVICE = "family-service";

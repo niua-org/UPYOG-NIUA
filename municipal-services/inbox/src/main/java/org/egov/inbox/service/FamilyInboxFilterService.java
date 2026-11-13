@@ -22,6 +22,14 @@ import java.util.Map;
 import static org.egov.inbox.util.CommonConstants.*;
 import static org.egov.inbox.util.FamilyConstants.*;
 
+/**
+ * Service responsible for delegating Family module inbox queries to {@code egov-searcher}.
+ * <p>
+ * Constructs query request payloads incorporating tenant parameters, workflow statuses,
+ * assignee identifiers, and pagination offsets, dispatches calls to the appropriate
+ * searcher endpoints, and parses application identifiers and count metrics.
+ * </p>
+ */
 @Slf4j
 @Service
 public class FamilyInboxFilterService {
@@ -38,6 +46,18 @@ public class FamilyInboxFilterService {
     @Autowired
     private InboxConfiguration config;
 
+    /**
+     * Queries {@code egov-searcher} to retrieve a paginated list of matching family application IDs.
+     * <p>
+     * Evaluates the requested sort order (ascending vs. descending), maps workflow process criteria,
+     * formats the search payload, and extracts family IDs from the JSON response using JsonPath.
+     * </p>
+     *
+     * @param criteria         Search criteria specified in the Inbox request (tenant, module, pagination).
+     * @param StatusIdNameMap  Mapping of workflow status IDs to names for multi-status filtering.
+     * @param requestInfo      Authentication and auditing metadata for the request.
+     * @return List of matching family application IDs ({@code family_id}), or an empty list if none found.
+     */
     public List<String> fetchApplicationNumbersFromSearcher(InboxSearchCriteria criteria,
             HashMap<String, String> StatusIdNameMap, RequestInfo requestInfo) {
         List<String> applicationNumbers = new ArrayList<>();
@@ -95,6 +115,14 @@ public class FamilyInboxFilterService {
         return applicationNumbers;
     }
 
+    /**
+     * Queries {@code egov-searcher} to retrieve the total count of family applications matching the search criteria.
+     *
+     * @param criteria         Search criteria specified in the Inbox request.
+     * @param StatusIdNameMap  Mapping of workflow status IDs to names.
+     * @param requestInfo      Authentication and auditing metadata.
+     * @return Total count of matching family records, or {@code 0} if an error occurs.
+     */
     public Integer fetchApplicationCountFromSearcher(InboxSearchCriteria criteria,
             HashMap<String, String> StatusIdNameMap, RequestInfo requestInfo) {
         Integer totalCount = 0;
