@@ -1,17 +1,17 @@
 import React from "react";
-import { Card, KeyNote, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 /**
- * GCApplication Component
+ * GCApplication Component (Preview Card)
  * 
- * Displays a summary card for a single GC application in the citizen's "My Applications" list
- * as per UPYOG Garbage Service HLD Section 3:
- * - Shows Application Number, Applicant Name, Mobile Number, Property ID
- * - Shows Property Type (Owner or Tenant) and Floor Number (for Tenants)
- * - Shows Status (ACTIVE, DISCONNECTED, PERMANENTLY_DISCONNECTED, PENDING_FOR_PAYMENT, etc.)
- * - Provides buttons to view details and make payment
+ * Displays a summary preview card for a single GC application in Citizen "My Applications".
+ * Styled using the modern property card layout from Property Tax Assessment (pt-citizen-prop-card),
+ * utilizing existing premade styles without modifying packages/css:
+ * - Top accent gradient bar and card hover animations
+ * - Header with Application Number label & value, Property Type badge, and Status pill (no bin icon)
+ * - Info grid with field-specific SVG icons:
+ * - Bottom action buttons matching PT view-details and make-payment styles
  */
 const GCApplication = ({ application, tenantId }) => {
   const { t } = useTranslation();
@@ -32,17 +32,29 @@ const GCApplication = ({ application, tenantId }) => {
   const category = collectionUnit?.category;
   const typeOfCollection = collectionUnit?.collectionType;
   const propertyType = collectionUnit?.propertyType || (application?.isOwner === false || application?.tenantUuid ? "TENANT" : "OWNER");
-  const floorNo = collectionUnit?.floorNo || application?.floorNo;
   const dueDate = application?.dueDate;
   const paymentStatus = application?.paymentStatus;
   const paymentAmount = application?.paymentAmount;
+
+  
+
+  const isApplicationApproved = [
+    "APPROVED",
+    "ACTIVE",
+    "PENDING_FOR_PAYMENT",
+    "PAID",
+    "DISCONNECTED",
+    "PERMANENTLY_DISCONNECTED",
+  ].includes(appStatus);
+
+  const hasDue = paymentAmount !== undefined && paymentAmount !== null && Number(paymentAmount) > 0;
 
   const handleMakePayment = () => {
     navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
   };
 
   const handleEditApplication = () => {
-    navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`);
+    navigate(`/upyog-ui/citizen/gc/edit/${appNo}`);
   };
 
   const getStatusColor = (status) => {
@@ -53,7 +65,6 @@ const GCApplication = ({ application, tenantId }) => {
       case "DISCONNECTED":
         return "#a82227";
       case "PERMANENTLY_DISCONNECTED":
-        return "#d4351c";
       case "REJECTED":
         return "#d4351c";
       default:
@@ -62,81 +73,229 @@ const GCApplication = ({ application, tenantId }) => {
   };
 
   return (
-    <Card className="gc-gc-application-card" style={{ marginBottom: "16px", padding: "16px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-        <KeyNote keyValue={t("GC_APPLICATION_NUMBER_LABEL")} note={appNo} />
-        <span
-          style={{
-            backgroundColor: propertyType === "OWNER" ? "#1d70b8" : "#00703c",
-            color: "#ffffff",
-            padding: "2px 8px",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontWeight: "bold",
-          }}
-        >
-          {propertyType}
-        </span>
+    <div className="pt-citizen-prop-card">
+      {/* Card Header: Application Number, Property Type badge & Status Pill (Bin icon removed) */}
+      <div className="pt-citizen-prop-card-header">
+        <div className="pt-citizen-prop-card-id-wrap">
+          <div className="pt-citizen-prop-id-block">
+            <span className="pt-citizen-prop-id-label">{t("GC_APPLICATION_NUMBER_LABEL")}</span>
+            <span className="pt-citizen-prop-id-value">{appNo}</span>
+          </div>
+        </div>
+        <div className="pt-citizen-prop-header-right" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <span
+            style={{
+              backgroundColor: propertyType === "OWNER" ? "#1d70b8" : "#00703c",
+              color: "#ffffff",
+              padding: "2px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "bold",
+            }}
+          >
+            {propertyType}
+          </span>
+          <span
+            className={`pt-citizen-prop-status-pill status-${appStatus?.toLowerCase()}`}
+            style={{
+              color: getStatusColor(appStatus),
+              borderColor: getStatusColor(appStatus),
+            }}
+          >
+            {t(`GC_STATUS_${appStatus}`)}
+          </span>
+        </div>
       </div>
 
-      {garbageNo && (
-        <KeyNote keyValue={t("GC_GARBAGE_NUMBER_LABEL") || "Garbage Number"} note={garbageNo} />
-      )}
-      {oldGarbageNo && (
-        <KeyNote keyValue={t("GC_OLD_GARBAGE_ID") || "Old Garbage Number"} note={oldGarbageNo} />
-      )}
-      <KeyNote keyValue={t("GC_APPLICANT_NAME")} note={name} />
-      <KeyNote keyValue={t("GC_MOBILE_NUMBER")} note={mobileNumber} />
-      {propertyId && <KeyNote keyValue={t("GC_PROPERTY_ID")} note={propertyId} />}
-      {floorNo && (
-        <KeyNote
-          keyValue={t("GC_FLOOR_UNIT") || "Assigned Floor"}
-          note={floorNo === "0" ? t("GC_FLOOR_GROUND") || "Ground Floor" : `${floorNo} Floor`}
-        />
-      )}
-      {category && <KeyNote keyValue={t("GC_CATEGORY")} note={t(category)} />}
-      {typeOfCollection && <KeyNote keyValue={t("GC_TYPE_OF_COLLECTION")} note={t(typeOfCollection)} />}
-
-      {connectionStatus && (
-        <KeyNote
-          keyValue={t("GC_CONNECTION_STATUS") || "Connection Status"}
-          note={
-            <span style={{ color: connectionStatus === "ACTIVE" ? "#00703c" : "#d4351c", fontWeight: "600" }}>
-              {t(`GC_STATUS_${connectionStatus}`) || connectionStatus}
+      {/* Card Body: Info Grid matching specified sequence */}
+      <div className="pt-citizen-prop-card-body">
+        <div className="pt-citizen-prop-info-grid">
+          {/* a. Garbage number */}
+          <div className="pt-citizen-prop-info-item">
+            <span className="pt-citizen-prop-info-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              {t("GC_GARBAGE_NUMBER_LABEL")}
             </span>
-          }
-        />
-      )}
+            <span className="pt-citizen-prop-info-value">{garbageNo || t("CS_NA")}</span>
+          </div>
 
-      <KeyNote
-        keyValue={t("GC_APPLICATION_STATUS_LABEL")}
-        note={
-          <span style={{ color: getStatusColor(appStatus), fontWeight: "bold" }}>
-            {t(`GC_STATUS_${appStatus}`) || appStatus}
-          </span>
-        }
-      />
+          {/* Old Garbage Number if present */}
+          {oldGarbageNo && (
+            <div className="pt-citizen-prop-info-item">
+              <span className="pt-citizen-prop-info-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg>
+                {t("GC_OLD_GARBAGE_ID")}
+              </span>
+              <span className="pt-citizen-prop-info-value">{oldGarbageNo}</span>
+            </div>
+          )}
 
-      {dueDate && <KeyNote keyValue={t("GC_DUE_DATE")} note={dueDate} />}
-      {paymentStatus && (
-        <KeyNote keyValue={t("GC_PAYMENT_STATUS") || "Payment Status"} note={t(`GC_PAYMENT_${paymentStatus}`) || paymentStatus} />
-      )}
-      {paymentAmount > 0 && (
-        <KeyNote keyValue={t("GC_PAYMENT_AMOUNT") || "Fee Amount"} note={`₹ ${paymentAmount}`} />
-      )}
+          {/* b. Applicant Name */}
+          <div className="pt-citizen-prop-info-item">
+            <span className="pt-citizen-prop-info-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              {t("GC_APPLICANT_NAME")}
+            </span>
+            <span className="pt-citizen-prop-info-value">{name}</span>
+          </div>
 
-      <div className="gc-btn-row" style={{ marginTop: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-        <Link to={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(appNo)}`}>
-          <SubmitBar label={t("CS_VIEW_DETAILS")} />
+          {/* c. Mobile Number */}
+          <div className="pt-citizen-prop-info-item">
+            <span className="pt-citizen-prop-info-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+              {t("GC_MOBILE_NUMBER")}
+            </span>
+            <span className="pt-citizen-prop-info-value">{mobileNumber}</span>
+          </div>
+
+          {/* d. Property ID */}
+          {propertyId && (
+            <div className="pt-citizen-prop-info-item">
+              <span className="pt-citizen-prop-info-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                {t("GC_PROPERTY_ID")}
+              </span>
+              <span className="pt-citizen-prop-info-value">{propertyId}</span>
+            </div>
+          )}
+
+          {/* e. Floor unit (GC_FLOOR_UNIT) is excluded from preview card as requested */}
+
+          {/* f. Category */}
+          {category && (
+            <div className="pt-citizen-prop-info-item">
+              <span className="pt-citizen-prop-info-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+                {t("GC_CATEGORY")}
+              </span>
+              <span className="pt-citizen-prop-info-value">{t(category)}</span>
+            </div>
+          )}
+
+          {/* g. Type of Collection */}
+          {typeOfCollection && (
+            <div className="pt-citizen-prop-info-item">
+              <span className="pt-citizen-prop-info-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="3" width="15" height="13" />
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
+                  <circle cx="5.5" cy="18.5" r="2.5" />
+                  <circle cx="18.5" cy="18.5" r="2.5" />
+                </svg>
+                {t("GC_TYPE_OF_COLLECTION")}
+              </span>
+              <span className="pt-citizen-prop-info-value">{t(typeOfCollection)}</span>
+            </div>
+          )}
+
+          {/* h. Payment Amount - placed BEFORE Connection Status, shows NA until approved and amount only once approved */}
+          <div className="pt-citizen-prop-info-item pt-due-item">
+            <span className="pt-citizen-prop-info-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+              {isApplicationApproved && dueDate ? `${t("GC_DUE_DATE")}: ${dueDate}` : t("CS_COMMON_TOTAL_AMOUNT_DUE")}
+            </span>
+            <span className="pt-citizen-prop-info-value">
+              {isApplicationApproved && paymentAmount !== undefined && paymentAmount !== null ? (
+                <span className={`pt-prop-amount-pill ${hasDue ? "due" : "paid"}`}>{`₹${paymentAmount}`}</span>
+              ) : (
+                <span className="pt-prop-amount-pill na">{t("CS_NA")}</span>
+              )}
+            </span>
+          </div>
+
+          {/* Payment Status */}
+          {paymentStatus && (
+            <div className="pt-citizen-prop-info-item">
+              <span className="pt-citizen-prop-info-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+                {t("GC_PAYMENT_STATUS")}
+              </span>
+              <span className="pt-citizen-prop-info-value">
+                <span className={`pt-prop-amount-pill ${paymentStatus === "PAID" ? "paid" : "due"}`}>
+                  {t(`GC_PAYMENT_${paymentStatus}`)}
+                </span>
+              </span>
+            </div>
+          )}
+
+          {/* Connection Status - placed AFTER payment and garbage collection amount */}
+          {connectionStatus && (
+            <div className="pt-citizen-prop-info-item">
+              <span className="pt-citizen-prop-info-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {t("GC_CONNECTION_STATUS")}
+              </span>
+              <span
+                className="pt-citizen-prop-info-value"
+                style={{
+                  color: connectionStatus === "ACTIVE" ? "#00703c" : "#d4351c",
+                  fontWeight: "bold",
+                }}
+              >
+                {t(`GC_STATUS_${connectionStatus}`)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card Actions: View Details, Make Payment, Edit Application */}
+      <div className="pt-citizen-prop-card-actions">
+        <Link
+          to={`/upyog-ui/citizen/gc/application-details/${appNo}`}
+          className="pt-citizen-action-btn view-details"
+        >
+          {t("CS_VIEW_DETAILS")}
         </Link>
-        {(appStatus === "PENDING_FOR_PAYMENT" || application?.paymentStatus === "PENDING") && (
-          <SubmitBar label={t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")} onSubmit={handleMakePayment} />
+        {(appStatus === "PENDING_FOR_PAYMENT" || paymentStatus === "PENDING" || hasDue) && (
+          <button
+            type="button"
+            className="pt-citizen-action-btn make-payment"
+            onClick={handleMakePayment}
+          >
+            {t("CS_APPLICATION_DETAILS_MAKE_PAYMENT")}
+          </button>
         )}
         {appStatus === "EDIT_APPLICATION" && (
-          <SubmitBar label={t("GC_EDIT_APPLICATION")} onSubmit={handleEditApplication} />
+          <button
+            type="button"
+            className="pt-citizen-action-btn view-details"
+            onClick={handleEditApplication}
+          >
+            {t("GC_EDIT_APPLICATION")}
+          </button>
         )}
       </div>
-    </Card>
+    </div>
   );
 };
 

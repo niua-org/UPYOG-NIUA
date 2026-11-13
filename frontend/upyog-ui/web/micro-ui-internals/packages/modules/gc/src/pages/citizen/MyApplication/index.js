@@ -8,9 +8,14 @@ import { getGCStatusOptions } from "../../../utils";
 /**
  * GCMyApplications Component
  * 
- * Renders the "My Applications" page for citizens, displaying a list of GC applications
- * associated with the user's mobile number. Provides persona switching between Owner and Tenant,
- * and search/filter functionality by application number, garbage number, and status.
+ * Renders the "My Applications" page for citizens in the Garbage Collection service.
+ * Structured to match the Property Tax Assessment "My Properties" layout using existing
+ * premade modern CSS classes (pt-citizen-my-properties-container, pt-citizen-properties-grid, etc.):
+ * - Header with application count badge and "+ New Application" quick action button
+ * - Filter & search card with owner/tenant persona switcher, application number, garbage number, and status
+ * - Modern responsive card grid (pt-citizen-properties-grid)
+ * - Empty state card with icon & registration call-to-action
+ * - Modern footer pagination card (pt-citizen-properties-footer-card)
  */
 export const GCMyApplications = () => {
   const { t } = useTranslation();
@@ -89,8 +94,32 @@ export const GCMyApplications = () => {
   const totalCount = data?.applicationCount || data?.count || 0;
 
   return (
-    <React.Fragment>
-      <Header>{`${t("GC_MY_APPLICATIONS_HEADER")} (${filteredApplications.length})`}</Header>
+    <div className="pt-citizen-my-properties-container">
+      {/* Header section with Title, Count Badge and New Application button */}
+      <div className="pt-citizen-my-properties-header-wrap">
+        <div className="pt-citizen-my-properties-title-block">
+          <Header className="pt-citizen-my-properties-title">
+            {t("GC_MY_APPLICATIONS_HEADER")}
+          </Header>
+          {filteredApplications && (
+            <span className="pt-citizen-my-properties-count-badge">
+              {filteredApplications.length}
+            </span>
+          )}
+        </div>
+        <Link
+          to="/upyog-ui/citizen/gc/new-registration"
+          className="pt-citizen-register-prop-btn"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>{t("GC_NEW_APPLICATION") || "New Application"}</span>
+        </Link>
+      </div>
+
+      {/* Filter / Search Card */}
       <Card style={{ marginBottom: "24px", padding: "20px" }}>
         {/* Top Owner / Tenant Persona Selector */}
         <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "20px", paddingBottom: "14px", borderBottom: "1px solid #d6d5d4", flexWrap: "wrap" }}>
@@ -152,31 +181,63 @@ export const GCMyApplications = () => {
         </div>
       </Card>
 
-      <div>
-        {filteredApplications.length > 0 &&
-          filteredApplications.map((application, index) => (
-            <div key={application.applicationNo || index}>
-              <GCApplication 
-                application={application} 
-                tenantId={tenantId} 
-              />
-            </div>
+      {/* Applications Grid: Cards rendered in the same responsive grid as Property Tax */}
+      {filteredApplications.length > 0 ? (
+        <div className="pt-citizen-properties-grid">
+          {filteredApplications.map((application, index) => (
+            <GCApplication 
+              key={application.applicationNo || index} 
+              application={application} 
+              tenantId={tenantId} 
+            />
           ))}
-        {filteredApplications.length === 0 && !isLoading && (
-          <p className="gc-index-top-spacing-3">{t("GC_NO_APPLICATION_FOUND_MSG") || "No applications found"}</p>
-        )}
-
-        {filteredApplications.length !== 0 && totalCount >= t1 && (
-          <div>
-            <p className="gc-index-top-spacing-3">
-              <span className="link">
-                <Link to={`/upyog-ui/citizen/gc/my-applications/${t1}`}>{t("CS_LOAD_MORE")}</Link>
-              </span>
-            </p>
+        </div>
+      ) : (
+        !isLoading && (
+          <div className="pt-citizen-empty-properties-card">
+            <div className="pt-citizen-empty-icon-wrap">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </div>
+            <h3 className="pt-citizen-empty-title">{t("GC_NO_APPLICATION_FOUND_MSG") || "No applications found"}</h3>
+            <p className="pt-citizen-empty-subtitle">{t("PT_TEXT_NOT_ABLE_TO_FIND_THE_APPLICATION")}</p>
+            <Link
+              to="/upyog-ui/citizen/gc/new-registration"
+              className="pt-citizen-register-prop-btn"
+            >
+              {t("GC_NEW_APPLICATION") || "New Application"}
+            </Link>
           </div>
-        )}
-      </div>
-    </React.Fragment>
+        )
+      )}
+
+      {/* Modern Footer / Pagination Card */}
+      {filteredApplications.length !== 0 && totalCount >= t1 && (
+        <div className="pt-citizen-properties-footer-card">
+          <div className="pt-citizen-load-more-wrap">
+            <Link
+              to={`/upyog-ui/citizen/gc/my-applications/${t1}`}
+              className="pt-citizen-load-more-btn"
+            >
+              {t("CS_LOAD_MORE")}
+            </Link>
+          </div>
+          <div className="pt-citizen-help-text">
+            <span>{t("PT_TEXT_NOT_ABLE_TO_FIND_THE_APPLICATION")}</span>{" "}
+            <Link
+              to="/upyog-ui/citizen/gc/new-registration"
+              className="pt-citizen-help-link"
+            >
+              {t("GC_NEW_APPLICATION") || "New Application"}
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
