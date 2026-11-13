@@ -23,7 +23,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t }) => {
   const [propertyDocument, setPropertyDocument] = useState(data.propertyDocument || null);
   const [fileUploadError, setFileUploadError] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [propertyAddress, setPropertyAddress] = useState(data.propertyAddress || "");
+  const [propertyAddress, setPropertyAddress] = useState(data.propertyAddress || null);
   const [documentType, setDocumentType] = useState(data.documentType || null);
   const [propertyType, setPropertyType] = useState(data.propertyType || null);
   const [propertyUsage, setPropertyUsage] = useState(data.propertyUsage || null);
