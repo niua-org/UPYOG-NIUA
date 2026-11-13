@@ -72,10 +72,9 @@ public class FamilyConfig {
     /**
      * Creates a default UPYOG-internal configuration as safe fallback when MDMS has no record.
      *
-     * @param tenantId state tenant identifier
      * @return default active UPYOG_INTERNAL FamilyConfig
      */
-    public static FamilyConfig createDefault(String tenantId) {
+    public static FamilyConfig createDefault() {
         return FamilyConfig.builder()
                 .code(TYPE_UPYOG_INTERNAL)
                 .name("Default UPYOG Native Family Lifecycle")

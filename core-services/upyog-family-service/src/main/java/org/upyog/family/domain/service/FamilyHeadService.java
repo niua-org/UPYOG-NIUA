@@ -13,7 +13,7 @@ import org.upyog.family.web.contract.FamilyHofCheckResponse;
  *   <li>Only the existing Head of Family or an authorized administrator can transfer the HoF role.</li>
  *   <li>The prospective new Head must already be an active, verified member of the household unit.</li>
  *   <li>The member cannot already be the current Head of Family.</li>
- *   <li>Upon succession, the existing HoF's leadership flag is revoked, and the new Head is designated with {@code relationshipWithHead = "HEAD"}.</li>
+ *   <li>Upon succession, the existing HoF's leadership flag is revoked, and the new Head is designated with {@code relationshipWithHead = "SELF"}.</li>
  * </ul>
  *
  * @author UPYOG Team

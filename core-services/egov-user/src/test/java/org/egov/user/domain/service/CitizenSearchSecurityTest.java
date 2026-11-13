@@ -1,5 +1,6 @@
 package org.egov.user.domain.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.Role;
@@ -76,27 +77,26 @@ public class CitizenSearchSecurityTest {
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
     }
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private RequestInfo createCitizenRequestInfo(String uuid, String mobile) {
-        return RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder()
-                        .id(101L)
-                        .uuid(uuid)
-                        .userName(mobile)
-                        .mobileNumber(mobile)
-                        .type("CITIZEN")
-                        .build())
-                .build();
+        try {
+            return objectMapper.readValue(
+                    "{\"userInfo\":{\"id\":101,\"uuid\":\"" + uuid + "\",\"userName\":\"" + mobile + "\",\"mobileNumber\":\"" + mobile + "\",\"type\":\"CITIZEN\"}}",
+                    RequestInfo.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private RequestInfo createEmployeeRequestInfo(String uuid) {
-        return RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder()
-                        .id(501L)
-                        .uuid(uuid)
-                        .userName("emp501")
-                        .type("EMPLOYEE")
-                        .build())
-                .build();
+        try {
+            return objectMapper.readValue(
+                    "{\"userInfo\":{\"id\":501,\"uuid\":\"" + uuid + "\",\"userName\":\"emp501\",\"type\":\"EMPLOYEE\"}}",
+                    RequestInfo.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // =========================================================================
@@ -107,7 +107,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Citizen searching for their own UUID should succeed")
     public void testProfileSearch_CitizenOwnUuid_Succeeds() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .uuid(Collections.singletonList("citizen-uuid-1"))
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -119,7 +119,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Citizen searching for their own mobile should succeed")
     public void testProfileSearch_CitizenOwnMobile_Succeeds() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .mobileNumber("9876543210")
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -131,7 +131,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Citizen searching for someone else's UUID should fail")
     public void testProfileSearch_CitizenOtherUuid_ThrowsUnauthorized() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .uuid(Collections.singletonList("different-citizen-uuid"))
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -145,7 +145,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Searching for multiple UUIDs should fail as only one user can be searched at a time")
     public void testProfileSearch_CitizenUuidListWithOtherUser_ThrowsUnauthorized() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .uuid(Arrays.asList("citizen-uuid-1", "other-citizen-uuid"))
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -159,7 +159,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Searching with userId should fail as only uuid is supported")
     public void testProfileSearch_WithUserId_ThrowsInvalidSearchCriteria() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .userId(101L)
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -173,7 +173,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Searching with single String uuid using builder overload succeeds")
     public void testProfileSearch_SingleStringUuid_Succeeds() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .uuid("citizen-uuid-1")
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -186,7 +186,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Citizen searching for someone else's mobile should fail")
     public void testProfileSearch_CitizenOtherMobile_ThrowsUnauthorized() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .mobileNumber("9111111111")
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -199,7 +199,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: Citizen searching by name only without own UUID/mobile should fail")
     public void testProfileSearch_CitizenNameOnly_ThrowsUnauthorized() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .name("Aarav Sharma")
                 .requestInfo(createCitizenRequestInfo("citizen-uuid-1", "9876543210"))
                 .build();
@@ -212,7 +212,7 @@ public class CitizenSearchSecurityTest {
     @DisplayName("ProfileSearch: EMPLOYEE searching for a citizen should succeed")
     public void testProfileSearch_EmployeeSearchingCitizen_Succeeds() {
         ProfileSearchRequest request = ProfileSearchRequest.builder()
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .uuid(Collections.singletonList("citizen-uuid-1"))
                 .mobileNumber("9876543210")
                 .requestInfo(createEmployeeRequestInfo("emp-uuid-1"))
@@ -310,21 +310,16 @@ public class CitizenSearchSecurityTest {
 
     @Test
     @DisplayName("UserService.searchUsers: Spoofed caller type EMPLOYEE detected as CITIZEN in DB should fail searching others")
-    public void testUserServiceSearch_SpoofedCallerTypeEmployee_DetectedAsCitizenFromDb_ThrowsUnauthorized() {
+    public void testUserServiceSearch_SpoofedCallerTypeEmployee_DetectedAsCitizenFromDb_ThrowsUnauthorized() throws Exception {
         UserSearchCriteria criteria = UserSearchCriteria.builder()
                 .tenantId("pg")
                 .uuid(Collections.singletonList("other-citizen-uuid"))
                 .build();
 
         // Caller claims to be EMPLOYEE in RequestInfo
-        RequestInfo requestInfo = RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder()
-                        .id(777L)
-                        .uuid("spoofed-citizen-uuid")
-                        .userName("spoofed")
-                        .type("EMPLOYEE")
-                        .build())
-                .build();
+        RequestInfo requestInfo = objectMapper.readValue(
+                "{\"userInfo\":{\"id\":777,\"uuid\":\"spoofed-citizen-uuid\",\"userName\":\"spoofed\",\"type\":\"EMPLOYEE\"}}",
+                RequestInfo.class);
 
         // But in the DB, this user is a CITIZEN
         User dbCaller = User.builder()

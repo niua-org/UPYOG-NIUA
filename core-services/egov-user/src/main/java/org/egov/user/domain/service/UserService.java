@@ -2,14 +2,16 @@ package org.egov.user.domain.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.exception.*;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.AddressSearchCriteria;
 import org.egov.user.domain.model.LoggedInUserUpdatePasswordRequest;
 import org.egov.user.domain.model.NonLoggedInUserUpdatePasswordRequest;
-import org.egov.user.domain.model.Role;
+import org.egov.common.contract.request.Role;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.AddressType;
@@ -25,6 +27,7 @@ import org.egov.user.persistence.repository.OtpRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.Otp;
 import org.egov.user.web.contract.OtpValidateRequest;
+import org.egov.user.web.contract.auth.AuthUserAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -94,9 +97,6 @@ public class UserService {
     private UserRepository userRepository;
     private OtpRepository otpRepository;
     private PasswordEncoder passwordEncoder;
-    private int defaultPasswordExpiryInDays;
-    private boolean isCitizenLoginOtpBased;
-    private boolean isEmployeeLoginOtpBased;
     private FileStoreRepository fileRepository;
     private EncryptionDecryptionUtil encryptionDecryptionUtil;
     //private TokenStore tokenStore;
@@ -105,38 +105,11 @@ public class UserService {
     // CHANGED: TokenStore -> OAuth2AuthorizationService
     private OAuth2AuthorizationService authorizationService;
 
-    @Value("${egov.user.host}")
-    private String userHost;
-
-    @Value("${egov.user.oauth.token.endpoint}")
-    private String userOauthTokenEndpoint;
-
-    @Value("${account.unlock.cool.down.period.minutes}")
-    private Long accountUnlockCoolDownPeriod;
-
-    @Value("${max.invalid.login.attempts.period.minutes}")
-    private Long maxInvalidLoginAttemptsPeriod;
-
-    @Value("${create.user.validate.name}")
-    private boolean createUserValidateName;
-
-    @Value("${max.invalid.login.attempts}")
-    private Long maxInvalidLoginAttempts;
-
-    @Value("${digilocker.search}")
-    private boolean isDigiLockerSearch;
-
-    @Value("${egov.user.pwd.pattern}")
-    private String pwdRegex;
-
-    @Value("${egov.user.pwd.pattern.min.length}")
-    private Integer pwdMinLength;
-
-    @Value("${egov.user.pwd.pattern.max.length}")
-    private Integer pwdMaxLength;
-
-    @Value("${user.address.mandatory.fields.enabled}")
-    private boolean addressMandatoryFieldsEnabled;
+    // Fix for PR Comment #19 (UserService.java:156):
+    // Removed legacy fallback fields (pwdRegex, maxInvalidLoginAttempts, etc.) and made
+    // UserConfiguration mandatory (no required = false) to eliminate degraded config fallbacks.
+    @Autowired
+    private UserConfiguration userConfiguration;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -148,14 +121,39 @@ public class UserService {
     @Lazy
     private TokenGenerationService tokenGenerationService;
 
-    @Value("${citizen.login.password.otp.fixed.enabled}")
-    private boolean fixedOTPEnabled;
+    @Autowired(required = false)
+    private ObjectMapper objectMapper;
 
-    @Value("${citizen.login.password.otp.fixed.value}")
-    private String fixedOTPPassword;
+    /**
+     * Primary constructor injecting repositories and centralized configuration.
+     * Fix for PR Comment #19 (UserService.java:156):
+     * UserConfiguration injected as mandatory bean (removed required = false) to prevent degraded config fallback.
+     *
+     * @param userRepository repository for user persistence operations
+     * @param otpRepository repository for validating OTPs
+     * @param fileRepository repository for resolving file URLs
+     * @param passwordEncoder cryptographic encoder for hashing passwords
+     * @param encryptionDecryptionUtil utility for field-level encryption/decryption
+     * @param addressRepository repository for user addresses
+     * @param userConfiguration centralized configuration component for application properties
+     */
+    @Autowired
+    public UserService(UserRepository userRepository, OtpRepository otpRepository, FileStoreRepository fileRepository,
+                       PasswordEncoder passwordEncoder, EncryptionDecryptionUtil encryptionDecryptionUtil,
+                       AddressRepository addressRepository,
+                       UserConfiguration userConfiguration) {
+        this.userRepository = userRepository;
+        this.otpRepository = otpRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.fileRepository = fileRepository;
+        this.encryptionDecryptionUtil = encryptionDecryptionUtil;
+        this.addressRepository = addressRepository;
+        this.userConfiguration = userConfiguration;
+    }
 
 	/**
 	 * Constructs a new {@link UserService} with all required repository, security, and configuration dependencies.
+	 * Legacy constructor preserved for unit test suites; initializes internal {@link UserConfiguration} cleanly.
 	 *
 	 * @param userRepository              repository for user persistence operations and queries
 	 * @param otpRepository               repository for validating one-time passwords with egov-otp service
@@ -172,27 +170,169 @@ public class UserService {
 	 */
 	public UserService(UserRepository userRepository, OtpRepository otpRepository, FileStoreRepository fileRepository,
 			PasswordEncoder passwordEncoder, EncryptionDecryptionUtil encryptionDecryptionUtil,
-			// REMOVED: OAuth2AuthorizationService authorizationService,
-			@Value("${default.password.expiry.in.days}") int defaultPasswordExpiryInDays,
-			@Value("${citizen.login.password.otp.enabled}") boolean isCitizenLoginOtpBased,
-			@Value("${employee.login.password.otp.enabled}") boolean isEmployeeLoginOtpBased,
-			@Value("${egov.user.pwd.pattern}") String pwdRegex,
-			@Value("${egov.user.pwd.pattern.max.length}") Integer pwdMaxLength,
-			@Value("${egov.user.pwd.pattern.min.length}") Integer pwdMinLength, AddressRepository addressRepository) {
+			int defaultPasswordExpiryInDays,
+			boolean isCitizenLoginOtpBased,
+			boolean isEmployeeLoginOtpBased,
+			String pwdRegex,
+			Integer pwdMaxLength,
+			Integer pwdMinLength, AddressRepository addressRepository) {
 		this.userRepository = userRepository;
 		this.otpRepository = otpRepository;
 		this.passwordEncoder = passwordEncoder;
-		this.defaultPasswordExpiryInDays = defaultPasswordExpiryInDays;
-		this.isCitizenLoginOtpBased = isCitizenLoginOtpBased;
-		this.isEmployeeLoginOtpBased = isEmployeeLoginOtpBased;
 		this.fileRepository = fileRepository;
 		this.encryptionDecryptionUtil = encryptionDecryptionUtil;
-		// REMOVED: this.authorizationService = authorizationService;
-		this.pwdRegex = pwdRegex;
-		this.pwdMaxLength = pwdMaxLength;
-		this.pwdMinLength = pwdMinLength;
 		this.addressRepository = addressRepository;
+		this.userConfiguration = UserConfiguration.builder()
+				.defaultPasswordExpiryInDays(defaultPasswordExpiryInDays)
+				.citizenLoginPasswordOtpEnabled(isCitizenLoginOtpBased)
+				.employeeLoginPasswordOtpEnabled(isEmployeeLoginOtpBased)
+				.pwdRegex(pwdRegex)
+				.pwdMaxLength(pwdMaxLength)
+				.pwdMinLength(pwdMinLength)
+				.accountUnlockCoolDownPeriod(30L)
+				.maxInvalidLoginAttemptsPeriod(30L)
+				.maxInvalidLoginAttempts(5L)
+				.createUserValidateName(true)
+				.digilockerSearch(false)
+				.citizenLoginPasswordOtpFixedEnabled(false)
+				.build();
 	}
+
+    /**
+     * Resolves the configured egov-user host directly from centralized UserConfiguration.
+     *
+     * @return configured user service host URL
+     */
+    private String getUserHost() {
+        return userConfiguration != null ? userConfiguration.getUserHost() : null;
+    }
+
+    /**
+     * Resolves the configured OAuth token endpoint directly from centralized UserConfiguration.
+     *
+     * @return OAuth token endpoint path
+     */
+    private String getUserOauthTokenEndpoint() {
+        return userConfiguration != null ? userConfiguration.getUserOauthTokenEndpoint() : null;
+    }
+
+    /**
+     * Resolves the account unlock cooldown period in minutes from centralized UserConfiguration.
+     *
+     * @return cooldown period in minutes
+     */
+    private Long getAccountUnlockCoolDownPeriod() {
+        return userConfiguration != null ? userConfiguration.getAccountUnlockCoolDownPeriod() : null;
+    }
+
+    /**
+     * Resolves the evaluation window in minutes for tracking invalid login attempts from UserConfiguration.
+     *
+     * @return evaluation window in minutes
+     */
+    private Long getMaxInvalidLoginAttemptsPeriod() {
+        return userConfiguration != null ? userConfiguration.getMaxInvalidLoginAttemptsPeriod() : null;
+    }
+
+    /**
+     * Resolves whether user name validation is enforced during new user creation from UserConfiguration.
+     *
+     * @return true if user name validation is enabled
+     */
+    private boolean isCreateUserValidateName() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCreateUserValidateName());
+    }
+
+    /**
+     * Resolves the maximum invalid login attempts before locking user account from UserConfiguration.
+     *
+     * @return maximum invalid login attempts threshold
+     */
+    private Long getMaxInvalidLoginAttempts() {
+        return userConfiguration != null ? userConfiguration.getMaxInvalidLoginAttempts() : null;
+    }
+
+    /**
+     * Resolves whether DigiLocker search is enabled from UserConfiguration.
+     *
+     * @return true if DigiLocker search is enabled
+     */
+    private boolean isDigiLockerSearch() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getDigilockerSearch());
+    }
+
+    /**
+     * Resolves the password complexity regular expression pattern from UserConfiguration.
+     *
+     * @return password pattern regex string
+     */
+    private String getPwdRegex() {
+        return userConfiguration != null ? userConfiguration.getPwdRegex() : null;
+    }
+
+    /**
+     * Resolves the minimum allowed character length for passwords from UserConfiguration.
+     *
+     * @return minimum password length
+     */
+    private Integer getPwdMinLength() {
+        return userConfiguration != null ? userConfiguration.getPwdMinLength() : null;
+    }
+
+    /**
+     * Resolves the maximum allowed character length for passwords from UserConfiguration.
+     *
+     * @return maximum password length
+     */
+    private Integer getPwdMaxLength() {
+        return userConfiguration != null ? userConfiguration.getPwdMaxLength() : null;
+    }
+
+    /**
+     * Resolves whether fixed OTP testing is enabled for citizen login from UserConfiguration.
+     *
+     * @return true if fixed OTP testing is enabled
+     */
+    private boolean isFixedOTPEnabled() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpFixedEnabled());
+    }
+
+    /**
+     * Resolves the configured fixed OTP password value for testing from UserConfiguration.
+     *
+     * @return fixed OTP password string
+     */
+    private String getFixedOTPPassword() {
+        return userConfiguration != null ? userConfiguration.getCitizenLoginPasswordOtpFixedValue() : null;
+    }
+
+    /**
+     * Resolves the default password expiry duration in days from UserConfiguration.
+     *
+     * @return duration in days before password expires
+     */
+    private int getDefaultPasswordExpiryInDays() {
+        return userConfiguration != null && userConfiguration.getDefaultPasswordExpiryInDays() != null
+                ? userConfiguration.getDefaultPasswordExpiryInDays() : 90;
+    }
+
+    /**
+     * Resolves whether citizen login requires OTP verification from UserConfiguration.
+     *
+     * @return true if citizen login requires OTP
+     */
+    private boolean isCitizenLoginOtpBased() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpEnabled());
+    }
+
+    /**
+     * Resolves whether employee login requires OTP verification from UserConfiguration.
+     *
+     * @return true if employee login requires OTP
+     */
+    private boolean isEmployeeLoginOtpBased() {
+        return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getEmployeeLoginPasswordOtpEnabled());
+    }
 
     /**
      * Retrieves a single, unique user matching the specified username, tenant ID, and user type.
@@ -279,41 +419,43 @@ public class UserService {
      * @param authenticatedUser the authenticated user contract containing token generation metadata and roles
      * @return the decrypted {@link User} entity, or the original encrypted entity if decryption encounters an error
      */
-    public User decryptUserWithContext(User encryptedUser, org.egov.user.web.contract.auth.User authenticatedUser) {
+    public User decryptUserWithContext(User encryptedUser, AuthUserAccount authenticatedUser) {
         if (encryptedUser == null) {
             return null;
         }
 
         try {
-            // CRITICAL FIX: Create RequestInfo without encrypted fields
-            // The RequestInfo.userInfo should NOT contain encrypted data (userName, mobileNumber, emailId, name)
-            // because the egov-enc-service ABAC policy evaluator cannot work with encrypted data in RequestInfo.
-            // For CITIZEN users, userName and mobileNumber come from encrypted Redis token data.
-            // For EMPLOYEE users, these are already decrypted (which is why EMPLOYEE searches work).
-            // By only including non-encrypted identifiers (uuid, id, type, tenantId, roles),
-            // the ABAC policy can properly identify the user and validate "Self" purpose decryption.
-            RequestInfo requestInfo = RequestInfo.builder()
-                .action("token_generation")
-                .ts(System.currentTimeMillis())
-                .userInfo(org.egov.common.contract.request.User.builder()
-                    .uuid(authenticatedUser.getUuid())        // ✓ Not encrypted
-                    .id(authenticatedUser.getId())            // ✓ Not encrypted
-                    .type(authenticatedUser.getType())        // ✓ Not encrypted
-                    .tenantId(authenticatedUser.getTenantId()) // ✓ Not encrypted
-                    // REMOVED: .userName() - Can be encrypted for CITIZEN, causes ABAC to fail
-                    // REMOVED: .mobileNumber() - Can be encrypted for CITIZEN, causes ABAC to fail
-                    // REMOVED: .emailId() - Can be encrypted, causes ABAC to fail
-                    // REMOVED: .name() - Can be encrypted, causes ABAC to fail
-                    .roles(authenticatedUser.getRoles() != null ?
-                        authenticatedUser.getRoles().stream()
-                            .map(role -> org.egov.common.contract.request.Role.builder()
+            // Fix for PR Comment #20 (UserService.java:459):
+            // Use typed RequestInfo and Role builders via AuthUserAccount getters instead of raw Map.
+            // Preserves actual null values on role attributes (rather than forcing empty strings)
+            // and retains the roles collection structure required for ABAC policy evaluation.
+            List<Role> contractRoles = new ArrayList<>();
+            if (authenticatedUser.getRoles() != null) {
+                for (org.egov.user.web.contract.auth.Role role : authenticatedUser.getRoles()) {
+                    if (role != null) {
+                        contractRoles.add(Role.builder()
                                 .code(role.getCode())
                                 .name(role.getName())
-                                .tenantId(role.getTenantId()) // Added for proper ABAC evaluation
-                                .build())
-                            .collect(Collectors.toList()) : new ArrayList<>())
-                    .build())
-                .build();
+                                .tenantId(role.getTenantId())
+                                .build());
+                    }
+                }
+            }
+
+            org.egov.common.contract.request.User contractUser =
+                    org.egov.common.contract.request.User.builder()
+                            .uuid(authenticatedUser.getUuid())
+                            .id(authenticatedUser.getId())
+                            .type(authenticatedUser.getType())
+                            .tenantId(authenticatedUser.getTenantId())
+                            .roles(contractRoles)
+                            .build();
+
+            RequestInfo requestInfo = RequestInfo.builder()
+                    .action("token_generation")
+                    .ts(System.currentTimeMillis())
+                    .userInfo(contractUser)
+                    .build();
 
             // The encryption service expects a List<User>, not a single User
             // Wrap in list, decrypt, then extract the single user (same pattern as searchUsers)
@@ -414,8 +556,8 @@ public class UserService {
      * @return list of matching domain {@link User} entities with decrypted fields, or an empty list if none match
      * @throws CustomException if citizen caller security validation fails or criteria validation fails
      */
-    public List<org.egov.user.domain.model.User> searchUsers(UserSearchCriteria searchCriteria,
-                                                             boolean isInterServiceCall, RequestInfo requestInfo) {
+    public List<User> searchUsers(UserSearchCriteria searchCriteria,
+                                  boolean isInterServiceCall, RequestInfo requestInfo) {
     	log.info("searchCriteria"+searchCriteria);
         searchCriteria.validate(isInterServiceCall);
         validateCitizenSearch(searchCriteria, isInterServiceCall, requestInfo);
@@ -434,7 +576,7 @@ public class UserService {
                 searchCriteria.setAlternatemobilenumber(altmobnumber);
             }
         log.info("Search Criteria :-"+ searchCriteria);
-        List<org.egov.user.domain.model.User> list = userRepository.findAll(searchCriteria);
+        List<User> list = userRepository.findAll(searchCriteria);
 
         if (list.isEmpty()) {
             return Collections.emptyList();
@@ -485,7 +627,7 @@ public class UserService {
         user.setIdentityVerifiedSource(null);
 
         user.setUuid(UUID.randomUUID().toString());
-        user.validateNewUser(createUserValidateName);
+        user.validateNewUser(isCreateUserValidateName());
         conditionallyValidateOtp(user);
         /* encrypt here */
         user = encryptionDecryptionUtil.encryptObject(user, "User", User.class);
@@ -496,7 +638,7 @@ public class UserService {
             validatePassword(user.getPassword());
         }
         user.setPassword(encryptPwd(user.getPassword()));
-        user.setDefaultPasswordExpiry(defaultPasswordExpiryInDays);
+        user.setDefaultPasswordExpiry(getDefaultPasswordExpiryInDays());
         user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
 
         User persistedNewUser = persistNewUser(user);
@@ -506,6 +648,12 @@ public class UserService {
 
     }
 
+    /**
+     * Validates that the username does not already exist within the state tenant for the specified user type.
+     *
+     * @param user domain user entity to validate for uniqueness
+     * @throws DuplicateUserNameException if an existing user matches the username and tenant
+     */
     private void validateUserUniqueness(User user) {
         if (userRepository.isUserPresent(user.getUsername(), getStateLevelTenantForCitizen(user.getTenantId(), user
                 .getType()), user.getType()))
@@ -513,6 +661,13 @@ public class UserService {
                     .getType()).tenantId(user.getTenantId()).build());
     }
 
+    /**
+     * Normalizes the tenant identifier to the state level (root tenant) for citizen users.
+     *
+     * @param tenantId input tenant identifier (e.g. "pg.citya")
+     * @param userType classification of the user
+     * @return state-level tenant code (e.g. "pg") for citizens, or original tenantId for non-citizens
+     */
     private String getStateLevelTenantForCitizen(String tenantId, UserType userType) {
         if (!isNull(userType) && userType.equals(UserType.CITIZEN) && !isEmpty(tenantId) && tenantId.contains("."))
             return tenantId.split("\\.")[0];
@@ -546,15 +701,20 @@ public class UserService {
     }
 
 
+    /**
+     * Validates and enriches a newly registering citizen's username, roles, and state tenant.
+     *
+     * @param user incoming citizen user entity to validate and enrich
+     */
     private void validateAndEnrichCitizen(User user) {
         log.info("Validating User........");
-        if (isCitizenLoginOtpBased && !StringUtils.isNumeric(user.getUsername()))
+        if (isCitizenLoginOtpBased() && !StringUtils.isNumeric(user.getUsername()))
             throw new UserNameNotValidException();
-        else if (isCitizenLoginOtpBased)
+        else if (isCitizenLoginOtpBased())
             user.setMobileNumber(user.getUsername());
-        else if(!isCitizenLoginOtpBased && user.isDigilockerRegistration())
+        else if(!isCitizenLoginOtpBased() && user.isDigilockerRegistration())
             user.setMobileNumber(user.getUsername());
-        if (!isCitizenLoginOtpBased)
+        if (!isCitizenLoginOtpBased())
             validatePassword(user.getPassword());
         user.setRoleToCitizen();
         user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
@@ -586,6 +746,13 @@ public class UserService {
         return getAccess(targetUser, user.getOtpReference());
     }
 
+    /**
+     * Obtains OAuth access and refresh tokens for a newly registered user.
+     *
+     * @param user target authenticated user
+     * @param password user password or OTP credential reference
+     * @return token response map or contract
+     */
     private Object getAccess(User user, String password) {
         log.info("Fetch access token for register with login flow");
         if (user == null || !Boolean.TRUE.equals(user.getActive())) {
@@ -624,17 +791,19 @@ public class UserService {
             map.add("isInternal", "true");
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-            if (StringUtils.isBlank(userHost)) {
+            String host = getUserHost();
+            if (StringUtils.isBlank(host)) {
                 throw new CustomException("CONFIG_ERROR", "egov.user.host is not configured");
             }
-            if (StringUtils.isBlank(userOauthTokenEndpoint)) {
+            String endpoint = getUserOauthTokenEndpoint();
+            if (StringUtils.isBlank(endpoint)) {
                 throw new CustomException("CONFIG_ERROR", "egov.user.oauth.token.endpoint is not configured");
             }
-            String host = userHost.trim();
+            host = host.trim();
             if (!host.endsWith("/")) {
                 host += "/";
             }
-            String endpoint = userOauthTokenEndpoint.trim();
+            endpoint = endpoint.trim();
             String tokenUrl = host + (endpoint.startsWith("/") ? endpoint.substring(1) : endpoint);
             return restTemplate.postForEntity(tokenUrl, request, Map.class).getBody();
 
@@ -671,7 +840,7 @@ public class UserService {
     public Boolean validateOtp(User user) {
         // Bypass egov-otp validation in non-production/test environments if fixed OTP is enabled
         // This allows registration with configured fixed OTP (e.g., 123456) without prior OTP generation
-        if (fixedOTPEnabled && StringUtils.isNotBlank(fixedOTPPassword) && fixedOTPPassword.equals(user.getOtpReference())) {
+        if (isFixedOTPEnabled() && StringUtils.isNotBlank(getFixedOTPPassword()) && getFixedOTPPassword().equals(user.getOtpReference())) {
             log.info("Fixed OTP matched successfully for user: {}", MaskUtils.maskMobile(user.getMobileNumber()));
             return true;
         }
@@ -740,25 +909,6 @@ public class UserService {
             decryptedupdatedUserfromDB = encryptionDecryptionUtil.decryptObject(encryptedUpdatedUserfromDB, "UserSelf", User.class, requestInfo);
             return decryptedupdatedUserfromDB;
     }
-
-	/*
-	 * public void removeTokensByUser(User user) { Collection<OAuth2AccessToken>
-	 * tokens = tokenStore.findTokensByClientIdAndUserName(USER_CLIENT_ID,
-	 * user.getUsername());
-	 * 
-	 * for (OAuth2AccessToken token : tokens) { if (token.getAdditionalInformation()
-	 * != null && token.getAdditionalInformation().containsKey("UserRequest")) { if
-	 * (token.getAdditionalInformation().get("UserRequest") instanceof
-	 * org.egov.user.web.contract.auth.User) { org.egov.user.web.contract.auth.User
-	 * userInfo = (org.egov.user.web.contract.auth.User)
-	 * token.getAdditionalInformation().get( "UserRequest"); if
-	 * (user.getUsername().equalsIgnoreCase(userInfo.getUserName()) &&
-	 * user.getTenantId().equalsIgnoreCase(userInfo.getTenantId()) &&
-	 * user.getType().equals(UserType.fromValue(userInfo.getType())))
-	 * tokenStore.removeAccessToken(token); } } }
-	 * 
-	 * }
-	 */
     
     
     /**
@@ -813,7 +963,7 @@ public class UserService {
         User existingUser = getUserByUuid(user.getUuid());
         validateProfileUpdateIsDoneByTheSameLoggedInUser(user);
         if (isCallerCitizen(requestInfo)) {
-            org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
+            var caller = requestInfo.getUserInfo();
             String callerUuid = caller.getUuid();
             Long callerId = caller.getId();
             boolean uuidMismatch = StringUtils.isNotBlank(callerUuid) && StringUtils.isNotBlank(existingUser.getUuid())
@@ -873,9 +1023,9 @@ public class UserService {
         final User user = getUniqueUser(updatePasswordRequest.getUserName(), updatePasswordRequest.getTenantId(),
                 updatePasswordRequest.getType(), null);
 
-        if (user.getType().toString().equals(UserType.CITIZEN.toString()) && isCitizenLoginOtpBased)
+        if (user.getType().toString().equals(UserType.CITIZEN.toString()) && isCitizenLoginOtpBased())
             throw new InvalidUpdatePasswordRequestException();
-        if (user.getType().toString().equals(UserType.EMPLOYEE.toString()) && isEmployeeLoginOtpBased)
+        if (user.getType().toString().equals(UserType.EMPLOYEE.toString()) && isEmployeeLoginOtpBased())
             throw new InvalidUpdatePasswordRequestException();
 
         validateExistingPassword(user, updatePasswordRequest.getExistingPassword());
@@ -906,11 +1056,11 @@ public class UserService {
         request.validate();
         // validateOtp(request.getOtpValidationRequest());
         User user = getUniqueUser(request.getUserName(), request.getTenantId(), request.getType(), requestInfo);
-        if (user.getType().toString().equals(UserType.CITIZEN.toString()) && isCitizenLoginOtpBased) {
+        if (user.getType().toString().equals(UserType.CITIZEN.toString()) && isCitizenLoginOtpBased()) {
             log.info("CITIZEN forgot password flow is disabled");
             throw new InvalidUpdatePasswordRequestException();
         }
-        if (user.getType().toString().equals(UserType.EMPLOYEE.toString()) && isEmployeeLoginOtpBased) {
+        if (user.getType().toString().equals(UserType.EMPLOYEE.toString()) && isEmployeeLoginOtpBased()) {
             log.info("EMPLOYEE forgot password flow is disabled");
             throw new InvalidUpdatePasswordRequestException();
         }
@@ -938,11 +1088,11 @@ public class UserService {
     public boolean isAccountUnlockAble(User user) {
         if (user.getAccountLocked()) {
             boolean unlockAble =
-                    System.currentTimeMillis() - user.getAccountLockedDate() > TimeUnit.MINUTES.toMillis(accountUnlockCoolDownPeriod);
+                    System.currentTimeMillis() - user.getAccountLockedDate() > TimeUnit.MINUTES.toMillis(getAccountUnlockCoolDownPeriod());
 
             log.info("Account eligible for unlock - " + unlockAble);
             log.info("Current time {}, last lock time {} , cool down period {} ", System.currentTimeMillis(),
-                    user.getAccountLockedDate(), TimeUnit.MINUTES.toMillis(accountUnlockCoolDownPeriod));
+                    user.getAccountLockedDate(), TimeUnit.MINUTES.toMillis(getAccountUnlockCoolDownPeriod()));
             return unlockAble;
         } else
             return true;
@@ -973,9 +1123,9 @@ public class UserService {
         if (!Objects.isNull(user.getUuid())) {
             List<FailedLoginAttempt> failedLoginAttempts =
                     userRepository.fetchFailedAttemptsByUserAndTime(user.getUuid(),
-                            System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(maxInvalidLoginAttemptsPeriod));
+                            System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(getMaxInvalidLoginAttemptsPeriod()));
 
-            if (failedLoginAttempts.size() + 1 >= maxInvalidLoginAttempts) {
+            if (failedLoginAttempts.size() + 1 >= getMaxInvalidLoginAttempts()) {
                 User userToBeUpdated = user.toBuilder()
                         .accountLocked(true)
                         .password(null)
@@ -988,7 +1138,7 @@ public class UserService {
                 // Token removal will be handled when user tries to use expired/invalid tokens
                 
                 log.info("Locked account with uuid {} for {} minutes as exceeded max allowed attempts of {} within {} minutes",
-                        user.getUuid(), accountUnlockCoolDownPeriod, maxInvalidLoginAttempts, maxInvalidLoginAttemptsPeriod);
+                        user.getUuid(), getAccountUnlockCoolDownPeriod(), getMaxInvalidLoginAttempts(), getMaxInvalidLoginAttemptsPeriod());
                 
                 throw new BadCredentialsException("Account locked");
             }
@@ -1038,6 +1188,12 @@ public class UserService {
     }
 
 
+    /**
+     * Encrypts the raw password using the injected PasswordEncoder.
+     *
+     * @param pwd raw plaintext password
+     * @return encoded password hash or null if input is null
+     */
     String encryptPwd(String pwd) {
         if (!isNull(pwd))
             return passwordEncoder.encode(pwd);
@@ -1103,9 +1259,11 @@ public class UserService {
     public void validatePassword(String password) {
         Map<String, String> errorMap = new HashMap<>();
         if (!StringUtils.isEmpty(password)) {
-            if (password.length() < pwdMinLength || password.length() > pwdMaxLength)
-                errorMap.put("INVALID_PWD_LENGTH", "Password must be of minimum: " + pwdMinLength + " and maximum: " + pwdMaxLength + " characters.");
-            Pattern p = Pattern.compile(pwdRegex);
+            int minLen = getPwdMinLength();
+            int maxLen = getPwdMaxLength();
+            if (password.length() < minLen || password.length() > maxLen)
+                errorMap.put("INVALID_PWD_LENGTH", "Password must be of minimum: " + minLen + " and maximum: " + maxLen + " characters.");
+            Pattern p = Pattern.compile(getPwdRegex());
             Matcher m = p.matcher(password);
             if (!m.find()) {
                 errorMap.put("INVALID_PWD_PATTERN", "Password MUST HAVE: Atleast one digit, one upper case, one lower case, one special character (@#$%) and MUST NOT contain any spaces");
@@ -1167,6 +1325,17 @@ public class UserService {
     }
 
     /**
+     * Determines whether mandatory address fields (city, pincode, address) are strictly enforced.
+     * Fetches configuration from {@link UserConfiguration} if available, falling back to local field or default true.
+     *
+     * @return true if mandatory address fields are required, false otherwise
+     */
+    private boolean isAddressMandatoryFieldsEnabled() {
+        return userConfiguration == null || userConfiguration.getAddressMandatoryFieldsEnabled() == null
+                || Boolean.TRUE.equals(userConfiguration.getAddressMandatoryFieldsEnabled());
+    }
+
+    /**
      * Creates and persists an encrypted address associated with the specified user UUID.
      * <p>
      * <b>Rules & Constraints:</b>
@@ -1193,7 +1362,8 @@ public class UserService {
         }
         
         // Validate mandatory fields if enabled
-        if (addressMandatoryFieldsEnabled && address.isMandatoryFieldsMissing(addressMandatoryFieldsEnabled)) {
+        boolean mandatoryEnabled = isAddressMandatoryFieldsEnabled();
+        if (mandatoryEnabled && address.isMandatoryFieldsMissing(mandatoryEnabled)) {
             log.error("Address validation failed - mandatory fields missing for address creation for user UUID: {}", userUuid);
             throw new CustomException("ADDRESS_VALIDATION_ERROR", "City, pincode, and address are mandatory fields for address creation");
         }
@@ -1255,7 +1425,8 @@ public class UserService {
     public Address updateAddress(Address address) {
 
         // Validate mandatory fields if enabled
-        if (addressMandatoryFieldsEnabled && address.isMandatoryFieldsMissing(addressMandatoryFieldsEnabled)) {
+        boolean mandatoryEnabled = isAddressMandatoryFieldsEnabled();
+        if (mandatoryEnabled && address.isMandatoryFieldsMissing(mandatoryEnabled)) {
             log.error("Address validation failed - mandatory fields missing for address update with ID: {}", address.getId());
             throw new CustomException("ADDRESS_VALIDATION_ERROR", "City, pincode, and address are mandatory fields for address creation");
         }
@@ -1281,9 +1452,9 @@ public class UserService {
     /**
      * Deactivates failed login attempts for the provided authenticated user contract.
      *
-     * @param user contract {@link org.egov.user.web.contract.auth.User} whose failed attempts are to be reset
+     * @param user authenticated user account whose failed attempts are to be reset
      */
-    public void resetFailedLoginAttempts(org.egov.user.web.contract.auth.User user) {
+    public void resetFailedLoginAttempts(AuthUserAccount user) {
         if (user != null && user.getUuid() != null)
             userRepository.resetFailedLoginAttemptsForUser(user.getUuid());
     }
@@ -1317,7 +1488,7 @@ public class UserService {
         user.setUuid(UUID.randomUUID().toString());
 
         // Validate user details, including name, mobile number, and addresses
-        user.validateNewUser(createUserValidateName);
+        user.validateNewUser(isCreateUserValidateName());
         conditionallyValidateOtp(user);
         user = encryptionDecryptionUtil.encryptObject(user, "User", User.class);
 
@@ -1331,7 +1502,7 @@ public class UserService {
         }
 
         user.setPassword(encryptPwd(user.getPassword()));
-        user.setDefaultPasswordExpiry(defaultPasswordExpiryInDays);
+        user.setDefaultPasswordExpiry(getDefaultPasswordExpiryInDays());
         user.setTenantId(getStateLevelTenantForCitizen(user.getTenantId(), user.getType()));
 
         // Persist the validated and encrypted user in the database
@@ -1381,7 +1552,7 @@ public class UserService {
             throw new CustomException(UserConstants.ERROR_DATA_MISMATCH, "Data mismatch: Provided id " + user.getId() + " does not match existing user record for uuid: " + user.getUuid());
         }
         if (isCallerCitizen(requestInfo)) {
-            org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
+            var caller = requestInfo.getUserInfo();
             String callerUuid = caller.getUuid();
             Long callerId = caller.getId();
             boolean uuidMismatch = StringUtils.isNotBlank(callerUuid) && StringUtils.isNotBlank(existingUser.getUuid())
@@ -1432,8 +1603,8 @@ public class UserService {
      * @return list of matching domain {@link User} entities with decrypted profile and address details
      * @throws CustomException if search criteria or citizen security validations fail
      */
-    public List<org.egov.user.domain.model.User>  searchUsersV2(UserSearchCriteria searchCriteria,
-                                                               boolean isInterServiceCall, RequestInfo requestInfo) {
+    public List<User> searchUsersV2(UserSearchCriteria searchCriteria,
+                                  boolean isInterServiceCall, RequestInfo requestInfo) {
 
         searchCriteria.validate(isInterServiceCall);
         validateCitizenSearch(searchCriteria, isInterServiceCall, requestInfo);
@@ -1451,7 +1622,7 @@ public class UserService {
             searchCriteria.setAlternatemobilenumber(altmobnumber);
         }
 
-        List<org.egov.user.domain.model.User> list = userRepository.findAllV2(searchCriteria);
+        List<User> list = userRepository.findAllV2(searchCriteria);
 
         // If list is null or empty, return an empty list
         if (list == null || list.isEmpty()) {
@@ -1682,8 +1853,8 @@ public class UserService {
         if (requestInfo == null || requestInfo.getUserInfo() == null) {
             return false;
         }
-        org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
-        User dbUser = getCallerDbUser(caller);
+        var caller = requestInfo.getUserInfo();
+        User dbUser = getCallerDbUser(requestInfo);
         if (dbUser != null && dbUser.getType() != null) {
             return UserType.CITIZEN.equals(dbUser.getType());
         }
@@ -1691,15 +1862,16 @@ public class UserService {
     }
 
     /**
-     * Looks up the authenticated caller's domain user record from the database by UUID or ID.
+     * Looks up the authenticated caller's domain user record from the database by UUID or ID from RequestInfo.
      *
-     * @param caller user contract from requestInfo
+     * @param requestInfo standard UPYOG request metadata envelope
      * @return database domain {@link User} entity or null if not found
      */
-    public User getCallerDbUser(org.egov.common.contract.request.User caller) {
-        if (caller == null) {
+    public User getCallerDbUser(RequestInfo requestInfo) {
+        if (requestInfo == null || requestInfo.getUserInfo() == null) {
             return null;
         }
+        var caller = requestInfo.getUserInfo();
         if (StringUtils.isNotBlank(caller.getUuid())) {
             try {
                 return getUserByUuid(caller.getUuid().trim());
@@ -1724,6 +1896,14 @@ public class UserService {
         return null;
     }
 
+    /**
+     * Enforces citizen caller isolation rules to prevent unauthorized searching of other users profiles.
+     *
+     * @param searchCriteria incoming search filters
+     * @param isInterServiceCall whether invocation is a trusted inter-service call
+     * @param requestInfo request metadata and security context
+     * @throws CustomException if a citizen caller attempts to search for other users
+     */
     private void validateCitizenSearch(UserSearchCriteria searchCriteria, boolean isInterServiceCall, RequestInfo requestInfo) {
         if (isInterServiceCall || requestInfo == null || requestInfo.getUserInfo() == null) {
             return;
@@ -1732,8 +1912,8 @@ public class UserService {
             return;
         }
 
-        org.egov.common.contract.request.User caller = requestInfo.getUserInfo();
-        User dbCaller = getCallerDbUser(caller);
+        var caller = requestInfo.getUserInfo();
+        User dbCaller = getCallerDbUser(requestInfo);
 
         String callerUuid = (dbCaller != null && StringUtils.isNotBlank(dbCaller.getUuid()))
                 ? dbCaller.getUuid().trim()

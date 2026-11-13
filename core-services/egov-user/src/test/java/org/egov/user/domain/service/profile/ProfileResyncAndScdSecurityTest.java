@@ -1,10 +1,12 @@
 package org.egov.user.domain.service.profile;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
-import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.AddressSearchCriteria;
+import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.enums.AddressType;
 import org.egov.user.domain.service.UserService;
@@ -48,6 +50,15 @@ public class ProfileResyncAndScdSecurityTest {
     class ResyncSecurityTests {
 
         private ProfileValidatorImpl validator;
+        private final ObjectMapper objectMapper = new ObjectMapper();
+
+        private RequestInfo createRequestInfo(String userUuid) {
+            try {
+                return objectMapper.readValue("{\"userInfo\":{\"uuid\":\"" + userUuid + "\"}}", RequestInfo.class);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         @BeforeEach
         public void setUp() throws Exception {
@@ -57,19 +68,17 @@ public class ProfileResyncAndScdSecurityTest {
         @Test
         @DisplayName("Re-sync succeeds when authenticated user UUID matches target citizen record")
         public void testResync_WhenAuthenticatedUserMatchesTarget_Succeeds() {
-            RequestInfo requestInfo = RequestInfo.builder()
-                    .userInfo(User.builder().uuid("citizen-uuid-1").build())
-                    .build();
+            RequestInfo requestInfo = createRequestInfo("citizen-uuid-1");
 
             ProfileResyncRequest request = ProfileResyncRequest.builder()
                     .requestInfo(requestInfo)
                     .uuid("citizen-uuid-1")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .otp("123456")
                     .aadhaarNumber("999988881234")
                     .build();
 
-            org.egov.user.domain.model.User existingUser = org.egov.user.domain.model.User.builder()
+            User existingUser = User.builder()
                     .uuid("citizen-uuid-1")
                     .aadhaarNumber("XXXXXXXX1234")
                     .tenantId("pg")
@@ -81,18 +90,16 @@ public class ProfileResyncAndScdSecurityTest {
         @Test
         @DisplayName("Re-sync rejected with UNAUTHORIZED_RESYNC when logged-in user is Citizen A but targets Citizen B")
         public void testResync_WhenCitizenATriesToResyncCitizenB_ThrowsUnauthorized() {
-            RequestInfo requestInfo = RequestInfo.builder()
-                    .userInfo(User.builder().uuid("citizen-A-uuid").build())
-                    .build();
+            RequestInfo requestInfo = createRequestInfo("citizen-A-uuid");
 
             ProfileResyncRequest request = ProfileResyncRequest.builder()
                     .requestInfo(requestInfo)
                     .uuid("citizen-B-uuid")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .otp("123456")
                     .build();
 
-            org.egov.user.domain.model.User citizenB = org.egov.user.domain.model.User.builder()
+            User citizenB = User.builder()
                     .uuid("citizen-B-uuid")
                     .tenantId("pg")
                     .build();
@@ -104,19 +111,17 @@ public class ProfileResyncAndScdSecurityTest {
         @Test
         @DisplayName("Re-sync rejected when Aadhaar number does not match registered citizen Aadhaar")
         public void testResync_WhenAadhaarNumberDoesNotMatchRegistered_ThrowsMismatch() {
-            RequestInfo requestInfo = RequestInfo.builder()
-                    .userInfo(User.builder().uuid("citizen-uuid-1").build())
-                    .build();
+            RequestInfo requestInfo = createRequestInfo("citizen-uuid-1");
 
             ProfileResyncRequest request = ProfileResyncRequest.builder()
                     .requestInfo(requestInfo)
                     .uuid("citizen-uuid-1")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .otp("123456")
                     .aadhaarNumber("999988885678") // Ends in 5678
                     .build();
 
-            org.egov.user.domain.model.User existingUser = org.egov.user.domain.model.User.builder()
+            User existingUser = User.builder()
                     .uuid("citizen-uuid-1")
                     .aadhaarNumber("XXXXXXXX1234") // Ends in 1234
                     .tenantId("pg")
@@ -181,12 +186,12 @@ public class ProfileResyncAndScdSecurityTest {
                     .houseNumber("102")
                     .pinCode("143001")
                     .landmark("Near Park")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .filestoreId("filestore-addr-proof-1")
                     .build();
 
             when(userRepository.getUuidByUserId(1L)).thenReturn("user-1");
-            when(userRepository.getTenantIdByUserId(1L)).thenReturn("pb.amritsar");
+            when(userRepository.getTenantIdByUserId(1L)).thenReturn("pg.citya");
             when(addressRepository.getAddressV2(any(AddressSearchCriteria.class))).thenReturn(Collections.singletonList(existingPermanent));
             when(addressRepository.createAddressV2(any(Address.class), eq(1L), anyString())).thenReturn(incomingPermanent);
 
@@ -228,12 +233,12 @@ public class ProfileResyncAndScdSecurityTest {
                     .houseNumber("202")
                     .pinCode("143001")
                     .landmark("Near Metro")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .filestoreId("filestore-addr-proof-1")
                     .build();
 
             when(userRepository.getUuidByUserId(1L)).thenReturn("user-1");
-            when(userRepository.getTenantIdByUserId(1L)).thenReturn("pb.amritsar");
+            when(userRepository.getTenantIdByUserId(1L)).thenReturn("pg.citya");
             when(addressRepository.getAddressV2(any(AddressSearchCriteria.class))).thenReturn(Collections.singletonList(existingCorr));
             when(addressRepository.createAddressV2(any(Address.class), eq(1L), anyString())).thenReturn(incomingCorr);
 
@@ -262,7 +267,7 @@ public class ProfileResyncAndScdSecurityTest {
                     .houseNumber("501")
                     .pinCode("143001")
                     .landmark("Old Landmark")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .version(1L)
                     .status(UserConstants.ADDRESS_ACTIVE_STATUS)
                     .build();
@@ -277,11 +282,11 @@ public class ProfileResyncAndScdSecurityTest {
                     .houseNumber("501")
                     .pinCode("143001")
                     .landmark("New Landmark") // Editable
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .build();
 
             when(addressRepository.getAddressV2(any(AddressSearchCriteria.class))).thenReturn(Collections.singletonList(existing));
-            when(userRepository.getTenantIdByUserId(1L)).thenReturn("pb.amritsar");
+            when(userRepository.getTenantIdByUserId(1L)).thenReturn("pg.citya");
             when(addressRepository.createAddressV2(any(Address.class), eq(1L), anyString())).thenAnswer(invocation -> {
                 Address a = invocation.getArgument(0);
                 a.setId(206L);
@@ -332,7 +337,7 @@ public class ProfileResyncAndScdSecurityTest {
                     .id("doc-uuid-1")
                     .userId(101L)
                     .userUuid("user-uuid-1")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .documentType("ADDRESS_PROOF")
                     .filestoreId("file-store-old")
                     .active(true)
@@ -370,7 +375,8 @@ public class ProfileResyncAndScdSecurityTest {
         public void testCreateDocument_WhenFilestoreNotFound_ThrowsException() throws Exception {
             when(fileStoreRepository.getUrlByFileStoreId(anyString(), anyList()))
                     .thenReturn(Collections.emptyMap());
-            when(userRepository.getTenantIdByUserId(anyLong())).thenReturn("pb.amritsar");
+            when(userRepository.getTenantIdByUserId(anyLong())).thenReturn("pg.citya");
+            when(userRepository.getUuidByUserId(anyLong())).thenReturn("citizen-uuid");
 
             UserDocument doc = UserDocument.builder()
                     .documentType("ADDRESS_PROOF")
@@ -407,7 +413,7 @@ public class ProfileResyncAndScdSecurityTest {
 
         @BeforeEach
         public void setUp() throws Exception {
-            org.egov.user.config.UserConfiguration userConfig = org.egov.user.config.UserConfiguration.builder()
+            UserConfiguration userConfig = UserConfiguration.builder()
                     .citizenLoginPasswordOtpFixedEnabled(false)
                     .otpMaxInvalidAttempts(3)
                     .build();
@@ -422,7 +428,7 @@ public class ProfileResyncAndScdSecurityTest {
             LoginV2Request request = LoginV2Request.builder()
                     .mobileNumber("9876543210")
                     .otp("000000")
-                    .tenantId("pb.amritsar")
+                    .tenantId("pg.citya")
                     .build();
 
             // Attempt 1 -> INVALID_OTP

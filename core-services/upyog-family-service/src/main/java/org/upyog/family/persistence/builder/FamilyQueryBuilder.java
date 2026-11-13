@@ -78,6 +78,8 @@ public class FamilyQueryBuilder {
             "SELECT f.id as f_id, f.family_id as f_family_id, f.tenant_id as f_tenant_id, "
             + "f.head_user_uuid as f_head_user_uuid, f.category as f_category, "
             + "f.status as f_status, f.family_type as f_family_type, "
+            + "f.family_address_property_id as f_family_address_property_id, "
+            + "f.family_source as f_family_source, "
             + "f.additional_details as f_additional_details, f.created_by as f_created_by, "
             + "f.created_time as f_created_time, f.last_modified_by as f_last_modified_by, "
             + "f.last_modified_time as f_last_modified_time, "

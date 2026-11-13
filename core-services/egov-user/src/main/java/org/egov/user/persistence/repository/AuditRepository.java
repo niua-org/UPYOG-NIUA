@@ -31,6 +31,12 @@ public class AuditRepository {
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private JdbcTemplate jdbcTemplate;
 
+    /**
+     * Constructs a new {@link AuditRepository} with JDBC templates.
+     *
+     * @param namedParameterJdbcTemplate named parameter JDBC template for parameterized queries
+     * @param jdbcTemplate               standard Spring JDBC template
+     */
     public AuditRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate, JdbcTemplate jdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.jdbcTemplate = jdbcTemplate;
@@ -157,6 +163,8 @@ public class AuditRepository {
         auditInputs.put("father_name", oldUser.getFatherName());
         auditInputs.put("mother_name", oldUser.getMotherName());
         auditInputs.put("spouse_name", oldUser.getSpouseName());
+        auditInputs.put("caste", oldUser.getCaste());
+        auditInputs.put("is_specially_abled", oldUser.getIsSpeciallyAbled() != null ? oldUser.getIsSpeciallyAbled() : false);
         auditInputs.put("is_identity_verified", oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false);
         auditInputs.put("identity_verified_date", oldUser.getIdentityVerifiedDate());
         auditInputs.put("identity_verified_source", oldUser.getIdentityVerifiedSource());

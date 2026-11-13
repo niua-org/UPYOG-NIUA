@@ -76,7 +76,7 @@ public class LoginV2ServiceTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 
@@ -111,7 +111,7 @@ public class LoginV2ServiceTest {
         LoginV2Request request = LoginV2Request.builder()
                 .mobileNumber("9876543210")
                 .otp("123456")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .requestInfo(new RequestInfo())
                 .build();
 

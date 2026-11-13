@@ -14,6 +14,8 @@ import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.domain.service.multiauth.MockAadhaarRecordService;
+import org.egov.user.domain.service.multiauth.MockAadhaarRecordService.MockCitizenRecord;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.FamilyRestRepository;
@@ -94,6 +96,16 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         this.familyRestRepository = familyRestRepository;
     }
 
+    /**
+     * Constructor for AadhaarAuthStrategy with encryption utility and without family REST repository.
+     *
+     * @param userService core user domain service
+     * @param userRepository repository for querying and saving users
+     * @param restTemplate HTTP REST client
+     * @param objectMapper Jackson JSON object mapper
+     * @param encryptionDecryptionUtil utility for encrypting/decrypting sensitive fields
+     * @param userConfiguration configuration settings
+     */
     public AadhaarAuthStrategy(UserService userService,
                                UserRepository userRepository,
                                RestTemplate restTemplate,
@@ -135,24 +147,47 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         this(userService, userRepository, restTemplate, objectMapper, null, null);
     }
 
+    /**
+     * Resolves the configured host URL for dx requester service.
+     *
+     * @return base host URL string
+     * @throws CustomException if host property is missing
+     */
     private String getRequesterServiceHost() {
         if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceHost())) {
-            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.service.host is not configured");
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_REQUESTER_HOST_NOT_CONFIGURED);
         }
         return userConfiguration.getRequesterServiceHost();
     }
 
+    /**
+     * Resolves the configured URI endpoint for verifying Aadhaar OTP.
+     *
+     * @return verify endpoint path
+     * @throws CustomException if verify endpoint is missing
+     */
     private String getRequesterVerifyEndpoint() {
         if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint())) {
-            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.aadhaar.verify.endpoint is not configured");
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_REQUESTER_VERIFY_ENDPOINT_NOT_CONFIGURED);
         }
         return userConfiguration.getRequesterAadhaarVerifyEndpoint();
     }
 
+    /**
+     * Checks if citizen login fixed mock OTP validation is enabled.
+     *
+     * @return {@code true} if fixed OTP is enabled; {@code false} otherwise
+     */
     private boolean isFixedOTPEnabled() {
         return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpFixedEnabled());
     }
 
+    /**
+     * Retrieves the configured static OTP value for bypass / mock environments.
+     *
+     * @return static OTP string
+     * @throws CustomException if fixed OTP value is missing
+     */
     private String getFixedOTPPassword() {
         if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getCitizenLoginPasswordOtpFixedValue())) {
             throw new CustomException(UserConstants.ERROR_FIXED_OTP_NOT_CONFIGURED, UserConstants.MSG_FIXED_OTP_NOT_CONFIGURED);
@@ -160,16 +195,28 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         return userConfiguration.getCitizenLoginPasswordOtpFixedValue();
     }
 
+    /**
+     * Determines whether citizen roles should be granted at the state tenant level.
+     *
+     * @return {@code true} if state level roles are enabled; {@code false} otherwise
+     * @throws CustomException if role level flag is unconfigured
+     */
     private boolean isRoleStateLevel() {
         if (userConfiguration == null || userConfiguration.getRolesStateLevelEnabled() == null) {
-            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "roles.state.level.enabled is not configured");
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_ROLES_STATE_LEVEL_NOT_CONFIGURED);
         }
         return Boolean.TRUE.equals(userConfiguration.getRolesStateLevelEnabled());
     }
 
+    /**
+     * Retrieves the maximum allowed failed OTP verification attempts before lockout.
+     *
+     * @return max attempts count
+     * @throws CustomException if max attempts property is missing
+     */
     private int getMaxOtpAttempts() {
         if (userConfiguration == null || userConfiguration.getAadhaarOtpMaxAttempts() == null) {
-            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "aadhaar.otp.max.attempts is not configured");
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_AADHAAR_OTP_MAX_ATTEMPTS_NOT_CONFIGURED);
         }
         return userConfiguration.getAadhaarOtpMaxAttempts();
     }
@@ -264,7 +311,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
                 existingUser.setAadhaarNumber(fullAadhaar);
             }
-            if (StringUtils.isNotBlank(eKyc.getName()) && ("Citizen".equalsIgnoreCase(existingUser.getName()) || StringUtils.isBlank(existingUser.getName()))) {
+            if (StringUtils.isNotBlank(eKyc.getName()) && (UserConstants.DEFAULT_CITIZEN_NAME.equalsIgnoreCase(existingUser.getName()) || StringUtils.isBlank(existingUser.getName()))) {
                 existingUser.setName(eKyc.getName());
             }
             if (existingUser.getDob() == null && eKyc.getDob() != null) {
@@ -308,7 +355,7 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
 
         String citizenName = StringUtils.isNotBlank(eKyc.getName())
                 ? eKyc.getName()
-                : (StringUtils.isNotBlank(request.getName()) ? request.getName() : "Citizen");
+                : (StringUtils.isNotBlank(request.getName()) ? request.getName() : UserConstants.DEFAULT_CITIZEN_NAME);
 
         User newUser = User.builder()
                 .username(username)
@@ -397,12 +444,12 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                     : host + "/" + endpoint;
 
             Map<String, Object> reqBody = new HashMap<>();
-            reqBody.put("RequestInfo", request.getRequestInfo());
-            reqBody.put("txnId", refId);
-            reqBody.put("referenceId", refId);
-            reqBody.put("otp", otp);
-            reqBody.put("tenantId", request.getTenantId());
-            reqBody.put("isResync", false);
+            reqBody.put(UserConstants.JSON_KEY_REQUEST_INFO, request.getRequestInfo());
+            reqBody.put(UserConstants.JSON_KEY_TXN_ID, refId);
+            reqBody.put(UserConstants.JSON_KEY_REFERENCE_ID, refId);
+            reqBody.put(UserConstants.JSON_KEY_OTP, otp);
+            reqBody.put(UserConstants.PARAM_TENANT_ID, request.getTenantId());
+            reqBody.put(UserConstants.JSON_KEY_IS_RESYNC, false);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -413,7 +460,10 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
-                boolean isVerified = root.path("isVerified").asBoolean(true);
+                // Fix for PR Comment #18 (AadhaarAuthStrategy.java:463):
+                // Fail-closed security fix: Default missing 'isVerified' flag to false instead of true
+                // to prevent malformed or missing verification payloads from bypassing authentication.
+                boolean isVerified = root.path(UserConstants.JSON_KEY_IS_VERIFIED).asBoolean(false);
                 if (!isVerified) {
                     recordFailedOtpAttempt(refId);
                     log.error("[AADHAAR-AUTH-STRATEGY] Identity provider reported verification unsuccessful");
@@ -425,12 +475,12 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                 }
 
                 String maskedAadhaar = root.path(UserConstants.JSON_KEY_MASKED_AADHAAR).asText(MaskUtils.maskAadhaar(rawAadhaar));
-                JsonNode demoNode = root.path("demographics");
-                String name = demoNode.hasNonNull("name") ? demoNode.path("name").asText() : root.path("name").asText(null);
-                String genderStr = demoNode.hasNonNull("gender") ? demoNode.path("gender").asText() : root.path("gender").asText(null);
-                String dobStr = demoNode.hasNonNull("dob") ? demoNode.path("dob").asText() : root.path("dob").asText(null);
-                String mobileStr = demoNode.hasNonNull("mobile") ? demoNode.path("mobile").asText()
-                        : (demoNode.hasNonNull("mobileNumber") ? demoNode.path("mobileNumber").asText() : root.path("mobileNumber").asText(null));
+                JsonNode demoNode = root.path(UserConstants.JSON_KEY_DEMOGRAPHICS);
+                String name = demoNode.hasNonNull(UserConstants.JSON_KEY_NAME) ? demoNode.path(UserConstants.JSON_KEY_NAME).asText() : root.path(UserConstants.JSON_KEY_NAME).asText(null);
+                String genderStr = demoNode.hasNonNull(UserConstants.JSON_KEY_GENDER) ? demoNode.path(UserConstants.JSON_KEY_GENDER).asText() : root.path(UserConstants.JSON_KEY_GENDER).asText(null);
+                String dobStr = demoNode.hasNonNull(UserConstants.JSON_KEY_DOB) ? demoNode.path(UserConstants.JSON_KEY_DOB).asText() : root.path(UserConstants.JSON_KEY_DOB).asText(null);
+                String mobileStr = demoNode.hasNonNull(UserConstants.JSON_KEY_MOBILE) ? demoNode.path(UserConstants.JSON_KEY_MOBILE).asText()
+                        : (demoNode.hasNonNull(UserConstants.JSON_KEY_MOBILE_NUMBER) ? demoNode.path(UserConstants.JSON_KEY_MOBILE_NUMBER).asText() : root.path(UserConstants.JSON_KEY_MOBILE_NUMBER).asText(null));
 
                 String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
                 return VerifiedAadhaarDemographics.builder()
@@ -474,11 +524,12 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
     }
 
     /**
-     * Generates a simulated verified demographic payload for local development and testing.
+     * Generates a simulated verified demographic payload for local development and testing
+     * by pulling sequentially from the 500+ mock citizen personas dataset.
      *
      * @param rawAadhaar plain Aadhaar number
      * @param refId      transaction reference ID
-     * @return dummy verified demographics
+     * @return simulated verified demographics containing sequential citizen persona
      */
     private VerifiedAadhaarDemographics createMockDemographics(String rawAadhaar, String refId) {
         String masked = MaskUtils.maskAadhaar(rawAadhaar);
@@ -487,12 +538,18 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
                     ? refId.substring(refId.length() - 4) : "1234");
         }
         String fullAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(rawAadhaar);
+        // Fix for PR Comment #16 (MockAadhaarRecordService.java:144):
+        // Deterministically select mock citizen persona based on Aadhaar number hash.
+        String aadhaarKey = StringUtils.isNotBlank(fullAadhaar) ? fullAadhaar : (StringUtils.isNotBlank(rawAadhaar) ? rawAadhaar : refId);
+        MockCitizenRecord record = MockAadhaarRecordService.getRecordForAadhaar(aadhaarKey);
+        Gender gender = UserConstants.GENDER_FEMALE_CODE.equalsIgnoreCase(record.getGender()) ? Gender.FEMALE : Gender.MALE;
+        Date dob = parseDob(record.getDob() != null ? record.getDob() : UserConstants.DEFAULT_MOCK_DOB);
         return VerifiedAadhaarDemographics.builder()
                 .fullAadhaarNumber(fullAadhaar)
                 .maskedAadhaar(masked)
-                .name(UserConstants.getRandomCitizenName())
-                .gender(Gender.MALE)
-                .dob(parseDob("1990-01-01"))
+                .name(record.getName())
+                .gender(gender)
+                .dob(dob)
                 .mobileNumber(null)
                 .build();
     }
@@ -571,6 +628,14 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         return null;
     }
 
+    /**
+     * Finds active citizen accounts matching the specified mobile number within the state-level tenant.
+     *
+     * @param mobileNumber citizen mobile number
+     * @param stateTenant  state-level tenant ID
+     * @param requestInfo  incoming request metadata
+     * @return list of matching active citizen users
+     */
     private List<User> findUsersByMobile(String mobileNumber, String stateTenant, RequestInfo requestInfo) {
         Map<String, User> userMap = new LinkedHashMap<>();
 
@@ -725,6 +790,9 @@ public class AadhaarAuthStrategy implements MultiAuthStrategy {
         }
     }
 
+    /**
+     * Inner data carrier holding verified citizen demographics extracted from an upstream Aadhaar e-KYC response.
+     */
     @Getter
     @Setter
     @Builder

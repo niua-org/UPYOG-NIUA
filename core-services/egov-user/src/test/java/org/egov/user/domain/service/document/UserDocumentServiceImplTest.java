@@ -1,9 +1,11 @@
 package org.egov.user.domain.service.document;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.persistence.repository.FileStoreRepository;
+import org.egov.user.persistence.repository.IdGenRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.document.UserDocumentRequest;
@@ -21,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,18 +62,19 @@ class UserDocumentServiceImplTest {
                 .build();
         UserDocumentRequest request = UserDocumentRequest.builder()
                 .requestInfo(RequestInfo.builder()
-                        .userInfo(org.egov.common.contract.request.User.builder().id(99L).uuid("op-uuid").build())
+                        .userInfo(User.builder().id(99L).uuid("op-uuid").build())
                         .build())
                 .userId(10L)
                 .uuid("user-uuid")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .documents(List.of(doc))
                 .build();
 
-        when(userRepository.getUserIdByUuid("user-uuid")).thenReturn(10L);
-        when(userRepository.getTenantIdByUserId(10L)).thenReturn("pb.amritsar");
+        lenient().when(userRepository.getUserIdByUuid("user-uuid")).thenReturn(10L);
+        lenient().when(userRepository.getTenantIdByUserId(10L)).thenReturn("pg.citya");
+        lenient().when(userRepository.getTenantIdByUuid("user-uuid")).thenReturn("pg.citya");
         doReturn(Collections.singletonMap("fs-1", "http://filestore/fs-1"))
-                .when(fileStoreRepository).getUrlByFileStoreId(eq("pb.amritsar"), eq(Collections.singletonList("fs-1")));
+                .when(fileStoreRepository).getUrlByFileStoreId(eq("pg.citya"), eq(Collections.singletonList("fs-1")));
         when(documentRepository.create(any(UserDocument.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<UserDocument> created = service.createDocuments(request);
@@ -93,8 +98,8 @@ class UserDocumentServiceImplTest {
 
     @Test
     void createDocuments_withIDGen_generatesFormattedDocId() throws Exception {
-        org.egov.user.persistence.repository.IdGenRepository idGenRepository = org.mockito.Mockito.mock(org.egov.user.persistence.repository.IdGenRepository.class);
-        when(idGenRepository.generateUserDocumentId(any(), eq("pb.amritsar"))).thenReturn("DOC-2026-000001");
+        IdGenRepository idGenRepository = mock(IdGenRepository.class);
+        when(idGenRepository.generateUserDocumentId(any(), eq("pg.citya"))).thenReturn("DOC-2026-000001");
 
         UserDocumentServiceImpl serviceWithIdGen = new UserDocumentServiceImpl(
                 documentRepository, userRepository, fileStoreRepository, null, idGenRepository);
@@ -106,24 +111,25 @@ class UserDocumentServiceImplTest {
                 .build();
         UserDocumentRequest request = UserDocumentRequest.builder()
                 .requestInfo(RequestInfo.builder()
-                        .userInfo(org.egov.common.contract.request.User.builder().id(99L).uuid("op-uuid").build())
+                        .userInfo(User.builder().id(99L).uuid("op-uuid").build())
                         .build())
                 .userId(10L)
                 .uuid("user-uuid")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .documents(List.of(doc))
                 .build();
 
-        when(userRepository.getUserIdByUuid("user-uuid")).thenReturn(10L);
-        when(userRepository.getTenantIdByUserId(10L)).thenReturn("pb.amritsar");
+        lenient().when(userRepository.getUserIdByUuid("user-uuid")).thenReturn(10L);
+        lenient().when(userRepository.getTenantIdByUserId(10L)).thenReturn("pg.citya");
+        lenient().when(userRepository.getTenantIdByUuid("user-uuid")).thenReturn("pg.citya");
         doReturn(Collections.singletonMap("fs-1", "http://filestore/fs-1"))
-                .when(fileStoreRepository).getUrlByFileStoreId(eq("pb.amritsar"), eq(Collections.singletonList("fs-1")));
+                .when(fileStoreRepository).getUrlByFileStoreId(eq("pg.citya"), eq(Collections.singletonList("fs-1")));
         when(documentRepository.create(any(UserDocument.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<UserDocument> created = serviceWithIdGen.createDocuments(request);
 
         assertThat(created).hasSize(1);
         assertThat(created.get(0).getId()).isEqualTo("DOC-2026-000001");
-        verify(idGenRepository).generateUserDocumentId(any(), eq("pb.amritsar"));
+        verify(idGenRepository).generateUserDocumentId(any(), eq("pg.citya"));
     }
 }
