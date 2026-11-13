@@ -197,6 +197,18 @@ export const useAssetQrCode = ({ tenantId, ...params }, config = {}) => {
   });
 };
 
+export const useFamilyQrCode = ({ tenantId, ...params }, config = {}) => {
+  return queryTemplate({
+    queryKey: ["family_Qr_Search", { tenantId, params }, config],
+    queryFn: () => Digit.PaymentService.useFamilyQrCodeService(tenantId, params),
+    config: {
+      enabled: Boolean(tenantId && params?.familyId),
+      refetchOnMount: false,
+      ...config,
+    },
+  });
+};
+
 export const useRecieptSearch = ({ tenantId, businessService, ...params }, config = {}) => {
   return queryTemplate({
     queryKey: ["reciept_search", { tenantId, businessService, params },config],
