@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FormStep, Dropdown, TextInput, UploadFile } from "@nudmcdgnpm/digit-ui-react-components";
 import { TAX_VALIDATORS, FormField } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
@@ -34,6 +35,8 @@ const OCCUPATION_OPTIONS = [
 const fullWidth = { width: "100%" };
 
 const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
+  const [searchParams] = useSearchParams();
+  const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
   const [incomeProof, setIncomeProof] = useState(saved.incomeProof || null);
   const [taxIdType, setTaxIdType] = useState(saved.taxIdType || null);
@@ -50,6 +53,10 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [validateStatus, setValidateStatus] = useState(null);
 
   const goNext = () => {
+    if (isViewMode) {
+      onSelect(config.key, saved, false);
+      return;
+    }
     onSelect(
       config.key,
       {
@@ -70,7 +77,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const onSkip = () => onSelect();
 
   useEffect(() => {
-    if (userType === "citizen") goNext();
+    if (userType === "citizen" && !isViewMode) goNext();
   }, [taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, uploadedIncomeFile, uploadedTaxProof]);
 
   const handleTaxIdNumberChange = (e) => {
@@ -158,7 +165,19 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
     <React.Fragment>
       <FamilyCreateTabs t={t} />
 
-      <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={isDisabled}>
+      <FormStep
+        config={{
+          ...config,
+          texts: {
+            ...config?.texts,
+            submitBarLabel: isViewMode ? "COMMON_NEXT" : (config?.texts?.submitBarLabel || "COMMON_SAVE_NEXT"),
+          },
+        }}
+        onSelect={goNext}
+        onSkip={onSkip}
+        t={t}
+        isDisabled={isViewMode ? false : isDisabled}
+      >
         <div style={profileStyles.gridStyle}>
           <FormField label={t("PROFILE_OCCUPATION")} required t={t}>
             <Dropdown
@@ -169,6 +188,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               t={t}
               style={fullWidth}
               placeholder={t("PROFILE_SELECT_OCCUPATION")}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -181,6 +201,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               onChange={(e) => setAnnualIncome(e.target.value)}
               placeholder="0"
               style={fullWidth}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -193,6 +214,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               t={t}
               style={fullWidth}
               placeholder={t("PROFILE_SELECT_TAX_ID_TYPE")}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -209,16 +231,17 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                     placeholder={TAX_VALIDATORS[taxIdType.code]?.placeholder}
                     maxLength={TAX_VALIDATORS[taxIdType.code]?.maxLength}
                     style={fullWidth}
+                    disable={isViewMode}
                   />
                 </div>
                 <button
                   type="button"
                   onClick={handleValidateTaxId}
-                  disabled={isValidateBtnDisabled}
+                  disabled={isViewMode || isValidateBtnDisabled}
                   style={{
                     ...profileStyles.validateBtn,
                     ...(taxIdValidated ? profileStyles.validateBtnSuccess : {}),
-                    ...(isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
+                    ...(isViewMode || isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
                   }}
                 >
                   {taxIdValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
@@ -234,7 +257,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
             <FormField label={t("PROFILE_TAX_PROOF")} required t={t} error={taxProofError}>
               <UploadFile
                 onUpload={handleTaxProofSelect}
-                onDelete={() => {
+                onDelete={isViewMode ? undefined : () => {
                   setTaxProof(null);
                   setUploadedTaxProof(null);
                   setTaxProofError(null);
@@ -242,6 +265,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                 message={taxProof ? taxProof.name : t("PROFILE_NO_FILE_SELECTED")}
                 accept=".pdf,.jpg,.jpeg,.png"
                 iserror={taxProofError}
+                disabled={isViewMode}
               />
             </FormField>
           )}
@@ -249,7 +273,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
           <FormField label={t("PROFILE_INCOME_PROOF")} required t={t} error={fileError}>
             <UploadFile
               onUpload={handleFileSelect}
-              onDelete={() => {
+              onDelete={isViewMode ? undefined : () => {
                 setIncomeProof(null);
                 setUploadedIncomeFile(null);
                 setFileError(null);
@@ -257,6 +281,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
               message={incomeProof ? incomeProof.name : t("PROFILE_NO_FILE_SELECTED")}
               accept=".pdf,.jpg,.jpeg,.png"
               iserror={fileError}
+              disabled={isViewMode}
             />
           </FormField>
         </div>

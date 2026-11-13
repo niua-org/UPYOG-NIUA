@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FormStep, Dropdown, TextInput, UploadFile, DatePicker } from "@nudmcdgnpm/digit-ui-react-components";
 import { FormField } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
@@ -39,6 +40,8 @@ const FUEL_TYPE = [
 ];
 
 const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
+  const [searchParams] = useSearchParams();
+  const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
   const [vehicleRc, setVehicleRc] = useState(saved.vehicleRc || null);
   const [purchaseYear, setPurchaseYear] = useState(saved.purchaseYear || "");
@@ -53,13 +56,17 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   const [vehicleNoValidateStatus, setVehicleNoValidateStatus] = useState(null);
 
   const goNext = () => {
+    if (isViewMode) {
+      onSelect(config.key, saved, false);
+      return;
+    }
     onSelect(config.key, { vehicleRc, uploadedRCFile, purchaseYear, vehicleNo, vehicleNoValidated, fuelType, vehicleCategory, vehicleType }, false);
   };
 
   const onSkip = () => onSelect();
 
   useEffect(() => {
-    if (userType === "citizen") goNext();
+    if (userType === "citizen" && !isViewMode) goNext();
   }, [vehicleNo, purchaseYear, uploadedRCFile, fuelType, vehicleCategory, vehicleType, vehicleNoValidated]);
 
   const handleVehicleNoChange = (e) => {
@@ -110,7 +117,19 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   return (
     <React.Fragment>
       <FamilyCreateTabs t={t} />
-      <FormStep config={config} onSelect={goNext} onSkip={onSkip} t={t} isDisabled={isDisabled}>
+      <FormStep
+        config={{
+          ...config,
+          texts: {
+            ...config?.texts,
+            submitBarLabel: isViewMode ? "COMMON_NEXT" : (config?.texts?.submitBarLabel || "COMMON_SAVE_NEXT"),
+          },
+        }}
+        onSelect={goNext}
+        onSkip={onSkip}
+        t={t}
+        isDisabled={isViewMode ? false : isDisabled}
+      >
         <div style={profileStyles.gridStyle}>
           <FormField label={t("PROFILE_VEHICLE_TYPE")} required t={t}>
             <Dropdown
@@ -121,6 +140,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               t={t}
               style={fullWidth}
               placeholder={t("PROFILE_SELECT_VEHICLE_TYPE")}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -133,6 +153,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               t={t}
               style={fullWidth}
               placeholder={t("PROFILE_SELECT_VEHICLE_CATEGORY")}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -145,6 +166,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               t={t}
               style={fullWidth}
               placeholder={t("PROFILE_SELECT_FUEL_CATEGORY")}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -160,16 +182,17 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
                   placeholder="MH12AB1234"
                   maxLength={10}
                   style={fullWidth}
+                  disable={isViewMode}
                 />
               </div>
               <button
                 type="button"
                 onClick={handleValidateVehicleNo}
-                disabled={isValidateBtnDisabled}
+                disabled={isViewMode || isValidateBtnDisabled}
                 style={{
                   ...profileStyles.validateBtn,
                   ...(vehicleNoValidated ? profileStyles.validateBtnSuccess : {}),
-                  ...(isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
+                  ...(isViewMode || isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
                 }}
               >
                 {vehicleNoValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
@@ -185,13 +208,14 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               date={purchaseYear}
               onChange={setPurchaseYear}
               max={new Date().toISOString().split("T")[0]}
+              disabled={isViewMode}
             />
           </FormField>
 
           <FormField label={t("PROFILE_VEHICLE_RC")} required t={t} error={fileError}>
             <UploadFile
               onUpload={handleFileSelect}
-              onDelete={() => {
+              onDelete={isViewMode ? undefined : () => {
                 setVehicleRc(null);
                 setUploadedRCFile(null);
                 setFileError(null);
@@ -199,6 +223,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               message={vehicleRc ? vehicleRc.name : t("PROFILE_NO_FILE_SELECTED")}
               accept=".pdf,.jpg,.jpeg,.png"
               iserror={fileError}
+              disabled={isViewMode}
             />
           </FormField>
         </div>

@@ -13,7 +13,7 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 import UploadDrawer from "../components/UploadDrawer";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
-import { FormField, AvatarUpload, toGenderOption, fetchThumbnail, useProfileUser, getVerifiedMember } from "../utils";
+import { FormField, AvatarUpload, toGenderOption, fetchThumbnail, useProfileUser, getVerifiedMember, getFamilyMembers, setFamilyMembers } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import { DEFAULT_CASTE, SPECIALLY_ABLED_YES } from "../utils/constants";
 import { buildUpdateUserPayload, buildSessionUser } from "../utils/payloads";
@@ -321,6 +321,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   // Everything below prefills from `user`: the logged-in user's profile, or the Aadhaar-verified details of the member.
   const [searchParams] = useSearchParams();
   const memberParam = searchParams.get("member");
+  const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const isSelf = !memberParam || memberParam === Digit.UserService.getUser()?.info?.uuid;
   const user = useMemo(() => {
     if (isSelf) return loggedInUser;
@@ -549,9 +550,14 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     birthProofFile,
   });
 
-  // Save & Next
+  // Save & Next (or Next in view mode)
   const handleNext = async () => {
     if (saving) return;
+
+    if (isViewMode) {
+      onSelect(config.key, compilePayload());
+      return;
+    }
 
     if (!validateForm()) {
       setToast({
@@ -588,6 +594,19 @@ const CreateProfile = ({ config, onSelect, formData }) => {
       } finally {
         setSaving(false);
       }
+
+      // Sync applicant relationship directly into staged family members list
+      try {
+        const relCode = String(relationshipWithHof?.code || relationshipWithHof?.name || relationshipWithHof || "").toUpperCase();
+        if (relCode) {
+          const staged = getFamilyMembers();
+          if (staged && staged.length > 0 && staged.some((m) => m.userUuid === user?.uuid)) {
+            setFamilyMembers(staged.map((m) => (m.userUuid === user?.uuid ? { ...m, relationshipWithHead: relCode } : m)));
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to sync applicant relationship to family members list", err);
+      }
     }
 
     onSelect(config.key, compilePayload());
@@ -607,11 +626,11 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           texts: {
             ...config?.texts,
             header: config?.texts?.header || "ES_TITLE_PROFILE_DETAILS",
-            submitBarLabel: config?.texts?.submitBarLabel || "COMMON_SAVE_NEXT",
+            submitBarLabel: isViewMode ? "COMMON_NEXT" : (config?.texts?.submitBarLabel || "COMMON_SAVE_NEXT"),
           },
         }}
         onSelect={handleNext}
-        isDisabled={saving || !isFormComplete}
+        isDisabled={isViewMode ? false : (saving || !isFormComplete)}
         t={t}
       >
         {/* Profile Avatar / Photo Upload Card */}
@@ -632,7 +651,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           <AvatarUpload
             imageUrl={photoThumb}
             name={form.name}
-            onCameraClick={() => setShowUploadDrawer(true)}
+            onCameraClick={isViewMode ? undefined : () => setShowUploadDrawer(true)}
           />
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 600, color: "#0B0C0C" }}>
@@ -642,23 +661,25 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               {t("PROFILE_PHOTO_UPLOAD_HELP", "Click on the camera icon to upload or update your profile photo.")}
             </span>
             <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
-              <button
-                type="button"
-                onClick={() => setShowUploadDrawer(true)}
-                style={{
-                  background: "#FFFFFF",
-                  border: "1px solid #D6D5D5",
-                  borderRadius: "6px",
-                  padding: "6px 14px",
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  color: "#0B0C0C",
-                  cursor: "pointer",
-                }}
-              >
-                📷 {t("UPDATE_PHOTO", "Upload Photo")}
-              </button>
-              {photoThumb && (
+              {!isViewMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowUploadDrawer(true)}
+                  style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #D6D5D5",
+                    borderRadius: "6px",
+                    padding: "6px 14px",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    color: "#0B0C0C",
+                    cursor: "pointer",
+                  }}
+                >
+                  📷 {t("UPDATE_PHOTO", "Upload Photo")}
+                </button>
+              )}
+              {photoThumb && !isViewMode && (
                 <button
                   type="button"
                   onClick={removeProfilePic}
@@ -741,6 +762,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               name="altContactNumber"
               placeholder="+91"
               onChange={(v) => setFieldValue("altContactNumber", v)}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -752,6 +774,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               value={form.emailId}
               placeholder={t("ENTER_EMAIL", "Enter email")}
               onChange={(e) => setFieldValue("emailId", e.target.value)}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -764,6 +787,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               value={form.fatherName}
               placeholder={t("ENTER_FATHER_NAME", "Enter father's name")}
               onChange={(e) => setFieldValue("fatherName", e.target.value)}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -775,6 +799,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               value={form.motherName}
               placeholder={t("ENTER_MOTHER_NAME", "Enter mother's name")}
               onChange={(e) => setFieldValue("motherName", e.target.value)}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -786,6 +811,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               value={form.spouseName}
               placeholder={t("ENTER_SPOUSE_NAME", "Enter spouse name")}
               onChange={(e) => setFieldValue("spouseName", e.target.value)}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -798,6 +824,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               value={form.guardianName}
               placeholder={t("ENTER_GUARDIAN_NAME", "Enter guardian name")}
               onChange={(e) => setFieldValue("guardianName", e.target.value)}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -812,6 +839,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               optionKey="name"
               t={t}
               placeholder={t("SELECT", "Select")}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -823,10 +851,11 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               value={occupation}
               placeholder={t("PROFILE_OCCUPATION", "Enter occupation")}
               onChange={(e) => setOccupation(e.target.value)}
+              disable={isViewMode}
             />
           </FormField>
 
-          {/* Row 5 */}
+          {/* Row 5: Divyang and Caste rendered horizontally */}
           <FormField label={t("PROFILE_SPECIALLY_ABLED", "Divyang")} required error={errors.speciallyAbled} t={t}>
             <Dropdown
               selected={speciallyAbled}
@@ -835,6 +864,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               optionKey="name"
               t={t}
               placeholder={t("YES_NO", "Yes / No")}
+              disable={isViewMode}
             />
           </FormField>
 
@@ -846,9 +876,74 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               optionKey="name"
               t={t}
               placeholder={t("GENERAL_OBC_SC_ST", "General / OBC / SC / ST")}
+              disable={isViewMode}
             />
           </FormField>
         </div>
+
+        {/* Conditional Proofs Row: Divyang Proof below Divyang (Col 1), Caste Certificate below Caste (Col 2) */}
+        {(isSpeciallyAbled || needsCasteProof) && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+              gap: "20px 24px",
+              width: "100%",
+              boxSizing: "border-box",
+              marginTop: "20px",
+            }}
+          >
+            {isSpeciallyAbled ? (
+              <div style={{ gridColumn: 1 }}>
+                <DocumentUploadCard
+                  label={t("PROFILE_DISABILITY_PROOF", "Divyang Proof")}
+                  required={true}
+                  options={disabilityDocumentOptions}
+                  selectedType={disabilityProofType}
+                  onSelectType={(v) => {
+                    setDisabilityProofType(v);
+                    setErrors((prev) => ({ ...prev, disabilityProofType: null }));
+                  }}
+                  typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
+                  file={disabilityProofFile}
+                  onFileChange={(f) => {
+                    setDisabilityProofFile(f);
+                    setErrors((prev) => ({ ...prev, disabilityProofFile: null }));
+                  }}
+                  error={errors.disabilityProofFile}
+                  t={t}
+                  stateId={stateId}
+                  disabled={isViewMode}
+                />
+              </div>
+            ) : null}
+
+            {needsCasteProof ? (
+              <div style={{ gridColumn: 2 }}>
+                <DocumentUploadCard
+                  label={t("PROFILE_CASTE_PROOF", "Caste Certificate")}
+                  required={true}
+                  options={casteDocumentOptions}
+                  selectedType={casteProofType}
+                  onSelectType={(v) => {
+                    setCasteProofType(v);
+                    setErrors((prev) => ({ ...prev, casteProofType: null }));
+                  }}
+                  typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
+                  file={casteProofFile}
+                  onFileChange={(f) => {
+                    setCasteProofFile(f);
+                    setErrors((prev) => ({ ...prev, casteProofFile: null }));
+                  }}
+                  error={errors.casteProofFile}
+                  t={t}
+                  stateId={stateId}
+                  disabled={isViewMode}
+                />
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {/* Supporting Verification Documents: Strict 3-Column Per Row Grid */}
         <div style={{ marginTop: "28px", marginBottom: "36px" }}>
@@ -880,6 +975,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               error={errors.identityProofType || errors.identityProofFile}
               t={t}
               stateId={stateId}
+              disabled={isViewMode}
             />
 
             {/* Document 2: Date of Birth Proof (Always Shown) */}
@@ -901,53 +997,8 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               error={errors.birthProofType || errors.birthProofFile}
               t={t}
               stateId={stateId}
+              disabled={isViewMode}
             />
-
-            {/* Document 3: Caste Certificate (Shown ONLY if Caste !== General) */}
-            {needsCasteProof && (
-              <DocumentUploadCard
-                label={t("PROFILE_CASTE_PROOF", "Caste Certificate")}
-                required={true}
-                options={casteDocumentOptions}
-                selectedType={casteProofType}
-                onSelectType={(v) => {
-                  setCasteProofType(v);
-                  setErrors((prev) => ({ ...prev, casteProofType: null }));
-                }}
-                typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
-                file={casteProofFile}
-                onFileChange={(f) => {
-                  setCasteProofFile(f);
-                  setErrors((prev) => ({ ...prev, casteProofFile: null }));
-                }}
-                error={errors.casteProofFile}
-                t={t}
-                stateId={stateId}
-              />
-            )}
-
-            {/* Document 4: Divyang Proof (Shown ONLY if Divyang === Yes) */}
-            {isSpeciallyAbled && (
-              <DocumentUploadCard
-                label={t("PROFILE_DISABILITY_PROOF", "Divyang Proof")}
-                required={true}
-                options={disabilityDocumentOptions}
-                selectedType={disabilityProofType}
-                onSelectType={(v) => {
-                  setDisabilityProofType(v);
-                  setErrors((prev) => ({ ...prev, disabilityProofType: null }));
-                }}
-                typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
-                file={disabilityProofFile}
-                onFileChange={(f) => {
-                  setDisabilityProofFile(f);
-                  setErrors((prev) => ({ ...prev, disabilityProofFile: null }));
-                }}
-                error={errors.disabilityProofFile}
-                t={t}
-                stateId={stateId}
-              />
-            )}
           </div>
         </div>
       </FormStep>

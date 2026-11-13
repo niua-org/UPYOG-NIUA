@@ -19,7 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Route, useLocation, useSearchParams, Routes, Navigate } from "react-router-dom";
 import { createfamilyconfig } from "../config/createfamilyconfig";
 import { PROFILE_ROUTES } from "../utils/constants";
-import { stageVerifiedMember } from "../utils";
+import { stageVerifiedMember, getFamilyMembers, setFamilyMembers } from "../utils";
 
 
 const FamilyCreate = ({ parentRoute }) => {
@@ -38,6 +38,7 @@ const FamilyCreate = ({ parentRoute }) => {
   */
   const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
   const memberId = searchParams.get("member") || loggedInUuid;
+  const isViewMode = searchParams.get("mode") === "view";
   const [allParams, setAllParams, clearParams] = Digit.Hooks.useSessionStorage("Family_Details", {});
   const params = allParams?.[memberId] || {};
 
@@ -75,7 +76,18 @@ const FamilyCreate = ({ parentRoute }) => {
 
     // Last step — stage member if added via Aadhaar, then go to summary
     if (nextStep === null) {
-      if (memberId !== loggedInUuid) stageVerifiedMember(memberId, params.profileDetails?.relationshipWithHof);
+      if (!isViewMode) {
+        const rel = params.profileDetails?.relationshipWithHof;
+        const relCode = String(rel?.code || rel?.name || rel || "").toUpperCase().replace(/\s+/g, "_");
+        if (memberId !== loggedInUuid) {
+          stageVerifiedMember(memberId, rel);
+        } else {
+          const staged = getFamilyMembers();
+          if (staged.some((m) => m.userUuid === memberId)) {
+            setFamilyMembers(staged.map((m) => (m.userUuid === memberId ? { ...m, relationshipWithHead: relCode || m.relationshipWithHead || "SELF" } : m)));
+          }
+        }
+      }
       return redirect(PROFILE_ROUTES.FAMILY_MEMBER_ADDED);
     }
 
@@ -104,7 +116,9 @@ const FamilyCreate = ({ parentRoute }) => {
 
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
-    setAllParams({ ...allParams, [memberId]: { ...params, [key]: { ...params[key], ...data } } });
+    if (!isViewMode) {
+      setAllParams({ ...allParams, [memberId]: { ...params, [key]: { ...params[key], ...data } } });
+    }
     goNext(skipStep, index, isAddMultiple, key);
   }
 
@@ -137,7 +151,7 @@ const FamilyCreate = ({ parentRoute }) => {
             path={`${routeObj.route}`}
             key={index}
             element={
-              <Component config={{ texts, inputs, key }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
+              <Component config={{ texts, inputs, key, isViewMode }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
             }
           />
         );

@@ -14,7 +14,7 @@ import { profileStyles } from "../../utils/profileStyles";
  * 
  */
 
-const RuralPropertyForm = ({ data = {}, onChange, t }) => {
+const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
   const styles = profileStyles.ruralPropertyForm;
 
   const [gramPanchayat, setGramPanchayat] = useState(data.gramPanchayat || null);
@@ -205,7 +205,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t }) => {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, ...(disabled ? { opacity: 0.9, pointerEvents: "none" } : {}) }}>
       <div style={styles.header}>
         <div style={styles.title}>
           Register Your Property – Rural

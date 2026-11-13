@@ -10,27 +10,40 @@ import {
   Toast,
   Loader,
   Table,
-  Dropdown,
   DeleteIcon,
   EditIcon,
   ViewsIcon,
-  Modal,
 } from "@nudmcdgnpm/digit-ui-react-components";
 
-import { getFamilyMembers, clearFamilyMembers, setFamilyMembers, FieldGrid, withValues } from "../utils";
+import { getFamilyMembers, clearFamilyMembers, setFamilyMembers } from "../utils";
 import { buildCreateFamilyPayload } from "../utils/payloads";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 /**
+ * Helper to retrieve applicant's relationship with HOF chosen in CreateProfile (Step 1).
+ */
+const getApplicantRelationship = (uuid) => {
+  try {
+    const familyDetails = Digit.SessionStorage.get("Family_Details") || {};
+    const rel = familyDetails[uuid]?.profileDetails?.relationshipWithHof;
+    if (!rel) return "";
+    return String(rel?.code || rel?.name || (typeof rel === "string" ? rel : "")).toUpperCase();
+  } catch {
+    return "";
+  }
+};
+
+/**
  * Helper to construct the initial Member #1 (applicant) object from logged-in user info.
  * @param {Object} currentUser - User profile object from Digit.UserService.getUser()?.info
+ * @param {string} [relationshipWithHead=""] - Relationship chosen in CreateProfile (e.g. SELF)
  * @returns {Object} Initial applicant member object
  */
-const createInitialApplicant = (currentUser) => ({
+const createInitialApplicant = (currentUser, relationshipWithHead = "") => ({
   userUuid: currentUser?.uuid,
   name: currentUser?.name || "Citizen",
-  relationshipWithHead: "",
+  relationshipWithHead: relationshipWithHead || "SELF",
   isHead: true,
   isApplicant: true,
   mobileNumber: currentUser?.mobileNumber,
@@ -63,41 +76,28 @@ const FamilyMemberAdded = () => {
   const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
   const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
 
-  // MDMS Hook: Fetch active relationship master data from common-masters.FamilyRelationship
-  const { data: FamilyRelationShips } = Digit.Hooks.useEnabledMDMS(
-    stateId,
-    "common-masters",
-    [{ name: "FamilyRelationship" }],
-    {
-      select: (data) => {
-        const formattedData = data?.["common-masters"]?.["FamilyRelationship"];
-        return formattedData?.filter((option) => option.active !== false) || [];
-      },
-    }
-  );
-
-  // Memoize formatted relationship dropdown options from MDMS
-  const familyRelationShips = useMemo(() => {
-    if (Array.isArray(FamilyRelationShips) && FamilyRelationShips.length > 0) {
-      return FamilyRelationShips.map((relation) => ({
-        code: relation.code,
-        name: relation.name || relation.code,
-        i18nKey: `${relation.code}`,
-      }));
-    }
-    return [];
-  }, [FamilyRelationShips]);
-
   // Initialize family members list: Read from sessionStorage or seed with logged-in user
   const [members, setMembers] = useState(() => {
     const stored = getFamilyMembers();
+    const applicantRel = getApplicantRelationship(loggedInUuid);
+
     // Validate stored members belong to currently logged-in user to prevent stale/cross-user data
     if (stored && stored.length > 0 && stored.some((m) => m.userUuid === loggedInUuid)) {
-      return stored;
+      const updated = stored.map((m) => {
+        if (m.userUuid === loggedInUuid) {
+          return {
+            ...m,
+            relationshipWithHead: applicantRel || m.relationshipWithHead || "SELF",
+          };
+        }
+        return m;
+      });
+      setFamilyMembers(updated);
+      return updated;
     }
     const currentUser = Digit.UserService.getUser()?.info;
     if (currentUser?.uuid) {
-      const initialHead = createInitialApplicant(currentUser);
+      const initialHead = createInitialApplicant(currentUser, applicantRel);
       setFamilyMembers([initialHead]);
       return [initialHead];
     }
@@ -108,8 +108,6 @@ const FamilyMemberAdded = () => {
   // Declaration must be ticked before the family can be submitted
   const [agree, setAgree] = useState(false);
   const [toast, setToast] = useState(null);
-  // View dialog: { mode: "view", member }
-  const [actionModal, setActionModal] = useState(null);
 
   // Toast notification helper
   const showToast = (type, message, duration = 4000) => {
@@ -125,33 +123,30 @@ const FamilyMemberAdded = () => {
 
   // Ensure applicant is seeded on mount; if unauthenticated, redirect to profile details
   useEffect(() => {
+    const currentUser = Digit.UserService.getUser()?.info;
+    const applicantRel = getApplicantRelationship(loggedInUuid || currentUser?.uuid);
+
     if (!members.length) {
-      const currentUser = Digit.UserService.getUser()?.info;
       if (currentUser?.uuid) {
-        const initialHead = createInitialApplicant(currentUser);
+        const initialHead = createInitialApplicant(currentUser, applicantRel);
         setFamilyMembers([initialHead]);
         setMembers([initialHead]);
         setSelectedHeadUuid(initialHead.userUuid);
       } else {
         navigate(PROFILE_ROUTES.DETAILS, { replace: true });
       }
+    } else if (applicantRel) {
+      setMembers((prev) => {
+        const applicant = prev.find((m) => m.userUuid === loggedInUuid);
+        if (applicant && (!applicant.relationshipWithHead || applicant.relationshipWithHead !== applicantRel)) {
+          const updated = prev.map((m) => (m.userUuid === loggedInUuid ? { ...m, relationshipWithHead: applicantRel } : m));
+          setFamilyMembers(updated);
+          return updated;
+        }
+        return prev;
+      });
     }
   }, [members.length, navigate, loggedInUuid]);
-
-  /**
-   * Handle relationship selection changes in the table (specifically Member #1).
-   * Updates state and syncs to sessionStorage.
-   */
-  const handleRelationshipChange = (userUuid, selectedOption) => {
-    const code = (selectedOption?.code || selectedOption?.rawName || "").toUpperCase();
-    setMembers((prev) => {
-      const updated = prev.map((m) =>
-        m.userUuid === userUuid ? { ...m, relationshipWithHead: code } : m
-      );
-      setFamilyMembers(updated);
-      return updated;
-    });
-  };
 
   /**
    * Remove a family member from the table.
@@ -167,6 +162,10 @@ const FamilyMemberAdded = () => {
       return updated;
     });
   };
+
+  // View opens the Create Family steps in read-only view mode for that member
+  const handleViewMember = (member, isApplicant) =>
+    navigate(isApplicant ? `${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?mode=view` : `${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${member.userUuid}&mode=view`);
 
   // Edit re-opens the Create Family steps for that member; their saved details are prefilled from the flow data
   const handleEditMember = (member, isApplicant) =>
@@ -195,41 +194,13 @@ const FamilyMemberAdded = () => {
       },
     },
     {
-      Header: t("CORE_COMMON_RELATIONSHIP"),
+      Header: t("PROFILE_RELATIONSHIP_WITH_HOF", "Relationship with HOF"),
       accessor: "relationshipWithHead",
-      Cell: ({ row }) => {
-        const member = row.original;
-        const isApplicant = member.userUuid === loggedInUuid;
-
-        // Applicant (Member #1) selects relationship via Dropdown
-        if (isApplicant) {
-          const selectedRelOption = familyRelationShips.find(
-            (r) => r.code === member.relationshipWithHead
-          ) || null;
-
-          return (
-            <div style={styles.dropdownWrap}>
-              <Dropdown
-                t={t}
-                option={familyRelationShips}
-                optionKey="name"
-                selected={selectedRelOption}
-                select={(val) => handleRelationshipChange(member.userUuid, val)}
-                placeholder={t("SELECT_RELATIONSHIP")}
-                optionCardStyles={styles.dropdownCard}
-                style={styles.dropdown}
-              />
-            </div>
-          );
-        }
-
-        // Added members display relationship selected during their verification step
-        return (
-          <span style={styles.relationshipText}>
-            {member.relationshipWithHead || "-"}
-          </span>
-        );
-      },
+      Cell: ({ row }) => (
+        <span style={styles.relationshipText}>
+          {row.original.relationshipWithHead || "-"}
+        </span>
+      ),
     },
     {
       Header: t("HEAD_OF_FAMILY_COL"),
@@ -262,22 +233,24 @@ const FamilyMemberAdded = () => {
 
         return (
           <div style={styles.actionsWrap}>
-            <button type="button" style={styles.deleteBtn} title={t("CORE_COMMON_VIEW")} onClick={() => setActionModal({ mode: "view", member })}>
+            <button type="button" style={styles.deleteBtn} title={t("CORE_COMMON_VIEW")} onClick={() => handleViewMember(member, isApplicant)}>
               <ViewsIcon />
             </button>
             {/* Applicant edits the profile steps; added members only have their relationship editable */}
             <button type="button" style={styles.deleteBtn} title={t("CORE_COMMON_EDIT")} onClick={() => handleEditMember(member, isApplicant)}>
               <EditIcon />
             </button>
-            {/* Applicant (Member #1) cannot be removed */}
-            <button type="button" style={styles.deleteBtn} title={t("REMOVE")} disabled={isApplicant} onClick={() => handleRemoveMember(member.userUuid)}>
-              <DeleteIcon fill={isApplicant ? "#9CA3AF" : styles.deleteIconFill} style={styles.deleteIcon} />
-            </button>
+            {/* If there is only one row, the Delete button should not be displayed */}
+            {members.length > 1 && (
+              <button type="button" style={styles.deleteBtn} title={t("REMOVE")} disabled={isApplicant} onClick={() => handleRemoveMember(member.userUuid)}>
+                <DeleteIcon fill={isApplicant ? "#9CA3AF" : styles.deleteIconFill} style={styles.deleteIcon} />
+              </button>
+            )}
           </div>
         );
       },
     },
-  ], [members, selectedHeadUuid, familyRelationShips, loggedInUuid, t, styles]);
+  ], [members, selectedHeadUuid, loggedInUuid, t, styles]);
 
   // Navigate to Aadhaar verification to add another family member
   const handleAddAnother = () => {
@@ -420,27 +393,6 @@ const FamilyMemberAdded = () => {
         />
         {submitting && <Loader />}
       </Card>
-
-      {actionModal && (
-        <Modal
-          headerBarMain={<h1 className="heading-m">{t(actionModal.mode === "view" ? "CORE_COMMON_VIEW" : "CORE_COMMON_EDIT")}</h1>}
-          actionCancelLabel={t("BACK")}
-          actionCancelOnSubmit={() => setActionModal(null)}
-          hideSubmit
-          formId="family-member-action"
-        >
-          <FieldGrid
-              t={t}
-              fields={withValues([
-                ["CORE_COMMON_NAME", actionModal.member.name],
-                ["CORE_COMMON_RELATIONSHIP", actionModal.member.relationshipWithHead],
-                ["CORE_COMMON_PROFILE_MOBILE_NUMBER", actionModal.member.mobileNumber],
-                ["CORE_COMMON_PROFILE_GENDER", actionModal.member.gender],
-                ["CORE_COMMON_AADHAR_NUMBER", actionModal.member.aadhaarLast4 && `XXXX-XXXX-${actionModal.member.aadhaarLast4}`],
-              ])}
-            />
-        </Modal>
-      )}
 
       {/* Toast Notification Container */}
       {toast && (

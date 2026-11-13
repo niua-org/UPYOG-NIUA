@@ -25,7 +25,7 @@ const getPropertyAddress = (property) => {
   ].filter(Boolean).join(", ");
 };
 
-const UrbanPropertyForm = ({ data = {}, onChange }) => {
+const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
   const styles = profileStyles.urbanPropertyForm;
   const [propertyId, setPropertyId] = useState("");
   const [searched, setSearched] = useState(false);
@@ -143,36 +143,38 @@ const UrbanPropertyForm = ({ data = {}, onChange }) => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.field}>
-        <label style={profileStyles.label}>Search &amp; Link Property ID</label>
-        <div className="flex items-center gap-md">
-          <TextInput
-            style={styles.searchInput}
-            value={propertyId}
-            onChange={handleSearchInputChange}
-            placeholder="Search by Property ID"
-            signature={true}
-            signatureImg={
-              <SearchIconSvg
-                className="signature-img"
-                onClick={() => handleSearch()}
-              />
-            }
-          />
-          <button type="button" style={profileStyles.primaryButton} onClick={handleAddMore}>
-            + Add more
-          </button>
-        </div>
-        {isLoading && <Loader />}
-        {searchError && (
-          <div style={styles.noProperty} role="alert">
-            Property search failed. Please try again.
+      {!disabled && (
+        <div style={styles.field}>
+          <label style={profileStyles.label}>Search &amp; Link Property ID</label>
+          <div className="flex items-center gap-md">
+            <TextInput
+              style={styles.searchInput}
+              value={propertyId}
+              onChange={handleSearchInputChange}
+              placeholder="Search by Property ID"
+              signature={true}
+              signatureImg={
+                <SearchIconSvg
+                  className="signature-img"
+                  onClick={() => handleSearch()}
+                />
+              }
+            />
+            <button type="button" style={profileStyles.primaryButton} onClick={handleAddMore}>
+              + Add more
+            </button>
           </div>
-        )}
-        {searched && !isLoading && !searchError && resultsCount === 0 && (
-          <div style={styles.noProperty}>No property found.</div>
-        )}
-      </div>
+          {isLoading && <Loader />}
+          {searchError && (
+            <div style={styles.noProperty} role="alert">
+              Property search failed. Please try again.
+            </div>
+          )}
+          {searched && !isLoading && !searchError && resultsCount === 0 && (
+            <div style={styles.noProperty}>No property found.</div>
+          )}
+        </div>
+      )}
 
       {propertyCards.length > 0 && (
         <div style={styles.results}>
@@ -204,7 +206,8 @@ const UrbanPropertyForm = ({ data = {}, onChange }) => {
                   aria-label={`Mark ${propertyIdValue} as primary address`}
                   title="Mark as primary address"
                   checked={primaryPropertyId === propertyIdValue}
-                  onChange={() => handleSelectPrimary(propertyIdValue)}
+                  onChange={() => !disabled && handleSelectPrimary(propertyIdValue)}
+                  disabled={disabled}
                   style={styles.selectRadio}
                 />
               </Card>
@@ -213,11 +216,13 @@ const UrbanPropertyForm = ({ data = {}, onChange }) => {
         </div>
       )}
 
-      <div style={styles.createProperty}>
-        <button type="button" style={profileStyles.primaryButton} onClick={handleCreateProperty}>
-          + Create Property ID
-        </button>
-      </div>
+      {!disabled && (
+        <div style={styles.createProperty}>
+          <button type="button" style={profileStyles.primaryButton} onClick={handleCreateProperty}>
+            + Create Property ID
+          </button>
+        </div>
+      )}
     </div>
   );
 };
