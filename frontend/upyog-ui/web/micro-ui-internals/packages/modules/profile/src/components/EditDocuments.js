@@ -72,13 +72,12 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
 
   const toastTimerRef = useRef(null);
 
-
-  // it will sync detail from userdetail when refresh page
+  // Re-sync with UserDetails when page refreshes
   useEffect(() => {
-  if (userDetails?.documents?.length) {
-    setDocuments(userDetails.documents.filter((doc) => doc.active === true));
-  }
-}, [userDetails?.documents]);
+    if (userDetails?.documents?.length) {
+      setDocuments(userDetails.documents.filter((doc) => doc.active === true));
+    }
+  }, [userDetails?.documents]);
 
   // Cleanup toast timer on unmount
   useEffect(() => {
@@ -210,7 +209,6 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   };
 
   // Save documents
-  // Resolves to true when the documents are saved (or already complete and `proceedIfUnchanged` is set)
   const handleSave = async () => {
     if (saving) return;
 
@@ -231,8 +229,6 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
 
     // At least one document must be selected for re-upload
     if (!toUpload.length) {
-      // Create Family flow: nothing new to upload but both documents already exist, so just continue
-      if (proceedIfUnchanged && DOC_TYPES.every(({ key }) => findExisting(key))) return true;
       showToast("error", t("PROFILE_NO_DOC_SELECTED"));
       return;
     }
@@ -318,6 +314,7 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
       setSaving(false);
     }
   };
+
 
   return (
     <>

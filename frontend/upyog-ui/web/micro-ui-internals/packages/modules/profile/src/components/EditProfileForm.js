@@ -118,7 +118,6 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
     }
   };
 
-
   return (
     <>
       <div style={profileStyles.card}>
