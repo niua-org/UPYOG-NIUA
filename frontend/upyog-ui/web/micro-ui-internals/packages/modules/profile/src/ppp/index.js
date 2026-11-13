@@ -55,65 +55,38 @@ const FamilyCreate = ({ parentRoute }) => {
 
 
   const goNext = (skipStep, index, isAddMultiple, key) => {
-    let currentPath = pathname.split("/").pop(),
-      lastchar = currentPath.charAt(currentPath.length - 1),
-      isMultiple = false,
-      nextPage;
+  const currentPath = pathname.split("/").pop();
 
-      // Handles multi-step form navigation
-    if (Number(parseInt(currentPath)) || currentPath == "0" || currentPath == "-1") {
-      if (currentPath == "-1" || currentPath == "-2") {
-        currentPath = pathname.slice(0, -3);
-        currentPath = currentPath.split("/").pop();
-        isMultiple = true;
-      } else {
-        currentPath = pathname.slice(0, -2);
-        currentPath = currentPath.split("/").pop();
-        isMultiple = true;
-      }
-    } else {
-      isMultiple = false;
-    }
-    if (!isNaN(lastchar)) {
-      isMultiple = true;
-    }
-    const currentRoute =
-      config.find((routeObj) => routeObj.route === (currentPath || "0")) ||
-      config.find((routeObj) => routeObj.key === key);
-    if (!currentRoute) {
-      console.error(`Unable to find profile step configuration for route "${currentPath}" or key "${key}".`);
-      return;
-    }
-    let nextStep = currentRoute.nextStep;
+  // Find current step by route or by key as fallback
+  const currentRoute =
+    config.find((r) => r.route === currentPath) ||
+    config.find((r) => r.key === key);
 
-    // Keep `?member=` on step-to-step navigation (absolute routes such as the Family Members page are left as is)
-    const withMember = (to) => (to.startsWith("/") ? to : `${to}${search}`);
-    let redirectWithHistory = (to, state) => navigate(withMember(to), state != null ? { state } : undefined);
-    if (skipStep) {
-      redirectWithHistory = (to, state) => navigate(withMember(to), state != null ? { replace: true, state } : { replace: true });
-    }
-    if (isAddMultiple) {
-      nextStep = key;
-    }
-    // Last step: the Family Members page (FamilyMemberAdded) is the summary of this flow
-    if (nextStep === null) {
-      // A member added via Aadhaar joins the family list only once all their steps are done
-      if (memberId !== loggedInUuid) stageVerifiedMember(memberId, params.profileDetails?.relationshipWithHof);
-      return redirectWithHistory(PROFILE_ROUTES.FAMILY_MEMBER_ADDED);
-    }
-    if (typeof nextStep !== "string") {
-      console.error(`Profile step "${currentRoute.route}" does not have a valid nextStep configured.`);
-      return;
-    }
-    if (!isNaN(nextStep.split("/").pop())) {
-      nextPage = `${nextStep}`;
-    }
-    else {
-      nextPage = isMultiple && nextStep !== "map" ? `${nextStep}/${index}` : `${nextStep}`;
-    }
+  if (!currentRoute) {
+    console.error(`[FamilyCreate] No config found for route "${currentPath}" or key "${key}".`);
+    return;
+  }
 
-    redirectWithHistory(nextPage);
-  };
+  let nextStep = isAddMultiple ? key : currentRoute.nextStep;
+
+  // Preserve ?member= query param on relative navigations
+  const withMember = (to) => (to.startsWith("/") ? to : `${to}${search}`);
+
+  const redirect = (to, state) => navigate(withMember(to),skipStep ? { replace: true, ...(state != null && { state }) } : state != null ? { state } : undefined);
+
+  // Last step — stage member if added via Aadhaar, then go to summary
+  if (nextStep === null) {
+    if (memberId !== loggedInUuid) stageVerifiedMember(memberId, params.profileDetails?.relationshipWithHof);
+    return redirect(PROFILE_ROUTES.FAMILY_MEMBER_ADDED);
+  }
+
+  if (typeof nextStep !== "string") {
+    console.error(`[FamilyCreate] Step "${currentRoute.route}" has invalid nextStep.`);
+    return;
+  }
+
+  redirect(nextStep);
+};
 
  
  // Clears parameters on back navigation

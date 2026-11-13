@@ -70,8 +70,12 @@ export const buildCreateDocumentPayload = ({ uuid, tenantId, documentType, files
 
 
 // Body for Digit.UserService.createFamily
-export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid }) => {
+export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
   // 1. Use ONLY the members explicitly verified and added to the screen
+
+  console.log("familyDetails", familyDetails)
+
+  debugger
   const members = membersList || [];
 
   // 2. Head UUID from the radio button (or fallback to the first member)

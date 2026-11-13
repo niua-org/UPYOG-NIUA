@@ -314,12 +314,14 @@ const FamilyMemberAdded = () => {
 
     try {
       const tenantId = Digit.ULBService.getCurrentTenantId();
+      const familyDetails = Digit.SessionStorage.get("Family_Details") || {};
 
       // 3. Use validated `members` React state (avoids state vs. storage divergence)
       const payload = buildCreateFamilyPayload({
         membersList: members,
         tenantId: tenantId,
         selectedHeadUuid: selectedHeadUuid,
+        familyDetails
       });
 
       // API Call: Create Family
