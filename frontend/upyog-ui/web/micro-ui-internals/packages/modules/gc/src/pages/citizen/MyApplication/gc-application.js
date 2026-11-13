@@ -36,10 +36,7 @@ const GCApplication = ({ application, tenantId }) => {
   const paymentStatus = application?.paymentStatus;
   const paymentAmount = application?.paymentAmount;
 
-  const totalDue =
-    paymentAmount !== undefined && paymentAmount !== null && !Number.isNaN(Number(paymentAmount))
-      ? Number(paymentAmount)
-      : null;
+  
 
   const isApplicationApproved = [
     "APPROVED",
@@ -50,14 +47,14 @@ const GCApplication = ({ application, tenantId }) => {
     "PERMANENTLY_DISCONNECTED",
   ].includes(appStatus);
 
-  const hasDue = totalDue !== null && totalDue > 0;
+  const hasDue = paymentAmount !== undefined && paymentAmount !== null && Number(paymentAmount) > 0;
 
   const handleMakePayment = () => {
-    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${encodeURIComponent(appNo)}`);
+    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
   };
 
   const handleEditApplication = () => {
-    navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`);
+    navigate(`/upyog-ui/citizen/gc/edit/${appNo}`);
   };
 
   const getStatusColor = (status) => {
@@ -220,8 +217,8 @@ const GCApplication = ({ application, tenantId }) => {
               {isApplicationApproved && dueDate ? `${t("GC_DUE_DATE")}: ${dueDate}` : t("CS_COMMON_TOTAL_AMOUNT_DUE")}
             </span>
             <span className="pt-citizen-prop-info-value">
-              {isApplicationApproved && totalDue !== null ? (
-                <span className={`pt-prop-amount-pill ${hasDue ? "due" : "paid"}`}>{`₹${totalDue}`}</span>
+              {isApplicationApproved && paymentAmount !== undefined && paymentAmount !== null ? (
+                <span className={`pt-prop-amount-pill ${hasDue ? "due" : "paid"}`}>{`₹${paymentAmount}`}</span>
               ) : (
                 <span className="pt-prop-amount-pill na">{t("CS_NA")}</span>
               )}
@@ -274,7 +271,7 @@ const GCApplication = ({ application, tenantId }) => {
       {/* Card Actions: View Details, Make Payment, Edit Application */}
       <div className="pt-citizen-prop-card-actions">
         <Link
-          to={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(appNo)}`}
+          to={`/upyog-ui/citizen/gc/application-details/${appNo}`}
           className="pt-citizen-action-btn view-details"
         >
           {t("CS_VIEW_DETAILS")}

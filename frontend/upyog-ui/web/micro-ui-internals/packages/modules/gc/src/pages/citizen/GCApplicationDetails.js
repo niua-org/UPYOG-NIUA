@@ -85,8 +85,7 @@ const GCApplicationDetails = () => {
     { enabled: !!applicationNo, cacheTime: 0, staleTime: 0 }
   );
 
-  const applicationList = gcData?.garbageApplications || [];
-  const application = applicationList.length > 0 ? applicationList[0] : null;
+  const application = gcData?.garbageApplications?.[0] || null;
 
   const businessService = application?.businessService || "garbage-service";
 
@@ -242,7 +241,7 @@ const GCApplicationDetails = () => {
   const docs = appData?.documents || [];
 
   const handleMakePayment = () => {
-    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${encodeURIComponent(appNo)}`);
+    navigate(`/upyog-ui/citizen/payment/my-bills/garbage-service/${appNo}`);
   };
 
   if (isLoading || isWorkflowLoading) {
@@ -582,7 +581,7 @@ const GCApplicationDetails = () => {
                         <p className="app-details-kv-label">{t("GC_APPLICATION_NUMBER_LABEL")}</p>
                         <p className="app-details-kv-value">
                           <span className="link">
-                            <a href={`/upyog-ui/citizen/gc/application-details/${encodeURIComponent(childAppNo)}`}>
+                            <a href={`/upyog-ui/citizen/gc/application-details/${childAppNo}`}>
                               {childAppNo}
                             </a>
                           </span>
@@ -626,7 +625,7 @@ const GCApplicationDetails = () => {
           {appStatus === "EDIT_APPLICATION" && (
             <SubmitBar
               label={t("GC_EDIT_APPLICATION") || "Edit Application"}
-              onSubmit={() => navigate(`/upyog-ui/citizen/gc/edit/${encodeURIComponent(appNo)}`)}
+              onSubmit={() => navigate(`/upyog-ui/citizen/gc/edit/${appNo}`)}
             />
           )}
 
