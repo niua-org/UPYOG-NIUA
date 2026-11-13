@@ -68,36 +68,171 @@ export const buildCreateDocumentPayload = ({ uuid, tenantId, documentType, files
 });
 
 
-
-// Body for Digit.UserService.createFamily
+// Payload to be used when Create a Family
 export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
-  // 1. Use ONLY the members explicitly verified and added to the screen
+  console.log("membersListmembersListmembersList", familyDetails);
 
-  console.log("familyDetails", familyDetails)
-
-  debugger
   const members = membersList || [];
-
-  // 2. Head UUID from the radio button (or fallback to the first member)
   const finalHeadUuid = selectedHeadUuid || members[0]?.userUuid;
 
-  // 3. Keep relationshipWithHead exactly as selected from the dropdown,
-  // and set isHead: true ONLY for the member selected as Head via radio button
-  const finalMembers = members.map((member) => ({
-    userUuid: member.userUuid,
-    name: member.name || "Family Member",
-    relationshipWithHead: member.relationshipWithHead,
-    isHead: member.userUuid === finalHeadUuid,
-  }));
+  const finalMembers = members.map((member) => {
+    const data = familyDetails[member.userUuid] || {};
+    const p = data.profileDetails || {};
+    const inc = data.income || {};
+    const veh = data.vehicles || {};
+    const prop = data.property || {};
+
+    // --- citizenDetails ---
+    const citizenDetails = {
+      name: p.name,
+      gender: p.gender?.code || p.gender,
+      dob: p.dob || undefined,                          // "1995-05-15" as-is, no UTC conversion
+      mobileNumber: p.mobileNumber,
+      alternateMobileNumber: p.altContactNumber,
+      emailId: p.emailId,
+      fatherName: p.fatherName,
+      motherName: p.motherName,
+      spouseName: p.spouseName,
+      guardian: p.guardianName,
+      caste: p.caste?.code,
+      isSpeciallyAbled: p.speciallyAbled?.code === "Yes",
+      documents: [
+        p.identityProofFile?.fileStoreId && {
+          documentType: p.identityProofType?.code || "IDENTITY_PROOF",
+          filestoreId: p.identityProofFile.fileStoreId,
+          fileName: p.identityProofFile.name,
+          referenceType: "CITIZEN_PROFILE",
+        },
+        p.birthProofFile?.fileStoreId && {
+          documentType: p.birthProofType?.code || "DOB_PROOF",
+          filestoreId: p.birthProofFile.fileStoreId,
+          fileName: p.birthProofFile.name,
+          referenceType: "CITIZEN_PROFILE",
+        },
+        p.casteProof?.fileStoreId && {
+          documentType: p.casteProofType?.code || "CASTE_CERTIFICATE",
+          filestoreId: p.casteProof.fileStoreId,
+          fileName: p.casteProof.name,
+          referenceType: "CITIZEN_PROFILE",
+        },
+        p.disabilityProof?.fileStoreId && {
+          documentType: p.disabilityProofType?.code || "DISABILITY_CERTIFICATE",
+          filestoreId: p.disabilityProof.fileStoreId,
+          fileName: p.disabilityProof.name,
+          referenceType: "CITIZEN_PROFILE",
+        },
+      ].filter(Boolean),
+    };
+
+    // --- income ---
+    const income = inc.annualIncome ? {
+      occupation: inc.occupation?.code || inc.occupation,
+      annualIncome: Number(inc.annualIncome),
+      identifierType: inc.taxIdType?.code,
+      identifierValue: inc.taxIdNumber,
+      isVerified: inc.taxIdValidated || false,
+      ...(inc.uploadedIncomeFile && {
+        salaryProofDocument: {
+          documentType: "SALARY_PROOF",
+          filestoreId: inc.uploadedIncomeFile,
+          referenceType: "INCOME",
+        },
+      }),
+      ...(inc.uploadedTaxProof && {
+        taxProofDocument: {
+          documentType: `${inc.taxIdType?.code || "TAX"}_PROOF`,
+          filestoreId: inc.uploadedTaxProof,
+          referenceType: "INCOME",
+        },
+      }),
+    } : undefined;
+
+    // --- vehicles ---
+    const vehicles = veh.vehicleNo ? [{
+      vehicleNumber: veh.vehicleNo,
+      purchaseDate: veh.purchaseYear,               // "2026-11-04" as-is
+      vehicleType: veh.vehicleType?.code,
+      vehicleCategory: veh.vehicleCategory?.code,
+      fuelType: veh.fuelType?.code,
+      isVerified: veh.vehicleNoValidated || false,
+      ...(veh.uploadedRCFile && {
+        rcDocument: {
+          documentType: "VEHICLE_RC",
+          filestoreId: veh.uploadedRCFile,
+          referenceType: "VEHICLE",
+        },
+      }),
+    }] : undefined;
+
+    // --- properties ---
+    let properties;
+    if (prop.localityType === "RURAL") {
+      properties = [{
+        localityType: "RURAL",
+        ownershipType: prop.ownershipType || "INDIVIDUAL",
+        declarationConfirmed: true,
+        ruralPropertyDetail: {
+          gramPanchayat: prop.gramPanchayat?.name,
+          villageName: prop.village?.name,
+          wardNumber: prop.ward?.name,
+          propertyAddress: prop.propertyAddress,
+          propertyType: prop.propertyType?.code,
+          propertyUsage: prop.propertyUsage?.code,
+          surveyNumber: prop.surveyNumber,
+        },
+        owners: [{ ownerType: "INDIVIDUAL", userUuid: member.userUuid }],
+        ...(prop.propertyDocument?.fileStoreId && {
+          document: {
+            documentType: prop.documentType?.code || "PROPERTY_ADDRESS_PROOF",
+            filestoreId: prop.propertyDocument.fileStoreId,
+            fileName: prop.propertyDocument.name,
+            referenceType: "PROPERTY",
+          },
+        }),
+      }];
+    } else if (prop.localityType === "URBAN" && prop.primaryPropertyId) {
+      properties = [{
+        localityType: "URBAN",
+        ownershipType: "INDIVIDUAL",
+        declarationConfirmed: true,
+        urbanPropertyDetail: {
+          upyogPropertyId: prop.primaryPropertyId || prop.propertyId,
+          propertyTaxAmount: prop.propertyTaxAmount || 0,
+          urbanAddress: prop.propertyAddress,
+        },
+        owners: [{ ownerType: "INDIVIDUAL", userUuid: member.userUuid }],
+      }];
+    }
+
+    return {
+      userUuid: member.userUuid,
+      name: member.name || p.name || "Family Member",
+      relationshipWithHead: member.relationshipWithHead,
+      isHead: member.userUuid === finalHeadUuid,
+      isVerified: true,
+      ...(Object.keys(citizenDetails).some((k) => k === "documents" ? citizenDetails.documents.length > 0 : !!citizenDetails[k]) && { citizenDetails }),
+      ...(income && { income }),
+      ...(vehicles && { vehicles }),
+      ...(properties && { properties }),
+    };
+  });
 
   return {
-    Family: {
-      tenantId: tenantId,
+    family: {
+      tenantId,
       headUserUuid: finalHeadUuid,
       members: finalMembers,
+      workflow: {
+            action: "APPLY",
+            businessService: "FAMILY_REGISTRATION",
+            comment: "",
+            assignees: []
+        },
     },
   };
 };
+
+
 
 // Maps and standardizes the Aadhaar OTP verification response into a verified member object
 export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) => ({

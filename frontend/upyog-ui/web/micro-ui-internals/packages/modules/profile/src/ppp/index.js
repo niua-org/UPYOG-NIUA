@@ -9,7 +9,6 @@
  * - Fetches common fields configuration and application data from the MDMS service.
  * - Supports navigation between different steps of the form.
  * - Caches form data using session storage to persist user inputs.
- * - Renders loading state until data is fetched.
  * - Dynamically renders routes based on configuration.
  * - Handles multi-step form submissions and navigates to acknowledgment or summary pages.
  */
@@ -17,7 +16,6 @@
 import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-// import { PetDataConvert } from "../../../utils";
 import { Route, useLocation, useSearchParams, Routes, Navigate } from "react-router-dom";
 import { createfamilyconfig } from "../config/createfamilyconfig";
 import { PROFILE_ROUTES } from "../utils/constants";
@@ -30,13 +28,14 @@ const FamilyCreate = ({ parentRoute }) => {
   const { pathname, search } = useLocation();
   const [searchParams] = useSearchParams();
   const navigate = Digit.Hooks.useCustomNavigate();
-
   let config = [];
   const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();; 
-  const mutation = Digit.Hooks.ptr.usePTRCreateAPI(tenantId);
-  // Step data is kept per family member: Family_Details = { [memberId]: { profileDetails, income, vehicles } }.
-  // memberId comes from `?member=<userUuid>` (defaults to the logged-in applicant), so filling in another
-  // member never overwrites the details already stored for someone else.
+
+  /**
+   * Step data is kept per family member: Family_Details = { [memberId]: { profileDetails, income, vehicles } }.
+   * memberId comes from `?member=<userUuid>` (defaults to the logged-in applicant), so filling in another
+   * member never overwrites the details already stored for someone else.
+  */
   const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
   const memberId = searchParams.get("member") || loggedInUuid;
   const [allParams, setAllParams, clearParams] = Digit.Hooks.useSessionStorage("Family_Details", {});
@@ -55,38 +54,38 @@ const FamilyCreate = ({ parentRoute }) => {
 
 
   const goNext = (skipStep, index, isAddMultiple, key) => {
-  const currentPath = pathname.split("/").pop();
+    const currentPath = pathname.split("/").pop();
 
-  // Find current step by route or by key as fallback
-  const currentRoute =
-    config.find((r) => r.route === currentPath) ||
-    config.find((r) => r.key === key);
+    // Find current step by route or by key as fallback
+    const currentRoute =
+      config.find((r) => r.route === currentPath) ||
+      config.find((r) => r.key === key);
 
-  if (!currentRoute) {
-    console.error(`[FamilyCreate] No config found for route "${currentPath}" or key "${key}".`);
-    return;
-  }
+    if (!currentRoute) {
+      console.error(`[FamilyCreate] No config found for route "${currentPath}" or key "${key}".`);
+      return;
+    }
 
-  let nextStep = isAddMultiple ? key : currentRoute.nextStep;
+    let nextStep = isAddMultiple ? key : currentRoute.nextStep;
 
-  // Preserve ?member= query param on relative navigations
-  const withMember = (to) => (to.startsWith("/") ? to : `${to}${search}`);
+    // Preserve ?member= query param on relative navigations
+    const withMember = (to) => (to.startsWith("/") ? to : `${to}${search}`);
 
-  const redirect = (to, state) => navigate(withMember(to),skipStep ? { replace: true, ...(state != null && { state }) } : state != null ? { state } : undefined);
+    const redirect = (to, state) => navigate(withMember(to),skipStep ? { replace: true, ...(state != null && { state }) } : state != null ? { state } : undefined);
 
-  // Last step — stage member if added via Aadhaar, then go to summary
-  if (nextStep === null) {
-    if (memberId !== loggedInUuid) stageVerifiedMember(memberId, params.profileDetails?.relationshipWithHof);
-    return redirect(PROFILE_ROUTES.FAMILY_MEMBER_ADDED);
-  }
+    // Last step — stage member if added via Aadhaar, then go to summary
+    if (nextStep === null) {
+      if (memberId !== loggedInUuid) stageVerifiedMember(memberId, params.profileDetails?.relationshipWithHof);
+      return redirect(PROFILE_ROUTES.FAMILY_MEMBER_ADDED);
+    }
 
-  if (typeof nextStep !== "string") {
-    console.error(`[FamilyCreate] Step "${currentRoute.route}" has invalid nextStep.`);
-    return;
-  }
+    if (typeof nextStep !== "string") {
+      console.error(`[FamilyCreate] Step "${currentRoute.route}" has invalid nextStep.`);
+      return;
+    }
 
-  redirect(nextStep);
-};
+    redirect(nextStep);
+  };
 
  
  // Clears parameters on back navigation
@@ -96,10 +95,6 @@ const FamilyCreate = ({ parentRoute }) => {
       queryClient.invalidateQueries("Family_Details");
 
     }
- // Navigates to the acknowledgment page
-  const ptrcreate = async () => {
-    navigate(`acknowledgement`);
-  };
 
   // clear session after successfull Submit
  const clearSession = () => {
@@ -107,32 +102,6 @@ const FamilyCreate = ({ parentRoute }) => {
     queryClient.invalidateQueries("Family_Details");
   };
 
-//  const handleSubmit = () => {
-//   const formdata = PetDataConvert(params);
-//   formdata.PetRegistrationApplications[0].tenantId = tenantId;
-//   mutation.mutate(formdata, {
-//     onSuccess: (response) => {
-//       clearSession();
-//       navigate("acknowledgement", {
-//         state: {
-//           data: response,
-//           isSuccess: true,
-//         },
-//       });
-//     },
-
-//     onError: (error) => {
-//       console.log("error");
-//       navigate("acknowledgement", {
-//         state: {
-//           data: null,
-//           isSuccess: false,
-//            error:error
-//         },
-//       });
-//     },
-//   });
-// };
 
   function handleSelect(key, data, skipStep, index, isAddMultiple = false) {
     setAllParams({ ...allParams, [memberId]: { ...params, [key]: { ...params[key], ...data } } });
