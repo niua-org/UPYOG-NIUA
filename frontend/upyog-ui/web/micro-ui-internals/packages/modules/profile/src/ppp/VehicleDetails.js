@@ -35,7 +35,7 @@ const FUEL_TYPE = [
   { i18nKey: "VEH_CNG", code: "CNG" },
   { i18nKey: "VEH_ELECTRIC", code: "ELECTRIC" },
   { i18nKey: "VEH_HYBRID", code: "HYBRID" },
-  { i18nKey: "VEH_PETROL_CND", code: "PETROL_CNG" },
+  { i18nKey: "VEH_PETROL_CNG", code: "PETROL_CNG" },
 ];
 
 const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
@@ -144,7 +144,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               optionKey="i18nKey"
               t={t}
               style={fullWidth}
-              placeholder={t("PROFILE_SELECT_VEHICLE_CATEGORY")}
+              placeholder={t("PROFILE_SELECT_FUEL_CATEGORY")}
             />
           </FormField>
 
