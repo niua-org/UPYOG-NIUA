@@ -41,6 +41,14 @@ public class FamilyRestRepository {
     private final ObjectMapper objectMapper;
     private final FamilyConfigurationService familyConfigurationService;
 
+    /**
+     * Constructs a {@link FamilyRestRepository} with all required dependencies including MDMS family configuration support.
+     *
+     * @param restTemplate               HTTP client for making external service calls; optional
+     * @param userConfiguration          application-level user configuration properties; optional
+     * @param objectMapper               Jackson JSON mapper; if {@code null}, a default instance is created
+     * @param familyConfigurationService service to fetch state/tenant-specific family configuration from MDMS; optional
+     */
     @Autowired
     public FamilyRestRepository(@Autowired(required = false) RestTemplate restTemplate,
                                 @Autowired(required = false) UserConfiguration userConfiguration,
@@ -52,6 +60,14 @@ public class FamilyRestRepository {
         this.familyConfigurationService = familyConfigurationService;
     }
 
+    /**
+     * Overloaded constructor for backwards compatibility and standalone testing environments
+     * where the {@link FamilyConfigurationService} is not configured or required.
+     *
+     * @param restTemplate      HTTP client for making external service calls
+     * @param userConfiguration application-level user configuration properties
+     * @param objectMapper      Jackson JSON mapper
+     */
     public FamilyRestRepository(RestTemplate restTemplate,
                                 UserConfiguration userConfiguration,
                                 ObjectMapper objectMapper) {

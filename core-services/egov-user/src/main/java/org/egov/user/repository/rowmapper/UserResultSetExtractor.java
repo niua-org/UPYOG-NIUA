@@ -31,6 +31,11 @@ public class UserResultSetExtractor implements ResultSetExtractor<List<User>> {
 
     private ObjectMapper objectMapper;
 
+    /**
+     * Constructs a {@code UserResultSetExtractor} with the specified Jackson JSON mapper.
+     *
+     * @param objectMapper Jackson JSON mapper for parsing complex JSON types
+     */
     @Autowired
     UserResultSetExtractor(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -111,6 +116,12 @@ public class UserResultSetExtractor implements ResultSetExtractor<List<User>> {
                 if (hasColumn(rs, "spouse_name")) {
                     user.setSpouseName(rs.getString("spouse_name"));
                 }
+                if (hasColumn(rs, "caste")) {
+                    user.setCaste(rs.getString("caste"));
+                }
+                if (hasColumn(rs, "is_specially_abled")) {
+                    user.setIsSpeciallyAbled(rs.getBoolean("is_specially_abled"));
+                }
                 if (hasColumn(rs, "is_identity_verified")) {
                     user.setIsIdentityVerified(rs.getBoolean("is_identity_verified"));
                 }
@@ -158,6 +169,13 @@ public class UserResultSetExtractor implements ResultSetExtractor<List<User>> {
         return new ArrayList<>(usersMap.values());
     }
 
+    /**
+     * Extracts a {@link Role} domain model from the current result set row.
+     *
+     * @param rs database result set
+     * @return constructed {@link Role} instance or null if role_code is absent
+     * @throws SQLException if a database access error occurs
+     */
     private Role populateRole(ResultSet rs) throws SQLException {
         String code = rs.getString("role_code");
         String tenantId = rs.getString("role_tenantid");
@@ -176,6 +194,14 @@ public class UserResultSetExtractor implements ResultSetExtractor<List<User>> {
         return role;
     }
 
+    /**
+     * Extracts an {@link Address} domain model from the current result set row.
+     *
+     * @param rs database result set
+     * @param user parent user instance being populated
+     * @return constructed {@link Address} instance or null if no address row exists
+     * @throws SQLException if a database access error occurs
+     */
     private Address populateAddress(ResultSet rs, User user) throws SQLException {
         if (!hasColumn(rs, "addr_id")) {
             return null;
@@ -201,6 +227,14 @@ public class UserResultSetExtractor implements ResultSetExtractor<List<User>> {
 
     }
 
+    /**
+     * Checks whether a column is present in the result set metadata to prevent invalid column exceptions.
+     *
+     * @param rs database result set
+     * @param columnName column label or name to check
+     * @return true if column exists in the metadata, false otherwise
+     * @throws SQLException if a database access error occurs
+     */
     private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
         ResultSetMetaData rsmd = rs.getMetaData();
         int columns = rsmd.getColumnCount();

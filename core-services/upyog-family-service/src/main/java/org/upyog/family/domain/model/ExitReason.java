@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang3.StringUtils;
 
+import org.upyog.family.util.FamilyConstants;
+
 /**
  * Enumeration representing reasons for a member leaving a Family Unit in UPYOG.
  *
  * @author UPYOG Team
  * @since 1.0.0
  */
-import org.upyog.family.util.FamilyConstants;
-
 public enum ExitReason {
     MARRIAGE(FamilyConstants.EXIT_REASON_MARRIAGE),
     DEMISE(FamilyConstants.EXIT_REASON_DEMISE),
@@ -20,6 +20,11 @@ public enum ExitReason {
 
     private final String value;
 
+    /**
+     * Constructs an {@code ExitReason} enum constant with its backing string value.
+     *
+     * @param value serialized string code
+     */
     ExitReason(String value) {
         this.value = value;
     }

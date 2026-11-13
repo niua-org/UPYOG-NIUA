@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
+import org.upyog.family.domain.model.MemberStatus;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
@@ -19,6 +20,7 @@ import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -75,10 +77,10 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
 
         Family family = familyRepository.findByFamilyIdAndTenantId(familyId, tenantId)
                 .orElseThrow(() -> new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,
-                        "Family with ID " + familyId + " not found."));
+                        FamilyConstants.MSG_FAMILY_ID_PREFIX + familyId + FamilyConstants.MSG_NOT_FOUND_SUFFIX));
         enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
 
-        List<FamilyMember> members = family.getMembers() != null ? new java.util.ArrayList<>(family.getMembers()) : new java.util.ArrayList<>();
+        List<FamilyMember> members = family.getMembers() != null ? new ArrayList<>(family.getMembers()) : new ArrayList<>();
 
         // Ensure the Head of Family is present in the members roster
         boolean headPresentInMembers = members.stream()
@@ -90,15 +92,15 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
             CitizenProfile headProfile = headProfileMap != null ? headProfileMap.get(family.getHeadUserUuid()) : null;
 
             FamilyMember headMember = FamilyMember.builder()
-                    .id("HEAD-" + (family.getHeadUserUuid().length() >= 8 ? family.getHeadUserUuid().substring(0, 8) : family.getHeadUserUuid()))
+                    .id(null)
                     .familyId(family.getFamilyId())
                     .tenantId(family.getTenantId())
                     .userUuid(family.getHeadUserUuid())
-                    .relationshipWithHead("HEAD")
+                    .relationshipWithHead(FamilyConstants.RELATIONSHIP_SELF)
                     .isHead(true)
                     .isVerified(headProfile != null && Boolean.TRUE.equals(headProfile.getIsIdentityVerified()))
                     .active(true)
-                    .status(org.upyog.family.domain.model.MemberStatus.ACTIVE)
+                    .status(MemberStatus.ACTIVE)
                     .name(headProfile != null ? headProfile.getName() : null)
                     .mobileNumber(headProfile != null ? headProfile.getMobileNumber() : null)
                     .gender(headProfile != null ? headProfile.getGender() : null)
@@ -150,7 +152,7 @@ public class FamilyDashboardServiceImpl implements FamilyDashboardService {
         FamilyDashboardMetrics metrics = FamilyDashboardMetrics.builder()
                 .familyId(family.getFamilyId())
                 .tenantId(family.getTenantId())
-                .familyStatus(family.getStatus() != null ? family.getStatus().name() : "ACTIVE")
+                .familyStatus(family.getStatus() != null ? family.getStatus().name() : FamilyConstants.STATUS_ACTIVE)
                 .headUserUuid(family.getHeadUserUuid())
                 .headName(headName)
                 .totalMembersCount(totalMembers)

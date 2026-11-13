@@ -78,6 +78,18 @@ public class Family {
     private FamilyStatus status;
 
     /**
+     * Property ID representing the residential address property linked to this household unit.
+     */
+    @JsonProperty("familyAddressPropertyId")
+    private String familyAddressPropertyId;
+
+    /**
+     * Originating portal or department source of family declaration (e.g. {@code CITIZEN_PORTAL}, {@code CSC}).
+     */
+    @JsonProperty("familySource")
+    private String familySource;
+
+    /**
      * Identifies the type of family unit: UPYOG_INTERNAL (native) or STATE_REGISTRY (state-synced e.g. Haryana PPP).
      */
     @JsonProperty("familyType")

@@ -1,7 +1,9 @@
 package org.upyog.family.persistence.repository;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
 import org.upyog.family.web.contract.CitizenProfile;
+import org.upyog.family.web.contract.FamilyMember;
 
 import java.util.List;
 import java.util.Map;
@@ -59,7 +61,18 @@ public interface UserClient {
      * @param userUuid citizen user UUID
      * @param requestInfo UPYOG request context envelope
      * @return CitizenProfile of the verified user
-     * @throws org.egov.tracer.model.CustomException if user is not found or not identity-verified
+     * @throws CustomException if user is not found or not identity-verified
      */
     CitizenProfile validateUserIsVerified(String userUuid, RequestInfo requestInfo);
+
+    /**
+     * Synchronizes family member demographic profiles and asset declarations (properties, income,
+     * vehicles, attached documents) to the core UPYOG registry in {@code egov-user}.
+     *
+     * @param members list of family members with asset declarations
+     * @param tenantId tenant identifier
+     * @param requestInfo UPYOG request context envelope
+     * @return true if synchronization succeeded, false otherwise
+     */
+    boolean syncMemberAssets(List<FamilyMember> members, String tenantId, RequestInfo requestInfo);
 }

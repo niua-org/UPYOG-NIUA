@@ -11,10 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
+import org.egov.user.domain.service.asset.MemberAssetService;
 import org.egov.user.domain.service.profile.ProfileService;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserSearchResponseContent;
+import org.egov.user.web.contract.asset.MemberAssetSyncRequest;
+import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
 import org.egov.user.web.contract.profile.AadhaarEkycMarkVerifiedRequest;
@@ -75,15 +78,28 @@ import java.util.stream.Collectors;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final MemberAssetService memberAssetService;
 
     /**
-     * Constructs the profile controller with the citizen profile orchestrator service.
+     * Constructs the profile controller with citizen profile and member asset services.
      *
      * @param profileService citizen profile domain service
+     * @param memberAssetService citizen member asset domain service
      */
     @Autowired
-    public ProfileController(ProfileService profileService) {
+    public ProfileController(ProfileService profileService,
+                             @Autowired(required = false) MemberAssetService memberAssetService) {
         this.profileService = profileService;
+        this.memberAssetService = memberAssetService;
+    }
+
+    /**
+     * Backward-compatible constructor for ProfileController without {@link MemberAssetService}.
+     *
+     * @param profileService service handling citizen profile lifecycle operations
+     */
+    public ProfileController(ProfileService profileService) {
+        this(profileService, null);
     }
 
     /**
@@ -323,7 +339,7 @@ public class ProfileController {
     public ResponseEntity<Void> markVerifiedAfterEkyc(@RequestBody @Valid AadhaarEkycMarkVerifiedRequest request,
                                                       @RequestHeader HttpHeaders headers) {
         if (!isInterServiceCall(headers)) {
-            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, "Inter-service call required");
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_INTER_SERVICE_REQUIRED);
         }
         profileService.markCitizenVerifiedAfterAadhaarEkyc(
                 request.getUserUuid(),
@@ -333,6 +349,12 @@ public class ProfileController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    /**
+     * Verifies a logged-in citizen profile with UIDAI Aadhaar via OTP authentication.
+     *
+     * @param request Aadhaar verification request payload
+     * @return HTTP response containing Aadhaar verification result and demographic details
+     */
     @PostMapping("/aadhaar/_verifyProfile")
     public ResponseEntity<AadhaarCitizenVerifyResponse> verifyProfileWithAadhaar(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
         log.info("[PROFILE-CONTROLLER] Received profile Aadhaar verification request. refId: {}, aadhaar: {}",
@@ -366,7 +388,7 @@ public class ProfileController {
     public ResponseEntity<ProfileResponse> searchByAadhaar(@RequestBody @Valid AadhaarSearchRequest request,
                                                            @RequestHeader HttpHeaders headers) {
         if (!isInterServiceCall(headers)) {
-            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, "Searching citizen by Aadhaar is restricted to trusted internal services");
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_SEARCH_CITIZEN_BY_AADHAAR_RESTRICTED);
         }
         log.info("[PROFILE-CONTROLLER] Received dedicated Aadhaar citizen search request. tenant: {}, aadhaar: {}",
                 request != null ? request.getTenantId() : null,
@@ -385,6 +407,47 @@ public class ProfileController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Inter-service endpoint to synchronize member profile demographics, attached documents, and asset declarations
+     * (properties, income, vehicles) into egov-user core registry.
+     *
+     * @param request member asset sync request payload
+     * @param headers HTTP headers used to validate inter-service origin
+     * @return response summarizing synchronization results for each member
+     */
+    @Operation(
+            summary = "Synchronize Member Assets and Demographics",
+            description = "Synchronizes member profile demographics (father/mother/spouse name, caste, specially-abled status), attached documents, and declarations (properties, income, vehicles) into egov-user core registry. Restricted to trusted internal services."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Member assets synchronized successfully",
+                    content = @Content(schema = @Schema(implementation = MemberAssetSyncResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context - inter-service call required"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/_sync-member-assets")
+    public ResponseEntity<MemberAssetSyncResponse> syncMemberAssets(@RequestBody @Valid MemberAssetSyncRequest request,
+                                                                   @RequestHeader HttpHeaders headers) {
+        // Enforce inter-service access guard: reject external ingress calls forwarded through API gateway
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_INTER_SERVICE_REQUIRED);
+        }
+        log.info("[PROFILE-CONTROLLER] Received member asset sync request with {} member(s)",
+                request != null ? request.getNormalizedMembers().size() : 0);
+        if (memberAssetService == null) {
+            throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE, UserConstants.MSG_SERVICE_UNAVAILABLE_MEMBER_ASSET);
+        }
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Builds a standardized single-user {@link ProfileResponse} wrapper for internal service search endpoints.
+     *
+     * @param user domain user entity (may be null)
+     * @return HTTP 200 response enclosing the user search response content
+     */
     private ResponseEntity<ProfileResponse> buildSingleUserResponse(User user) {
         List<UserSearchResponseContent> contents = user != null
                 ? Collections.singletonList(new UserSearchResponseContent(user))

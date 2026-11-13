@@ -47,6 +47,12 @@ public class MdmsFamilyConfigurationServiceImpl implements FamilyConfigurationSe
         private final FamilyConfig familyConfig;
         private final long lastUpdatedTimestamp;
 
+        /**
+         * Constructs a new {@code CacheEntry} holding the family configuration and its fetch timestamp.
+         *
+         * @param familyConfig          the family configuration to cache
+         * @param lastUpdatedTimestamp  the timestamp (in epoch milliseconds) when the configuration was cached
+         */
         public CacheEntry(FamilyConfig familyConfig, long lastUpdatedTimestamp) {
             this.familyConfig = familyConfig;
             this.lastUpdatedTimestamp = lastUpdatedTimestamp;

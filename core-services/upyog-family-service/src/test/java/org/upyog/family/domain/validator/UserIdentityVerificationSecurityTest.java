@@ -24,6 +24,7 @@ import org.upyog.family.web.contract.*;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -244,5 +245,77 @@ public class UserIdentityVerificationSecurityTest {
         );
 
         assertEquals(FamilyConstants.ERROR_USER_NOT_VERIFIED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("UserClient: syncMemberAssets successfully dispatches member payload to egov-user")
+    void testSyncMemberAssets_Success() {
+        when(configuration.getUserHost()).thenReturn("http://localhost:8085");
+        when(configuration.getUserMemberAssetSyncPath()).thenReturn("/user/profile/_sync-member-assets");
+
+        FamilyMember member = FamilyMember.builder()
+                .userUuid("member-uuid-1")
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(UserProperty.builder().localityType("URBAN").ownershipType("INDIVIDUAL").build()))
+                .income(UserIncomeDetail.builder().annualIncome(new BigDecimal("500000")).build())
+                .vehicles(Collections.singletonList(UserVehicleDetail.builder().vehicleNumber("PB02AB1234").build()))
+                .citizenDetails(CitizenProfile.builder().caste("GENERAL").isSpeciallyAbled(false).build())
+                .build();
+
+        Map<String, Object> mockResponse = new HashMap<>();
+        mockResponse.put("status", "SUCCESS");
+        when(restTemplate.postForObject(eq("http://localhost:8085/user/profile/_sync-member-assets"), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockResponse);
+
+        boolean synced = userClient.syncMemberAssets(Collections.singletonList(member), "pg.citya", RequestInfo.builder().build());
+        assertTrue(synced);
+        verify(restTemplate).postForObject(eq("http://localhost:8085/user/profile/_sync-member-assets"), any(HttpEntity.class), eq(Map.class));
+    }
+
+    @Test
+    @DisplayName("UserClient: searchUsersByUuids maps all demographic attributes including caste and speciallyAbled")
+    void testSearchUsersByUuids_MapsDemographics() {
+        when(configuration.getUserHost()).thenReturn("http://localhost:8085");
+        when(configuration.getUserSearchPath()).thenReturn("/user/_search");
+
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("uuid", "citizen-uuid-1");
+        userMap.put("userName", "9876543210");
+        userMap.put("name", "Rahul Kumar");
+        userMap.put("mobileNumber", "9876543210");
+        userMap.put("gender", "MALE");
+        userMap.put("caste", "OBC");
+        userMap.put("isSpeciallyAbled", true);
+        userMap.put("fatherName", "Suresh Kumar");
+        userMap.put("motherName", "Sunita Devi");
+        userMap.put("spouseName", "Pooja Kumar");
+        userMap.put("alternateMobileNumber", "9876543211");
+        userMap.put("guardian", "Suresh Kumar");
+        userMap.put("guardianRelation", "FATHER");
+        userMap.put("isIdentityVerified", true);
+
+        Map<String, Object> mockResponse = new HashMap<>();
+        mockResponse.put("user", Collections.singletonList(userMap));
+
+        when(restTemplate.postForObject(eq("http://localhost:8085/user/_search"), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockResponse);
+
+        Map<String, CitizenProfile> profileMap = userClient.searchUsersByUuids(
+                Collections.singletonList("citizen-uuid-1"),
+                RequestInfo.builder().build()
+        );
+
+        assertNotNull(profileMap);
+        assertTrue(profileMap.containsKey("citizen-uuid-1"));
+        CitizenProfile profile = profileMap.get("citizen-uuid-1");
+        assertEquals("OBC", profile.getCaste());
+        assertTrue(profile.getIsSpeciallyAbled());
+        assertEquals("Suresh Kumar", profile.getFatherName());
+        assertEquals("Sunita Devi", profile.getMotherName());
+        assertEquals("Pooja Kumar", profile.getSpouseName());
+        assertEquals("9876543211", profile.getAlternateMobileNumber());
+        assertEquals("Suresh Kumar", profile.getGuardian());
+        assertEquals("FATHER", profile.getGuardianRelation());
+        assertTrue(profile.getIsIdentityVerified());
     }
 }

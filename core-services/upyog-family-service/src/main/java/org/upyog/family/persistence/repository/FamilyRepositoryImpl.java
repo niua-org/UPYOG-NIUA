@@ -7,6 +7,7 @@ import org.upyog.family.domain.model.LineageActionType;
 import org.upyog.family.persistence.builder.FamilyQueryBuilder;
 import org.upyog.family.persistence.rowmapper.FamilyRowMapper;
 import org.upyog.family.util.FamilyConstants;
+import org.upyog.family.util.FamilyJsonConverter;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyDocument;
 import org.upyog.family.web.contract.FamilyLineage;
@@ -35,7 +36,7 @@ public class FamilyRepositoryImpl implements FamilyRepository {
     private final JdbcTemplate jdbcTemplate;
     private final FamilyQueryBuilder queryBuilder;
     private final FamilyRowMapper rowMapper;
-    private final org.upyog.family.util.FamilyJsonConverter jsonConverter;
+    private final FamilyJsonConverter jsonConverter;
 
     /**
      * Constructs a FamilyRepositoryImpl with required database access and parsing dependencies.
@@ -49,11 +50,11 @@ public class FamilyRepositoryImpl implements FamilyRepository {
     public FamilyRepositoryImpl(JdbcTemplate jdbcTemplate,
                                 FamilyQueryBuilder queryBuilder,
                                 FamilyRowMapper rowMapper,
-                                org.upyog.family.util.FamilyJsonConverter jsonConverter) {
+                                FamilyJsonConverter jsonConverter) {
         this.jdbcTemplate = jdbcTemplate;
         this.queryBuilder = queryBuilder;
         this.rowMapper = rowMapper;
-        this.jsonConverter = jsonConverter != null ? jsonConverter : new org.upyog.family.util.FamilyJsonConverter(new ObjectMapper());
+        this.jsonConverter = jsonConverter != null ? jsonConverter : new FamilyJsonConverter(new ObjectMapper());
     }
 
     /**

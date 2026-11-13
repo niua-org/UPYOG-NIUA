@@ -17,7 +17,7 @@ import java.util.List;
  * business invariants across all lifecycle flows:</p>
  * <ul>
  *   <li><b>Single Active Head of Family (HoF):</b> Exactly one member within a family unit must have
- *       {@code isHead = true} and a corresponding {@code relationshipWithHead = "HEAD"}.</li>
+ *       {@code isHead = true} and a corresponding {@code relationshipWithHead = "SELF"}.</li>
  *   <li><b>Multi-Family Exclusivity:</b> A citizen cannot be an active member of more than one household unit
  *       simultaneously across the platform.</li>
  *   <li><b>Dynamic Relationship Taxonomy:</b> Member relationships relative to the HoF are dynamically

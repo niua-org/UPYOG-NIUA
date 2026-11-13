@@ -9,14 +9,32 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Contract representation of an authenticated user session cached in Redis.
- * Contains core identity properties, roles, and demographic verification flags.
+ * Contract representation of an authenticated user principal serialized and cached in Redis.
+ *
+ * <p>Implements {@link AuthUserAccount} and {@link Serializable} to serve as the unified authentication
+ * token details object across Spring Authorization Server, Redis token store, and downstream API gateway filters.</p>
+ *
+ * <p><b>Key Responsibilities & Architectural Constraints:</b></p>
+ * <ul>
+ *   <li><b>Redis Principal Caching:</b> Preserves authenticated citizen/employee state across distributed
+ *       gateway requests without repeated database round-trips. Changes to class structure require strict
+ *       {@link #serialVersionUID} compatibility checks to prevent token deserialization failures.</li>
+ *   <li><b>Identity & Demographic Context:</b> Encapsulates verified identity metadata including
+ *       e-KYC verification status ({@code isIdentityVerified}), verification timestamp, verification source
+ *       (e.g. Aadhaar, DigiLocker), and family unit linkage ({@code familyId}).</li>
+ *   <li><b>RBAC Role Guarantees:</b> {@link #getRoles()} guarantees non-null collection semantics to ensure
+ *       fail-closed evaluation in downstream gateway authorization filters.</li>
+ * </ul>
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
+ * @see AuthUserAccount
+ * @see Role
  */
 @Setter
 @Getter
 @Builder
-//This class is serialized to Redis
-public class User implements Serializable {
+public class User implements Serializable, AuthUserAccount {
     private static final long serialVersionUID = -1053170163821651014L;
     private Long id;
     private String uuid;
