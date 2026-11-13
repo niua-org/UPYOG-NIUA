@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardText, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import AadhaarVerification from "../verifications/AadhaarVerification";
 import { PROFILE_ROUTES } from "../utils/constants";
+import { getFamilyMembers } from "../utils";
 
 /**
  * AddFamilyMember Component
@@ -44,6 +45,14 @@ const AddFamilyMember = () => {
    * @param {string} verificationData.maskedMobile - Masked mobile number (e.g. +91 ******7935)
    */
   const handleVerified = ({ verifiedMember, aadhaarLast4, maskedMobile }) => {
+    // The same Aadhaar (= same user) cannot be added twice: not the applicant, nor a member already in the family
+    const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
+    const memberUuid = verifiedMember?.userUuid;
+    if (memberUuid && (memberUuid === loggedInUuid || getFamilyMembers().some((m) => m.userUuid === memberUuid))) {
+      showToast("error", t("ERR_AADHAAR_ALREADY_ADDED", "This Aadhaar number is already added to the family."));
+      return;
+    }
+
     // Persist verified data to sessionStorage so state is preserved if user refreshes the review page
     try {
       sessionStorage.setItem("Digit.family.verifiedMember", JSON.stringify(verifiedMember));
