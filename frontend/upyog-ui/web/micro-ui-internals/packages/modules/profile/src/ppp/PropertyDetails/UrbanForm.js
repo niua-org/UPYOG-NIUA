@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, Loader, SearchIconSvg, TextInput } from "@nudmcdgnpm/digit-ui-react-components";
-
+import { useTranslation } from "react-i18next";
 import { profileStyles } from "../../utils/profileStyles";
 
 const getOwnerName = (property) => {
@@ -26,6 +26,7 @@ const getPropertyAddress = (property) => {
 };
 
 const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
+  const { t } = useTranslation();
   const styles = profileStyles.urbanPropertyForm;
   const [propertyId, setPropertyId] = useState("");
   const [searched, setSearched] = useState(false);
@@ -145,7 +146,7 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
     <div style={styles.container}>
       {!disabled && (
         <div style={styles.field}>
-          <label style={profileStyles.label}>Search &amp; Link Property ID</label>
+          <label style={profileStyles.label}>{t("PROFILE_SEARCH_LINK_PROPERTY_ID")}</label>
           <div className="flex items-center gap-md">
             <TextInput
               style={styles.searchInput}
@@ -161,17 +162,17 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
               }
             />
             <button type="button" style={profileStyles.primaryButton} onClick={handleAddMore}>
-              + Add more
+              {t("PROFILE_ADD_MORE")}
             </button>
           </div>
           {isLoading && <Loader />}
           {searchError && (
             <div style={styles.noProperty} role="alert">
-              Property search failed. Please try again.
+              {t("PROFILE_PROPERTY_SEARCH_FAILED")}
             </div>
           )}
           {searched && !isLoading && !searchError && resultsCount === 0 && (
-            <div style={styles.noProperty}>No property found.</div>
+            <div style={styles.noProperty}>{t("PROFILE_NO_PROPERTY_FOUND")}</div>
           )}
         </div>
       )}
@@ -188,11 +189,11 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
               <Card key={propertyIdValue} style={styles.propertyCard}>
                 <div style={styles.propertyDetails}>
                   {[
-                    ["Property Tax Amount", `₹ ${property.propertyTaxAmount ?? 0}`],
-                    ["Property ID", propertyIdValue || "NA"],
-                    ["Owner Name", property.ownerName || "NA"],
-                    ["Property Address", property.propertyAddress || "NA"],
-                    ["Status", status],
+                    [t("PROFILE_PROPERTY_TAX_AMOUNT"), `₹ ${property.propertyTaxAmount ?? 0}`],
+                    [t("PROFILE_PROPERTY_ID"), propertyIdValue || "NA"],
+                    [t("PROFILE_OWNER_NAME"), property.ownerName || "NA"],
+                    [t("PROFILE_PROPERTY_ADDRESS"), property.propertyAddress || "NA"],
+                    [t("PROFILE_STATUS"), status],
                   ].map(([label, value]) => (
                     <div key={label} style={styles.propertyField}>
                       <div style={styles.propertyLabel}>{label}</div>
@@ -219,7 +220,7 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
       {!disabled && (
         <div style={styles.createProperty}>
           <button type="button" style={profileStyles.primaryButton} onClick={handleCreateProperty}>
-            + Create Property ID
+            {t("PROFILE_CREATE_PROPERTY_ID")}
           </button>
         </div>
       )}

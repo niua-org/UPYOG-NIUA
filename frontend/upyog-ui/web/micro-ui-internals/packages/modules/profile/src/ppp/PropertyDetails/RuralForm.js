@@ -208,20 +208,20 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
     <div style={{ ...styles.container, ...(disabled ? { opacity: 0.9, pointerEvents: "none" } : {}) }}>
       <div style={styles.header}>
         <div style={styles.title}>
-          Register Your Property – Rural
+          {t("PROFILE_REGISTER_PROPERTY_RURAL")}
         </div>
       </div>
 
       <div style={styles.section}>
         <div style={styles.sectionTitle}>
-          1. Property Location
+          {t("PROFILE_PROPERTY_LOCATION")}
         </div>
 
         {/* Row 1 */}
         <div style={styles.fieldRow}>
           {/* Gram Panchayat */}
           <div style={styles.field}>
-            <label style={profileStyles.label}> Gram Panchayat{" "}
+            <label style={profileStyles.label}>{t("PROFILE_GRAM_PANCHAYAT")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
 
@@ -237,7 +237,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           {/* Village */}
           <div style={styles.field}>
             <label style={profileStyles.label}>
-              Village Name{" "}
+              {t("PROFILE_VILLAGE_NAME")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
 
@@ -258,7 +258,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           {/* Ward */}
           <div style={styles.field}>
             <label style={profileStyles.label}>
-              Ward Number{" "}
+              {t("PROFILE_WARD_NUMBER")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
 
@@ -274,7 +274,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           {/* Property Address */}
           <div style={styles.field}>
             <label style={profileStyles.label}>
-              Property Address / Locality{" "}
+              {t("PROFILE_PROPERTY_ADDRESS_LOCALITY")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
 
@@ -292,14 +292,14 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
 
       <div style={styles.section}>
         <div style={styles.sectionTitle}>
-          2. Property Details
+          {t("PROFILE_PROPERTY_DETAILS_SECTION")}
         </div>
 
         {/* Row 1 */}
         <div style={styles.fieldRow}>
           <div style={styles.field}>
             <label style={profileStyles.label}>
-              Property Type{" "}
+              {t("PROFILE_PROPERTY_TYPE")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
             <Dropdown
@@ -313,7 +313,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           {/* Property Usage */}
           <div style={styles.field}>
             <label style={profileStyles.label}>
-              Property Usage{" "}
+              {t("PROFILE_PROPERTY_USAGE")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
             <Dropdown
@@ -335,7 +335,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           <div style={styles.field}>
 
             <label style={profileStyles.label}>
-              Survey Number{" "}
+              {t("PROFILE_SURVEY_NUMBER")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
 
@@ -357,12 +357,12 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
       </div>
       <div style={styles.section}>
         <div style={styles.sectionTitle}>
-          3. Ownership Details
+          {t("PROFILE_OWNERSHIP_DETAILS")}
         </div>
         <div style={styles.fieldRow}>
           <div style={styles.field}>
             <label style={profileStyles.label}>
-              Ownership Type{" "}
+              {t("PROFILE_OWNERSHIP_TYPE")}{" "}
               <span style={profileStyles.required}>*</span>
             </label>
             <RadioButtons
@@ -380,7 +380,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           <div style={styles.jointOwnerSection}>
 
             <div style={styles.jointOwnerTitle}>
-              Joint Owner Details
+              {t("PROFILE_JOINT_OWNER_DETAILS")}
             </div>
 
             <div style={styles.fieldRow}>
@@ -389,7 +389,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
               <div style={styles.field}>
 
                 <label style={profileStyles.label}>
-                  Joint Owner Name{" "}
+                  {t("PROFILE_JOINT_OWNER_NAME")}{" "}
                   <span style={profileStyles.required}>
                     *
                   </span>
@@ -409,7 +409,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
               <div style={styles.field}>
 
                 <label style={profileStyles.label}>
-                  Joint Owner Mobile Number{" "}
+                  {t("PROFILE_JOINT_OWNER_MOBILE")}{" "}
                   <span style={profileStyles.required}>
                     *
                   </span>
@@ -428,7 +428,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
             </div>
 
             <div style={styles.hint}>
-              Additional joint owners can be added if required.
+              {t("PROFILE_JOINT_OWNER_HINT")}
             </div>
 
           </div>
@@ -436,10 +436,10 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
       </div>
       <div style={styles.field}>
         <div style={styles.sectionTitle}>
-          4. Document Uplaod
+          {t("PROFILE_DOCUMENT_UPLOAD")}
         </div>
         <label style={profileStyles.label}>
-          Address Proof{" "}
+          {t("PROFILE_ADDRESS_PROOF")}{" "}
           <span style={profileStyles.required}>*</span>
         </label>
         <Dropdown
@@ -456,7 +456,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           file={propertyDocument}
           message={
             fileUploadError ||
-            (isUploading ? "Uploading..." : propertyDocument?.name || t("PROFILE_NO_FILE_SELECTED"))
+            (isUploading ? t("UPLOADING") : propertyDocument?.name || t("PROFILE_NO_FILE_SELECTED"))
           }
           error={fileUploadError}
           disabled={isUploading}
