@@ -69,6 +69,7 @@ export const buildCreateDocumentPayload = ({ uuid, tenantId, documentType, files
 
 
 // Payload to be used when Create a Family
+///TODO: Need to check as many details we can get from Dynamically
 export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
   console.log("membersListmembersListmembersList", familyDetails);
 
