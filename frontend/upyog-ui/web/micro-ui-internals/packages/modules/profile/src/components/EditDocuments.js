@@ -47,18 +47,13 @@ const INITIAL_FILES = {
 
 const styles = profileStyles.documentUpload;
 
-// Uploaded file preview: icon, file name below it, upload date and a view action
-const UploadedDocTile = ({ doc, onView, t }) => {
-  const isPdf = /\.pdf$/i.test(doc.fileName || "");
-  const uploadedOn = doc.lastModifiedDate?.split(" ")[0]; // "09-11-2026 13:38:46" -> "09-11-2026"
-
-  return (
-    <button type="button" style={styles.fileTile} onClick={onView} title={t("PROFILE_VIEW_DOC")}>
-      {isPdf ? <PDFSvg width={48} height={48} /> : <span style={styles.fileEmoji}>🖼️</span>}
-      <span style={styles.viewLink}>{t("PROFILE_VIEW_DOC")}</span>
-    </button>
-  );
-};
+// Uploaded file preview: icon
+const UploadedDocTile = ({ doc, onView, t }) => (
+  <button type="button" style={styles.fileTile} onClick={onView} title={t("PROFILE_VIEW_DOC")}>
+    <PDFSvg width={48} height={48} />
+    <span style={styles.viewLink}>{t("PROFILE_VIEW_DOC")}</span>
+  </button>
+);
 
 const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   const { t } = useTranslation();
@@ -76,6 +71,13 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
   const [toast, setToast] = useState(null);
 
   const toastTimerRef = useRef(null);
+
+  // Re-sync with UserDetails when page refreshes
+  useEffect(() => {
+    if (userDetails?.documents?.length) {
+      setDocuments(userDetails.documents.filter((doc) => doc.active === true));
+    }
+  }, [userDetails?.documents]);
 
   // Cleanup toast timer on unmount
   useEffect(() => {

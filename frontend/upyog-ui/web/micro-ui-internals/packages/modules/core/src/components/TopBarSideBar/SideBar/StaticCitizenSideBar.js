@@ -19,7 +19,8 @@ import {
   DeathIcon,
   FirenocIcon,
   LoginIcon,
-  CHBIcon
+  CHBIcon,
+  PersonIcon,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { Link, useLocation } from "react-router-dom";
 import SideBarMenu from "../../../config/sidebar-menu";
@@ -101,6 +102,7 @@ const IconsObject = {
   LogoutIcon: <LogoutIcon className="icon" />,
   Phone: <Phone className="icon" />,
   LoginIcon: <LoginIcon className="icon" />,
+  PersonIcon: <PersonIcon className="icon" />
 };
 const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed, closeMobileSidebar }) => {
   const { t } = useTranslation();
@@ -223,14 +225,14 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed,
     menuItems = menuItems.filter((item) => item?.id !== "login-btn" && item?.id !== "help-line");
     menuItems = [
       ...menuItems,
-      {
-        text: t("EDIT_PROFILE"),
-        element: "PROFILE",
-        icon: "EditPencilIcon",
-        populators: {
-          onClick: showProfilePage,
-        },
-      },
+      // {
+      //   text: t("EDIT_PROFILE"),
+      //   element: "PROFILE",
+      //   icon: "EditPencilIcon",
+      //   populators: {
+      //     onClick: showProfilePage,
+      //   },
+      // },
       {
         text: (
           <React.Fragment>
@@ -259,6 +261,13 @@ const StaticCitizenSideBar = ({ linkData, islinkDataLoading, isSidebarCollapsed,
           link: linkData[key][0]?.sidebarURL,
         });
       }
+    });
+
+    menuItems.splice(1, 0, {
+      text: t("CREATE_FAMILY"),
+      element: "PROFILE",
+      icon: "PersonIcon",
+      populators: { onClick: showProfilePage },
     });
 
   return (

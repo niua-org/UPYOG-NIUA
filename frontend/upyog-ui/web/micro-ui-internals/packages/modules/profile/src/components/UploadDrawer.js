@@ -48,11 +48,11 @@ function UploadDrawer({ setProfilePic, closeDrawer, userType, removeProfilePic ,
         <div
           className="core-upload-drawer-fullwidth-2"
         >
-          <label for="file" className="core-upload-drawer-clickable">
+          <label htmlFor="file" className="core-upload-drawer-clickable">
             {" "}
             <GalleryIcon />
           </label>
-          <label className="core-upload-drawer-clickable"> Gallery</label>
+          <label className="core-upload-drawer-clickable">{t("CORE_COMMON_GALLERY")}</label>
           <input type="file" id="file" accept="image/*, .png, .jpeg, .jpg" onChange={selectfile} className="core-upload-drawer-hidden" />
         </div>
 
@@ -62,7 +62,7 @@ function UploadDrawer({ setProfilePic, closeDrawer, userType, removeProfilePic ,
           <button onClick={removeimg}>
             <RemoveIcon />
           </button>
-          <label className="core-upload-drawer-clickable">Remove</label>
+          <label className="core-upload-drawer-clickable">{t("CORE_COMMON_REMOVE")}</label>
         </div>
       </div>
     </React.Fragment>
