@@ -68,150 +68,173 @@ export const buildCreateDocumentPayload = ({ uuid, tenantId, documentType, files
 });
 
 
-// Payload to be used when Create a Family
-///TODO: Need to check as many details we can get from Dynamically
+// Builds the Family Create API payload from familyDetails session data + staged members list
 export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
-  console.log("membersListmembersListmembersList", familyDetails);
-
   const members = membersList || [];
   const finalHeadUuid = selectedHeadUuid || members[0]?.userUuid;
 
   const finalMembers = members.map((member) => {
-    const data = familyDetails[member.userUuid] || {};
-    const p = data.profileDetails || {};
-    const inc = data.income || {};
-    const veh = data.vehicles || {};
-    const prop = data.property || {};
+    const memberData = familyDetails[member.userUuid] || {};
+    const profileDetails = memberData.profileDetails || {};
+    const incomeDetails = memberData.income || {};
+    const vehicleDetails = memberData.vehicles || {};
+    const propertyDetails = memberData.property || {};
 
-    // --- citizenDetails ---
+    // --- Citizen Documents (identity, DOB, caste, disability proofs) ---
+    const citizenDocuments = [
+      profileDetails.identityProofFile?.fileStoreId && {
+        documentType: profileDetails.identityProofType?.code || "IDENTITY_PROOF",
+        filestoreId: profileDetails.identityProofFile.fileStoreId,
+        fileName: profileDetails.identityProofFile.name,
+        referenceType: "CITIZEN_PROFILE",
+        active: true,
+      },
+      profileDetails.birthProofFile?.fileStoreId && {
+        documentType: profileDetails.birthProofType?.code || "DOB_PROOF",
+        filestoreId: profileDetails.birthProofFile.fileStoreId,
+        fileName: profileDetails.birthProofFile.name,
+        referenceType: "CITIZEN_PROFILE",
+        active: true,
+      },
+      profileDetails.casteProof?.fileStoreId && {
+        documentType: profileDetails.casteProofType?.code || "CASTE_CERTIFICATE",
+        filestoreId: profileDetails.casteProof.fileStoreId,
+        fileName: profileDetails.casteProof.name,
+        referenceType: "CITIZEN_PROFILE",
+        active: true,
+      },
+      profileDetails.disabilityProof?.fileStoreId && {
+        documentType: profileDetails.disabilityProofType?.code || "DISABILITY_CERTIFICATE",
+        filestoreId: profileDetails.disabilityProof.fileStoreId,
+        fileName: profileDetails.disabilityProof.name,
+        referenceType: "CITIZEN_PROFILE",
+        active: true,
+      },
+    ].filter(Boolean);
+
+    // --- Citizen Details ---
     const citizenDetails = {
-      name: p.name,
-      gender: p.gender?.code || p.gender,
-      dob: p.dob || undefined,                          // "1995-05-15" as-is, no UTC conversion
-      mobileNumber: p.mobileNumber,
-      alternateMobileNumber: p.altContactNumber,
-      emailId: p.emailId,
-      fatherName: p.fatherName,
-      motherName: p.motherName,
-      spouseName: p.spouseName,
-      guardian: p.guardianName,
-      caste: p.caste?.code,
-      isSpeciallyAbled: p.speciallyAbled?.code === "Yes",
-      documents: [
-        p.identityProofFile?.fileStoreId && {
-          documentType: p.identityProofType?.code || "IDENTITY_PROOF",
-          filestoreId: p.identityProofFile.fileStoreId,
-          fileName: p.identityProofFile.name,
-          referenceType: "CITIZEN_PROFILE",
-        },
-        p.birthProofFile?.fileStoreId && {
-          documentType: p.birthProofType?.code || "DOB_PROOF",
-          filestoreId: p.birthProofFile.fileStoreId,
-          fileName: p.birthProofFile.name,
-          referenceType: "CITIZEN_PROFILE",
-        },
-        p.casteProof?.fileStoreId && {
-          documentType: p.casteProofType?.code || "CASTE_CERTIFICATE",
-          filestoreId: p.casteProof.fileStoreId,
-          fileName: p.casteProof.name,
-          referenceType: "CITIZEN_PROFILE",
-        },
-        p.disabilityProof?.fileStoreId && {
-          documentType: p.disabilityProofType?.code || "DISABILITY_CERTIFICATE",
-          filestoreId: p.disabilityProof.fileStoreId,
-          fileName: p.disabilityProof.name,
-          referenceType: "CITIZEN_PROFILE",
-        },
-      ].filter(Boolean),
+      name: profileDetails.name,
+      gender: profileDetails.gender?.code || profileDetails.gender,
+      dob: profileDetails.dob || undefined,
+      mobileNumber: profileDetails.mobileNumber,
+      alternateMobileNumber: profileDetails.altContactNumber,
+      emailId: profileDetails.emailId,
+      fatherName: profileDetails.fatherName,
+      motherName: profileDetails.motherName,
+      spouseName: profileDetails.spouseName,
+      guardian: profileDetails.guardianName,
+      caste: profileDetails.caste?.code,
+      isSpeciallyAbled: profileDetails.speciallyAbled?.code === "Yes",
+      relationshipWithHead: String(profileDetails.relationshipWithHof?.code || profileDetails.relationshipWithHof || "").toUpperCase().replace(/\s+/g, "_") || undefined,
+      ...(citizenDocuments.length > 0 && { documents: citizenDocuments }),
     };
 
-    // --- income ---
-    const income = inc.annualIncome ? {
-      occupation: inc.occupation?.code || inc.occupation,
-      annualIncome: Number(inc.annualIncome),
-      identifierType: inc.taxIdType?.code,
-      identifierValue: inc.taxIdNumber,
-      isVerified: inc.taxIdValidated || false,
-      ...(inc.uploadedIncomeFile && {
+    // --- Income Details ---
+    const income = incomeDetails.annualIncome ? {
+      occupation: incomeDetails.occupation?.code || incomeDetails.occupation,
+      annualIncome: Number(incomeDetails.annualIncome),
+      identifierType: incomeDetails.taxIdType?.code,
+      identifierValue: incomeDetails.taxIdNumber,
+      isVerified: incomeDetails.taxIdValidated || false,
+      ...(incomeDetails.uploadedIncomeFile && {
         salaryProofDocument: {
           documentType: "SALARY_PROOF",
-          filestoreId: inc.uploadedIncomeFile,
+          filestoreId: incomeDetails.uploadedIncomeFile,
           referenceType: "INCOME",
+          active: true,
         },
       }),
-      ...(inc.uploadedTaxProof && {
+      ...(incomeDetails.uploadedTaxProof && {
         taxProofDocument: {
-          documentType: `${inc.taxIdType?.code || "TAX"}_PROOF`,
-          filestoreId: inc.uploadedTaxProof,
+          documentType: `${incomeDetails.taxIdType?.code || "TAX"}_PROOF`,
+          filestoreId: incomeDetails.uploadedTaxProof,
           referenceType: "INCOME",
+          active: true,
         },
       }),
     } : undefined;
 
-    // --- vehicles ---
-    const vehicles = veh.vehicleNo ? [{
-      vehicleNumber: veh.vehicleNo,
-      purchaseDate: veh.purchaseYear,               // "2026-11-04" as-is
-      vehicleType: veh.vehicleType?.code,
-      vehicleCategory: veh.vehicleCategory?.code,
-      fuelType: veh.fuelType?.code,
-      isVerified: veh.vehicleNoValidated || false,
-      ...(veh.uploadedRCFile && {
+    // --- Vehicle Details ---
+    const vehicles = vehicleDetails.vehicleNo ? [{
+      vehicleNumber: vehicleDetails.vehicleNo,
+      purchaseDate: vehicleDetails.purchaseYear,
+      vehicleType: vehicleDetails.vehicleType?.code,
+      vehicleCategory: vehicleDetails.vehicleCategory?.code,
+      fuelType: vehicleDetails.fuelType?.code,
+      isVerified: vehicleDetails.vehicleNoValidated || false,
+      ...(vehicleDetails.uploadedRCFile && {
         rcDocument: {
           documentType: "VEHICLE_RC",
-          filestoreId: veh.uploadedRCFile,
+          filestoreId: vehicleDetails.uploadedRCFile,
           referenceType: "VEHICLE",
+          active: true,
         },
       }),
     }] : undefined;
 
-    // --- properties ---
+    // --- Property Details (URBAN or RURAL) ---
     let properties;
-    if (prop.localityType === "RURAL") {
+    if (propertyDetails.localityType === "RURAL") {
+      const propertyOwners = [{ ownerType: "INDIVIDUAL", userUuid: member.userUuid, active: true }];
+      if (propertyDetails.ownershipType === "JOINT" && propertyDetails.ownerName) {
+        propertyOwners.push({
+          ownerType: "INDIVIDUAL",
+          ownerName: propertyDetails.ownerName,
+          ownerMobile: propertyDetails.ownerMobile,
+          active: true,
+        });
+      }
       properties = [{
         localityType: "RURAL",
-        ownershipType: prop.ownershipType || "INDIVIDUAL",
+        ownershipType: propertyDetails.ownershipType || "INDIVIDUAL",
         declarationConfirmed: true,
         ruralPropertyDetail: {
-          gramPanchayat: prop.gramPanchayat?.name,
-          villageName: prop.village?.name,
-          wardNumber: prop.ward?.name,
-          propertyAddress: prop.propertyAddress,
-          propertyType: prop.propertyType?.code,
-          propertyUsage: prop.propertyUsage?.code,
-          surveyNumber: prop.surveyNumber,
+          gramPanchayat: propertyDetails.gramPanchayat?.name || propertyDetails.gramPanchayat,
+          villageName: propertyDetails.village?.name || propertyDetails.village,
+          wardNumber: propertyDetails.ward?.name || propertyDetails.ward,
+          propertyAddress: propertyDetails.propertyAddress,
+          propertyType: propertyDetails.propertyType?.code || propertyDetails.propertyType,
+          propertyUsage: propertyDetails.propertyUsage?.code || propertyDetails.propertyUsage,
+          surveyNumber: propertyDetails.surveyNumber,
         },
-        owners: [{ ownerType: "INDIVIDUAL", userUuid: member.userUuid }],
-        ...(prop.propertyDocument?.fileStoreId && {
+        owners: propertyOwners,
+        ...(propertyDetails.propertyDocument?.fileStoreId && {
           document: {
-            documentType: prop.documentType?.code || "PROPERTY_ADDRESS_PROOF",
-            filestoreId: prop.propertyDocument.fileStoreId,
-            fileName: prop.propertyDocument.name,
+            documentType: propertyDetails.documentType?.code || "PROPERTY_ADDRESS_PROOF",
+            filestoreId: propertyDetails.propertyDocument.fileStoreId,
+            fileName: propertyDetails.propertyDocument.name,
             referenceType: "PROPERTY",
+            active: true,
           },
         }),
       }];
-    } else if (prop.localityType === "URBAN" && prop.primaryPropertyId) {
+    } else if (propertyDetails.localityType === "URBAN" && propertyDetails.primaryPropertyId) {
       properties = [{
         localityType: "URBAN",
         ownershipType: "INDIVIDUAL",
         declarationConfirmed: true,
         urbanPropertyDetail: {
-          upyogPropertyId: prop.primaryPropertyId || prop.propertyId,
-          propertyTaxAmount: prop.propertyTaxAmount || 0,
-          urbanAddress: prop.propertyAddress,
+          upyogPropertyId: propertyDetails.primaryPropertyId || propertyDetails.propertyId,
+          propertyTaxAmount: propertyDetails.propertyTaxAmount || 0,
+          urbanAddress: propertyDetails.propertyAddress,
         },
-        owners: [{ ownerType: "INDIVIDUAL", userUuid: member.userUuid }],
+        owners: [{ ownerType: "INDIVIDUAL", userUuid: member.userUuid, active: true }],
       }];
     }
 
     return {
       userUuid: member.userUuid,
-      name: member.name || p.name || "Family Member",
-      relationshipWithHead: member.relationshipWithHead,
+      name: member.name || profileDetails.name,
+      mobileNumber: member.mobileNumber || profileDetails.mobileNumber,
+      gender: profileDetails.gender?.code || profileDetails.gender || member.gender,
+      dob: profileDetails.dob || undefined,
+      photo: profileDetails.photo || undefined,
+      relationshipWithHead: String(member.relationshipWithHead || profileDetails.relationshipWithHof?.code || "").toUpperCase().replace(/\s+/g, "_") || undefined,
       isHead: member.userUuid === finalHeadUuid,
-      isVerified: true,
-      ...(Object.keys(citizenDetails).some((k) => k === "documents" ? citizenDetails.documents.length > 0 : !!citizenDetails[k]) && { citizenDetails }),
+      isVerified: member.isVerified ?? true,
+      active: true,
+      citizenDetails,
       ...(income && { income }),
       ...(vehicles && { vehicles }),
       ...(properties && { properties }),
@@ -219,16 +242,16 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
   });
 
   return {
-    family: {
+    Family: {
       tenantId,
       headUserUuid: finalHeadUuid,
       members: finalMembers,
       workflow: {
-            action: "APPLY",
-            businessService: "FAMILY_REGISTRATION",
-            comment: "",
-            assignees: []
-        },
+        action: "APPLY",
+        businessService: "FAMILY_REGISTRATION",
+        comment: "",
+        assignees: [],
+      },
     },
   };
 };
