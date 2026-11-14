@@ -1,0 +1,251 @@
+name: SonarQube PR Analysis
+on:
+  pull_request:
+    branches: [niua-dev-3.0]
+    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: '0 3 * * 0' # Sundays at 03:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: sonar-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  sonar:
+    name: sonar
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Detect the service
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          # Every Maven module is a candidate (longest matching path wins).
+          # Exclude build output to avoid discovering generated POM files.
+          find . -name pom.xml -not -path '*/target/*' -print \
+            | sed 's#^./##; s#/pom.xml$##' | sort -u > "$RUNNER_TEMP/roots.txt"
+
+          services=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
+            --jq '.[].filename' | awk '
+              NR == FNR { root[++n] = $0; next }
+              {
+                best = ""
+                for (i = 1; i <= n; i++)
+                  if (index($0, root[i] "/") == 1 && length(root[i]) > length(best)) best = root[i]
+                if (best != "") print best
+              }
+            ' "$RUNNER_TEMP/roots.txt" - | sort -u)
+
+          {
+            echo "services<<EOF"
+            echo "$services"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Affected services: $(echo "$services" | tr '\n' ' ')" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+
+          # Frontend apps are the Node projects at frontend/<app> (no pom.xml).
+          # Any change under the app dir (README, Jenkinsfile, web/src, ...) maps to it.
+          if [ -d frontend ]; then
+            find frontend -mindepth 2 -maxdepth 2 -name package.json -not -path '*/node_modules/*' -print \
+              | sed 's#/package.json$##' | sort -u > "$RUNNER_TEMP/fe-roots.txt"
+          else
+            : > "$RUNNER_TEMP/fe-roots.txt"
+          fi
+
+          frontends=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
+            --jq '.[].filename' | awk '
+              NR == FNR { root[++n] = $0; next }
+              {
+                best = ""
+                for (i = 1; i <= n; i++)
+                  if (index($0, root[i] "/") == 1 && length(root[i]) > length(best)) best = root[i]
+                if (best != "") print best
+              }
+            ' "$RUNNER_TEMP/fe-roots.txt" - | sort -u)
+
+          {
+            echo "frontends<<EOF"
+            echo "$frontends"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Affected frontends: $(echo "$frontends" | tr '\n' ' ')" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+
+      - name: Set up Node.js
+        if: steps.detect.outputs.frontends != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build and scan
+        id: scan
+        if: steps.detect.outputs.services != ''
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SERVICES: ${{ steps.detect.outputs.services }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          MVN=(-B -ntp)
+
+          while read -r service; do
+            [ -n "$service" ] || continue
+            echo "::group::scan $service"
+            (
+              cd "$service"
+              project_key=$(printf '%s' "$service" | tr '/_' '-' | tr -cd '[:alnum:]-')
+              mvn "${MVN[@]}" clean package -Dmaven.test.skip=true
+              mvn "${MVN[@]}" org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
+                -Dsonar.projectKey="upyog_${project_key}-pr-$PR" \
+                -Dsonar.projectName="$service" \
+                -Dsonar.qualitygate.wait=true
+            )
+            echo "::endgroup::"
+          done <<< "$SERVICES"
+
+      - name: Scan frontend applications
+        id: scan-frontend
+        if: steps.detect.outputs.frontends != ''
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          FRONTENDS: ${{ steps.detect.outputs.frontends }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          while read -r app; do
+            [ -n "$app" ] || continue
+            # The project lives in <app>/web when present, otherwise at the app root.
+            workdir="$app/web"
+            [ -d "$workdir" ] || workdir="$app"
+            echo "::group::scan $app"
+            (
+              cd "$workdir"
+              project_key=$(printf '%s' "$app" | tr '/_' '-' | tr -cd '[:alnum:]-')
+              npx --yes @sonar/scan \
+                -Dsonar.host.url="$SONAR_HOST_URL" \
+                -Dsonar.token="$SONAR_TOKEN" \
+                -Dsonar.projectKey="upyog_${project_key}-pr-$PR" \
+                -Dsonar.projectName="$app" \
+                -Dsonar.sources=. \
+                -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/build/**,**/public/**,**/coverage/**,**/*.min.js,**/*.test.*,**/*.spec.*,**/__tests__/**" \
+                -Dsonar.qualitygate.wait=true
+            )
+            echo "::endgroup::"
+          done <<< "$FRONTENDS"
+
+      - name: Comment on the pull request
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          OUTCOME: ${{ steps.scan.outcome }}
+          OUTCOME_FE: ${{ steps.scan-frontend.outcome }}
+          SERVICES: ${{ steps.detect.outputs.services }}
+          FRONTENDS: ${{ steps.detect.outputs.frontends }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          PR: ${{ github.event.pull_request.number }}
+        with:
+          script: |
+            const marker = '<!-- sonarqube-pr-analysis -->';
+            const outcomes = [process.env.OUTCOME, process.env.OUTCOME_FE].filter(Boolean);
+            const state = outcomes.includes('failure') ? 'FAILED'
+              : outcomes.includes('success') ? 'PASSED'
+              : 'SKIPPED';
+            const toLinks = (value, label) => value
+              ? value.trim().split('\n').map(project => {
+                  const projectKey = `upyog_${project.replace(/[\/_]/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-pr-${process.env.PR}`;
+                  const url = `${process.env.SONAR_HOST_URL}dashboard?id=${encodeURIComponent(projectKey)}`;
+                  return `- **${project}**: [View SonarQube Scan](${url})`;
+                }).join('\n')
+              : `_No ${label} affected._`;
+
+            const body = [
+              marker,
+              '## SonarQube PR Analysis',
+              '',
+              `**Result: ${state}**`,
+              '',
+              '**Scanned Services:**',
+              toLinks(process.env.SERVICES, 'Maven service'),
+              '',
+              '**Scanned Frontends:**',
+              toLinks(process.env.FRONTENDS, 'frontend app'),
+              '',
+              `[View the job run and logs](${process.env.RUN_URL})`,
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+  # ------------------------------------------------------------------------ #
+  # Weekly remove the ephemeral <key>-pr-<n> projects.
+  # ------------------------------------------------------------------------ #
+  cleanup:
+    name: cleanup
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Delete stale ephemeral projects
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          MAX_AGE_DAYS: ${{ vars.SONAR_CLEANUP_MAX_AGE_DAYS || '14' }}
+          DRY_RUN: ${{ vars.SONAR_CLEANUP_DRY_RUN || 'true' }}
+        run: |
+          set -euo pipefail
+          cutoff=$(date -u -d "-${MAX_AGE_DAYS} days" +%Y-%m-%dT%H:%M:%S%z)
+          page=1
+          while :; do
+            body=$(curl -fsS -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/projects/search?ps=100&p=$page")
+            stale=$(printf '%s' "$body" | jq -r --arg c "$cutoff" '
+              .components[]?
+              | select(.key | test("-pr-[0-9]+$"))
+              | select((.lastAnalysisDate // "1970-01-01T00:00:00+0000") < $c)
+              | .key')
+            for key in $stale; do
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "[dry-run] would delete $key"
+              else
+                curl -fsS -X POST -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/projects/delete" \
+                  --data-urlencode "project=$key" > /dev/null && echo "deleted $key"
+              fi
+            done
+            total=$(printf '%s' "$body" | jq -r '.paging.total')
+            [ $((page * 100)) -ge "$total" ] && break
+            page=$((page + 1))
+          done
