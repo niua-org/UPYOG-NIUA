@@ -15,10 +15,10 @@ import {
   useRecieptSearch,
   useRecieptSearchNew,
   useAssetQrCode,
-  useFamilyQrCode,
   usePaymentSearch,
   useBulkPdfDetails,
 } from "./payment";
+import { useFamilyQrCode } from "./profile/searchfamily";
 import { useUserSearch } from "./userSearch";
 import { useApplicationsForBusinessServiceSearch } from "./useApplicationForBillSearch";
 import useBoundaryLocalities from "./useLocalities";

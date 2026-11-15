@@ -197,10 +197,19 @@ export const useAssetQrCode = ({ tenantId, ...params }, config = {}) => {
   });
 };
 
+/**
+ * Hook to fetch family details for QR code verification.
+ * Moved to hooks/profile/searchfamily.js for profile/family domain consistency; kept here for backward compatibility.
+ * @param {Object} queryProps - Query parameters.
+ * @param {string} queryProps.tenantId - ULB / state tenant identifier.
+ * @param {string} queryProps.familyId - Unique family identifier (e.g. FAM-2026-000064).
+ * @param {Object} [config={}] - Additional react-query configuration.
+ * @returns {Object} React Query result containing family data, loading, and error states.
+ */
 export const useFamilyQrCode = ({ tenantId, ...params }, config = {}) => {
   return queryTemplate({
     queryKey: ["family_Qr_Search", { tenantId, params }, config],
-    queryFn: () => Digit.PaymentService.useFamilyQrCodeService(tenantId, params),
+    queryFn: () => (Digit.UserService?.familySearch ? Digit.UserService.familySearch(tenantId, params) : Digit.PaymentService.useFamilyQrCodeService(tenantId, params)),
     config: {
       enabled: Boolean(tenantId && params?.familyId),
       refetchOnMount: false,
