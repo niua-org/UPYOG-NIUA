@@ -18,6 +18,7 @@ import {
   usePaymentSearch,
   useBulkPdfDetails,
 } from "./payment";
+import { useFamilyQrCode } from "./profile/searchfamily";
 import { useUserSearch } from "./userSearch";
 import { useApplicationsForBusinessServiceSearch } from "./useApplicationForBillSearch";
 import useBoundaryLocalities from "./useLocalities";
@@ -776,6 +777,7 @@ const Hooks = {
   useQueryParams,
   useFetchPayment,
   useAssetQrCode,
+  useFamilyQrCode,
   usePaymentUpdate,
   useFetchCitizenBillsForBuissnessService,
   useFetchBillsForBuissnessService,
