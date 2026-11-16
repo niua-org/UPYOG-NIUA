@@ -3,6 +3,7 @@ package org.egov.user.persistence.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.repository.builder.UserVehicleQueryBuilder;
@@ -205,5 +206,85 @@ public class UserVehicleRepository {
             log.debug("[USER-VEHICLE-REPO] Failed to lookup vehicle owner userUuid: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Retrieves declared citizen vehicle records for the specified citizen user UUID.
+     * Hydrates child Registration Certificate (RC) verification documents.
+     *
+     * @param userUuid citizen user UUID
+     * @param active   optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return list of matching {@link UserVehicle} domain instances
+     */
+    public List<UserVehicle> findVehiclesByUserUuid(String userUuid, Boolean active) {
+        if (StringUtils.isBlank(userUuid)) {
+            return Collections.emptyList();
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("user_uuid", userUuid.trim());
+            String sql = queryBuilder.buildVehiclesByUserQuery(active);
+            return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> {
+                UserDocument rcDoc = null;
+                String rdId = rs.getString("rd_id");
+                if (StringUtils.isNotBlank(rdId)) {
+                    rcDoc = UserDocument.builder()
+                            .id(rdId)
+                            .documentType(rs.getString("rd_document_type"))
+                            .filestoreId(rs.getString("rd_filestore_id"))
+                            .documentUid(rs.getString("rd_document_uid"))
+                            .fileName(rs.getString("rd_file_name"))
+                            .isVerified(rs.getObject("rd_is_verified") != null ? rs.getBoolean("rd_is_verified") : null)
+                            .build();
+                }
+
+                Object additionalDetails = null;
+                String jsonStr = rs.getString("v_additional_details");
+                if (StringUtils.isNotBlank(jsonStr)) {
+                    try {
+                        additionalDetails = objectMapper.readValue(jsonStr, Object.class);
+                    } catch (Exception e) {
+                        log.debug("[USER-VEHICLE-REPO] Unable to deserialize additional_details: {}", e.getMessage());
+                    }
+                }
+
+                Date pDate = rs.getDate("v_purchase_date");
+                String purchaseDateStr = pDate != null ? pDate.toString() : null;
+
+                return UserVehicle.builder()
+                        .id(rs.getString("v_id"))
+                        .userUuid(rs.getString("v_user_uuid"))
+                        .tenantId(rs.getString("v_tenant_id"))
+                        .vehicleNumber(rs.getString("v_vehicle_number"))
+                        .purchaseDate(purchaseDateStr)
+                        .isVerified(rs.getObject("v_is_verified") != null ? rs.getBoolean("v_is_verified") : null)
+                        .validationSource(rs.getString("v_validation_source"))
+                        .rcDocId(rs.getString("v_rc_doc_id"))
+                        .rcDocument(rcDoc)
+                        .vehicleType(rs.getString("v_vehicle_type"))
+                        .makerModel(rs.getString("v_maker_model"))
+                        .fuelType(rs.getString("v_fuel_type"))
+                        .category(rs.getString("v_category"))
+                        .status(rs.getString("v_status"))
+                        .additionalDetails(additionalDetails)
+                        .createdBy(rs.getString("v_created_by"))
+                        .createdTime(rs.getLong("v_created_time"))
+                        .lastModifiedBy(rs.getString("v_last_modified_by"))
+                        .lastModifiedTime(rs.getObject("v_last_modified_time") != null ? rs.getLong("v_last_modified_time") : null)
+                        .build();
+            });
+        } catch (Exception e) {
+            log.error("[USER-VEHICLE-REPO] Failed to lookup vehicles by user UUID {}: {}", userUuid, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Overloaded convenience method retrieving active vehicle declarations for a citizen user UUID.
+     *
+     * @param userUuid citizen user UUID
+     * @return list of active {@link UserVehicle} domain instances
+     */
+    public List<UserVehicle> findVehiclesByUserUuid(String userUuid) {
+        return findVehiclesByUserUuid(userUuid, Boolean.TRUE);
     }
 }

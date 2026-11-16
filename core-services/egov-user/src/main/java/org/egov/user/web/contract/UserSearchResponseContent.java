@@ -17,6 +17,9 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.model.asset.UserIncome;
+import org.egov.user.domain.model.asset.UserProperty;
+import org.egov.user.domain.model.asset.UserVehicle;
 
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 
@@ -69,6 +72,18 @@ public class UserSearchResponseContent {
     @JsonProperty("documents")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<UserDocument> documents;
+
+    @JsonProperty("properties")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<UserProperty> properties;
+
+    @JsonProperty("income")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private UserIncome income;
+
+    @JsonProperty("vehicles")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<UserVehicle> vehicles;
 
     private Boolean active;
     private String locale;
@@ -226,6 +241,18 @@ public class UserSearchResponseContent {
 
         if (includes != null && includes.contains(ProfileIncludeEntity.DOCUMENT)) {
             this.documents = user.getDocuments();
+        }
+
+        if (includes != null && includes.contains(ProfileIncludeEntity.PROPERTY)) {
+            this.properties = user.getProperties();
+        }
+
+        if (includes != null && includes.contains(ProfileIncludeEntity.INCOME)) {
+            this.income = user.getIncome();
+        }
+
+        if (includes != null && includes.contains(ProfileIncludeEntity.VEHICLE)) {
+            this.vehicles = user.getVehicles();
         }
     }
 

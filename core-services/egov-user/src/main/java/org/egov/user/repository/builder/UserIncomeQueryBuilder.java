@@ -57,11 +57,47 @@ public class UserIncomeQueryBuilder {
     public static final String SELECT_INCOME_USER_UUID_BY_ID_SQL =
             "SELECT user_uuid FROM ug_user_income WHERE id = :id";
 
+    public static final String SELECT_INCOME_BY_USER_BASE_SQL =
+            "SELECT i.id as i_id, i.user_uuid as i_user_uuid, i.tenant_id as i_tenant_id, " +
+            "i.occupation as i_occupation, i.annual_income as i_annual_income, " +
+            "i.identifier_type as i_identifier_type, i.identifier_value as i_identifier_value, " +
+            "i.is_verified as i_is_verified, i.verification_source as i_verification_source, " +
+            "i.verification_date as i_verification_date, i.otp_verified as i_otp_verified, " +
+            "i.salary_proof_doc_id as i_salary_proof_doc_id, i.tax_proof_doc_id as i_tax_proof_doc_id, " +
+            "i.status as i_status, i.additional_details as i_additional_details, " +
+            "i.created_by as i_created_by, i.created_time as i_created_time, " +
+            "i.last_modified_by as i_last_modified_by, i.last_modified_time as i_last_modified_time, " +
+            "sd.id as sd_id, sd.document_type as sd_document_type, sd.filestore_id as sd_filestore_id, " +
+            "sd.document_uid as sd_document_uid, sd.file_name as sd_file_name, sd.is_verified as sd_is_verified, " +
+            "td.id as td_id, td.document_type as td_document_type, td.filestore_id as td_filestore_id, " +
+            "td.document_uid as td_document_uid, td.file_name as td_file_name, td.is_verified as td_is_verified " +
+            "FROM ug_user_income i " +
+            "LEFT JOIN ug_user_document sd ON i.salary_proof_doc_id = sd.id " +
+            "LEFT JOIN ug_user_document td ON i.tax_proof_doc_id = td.id " +
+            "WHERE i.user_uuid = :user_uuid";
+
     /**
      * Default constructor for Spring component lifecycle.
      */
     public UserIncomeQueryBuilder() {
         // Default constructor
+    }
+
+    /**
+     * Builds dynamic parameterized SQL query for retrieving citizen income declarations.
+     *
+     * @param active optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return SQL query string
+     */
+    public String buildIncomeByUserQuery(Boolean active) {
+        StringBuilder query = new StringBuilder(SELECT_INCOME_BY_USER_BASE_SQL);
+        if (Boolean.TRUE.equals(active)) {
+            query.append(" AND i.status = 'ACTIVE'");
+        } else if (Boolean.FALSE.equals(active)) {
+            query.append(" AND i.status = 'INACTIVE'");
+        }
+        query.append(" ORDER BY i.created_time DESC LIMIT 1");
+        return query.toString();
     }
 
     /**

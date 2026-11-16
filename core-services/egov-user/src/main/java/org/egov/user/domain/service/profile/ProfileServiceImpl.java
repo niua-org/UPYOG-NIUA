@@ -18,6 +18,9 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.model.asset.UserIncome;
+import org.egov.user.domain.model.asset.UserProperty;
+import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.service.address.AddressMasterDataService;
 import org.egov.user.domain.service.address.AddressService;
@@ -32,7 +35,10 @@ import org.egov.user.util.MaskUtils;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
+import org.egov.user.persistence.repository.UserIncomeRepository;
+import org.egov.user.persistence.repository.UserPropertyRepository;
 import org.egov.user.persistence.repository.UserRepository;
+import org.egov.user.persistence.repository.UserVehicleRepository;
 import org.egov.user.web.contract.UserRequest;
 import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
@@ -109,13 +115,16 @@ public class ProfileServiceImpl implements ProfileService {
     private final AddressService addressService;
     private final UserDocumentService userDocumentService;
     private final FamilyRestRepository familyRestRepository;
+    private final UserPropertyRepository userPropertyRepository;
+    private final UserIncomeRepository userIncomeRepository;
+    private final UserVehicleRepository userVehicleRepository;
     @Autowired(required = false)
     @Setter
     private UserConfiguration userConfiguration;
 
     /**
      * Primary Spring-managed constructor injecting core repositories, validators, modular address/document services,
-     * and optional family REST repository for SSOT familyId enrichment.
+     * optional family REST repository, and citizen asset repositories.
      *
      * @param userRepository              repository for user persistence
      * @param profileValidator            validator for profile request lifecycle rules
@@ -127,6 +136,9 @@ public class ProfileServiceImpl implements ProfileService {
      * @param addressService              service for address lifecycle management
      * @param userDocumentService         service for document proof lifecycle management
      * @param familyRestRepository        repository for family service lookups
+     * @param userPropertyRepository      repository for property asset queries
+     * @param userIncomeRepository        repository for income declaration queries
+     * @param userVehicleRepository       repository for vehicle declaration queries
      */
     @Autowired
     public ProfileServiceImpl(UserRepository userRepository,
@@ -138,8 +150,32 @@ public class ProfileServiceImpl implements ProfileService {
                               @Autowired(required = false) AddressMasterDataService addressMasterDataService,
                               @Autowired(required = false) AddressService addressService,
                               @Autowired(required = false) UserDocumentService userDocumentService,
-                              @Autowired(required = false) FamilyRestRepository familyRestRepository) {
-        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, null, familyRestRepository);
+                              @Autowired(required = false) FamilyRestRepository familyRestRepository,
+                              @Autowired(required = false) UserPropertyRepository userPropertyRepository,
+                              @Autowired(required = false) UserIncomeRepository userIncomeRepository,
+                              @Autowired(required = false) UserVehicleRepository userVehicleRepository) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil,
+                addressRepository, userDocumentRepository, addressMasterDataService, addressService,
+                userDocumentService, null, familyRestRepository,
+                userPropertyRepository, userIncomeRepository, userVehicleRepository);
+    }
+
+    /**
+     * Constructor for backward compatibility with 10 arguments.
+     */
+    public ProfileServiceImpl(UserRepository userRepository,
+                              ProfileValidator profileValidator,
+                              IdentityVerificationService identityVerificationService,
+                              EncryptionDecryptionUtil encryptionDecryptionUtil,
+                              AddressRepository addressRepository,
+                              UserDocumentRepository userDocumentRepository,
+                              AddressMasterDataService addressMasterDataService,
+                              AddressService addressService,
+                              UserDocumentService userDocumentService,
+                              FamilyRestRepository familyRestRepository) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil,
+                addressRepository, userDocumentRepository, addressMasterDataService, addressService,
+                userDocumentService, null, familyRestRepository, null, null, null);
     }
 
     /**
@@ -154,7 +190,9 @@ public class ProfileServiceImpl implements ProfileService {
                               AddressMasterDataService addressMasterDataService,
                               AddressService addressService,
                               UserDocumentService userDocumentService) {
-        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, null, null);
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil,
+                addressRepository, userDocumentRepository, addressMasterDataService, addressService,
+                userDocumentService, null, null, null, null, null);
     }
 
     /**
@@ -170,7 +208,28 @@ public class ProfileServiceImpl implements ProfileService {
                               AddressService addressService,
                               UserDocumentService userDocumentService,
                               UserConfiguration userConfiguration) {
-        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil, addressRepository, userDocumentRepository, addressMasterDataService, addressService, userDocumentService, userConfiguration, null);
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil,
+                addressRepository, userDocumentRepository, addressMasterDataService, addressService,
+                userDocumentService, userConfiguration, null, null, null, null);
+    }
+
+    /**
+     * Constructor including 11 dependencies.
+     */
+    public ProfileServiceImpl(UserRepository userRepository,
+                              ProfileValidator profileValidator,
+                              IdentityVerificationService identityVerificationService,
+                              EncryptionDecryptionUtil encryptionDecryptionUtil,
+                              AddressRepository addressRepository,
+                              UserDocumentRepository userDocumentRepository,
+                              AddressMasterDataService addressMasterDataService,
+                              AddressService addressService,
+                              UserDocumentService userDocumentService,
+                              UserConfiguration userConfiguration,
+                              FamilyRestRepository familyRestRepository) {
+        this(userRepository, profileValidator, identityVerificationService, encryptionDecryptionUtil,
+                addressRepository, userDocumentRepository, addressMasterDataService, addressService,
+                userDocumentService, userConfiguration, familyRestRepository, null, null, null);
     }
 
     /**
@@ -186,7 +245,10 @@ public class ProfileServiceImpl implements ProfileService {
                               AddressService addressService,
                               UserDocumentService userDocumentService,
                               UserConfiguration userConfiguration,
-                              FamilyRestRepository familyRestRepository) {
+                              FamilyRestRepository familyRestRepository,
+                              UserPropertyRepository userPropertyRepository,
+                              UserIncomeRepository userIncomeRepository,
+                              UserVehicleRepository userVehicleRepository) {
         this.userRepository = userRepository;
         this.profileValidator = profileValidator;
         this.identityVerificationService = identityVerificationService;
@@ -198,6 +260,9 @@ public class ProfileServiceImpl implements ProfileService {
         this.userDocumentService = userDocumentService;
         this.userConfiguration = userConfiguration;
         this.familyRestRepository = familyRestRepository;
+        this.userPropertyRepository = userPropertyRepository;
+        this.userIncomeRepository = userIncomeRepository;
+        this.userVehicleRepository = userVehicleRepository;
     }
 
     /**
@@ -413,8 +478,8 @@ public class ProfileServiceImpl implements ProfileService {
                         .documentType(UserConstants.DOC_TYPE_ADDRESS_PROOF)
                         .filestoreId(finalAddr.getFilestoreId())
                         .active(true)
-                        .createdBy(savedUser.getId())
-                        .lastModifiedBy(savedUser.getId())
+                        .createdBy(savedUser.getUuid())
+                        .lastModifiedBy(savedUser.getUuid())
                         .build();
                 userDocumentRepository.create(addrDoc);
             }
@@ -430,8 +495,8 @@ public class ProfileServiceImpl implements ProfileService {
                     doc.setUserId(savedUser.getId());
                     doc.setUserUuid(savedUser.getUuid());
                     doc.setTenantId(userDocTenant);
-                    doc.setCreatedBy(savedUser.getId());
-                    doc.setLastModifiedBy(savedUser.getId());
+                    doc.setCreatedBy(savedUser.getUuid());
+                    doc.setLastModifiedBy(savedUser.getUuid());
                     if (doc.getActive() == null) {
                         doc.setActive(true);
                     }
@@ -451,8 +516,8 @@ public class ProfileServiceImpl implements ProfileService {
                     .documentType("ADDRESS_PROOF")
                     .filestoreId(request.getAddressProofFileStoreId())
                     .active(true)
-                    .createdBy(savedUser.getId())
-                    .lastModifiedBy(savedUser.getId())
+                    .createdBy(savedUser.getUuid())
+                    .lastModifiedBy(savedUser.getUuid())
                     .build();
             userDocumentRepository.create(doc);
         }
@@ -465,8 +530,8 @@ public class ProfileServiceImpl implements ProfileService {
                     .documentType("IDENTITY_PROOF")
                     .filestoreId(request.getIdentityProofFileStoreId())
                     .active(true)
-                    .createdBy(savedUser.getId())
-                    .lastModifiedBy(savedUser.getId())
+                    .createdBy(savedUser.getUuid())
+                    .lastModifiedBy(savedUser.getUuid())
                     .build();
             userDocumentRepository.create(doc);
         }
@@ -479,8 +544,8 @@ public class ProfileServiceImpl implements ProfileService {
                     .documentType("DOB_PROOF")
                     .filestoreId(request.getDobProofFileStoreId())
                     .active(true)
-                    .createdBy(savedUser.getId())
-                    .lastModifiedBy(savedUser.getId())
+                    .createdBy(savedUser.getUuid())
+                    .lastModifiedBy(savedUser.getUuid())
                     .build();
             userDocumentRepository.create(doc);
         }
@@ -822,8 +887,11 @@ public class ProfileServiceImpl implements ProfileService {
 
         boolean includeAddresses = includes.contains(ProfileIncludeEntity.ADDRESS);
         boolean includeDocuments = includes.contains(ProfileIncludeEntity.DOCUMENT);
+        boolean includeProperties = includes.contains(ProfileIncludeEntity.PROPERTY);
+        boolean includeIncome = includes.contains(ProfileIncludeEntity.INCOME);
+        boolean includeVehicles = includes.contains(ProfileIncludeEntity.VEHICLE);
 
-        if (!includeAddresses && !includeDocuments) {
+        if (!includeAddresses && !includeDocuments && !includeProperties && !includeIncome && !includeVehicles) {
             return;
         }
 
@@ -924,6 +992,81 @@ public class ProfileServiceImpl implements ProfileService {
                         throw (CustomException) e;
                     }
                     throw new CustomException("DOCUMENT_ENRICHMENT_FAILED", "Failed to enrich document proofs for citizen profile search: " + e.getMessage());
+                }
+            }
+        }
+
+        if (includeProperties) {
+            try {
+                if (userPropertyRepository != null) {
+                    List<UserProperty> properties = userPropertyRepository.findPropertiesByUserUuid(user.getUuid(), active);
+                    if (!CollectionUtils.isEmpty(properties)) {
+                        user.setProperties(properties);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error enriching properties for profile search: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("PROPERTY_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich property details for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) {
+                        throw (CustomException) e;
+                    }
+                    throw new CustomException("PROPERTY_ENRICHMENT_FAILED", "Failed to enrich property details for citizen profile search: " + e.getMessage());
+                }
+            }
+        }
+
+        if (includeIncome) {
+            try {
+                if (userIncomeRepository != null) {
+                    UserIncome income = userIncomeRepository.findActiveIncomeByUserUuid(user.getUuid(), active);
+                    if (income != null) {
+                        user.setIncome(income);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error enriching income for profile search: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("INCOME_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich income details for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) {
+                        throw (CustomException) e;
+                    }
+                    throw new CustomException("INCOME_ENRICHMENT_FAILED", "Failed to enrich income details for citizen profile search: " + e.getMessage());
+                }
+            }
+        }
+
+        if (includeVehicles) {
+            try {
+                if (userVehicleRepository != null) {
+                    List<UserVehicle> vehicles = userVehicleRepository.findVehiclesByUserUuid(user.getUuid(), active);
+                    if (!CollectionUtils.isEmpty(vehicles)) {
+                        user.setVehicles(vehicles);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error enriching vehicles for profile search: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("VEHICLE_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich vehicle details for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) {
+                        throw (CustomException) e;
+                    }
+                    throw new CustomException("VEHICLE_ENRICHMENT_FAILED", "Failed to enrich vehicle details for citizen profile search: " + e.getMessage());
                 }
             }
         }

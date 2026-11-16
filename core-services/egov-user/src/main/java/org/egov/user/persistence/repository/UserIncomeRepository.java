@@ -3,6 +3,7 @@ package org.egov.user.persistence.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.asset.UserIncome;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.repository.builder.UserIncomeQueryBuilder;
@@ -177,5 +178,98 @@ public class UserIncomeRepository {
             log.debug("[USER-INCOME-REPO] Failed to lookup income owner userUuid: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Retrieves declared citizen income record for the specified citizen user UUID.
+     * Hydrates child salary and tax proof verification documents.
+     *
+     * @param userUuid citizen user UUID
+     * @param active   optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return {@link UserIncome} domain instance or null if not found
+     */
+    public UserIncome findActiveIncomeByUserUuid(String userUuid, Boolean active) {
+        if (StringUtils.isBlank(userUuid)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("user_uuid", userUuid.trim());
+            String sql = queryBuilder.buildIncomeByUserQuery(active);
+            List<UserIncome> list = namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> {
+                UserDocument salaryDoc = null;
+                String sdId = rs.getString("sd_id");
+                if (StringUtils.isNotBlank(sdId)) {
+                    salaryDoc = UserDocument.builder()
+                            .id(sdId)
+                            .documentType(rs.getString("sd_document_type"))
+                            .filestoreId(rs.getString("sd_filestore_id"))
+                            .documentUid(rs.getString("sd_document_uid"))
+                            .fileName(rs.getString("sd_file_name"))
+                            .isVerified(rs.getObject("sd_is_verified") != null ? rs.getBoolean("sd_is_verified") : null)
+                            .build();
+                }
+
+                UserDocument taxDoc = null;
+                String tdId = rs.getString("td_id");
+                if (StringUtils.isNotBlank(tdId)) {
+                    taxDoc = UserDocument.builder()
+                            .id(tdId)
+                            .documentType(rs.getString("td_document_type"))
+                            .filestoreId(rs.getString("td_filestore_id"))
+                            .documentUid(rs.getString("td_document_uid"))
+                            .fileName(rs.getString("td_file_name"))
+                            .isVerified(rs.getObject("td_is_verified") != null ? rs.getBoolean("td_is_verified") : null)
+                            .build();
+                }
+
+                Object additionalDetails = null;
+                String jsonStr = rs.getString("i_additional_details");
+                if (StringUtils.isNotBlank(jsonStr)) {
+                    try {
+                        additionalDetails = objectMapper.readValue(jsonStr, Object.class);
+                    } catch (Exception e) {
+                        log.debug("[USER-INCOME-REPO] Unable to deserialize additional_details: {}", e.getMessage());
+                    }
+                }
+
+                return UserIncome.builder()
+                        .id(rs.getString("i_id"))
+                        .userUuid(rs.getString("i_user_uuid"))
+                        .tenantId(rs.getString("i_tenant_id"))
+                        .occupation(rs.getString("i_occupation"))
+                        .annualIncome(rs.getBigDecimal("i_annual_income"))
+                        .identifierType(rs.getString("i_identifier_type"))
+                        .identifierValue(rs.getString("i_identifier_value"))
+                        .isVerified(rs.getObject("i_is_verified") != null ? rs.getBoolean("i_is_verified") : null)
+                        .verificationSource(rs.getString("i_verification_source"))
+                        .verificationDate(rs.getObject("i_verification_date") != null ? rs.getLong("i_verification_date") : null)
+                        .otpVerified(rs.getObject("i_otp_verified") != null ? rs.getBoolean("i_otp_verified") : null)
+                        .salaryProofDocId(rs.getString("i_salary_proof_doc_id"))
+                        .salaryProofDocument(salaryDoc)
+                        .taxProofDocId(rs.getString("i_tax_proof_doc_id"))
+                        .taxProofDocument(taxDoc)
+                        .status(rs.getString("i_status"))
+                        .additionalDetails(additionalDetails)
+                        .createdBy(rs.getString("i_created_by"))
+                        .createdTime(rs.getLong("i_created_time"))
+                        .lastModifiedBy(rs.getString("i_last_modified_by"))
+                        .lastModifiedTime(rs.getObject("i_last_modified_time") != null ? rs.getLong("i_last_modified_time") : null)
+                        .build();
+            });
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.error("[USER-INCOME-REPO] Failed to lookup income by user UUID {}: {}", userUuid, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Overloaded convenience method retrieving active income declaration for a citizen user UUID.
+     *
+     * @param userUuid citizen user UUID
+     * @return active {@link UserIncome} domain instance or null
+     */
+    public UserIncome findActiveIncomeByUserUuid(String userUuid) {
+        return findActiveIncomeByUserUuid(userUuid, Boolean.TRUE);
     }
 }

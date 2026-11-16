@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -78,5 +79,13 @@ class UserVehicleRepositoryTest {
         assertEquals("LMV", capturedParams.get("category"));
         assertEquals("PB02AB1234", capturedParams.get("vehicle_number"));
         assertEquals("Tata Nexon EV", capturedParams.get("maker_model"));
+    }
+
+    @Test
+    @DisplayName("findVehiclesByUserUuid should return empty list when userUuid is blank")
+    void testFindVehiclesByUserUuid_BlankUserUuid() {
+        List<UserVehicle> result = vehicleRepository.findVehiclesByUserUuid("  ");
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 }

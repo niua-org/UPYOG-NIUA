@@ -52,11 +52,44 @@ public class UserVehicleQueryBuilder {
     public static final String SELECT_VEHICLE_USER_UUID_BY_ID_SQL =
             "SELECT user_uuid FROM ug_user_vehicle WHERE id = :id";
 
+    public static final String SELECT_VEHICLES_BY_USER_BASE_SQL =
+            "SELECT v.id as v_id, v.user_uuid as v_user_uuid, v.tenant_id as v_tenant_id, " +
+            "v.vehicle_number as v_vehicle_number, v.purchase_date as v_purchase_date, " +
+            "v.is_verified as v_is_verified, v.validation_source as v_validation_source, " +
+            "v.rc_doc_id as v_rc_doc_id, v.vehicle_type as v_vehicle_type, " +
+            "v.maker_model as v_maker_model, v.fuel_type as v_fuel_type, " +
+            "v.category as v_category, v.status as v_status, " +
+            "v.additional_details as v_additional_details, " +
+            "v.created_by as v_created_by, v.created_time as v_created_time, " +
+            "v.last_modified_by as v_last_modified_by, v.last_modified_time as v_last_modified_time, " +
+            "rd.id as rd_id, rd.document_type as rd_document_type, rd.filestore_id as rd_filestore_id, " +
+            "rd.document_uid as rd_document_uid, rd.file_name as rd_file_name, rd.is_verified as rd_is_verified " +
+            "FROM ug_user_vehicle v " +
+            "LEFT JOIN ug_user_document rd ON v.rc_doc_id = rd.id " +
+            "WHERE v.user_uuid = :user_uuid";
+
     /**
      * Default constructor for Spring component lifecycle.
      */
     public UserVehicleQueryBuilder() {
         // Default constructor
+    }
+
+    /**
+     * Builds dynamic parameterized SQL query for retrieving citizen vehicle ownership declarations.
+     *
+     * @param active optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return SQL query string
+     */
+    public String buildVehiclesByUserQuery(Boolean active) {
+        StringBuilder query = new StringBuilder(SELECT_VEHICLES_BY_USER_BASE_SQL);
+        if (Boolean.TRUE.equals(active)) {
+            query.append(" AND v.status = 'ACTIVE'");
+        } else if (Boolean.FALSE.equals(active)) {
+            query.append(" AND v.status = 'INACTIVE'");
+        }
+        query.append(" ORDER BY v.created_time DESC");
+        return query.toString();
     }
 
     /**

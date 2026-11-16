@@ -158,19 +158,29 @@ public class UserDocumentRepository {
     }
 
     /**
+     * Soft-deletes a document by marking {@code active = false} and auditing the actor UUID.
+     *
+     * @param id        the document identifier
+     * @param actorUuid the UUID of the user performing the deletion
+     */
+    public void delete(String id, String actorUuid) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", id);
+        params.put("lastmodifiedby", actorUuid);
+        params.put("lastmodifieddate", new Date());
+
+        log.debug("[USER-DOC-REPO] Executing soft delete for document ID: {}, actorUuid: {}", id, actorUuid);
+        namedParameterJdbcTemplate.update(queryBuilder.getSoftDeleteQuery(), params);
+    }
+
+    /**
      * Soft-deletes a document by marking {@code active = false} and auditing the actor.
      *
      * @param id     the document identifier
      * @param userId the ID of the user performing the deletion
      */
     public void delete(String id, Long userId) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        params.put("lastmodifiedby", userId);
-        params.put("lastmodifieddate", new Date());
-
-        log.debug("[USER-DOC-REPO] Executing soft delete for document ID: {}", id);
-        namedParameterJdbcTemplate.update(queryBuilder.getSoftDeleteQuery(), params);
+        delete(id, userId != null ? userId.toString() : null);
     }
 
     /**
@@ -233,9 +243,9 @@ public class UserDocumentRepository {
                 .active(rs.getBoolean("active"))
                 .referenceType(referenceType)
                 .referenceId(referenceId)
-                .createdBy(rs.getLong("createdby"))
+                .createdBy(rs.getString("createdby"))
                 .createdDate(rs.getTimestamp("createddate"))
-                .lastModifiedBy(rs.getLong("lastmodifiedby"))
+                .lastModifiedBy(rs.getString("lastmodifiedby"))
                 .lastModifiedDate(rs.getTimestamp("lastmodifieddate"))
                 .additionalDetails(deserializeJson(rs.getString("additional_details")))
                 .build();

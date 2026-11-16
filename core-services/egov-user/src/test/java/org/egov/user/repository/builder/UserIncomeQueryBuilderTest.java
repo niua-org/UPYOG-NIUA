@@ -1,0 +1,64 @@
+package org.egov.user.repository.builder;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Unit tests verifying SQL query generation in {@link UserIncomeQueryBuilder}.
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
+ */
+public class UserIncomeQueryBuilderTest {
+
+    private UserIncomeQueryBuilder queryBuilder;
+
+    @BeforeEach
+    public void setUp() {
+        queryBuilder = new UserIncomeQueryBuilder();
+    }
+
+    @Test
+    @DisplayName("Should build income by user query with active status filter")
+    public void testBuildIncomeByUserQuery_Active() {
+        String sql = queryBuilder.buildIncomeByUserQuery(true);
+        assertNotNull(sql);
+        assertTrue(sql.contains("WHERE i.user_uuid = :user_uuid"));
+        assertTrue(sql.contains("AND i.status = 'ACTIVE'"));
+        assertTrue(sql.contains("ORDER BY i.created_time DESC LIMIT 1"));
+    }
+
+    @Test
+    @DisplayName("Should build income by user query with inactive status filter")
+    public void testBuildIncomeByUserQuery_Inactive() {
+        String sql = queryBuilder.buildIncomeByUserQuery(false);
+        assertNotNull(sql);
+        assertTrue(sql.contains("WHERE i.user_uuid = :user_uuid"));
+        assertTrue(sql.contains("AND i.status = 'INACTIVE'"));
+        assertTrue(sql.contains("ORDER BY i.created_time DESC LIMIT 1"));
+    }
+
+    @Test
+    @DisplayName("Should build income by user query without status filter when active is null")
+    public void testBuildIncomeByUserQuery_AllStatus() {
+        String sql = queryBuilder.buildIncomeByUserQuery(null);
+        assertNotNull(sql);
+        assertTrue(sql.contains("WHERE i.user_uuid = :user_uuid"));
+        assertFalse(sql.contains("AND i.status ="));
+        assertTrue(sql.contains("ORDER BY i.created_time DESC LIMIT 1"));
+    }
+
+    @Test
+    @DisplayName("Should return valid static insert and audit SQL queries")
+    public void testStaticQueries() {
+        assertNotNull(queryBuilder.getInsertIncomeQuery());
+        assertTrue(queryBuilder.getInsertIncomeQuery().contains("INSERT INTO ug_user_income"));
+        assertNotNull(queryBuilder.getInsertIncomeAuditQuery());
+        assertTrue(queryBuilder.getInsertIncomeAuditQuery().contains("INSERT INTO ug_user_income_audit"));
+    }
+}

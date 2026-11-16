@@ -429,4 +429,17 @@ public final class UserConstants {
     public static final String MSG_AADHAAR_OTP_MAX_ATTEMPTS_NOT_CONFIGURED = "aadhaar.otp.max.attempts is not configured";
     public static final String GENDER_FEMALE_CODE = "F";
     public static final String DEFAULT_MOCK_DOB = "1990-01-01";
+
+    // =========================================================================
+    // 13. Rural Property & Asset CRUD Constants
+    // =========================================================================
+    public static final String STATUS_INACTIVE_UPPERCASE = "INACTIVE";
+    public static final String STATUS_ALL = "ALL";
+    public static final String ERROR_PROPERTY_NOT_FOUND = "PROPERTY_NOT_FOUND";
+    public static final String ERROR_INVALID_PROPERTY_REQUEST = "INVALID_PROPERTY_REQUEST";
+    public static final String ERROR_RURAL_PROPERTY_MANDATORY_FIELDS = "RURAL_PROPERTY_MANDATORY_FIELDS";
+    public static final String MSG_RURAL_MANDATORY_FIELDS = "gramPanchayat, villageName, and tenantId are mandatory for rural property declarations";
+    public static final String MSG_PROPERTY_NOT_FOUND = "Rural property not found with ID: ";
+    public static final String MSG_PROPERTY_ACCESS_DENIED = "Unauthorized access: Property does not belong to specified citizen";
+    public static final String MSG_PROPERTY_DEACTIVATED_SUCCESS = "Rural property marked as inactive successfully";
 }

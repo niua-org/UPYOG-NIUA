@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
-import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.UserSearchCriteria;
@@ -53,42 +52,27 @@ public class MemberAssetProcessor {
     private final UserIncomeRepository incomeRepository;
     private final UserVehicleRepository vehicleRepository;
     private final UserDocumentRepository documentRepository;
-    private final UserConfiguration userConfiguration;
 
     /**
-     * Primary constructor injecting persistence repositories and centralized configuration.
+     * Primary constructor injecting persistence repositories.
      *
      * @param userRepository     repository for querying and updating user demographic records
      * @param propertyRepository repository for persisting 3NF property assets and ownership
      * @param incomeRepository   repository for persisting citizen income declarations
      * @param vehicleRepository  repository for persisting declared vehicle assets
      * @param documentRepository repository for persisting user documents and verification statuses
-     * @param userConfiguration  centralized configuration for system actor audit constants
      */
     @Autowired
     public MemberAssetProcessor(UserRepository userRepository,
                                 UserPropertyRepository propertyRepository,
                                 UserIncomeRepository incomeRepository,
                                 UserVehicleRepository vehicleRepository,
-                                UserDocumentRepository documentRepository,
-                                @Autowired(required = false) UserConfiguration userConfiguration) {
+                                UserDocumentRepository documentRepository) {
         this.userRepository = userRepository;
         this.propertyRepository = propertyRepository;
         this.incomeRepository = incomeRepository;
         this.vehicleRepository = vehicleRepository;
         this.documentRepository = documentRepository;
-        this.userConfiguration = userConfiguration;
-    }
-
-    /**
-     * Backwards-compatible constructor for testing and manual wiring.
-     */
-    public MemberAssetProcessor(UserRepository userRepository,
-                                UserPropertyRepository propertyRepository,
-                                UserIncomeRepository incomeRepository,
-                                UserVehicleRepository vehicleRepository,
-                                UserDocumentRepository documentRepository) {
-        this(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository, null);
     }
 
     /**
@@ -154,7 +138,7 @@ public class MemberAssetProcessor {
         }
 
         // 2. Persist attached citizen documents (e.g. Caste certificate, Aadhaar, DOB proof)
-        int docsSynced = persistCitizenDocuments(memberDetail, existingUser, actorId);
+        int docsSynced = persistCitizenDocuments(memberDetail, existingUser, actorUuid);
 
         // 3. Persist declared property assets (Rural and Urban with co-owners)
         List<String> propertyIds = persistProperties(memberDetail, existingUser, actorId, actorUuid);
@@ -264,7 +248,7 @@ public class MemberAssetProcessor {
      * @param actorId      numeric user ID of the updater
      * @return count of successfully persisted documents
      */
-    private int persistCitizenDocuments(MemberAssetDetail detail, User existingUser, Long actorId) {
+    private int persistCitizenDocuments(MemberAssetDetail detail, User existingUser, String actorUuid) {
         List<UserDocument> documents = detail.resolveAllDocuments();
         if (CollectionUtils.isEmpty(documents)) {
             return 0;
@@ -286,8 +270,8 @@ public class MemberAssetProcessor {
             if (StringUtils.isBlank(doc.getReferenceId())) {
                 doc.setReferenceId(existingUser.getUuid());
             }
-            doc.setCreatedBy(actorId);
-            doc.setLastModifiedBy(actorId);
+            doc.setCreatedBy(actorUuid);
+            doc.setLastModifiedBy(actorUuid);
             documentRepository.create(doc);
             count++;
         }
@@ -355,8 +339,8 @@ public class MemberAssetProcessor {
                 doc.setTenantId(prop.getTenantId());
                 doc.setReferenceType(UserConstants.DOC_REF_TYPE_PROPERTY);
                 doc.setReferenceId(prop.getId());
-                doc.setCreatedBy(actorId);
-                doc.setLastModifiedBy(actorId);
+                doc.setCreatedBy(actorUuid);
+                doc.setLastModifiedBy(actorUuid);
                 documentRepository.create(doc);
                 prop.setDocumentId(doc.getId());
             }
@@ -449,8 +433,8 @@ public class MemberAssetProcessor {
             sDoc.setTenantId(income.getTenantId());
             sDoc.setReferenceType(UserConstants.DOC_REF_TYPE_INCOME_SALARY);
             sDoc.setReferenceId(income.getId());
-            sDoc.setCreatedBy(actorId);
-            sDoc.setLastModifiedBy(actorId);
+            sDoc.setCreatedBy(actorUuid);
+            sDoc.setLastModifiedBy(actorUuid);
             documentRepository.create(sDoc);
             income.setSalaryProofDocId(sDoc.getId());
         }
@@ -463,8 +447,8 @@ public class MemberAssetProcessor {
             tDoc.setTenantId(income.getTenantId());
             tDoc.setReferenceType(UserConstants.DOC_REF_TYPE_INCOME_TAX);
             tDoc.setReferenceId(income.getId());
-            tDoc.setCreatedBy(actorId);
-            tDoc.setLastModifiedBy(actorId);
+            tDoc.setCreatedBy(actorUuid);
+            tDoc.setLastModifiedBy(actorUuid);
             documentRepository.create(tDoc);
             income.setTaxProofDocId(tDoc.getId());
         }
@@ -529,8 +513,8 @@ public class MemberAssetProcessor {
                 rcDoc.setTenantId(veh.getTenantId());
                 rcDoc.setReferenceType(UserConstants.DOC_REF_TYPE_VEHICLE_RC);
                 rcDoc.setReferenceId(veh.getId());
-                rcDoc.setCreatedBy(actorId);
-                rcDoc.setLastModifiedBy(actorId);
+                rcDoc.setCreatedBy(actorUuid);
+                rcDoc.setLastModifiedBy(actorUuid);
                 documentRepository.create(rcDoc);
                 veh.setRcDocId(rcDoc.getId());
             }
@@ -558,38 +542,25 @@ public class MemberAssetProcessor {
     }
 
     /**
-     * Resolves the audit actor numeric ID and UUID strictly from {@link RequestInfo#getUserInfo()} or {@link UserConfiguration}.
-     * Fixes PR Comment #4 by guaranteeing that audit columns ({@code createdby}, {@code lastmodifiedby})
-     * are never attributed to the target citizen whose assets are being synchronized, and eliminates
-     * inline fallback default values.
-     *
-     * <p>If caller details are absent in {@code RequestInfo}:</p>
-     * <ul>
-     *   <li>If {@code user.member.asset.sync.require.caller=true}, rejects the request with {@code CALLER_INFO_REQUIRED}.</li>
-     *   <li>Otherwise, retrieves configured system actor credentials from {@link UserConfiguration}.</li>
-     * </ul>
+     * Resolves the audit actor numeric ID and UUID strictly from {@link RequestInfo#getUserInfo()}.
+     * Enforces strict caller authentication so that citizen asset declarations and demographic updates
+     * cannot be executed anonymously or masked under generic system actor credentials.
      *
      * @param request synchronization request containing request context
      * @return resolved audit actor credentials
+     * @throws CustomException if {@code requestInfo}, {@code userInfo}, or {@code uuid} is missing
      */
     private AuditActor resolveAuditActor(MemberAssetSyncRequest request) {
-        Long configuredSystemId = (userConfiguration != null) ? userConfiguration.getSystemActorId() : null;
-        String configuredSystemUuid = (userConfiguration != null) ? userConfiguration.getSystemActorUuid() : null;
-        boolean requireCaller = userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getRequireCallerForSync());
-
-        if (request == null || request.getRequestInfo() == null || request.getRequestInfo().getUserInfo() == null) {
-            if (requireCaller) {
-                log.error("[MEMBER-ASSET-PROCESSOR] Caller userInfo is missing in RequestInfo and requireCallerForSync is enforced");
-                throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
-            }
-            log.info("[MEMBER-ASSET-PROCESSOR] RequestInfo.userInfo is missing caller details. Using configured system actor: id={}, uuid={}",
-                    configuredSystemId, configuredSystemUuid);
-            return new AuditActor(configuredSystemId, configuredSystemUuid);
+        if (request == null || request.getRequestInfo() == null || request.getRequestInfo().getUserInfo() == null
+                || StringUtils.isBlank(request.getRequestInfo().getUserInfo().getUuid())
+                || request.getRequestInfo().getUserInfo().getId() == null) {
+            log.error("[MEMBER-ASSET-PROCESSOR] Caller userInfo (both id and uuid) is mandatory in RequestInfo for member asset synchronization");
+            throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
         }
 
         var userInfo = request.getRequestInfo().getUserInfo();
-        Long actorId = userInfo.getId() != null ? userInfo.getId() : configuredSystemId;
-        String actorUuid = StringUtils.isNotBlank(userInfo.getUuid()) ? userInfo.getUuid() : configuredSystemUuid;
+        String actorUuid = userInfo.getUuid().trim();
+        Long actorId = userInfo.getId();
 
         return new AuditActor(actorId, actorUuid);
     }
