@@ -11,6 +11,7 @@ import org.egov.user.domain.model.asset.PropertyOwner;
 import org.egov.user.domain.model.asset.RuralPropertyDetail;
 import org.egov.user.domain.model.asset.UserProperty;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.persistence.repository.IdGenRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserPropertyRepository;
 import org.egov.user.persistence.repository.UserRepository;
@@ -46,21 +47,38 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
     private final UserPropertyRepository propertyRepository;
     private final UserRepository userRepository;
     private final UserDocumentRepository documentRepository;
+    private final IdGenRepository idGenRepository;
 
     /**
-     * Constructs {@link RuralPropertyServiceImpl} with required persistence repositories.
+     * Constructs {@link RuralPropertyServiceImpl} with required persistence repositories and optional IdGen repository.
+     *
+     * @param propertyRepository persistence repository for 3NF property tables
+     * @param userRepository     repository for querying citizen user existence
+     * @param documentRepository repository for storing attached title and verification documents
+     * @param idGenRepository     repository for generating formatted sequential rural property IDs
+     */
+    @Autowired
+    public RuralPropertyServiceImpl(UserPropertyRepository propertyRepository,
+                                    UserRepository userRepository,
+                                    UserDocumentRepository documentRepository,
+                                    @Autowired(required = false) IdGenRepository idGenRepository) {
+        this.propertyRepository = propertyRepository;
+        this.userRepository = userRepository;
+        this.documentRepository = documentRepository;
+        this.idGenRepository = idGenRepository;
+    }
+
+    /**
+     * Testing constructor without {@link IdGenRepository}.
      *
      * @param propertyRepository persistence repository for 3NF property tables
      * @param userRepository     repository for querying citizen user existence
      * @param documentRepository repository for storing attached title and verification documents
      */
-    @Autowired
     public RuralPropertyServiceImpl(UserPropertyRepository propertyRepository,
                                     UserRepository userRepository,
                                     UserDocumentRepository documentRepository) {
-        this.propertyRepository = propertyRepository;
-        this.userRepository = userRepository;
-        this.documentRepository = documentRepository;
+        this(propertyRepository, userRepository, documentRepository, null);
     }
 
     /**
@@ -93,9 +111,14 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
 
         String actorUuid = resolveActorUuid(request.getRequestInfo());
 
-        // Natural key deduplication by survey number if ID is not explicitly provided
+        // Natural key deduplication by property ID or survey number if ID is not explicitly provided
         if (StringUtils.isBlank(prop.getId())) {
-            if (StringUtils.isNotBlank(rural.getSurveyNumber())) {
+            if (StringUtils.isNotBlank(rural.getPropertyId())) {
+                String existingId = propertyRepository.findRuralPropertyIdByPropertyId(userUuid, rural.getPropertyId());
+                if (existingId != null) {
+                    prop.setId(existingId);
+                }
+            } else if (StringUtils.isNotBlank(rural.getSurveyNumber())) {
                 String existingId = propertyRepository.findRuralPropertyId(userUuid, rural.getSurveyNumber());
                 if (existingId != null) {
                     prop.setId(existingId);
@@ -104,6 +127,11 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             if (StringUtils.isBlank(prop.getId())) {
                 prop.setId(UUID.randomUUID().toString());
             }
+        }
+
+        // Generate formatted rural property ID via IdGen if not explicitly supplied
+        if (StringUtils.isBlank(rural.getPropertyId())) {
+            rural.setPropertyId(generateRuralPropertyId(request.getRequestInfo(), prop.getTenantId()));
         }
 
         prop.setUserUuid(userUuid);
@@ -242,6 +270,15 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             }
             if (StringUtils.isNotBlank(incomingRural.getSurveyNumber())) {
                 existingRural.setSurveyNumber(incomingRural.getSurveyNumber());
+            }
+            if (StringUtils.isNotBlank(incomingRural.getPropertyId())) {
+                existingRural.setPropertyId(incomingRural.getPropertyId());
+            } else if (StringUtils.isBlank(existingRural.getPropertyId()) && idGenRepository != null) {
+                try {
+                    existingRural.setPropertyId(idGenRepository.generateRuralPropertyId(request.getRequestInfo(), existing.getTenantId()));
+                } catch (Exception e) {
+                    log.warn("[RURAL-PROP-SERVICE] Failed to generate rural property ID during update: {}", e.getMessage());
+                }
             }
         }
         existingRural.setLastModifiedBy(actorUuid);
@@ -400,5 +437,24 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
         }
         return requestInfo.getUserInfo().getUuid().trim();
+    }
+
+    /**
+     * Generates a unique, formatted human-readable rural property ID using {@link IdGenRepository}.
+     * All ID formatting is managed and resolved directly by the IdGen microservice.
+     *
+     * @param requestInfo request context containing client and authentication details
+     * @param tenantId    tenant identifier for scoping ID sequence
+     * @return generated rural property identifier from IdGen
+     */
+    private String generateRuralPropertyId(RequestInfo requestInfo, String tenantId) {
+        if (idGenRepository != null) {
+            String generatedId = idGenRepository.generateRuralPropertyId(requestInfo, tenantId);
+            if (StringUtils.isNotBlank(generatedId)) {
+                return generatedId;
+            }
+        }
+        log.error("[RURAL-PROP-SERVICE] IdGen service failed or is unconfigured for rural property ID generation");
+        throw new CustomException("IDGEN_ERROR", "Failed to generate rural property ID from IdGen service");
     }
 }

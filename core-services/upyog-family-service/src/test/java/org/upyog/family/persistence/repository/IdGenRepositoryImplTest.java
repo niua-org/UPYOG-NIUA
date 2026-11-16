@@ -41,7 +41,6 @@ class IdGenRepositoryImplTest {
         when(configuration.getIdGenHost()).thenReturn("http://localhost:8086");
         when(configuration.getIdGenPath()).thenReturn("/egov-idgen/id/_generate");
         when(configuration.getIdGenFamilyIdName()).thenReturn("family.id");
-        when(configuration.getIdGenFamilyIdFormat()).thenReturn("FAM-[cy:yyyy]-[seq_family_id]");
 
         Map<String, Object> mockResponse = new HashMap<>();
         Map<String, Object> idRes = new HashMap<>();
@@ -62,6 +61,7 @@ class IdGenRepositoryImplTest {
         assertEquals(1, requests.size());
         assertEquals("family.id", requests.get(0).get("idName"));
         assertEquals("pg", requests.get(0).get("tenantId"));
+        assertNull(requests.get(0).get("format"));
     }
 
     @Test
@@ -70,7 +70,6 @@ class IdGenRepositoryImplTest {
         when(configuration.getIdGenHost()).thenReturn("http://localhost:8086");
         when(configuration.getIdGenPath()).thenReturn("/egov-idgen/id/_generate");
         when(configuration.getIdGenMemberIdName()).thenReturn("family.member.id");
-        when(configuration.getIdGenMemberIdFormat()).thenReturn("MEM-[cy:yyyy]-[seq_family_member_id]");
 
         Map<String, Object> mockResponse = new HashMap<>();
         Map<String, Object> idRes1 = new HashMap<>();

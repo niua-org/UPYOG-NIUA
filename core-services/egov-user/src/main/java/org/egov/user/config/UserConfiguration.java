@@ -208,12 +208,9 @@ public class UserConfiguration {
     @Value("${egov.idgen.citizen.id.name}")
     private String idGenCitizenIdName;
 
-    @Value("${egov.idgen.citizen.id.format}")
-    private String idGenCitizenIdFormat;
-
     @Value("${egov.idgen.user.doc.id.name}")
     private String idGenUserDocIdName;
 
-    @Value("${egov.idgen.user.doc.id.format}")
-    private String idGenUserDocIdFormat;
+    @Value("${egov.idgen.rural.property.id.name}")
+    private String idGenRuralPropertyIdName;
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
@@ -16,6 +17,7 @@ import org.egov.user.domain.model.asset.UserProperty;
 import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.persistence.repository.IdGenRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserIncomeRepository;
 import org.egov.user.persistence.repository.UserPropertyRepository;
@@ -52,9 +54,35 @@ public class MemberAssetProcessor {
     private final UserIncomeRepository incomeRepository;
     private final UserVehicleRepository vehicleRepository;
     private final UserDocumentRepository documentRepository;
+    private final IdGenRepository idGenRepository;
 
     /**
-     * Primary constructor injecting persistence repositories.
+     * Primary constructor injecting persistence repositories and optional IdGen repository.
+     *
+     * @param userRepository     repository for querying and updating user demographic records
+     * @param propertyRepository repository for persisting 3NF property assets and ownership
+     * @param incomeRepository   repository for persisting citizen income declarations
+     * @param vehicleRepository  repository for persisting declared vehicle assets
+     * @param documentRepository repository for persisting user documents and verification statuses
+     * @param idGenRepository    repository for generating business identifiers
+     */
+    @Autowired
+    public MemberAssetProcessor(UserRepository userRepository,
+                                UserPropertyRepository propertyRepository,
+                                UserIncomeRepository incomeRepository,
+                                UserVehicleRepository vehicleRepository,
+                                UserDocumentRepository documentRepository,
+                                @Autowired(required = false) IdGenRepository idGenRepository) {
+        this.userRepository = userRepository;
+        this.propertyRepository = propertyRepository;
+        this.incomeRepository = incomeRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.documentRepository = documentRepository;
+        this.idGenRepository = idGenRepository;
+    }
+
+    /**
+     * Backward-compatible constructor for testing without {@link IdGenRepository}.
      *
      * @param userRepository     repository for querying and updating user demographic records
      * @param propertyRepository repository for persisting 3NF property assets and ownership
@@ -62,17 +90,12 @@ public class MemberAssetProcessor {
      * @param vehicleRepository  repository for persisting declared vehicle assets
      * @param documentRepository repository for persisting user documents and verification statuses
      */
-    @Autowired
     public MemberAssetProcessor(UserRepository userRepository,
                                 UserPropertyRepository propertyRepository,
                                 UserIncomeRepository incomeRepository,
                                 UserVehicleRepository vehicleRepository,
                                 UserDocumentRepository documentRepository) {
-        this.userRepository = userRepository;
-        this.propertyRepository = propertyRepository;
-        this.incomeRepository = incomeRepository;
-        this.vehicleRepository = vehicleRepository;
-        this.documentRepository = documentRepository;
+        this(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository, null);
     }
 
     /**
@@ -141,7 +164,7 @@ public class MemberAssetProcessor {
         int docsSynced = persistCitizenDocuments(memberDetail, existingUser, actorUuid);
 
         // 3. Persist declared property assets (Rural and Urban with co-owners)
-        List<String> propertyIds = persistProperties(memberDetail, existingUser, actorId, actorUuid);
+        List<String> propertyIds = persistProperties(memberDetail, existingUser, actorId, actorUuid, request.getRequestInfo());
 
         // 4. Persist income and fiscal identity declarations
         String incomeId = persistIncome(memberDetail, existingUser, actorId, actorUuid);
@@ -287,7 +310,7 @@ public class MemberAssetProcessor {
      * @param actorUuid    UUID of the updater
      * @return list of generated property primary key IDs
      */
-    private List<String> persistProperties(MemberAssetDetail detail, User existingUser, Long actorId, String actorUuid) {
+    private List<String> persistProperties(MemberAssetDetail detail, User existingUser, Long actorId, String actorUuid, RequestInfo requestInfo) {
         List<UserProperty> properties = detail.getProperties();
         if (CollectionUtils.isEmpty(properties)) {
             return Collections.emptyList();
@@ -303,6 +326,11 @@ public class MemberAssetProcessor {
             if (StringUtils.isBlank(prop.getId())) {
                 if (prop.getUrbanPropertyDetail() != null && StringUtils.isNotBlank(prop.getUrbanPropertyDetail().getUpyogPropertyId())) {
                     String existingId = propertyRepository.findUrbanPropertyId(existingUser.getUuid(), prop.getUrbanPropertyDetail().getUpyogPropertyId());
+                    if (existingId != null) {
+                        prop.setId(existingId);
+                    }
+                } else if (prop.getRuralPropertyDetail() != null && StringUtils.isNotBlank(prop.getRuralPropertyDetail().getPropertyId())) {
+                    String existingId = propertyRepository.findRuralPropertyIdByPropertyId(existingUser.getUuid(), prop.getRuralPropertyDetail().getPropertyId());
                     if (existingId != null) {
                         prop.setId(existingId);
                     }
@@ -361,6 +389,13 @@ public class MemberAssetProcessor {
             // Rural property specialization
             if (UserConstants.LOCALITY_TYPE_RURAL.equalsIgnoreCase(prop.getLocalityType()) && prop.getRuralPropertyDetail() != null) {
                 RuralPropertyDetail rural = prop.getRuralPropertyDetail();
+                if (StringUtils.isBlank(rural.getPropertyId()) && idGenRepository != null) {
+                    try {
+                        rural.setPropertyId(idGenRepository.generateRuralPropertyId(requestInfo, prop.getTenantId()));
+                    } catch (Exception e) {
+                        log.warn("[MEMBER-ASSET-PROCESSOR] Failed to generate rural property ID via IdGen: {}", e.getMessage());
+                    }
+                }
                 rural.setPropertyRecordId(prop.getId());
                 rural.setTenantId(prop.getTenantId());
                 rural.setCreatedBy(actorUuid);

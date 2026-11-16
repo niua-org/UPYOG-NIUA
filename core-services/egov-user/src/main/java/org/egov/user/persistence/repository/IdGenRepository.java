@@ -32,6 +32,15 @@ public interface IdGenRepository {
     String generateUserDocumentId(RequestInfo requestInfo, String tenantId);
 
     /**
+     * Calls UPYOG IdGen microservice to generate a formatted Rural Property ID.
+     *
+     * @param requestInfo UPYOG request context envelope
+     * @param tenantId target tenant identifier
+     * @return generated unique Rural Property ID string
+     */
+    String generateRuralPropertyId(RequestInfo requestInfo, String tenantId);
+
+    /**
      * Generic bulk ID generation querying UPYOG IdGen microservice.
      *
      * @param requestInfo UPYOG request context envelope

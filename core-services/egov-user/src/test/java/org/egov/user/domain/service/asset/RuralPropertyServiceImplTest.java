@@ -9,6 +9,7 @@ import org.egov.user.domain.model.asset.PropertyOwner;
 import org.egov.user.domain.model.asset.RuralPropertyDetail;
 import org.egov.user.domain.model.asset.UserProperty;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.persistence.repository.IdGenRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserPropertyRepository;
 import org.egov.user.persistence.repository.UserRepository;
@@ -25,6 +26,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -44,6 +46,7 @@ public class RuralPropertyServiceImplTest {
     private UserPropertyRepository propertyRepository;
     private UserRepository userRepository;
     private UserDocumentRepository documentRepository;
+    private IdGenRepository idGenRepository;
     private RuralPropertyServiceImpl ruralPropertyService;
 
     private static final String TEST_USER_UUID = "citizen-uuid-001";
@@ -57,11 +60,13 @@ public class RuralPropertyServiceImplTest {
         propertyRepository = mock(UserPropertyRepository.class);
         userRepository = mock(UserRepository.class);
         documentRepository = mock(UserDocumentRepository.class);
+        idGenRepository = mock(IdGenRepository.class);
 
         ruralPropertyService = new RuralPropertyServiceImpl(
                 propertyRepository,
                 userRepository,
-                documentRepository
+                documentRepository,
+                idGenRepository
         );
     }
 
@@ -124,6 +129,8 @@ public class RuralPropertyServiceImplTest {
                 .build();
 
         when(propertyRepository.findRuralPropertyById(any(String.class))).thenReturn(hydratedReturn);
+        when(idGenRepository.generateRuralPropertyId(any(RequestInfo.class), eq(TEST_TENANT_ID)))
+                .thenReturn("PG-RP-2026-11-16-000001");
 
         UserProperty created = ruralPropertyService.createRuralProperty(request);
 
@@ -133,7 +140,9 @@ public class RuralPropertyServiceImplTest {
         assertEquals(UserConstants.STATUS_ACTIVE_UPPERCASE, created.getStatus());
 
         verify(propertyRepository, times(1)).saveProperty(any(UserProperty.class));
-        verify(propertyRepository, times(1)).saveRuralProperty(any(RuralPropertyDetail.class));
+        ArgumentCaptor<RuralPropertyDetail> ruralCaptor = ArgumentCaptor.forClass(RuralPropertyDetail.class);
+        verify(propertyRepository, times(1)).saveRuralProperty(ruralCaptor.capture());
+        assertEquals("PG-RP-2026-11-16-000001", ruralCaptor.getValue().getPropertyId());
 
         ArgumentCaptor<UserDocument> docCaptor = ArgumentCaptor.forClass(UserDocument.class);
         verify(documentRepository, times(1)).create(docCaptor.capture());
@@ -141,6 +150,130 @@ public class RuralPropertyServiceImplTest {
         assertEquals(TEST_OPERATOR_UUID, docCaptor.getValue().getLastModifiedBy());
 
         verify(propertyRepository, times(1)).savePropertyOwner(any(PropertyOwner.class));
+    }
+
+    @Test
+    @DisplayName("Should generate rural property ID via IdGen when IdGenRepository is available")
+    public void testCreateRuralProperty_WithIdGen_GeneratesPropertyId() {
+        IdGenRepository idGenRepository = mock(IdGenRepository.class);
+        RuralPropertyServiceImpl serviceWithIdGen = new RuralPropertyServiceImpl(
+                propertyRepository,
+                userRepository,
+                documentRepository,
+                idGenRepository
+        );
+
+        User citizen = User.builder()
+                .id(101L)
+                .uuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .build();
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(citizen));
+        when(idGenRepository.generateRuralPropertyId(any(RequestInfo.class), eq(TEST_TENANT_ID)))
+                .thenReturn("PG-RP-2026-11-16-000001");
+
+        RuralPropertyDetail ruralDetail = RuralPropertyDetail.builder()
+                .gramPanchayat("Rampur")
+                .villageName("Fatehpur")
+                .surveyNumber("KHASRA-102")
+                .build();
+
+        RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createTestRequestInfo())
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralProperty(ruralDetail)
+                .build();
+
+        UserProperty hydratedReturn = UserProperty.builder()
+                .id(TEST_PROPERTY_ID)
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralPropertyDetail(ruralDetail)
+                .build();
+        when(propertyRepository.findRuralPropertyById(any(String.class))).thenReturn(hydratedReturn);
+
+        UserProperty created = serviceWithIdGen.createRuralProperty(request);
+
+        assertNotNull(created);
+        ArgumentCaptor<RuralPropertyDetail> ruralCaptor = ArgumentCaptor.forClass(RuralPropertyDetail.class);
+        verify(propertyRepository).saveRuralProperty(ruralCaptor.capture());
+        assertEquals("PG-RP-2026-11-16-000001", ruralCaptor.getValue().getPropertyId());
+    }
+
+    @Test
+    @DisplayName("Should throw CustomException when IdGen fails during property creation")
+    public void testCreateRuralProperty_IdGenFailure_ThrowsCustomException() {
+        User citizen = User.builder()
+                .id(101L)
+                .uuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .build();
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(citizen));
+        when(idGenRepository.generateRuralPropertyId(any(RequestInfo.class), eq(TEST_TENANT_ID)))
+                .thenThrow(new CustomException("IDGEN_ERROR", "IdGen connection refused"));
+
+        RuralPropertyDetail ruralDetail = RuralPropertyDetail.builder()
+                .gramPanchayat("Rampur")
+                .villageName("Fatehpur")
+                .surveyNumber("KHASRA-102")
+                .build();
+
+        RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createTestRequestInfo())
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralProperty(ruralDetail)
+                .build();
+
+        assertThrows(CustomException.class, () -> ruralPropertyService.createRuralProperty(request));
+    }
+
+    @Test
+    @DisplayName("Should deduplicate by existing propertyId when propertyId is explicitly provided")
+    public void testCreateRuralProperty_DeduplicationByPropertyId() {
+        User citizen = User.builder()
+                .id(101L)
+                .uuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .build();
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(citizen));
+
+        String existingRecordId = "existing-prop-uuid-999";
+        when(propertyRepository.findRuralPropertyIdByPropertyId(TEST_USER_UUID, "PG-RP-2026-11-16-000001"))
+                .thenReturn(existingRecordId);
+
+        RuralPropertyDetail ruralDetail = RuralPropertyDetail.builder()
+                .propertyId("PG-RP-2026-11-16-000001")
+                .gramPanchayat("Rampur")
+                .villageName("Fatehpur")
+                .surveyNumber("KHASRA-102")
+                .build();
+
+        RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createTestRequestInfo())
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralProperty(ruralDetail)
+                .build();
+
+        UserProperty hydratedReturn = UserProperty.builder()
+                .id(existingRecordId)
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralPropertyDetail(ruralDetail)
+                .build();
+        when(propertyRepository.findRuralPropertyById(existingRecordId)).thenReturn(hydratedReturn);
+
+        UserProperty created = ruralPropertyService.createRuralProperty(request);
+
+        assertNotNull(created);
+        ArgumentCaptor<UserProperty> propCaptor = ArgumentCaptor.forClass(UserProperty.class);
+        verify(propertyRepository).saveProperty(propCaptor.capture());
+        assertEquals(existingRecordId, propCaptor.getValue().getId());
     }
 
     @Test
@@ -199,6 +332,7 @@ public class RuralPropertyServiceImplTest {
                 .status(UserConstants.STATUS_ACTIVE_UPPERCASE)
                 .ruralPropertyDetail(RuralPropertyDetail.builder()
                         .propertyRecordId(TEST_PROPERTY_ID)
+                        .propertyId("PG-RP-2026-0001")
                         .gramPanchayat("Old GP")
                         .villageName("Old Village")
                         .build())

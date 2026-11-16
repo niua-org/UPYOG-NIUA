@@ -164,6 +164,7 @@ public class UserPropertyRepository {
         Map<String, Object> params = new HashMap<>();
         params.put("property_record_id", detail.resolvePropertyRecordId());
         params.put("tenant_id", detail.getTenantId());
+        params.put("property_id", detail.getPropertyId());
         params.put("gram_panchayat", detail.getGramPanchayat());
         params.put("village_name", detail.getVillageName());
         params.put("ward_number", detail.getWardNumber());
@@ -328,6 +329,33 @@ public class UserPropertyRepository {
             return (list != null && !list.isEmpty()) ? list.get(0) : null;
         } catch (Exception e) {
             log.debug("[USER-PROP-REPO] Failed to lookup existing rural property by surveyNumber: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Looks up existing active rural property record ID by citizen user UUID and rural property ID.
+     *
+     * @param userUuid citizen user UUID
+     * @param propertyId generated or assigned rural property ID
+     * @return existing property record ID or null
+     */
+    public String findRuralPropertyIdByPropertyId(String userUuid, String propertyId) {
+        if (StringUtils.isBlank(userUuid) || StringUtils.isBlank(propertyId)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put("user_uuid", userUuid);
+            params.put("property_id", propertyId.trim());
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserPropertyQueryBuilder.SELECT_RURAL_PROPERTY_RECORD_ID_BY_PROPERTY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("id")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-PROP-REPO] Failed to lookup existing rural property by propertyId: {}", e.getMessage());
             return null;
         }
     }
@@ -588,6 +616,7 @@ public class UserPropertyRepository {
                 rural = RuralPropertyDetail.builder()
                         .propertyRecordId(rId)
                         .id(rId)
+                        .propertyId(rs.getString("r_property_id"))
                         .tenantId(rs.getString("r_tenant_id"))
                         .gramPanchayat(rs.getString("r_gram_panchayat"))
                         .villageName(rs.getString("r_village_name"))

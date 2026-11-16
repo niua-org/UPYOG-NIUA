@@ -37,6 +37,12 @@ public class RuralPropertyDetail {
     private String id;
 
     /**
+     * Unique business identifier for the rural property (generated via IdGen, e.g. PG-RP-2026-0001).
+     */
+    @JsonProperty("propertyId")
+    private String propertyId;
+
+    /**
      * Tenant identifier scoping the rural property.
      */
     @JsonProperty("tenantId")

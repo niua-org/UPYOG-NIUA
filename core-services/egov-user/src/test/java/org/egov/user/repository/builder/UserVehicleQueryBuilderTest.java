@@ -1,9 +1,14 @@
 package org.egov.user.repository.builder;
 
+import org.egov.user.web.contract.asset.VehicleSearchCriteria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,11 +59,67 @@ public class UserVehicleQueryBuilderTest {
     }
 
     @Test
-    @DisplayName("Should return valid static insert and audit SQL queries")
+    @DisplayName("Should build criteria search query with all filter parameters")
+    public void testBuildSearchQuery_WithFullCriteria() {
+        Map<String, Object> params = new HashMap<>();
+        VehicleSearchCriteria criteria = VehicleSearchCriteria.builder()
+                .userUuid("user-uuid-001")
+                .vehicleId("veh-id-001")
+                .vehicleNumber("DL01AB1234")
+                .tenantId("pg.citya")
+                .vehicleType("4_WHEELER")
+                .fuelType("ELECTRIC")
+                .category("LMV")
+                .status("ACTIVE")
+                .limit(20)
+                .offset(0)
+                .build();
+
+        String sql = queryBuilder.buildSearchQuery(criteria, params);
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("v.user_uuid = :user_uuid"));
+        assertTrue(sql.contains("v.id = :id"));
+        assertTrue(sql.contains("UPPER(v.vehicle_number) = UPPER(:vehicle_number)"));
+        assertTrue(sql.contains("v.tenant_id = :tenant_id"));
+        assertTrue(sql.contains("UPPER(v.vehicle_type) = UPPER(:vehicle_type)"));
+        assertTrue(sql.contains("UPPER(v.fuel_type) = UPPER(:fuel_type)"));
+        assertTrue(sql.contains("UPPER(v.category) = UPPER(:category)"));
+        assertTrue(sql.contains("v.status = :status"));
+        assertTrue(sql.contains("LIMIT :limit"));
+        assertTrue(sql.contains("OFFSET :offset"));
+
+        assertEquals("user-uuid-001", params.get("user_uuid"));
+        assertEquals("veh-id-001", params.get("id"));
+        assertEquals("DL01AB1234", params.get("vehicle_number"));
+        assertEquals("pg.citya", params.get("tenant_id"));
+        assertEquals("4_WHEELER", params.get("vehicle_type"));
+        assertEquals("ELECTRIC", params.get("fuel_type"));
+        assertEquals("LMV", params.get("category"));
+        assertEquals("ACTIVE", params.get("status"));
+        assertEquals(20, params.get("limit"));
+        assertEquals(0, params.get("offset"));
+    }
+
+    @Test
+    @DisplayName("Should build default active status search query when criteria is null")
+    public void testBuildSearchQuery_NullCriteria() {
+        Map<String, Object> params = new HashMap<>();
+        String sql = queryBuilder.buildSearchQuery(null, params);
+
+        assertNotNull(sql);
+        assertTrue(sql.contains("v.status = 'ACTIVE'"));
+        assertTrue(sql.contains("ORDER BY v.created_time DESC"));
+    }
+
+    @Test
+    @DisplayName("Should return valid static insert, audit, and by-id SQL queries")
     public void testStaticQueries() {
         assertNotNull(queryBuilder.getInsertVehicleQuery());
         assertTrue(queryBuilder.getInsertVehicleQuery().contains("INSERT INTO ug_user_vehicle"));
         assertNotNull(queryBuilder.getInsertVehicleAuditQuery());
         assertTrue(queryBuilder.getInsertVehicleAuditQuery().contains("INSERT INTO ug_user_vehicle_audit"));
+        assertNotNull(UserVehicleQueryBuilder.SELECT_VEHICLE_BY_ID_SQL);
+        assertTrue(UserVehicleQueryBuilder.SELECT_VEHICLE_BY_ID_SQL.contains("WHERE v.id = :id"));
     }
 }

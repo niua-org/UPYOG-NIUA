@@ -36,21 +36,20 @@ import java.util.List;
  *   <li><b>Dependency Inversion Principle (DIP):</b> Relies exclusively on injected domain service abstractions.</li>
  * </ul>
  *
- * <p>Available Endpoints (available under both {@code /user/property/rural} and {@code /user/rural-property}):</p>
+ * <p>Available Endpoints (base path {@code /rural-property}):</p>
  * <ul>
  *   <li>{@code POST /_create} - Creates a new rural property declaration for a citizen</li>
  *   <li>{@code POST /_update} - Updates existing rural property attributes, co-owners, or documents</li>
  *   <li>{@code POST /_search} - Searches rural properties by citizen UUID, property ID, tenant, or survey number</li>
  *   <li>{@code POST /_delete} - Soft-deletes a rural property by marking its status as {@code INACTIVE}</li>
- *   <li>{@code POST /_deactivate} - Alias endpoint marking a rural property as {@code INACTIVE}</li>
  * </ul>
  *
  * @author UPYOG Team
  * @since 1.0.0
  */
-@Tag(name = "Rural Property Management", description = "Standalone CRUD and lifecycle deactivation endpoints for citizen rural properties")
+@Tag(name = "Rural Property Management", description = "Standalone CRUD endpoints for citizen rural properties")
 @RestController
-@RequestMapping({"/property/rural", "/rural-property"})
+@RequestMapping("/rural-property")
 @Slf4j
 public class RuralPropertyController {
 
@@ -173,7 +172,7 @@ public class RuralPropertyController {
      * @return response containing deactivated property
      */
     @Operation(
-            summary = "Delete / Deactivate Rural Property",
+            summary = "Delete Rural Property",
             description = "Soft-deletes a rural property declaration by setting its status to INACTIVE. Used during member information updates when a citizen removes or sells a landholding."
     )
     @ApiResponses(value = {
@@ -184,7 +183,7 @@ public class RuralPropertyController {
             @ApiResponse(responseCode = "404", description = "Property record not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping(value = {"/_delete", "/_deactivate"})
+    @PostMapping("/_delete")
     public ResponseEntity<RuralPropertyResponse> deleteRuralProperty(@RequestBody @Valid RuralPropertyRequest request) {
         log.info("[RURAL-PROP-CONTROLLER] Received rural property deactivation request for property ID: {}, citizen: {}",
                 request != null ? request.resolvePropertyId() : null,

@@ -63,14 +63,15 @@ public class UserPropertyQueryBuilder {
 
     public static final String INSERT_RURAL_PROPERTY_SQL =
             "INSERT INTO ug_user_rural_property (" +
-            "property_record_id, tenant_id, gram_panchayat, village_name, ward_number, " +
+            "property_record_id, tenant_id, property_id, gram_panchayat, village_name, ward_number, " +
             "property_address, property_type, property_usage, survey_number, " +
             "created_by, created_time, last_modified_by, last_modified_time" +
             ") VALUES (" +
-            ":property_record_id, :tenant_id, :gram_panchayat, :village_name, :ward_number, " +
+            ":property_record_id, :tenant_id, :property_id, :gram_panchayat, :village_name, :ward_number, " +
             ":property_address, :property_type, :property_usage, :survey_number, " +
             ":created_by, :created_time, :last_modified_by, :last_modified_time" +
             ") ON CONFLICT (property_record_id) DO UPDATE SET " +
+            "property_id = COALESCE(EXCLUDED.property_id, ug_user_rural_property.property_id), " +
             "gram_panchayat = EXCLUDED.gram_panchayat, " +
             "village_name = EXCLUDED.village_name, " +
             "ward_number = EXCLUDED.ward_number, " +
@@ -121,6 +122,10 @@ public class UserPropertyQueryBuilder {
             "SELECT p.id FROM ug_user_property p JOIN ug_user_rural_property r ON p.id = r.property_record_id " +
             "WHERE p.user_uuid = :user_uuid AND r.survey_number = :survey_number AND p.status = 'ACTIVE' LIMIT 1";
 
+    public static final String SELECT_RURAL_PROPERTY_RECORD_ID_BY_PROPERTY_ID_SQL =
+            "SELECT p.id FROM ug_user_property p JOIN ug_user_rural_property r ON p.id = r.property_record_id " +
+            "WHERE p.user_uuid = :user_uuid AND r.property_id = :property_id AND p.status = 'ACTIVE' LIMIT 1";
+
     public static final String SELECT_RURAL_PROPERTY_BASE_SQL =
             "SELECT p.id as p_id, p.user_uuid as p_user_uuid, p.tenant_id as p_tenant_id, " +
             "p.locality_type as p_locality_type, p.ownership_type as p_ownership_type, " +
@@ -128,7 +133,7 @@ public class UserPropertyQueryBuilder {
             "p.status as p_status, p.additional_details as p_additional_details, " +
             "p.created_by as p_created_by, p.created_time as p_created_time, " +
             "p.last_modified_by as p_last_modified_by, p.last_modified_time as p_last_modified_time, " +
-            "r.property_record_id as r_property_record_id, r.tenant_id as r_tenant_id, " +
+            "r.property_record_id as r_property_record_id, r.tenant_id as r_tenant_id, r.property_id as r_property_id, " +
             "r.gram_panchayat as r_gram_panchayat, r.village_name as r_village_name, " +
             "r.ward_number as r_ward_number, r.property_address as r_property_address, " +
             "r.property_type as r_property_type, r.property_usage as r_property_usage, " +
@@ -154,7 +159,7 @@ public class UserPropertyQueryBuilder {
             "u.urban_address as u_urban_address, u.created_by as u_created_by, " +
             "u.created_time as u_created_time, u.last_modified_by as u_last_modified_by, " +
             "u.last_modified_time as u_last_modified_time, " +
-            "r.property_record_id as r_property_record_id, r.tenant_id as r_tenant_id, " +
+            "r.property_record_id as r_property_record_id, r.tenant_id as r_tenant_id, r.property_id as r_property_id, " +
             "r.gram_panchayat as r_gram_panchayat, r.village_name as r_village_name, " +
             "r.ward_number as r_ward_number, r.property_address as r_property_address, " +
             "r.property_type as r_property_type, r.property_usage as r_property_usage, " +
@@ -265,12 +270,12 @@ public class UserPropertyQueryBuilder {
             }
 
             if (StringUtils.isNotBlank(criteria.getPropertyId())) {
-                query.append(" AND p.id = :property_id");
+                query.append(" AND (p.id = :property_id OR r.property_id = :property_id)");
                 params.put("property_id", criteria.getPropertyId().trim());
             }
 
             if (criteria.getPropertyIds() != null && !criteria.getPropertyIds().isEmpty()) {
-                query.append(" AND p.id IN (:property_ids)");
+                query.append(" AND (p.id IN (:property_ids) OR r.property_id IN (:property_ids))");
                 params.put("property_ids", criteria.getPropertyIds());
             }
 

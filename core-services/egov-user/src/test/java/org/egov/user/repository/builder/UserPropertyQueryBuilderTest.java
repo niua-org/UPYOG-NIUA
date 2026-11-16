@@ -76,10 +76,24 @@ public class UserPropertyQueryBuilderTest {
 
         String sql = queryBuilder.buildRuralPropertySearchQuery(criteria, params);
 
-        assertTrue(sql.contains("AND p.id = :property_id"));
+        assertTrue(sql.contains("AND (p.id = :property_id OR r.property_id = :property_id)"));
         assertFalse(sql.contains("AND p.status = :status"));
         assertEquals("prop-id-123", params.get("property_id"));
         assertFalse(params.containsKey("status"));
+    }
+
+    @Test
+    @DisplayName("Should build rural property search query with propertyIds matching record id or property id")
+    public void testBuildRuralPropertySearchQuery_PropertyIds() {
+        RuralPropertySearchCriteria criteria = RuralPropertySearchCriteria.builder()
+                .propertyIds(Arrays.asList("prop-1", "prop-2"))
+                .build();
+        Map<String, Object> params = new HashMap<>();
+
+        String sql = queryBuilder.buildRuralPropertySearchQuery(criteria, params);
+
+        assertTrue(sql.contains("AND (p.id IN (:property_ids) OR r.property_id IN (:property_ids))"));
+        assertEquals(Arrays.asList("prop-1", "prop-2"), params.get("property_ids"));
     }
 
     @Test
