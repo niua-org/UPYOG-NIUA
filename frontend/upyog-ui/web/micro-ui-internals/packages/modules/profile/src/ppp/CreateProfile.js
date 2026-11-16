@@ -171,12 +171,21 @@ const DocumentUploadCard = ({
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    if (!ALLOWED_TYPES.includes(selectedFile.type)) {
+    // Validate file type (checks mime type and extension case-insensitively)
+    const isExtensionValid = /(.*?)\.(jpg|jpeg|png|pdf)$/i.test(selectedFile.name);
+    const isMimeValid = ALLOWED_TYPES.includes(selectedFile.type?.toLowerCase());
+    if (!isExtensionValid && !isMimeValid) {
       setUploadError(t("PROFILE_DOC_INVALID_TYPE", "Only JPG, PNG, and PDF files are allowed"));
+      onFileChange(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
+
+    // Validate file size (max 5 MB)
     if (selectedFile.size > MAX_SIZE) {
       setUploadError(t("PROFILE_DOC_SIZE_EXCEEDED", "File size cannot exceed 5MB"));
+      onFileChange(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
@@ -189,6 +198,8 @@ const DocumentUploadCard = ({
       onFileChange({ name: selectedFile.name, fileStoreId });
     } catch (err) {
       setUploadError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR", "Failed to upload file"));
+      onFileChange(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } finally {
       setUploading(false);
     }
@@ -240,6 +251,9 @@ const DocumentUploadCard = ({
             ref={fileInputRef}
             accept={ACCEPTED}
             onChange={handleFileSelect}
+            onClick={(e) => {
+              e.target.value = "";
+            }}
             disabled={disabled || uploading}
             style={{ display: "none" }}
           />
@@ -709,7 +723,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           </div>
         </div>
 
-        {/* Form Fields: Strict 3-Column Per Row Grid */}
+        {/* Form Fields: Dynamic 3-Column Per Row Grid */}
         <div
           style={{
             display: "grid",
@@ -717,6 +731,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             gap: "20px 24px",
             width: "100%",
             boxSizing: "border-box",
+            alignItems: "start",
           }}
         >
           {/* Row 1 */}
@@ -768,7 +783,6 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             <MobileNumber
               value={form.altContactNumber}
               name="altContactNumber"
-              placeholder="+91"
               onChange={(v) => setFieldValue("altContactNumber", v)}
               disable={isViewMode}
             />
@@ -851,11 +865,8 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             />
           </FormField>
 
-          {/* Spacer for Column 3 to keep Divyang & Caste on Row 5 */}
-          <div />
-
-          {/* Row 5: Divyang and Caste rendered horizontally */}
-          <FormField label={t("PROFILE_SPECIALLY_ABLED", "Divyang")} required error={errors.speciallyAbled} t={t} style={{ gridColumn: 1 }}>
+          {/* Divyang (appears right after Relationship with HOF) */}
+          <FormField label={t("PROFILE_SPECIALLY_ABLED", "Divyang")} required error={errors.speciallyAbled} t={t}>
             <Dropdown
               selected={speciallyAbled}
               select={handleSpeciallyAbledChange}
@@ -867,7 +878,32 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             />
           </FormField>
 
-          <FormField label={t("PROFILE_CASTE", "Caste")} required error={errors.caste} t={t} style={{ gridColumn: 2 }}>
+          {/* Divyang Proof appears in the next column dynamically when Divyang is Yes */}
+          {isSpeciallyAbled && (
+            <DocumentUploadCard
+              label={t("PROFILE_DISABILITY_PROOF", "Divyang Proof")}
+              required={true}
+              options={disabilityDocumentOptions}
+              selectedType={disabilityProofType}
+              onSelectType={(v) => {
+                setDisabilityProofType(v);
+                setErrors((prev) => ({ ...prev, disabilityProofType: null }));
+              }}
+              typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
+              file={disabilityProofFile}
+              onFileChange={(f) => {
+                setDisabilityProofFile(f);
+                setErrors((prev) => ({ ...prev, disabilityProofFile: null }));
+              }}
+              error={errors.disabilityProofFile}
+              t={t}
+              stateId={stateId}
+              disabled={isViewMode}
+            />
+          )}
+
+          {/* Caste follows in the next available column */}
+          <FormField label={t("PROFILE_CASTE", "Caste")} required error={errors.caste} t={t}>
             <Dropdown
               selected={caste}
               select={handleCasteChange}
@@ -878,127 +914,74 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               disable={isViewMode}
             />
           </FormField>
-        </div>
 
-        {/* Conditional Proofs Row: Divyang Proof below Divyang (Col 1), Caste Certificate below Caste (Col 2) */}
-        {(isSpeciallyAbled || needsCasteProof) && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              gap: "20px 24px",
-              width: "100%",
-              boxSizing: "border-box",
-              marginTop: "20px",
-            }}
-          >
-            {isSpeciallyAbled ? (
-              <div style={{ gridColumn: 1 }}>
-                <DocumentUploadCard
-                  label={t("PROFILE_DISABILITY_PROOF", "Divyang Proof")}
-                  required={true}
-                  options={disabilityDocumentOptions}
-                  selectedType={disabilityProofType}
-                  onSelectType={(v) => {
-                    setDisabilityProofType(v);
-                    setErrors((prev) => ({ ...prev, disabilityProofType: null }));
-                  }}
-                  typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
-                  file={disabilityProofFile}
-                  onFileChange={(f) => {
-                    setDisabilityProofFile(f);
-                    setErrors((prev) => ({ ...prev, disabilityProofFile: null }));
-                  }}
-                  error={errors.disabilityProofFile}
-                  t={t}
-                  stateId={stateId}
-                  disabled={isViewMode}
-                />
-              </div>
-            ) : null}
-
-            {needsCasteProof ? (
-              <div style={{ gridColumn: 2 }}>
-                <DocumentUploadCard
-                  label={t("PROFILE_CASTE_PROOF", "Caste Certificate")}
-                  required={true}
-                  options={casteDocumentOptions}
-                  selectedType={casteProofType}
-                  onSelectType={(v) => {
-                    setCasteProofType(v);
-                    setErrors((prev) => ({ ...prev, casteProofType: null }));
-                  }}
-                  typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
-                  file={casteProofFile}
-                  onFileChange={(f) => {
-                    setCasteProofFile(f);
-                    setErrors((prev) => ({ ...prev, casteProofFile: null }));
-                  }}
-                  error={errors.casteProofFile}
-                  t={t}
-                  stateId={stateId}
-                  disabled={isViewMode}
-                />
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {/* Supporting Verification Documents: Strict 3-Column Per Row Grid */}
-        <div style={{ marginTop: "28px", marginBottom: "36px" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              gap: "20px 24px",
-              width: "100%",
-              boxSizing: "border-box",
-            }}
-          >
-            {/* Document 1: Identity Proof (Always Shown) */}
+          {/* Caste Certificate appears in the next column dynamically when Caste is not General */}
+          {needsCasteProof && (
             <DocumentUploadCard
-              label={t("PROFILE_IDENTITY_PROOF", "Identity Proof")}
+              label={t("PROFILE_CASTE_PROOF", "Caste Certificate")}
               required={true}
-              options={identityProof}
-              selectedType={identityProofType}
+              options={casteDocumentOptions}
+              selectedType={casteProofType}
               onSelectType={(v) => {
-                setIdentityProofType(v);
-                setErrors((prev) => ({ ...prev, identityProofType: null }));
-              }}
-              typePlaceholder={t("CHOOSE_IDENTITY_TYPE", "Choose Identity Type")}
-              file={identityProofFile}
-              onFileChange={(f) => {
-                setIdentityProofFile(f);
-                setErrors((prev) => ({ ...prev, identityProofFile: null }));
-              }}
-              error={errors.identityProofType || errors.identityProofFile}
-              t={t}
-              stateId={stateId}
-              disabled={isViewMode}
-            />
-
-            {/* Document 2: Date of Birth Proof (Always Shown) */}
-            <DocumentUploadCard
-              label={t("PROFILE_DOB_PROOF", "Date of Birth Proof")}
-              required={true}
-              options={birthDocument}
-              selectedType={birthProofType}
-              onSelectType={(v) => {
-                setBirthProofType(v);
-                setErrors((prev) => ({ ...prev, birthProofType: null }));
+                setCasteProofType(v);
+                setErrors((prev) => ({ ...prev, casteProofType: null }));
               }}
               typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
-              file={birthProofFile}
+              file={casteProofFile}
               onFileChange={(f) => {
-                setBirthProofFile(f);
-                setErrors((prev) => ({ ...prev, birthProofFile: null }));
+                setCasteProofFile(f);
+                setErrors((prev) => ({ ...prev, casteProofFile: null }));
               }}
-              error={errors.birthProofType || errors.birthProofFile}
+              error={errors.casteProofFile}
               t={t}
               stateId={stateId}
               disabled={isViewMode}
             />
-          </div>
+          )}
+
+          {/* Identity Proof (Always Shown, shifts dynamically) */}
+          <DocumentUploadCard
+            label={t("PROFILE_IDENTITY_PROOF", "Identity Proof")}
+            required={true}
+            options={identityProof}
+            selectedType={identityProofType}
+            onSelectType={(v) => {
+              setIdentityProofType(v);
+              setErrors((prev) => ({ ...prev, identityProofType: null }));
+            }}
+            typePlaceholder={t("CHOOSE_IDENTITY_TYPE", "Choose Identity Type")}
+            file={identityProofFile}
+            onFileChange={(f) => {
+              setIdentityProofFile(f);
+              setErrors((prev) => ({ ...prev, identityProofFile: null }));
+            }}
+            error={errors.identityProofType || errors.identityProofFile}
+            t={t}
+            stateId={stateId}
+            disabled={isViewMode}
+          />
+
+          {/* Date of Birth Proof (Always Shown, shifts dynamically) */}
+          <DocumentUploadCard
+            label={t("PROFILE_DOB_PROOF", "Date of Birth Proof")}
+            required={true}
+            options={birthDocument}
+            selectedType={birthProofType}
+            onSelectType={(v) => {
+              setBirthProofType(v);
+              setErrors((prev) => ({ ...prev, birthProofType: null }));
+            }}
+            typePlaceholder={t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
+            file={birthProofFile}
+            onFileChange={(f) => {
+              setBirthProofFile(f);
+              setErrors((prev) => ({ ...prev, birthProofFile: null }));
+            }}
+            error={errors.birthProofType || errors.birthProofFile}
+            t={t}
+            stateId={stateId}
+            disabled={isViewMode}
+          />
         </div>
       </FormStep>
 

@@ -136,7 +136,9 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
 
   // Validate uploaded file
   const validateFile = (file, key) => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const isExtensionValid = /(.*?)\.(jpg|jpeg|png|pdf)$/i.test(file?.name);
+    const isMimeValid = ALLOWED_TYPES.includes(file?.type?.toLowerCase());
+    if (!isExtensionValid && !isMimeValid) {
       setErrors((prev) => ({
         ...prev,
         [key]: t("PROFILE_DOC_INVALID_TYPE"),
