@@ -104,8 +104,11 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(idName)) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "idName is mandatory for ID generation");
         }
+        if (StringUtils.isBlank(tenantId)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "tenantId is mandatory for ID generation");
+        }
 
-        String rootTenant = StringUtils.isNotBlank(tenantId) ? tenantId.split("\\.")[0] : "pg";
+        String rootTenant = tenantId.split("\\.")[0];
         String url = buildUrl(configuration.getIdGenHost(), configuration.getIdGenPath());
         log.info("[UPYOG-IDGEN-CLIENT] Requesting ID generation for idName: {}, tenant: {}, count: {} from: {}",
                 idName, rootTenant, count, url);

@@ -850,6 +850,10 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         Boolean active = (request != null && request.getActive() != null) ? request.getActive() : Boolean.TRUE;
+
+        // Batch pre-fetch 3NF assets across all matched citizens to prevent N+1 queries
+        batchEnrichAssets(decryptedUsers, includes, active, errors);
+
         for (User user : decryptedUsers) {
             enrichRelatedEntities(user, stateTenant, includes, request != null ? request.getRequestInfo() : null, active, errors);
         }
@@ -996,7 +1000,7 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        if (includeProperties) {
+        if (includeProperties && user.getProperties() == null) {
             try {
                 if (userPropertyRepository != null) {
                     List<UserProperty> properties = userPropertyRepository.findPropertiesByUserUuid(user.getUuid(), active);
@@ -1021,7 +1025,7 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        if (includeIncome) {
+        if (includeIncome && user.getIncome() == null) {
             try {
                 if (userIncomeRepository != null) {
                     UserIncome income = userIncomeRepository.findActiveIncomeByUserUuid(user.getUuid(), active);
@@ -1046,7 +1050,7 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        if (includeVehicles) {
+        if (includeVehicles && user.getVehicles() == null) {
             try {
                 if (userVehicleRepository != null) {
                     List<UserVehicle> vehicles = userVehicleRepository.findVehiclesByUserUuid(user.getUuid(), active);
@@ -1066,6 +1070,99 @@ public class ProfileServiceImpl implements ProfileService {
                     if (e instanceof CustomException) {
                         throw (CustomException) e;
                     }
+                    throw new CustomException("VEHICLE_ENRICHMENT_FAILED", "Failed to enrich vehicle details for citizen profile search: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * Batch pre-fetches 3NF declared assets (properties, incomes, and vehicles) across all citizens
+     * matching the profile search, completely eliminating N+1 sequential SQL query execution.
+     *
+     * @param users    list of matched decrypted citizen user records
+     * @param includes requested entity inclusion flags
+     * @param active   active status filter
+     * @param errors   optional list to collect partial degradation errors
+     */
+    private void batchEnrichAssets(List<User> users, Set<ProfileIncludeEntity> includes, Boolean active, List<Error> errors) {
+        if (CollectionUtils.isEmpty(users) || CollectionUtils.isEmpty(includes)) {
+            return;
+        }
+
+        List<String> userUuids = users.stream()
+                .filter(u -> u != null && StringUtils.isNotBlank(u.getUuid()))
+                .map(User::getUuid)
+                .collect(Collectors.toList());
+
+        if (userUuids.isEmpty()) {
+            return;
+        }
+
+        if (includes.contains(ProfileIncludeEntity.PROPERTY) && userPropertyRepository != null) {
+            try {
+                Map<String, List<UserProperty>> propertiesByUser = userPropertyRepository.findPropertiesByUserUuids(userUuids, active);
+                for (User user : users) {
+                    if (user != null && propertiesByUser.containsKey(user.getUuid())) {
+                        user.setProperties(propertiesByUser.get(user.getUuid()));
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error batch enriching properties: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("PROPERTY_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich property details for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) throw (CustomException) e;
+                    throw new CustomException("PROPERTY_ENRICHMENT_FAILED", "Failed to enrich property details for citizen profile search: " + e.getMessage());
+                }
+            }
+        }
+
+        if (includes.contains(ProfileIncludeEntity.INCOME) && userIncomeRepository != null) {
+            try {
+                Map<String, UserIncome> incomeByUser = userIncomeRepository.findActiveIncomesByUserUuids(userUuids, active);
+                for (User user : users) {
+                    if (user != null && incomeByUser.containsKey(user.getUuid())) {
+                        user.setIncome(incomeByUser.get(user.getUuid()));
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error batch enriching income: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("INCOME_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich income details for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) throw (CustomException) e;
+                    throw new CustomException("INCOME_ENRICHMENT_FAILED", "Failed to enrich income details for citizen profile search: " + e.getMessage());
+                }
+            }
+        }
+
+        if (includes.contains(ProfileIncludeEntity.VEHICLE) && userVehicleRepository != null) {
+            try {
+                Map<String, List<UserVehicle>> vehiclesByUser = userVehicleRepository.findVehiclesByUserUuids(userUuids, active);
+                for (User user : users) {
+                    if (user != null && vehiclesByUser.containsKey(user.getUuid())) {
+                        user.setVehicles(vehiclesByUser.get(user.getUuid()));
+                    }
+                }
+            } catch (Exception e) {
+                log.error("[PROFILE-SERVICE] Error batch enriching vehicles: {}", e.getMessage(), e);
+                if (errors != null) {
+                    Error err = new Error();
+                    err.setCode("VEHICLE_ENRICHMENT_FAILED");
+                    err.setMessage("Failed to enrich vehicle details for citizen profile search: " + e.getMessage());
+                    err.setDescription(e.getMessage());
+                    errors.add(err);
+                } else {
+                    if (e instanceof CustomException) throw (CustomException) e;
                     throw new CustomException("VEHICLE_ENRICHMENT_FAILED", "Failed to enrich vehicle details for citizen profile search: " + e.getMessage());
                 }
             }

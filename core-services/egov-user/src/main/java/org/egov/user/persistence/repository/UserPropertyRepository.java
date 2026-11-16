@@ -609,88 +609,7 @@ public class UserPropertyRepository {
         String sql = queryBuilder.buildPropertiesByUserQuery(active, params);
         log.debug("[USER-PROP-REPO] Executing properties search SQL: {} with params: {}", sql, params);
 
-        List<UserProperty> properties = namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> {
-            RuralPropertyDetail rural = null;
-            String rId = rs.getString("r_property_record_id");
-            if (StringUtils.isNotBlank(rId)) {
-                rural = RuralPropertyDetail.builder()
-                        .propertyRecordId(rId)
-                        .id(rId)
-                        .propertyId(rs.getString("r_property_id"))
-                        .tenantId(rs.getString("r_tenant_id"))
-                        .gramPanchayat(rs.getString("r_gram_panchayat"))
-                        .villageName(rs.getString("r_village_name"))
-                        .wardNumber(rs.getString("r_ward_number"))
-                        .propertyAddress(rs.getString("r_property_address"))
-                        .propertyType(rs.getString("r_property_type"))
-                        .propertyUsage(rs.getString("r_property_usage"))
-                        .surveyNumber(rs.getString("r_survey_number"))
-                        .createdBy(rs.getString("r_created_by"))
-                        .createdTime(rs.getLong("r_created_time"))
-                        .lastModifiedBy(rs.getString("r_last_modified_by"))
-                        .lastModifiedTime(rs.getLong("r_last_modified_time"))
-                        .build();
-            }
-
-            UrbanPropertyDetail urban = null;
-            String uId = rs.getString("u_property_record_id");
-            if (StringUtils.isNotBlank(uId)) {
-                urban = UrbanPropertyDetail.builder()
-                        .propertyRecordId(uId)
-                        .tenantId(rs.getString("u_tenant_id"))
-                        .upyogPropertyId(rs.getString("u_upyog_property_id"))
-                        .propertyTaxAmount(rs.getBigDecimal("u_property_tax_amount"))
-                        .urbanAddress(rs.getString("u_urban_address"))
-                        .createdBy(rs.getString("u_created_by"))
-                        .createdTime(rs.getLong("u_created_time"))
-                        .lastModifiedBy(rs.getString("u_last_modified_by"))
-                        .lastModifiedTime(rs.getLong("u_last_modified_time"))
-                        .build();
-            }
-
-            UserDocument doc = null;
-            String docId = rs.getString("d_id");
-            if (StringUtils.isNotBlank(docId)) {
-                doc = UserDocument.builder()
-                        .id(docId)
-                        .documentType(rs.getString("d_document_type"))
-                        .filestoreId(rs.getString("d_filestore_id"))
-                        .documentUid(rs.getString("d_document_uid"))
-                        .fileName(rs.getString("d_file_name"))
-                        .isVerified(rs.getObject("d_is_verified") != null ? rs.getBoolean("d_is_verified") : null)
-                        .build();
-            }
-
-            Object additionalDetails = null;
-            String jsonStr = rs.getString("p_additional_details");
-            if (StringUtils.isNotBlank(jsonStr)) {
-                try {
-                    additionalDetails = objectMapper.readValue(jsonStr, Object.class);
-                } catch (Exception e) {
-                    log.debug("[USER-PROP-REPO] Unable to deserialize additional_details: {}", e.getMessage());
-                }
-            }
-
-            return UserProperty.builder()
-                    .id(rs.getString("p_id"))
-                    .userUuid(rs.getString("p_user_uuid"))
-                    .tenantId(rs.getString("p_tenant_id"))
-                    .localityType(rs.getString("p_locality_type"))
-                    .ownershipType(rs.getString("p_ownership_type"))
-                    .declarationConfirmed(rs.getBoolean("p_declaration_confirmed"))
-                    .documentId(rs.getString("p_document_id"))
-                    .document(doc)
-                    .status(rs.getString("p_status"))
-                    .additionalDetails(additionalDetails)
-                    .urbanPropertyDetail(urban)
-                    .ruralPropertyDetail(rural)
-                    .owners(new ArrayList<>())
-                    .createdBy(rs.getString("p_created_by"))
-                    .createdTime(rs.getLong("p_created_time"))
-                    .lastModifiedBy(rs.getString("p_last_modified_by"))
-                    .lastModifiedTime(rs.getLong("p_last_modified_time"))
-                    .build();
-        });
+        List<UserProperty> properties = namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToUserProperty(rs));
 
         if (properties.isEmpty()) {
             return Collections.emptyList();
@@ -706,6 +625,138 @@ public class UserPropertyRepository {
         }
 
         return properties;
+    }
+
+    /**
+     * Maps a database result row to a {@link UserProperty} domain entity with urban and rural details.
+     *
+     * @param rs JDBC result set
+     * @return populated {@link UserProperty} entity
+     * @throws java.sql.SQLException if SQL reading fails
+     */
+    private UserProperty mapRowToUserProperty(java.sql.ResultSet rs) throws java.sql.SQLException {
+        RuralPropertyDetail rural = null;
+        String rId = rs.getString("r_property_record_id");
+        if (StringUtils.isNotBlank(rId)) {
+            rural = RuralPropertyDetail.builder()
+                    .propertyRecordId(rId)
+                    .id(rId)
+                    .propertyId(rs.getString("r_property_id"))
+                    .tenantId(rs.getString("r_tenant_id"))
+                    .gramPanchayat(rs.getString("r_gram_panchayat"))
+                    .villageName(rs.getString("r_village_name"))
+                    .wardNumber(rs.getString("r_ward_number"))
+                    .propertyAddress(rs.getString("r_property_address"))
+                    .propertyType(rs.getString("r_property_type"))
+                    .propertyUsage(rs.getString("r_property_usage"))
+                    .surveyNumber(rs.getString("r_survey_number"))
+                    .createdBy(rs.getString("r_created_by"))
+                    .createdTime(rs.getLong("r_created_time"))
+                    .lastModifiedBy(rs.getString("r_last_modified_by"))
+                    .lastModifiedTime(rs.getLong("r_last_modified_time"))
+                    .build();
+        }
+
+        UrbanPropertyDetail urban = null;
+        String uId = rs.getString("u_property_record_id");
+        if (StringUtils.isNotBlank(uId)) {
+            urban = UrbanPropertyDetail.builder()
+                    .propertyRecordId(uId)
+                    .tenantId(rs.getString("u_tenant_id"))
+                    .upyogPropertyId(rs.getString("u_upyog_property_id"))
+                    .propertyTaxAmount(rs.getBigDecimal("u_property_tax_amount"))
+                    .urbanAddress(rs.getString("u_urban_address"))
+                    .createdBy(rs.getString("u_created_by"))
+                    .createdTime(rs.getLong("u_created_time"))
+                    .lastModifiedBy(rs.getString("u_last_modified_by"))
+                    .lastModifiedTime(rs.getLong("u_last_modified_time"))
+                    .build();
+        }
+
+        UserDocument doc = null;
+        String docId = rs.getString("d_id");
+        if (StringUtils.isNotBlank(docId)) {
+            doc = UserDocument.builder()
+                    .id(docId)
+                    .documentType(rs.getString("d_document_type"))
+                    .filestoreId(rs.getString("d_filestore_id"))
+                    .documentUid(rs.getString("d_document_uid"))
+                    .fileName(rs.getString("d_file_name"))
+                    .isVerified(rs.getObject("d_is_verified") != null ? rs.getBoolean("d_is_verified") : null)
+                    .build();
+        }
+
+        Object additionalDetails = null;
+        String jsonStr = rs.getString("p_additional_details");
+        if (StringUtils.isNotBlank(jsonStr)) {
+            try {
+                additionalDetails = objectMapper.readValue(jsonStr, Object.class);
+            } catch (Exception e) {
+                log.debug("[USER-PROP-REPO] Unable to deserialize additional_details: {}", e.getMessage());
+            }
+        }
+
+        return UserProperty.builder()
+                .id(rs.getString("p_id"))
+                .userUuid(rs.getString("p_user_uuid"))
+                .tenantId(rs.getString("p_tenant_id"))
+                .localityType(rs.getString("p_locality_type"))
+                .ownershipType(rs.getString("p_ownership_type"))
+                .declarationConfirmed(rs.getBoolean("p_declaration_confirmed"))
+                .documentId(rs.getString("p_document_id"))
+                .document(doc)
+                .status(rs.getString("p_status"))
+                .additionalDetails(additionalDetails)
+                .urbanPropertyDetail(urban)
+                .ruralPropertyDetail(rural)
+                .owners(new ArrayList<>())
+                .createdBy(rs.getString("p_created_by"))
+                .createdTime(rs.getLong("p_created_time"))
+                .lastModifiedBy(rs.getString("p_last_modified_by"))
+                .lastModifiedTime(rs.getLong("p_last_modified_time"))
+                .build();
+    }
+
+    /**
+     * Batch retrieves citizen property assets across multiple citizen user UUIDs in a single query.
+     * Prevents N+1 query overhead during bulk citizen profile searches.
+     *
+     * @param userUuids collection of citizen user UUIDs
+     * @param active    optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return map associating each citizen user UUID to their corresponding list of properties
+     */
+    public Map<String, List<UserProperty>> findPropertiesByUserUuids(List<String> userUuids, Boolean active) {
+        if (userUuids == null || userUuids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("user_uuids", userUuids);
+            String sql = queryBuilder.buildPropertiesByUserUuidsQuery(active);
+            List<UserProperty> properties = namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToUserProperty(rs));
+            if (properties == null || properties.isEmpty()) {
+                return Collections.emptyMap();
+            }
+
+            List<String> propertyIds = properties.stream().map(UserProperty::getId).collect(Collectors.toList());
+            Map<String, List<PropertyOwner>> ownersByProperty = fetchPropertyOwners(propertyIds);
+
+            for (UserProperty prop : properties) {
+                if (ownersByProperty.containsKey(prop.getId())) {
+                    prop.setOwners(ownersByProperty.get(prop.getId()));
+                }
+            }
+
+            Map<String, List<UserProperty>> result = new HashMap<>();
+            for (UserProperty prop : properties) {
+                if (prop != null && StringUtils.isNotBlank(prop.getUserUuid())) {
+                    result.computeIfAbsent(prop.getUserUuid(), k -> new ArrayList<>()).add(prop);
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("[USER-PROP-REPO] Failed to batch lookup properties by user UUIDs: {}", e.getMessage(), e);
+            return Collections.emptyMap();
+        }
     }
 
     /**

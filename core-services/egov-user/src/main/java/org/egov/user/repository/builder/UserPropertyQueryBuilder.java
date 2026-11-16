@@ -356,6 +356,49 @@ public class UserPropertyQueryBuilder {
     }
 
     /**
+     * Builds dynamic parameterized SQL query for batch retrieving citizen property assets across multiple citizen user UUIDs.
+     *
+     * @param active optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return fully constructed SQL query string
+     */
+    public String buildPropertiesByUserUuidsQuery(Boolean active) {
+        StringBuilder query = new StringBuilder(
+                "SELECT p.id as p_id, p.user_uuid as p_user_uuid, p.tenant_id as p_tenant_id, " +
+                "p.locality_type as p_locality_type, p.ownership_type as p_ownership_type, " +
+                "p.declaration_confirmed as p_declaration_confirmed, p.document_id as p_document_id, " +
+                "p.status as p_status, p.additional_details as p_additional_details, " +
+                "p.created_by as p_created_by, p.created_time as p_created_time, " +
+                "p.last_modified_by as p_last_modified_by, p.last_modified_time as p_last_modified_time, " +
+                "u.property_record_id as u_property_record_id, u.tenant_id as u_tenant_id, " +
+                "u.upyog_property_id as u_upyog_property_id, u.property_tax_amount as u_property_tax_amount, " +
+                "u.urban_address as u_urban_address, u.created_by as u_created_by, " +
+                "u.created_time as u_created_time, u.last_modified_by as u_last_modified_by, " +
+                "u.last_modified_time as u_last_modified_time, " +
+                "r.property_record_id as r_property_record_id, r.tenant_id as r_tenant_id, r.property_id as r_property_id, " +
+                "r.gram_panchayat as r_gram_panchayat, r.village_name as r_village_name, " +
+                "r.ward_number as r_ward_number, r.property_address as r_property_address, " +
+                "r.property_type as r_property_type, r.property_usage as r_property_usage, " +
+                "r.survey_number as r_survey_number, r.created_by as r_created_by, " +
+                "r.created_time as r_created_time, r.last_modified_by as r_last_modified_by, " +
+                "r.last_modified_time as r_last_modified_time, " +
+                "d.id as d_id, d.document_type as d_document_type, d.filestore_id as d_filestore_id, " +
+                "d.document_uid as d_document_uid, d.file_name as d_file_name, d.is_verified as d_is_verified " +
+                "FROM ug_user_property p " +
+                "LEFT JOIN ug_user_urban_property u ON p.id = u.property_record_id " +
+                "LEFT JOIN ug_user_rural_property r ON p.id = r.property_record_id " +
+                "LEFT JOIN ug_user_document d ON p.document_id = d.id " +
+                "WHERE p.user_uuid IN (:user_uuids)"
+        );
+        if (Boolean.TRUE.equals(active)) {
+            query.append(" AND p.status = 'ACTIVE'");
+        } else if (Boolean.FALSE.equals(active)) {
+            query.append(" AND p.status = 'INACTIVE'");
+        }
+        query.append(" ORDER BY p.created_time DESC");
+        return query.toString();
+    }
+
+    /**
      * Returns the parameterized SQL query for deactivating property owners.
      *
      * @return SQL query string

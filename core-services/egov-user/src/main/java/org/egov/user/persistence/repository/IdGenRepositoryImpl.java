@@ -99,8 +99,11 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(idName)) {
             throw new CustomException("INVALID_CONFIGURATION", "idName is mandatory for ID generation");
         }
+        if (StringUtils.isBlank(tenantId)) {
+            throw new CustomException("INVALID_TENANT_ID", "tenantId is mandatory for ID generation");
+        }
 
-        String rootTenant = StringUtils.isNotBlank(tenantId) ? tenantId.split("\\.")[0] : "pg";
+        String rootTenant = tenantId.split("\\.")[0];
         String url = buildUrl(configuration.getIdGenHost(), configuration.getIdGenPath());
         log.info("[EGOV-USER-IDGEN] Requesting ID generation for idName: {}, tenant: {}, count: {} from: {}",
                 idName, rootTenant, count, url);

@@ -161,6 +161,10 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         String userUuid = request.resolveUserUuid();
+        if (StringUtils.isBlank(userUuid)) {
+            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
+        }
+
         UserVehicle existing = vehicleRepository.findVehicleById(vehicleId);
         if (existing == null) {
             log.error("[VEHICLE-SERVICE] Vehicle not found with ID: {}", vehicleId);
@@ -168,7 +172,7 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         // Security boundary check: ensure the vehicle belongs to the declared citizen
-        if (StringUtils.isNotBlank(userUuid) && !userUuid.equals(existing.getUserUuid())) {
+        if (!userUuid.equals(existing.getUserUuid())) {
             log.error("[VEHICLE-SERVICE] Unauthorized update: vehicle {} belongs to {} but update requested for {}",
                     vehicleId, existing.getUserUuid(), userUuid);
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_VEHICLE_ACCESS_DENIED);
@@ -288,6 +292,10 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         String userUuid = request.resolveUserUuid();
+        if (StringUtils.isBlank(userUuid)) {
+            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
+        }
+
         UserVehicle existing = vehicleRepository.findVehicleById(vehicleId);
         if (existing == null) {
             log.error("[VEHICLE-SERVICE] Vehicle not found with ID: {}", vehicleId);
@@ -295,7 +303,7 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         // Security boundary check: ensure caller belongs to the vehicle's citizen
-        if (StringUtils.isNotBlank(userUuid) && !userUuid.equals(existing.getUserUuid())) {
+        if (!userUuid.equals(existing.getUserUuid())) {
             log.error("[VEHICLE-SERVICE] Unauthorized deactivation attempt: vehicle {} belongs to {} but deletion requested for {}",
                     vehicleId, existing.getUserUuid(), userUuid);
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_VEHICLE_ACCESS_DENIED);

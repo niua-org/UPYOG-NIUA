@@ -36,7 +36,7 @@ import java.util.List;
  *   <li><b>Dependency Inversion Principle (DIP):</b> Relies exclusively on injected domain service abstractions.</li>
  * </ul>
  *
- * <p>Available Endpoints (base path {@code /vehicle}):</p>
+ * <p>Available Endpoints (base path {@code /v1/vehicle}):</p>
  * <ul>
  *   <li>{@code POST /_create} - Registers a new vehicle declaration for a citizen</li>
  *   <li>{@code POST /_update} - Updates existing vehicle attributes or attached RC documents</li>
@@ -49,7 +49,7 @@ import java.util.List;
  */
 @Tag(name = "Vehicle Management", description = "Standalone CRUD endpoints for citizen vehicle declarations")
 @RestController
-@RequestMapping("/vehicle")
+@RequestMapping("/v1/vehicle")
 @Slf4j
 public class VehicleController {
 

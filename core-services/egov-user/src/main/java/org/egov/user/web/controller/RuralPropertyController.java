@@ -36,7 +36,7 @@ import java.util.List;
  *   <li><b>Dependency Inversion Principle (DIP):</b> Relies exclusively on injected domain service abstractions.</li>
  * </ul>
  *
- * <p>Available Endpoints (base path {@code /rural-property}):</p>
+ * <p>Available Endpoints (base path {@code /v1/rural-property}):</p>
  * <ul>
  *   <li>{@code POST /_create} - Creates a new rural property declaration for a citizen</li>
  *   <li>{@code POST /_update} - Updates existing rural property attributes, co-owners, or documents</li>
@@ -49,7 +49,7 @@ import java.util.List;
  */
 @Tag(name = "Rural Property Management", description = "Standalone CRUD endpoints for citizen rural properties")
 @RestController
-@RequestMapping("/rural-property")
+@RequestMapping("/v1/rural-property")
 @Slf4j
 public class RuralPropertyController {
 

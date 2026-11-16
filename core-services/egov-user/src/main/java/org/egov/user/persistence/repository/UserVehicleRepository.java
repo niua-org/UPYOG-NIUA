@@ -16,6 +16,7 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -297,6 +298,37 @@ public class UserVehicleRepository {
         } catch (Exception e) {
             log.error("[USER-VEHICLE-REPO] Failed to lookup vehicles by user UUID {}: {}", userUuid, e.getMessage());
             return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Batch retrieves citizen vehicle ownership declarations for multiple user UUIDs in a single query.
+     * Prevents N+1 query overhead during bulk citizen profile searches.
+     *
+     * @param userUuids collection of citizen user UUIDs
+     * @param active    optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return map associating each citizen user UUID to their corresponding list of vehicle declarations
+     */
+    public Map<String, List<UserVehicle>> findVehiclesByUserUuids(List<String> userUuids, Boolean active) {
+        if (userUuids == null || userUuids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("user_uuids", userUuids);
+            String sql = queryBuilder.buildVehiclesByUserUuidsQuery(active);
+            List<UserVehicle> vehicles = namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToUserVehicle(rs));
+            Map<String, List<UserVehicle>> result = new HashMap<>();
+            if (vehicles != null) {
+                for (UserVehicle v : vehicles) {
+                    if (v != null && StringUtils.isNotBlank(v.getUserUuid())) {
+                        result.computeIfAbsent(v.getUserUuid(), k -> new ArrayList<>()).add(v);
+                    }
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("[USER-VEHICLE-REPO] Failed to batch lookup vehicles by user UUIDs: {}", e.getMessage(), e);
+            return Collections.emptyMap();
         }
     }
 
