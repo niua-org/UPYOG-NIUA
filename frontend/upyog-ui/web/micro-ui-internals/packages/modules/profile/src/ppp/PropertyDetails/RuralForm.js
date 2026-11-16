@@ -16,6 +16,8 @@ import { profileStyles } from "../../utils/profileStyles";
 
 const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
   const styles = profileStyles.ruralPropertyForm;
+  const maxUploadSize = 5 * 1024 * 1024;
+  const allowedFileExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
 
   const [gramPanchayat, setGramPanchayat] = useState(data.gramPanchayat || null);
   const [village, setVillage] = useState(data.village || null);
@@ -162,15 +164,18 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setPropertyDocument(file);
-    setFileUploadError(null);
-    updateField("propertyDocument", null);
-
-    if (file.size >= 5242880) {
+    const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    if (!allowedFileExtensions.includes(extension) || file.size > maxUploadSize) {
+      setPropertyDocument(null);
+      updateField("propertyDocument", null);
       setFileUploadError(t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
+      event.target.value = "";
       return;
     }
 
+    setPropertyDocument(file);
+    setFileUploadError(null);
+    updateField("propertyDocument", null);
     setIsUploading(true);
 
     try {
@@ -462,6 +467,9 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           disabled={isUploading}
           accept=".pdf,.jpg,.jpeg,.png"
         />
+        <div style={styles.hint}>
+          Only .jpg, .jpeg, .png and .pdf files up to 5MB are allowed
+        </div>
 
       </div>
     </div>

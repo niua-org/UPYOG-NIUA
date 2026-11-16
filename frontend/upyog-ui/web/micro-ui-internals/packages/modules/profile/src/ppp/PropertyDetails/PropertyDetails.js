@@ -27,7 +27,7 @@ const LOCALITY_TYPE_OPTIONS = [
  *  5. Owner Name
  *  6. Property Address
  */
-const PropertyDetails = ({ t, config, onSelect, formData }) => {
+const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
   const styles = profileStyles.propertyDetails;
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
@@ -38,6 +38,7 @@ const PropertyDetails = ({ t, config, onSelect, formData }) => {
   const updatePropertyData = (data) => {
     if (isViewMode) return;
     setPropertyData((prev) => ({ ...prev, ...data, }));
+    onUpdate?.(config.key, data);
   };
 
   /*
@@ -84,9 +85,17 @@ const PropertyDetails = ({ t, config, onSelect, formData }) => {
   const hasUrbanProperty =
     propertyData.properties?.some((property) => property.propertyId) ||
     (propertyData.propertyId && propertyData.ownerName);
+  const urbanProperties = propertyData.properties || [];
+  const hasSelectedPrimaryProperty = urbanProperties.some(
+    (property) =>
+      property.propertyId ===
+      (propertyData.primaryPropertyId ||
+        urbanProperties.find((item) => item.isPrimaryAddress)?.propertyId)
+  );
   const isDisabled =
     !localityType ||
     (localityType.code === "URBAN" && !hasUrbanProperty) ||
+    (localityType.code === "URBAN" && urbanProperties.length > 1 && !hasSelectedPrimaryProperty) ||
     (localityType.code === "RURAL" &&
       (!propertyData.gramPanchayat || !propertyData.village || !propertyData.ward || !propertyData.propertyAddress || !propertyData.propertyType ||
         !propertyData.propertyUsage || !propertyData.surveyNumber || !propertyData.ownershipType || !propertyData.documentType || !propertyData.propertyDocument ||

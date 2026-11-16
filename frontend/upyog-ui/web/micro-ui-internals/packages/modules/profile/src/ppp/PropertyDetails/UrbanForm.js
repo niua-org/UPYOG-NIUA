@@ -3,6 +3,12 @@ import { Card, Loader, SearchIconSvg, TextInput } from "@nudmcdgnpm/digit-ui-rea
 import { useTranslation } from "react-i18next";
 import { profileStyles } from "../../utils/profileStyles";
 
+/**
+ * Gets the display name for a property's active owners.
+ *
+ * @param {object} property Property Tax search result.
+ * @returns {string} Owner name or comma-separated active owner names.
+ */
 const getOwnerName = (property) => {
   if (property.ownerName) return property.ownerName;
   return property.owners
@@ -12,6 +18,12 @@ const getOwnerName = (property) => {
     .join(", ") || "";
 };
 
+/**
+ * Builds a readable address from a property or its address fields.
+ *
+ * @param {object} property Property Tax search result.
+ * @returns {string} Property address.
+ */
 const getPropertyAddress = (property) => {
   if (typeof property.propertyAddress === "string") return property.propertyAddress;
 
@@ -25,6 +37,15 @@ const getPropertyAddress = (property) => {
   ].filter(Boolean).join(", ");
 };
 
+/**
+ * Searches Property Tax records and lets the user add and manage urban properties.
+ *
+ * @param {object} props Component props.
+ * @param {object} [props.data={}] Existing property details and selected default address.
+ * @param {Function} props.onChange Callback invoked when the property selection changes.
+ * @param {boolean} [props.disabled=false] Whether property search and editing are disabled.
+ * @returns {JSX.Element} The urban property search form and property cards.
+ */
 const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
   const { t } = useTranslation();
   const styles = profileStyles.urbanPropertyForm;
@@ -46,13 +67,16 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
     }
     return [];
   });
-  const [primaryPropertyId, setPrimaryPropertyId] = useState(
-    data.primaryPropertyId ||
-      data.properties?.find((property) => property.isPrimaryAddress)?.propertyId ||
-      data.properties?.[0]?.propertyId ||
-      data.propertyId ||
+  const [primaryPropertyId, setPrimaryPropertyId] = useState(() => {
+    const properties = data.properties || [];
+    return (
+      data.primaryPropertyId ||
+      properties.find((property) => property.isPrimaryAddress)?.propertyId ||
+      (properties.length === 1 ? properties[0].propertyId : "") ||
+      (!properties.length ? data.propertyId : "") ||
       ""
-  );
+    );
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const publishProperties = (properties, primaryId) => {
@@ -112,7 +136,12 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
       const existingIds = new Set(propertyCards.map((property) => property.propertyId));
       const newProperties = foundProperties.filter((property) => property.propertyId && !existingIds.has(property.propertyId));
       const nextProperties = [...propertyCards, ...newProperties];
-      const nextPrimaryId = primaryPropertyId || nextProperties[0]?.propertyId || "";
+      const nextPrimaryId =
+        nextProperties.length <= 1
+          ? primaryPropertyId || nextProperties[0]?.propertyId || ""
+          : newProperties.length > 0
+            ? ""
+            : primaryPropertyId;
 
       setPropertyCards(nextProperties);
       setPrimaryPropertyId(nextPrimaryId);
@@ -138,6 +167,20 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
     publishProperties(propertyCards, propertyId);
   };
 
+  const handleRemoveProperty = (propertyId) => {
+    const nextProperties = propertyCards.filter((property) => property.propertyId !== propertyId);
+    const nextPrimaryId =
+      nextProperties.length === 1
+        ? nextProperties[0].propertyId
+        : primaryPropertyId === propertyId
+          ? ""
+          : primaryPropertyId;
+
+    setPropertyCards(nextProperties);
+    setPrimaryPropertyId(nextPrimaryId);
+    publishProperties(nextProperties, nextPrimaryId);
+  };
+
   const handleAddMore = () => {
     setPropertyId("");
     setSearched(false);
@@ -145,16 +188,12 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
     setResultsCount(0);
   };
 
-  const handleCreateProperty = () => {
-    window.open("/upyog-ui/citizen/property/property-create", "_blank");
-  };
-
   return (
     <div style={styles.container}>
       {!disabled && (
         <div style={styles.field}>
           <label style={profileStyles.label}>{t("PROFILE_SEARCH_LINK_PROPERTY_ID")}</label>
-          <div className="flex items-center gap-md">
+          <div style={styles.searchRow}>
             <TextInput
               style={styles.searchInput}
               value={propertyId}
@@ -169,9 +208,31 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
                 />
               }
             />
-            <button type="button" style={profileStyles.primaryButton} onClick={handleAddMore}>
-              {t("PROFILE_ADD_MORE")}
+            <button
+              type="button"
+              style={{ ...profileStyles.primaryButton, ...styles.searchSubmitButton }}
+              onClick={handleSearch}
+              disabled={isLoading || !propertyId.trim()}
+            >
+              {t("CS_COMMON_SUBMIT")}
             </button>
+          </div>
+          {propertyCards.length > 0 && (
+            <div style={{ marginTop: "12px" }}>
+              <button type="button" style={profileStyles.primaryButton} onClick={handleAddMore}>
+                {t("PROFILE_ADD_MORE")}
+              </button>
+            </div>
+          )}
+          <div style={styles.createProperty}>
+            <span>Not able to find the property?</span>{" "}
+            <a
+              href="#"
+              onClick={(event) => event.preventDefault()}
+              style={styles.registerPropertyLink}
+            >
+              Click here to Register New Property
+            </a>
           </div>
           {isLoading && <Loader />}
           {searchError && (
@@ -187,6 +248,9 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
 
       {propertyCards.length > 0 && (
         <div style={styles.results}>
+          {propertyCards.length > 1 && (
+            <div style={styles.primaryAddressLabel}>Select primary address</div>
+          )}
           {propertyCards.map((property) => {
             const propertyIdValue = property.propertyId || "";
             const status = property.status
@@ -194,7 +258,13 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
               : "NA";
 
             return (
-              <Card key={propertyIdValue} style={styles.propertyCard}>
+              <Card
+                key={propertyIdValue}
+                style={{
+                  ...styles.propertyCard,
+                  ...styles.propertyCardWithActions,
+                }}
+              >
                 <div style={styles.propertyDetails}>
                   {[
                     [t("PROFILE_PROPERTY_TAX_AMOUNT"), `₹ ${property.propertyTaxAmount ?? 0}`],
@@ -209,29 +279,37 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
                     </div>
                   ))}
                 </div>
-                <input
-                  type="radio"
-                  name="primaryPropertyAddress"
-                  aria-label={`Mark ${propertyIdValue} as primary address`}
-                  title="Mark as primary address"
-                  checked={primaryPropertyId === propertyIdValue}
-                  onChange={() => !disabled && handleSelectPrimary(propertyIdValue)}
-                  disabled={disabled}
-                  style={styles.selectRadio}
-                />
+                <div style={styles.propertyActions}>
+                  {propertyCards.length > 1 && (
+                    <button
+                      type="button"
+                      aria-label={`Set ${propertyIdValue} as default property`}
+                      onClick={() => handleSelectPrimary(propertyIdValue)}
+                      disabled={primaryPropertyId === propertyIdValue || disabled}
+                      style={{
+                        ...styles.propertyActionButton,
+                        ...(primaryPropertyId === propertyIdValue ? styles.defaultPropertyButton : {}),
+                      }}
+                    >
+                      {primaryPropertyId === propertyIdValue ? "Primary" : "Set as Primary"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    aria-label={`Remove property ${propertyIdValue}`}
+                    onClick={() => handleRemoveProperty(propertyIdValue)}
+                    disabled={disabled}
+                    style={{ ...styles.propertyActionButton, ...styles.removePropertyButton }}
+                  >
+                    {t("CORE_COMMON_REMOVE", "Remove")}
+                  </button>
+                </div>
               </Card>
             );
           })}
         </div>
       )}
 
-      {!disabled && (
-        <div style={styles.createProperty}>
-          <button type="button" style={profileStyles.primaryButton} onClick={handleCreateProperty}>
-            {t("PROFILE_CREATE_PROPERTY_ID")}
-          </button>
-        </div>
-      )}
     </div>
   );
 };

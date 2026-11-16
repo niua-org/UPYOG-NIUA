@@ -1,3 +1,5 @@
+import { pad } from "lodash";
+
 // All inline styles for the ProfileDetails page
 export const profileStyles = {
   message: { padding: 16 },
@@ -662,9 +664,29 @@ urbanPropertyForm: {
     width: "100%",
   },
 
+  searchRow: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "16px",
+  },
+
+  searchSubmitButton: {
+    height: "40px",
+    padding: "0 16px",
+    borderRadius: "4px",
+    fontSize: "13px",
+    marginTop: 0,
+  },
+
   results: {
     width: "60%",
     marginTop: "16px",
+  },
+
+  primaryAddressLabel: {
+    marginBottom: "8px",
+    fontSize: "14px",
+    fontWeight: "600",
   },
 
   propertyCard: {
@@ -679,6 +701,10 @@ urbanPropertyForm: {
     border: "1px solid #E8E8E8",
     borderRadius: "8px",
     boxShadow: "none",
+  },
+
+  propertyCardWithActions: {
+    paddingTop: "48px",
   },
 
   propertyDetails: {
@@ -702,14 +728,37 @@ urbanPropertyForm: {
     overflowWrap: "anywhere",
   },
 
-  selectRadio: {
+  propertyActions: {
     position: "absolute",
-    top: "12px",
-    right: "16px",
-    width: "18px",
-    height: "18px",
-    accentColor: "#D7353A",
+    top: "10px",
+    right: "12px",
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: "8px",
+  },
+
+  propertyActionButton: {
+    padding: "6px 10px",
+    border: "1px solid #b1afb4",
+    borderRadius: "16px",
+    background: "#FFFFFF",
+    color: "#000000",
+    fontSize: "12px",
+    fontWeight: "600",
     cursor: "pointer",
+  },
+
+  defaultPropertyButton: {
+    background: "#ebebeb",
+    color: "#000000",
+    cursor: "default",
+  },
+
+  removePropertyButton: {
+    borderColor: "#D4353A",
+    color: "#D4353A",
   },
 
   noProperty: {
@@ -720,6 +769,15 @@ urbanPropertyForm: {
   createProperty: {
     marginTop: "20px",
     marginBottom:"10px",
+  },
+
+  registerPropertyLink: {
+    color: "#D4353A",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+    padding: "0 5px",
+    textDecoration:"underline"
   },
 
   createPropertyButton: {

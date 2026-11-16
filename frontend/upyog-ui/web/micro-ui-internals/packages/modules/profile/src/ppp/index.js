@@ -122,6 +122,12 @@ const FamilyCreate = ({ parentRoute }) => {
     goNext(skipStep, index, isAddMultiple, key);
   }
 
+  function handleUpdate(key, data) {
+    if (!isViewMode) {
+      setAllParams({ ...allParams, [memberId]: { ...params, [key]: { ...params[key], ...data } } });
+    }
+  }
+
   const handleSkip = () => { };
   const handleMultiple = () => { };
 
@@ -151,7 +157,7 @@ const FamilyCreate = ({ parentRoute }) => {
             path={`${routeObj.route}`}
             key={index}
             element={
-              <Component config={{ texts, inputs, key, isViewMode }} onSelect={handleSelect} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
+              <Component config={{ texts, inputs, key, isViewMode }} onSelect={handleSelect} onUpdate={handleUpdate} onSkip={handleSkip} t={t} formData={params} onAdd={handleMultiple} />
             }
           />
         );
