@@ -1,5 +1,13 @@
 // All request payload builders used by the Edit Profile screen
 
+
+// helper to convert all DOBs to epoch
+const toEpoch = (dob) => {
+  if (!dob) return undefined;
+  if (typeof dob === "number") return dob;
+  return new Date(dob).getTime();
+};
+
 // Body for Digit.UserService.updateUser
 export const buildUpdateUserPayload = ({ userInfo, form, photoId, locale }) => ({
   ...userInfo,
@@ -123,7 +131,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       userName: profileDetails.mobileNumber || member.mobileNumber,
       name: profileDetails.name || member.name,
       gender: profileDetails.gender?.code || profileDetails.gender,
-      dob: profileDetails.dob || undefined,
+      dob: toEpoch(profileDetails.dob) || undefined,
       mobileNumber: profileDetails.mobileNumber || member.mobileNumber,
       alternateMobileNumber: profileDetails.altContactNumber,
       emailId: profileDetails.emailId,
@@ -250,7 +258,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       name: member.name || profileDetails.name,
       mobileNumber: member.mobileNumber || profileDetails.mobileNumber,
       gender: profileDetails.gender?.code || profileDetails.gender || member.gender,
-      dob: profileDetails.dob || undefined,
+      dob: toEpoch(profileDetails.dob) || undefined,
       photo: profileDetails.photo || undefined,
       relationshipWithHead: String(member.relationshipWithHead || profileDetails.relationshipWithHof?.code || "").toUpperCase().replace(/\s+/g, "_") || undefined,
       isHead: member.userUuid === finalHeadUuid,
