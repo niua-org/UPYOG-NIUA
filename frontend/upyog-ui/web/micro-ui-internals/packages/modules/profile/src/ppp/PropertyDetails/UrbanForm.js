@@ -126,6 +126,13 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
     }
   };
 
+  const handleSearchKeyDown = (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSearch();
+    }
+  };
+
   const handleSelectPrimary = (propertyId) => {
     setPrimaryPropertyId(propertyId);
     publishProperties(propertyCards, propertyId);
@@ -152,6 +159,7 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false }) => {
               style={styles.searchInput}
               value={propertyId}
               onChange={handleSearchInputChange}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search by Property ID"
               signature={true}
               signatureImg={
