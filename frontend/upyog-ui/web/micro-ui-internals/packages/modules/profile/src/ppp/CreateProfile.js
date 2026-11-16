@@ -302,6 +302,18 @@ const DocumentUploadCard = ({
         )}
       </div>
 
+      {/* Allowed File Formats & Size Restriction */}
+      <div
+        style={{
+          fontSize: "12px",
+          color: "#64748b",
+          marginTop: "4px",
+          lineHeight: "1.3",
+        }}
+      >
+        {t("CS_FILE_SIZE_RESTRICTIONS", "Only .jpg, .jpeg, .png and .pdf files up to 5MB are allowed")}
+      </div>
+
       {(uploadError || error) && (
         <CardLabelError style={{ marginTop: "4px" }}>
           {t(uploadError || error)}
@@ -357,7 +369,6 @@ const CreateProfile = ({ config, onSelect, formData }) => {
 
   // Additional Dropdown Fields
   const [relationshipWithHof, setRelationshipWithHof] = useState(saved.relationshipWithHof || null);
-  const [occupation, setOccupation] = useState(saved.occupation || "");
   const [caste, setCaste] = useState(saved.caste || casteOptions[0]);
   const [speciallyAbled, setSpeciallyAbled] = useState(saved.speciallyAbled || speciallyAbledOptions[1]);
 
@@ -484,9 +495,6 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     if (!form.altContactNumber?.trim()) nextErrors.altContactNumber = "CORE_COMMON_PROFILE_ALT_MOBILE_REQUIRED";
     if (!form.emailId?.trim()) nextErrors.emailId = "CORE_COMMON_PROFILE_EMAIL_REQUIRED";
     if (!form.fatherName?.trim()) nextErrors.fatherName = "CORE_COMMON_PROFILE_FATHER_REQUIRED";
-    if (!form.motherName?.trim()) nextErrors.motherName = "CORE_COMMON_PROFILE_MOTHER_REQUIRED";
-    if (!form.spouseName?.trim()) nextErrors.spouseName = "CORE_COMMON_PROFILE_SPOUSE_REQUIRED";
-    if (!form.guardianName?.trim()) nextErrors.guardianName = "CORE_COMMON_PROFILE_GUARDIAN_REQUIRED";
 
     if (form.altContactNumber && validators.altMobileNumber(form.altContactNumber)) {
       nextErrors.altContactNumber = validators.altMobileNumber(form.altContactNumber);
@@ -498,8 +506,8 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     if (!caste) nextErrors.caste = "PROFILE_CASTE_REQUIRED";
     if (!speciallyAbled) nextErrors.speciallyAbled = "PROFILE_SPECIALLY_ABLED_REQUIRED";
 
-    // A member added through Aadhaar must state how they relate to the head of the family
-    if (!isSelf && !relationshipWithHof) nextErrors.relationshipWithHof = "ERR_SELECT_RELATIONSHIP";
+    // Relationship with Head of Family is mandatory
+    if (!relationshipWithHof) nextErrors.relationshipWithHof = "ERR_SELECT_RELATIONSHIP";
 
     // Identity Proof validation
     if (!identityProofType) nextErrors.identityProofType = "PROFILE_SELECT_DOC_TYPE";
@@ -537,7 +545,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     ...form,
     photo: photoId,
     relationshipWithHof,
-    occupation: occupation?.trim(),
+    occupation: saved.occupation || undefined,
     caste,
     casteProof: needsCasteProof ? casteProofFile : null,
     casteProofType,
@@ -791,7 +799,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             />
           </FormField>
 
-          <FormField label={t("CORE_COMMON_MOTHER_NAME", "Mother Name")} required error={errors.motherName} t={t}>
+          <FormField label={t("CORE_COMMON_MOTHER_NAME", "Mother Name")} error={errors.motherName} t={t}>
             <TextInput
               t={t}
               type="text"
@@ -803,7 +811,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             />
           </FormField>
 
-          <FormField label={t("CORE_COMMON_SPOUSENAME", "Spouse Name")} required error={errors.spouseName} t={t}>
+          <FormField label={t("CORE_COMMON_SPOUSENAME", "Spouse Name")} error={errors.spouseName} t={t}>
             <TextInput
               t={t}
               type="text"
@@ -816,7 +824,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           </FormField>
 
           {/* Row 4 */}
-          <FormField label={t("CORE_COMMON_GUARDIAN_NAME", "Guardian Name")} required error={errors.guardianName} t={t}>
+          <FormField label={t("CORE_COMMON_GUARDIAN_NAME", "Guardian Name")} error={errors.guardianName} t={t}>
             <TextInput
               t={t}
               type="text"
@@ -828,7 +836,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             />
           </FormField>
 
-          <FormField label={t("PROFILE_RELATIONSHIP_WITH_HOF", "Relationship with HOF")} error={errors.relationshipWithHof} t={t}>
+          <FormField label={t("PROFILE_RELATIONSHIP_WITH_HOF", "Relationship with HOF")} required error={errors.relationshipWithHof} t={t}>
             <Dropdown
               selected={relationshipWithHof}
               select={(v) => {
@@ -843,20 +851,11 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             />
           </FormField>
 
-          <FormField label={t("PROFILE_OCCUPATION", "Occupation")} t={t}>
-            <TextInput
-              t={t}
-              type="text"
-              name="occupation"
-              value={occupation}
-              placeholder={t("PROFILE_OCCUPATION", "Enter occupation")}
-              onChange={(e) => setOccupation(e.target.value)}
-              disable={isViewMode}
-            />
-          </FormField>
+          {/* Spacer for Column 3 to keep Divyang & Caste on Row 5 */}
+          <div />
 
           {/* Row 5: Divyang and Caste rendered horizontally */}
-          <FormField label={t("PROFILE_SPECIALLY_ABLED", "Divyang")} required error={errors.speciallyAbled} t={t}>
+          <FormField label={t("PROFILE_SPECIALLY_ABLED", "Divyang")} required error={errors.speciallyAbled} t={t} style={{ gridColumn: 1 }}>
             <Dropdown
               selected={speciallyAbled}
               select={handleSpeciallyAbledChange}
@@ -868,7 +867,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             />
           </FormField>
 
-          <FormField label={t("PROFILE_CASTE", "Caste")} required error={errors.caste} t={t}>
+          <FormField label={t("PROFILE_CASTE", "Caste")} required error={errors.caste} t={t} style={{ gridColumn: 2 }}>
             <Dropdown
               selected={caste}
               select={handleCasteChange}

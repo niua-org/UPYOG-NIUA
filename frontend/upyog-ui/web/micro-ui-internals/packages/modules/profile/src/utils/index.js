@@ -153,8 +153,8 @@ export const AvatarUpload = ({ imageUrl, name, onCameraClick }) => (
 );
 
 // Label + input + error — used in EditProfile form fields
-export const FormField = ({ label, required, error, t, children }) => (
-  <div>
+export const FormField = ({ label, required, error, t, children, style }) => (
+  <div style={style}>
     <label style={profileStyles.label}>
       {label}
       {required && <span style={profileStyles.required}> *</span>}
