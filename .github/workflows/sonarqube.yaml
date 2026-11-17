@@ -9,7 +9,7 @@ on:
 
 concurrency:
   group: sonar-${{ github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request_target' }}
 
 permissions:
   contents: read
@@ -22,8 +22,7 @@ jobs:
     # scan nor comment. A PR opened inside your own fork still matches this.
     if: >-
       github.event_name == 'pull_request_target' &&
-      github.event.pull_request.draft == false &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
