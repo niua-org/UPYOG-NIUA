@@ -520,14 +520,14 @@ public class IncomeServiceImplTest {
                 .mdmsPath("egov-mdms-service/v1/_search")
                 .mdmsIncomeIdentifierTypeEnabled(true)
                 .mdmsIncomeIdentifierTypeModuleName("common-masters")
-                .mdmsIncomeIdentifierTypeMasterName("IdentifierType")
+                .mdmsIncomeIdentifierTypeMasterName("IncomeIdentifier")
                 .mdmsIncomeIdentifierTypeFilter("[?(@.active==true)]")
                 .allowedIncomeIdentifierTypes("PAN,TAN,GSTIN")
                 .incomeIdentifierTypeCacheTtlMillis(300000L)
                 .build();
 
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        String json = "{\"MdmsRes\":{\"common-masters\":{\"IdentifierType\":[{\"code\":\"PAN\"},{\"code\":\"TAN\"},{\"code\":\"GSTIN\"},{\"code\":\"CUSTOM_TAX\"}]}}}";
+        String json = "{\"MdmsRes\":{\"common-masters\":{\"IncomeIdentifier\":[{\"code\":\"PAN\"},{\"code\":\"TAN\"},{\"code\":\"GSTIN\"},{\"code\":\"CUSTOM_TAX\"}]}}}";
         try {
             com.fasterxml.jackson.databind.JsonNode mockNode = mapper.readTree(json);
             when(mockRestTemplate.postForObject(any(String.class), any(), eq(com.fasterxml.jackson.databind.JsonNode.class)))

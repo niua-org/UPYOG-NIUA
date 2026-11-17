@@ -528,7 +528,7 @@ public class IncomeServiceImpl implements IncomeService {
                 : "common-masters";
         String masterName = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsIncomeIdentifierTypeMasterName()))
                 ? userConfiguration.getMdmsIncomeIdentifierTypeMasterName()
-                : "IdentifierType";
+                : "IncomeIdentifier";
         String filter = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsIncomeIdentifierTypeFilter()))
                 ? userConfiguration.getMdmsIncomeIdentifierTypeFilter()
                 : "[?(@.active==true)]";
@@ -560,7 +560,11 @@ public class IncomeServiceImpl implements IncomeService {
         Set<String> types = new HashSet<>();
         if (responseNode != null) {
             JsonNode mdmsRes = responseNode.path("MdmsRes").path(moduleName).path(masterName);
-            if (mdmsRes.isArray()) {
+            if (mdmsRes.isMissingNode() || mdmsRes.isNull() || !mdmsRes.isArray()) {
+                String altName = "IncomeIdentifier".equalsIgnoreCase(masterName) ? "IncomeIdentifierType" : "IncomeIdentifier";
+                mdmsRes = responseNode.path("MdmsRes").path(moduleName).path(altName);
+            }
+            if (mdmsRes != null && mdmsRes.isArray()) {
                 for (JsonNode item : mdmsRes) {
                     if (item.hasNonNull("code")) {
                         types.add(item.get("code").asText().trim().toUpperCase());
