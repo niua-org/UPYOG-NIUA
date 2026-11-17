@@ -1,5 +1,9 @@
 package org.upyog.dx.upyogdata.constants;
 
+/**
+ * All the constants are here used accross the Data-Sharing-Service-DX
+ */
+
 public class Constants {
     public static final String SUCCESS = "SUCCESS";
     public static final String COMPLETED = "COMPLETED";

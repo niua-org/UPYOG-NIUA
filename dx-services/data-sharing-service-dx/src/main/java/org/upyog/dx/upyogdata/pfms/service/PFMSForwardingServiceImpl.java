@@ -12,7 +12,6 @@ import org.upyog.dx.upyogdata.pfms.repository.PFMSRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import feign.FeignException;
-import org.upyog.dx.upyogdata.util.DxUtils;
 
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
@@ -42,19 +41,26 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
 
     private String currentToken;
 
-    // function to get is the
+    /**
+     * function to get is transaction is Retryable or not
+     * For example -
+     * if we get response of 500, 429, 408 can be retrybale so our scheduler don't mark these transaction rejected simple mark FAILED
+     * Other 400, 404, 409, 422 permanent (Not retryable) will be REJECTED
+     */
     private boolean isRetryable(Exception e) {
         if (e instanceof FeignException feignException) {
             int status = feignException.status();
-            // 5xx errors, 429 (Rate limit), 408 (Timeout) is retryable
-            return status >= 500 || status == 429 || status == 408;
+            // -1 = network-level failure (no HTTP response), 5xx, 429, 408
+            return status == -1 || status >= 500 || status == 429 || status == 408;
         }
-        // Network drop / socket timeout
-        if (e.getCause() instanceof SocketTimeoutException
-                || e.getCause() instanceof ConnectException) {
-            return true;
+        // Walk cause chain for IO/timeout exceptions
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause instanceof SocketTimeoutException || cause instanceof ConnectException) {
+                return true;
+            }
+            cause = cause.getCause();
         }
-        // 400, 404, 409, 422 permanent (Not retryable) will be REJECTED
         return false;
     }
 
@@ -84,7 +90,7 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
         Set<String> alreadyAttemptedIds = new HashSet<>();
         int iteration = 0;
 
-        // Loop chalega max 4-5 batches (Constants.MAX_RETRY_BATCH_LIMIT)
+        // Loop Run only 4 times ( can be changed from constants)
         while (iteration < Constants.MAX_RETRY_BATCH_LIMIT) {
             iteration++;
 
@@ -94,25 +100,25 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
                 break;
             }
 
-            // Sirf wahi IDs lo jo is cycle me abhi tak attempt nahi huye
+            // Take only those IDs which is not attempted yet
             List<String> newIds = ids.stream()
                     .filter(id -> !alreadyAttemptedIds.contains(id))
                     .toList();
 
-            // Agar koi naya transaction nahi bacha (yaani sab attempt ho chuke hain)
+            // if no failed transaction left
             if (newIds.isEmpty()) {
                 log.info("Pfms Retry Scheduler: All pending failed transactions have been retried for this cycle.");
                 break;
             }
 
-            alreadyAttemptedIds.addAll(newIds);
-            log.info("Pfms Retry Scheduler: Processing batch #{} with {} transactions", iteration, newIds.size());
 
+            log.info("Pfms Retry Scheduler: Processing batch #{} with {} transactions", iteration, newIds.size());
             boolean batchProcessed = processBatch(newIds, SchedulerType.RETRY, triggeredBy);
             if (!batchProcessed) {
                 log.warn("Pfms Retry Scheduler: Stopping further batches due to error (e.g. Auth failure).");
                 break;
             }
+            alreadyAttemptedIds.addAll(newIds);// only count actually attempted batches
         }
 
         log.info("Pfms Retry Scheduler cycle finished. Total batches run: {}, Total records touched: {}",
@@ -124,7 +130,7 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
 
         if (ids.isEmpty()) {
             log.info("Pfms Scheduler [{}] No transactions found. Skipping.", type);
-            return false;
+            return true;
         }
 
         log.info("Pfms Scheduler [{}] Found {} transaction(s)", type, ids.size());
@@ -150,11 +156,9 @@ public class PFMSForwardingServiceImpl implements PFMSForwardingService {
                 success++;
 
             } catch (Exception e) {
-//                log.error("Pfms[{}] Failed | id={}", type, id, e);
-//                pfmsRepository.updateTransactionStatus(id, Constants.FAILED, LocalDateTime.now());
-//                failed++;
+                log.error("Pfms [{}] {} | id={}", type, isRetryable(e) ? "FAILED" : "REJECTED", id, e);
                 if (isRetryable(e)) {
-                    // Temporary issue -> Marking FAILED, so that retry sceduler will pick
+                    // Temporary issue -> Marking FAILED, so that retry scheduler will pick
                     pfmsRepository.updateTransactionStatus(id, Constants.FAILED, LocalDateTime.now());
                 } else {
                     // Permanent data error (400, 422) -> Marking REJECTED
