@@ -143,22 +143,36 @@ export const PaymentService = {
       auth: true,
       params: { tenantId, ...params },
     }),
-    recieptSearchNew: (tenantId, params) =>
+  recieptSearchNew: (tenantId, params) =>
     Request({
-      url:Urls.payment.obps_Reciept_Search,
+      url: Urls.payment.obps_Reciept_Search,
       method: "POST",
       // do not change this directly add a param if needed
       auth: true,
       params: { tenantId, ...params },
     }),
-    useAssetQrCodeService: (tenantId, params) =>
-      Request({
-        url:Urls.asset.assets_Reciept_Search,
-        method: "POST",
-        // do not change this directly add a param if needed
-        auth: true,
-        params: { tenantId, ...params },
-      }),
+  useAssetQrCodeService: (tenantId, params) =>
+    Request({
+      url: Urls.asset.assets_Reciept_Search,
+      method: "POST",
+      // do not change this directly add a param if needed
+      auth: true,
+      params: { tenantId, ...params },
+    }),
+  /**
+   * Searches for family records for QR code verification.
+   * Moved to Digit.UserService.familySearch for profile domain consistency; kept here for backward compatibility.
+   * @param {string} tenantId - ULB / state tenant identifier.
+   * @param {Object} params - Query parameters including familyId.
+   * @returns {Promise<Object>} API response containing Families array.
+   */
+  useFamilyQrCodeService: (tenantId, params) =>
+    Request({
+      url: Urls.profile.familySearch,
+      method: "POST",
+      auth: false,
+      params: { tenantId, ...params },
+    }),
   getBulkPdfRecordsDetails: (filters) =>
     Request({
       url: Urls.payment.getBulkPdfRecordsDetails,

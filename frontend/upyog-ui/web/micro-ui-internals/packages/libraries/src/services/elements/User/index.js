@@ -338,4 +338,27 @@ export const UserService = {
       userService: true,
     }),
 
+  /**
+   * Searches for family records matching criteria (e.g. familyId, tenantId).
+   * @param {string} tenantId - ULB / state tenant identifier.
+   * @param {Object} params - Query parameters including familyId.
+   * @returns {Promise<Object>} API response containing Families array.
+   */
+  familySearch: (tenantId, params) =>
+    Request({
+      url: Urls.profile.familySearch,
+      method: "POST",
+      auth: false,
+      params: { tenantId, ...params },
+    }),
+
+  /**
+   * Service method for Family QR code verification search.
+   * @param {string} tenantId - ULB / state tenant identifier.
+   * @param {Object} params - Query parameters including familyId.
+   * @returns {Promise<Object>} API response containing Families array.
+   */
+  useFamilyQrCodeService: (tenantId, params) =>
+    UserService.familySearch(tenantId, params),
+
 };
