@@ -80,11 +80,17 @@ export const buildCreateDocumentPayload = ({ uuid, tenantId, documentType, files
  * Builds the Family Create API payload from familyDetails session data + staged members list
  * TODO - Need to Enhance this payload as lots of info is un-necessary
  * */
-export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {}, familyMeta = {} }) => {
+export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
   const members = membersList || [];
   const finalHeadUuid = selectedHeadUuid || members[0]?.userUuid;
   const headMember = members.find((m) => m.userUuid === finalHeadUuid);
-  const headData = familyDetails[finalHeadUuid]?.profileDetails || {};
+  const headMemberData = familyDetails[finalHeadUuid] || {};
+  const headProfile = headMemberData.profileDetails || {};
+  const headProperty = headMemberData.property || {};
+
+  // Derive family-level fields from head's session data
+  const familyAddressPropertyId = headProperty.primaryPropertyId || headProperty.propertyId || undefined;
+  const category = headProfile.caste?.code || undefined;
 
   const finalMembers = members.map((member) => {
     const memberData = familyDetails[member.userUuid] || {};
@@ -131,7 +137,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       userName: profileDetails.mobileNumber || member.mobileNumber,
       name: profileDetails.name || member.name,
       gender: profileDetails.gender?.code || profileDetails.gender,
-      dob: toEpoch(profileDetails.dob) || undefined,
+      dob: toEpoch(profileDetails.dob),
       mobileNumber: profileDetails.mobileNumber || member.mobileNumber,
       alternateMobileNumber: profileDetails.altContactNumber,
       emailId: profileDetails.emailId,
@@ -186,7 +192,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       vehicleNumber: vehicleDetails.vehicleNo,
       purchaseDate: vehicleDetails.purchaseYear,
       vehicleType: vehicleDetails.vehicleType?.code,
-      makerModel: vehicleDetails.makerModel,                    
+      makerModel: vehicleDetails?.makerModel,
       category: vehicleDetails.vehicleCategory?.code,
       fuelType: vehicleDetails.fuelType?.code,
       isVerified: vehicleDetails.vehicleNoValidated || false,
@@ -246,7 +252,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       }];
     }
 
-    // --- Member-level additionalDetails ---                    // FIX #5
+    // --- Member-level additionalDetails ---
     const memberAdditionalDetails = (profileDetails.educationLevel || profileDetails.maritalStatus) ? {
       educationLevel: profileDetails.educationLevel?.code || profileDetails.educationLevel,
       maritalStatus: profileDetails.maritalStatus?.code || profileDetails.maritalStatus,
@@ -258,44 +264,31 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       name: member.name || profileDetails.name,
       mobileNumber: member.mobileNumber || profileDetails.mobileNumber,
       gender: profileDetails.gender?.code || profileDetails.gender || member.gender,
-      dob: toEpoch(profileDetails.dob) || undefined,
+      dob: toEpoch(profileDetails.dob),
       photo: profileDetails.photo || undefined,
       relationshipWithHead: String(member.relationshipWithHead || profileDetails.relationshipWithHof?.code || "").toUpperCase().replace(/\s+/g, "_") || undefined,
       isHead: member.userUuid === finalHeadUuid,
       isVerified: member.isVerified ?? true,
       active: true,
-      consentToken: member.consentToken || profileDetails.consentToken || undefined,    // FIX #3
-      consentDate: member.consentDate || profileDetails.consentDate || undefined,       // FIX #3
-      effectiveFrom: member.effectiveFrom || profileDetails.effectiveFrom || undefined, // FIX #3
+      consentToken: member.consentToken || profileDetails.consentToken || undefined,
+      consentDate: member.consentDate || profileDetails.consentDate || undefined,
+      effectiveFrom: member.effectiveFrom || profileDetails.effectiveFrom || undefined,
       citizenDetails,
-      ...(memberAdditionalDetails && { additionalDetails: memberAdditionalDetails }),   // FIX #5
+      ...(memberAdditionalDetails && { additionalDetails: memberAdditionalDetails }),
       ...(income && { income }),
       ...(vehicles && { vehicles }),
       ...(properties && { properties }),
     };
   });
 
-  // --- Family-level additionalDetails ---                      
-  const familyAdditionalDetails = (familyMeta.rationCardNumber || familyMeta.electricityConsumerNumber || familyMeta.waterConsumerNumber || familyMeta.familyAddress) ? {
-    rationCardNumber: familyMeta.rationCardNumber,
-    electricityConsumerNumber: familyMeta.electricityConsumerNumber,
-    waterConsumerNumber: familyMeta.waterConsumerNumber,
-    ...(familyMeta.familyAddress && { familyAddress: familyMeta.familyAddress }),
-  } : undefined;
-
-  // --- Family-level documents ---                              
-  const familyDocuments = (familyMeta.documents || []).filter(Boolean);
-
   return {
     Family: {
       tenantId,
       headUserUuid: finalHeadUuid,
-      headName: headMember?.name || headData.name,                                     
-      category: familyMeta.category || undefined,                                      
-      familySource: "CITIZEN_PORTAL",                                                 
-      familyAddressPropertyId: familyMeta.familyAddressPropertyId || undefined,        
-      ...(familyAdditionalDetails && { additionalDetails: familyAdditionalDetails }),  
-      ...(familyDocuments.length > 0 && { documents: familyDocuments }),               
+      headName: headMember?.name || headProfile.name,
+      category,
+      familySource: "CITIZEN_PORTAL",
+      familyAddressPropertyId,
       members: finalMembers,
       workflow: {
         action: "APPLY",
