@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -41,9 +42,12 @@ public class VehicleServiceImplTest {
     private UserVehicleRepository vehicleRepository;
     private UserRepository userRepository;
     private UserDocumentRepository documentRepository;
+    private org.egov.user.persistence.repository.FamilyRestRepository familyRestRepository;
+    private AssetAuthorizationService assetAuthorizationService;
     private VehicleServiceImpl vehicleService;
 
     private static final String TEST_USER_UUID = "citizen-uuid-001";
+    private static final String TEST_MEMBER_UUID = "member-uuid-002";
     private static final String TEST_VEHICLE_ID = "veh-001";
     private static final String TEST_TENANT_ID = "pg.citya";
     private static final String TEST_OPERATOR_UUID = "operator-uuid-555";
@@ -54,11 +58,15 @@ public class VehicleServiceImplTest {
         vehicleRepository = mock(UserVehicleRepository.class);
         userRepository = mock(UserRepository.class);
         documentRepository = mock(UserDocumentRepository.class);
+        familyRestRepository = mock(org.egov.user.persistence.repository.FamilyRestRepository.class);
+
+        assetAuthorizationService = new AssetAuthorizationService(userRepository, familyRestRepository);
 
         vehicleService = new VehicleServiceImpl(
                 vehicleRepository,
                 userRepository,
-                documentRepository
+                documentRepository,
+                assetAuthorizationService
         );
     }
 
@@ -66,6 +74,20 @@ public class VehicleServiceImplTest {
         org.egov.common.contract.request.User userInfo = org.egov.common.contract.request.User.builder()
                 .uuid(TEST_OPERATOR_UUID)
                 .id(TEST_OPERATOR_ID)
+                .type("EMPLOYEE")
+                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("EMPLOYEE").name("Employee").build()))
+                .build();
+        return RequestInfo.builder()
+                .userInfo(userInfo)
+                .build();
+    }
+
+    private RequestInfo createCitizenRequestInfo(String citizenUuid) {
+        org.egov.common.contract.request.User userInfo = org.egov.common.contract.request.User.builder()
+                .uuid(citizenUuid)
+                .id(101L)
+                .type("CITIZEN")
+                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").name("Citizen").build()))
                 .build();
         return RequestInfo.builder()
                 .userInfo(userInfo)
@@ -449,5 +471,203 @@ public class VehicleServiceImplTest {
         CustomException ex = assertThrows(CustomException.class, () -> vehicleService.deleteVehicle(request));
         assertEquals(UserConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
         verify(vehicleRepository, never()).saveVehicle(any());
+    }
+
+    @Test
+    @DisplayName("Should permit citizen to create own vehicle declaration")
+    public void testCreateVehicle_CitizenSelfAccess_Success() {
+        User citizen = User.builder().id(101L).uuid(TEST_USER_UUID).tenantId(TEST_TENANT_ID).build();
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(citizen));
+
+        UserVehicle savedVehicle = UserVehicle.builder()
+                .id(TEST_VEHICLE_ID).userUuid(TEST_USER_UUID).vehicleNumber("DL01AB1234")
+                .vehicleType("2_WHEELER").makerModel("Hero Splendor").fuelType("PETROL")
+                .status(UserConstants.STATUS_ACTIVE_UPPERCASE).build();
+        when(vehicleRepository.findVehicleById(any())).thenReturn(savedVehicle);
+
+        VehicleRequest request = VehicleRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .vehicleNumber("DL01AB1234")
+                .vehicleType("2_WHEELER")
+                .build();
+
+        UserVehicle created = vehicleService.createVehicle(request);
+        assertNotNull(created);
+        assertEquals(TEST_USER_UUID, created.getUserUuid());
+    }
+
+    @Test
+    @DisplayName("Should permit Head of Family to create vehicle declaration for household member")
+    public void testCreateVehicle_HeadOfFamily_Success() {
+        User member = User.builder().id(102L).uuid(TEST_MEMBER_UUID).tenantId(TEST_TENANT_ID).build();
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(member));
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq(TEST_USER_UUID), eq(TEST_MEMBER_UUID), eq(TEST_TENANT_ID), any()))
+                .thenReturn(true);
+
+        UserVehicle savedVehicle = UserVehicle.builder()
+                .id(TEST_VEHICLE_ID).userUuid(TEST_MEMBER_UUID).vehicleNumber("DL02CD5678")
+                .vehicleType("2_WHEELER").status(UserConstants.STATUS_ACTIVE_UPPERCASE).build();
+        when(vehicleRepository.findVehicleById(any())).thenReturn(savedVehicle);
+
+        VehicleRequest request = VehicleRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .userUuid(TEST_MEMBER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .vehicleNumber("DL02CD5678")
+                .vehicleType("2_WHEELER")
+                .build();
+
+        UserVehicle created = vehicleService.createVehicle(request);
+        assertNotNull(created);
+        assertEquals(TEST_MEMBER_UUID, created.getUserUuid());
+    }
+
+    @Test
+    @DisplayName("Should reject vehicle creation when citizen caller is NOT Head of Family")
+    public void testCreateVehicle_UnauthorizedCitizen_ThrowsException() {
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq(TEST_USER_UUID), eq("stranger-uuid"), eq(TEST_TENANT_ID), any()))
+                .thenReturn(false);
+
+        VehicleRequest request = VehicleRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .userUuid("stranger-uuid")
+                .tenantId(TEST_TENANT_ID)
+                .vehicleNumber("DL03EF9012")
+                .vehicleType("4_WHEELER")
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> vehicleService.createVehicle(request));
+        assertEquals(UserConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should auto-scope unconstrained citizen vehicle search to caller UUID")
+    public void testSearchVehicles_CitizenSelfSearch_AutoScoped() {
+        VehicleSearchCriteria criteria = VehicleSearchCriteria.builder()
+                .tenantId(TEST_TENANT_ID)
+                .build();
+
+        when(vehicleRepository.searchVehicles(any(VehicleSearchCriteria.class)))
+                .thenAnswer(invocation -> {
+                    VehicleSearchCriteria passed = invocation.getArgument(0);
+                    assertEquals(TEST_USER_UUID, passed.getUserUuid());
+                    return Collections.singletonList(UserVehicle.builder().id(TEST_VEHICLE_ID).userUuid(TEST_USER_UUID).build());
+                });
+
+        List<UserVehicle> results = vehicleService.searchVehicles(criteria, createCitizenRequestInfo(TEST_USER_UUID));
+        assertNotNull(results);
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    @DisplayName("Should reject citizen attacker attempting to update another citizen's vehicle even if victim's userUuid is sent in payload")
+    public void testUpdateVehicle_AttackerCitizenSendingVictimUserUuid_ThrowsUnauthorizedAccess() {
+        UserVehicle existing = UserVehicle.builder()
+                .id(TEST_VEHICLE_ID)
+                .userUuid("citizen-victim-uuid")
+                .tenantId(TEST_TENANT_ID)
+                .vehicleNumber("DL01AB1234")
+                .vehicleType("4_WHEELER")
+                .status(UserConstants.STATUS_ACTIVE_UPPERCASE)
+                .build();
+        when(vehicleRepository.findVehicleById(TEST_VEHICLE_ID)).thenReturn(existing);
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq("citizen-attacker-uuid"), eq("citizen-victim-uuid"), eq(TEST_TENANT_ID), any()))
+                .thenReturn(false);
+
+        // Attacker caller puts victim's userUuid in the payload to match existing owner
+        VehicleRequest request = VehicleRequest.builder()
+                .requestInfo(createCitizenRequestInfo("citizen-attacker-uuid"))
+                .vehicleId(TEST_VEHICLE_ID)
+                .userUuid("citizen-victim-uuid")
+                .vehicleNumber("DL01AB1234")
+                .makerModel("Hacked Model")
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> vehicleService.updateVehicle(request));
+        assertEquals(UserConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
+        verify(vehicleRepository, never()).saveVehicle(any());
+    }
+
+    @Test
+    @DisplayName("Should reject citizen attacker attempting to deactivate another citizen's vehicle even if victim's userUuid is sent in payload")
+    public void testDeleteVehicle_AttackerCitizenSendingVictimUserUuid_ThrowsUnauthorizedAccess() {
+        UserVehicle existing = UserVehicle.builder()
+                .id(TEST_VEHICLE_ID)
+                .userUuid("citizen-victim-uuid")
+                .tenantId(TEST_TENANT_ID)
+                .status(UserConstants.STATUS_ACTIVE_UPPERCASE)
+                .build();
+        when(vehicleRepository.findVehicleById(TEST_VEHICLE_ID)).thenReturn(existing);
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq("citizen-attacker-uuid"), eq("citizen-victim-uuid"), eq(TEST_TENANT_ID), any()))
+                .thenReturn(false);
+
+        // Attacker caller puts victim's userUuid in the payload to match existing owner
+        VehicleRequest request = VehicleRequest.builder()
+                .requestInfo(createCitizenRequestInfo("citizen-attacker-uuid"))
+                .vehicleId(TEST_VEHICLE_ID)
+                .userUuid("citizen-victim-uuid")
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> vehicleService.deleteVehicle(request));
+        assertEquals(UserConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
+        verify(vehicleRepository, never()).saveVehicle(any());
+    }
+
+    @Test
+    @DisplayName("Should permit Head of Family to update vehicle declaration of a household member")
+    public void testUpdateVehicle_HeadOfFamily_Success() {
+        UserVehicle existing = UserVehicle.builder()
+                .id(TEST_VEHICLE_ID)
+                .userUuid(TEST_MEMBER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .vehicleNumber("DL01AB1234")
+                .vehicleType("4_WHEELER")
+                .makerModel("Old Model")
+                .status(UserConstants.STATUS_ACTIVE_UPPERCASE)
+                .build();
+        when(vehicleRepository.findVehicleById(TEST_VEHICLE_ID)).thenReturn(existing);
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq(TEST_USER_UUID), eq(TEST_MEMBER_UUID), eq(TEST_TENANT_ID), any()))
+                .thenReturn(true);
+
+        VehicleRequest request = VehicleRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .vehicleId(TEST_VEHICLE_ID)
+                .userUuid(TEST_MEMBER_UUID)
+                .makerModel("HOF Updated Model")
+                .build();
+
+        UserVehicle updated = vehicleService.updateVehicle(request);
+        assertNotNull(updated);
+        assertEquals("HOF Updated Model", existing.getMakerModel());
+        assertEquals(TEST_USER_UUID, existing.getLastModifiedBy());
+        verify(vehicleRepository, times(1)).saveVehicle(existing);
+    }
+
+    @Test
+    @DisplayName("Should permit Head of Family to deactivate vehicle declaration of a household member")
+    public void testDeleteVehicle_HeadOfFamily_Success() {
+        UserVehicle existing = UserVehicle.builder()
+                .id(TEST_VEHICLE_ID)
+                .userUuid(TEST_MEMBER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .status(UserConstants.STATUS_ACTIVE_UPPERCASE)
+                .build();
+        when(vehicleRepository.findVehicleById(TEST_VEHICLE_ID)).thenReturn(existing);
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq(TEST_USER_UUID), eq(TEST_MEMBER_UUID), eq(TEST_TENANT_ID), any()))
+                .thenReturn(true);
+
+        VehicleRequest request = VehicleRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .vehicleId(TEST_VEHICLE_ID)
+                .userUuid(TEST_MEMBER_UUID)
+                .build();
+
+        UserVehicle deactivated = vehicleService.deleteVehicle(request);
+        assertNotNull(deactivated);
+        assertEquals(UserConstants.STATUS_INACTIVE_UPPERCASE, deactivated.getStatus());
+        assertEquals(TEST_USER_UUID, deactivated.getLastModifiedBy());
+        verify(vehicleRepository, times(1)).saveVehicle(existing);
     }
 }

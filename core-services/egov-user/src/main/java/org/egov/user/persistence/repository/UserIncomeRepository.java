@@ -7,6 +7,7 @@ import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.asset.UserIncome;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.repository.builder.UserIncomeQueryBuilder;
+import org.egov.user.web.contract.asset.IncomeSearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -178,6 +179,71 @@ public class UserIncomeRepository {
             log.debug("[USER-INCOME-REPO] Failed to lookup income owner userUuid: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Retrieves a single citizen income declaration by primary key identifier.
+     * Hydrates child salary and tax proof verification documents if present.
+     *
+     * @param id income record primary key identifier
+     * @return matched {@link UserIncome} entity or null if not found
+     */
+    public UserIncome findIncomeById(String id) {
+        if (StringUtils.isBlank(id)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("id", id.trim());
+            List<UserIncome> list = namedParameterJdbcTemplate.query(
+                    UserIncomeQueryBuilder.SELECT_INCOME_BY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> mapRowToUserIncome(rs)
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.error("[USER-INCOME-REPO] Failed to lookup income by ID {}: {}", id, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Executes a dynamic search for citizen income declarations based on criteria filters.
+     *
+     * @param criteria search criteria filters
+     * @return list of matched {@link UserIncome} entities
+     */
+    public List<UserIncome> searchIncome(IncomeSearchCriteria criteria) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            String sql = queryBuilder.buildSearchQuery(criteria, params);
+            return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToUserIncome(rs));
+        } catch (Exception e) {
+            log.error("[USER-INCOME-REPO] Failed to search income declarations: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Updates the status of an income declaration (used for soft-deactivation).
+     *
+     * @param incomeId   income record primary key ID
+     * @param userUuid   citizen user UUID owning the record
+     * @param status     new lifecycle status (e.g. INACTIVE)
+     * @param actorUuid  audit actor UUID
+     * @return true if updated successfully, false otherwise
+     */
+    public boolean updateIncomeStatus(String incomeId, String userUuid, String status, String actorUuid) {
+        if (StringUtils.isBlank(incomeId) || StringUtils.isBlank(userUuid)) {
+            return false;
+        }
+        UserIncome existing = findIncomeById(incomeId);
+        if (existing == null || !userUuid.equals(existing.getUserUuid())) {
+            return false;
+        }
+        existing.setStatus(status != null ? status.trim().toUpperCase() : UserConstants.STATUS_INACTIVE_UPPERCASE);
+        existing.setLastModifiedBy(actorUuid);
+        saveIncome(existing);
+        return true;
     }
 
     /**

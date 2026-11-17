@@ -58,6 +58,10 @@ public class UserVehicleQueryBuilder {
     public static final String SELECT_ACTIVE_VEHICLE_OWNER_BY_NUMBER_SQL =
             "SELECT user_uuid FROM ug_user_vehicle WHERE UPPER(vehicle_number) = UPPER(:vehicle_number) AND status = 'ACTIVE' LIMIT 1";
 
+    public static final int DEFAULT_SEARCH_LIMIT = 50;
+    public static final int MAX_SEARCH_LIMIT = 100;
+    public static final int DEFAULT_SEARCH_OFFSET = 0;
+
     public static final String SELECT_VEHICLE_USER_UUID_BY_ID_SQL =
             "SELECT user_uuid FROM ug_user_vehicle WHERE id = :id";
 
@@ -175,7 +179,9 @@ public class UserVehicleQueryBuilder {
         );
 
         if (criteria == null) {
-            query.append(" AND v.status = 'ACTIVE' ORDER BY v.created_time DESC");
+            query.append(" AND v.status = 'ACTIVE' ORDER BY v.created_time DESC LIMIT :limit OFFSET :offset");
+            params.put("limit", DEFAULT_SEARCH_LIMIT);
+            params.put("offset", DEFAULT_SEARCH_OFFSET);
             return query.toString();
         }
 
@@ -238,14 +244,18 @@ public class UserVehicleQueryBuilder {
 
         query.append(" ORDER BY v.created_time DESC");
 
+        int limit = DEFAULT_SEARCH_LIMIT;
         if (criteria.getLimit() != null && criteria.getLimit() > 0) {
-            query.append(" LIMIT :limit");
-            params.put("limit", criteria.getLimit());
+            limit = Math.min(criteria.getLimit(), MAX_SEARCH_LIMIT);
         }
+        int offset = DEFAULT_SEARCH_OFFSET;
         if (criteria.getOffset() != null && criteria.getOffset() >= 0) {
-            query.append(" OFFSET :offset");
-            params.put("offset", criteria.getOffset());
+            offset = criteria.getOffset();
         }
+
+        query.append(" LIMIT :limit OFFSET :offset");
+        params.put("limit", limit);
+        params.put("offset", offset);
 
         return query.toString();
     }

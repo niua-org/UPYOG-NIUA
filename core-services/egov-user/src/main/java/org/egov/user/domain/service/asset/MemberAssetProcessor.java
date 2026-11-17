@@ -380,6 +380,7 @@ public class MemberAssetProcessor {
             if (UserConstants.LOCALITY_TYPE_URBAN.equalsIgnoreCase(prop.getLocalityType()) && prop.getUrbanPropertyDetail() != null) {
                 UrbanPropertyDetail urban = prop.getUrbanPropertyDetail();
                 urban.setPropertyRecordId(prop.getId());
+                urban.setUserUuid(existingUser.getUuid());
                 urban.setTenantId(prop.getTenantId());
                 urban.setCreatedBy(actorUuid);
                 urban.setLastModifiedBy(actorUuid);
@@ -397,6 +398,7 @@ public class MemberAssetProcessor {
                     }
                 }
                 rural.setPropertyRecordId(prop.getId());
+                rural.setUserUuid(existingUser.getUuid());
                 rural.setTenantId(prop.getTenantId());
                 rural.setCreatedBy(actorUuid);
                 rural.setLastModifiedBy(actorUuid);

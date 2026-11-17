@@ -144,6 +144,7 @@ public class UserPropertyRepository {
         params.put("created_time", detail.getCreatedTime());
         params.put("last_modified_by", detail.getLastModifiedBy());
         params.put("last_modified_time", detail.getLastModifiedTime());
+        params.put("user_uuid", detail.getUserUuid());
 
         namedParameterJdbcTemplate.update(queryBuilder.getInsertUrbanPropertyQuery(), params);
         log.info("[USER-PROP-REPO] Persisted urban property record id: {}", detail.resolvePropertyRecordId());
@@ -176,6 +177,7 @@ public class UserPropertyRepository {
         params.put("created_time", detail.getCreatedTime());
         params.put("last_modified_by", detail.getLastModifiedBy());
         params.put("last_modified_time", detail.getLastModifiedTime());
+        params.put("user_uuid", detail.getUserUuid());
 
         namedParameterJdbcTemplate.update(queryBuilder.getInsertRuralPropertyQuery(), params);
         log.info("[USER-PROP-REPO] Persisted rural property record id: {}", detail.resolvePropertyRecordId());

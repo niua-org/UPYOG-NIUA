@@ -777,6 +777,13 @@ public class ProfileSearchIncludeFlagsTest {
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("uuid-123"))
                 .include(Collections.singletonList(ProfileIncludeEntity.PROPERTY))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("uuid-123")
+                                .type("CITIZEN")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").tenantId("pg").build()))
+                                .build())
+                        .build())
                 .build();
 
         User user = createSampleUser("uuid-123");
@@ -824,6 +831,13 @@ public class ProfileSearchIncludeFlagsTest {
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("uuid-123"))
                 .include(Collections.singletonList(ProfileIncludeEntity.INCOME))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("uuid-123")
+                                .type("CITIZEN")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").tenantId("pg").build()))
+                                .build())
+                        .build())
                 .build();
 
         User user = createSampleUser("uuid-123");
@@ -868,6 +882,13 @@ public class ProfileSearchIncludeFlagsTest {
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("uuid-123"))
                 .include(Collections.singletonList(ProfileIncludeEntity.VEHICLE))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("uuid-123")
+                                .type("CITIZEN")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").tenantId("pg").build()))
+                                .build())
+                        .build())
                 .build();
 
         User user = createSampleUser("uuid-123");
@@ -916,6 +937,13 @@ public class ProfileSearchIncludeFlagsTest {
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("uuid-123"))
                 .include(new ArrayList<>(includes))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("uuid-123")
+                                .type("CITIZEN")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").tenantId("pg").build()))
+                                .build())
+                        .build())
                 .build();
 
         User user = createSampleUser("uuid-123");
@@ -955,6 +983,13 @@ public class ProfileSearchIncludeFlagsTest {
                 .tenantId("pg.citya")
                 .uuid(Collections.singletonList("uuid-123"))
                 .include(new ArrayList<>(includes))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("uuid-123")
+                                .type("CITIZEN")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").tenantId("pg").build()))
+                                .build())
+                        .build())
                 .build();
 
         User user = createSampleUser("uuid-123");
@@ -973,5 +1008,173 @@ public class ProfileSearchIncludeFlagsTest {
         assertTrue(enrichmentErrors.stream().anyMatch(e -> "PROPERTY_ENRICHMENT_FAILED".equals(e.getCode())));
         assertTrue(enrichmentErrors.stream().anyMatch(e -> "INCOME_ENRICHMENT_FAILED".equals(e.getCode())));
         assertTrue(enrichmentErrors.stream().anyMatch(e -> "VEHICLE_ENRICHMENT_FAILED".equals(e.getCode())));
+    }
+
+    @Test
+    @DisplayName("Should NOT expose declared assets when a citizen searches for another non-family citizen")
+    public void testProfileSearch_WhenCitizenSearchesAnotherCitizen_AssetIncludesAreOmitted() {
+        Set<ProfileIncludeEntity> includes = new LinkedHashSet<>(Arrays.asList(
+                ProfileIncludeEntity.PROFILE,
+                ProfileIncludeEntity.PROPERTY,
+                ProfileIncludeEntity.INCOME,
+                ProfileIncludeEntity.VEHICLE
+        ));
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .mobileNumber("9876543210")
+                .include(new ArrayList<>(includes))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("caller-citizen-uuid")
+                                .type("CITIZEN")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").tenantId("pg").build()))
+                                .build())
+                        .build())
+                .build();
+
+        User stranger = createSampleUser("stranger-citizen-uuid");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(stranger));
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq("caller-citizen-uuid"), eq("stranger-citizen-uuid"), anyString(), any()))
+                .thenReturn(false);
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        User resultUser = results.get(0);
+        // Demographics are present
+        assertEquals("Rohan Sharma", resultUser.getName());
+        // Assets MUST NOT be enriched
+        assertNull(resultUser.getProperties());
+        assertNull(resultUser.getIncome());
+        assertNull(resultUser.getVehicles());
+
+        // Verify repositories were never even called for stranger assets
+        verify(userPropertyRepository, never()).findPropertiesByUserUuid(any(), any());
+        verify(userIncomeRepository, never()).findActiveIncomeByUserUuid(any(), any());
+        verify(userVehicleRepository, never()).findVehiclesByUserUuid(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should expose declared assets when Head of Family (HoF) searches for family member")
+    public void testProfileSearch_WhenHeadOfFamilySearchesMember_AssetIncludesAreEnriched() {
+        Set<ProfileIncludeEntity> includes = new LinkedHashSet<>(Arrays.asList(
+                ProfileIncludeEntity.PROFILE,
+                ProfileIncludeEntity.PROPERTY,
+                ProfileIncludeEntity.INCOME,
+                ProfileIncludeEntity.VEHICLE
+        ));
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .mobileNumber("9876543210")
+                .include(new ArrayList<>(includes))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("hof-citizen-uuid")
+                                .type("CITIZEN")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").tenantId("pg").build()))
+                                .build())
+                        .build())
+                .build();
+
+        User member = createSampleUser("family-member-uuid");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(member));
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq("hof-citizen-uuid"), eq("family-member-uuid"), anyString(), any()))
+                .thenReturn(true);
+
+        UserProperty prop = UserProperty.builder().id("prop-fam-1").userUuid("family-member-uuid").status("ACTIVE").build();
+        UserIncome income = UserIncome.builder().id("income-fam-1").userUuid("family-member-uuid").status("ACTIVE").build();
+        UserVehicle veh = UserVehicle.builder().id("veh-fam-1").userUuid("family-member-uuid").status("ACTIVE").build();
+
+        when(userPropertyRepository.findPropertiesByUserUuid(eq("family-member-uuid"), any())).thenReturn(Collections.singletonList(prop));
+        when(userIncomeRepository.findActiveIncomeByUserUuid(eq("family-member-uuid"), any())).thenReturn(income);
+        when(userVehicleRepository.findVehiclesByUserUuid(eq("family-member-uuid"), any())).thenReturn(Collections.singletonList(veh));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        User resultUser = results.get(0);
+        assertNotNull(resultUser.getProperties());
+        assertEquals("prop-fam-1", resultUser.getProperties().get(0).getId());
+        assertNotNull(resultUser.getIncome());
+        assertEquals("income-fam-1", resultUser.getIncome().getId());
+        assertNotNull(resultUser.getVehicles());
+        assertEquals("veh-fam-1", resultUser.getVehicles().get(0).getId());
+    }
+
+    @Test
+    @DisplayName("Should expose declared assets when an employee searches for any citizen")
+    public void testProfileSearch_WhenEmployeeSearchesAnyCitizen_AssetIncludesAreEnriched() {
+        Set<ProfileIncludeEntity> includes = new LinkedHashSet<>(Arrays.asList(
+                ProfileIncludeEntity.PROFILE,
+                ProfileIncludeEntity.PROPERTY,
+                ProfileIncludeEntity.INCOME,
+                ProfileIncludeEntity.VEHICLE
+        ));
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("any-citizen-uuid"))
+                .include(new ArrayList<>(includes))
+                .requestInfo(RequestInfo.builder()
+                        .userInfo(org.egov.common.contract.request.User.builder()
+                                .uuid("employee-uuid-999")
+                                .type("EMPLOYEE")
+                                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("EMPLOYEE").tenantId("pg").build()))
+                                .build())
+                        .build())
+                .build();
+
+        User citizen = createSampleUser("any-citizen-uuid");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(citizen));
+
+        UserProperty prop = UserProperty.builder().id("prop-emp-1").userUuid("any-citizen-uuid").status("ACTIVE").build();
+        UserIncome income = UserIncome.builder().id("income-emp-1").userUuid("any-citizen-uuid").status("ACTIVE").build();
+        UserVehicle veh = UserVehicle.builder().id("veh-emp-1").userUuid("any-citizen-uuid").status("ACTIVE").build();
+
+        when(userPropertyRepository.findPropertiesByUserUuid(eq("any-citizen-uuid"), any())).thenReturn(Collections.singletonList(prop));
+        when(userIncomeRepository.findActiveIncomeByUserUuid(eq("any-citizen-uuid"), any())).thenReturn(income);
+        when(userVehicleRepository.findVehiclesByUserUuid(eq("any-citizen-uuid"), any())).thenReturn(Collections.singletonList(veh));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        User resultUser = results.get(0);
+        assertNotNull(resultUser.getProperties());
+        assertNotNull(resultUser.getIncome());
+        assertNotNull(resultUser.getVehicles());
+    }
+
+    @Test
+    @DisplayName("Should NOT expose declared assets when RequestInfo is missing or unauthenticated")
+    public void testProfileSearch_WhenRequestInfoMissing_AssetIncludesAreOmitted() {
+        Set<ProfileIncludeEntity> includes = new LinkedHashSet<>(Arrays.asList(
+                ProfileIncludeEntity.PROPERTY,
+                ProfileIncludeEntity.INCOME,
+                ProfileIncludeEntity.VEHICLE
+        ));
+        ProfileSearchRequest request = ProfileSearchRequest.builder()
+                .tenantId("pg.citya")
+                .uuid(Collections.singletonList("uuid-123"))
+                .include(new ArrayList<>(includes))
+                .requestInfo(null)
+                .build();
+
+        User user = createSampleUser("uuid-123");
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(user));
+
+        List<User> results = profileService.searchProfile(request);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        User resultUser = results.get(0);
+        assertNull(resultUser.getProperties());
+        assertNull(resultUser.getIncome());
+        assertNull(resultUser.getVehicles());
+
+        verify(userPropertyRepository, never()).findPropertiesByUserUuid(any(), any());
+        verify(userIncomeRepository, never()).findActiveIncomeByUserUuid(any(), any());
+        verify(userVehicleRepository, never()).findVehiclesByUserUuid(any(), any());
     }
 }

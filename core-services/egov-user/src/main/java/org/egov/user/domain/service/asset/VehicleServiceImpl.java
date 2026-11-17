@@ -45,21 +45,36 @@ public class VehicleServiceImpl implements VehicleService {
     private final UserVehicleRepository vehicleRepository;
     private final UserRepository userRepository;
     private final UserDocumentRepository documentRepository;
+    private final AssetAuthorizationService assetAuthorizationService;
 
     /**
-     * Constructs {@link VehicleServiceImpl} with required persistence repositories.
+     * Constructs {@link VehicleServiceImpl} with required persistence repositories and authorization service.
      *
      * @param vehicleRepository  persistence repository for vehicle declarations
      * @param userRepository     repository for querying citizen user existence
      * @param documentRepository repository for storing attached Registration Certificate documents
+     * @param assetAuthorizationService centralized caller authorization and family-scoping service
      */
     @Autowired
     public VehicleServiceImpl(UserVehicleRepository vehicleRepository,
                               UserRepository userRepository,
-                              UserDocumentRepository documentRepository) {
+                              UserDocumentRepository documentRepository,
+                              AssetAuthorizationService assetAuthorizationService) {
         this.vehicleRepository = vehicleRepository;
         this.userRepository = userRepository;
         this.documentRepository = documentRepository;
+        this.assetAuthorizationService = assetAuthorizationService != null
+                ? assetAuthorizationService
+                : new AssetAuthorizationService(userRepository, null);
+    }
+
+    /**
+     * Testing constructor.
+     */
+    public VehicleServiceImpl(UserVehicleRepository vehicleRepository,
+                              UserRepository userRepository,
+                              UserDocumentRepository documentRepository) {
+        this(vehicleRepository, userRepository, documentRepository, new AssetAuthorizationService(userRepository, null));
     }
 
     /**
@@ -75,11 +90,19 @@ public class VehicleServiceImpl implements VehicleService {
             throw new CustomException(UserConstants.ERROR_INVALID_VEHICLE_REQUEST, "Request payload cannot be null");
         }
 
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(request.getRequestInfo());
         UserVehicle veh = request.resolveVehicle();
         String userUuid = veh.getUserUuid();
         if (StringUtils.isBlank(userUuid)) {
-            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
+            if (assetAuthorizationService.isPrivilegedCaller(request.getRequestInfo())) {
+                throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
+            }
+            userUuid = callerUuid;
+            veh.setUserUuid(userUuid);
         }
+
+        // Validate caller authorization: caller must be self, Head of Family for member, or privileged employee
+        assetAuthorizationService.validateAssetAccess(callerUuid, userUuid, veh.getTenantId(), request.getRequestInfo());
 
         // Validate citizen exists in eg_user
         User existingCitizen = validateCitizenExists(userUuid);
@@ -90,7 +113,7 @@ public class VehicleServiceImpl implements VehicleService {
             throw new CustomException(UserConstants.ERROR_VEHICLE_MANDATORY_FIELDS, UserConstants.MSG_VEHICLE_MANDATORY_FIELDS);
         }
 
-        String actorUuid = resolveActorUuid(request.getRequestInfo());
+        String actorUuid = callerUuid;
 
         // Uniqueness validation: Ensure vehicle is not already actively registered to another citizen
         String existingOwnerUuid = vehicleRepository.findActiveOwnerByVehicleNumber(veh.getVehicleNumber());
@@ -155,14 +178,10 @@ public class VehicleServiceImpl implements VehicleService {
             throw new CustomException(UserConstants.ERROR_INVALID_VEHICLE_REQUEST, "Request payload cannot be null");
         }
 
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(request.getRequestInfo());
         String vehicleId = request.resolveVehicleId();
         if (StringUtils.isBlank(vehicleId)) {
             throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "Vehicle ID is required for update");
-        }
-
-        String userUuid = request.resolveUserUuid();
-        if (StringUtils.isBlank(userUuid)) {
-            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
         }
 
         UserVehicle existing = vehicleRepository.findVehicleById(vehicleId);
@@ -171,14 +190,18 @@ public class VehicleServiceImpl implements VehicleService {
             throw new CustomException(UserConstants.ERROR_VEHICLE_NOT_FOUND, UserConstants.MSG_VEHICLE_NOT_FOUND + vehicleId);
         }
 
-        // Security boundary check: ensure the vehicle belongs to the declared citizen
-        if (!userUuid.equals(existing.getUserUuid())) {
-            log.error("[VEHICLE-SERVICE] Unauthorized update: vehicle {} belongs to {} but update requested for {}",
-                    vehicleId, existing.getUserUuid(), userUuid);
+        // Enforce caller authorization: caller must be owner, Head of Family for member, or privileged employee
+        assetAuthorizationService.validateAssetAccess(callerUuid, existing.getUserUuid(), existing.getTenantId(), request.getRequestInfo());
+
+        // Prevent cross-user ownership reassignment
+        String requestedUserUuid = request.resolveUserUuid();
+        if (StringUtils.isNotBlank(requestedUserUuid) && !requestedUserUuid.trim().equalsIgnoreCase(existing.getUserUuid())) {
+            log.error("[VEHICLE-SERVICE] Ownership reassignment blocked: vehicle {} belongs to {} but update requested with userUuid {}",
+                    vehicleId, existing.getUserUuid(), requestedUserUuid);
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_VEHICLE_ACCESS_DENIED);
         }
 
-        String actorUuid = resolveActorUuid(request.getRequestInfo());
+        String actorUuid = callerUuid;
         UserVehicle incoming = request.resolveVehicle();
 
         // Merge attributes
@@ -255,16 +278,48 @@ public class VehicleServiceImpl implements VehicleService {
      */
     @Override
     public List<UserVehicle> searchVehicles(VehicleSearchCriteria criteria, RequestInfo requestInfo) {
+        if (requestInfo == null && criteria != null && criteria.getRequestInfo() != null) {
+            requestInfo = criteria.getRequestInfo();
+        }
+
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(requestInfo);
+
         if (criteria != null && criteria.getCriteria() != null) {
             VehicleSearchCriteria inner = criteria.getCriteria();
             if (inner.getRequestInfo() == null) {
                 inner.setRequestInfo(criteria.getRequestInfo());
+            }
+            if (inner.getLimit() == null) {
+                inner.setLimit(criteria.getLimit());
+            }
+            if (inner.getOffset() == null) {
+                inner.setOffset(criteria.getOffset());
             }
             criteria = inner;
         }
 
         if (criteria == null) {
             criteria = new VehicleSearchCriteria();
+        }
+
+        // Enforce caller authorization and auto-scope unconstrained citizen searches
+        assetAuthorizationService.scopeSearchCriteria(
+                callerUuid,
+                criteria.getUserUuid(),
+                criteria.getUserUuids(),
+                criteria.getTenantId(),
+                requestInfo,
+                criteria::setUserUuid
+        );
+
+        // Security Guard: Citizen callers must be scoped to an authorized userUuid
+        if (!assetAuthorizationService.isPrivilegedCaller(requestInfo)) {
+            if (StringUtils.isBlank(criteria.getUserUuid())
+                    && (criteria.getUserUuids() == null || criteria.getUserUuids().isEmpty())) {
+                log.warn("[VEHICLE-SERVICE] Unscoped vehicle search attempted by citizen caller {}", callerUuid);
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS,
+                        "Citizen searches must be scoped to an authorized userUuid");
+            }
         }
 
         log.debug("[VEHICLE-SERVICE] Searching vehicles with criteria: userUuid={}, vehicleId={}, tenantId={}",
@@ -286,14 +341,10 @@ public class VehicleServiceImpl implements VehicleService {
             throw new CustomException(UserConstants.ERROR_INVALID_VEHICLE_REQUEST, "Request payload cannot be null");
         }
 
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(request.getRequestInfo());
         String vehicleId = request.resolveVehicleId();
         if (StringUtils.isBlank(vehicleId)) {
             throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "Vehicle ID is required for deactivation");
-        }
-
-        String userUuid = request.resolveUserUuid();
-        if (StringUtils.isBlank(userUuid)) {
-            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
         }
 
         UserVehicle existing = vehicleRepository.findVehicleById(vehicleId);
@@ -302,14 +353,17 @@ public class VehicleServiceImpl implements VehicleService {
             throw new CustomException(UserConstants.ERROR_VEHICLE_NOT_FOUND, UserConstants.MSG_VEHICLE_NOT_FOUND + vehicleId);
         }
 
-        // Security boundary check: ensure caller belongs to the vehicle's citizen
-        if (!userUuid.equals(existing.getUserUuid())) {
-            log.error("[VEHICLE-SERVICE] Unauthorized deactivation attempt: vehicle {} belongs to {} but deletion requested for {}",
-                    vehicleId, existing.getUserUuid(), userUuid);
+        // Enforce caller authorization: caller must be owner, Head of Family for member, or privileged employee
+        assetAuthorizationService.validateAssetAccess(callerUuid, existing.getUserUuid(), existing.getTenantId(), request.getRequestInfo());
+
+        String requestedUserUuid = request.resolveUserUuid();
+        if (StringUtils.isNotBlank(requestedUserUuid) && !requestedUserUuid.trim().equalsIgnoreCase(existing.getUserUuid())) {
+            log.error("[VEHICLE-SERVICE] Unauthorized deactivation attempt: vehicle {} belongs to {} but deletion requested with userUuid {}",
+                    vehicleId, existing.getUserUuid(), requestedUserUuid);
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_VEHICLE_ACCESS_DENIED);
         }
 
-        String actorUuid = resolveActorUuid(request.getRequestInfo());
+        String actorUuid = callerUuid;
         existing.setStatus(UserConstants.STATUS_INACTIVE_UPPERCASE);
         existing.setLastModifiedBy(actorUuid);
 
@@ -337,22 +391,5 @@ public class VehicleServiceImpl implements VehicleService {
                     UserConstants.MSG_USER_RECORD_NOT_FOUND_PREFIX + userUuid + UserConstants.MSG_USER_RECORD_NOT_FOUND_SUFFIX);
         }
         return found.get(0);
-    }
-
-    /**
-     * Resolves audit actor UUID strictly from {@link RequestInfo#getUserInfo()}.
-     * Guarantees that mutations to citizen vehicle declarations are non-repudiable and cannot
-     * be executed anonymously or disguised under generic system actor credentials.
-     *
-     * @param requestInfo standard UPYOG request context envelope
-     * @return validated non-blank actor UUID string
-     * @throws CustomException if {@code requestInfo}, {@code userInfo}, or {@code uuid} is missing
-     */
-    private String resolveActorUuid(RequestInfo requestInfo) {
-        if (requestInfo == null || requestInfo.getUserInfo() == null || StringUtils.isBlank(requestInfo.getUserInfo().getUuid())) {
-            log.error("[VEHICLE-SERVICE] Unauthorized mutation attempt: RequestInfo.userInfo is missing or blank");
-            throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
-        }
-        return requestInfo.getUserInfo().getUuid().trim();
     }
 }

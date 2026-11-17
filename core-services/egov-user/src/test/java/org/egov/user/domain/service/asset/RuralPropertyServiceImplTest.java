@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,9 +48,12 @@ public class RuralPropertyServiceImplTest {
     private UserRepository userRepository;
     private UserDocumentRepository documentRepository;
     private IdGenRepository idGenRepository;
+    private org.egov.user.persistence.repository.FamilyRestRepository familyRestRepository;
+    private AssetAuthorizationService assetAuthorizationService;
     private RuralPropertyServiceImpl ruralPropertyService;
 
     private static final String TEST_USER_UUID = "citizen-uuid-001";
+    private static final String TEST_MEMBER_UUID = "member-uuid-002";
     private static final String TEST_PROPERTY_ID = "prop-rural-001";
     private static final String TEST_TENANT_ID = "pg.citya";
     private static final String TEST_OPERATOR_UUID = "operator-uuid-555";
@@ -61,12 +65,16 @@ public class RuralPropertyServiceImplTest {
         userRepository = mock(UserRepository.class);
         documentRepository = mock(UserDocumentRepository.class);
         idGenRepository = mock(IdGenRepository.class);
+        familyRestRepository = mock(org.egov.user.persistence.repository.FamilyRestRepository.class);
+
+        assetAuthorizationService = new AssetAuthorizationService(userRepository, familyRestRepository);
 
         ruralPropertyService = new RuralPropertyServiceImpl(
                 propertyRepository,
                 userRepository,
                 documentRepository,
-                idGenRepository
+                idGenRepository,
+                assetAuthorizationService
         );
     }
 
@@ -74,6 +82,20 @@ public class RuralPropertyServiceImplTest {
         org.egov.common.contract.request.User userInfo = org.egov.common.contract.request.User.builder()
                 .uuid(TEST_OPERATOR_UUID)
                 .id(TEST_OPERATOR_ID)
+                .type("EMPLOYEE")
+                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("EMPLOYEE").name("Employee").build()))
+                .build();
+        return RequestInfo.builder()
+                .userInfo(userInfo)
+                .build();
+    }
+
+    private RequestInfo createCitizenRequestInfo(String citizenUuid) {
+        org.egov.common.contract.request.User userInfo = org.egov.common.contract.request.User.builder()
+                .uuid(citizenUuid)
+                .id(101L)
+                .type("CITIZEN")
+                .roles(Collections.singletonList(org.egov.common.contract.request.Role.builder().code("CITIZEN").name("Citizen").build()))
                 .build();
         return RequestInfo.builder()
                 .userInfo(userInfo)
@@ -280,6 +302,7 @@ public class RuralPropertyServiceImplTest {
     @DisplayName("Should throw CustomException when userUuid is missing during creation")
     public void testCreateRuralProperty_MissingUserUuid() {
         RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createTestRequestInfo())
                 .tenantId(TEST_TENANT_ID)
                 .ruralProperty(RuralPropertyDetail.builder().gramPanchayat("GP").villageName("V").build())
                 .build();
@@ -294,6 +317,7 @@ public class RuralPropertyServiceImplTest {
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.emptyList());
 
         RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createTestRequestInfo())
                 .userUuid("unknown-uuid")
                 .tenantId(TEST_TENANT_ID)
                 .ruralProperty(RuralPropertyDetail.builder().gramPanchayat("GP").villageName("V").build())
@@ -312,6 +336,7 @@ public class RuralPropertyServiceImplTest {
                 .thenReturn(Collections.singletonList(citizen));
 
         RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createTestRequestInfo())
                 .userUuid(TEST_USER_UUID)
                 .tenantId(TEST_TENANT_ID)
                 .ruralProperty(RuralPropertyDetail.builder().gramPanchayat("GP").villageName(null).build())
@@ -332,7 +357,7 @@ public class RuralPropertyServiceImplTest {
                 .status(UserConstants.STATUS_ACTIVE_UPPERCASE)
                 .ruralPropertyDetail(RuralPropertyDetail.builder()
                         .propertyRecordId(TEST_PROPERTY_ID)
-                        .propertyId("PG-RP-2026-0001")
+                        .propertyId("PG-RP-2026-11-17-000001")
                         .gramPanchayat("Old GP")
                         .villageName("Old Village")
                         .build())
@@ -397,7 +422,7 @@ public class RuralPropertyServiceImplTest {
         when(propertyRepository.searchRuralProperties(any(RuralPropertySearchCriteria.class)))
                 .thenReturn(Collections.singletonList(mockProp));
 
-        List<UserProperty> results = ruralPropertyService.searchRuralProperties(criteria, new RequestInfo());
+        List<UserProperty> results = ruralPropertyService.searchRuralProperties(criteria, createTestRequestInfo());
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -410,7 +435,7 @@ public class RuralPropertyServiceImplTest {
         RuralPropertySearchCriteria criteria = new RuralPropertySearchCriteria();
 
         CustomException ex = assertThrows(CustomException.class,
-                () -> ruralPropertyService.searchRuralProperties(criteria, new RequestInfo()));
+                () -> ruralPropertyService.searchRuralProperties(criteria, createTestRequestInfo()));
         assertEquals(UserConstants.ERROR_INVALID_SEARCH_CRITERIA, ex.getCode());
     }
 
@@ -532,5 +557,174 @@ public class RuralPropertyServiceImplTest {
         CustomException ex = assertThrows(CustomException.class,
                 () -> ruralPropertyService.deactivateRuralProperty(TEST_PROPERTY_ID, TEST_USER_UUID, new RequestInfo()));
         assertEquals(UserConstants.ERROR_CALLER_INFO_REQUIRED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should permit citizen to create own rural property")
+    public void testCreateRuralProperty_CitizenSelfAccess_Success() {
+        User citizen = User.builder().id(101L).uuid(TEST_USER_UUID).tenantId(TEST_TENANT_ID).build();
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(citizen));
+        when(idGenRepository.generateRuralPropertyId(any(), any())).thenReturn("PG-RP-2026-11-17-000001");
+
+        RuralPropertyDetail ruralDetail = RuralPropertyDetail.builder()
+                .gramPanchayat("Rampur").villageName("Fatehpur").build();
+
+        UserProperty hydratedReturn = UserProperty.builder()
+                .id(TEST_PROPERTY_ID).userUuid(TEST_USER_UUID).tenantId(TEST_TENANT_ID)
+                .status(UserConstants.STATUS_ACTIVE_UPPERCASE).build();
+        when(propertyRepository.findRuralPropertyById(any(String.class))).thenReturn(hydratedReturn);
+
+        RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralProperty(ruralDetail)
+                .build();
+
+        UserProperty created = ruralPropertyService.createRuralProperty(request);
+        assertNotNull(created);
+        assertEquals(TEST_USER_UUID, created.getUserUuid());
+    }
+
+    @Test
+    @DisplayName("Should permit Head of Family to create rural property for household member")
+    public void testCreateRuralProperty_HeadOfFamily_Success() {
+        User member = User.builder().id(102L).uuid(TEST_MEMBER_UUID).tenantId(TEST_TENANT_ID).build();
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(member));
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq(TEST_USER_UUID), eq(TEST_MEMBER_UUID), eq(TEST_TENANT_ID), any()))
+                .thenReturn(true);
+        when(idGenRepository.generateRuralPropertyId(any(), any())).thenReturn("PG-RP-2026-11-17-000002");
+
+        RuralPropertyDetail ruralDetail = RuralPropertyDetail.builder()
+                .gramPanchayat("Rampur").villageName("Fatehpur").build();
+
+        UserProperty hydratedReturn = UserProperty.builder()
+                .id(TEST_PROPERTY_ID).userUuid(TEST_MEMBER_UUID).tenantId(TEST_TENANT_ID)
+                .status(UserConstants.STATUS_ACTIVE_UPPERCASE).build();
+        when(propertyRepository.findRuralPropertyById(any(String.class))).thenReturn(hydratedReturn);
+
+        RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .userUuid(TEST_MEMBER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralProperty(ruralDetail)
+                .build();
+
+        UserProperty created = ruralPropertyService.createRuralProperty(request);
+        assertNotNull(created);
+        assertEquals(TEST_MEMBER_UUID, created.getUserUuid());
+    }
+
+    @Test
+    @DisplayName("Should reject rural property creation when citizen caller is NOT Head of Family")
+    public void testCreateRuralProperty_UnauthorizedCitizen_ThrowsException() {
+        when(familyRestRepository.isCallerHeadOfFamilyForMember(eq(TEST_USER_UUID), eq("stranger-uuid"), eq(TEST_TENANT_ID), any()))
+                .thenReturn(false);
+
+        RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .userUuid("stranger-uuid")
+                .tenantId(TEST_TENANT_ID)
+                .ruralProperty(RuralPropertyDetail.builder().gramPanchayat("GP").villageName("V").build())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> ruralPropertyService.createRuralProperty(request));
+        assertEquals(UserConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should auto-scope unconstrained citizen rural property search to caller UUID")
+    public void testSearchRuralProperties_CitizenSelfSearch_AutoScoped() {
+        RuralPropertySearchCriteria criteria = RuralPropertySearchCriteria.builder()
+                .tenantId(TEST_TENANT_ID)
+                .build();
+
+        when(propertyRepository.searchRuralProperties(any(RuralPropertySearchCriteria.class)))
+                .thenAnswer(invocation -> {
+                    RuralPropertySearchCriteria passed = invocation.getArgument(0);
+                    assertEquals(TEST_USER_UUID, passed.getUserUuid());
+                    return Collections.singletonList(UserProperty.builder().id(TEST_PROPERTY_ID).userUuid(TEST_USER_UUID).build());
+                });
+
+        List<UserProperty> results = ruralPropertyService.searchRuralProperties(criteria, createCitizenRequestInfo(TEST_USER_UUID));
+        assertNotNull(results);
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    @DisplayName("Should pass pagination limit and offset parameters to repository during rural property search")
+    public void testSearchRuralProperties_PaginationParametersPassed() {
+        RuralPropertySearchCriteria criteria = RuralPropertySearchCriteria.builder()
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .limit(25)
+                .offset(10)
+                .build();
+
+        when(propertyRepository.searchRuralProperties(any(RuralPropertySearchCriteria.class)))
+                .thenAnswer(invocation -> {
+                    RuralPropertySearchCriteria passed = invocation.getArgument(0);
+                    assertEquals(25, passed.getLimit());
+                    assertEquals(10, passed.getOffset());
+                    return Collections.emptyList();
+                });
+
+        List<UserProperty> results = ruralPropertyService.searchRuralProperties(criteria, createCitizenRequestInfo(TEST_USER_UUID));
+        assertNotNull(results);
+        verify(propertyRepository).searchRuralProperties(any(RuralPropertySearchCriteria.class));
+    }
+
+    @Test
+    @DisplayName("Should allow privileged employee caller to search rural properties without citizen userUuid scoping")
+    public void testSearchRuralProperties_EmployeeCaller_AllowedWithoutUserUuid() {
+        RuralPropertySearchCriteria criteria = RuralPropertySearchCriteria.builder()
+                .tenantId(TEST_TENANT_ID)
+                .gramPanchayat("Rampur")
+                .limit(50)
+                .offset(0)
+                .build();
+
+        when(propertyRepository.searchRuralProperties(any(RuralPropertySearchCriteria.class)))
+                .thenReturn(Collections.emptyList());
+
+        List<UserProperty> results = ruralPropertyService.searchRuralProperties(criteria, createTestRequestInfo());
+        assertNotNull(results);
+        verify(propertyRepository).searchRuralProperties(criteria);
+    }
+
+    @Test
+    @DisplayName("Should ignore client-supplied property record ID during create to prevent hijacking foreign records")
+    public void testCreateRuralProperty_IgnoresClientSuppliedId() {
+        User citizen = User.builder().id(101L).uuid(TEST_USER_UUID).tenantId(TEST_TENANT_ID).build();
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(citizen));
+        when(idGenRepository.generateRuralPropertyId(any(), any())).thenReturn("PG-RP-2026-11-17-000099");
+
+        RuralPropertyDetail ruralDetail = RuralPropertyDetail.builder()
+                .id("foreign-prop-id-attacker-supplied")
+                .propertyRecordId("foreign-prop-id-attacker-supplied")
+                .gramPanchayat("GP")
+                .villageName("Village")
+                .build();
+
+        RuralPropertyRequest request = RuralPropertyRequest.builder()
+                .requestInfo(createCitizenRequestInfo(TEST_USER_UUID))
+                .propertyId("foreign-prop-id-attacker-supplied")
+                .userUuid(TEST_USER_UUID)
+                .tenantId(TEST_TENANT_ID)
+                .ruralProperty(ruralDetail)
+                .build();
+
+        when(propertyRepository.findRuralPropertyById(any())).thenReturn(UserProperty.builder().id("generated-id").userUuid(TEST_USER_UUID).build());
+
+        ruralPropertyService.createRuralProperty(request);
+
+        ArgumentCaptor<UserProperty> propCaptor = ArgumentCaptor.forClass(UserProperty.class);
+        verify(propertyRepository).saveProperty(propCaptor.capture());
+        assertFalse("foreign-prop-id-attacker-supplied".equals(propCaptor.getValue().getId()));
+
+        ArgumentCaptor<RuralPropertyDetail> ruralCaptor = ArgumentCaptor.forClass(RuralPropertyDetail.class);
+        verify(propertyRepository).saveRuralProperty(ruralCaptor.capture());
+        assertFalse("foreign-prop-id-attacker-supplied".equals(ruralCaptor.getValue().resolvePropertyRecordId()));
+        assertEquals(TEST_USER_UUID, ruralCaptor.getValue().getUserUuid());
     }
 }

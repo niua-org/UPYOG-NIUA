@@ -59,7 +59,13 @@ public class UserPropertyQueryBuilder {
             "property_tax_amount = EXCLUDED.property_tax_amount, " +
             "urban_address = EXCLUDED.urban_address, " +
             "last_modified_by = EXCLUDED.last_modified_by, " +
-            "last_modified_time = EXCLUDED.last_modified_time";
+            "last_modified_time = EXCLUDED.last_modified_time " +
+            // Security: guard upsert to ensure the parent property record is owned by the specified citizen
+            "WHERE EXISTS (" +
+            "SELECT 1 FROM ug_user_property p " +
+            "WHERE p.id = EXCLUDED.property_record_id " +
+            "AND (:user_uuid IS NULL OR p.user_uuid = :user_uuid)" +
+            ")";
 
     public static final String INSERT_RURAL_PROPERTY_SQL =
             "INSERT INTO ug_user_rural_property (" +
@@ -80,7 +86,13 @@ public class UserPropertyQueryBuilder {
             "property_usage = EXCLUDED.property_usage, " +
             "survey_number = EXCLUDED.survey_number, " +
             "last_modified_by = EXCLUDED.last_modified_by, " +
-            "last_modified_time = EXCLUDED.last_modified_time";
+            "last_modified_time = EXCLUDED.last_modified_time " +
+            // Security: guard upsert to ensure the parent property record is owned by the specified citizen
+            "WHERE EXISTS (" +
+            "SELECT 1 FROM ug_user_property p " +
+            "WHERE p.id = EXCLUDED.property_record_id " +
+            "AND (:user_uuid IS NULL OR p.user_uuid = :user_uuid)" +
+            ")";
 
     public static final String INSERT_PROPERTY_OWNER_SQL =
             "INSERT INTO ug_user_property_owner (" +
@@ -186,6 +198,10 @@ public class UserPropertyQueryBuilder {
     public static final String DEACTIVATE_PROPERTY_OWNERS_SQL =
             "UPDATE ug_user_property_owner SET active = false, last_modified_by = :last_modified_by, " +
             "last_modified_time = :last_modified_time WHERE property_id = :property_id";
+
+    public static final int DEFAULT_SEARCH_LIMIT = 50;
+    public static final int MAX_SEARCH_LIMIT = 100;
+    public static final int DEFAULT_SEARCH_OFFSET = 0;
 
     /**
      * Default constructor for Spring component lifecycle.
@@ -316,6 +332,20 @@ public class UserPropertyQueryBuilder {
         }
 
         query.append(" ORDER BY p.created_time DESC");
+
+        int limit = DEFAULT_SEARCH_LIMIT;
+        if (criteria != null && criteria.getLimit() != null && criteria.getLimit() > 0) {
+            limit = Math.min(criteria.getLimit(), MAX_SEARCH_LIMIT);
+        }
+        int offset = DEFAULT_SEARCH_OFFSET;
+        if (criteria != null && criteria.getOffset() != null && criteria.getOffset() >= 0) {
+            offset = criteria.getOffset();
+        }
+
+        query.append(" LIMIT :limit OFFSET :offset");
+        params.put("limit", limit);
+        params.put("offset", offset);
+
         return query.toString();
     }
 

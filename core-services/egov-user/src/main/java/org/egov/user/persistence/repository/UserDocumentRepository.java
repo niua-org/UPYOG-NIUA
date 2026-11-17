@@ -174,16 +174,6 @@ public class UserDocumentRepository {
     }
 
     /**
-     * Soft-deletes a document by marking {@code active = false} and auditing the actor.
-     *
-     * @param id     the document identifier
-     * @param userId the ID of the user performing the deletion
-     */
-    public void delete(String id, Long userId) {
-        delete(id, userId != null ? userId.toString() : null);
-    }
-
-    /**
      * Searches document records based on {@link UserDocumentSearchCriteria}.
      *
      * @param criteria search filter parameters

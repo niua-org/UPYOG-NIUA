@@ -105,6 +105,18 @@ public class RuralPropertySearchCriteria {
     private Boolean includeDeactivated;
 
     /**
+     * Pagination offset.
+     */
+    @JsonProperty("offset")
+    private Integer offset;
+
+    /**
+     * Pagination limit.
+     */
+    @JsonProperty("limit")
+    private Integer limit;
+
+    /**
      * Unwraps nested criteria if passed inside {@code criteria} property.
      *
      * @return normalized effective search criteria
@@ -113,6 +125,12 @@ public class RuralPropertySearchCriteria {
         if (this.criteria != null) {
             if (this.criteria.getRequestInfo() == null) {
                 this.criteria.setRequestInfo(this.requestInfo);
+            }
+            if (this.criteria.getLimit() == null) {
+                this.criteria.setLimit(this.limit);
+            }
+            if (this.criteria.getOffset() == null) {
+                this.criteria.setOffset(this.offset);
             }
             return this.criteria;
         }

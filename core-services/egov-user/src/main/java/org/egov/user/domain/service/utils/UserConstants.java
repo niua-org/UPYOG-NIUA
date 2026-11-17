@@ -455,4 +455,15 @@ public final class UserConstants {
     public static final String MSG_VEHICLE_ACCESS_DENIED = "Unauthorized access: Vehicle does not belong to specified citizen";
     public static final String MSG_VEHICLE_ALREADY_REGISTERED = "Vehicle is already actively registered to another citizen with registration number: ";
     public static final String MSG_VEHICLE_DEACTIVATED_SUCCESS = "Vehicle marked as inactive successfully";
+
+    // =========================================================================
+    // 15. Income CRUD Constants
+    // =========================================================================
+    public static final String ERROR_INCOME_NOT_FOUND = "INCOME_NOT_FOUND";
+    public static final String ERROR_INVALID_INCOME_REQUEST = "INVALID_INCOME_REQUEST";
+    public static final String ERROR_INCOME_MANDATORY_FIELDS = "INCOME_MANDATORY_FIELDS";
+    public static final String MSG_INCOME_MANDATORY_FIELDS = "occupation, annualIncome, identifierType, and tenantId are mandatory for income declarations";
+    public static final String MSG_INCOME_NOT_FOUND = "Income record not found with ID: ";
+    public static final String MSG_INCOME_ACCESS_DENIED = "Unauthorized access: Income record does not belong to specified citizen";
+    public static final String MSG_INCOME_DEACTIVATED_SUCCESS = "Income declaration marked as inactive successfully";
 }

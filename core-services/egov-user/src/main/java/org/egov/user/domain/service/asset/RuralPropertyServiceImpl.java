@@ -48,6 +48,7 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
     private final UserRepository userRepository;
     private final UserDocumentRepository documentRepository;
     private final IdGenRepository idGenRepository;
+    private final AssetAuthorizationService assetAuthorizationService;
 
     /**
      * Constructs {@link RuralPropertyServiceImpl} with required persistence repositories and optional IdGen repository.
@@ -56,16 +57,21 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
      * @param userRepository     repository for querying citizen user existence
      * @param documentRepository repository for storing attached title and verification documents
      * @param idGenRepository     repository for generating formatted sequential rural property IDs
+     * @param assetAuthorizationService centralized caller authorization and family-scoping service
      */
     @Autowired
     public RuralPropertyServiceImpl(UserPropertyRepository propertyRepository,
                                     UserRepository userRepository,
                                     UserDocumentRepository documentRepository,
-                                    @Autowired(required = false) IdGenRepository idGenRepository) {
+                                    @Autowired(required = false) IdGenRepository idGenRepository,
+                                    AssetAuthorizationService assetAuthorizationService) {
         this.propertyRepository = propertyRepository;
         this.userRepository = userRepository;
         this.documentRepository = documentRepository;
         this.idGenRepository = idGenRepository;
+        this.assetAuthorizationService = assetAuthorizationService != null
+                ? assetAuthorizationService
+                : new AssetAuthorizationService(userRepository, null);
     }
 
     /**
@@ -78,7 +84,17 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
     public RuralPropertyServiceImpl(UserPropertyRepository propertyRepository,
                                     UserRepository userRepository,
                                     UserDocumentRepository documentRepository) {
-        this(propertyRepository, userRepository, documentRepository, null);
+        this(propertyRepository, userRepository, documentRepository, null, new AssetAuthorizationService(userRepository, null));
+    }
+
+    /**
+     * Testing constructor with {@link IdGenRepository}.
+     */
+    public RuralPropertyServiceImpl(UserPropertyRepository propertyRepository,
+                                    UserRepository userRepository,
+                                    UserDocumentRepository documentRepository,
+                                    IdGenRepository idGenRepository) {
+        this(propertyRepository, userRepository, documentRepository, idGenRepository, new AssetAuthorizationService(userRepository, null));
     }
 
     /**
@@ -94,11 +110,19 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_REQUEST, "Request payload cannot be null");
         }
 
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(request.getRequestInfo());
         UserProperty prop = request.resolveProperty();
         String userUuid = prop.getUserUuid();
         if (StringUtils.isBlank(userUuid)) {
-            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
+            if (assetAuthorizationService.isPrivilegedCaller(request.getRequestInfo())) {
+                throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
+            }
+            userUuid = callerUuid;
+            prop.setUserUuid(userUuid);
         }
+
+        // Enforce caller authorization: caller must be self, Head of Family for member, or privileged employee
+        assetAuthorizationService.validateAssetAccess(callerUuid, userUuid, prop.getTenantId(), request.getRequestInfo());
 
         // Validate citizen exists in eg_user
         User existingCitizen = validateCitizenExists(userUuid);
@@ -109,24 +133,33 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             throw new CustomException(UserConstants.ERROR_RURAL_PROPERTY_MANDATORY_FIELDS, UserConstants.MSG_RURAL_MANDATORY_FIELDS);
         }
 
-        String actorUuid = resolveActorUuid(request.getRequestInfo());
+        String actorUuid = callerUuid;
 
-        // Natural key deduplication by property ID or survey number if ID is not explicitly provided
+        // Security: Ignore client-supplied ID on create to prevent hijacking or overwriting foreign records
+        if (StringUtils.isNotBlank(prop.getId())) {
+            log.warn("[RURAL-PROP-SERVICE] Client-supplied property ID {} ignored during creation for citizen {}",
+                    prop.getId(), userUuid);
+            prop.setId(null);
+        }
+        if (rural.getId() != null || rural.getPropertyRecordId() != null) {
+            rural.setId(null);
+            rural.setPropertyRecordId(null);
+        }
+
+        // Natural key deduplication by property ID or survey number scoped strictly to this citizen
+        if (StringUtils.isNotBlank(rural.getPropertyId())) {
+            String existingId = propertyRepository.findRuralPropertyIdByPropertyId(userUuid, rural.getPropertyId());
+            if (existingId != null) {
+                prop.setId(existingId);
+            }
+        } else if (StringUtils.isNotBlank(rural.getSurveyNumber())) {
+            String existingId = propertyRepository.findRuralPropertyId(userUuid, rural.getSurveyNumber());
+            if (existingId != null) {
+                prop.setId(existingId);
+            }
+        }
         if (StringUtils.isBlank(prop.getId())) {
-            if (StringUtils.isNotBlank(rural.getPropertyId())) {
-                String existingId = propertyRepository.findRuralPropertyIdByPropertyId(userUuid, rural.getPropertyId());
-                if (existingId != null) {
-                    prop.setId(existingId);
-                }
-            } else if (StringUtils.isNotBlank(rural.getSurveyNumber())) {
-                String existingId = propertyRepository.findRuralPropertyId(userUuid, rural.getSurveyNumber());
-                if (existingId != null) {
-                    prop.setId(existingId);
-                }
-            }
-            if (StringUtils.isBlank(prop.getId())) {
-                prop.setId(UUID.randomUUID().toString());
-            }
+            prop.setId(UUID.randomUUID().toString());
         }
 
         // Generate formatted rural property ID via IdGen if not explicitly supplied
@@ -144,6 +177,7 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
 
         rural.setPropertyRecordId(prop.getId());
         rural.setId(prop.getId());
+        rural.setUserUuid(userUuid);
         rural.setTenantId(prop.getTenantId());
         rural.setCreatedBy(actorUuid);
         rural.setLastModifiedBy(actorUuid);
@@ -197,14 +231,10 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_REQUEST, "Request payload cannot be null");
         }
 
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(request.getRequestInfo());
         String propertyId = request.resolvePropertyId();
         if (StringUtils.isBlank(propertyId)) {
             throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_REQUEST, "Property ID is mandatory for update");
-        }
-
-        String userUuid = request.resolveUserUuid();
-        if (StringUtils.isBlank(userUuid)) {
-            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
         }
 
         UserProperty existing = propertyRepository.findRuralPropertyById(propertyId);
@@ -212,14 +242,18 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             throw new CustomException(UserConstants.ERROR_PROPERTY_NOT_FOUND, UserConstants.MSG_PROPERTY_NOT_FOUND + propertyId);
         }
 
-        // Enforce ownership boundary
-        if (!userUuid.equals(existing.getUserUuid())) {
-            log.warn("[RURAL-PROP-SERVICE] Ownership mismatch: property {} belongs to {} but update was requested by {}",
-                    propertyId, existing.getUserUuid(), userUuid);
+        // Enforce caller authorization: caller must be owner, Head of Family for member, or privileged employee
+        assetAuthorizationService.validateAssetAccess(callerUuid, existing.getUserUuid(), existing.getTenantId(), request.getRequestInfo());
+
+        // Prevent cross-user ownership reassignment in update payload
+        String requestedUserUuid = request.resolveUserUuid();
+        if (StringUtils.isNotBlank(requestedUserUuid) && !requestedUserUuid.trim().equalsIgnoreCase(existing.getUserUuid())) {
+            log.warn("[RURAL-PROP-SERVICE] Ownership reassignment blocked: property {} belongs to {} but update payload contained userUuid {}",
+                    propertyId, existing.getUserUuid(), requestedUserUuid);
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_PROPERTY_ACCESS_DENIED);
         }
 
-        String actorUuid = resolveActorUuid(request.getRequestInfo());
+        String actorUuid = callerUuid;
 
         UserProperty incoming = request.resolveProperty();
 
@@ -281,11 +315,12 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
                 }
             }
         }
+        existingRural.setUserUuid(existing.getUserUuid());
         existingRural.setLastModifiedBy(actorUuid);
 
         // Update document proof if new document attached
         if (incoming.getDocument() != null && StringUtils.isNotBlank(incoming.getDocument().getFilestoreId())) {
-            User existingCitizen = validateCitizenExists(userUuid);
+            User existingCitizen = validateCitizenExists(existing.getUserUuid());
             UserDocument doc = incoming.getDocument();
             doc.setUserId(existingCitizen.getId());
             doc.setUserUuid(existingCitizen.getUuid());
@@ -316,12 +351,13 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             }
         }
 
-        log.info("[RURAL-PROP-SERVICE] Updated rural property ID: {} for citizen UUID: {}", propertyId, userUuid);
+        log.info("[RURAL-PROP-SERVICE] Updated rural property ID: {} for citizen UUID: {}", propertyId, existing.getUserUuid());
         return propertyRepository.findRuralPropertyById(propertyId);
     }
 
     /**
      * Searches rural property assets matching the specified criteria.
+     * Enforces caller read authorization and scopes unconstrained searches to the calling citizen.
      *
      * @param criteria    query criteria filters
      * @param requestInfo standard UPYOG request context envelope
@@ -333,7 +369,33 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
             throw new CustomException(UserConstants.ERROR_EMPTY_SEARCH_CRITERIA, "Search criteria payload cannot be null");
         }
 
+        if (requestInfo == null && criteria.getRequestInfo() != null) {
+            requestInfo = criteria.getRequestInfo();
+        }
+
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(requestInfo);
         RuralPropertySearchCriteria effectiveCriteria = criteria.resolveCriteria();
+
+        // Enforce caller authorization and auto-scope unconstrained citizen searches
+        assetAuthorizationService.scopeSearchCriteria(
+                callerUuid,
+                effectiveCriteria.getUserUuid(),
+                effectiveCriteria.getUserUuids(),
+                effectiveCriteria.getTenantId(),
+                requestInfo,
+                effectiveCriteria::setUserUuid
+        );
+
+        // Security Guard: Citizen callers must be scoped to an authorized userUuid
+        if (!assetAuthorizationService.isPrivilegedCaller(requestInfo)) {
+            if (StringUtils.isBlank(effectiveCriteria.getUserUuid())
+                    && (effectiveCriteria.getUserUuids() == null || effectiveCriteria.getUserUuids().isEmpty())) {
+                log.warn("[RURAL-PROP-SERVICE] Unscoped rural property search attempted by citizen caller {}", callerUuid);
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS,
+                        "Citizen searches must be scoped to an authorized userUuid");
+            }
+        }
+
         if (!effectiveCriteria.hasAnyFilter()) {
             throw new CustomException(UserConstants.ERROR_INVALID_SEARCH_CRITERIA,
                     "At least one search filter (userUuid, propertyId, tenantId, or surveyNumber) must be provided");
@@ -365,6 +427,7 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
 
     /**
      * Direct deactivation helper method marking a rural property as {@code INACTIVE}.
+     * Enforces that the caller is the property owner, Head of Family, or a privileged employee.
      *
      * @param propertyId  property record primary key ID
      * @param userUuid    citizen user UUID
@@ -377,29 +440,30 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
         if (StringUtils.isBlank(propertyId)) {
             throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_REQUEST, "Property ID is mandatory for deactivation");
         }
-        if (StringUtils.isBlank(userUuid)) {
-            throw new CustomException(UserConstants.ERROR_USER_UUID_REQUIRED, UserConstants.MSG_CITIZEN_USER_UUID_REQUIRED);
-        }
+
+        String callerUuid = assetAuthorizationService.resolveCallerUuid(requestInfo);
 
         UserProperty existing = propertyRepository.findRuralPropertyById(propertyId);
         if (existing == null) {
             throw new CustomException(UserConstants.ERROR_PROPERTY_NOT_FOUND, UserConstants.MSG_PROPERTY_NOT_FOUND + propertyId);
         }
 
-        // Security boundary
-        if (!userUuid.equals(existing.getUserUuid())) {
-            log.warn("[RURAL-PROP-SERVICE] Blocked deactivation attempt: property {} owned by {} requested by {}",
+        // Enforce caller authorization: caller must be owner, Head of Family for member, or privileged employee
+        assetAuthorizationService.validateAssetAccess(callerUuid, existing.getUserUuid(), existing.getTenantId(), requestInfo);
+
+        if (StringUtils.isNotBlank(userUuid) && !userUuid.trim().equalsIgnoreCase(existing.getUserUuid())) {
+            log.warn("[RURAL-PROP-SERVICE] Blocked deactivation attempt: property {} owned by {} requested with userUuid {}",
                     propertyId, existing.getUserUuid(), userUuid);
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_PROPERTY_ACCESS_DENIED);
         }
 
-        String actorUuid = resolveActorUuid(requestInfo);
-        boolean success = propertyRepository.updatePropertyStatus(propertyId, userUuid, UserConstants.STATUS_INACTIVE_UPPERCASE, actorUuid);
+        String actorUuid = callerUuid;
+        boolean success = propertyRepository.updatePropertyStatus(propertyId, existing.getUserUuid(), UserConstants.STATUS_INACTIVE_UPPERCASE, actorUuid);
         if (!success) {
             throw new CustomException(UserConstants.ERROR_PROPERTY_NOT_FOUND, "Failed to mark property as inactive: " + propertyId);
         }
 
-        log.info("[RURAL-PROP-SERVICE] Soft-deactivated rural property ID: {} for citizen UUID: {}", propertyId, userUuid);
+        log.info("[RURAL-PROP-SERVICE] Soft-deactivated rural property ID: {} for citizen UUID: {}", propertyId, existing.getUserUuid());
         return propertyRepository.findRuralPropertyById(propertyId);
     }
 
@@ -420,23 +484,6 @@ public class RuralPropertyServiceImpl implements RuralPropertyService {
                     UserConstants.MSG_USER_RECORD_NOT_FOUND_PREFIX + userUuid + UserConstants.MSG_USER_RECORD_NOT_FOUND_SUFFIX);
         }
         return found.get(0);
-    }
-
-    /**
-     * Resolves audit actor UUID strictly from {@link RequestInfo#getUserInfo()}.
-     * Guarantees that mutations to citizen rural property declarations are non-repudiable and cannot
-     * be executed anonymously or disguised under generic system actor credentials.
-     *
-     * @param requestInfo standard UPYOG request context envelope
-     * @return validated non-blank actor UUID string
-     * @throws CustomException if {@code requestInfo}, {@code userInfo}, or {@code uuid} is missing
-     */
-    private String resolveActorUuid(RequestInfo requestInfo) {
-        if (requestInfo == null || requestInfo.getUserInfo() == null || StringUtils.isBlank(requestInfo.getUserInfo().getUuid())) {
-            log.error("[RURAL-PROP-SERVICE] Unauthorized mutation attempt: RequestInfo.userInfo is missing or blank");
-            throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
-        }
-        return requestInfo.getUserInfo().getUuid().trim();
     }
 
     /**

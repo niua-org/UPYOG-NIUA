@@ -44,8 +44,28 @@ public class UserPropertyQueryBuilderTest {
         assertTrue(sql.contains("AND p.user_uuid = :user_uuid"));
         assertTrue(sql.contains("AND p.status = :status"));
         assertTrue(sql.contains("ORDER BY p.created_time DESC"));
+        assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
         assertEquals("user-uuid-1", params.get("user_uuid"));
         assertEquals("ACTIVE", params.get("status"));
+        assertEquals(UserPropertyQueryBuilder.DEFAULT_SEARCH_LIMIT, params.get("limit"));
+        assertEquals(UserPropertyQueryBuilder.DEFAULT_SEARCH_OFFSET, params.get("offset"));
+    }
+
+    @Test
+    @DisplayName("Should apply and cap search limit and offset when provided in criteria")
+    public void testBuildRuralPropertySearchQuery_PaginationAndCapping() {
+        RuralPropertySearchCriteria criteria = RuralPropertySearchCriteria.builder()
+                .userUuid("user-uuid-1")
+                .limit(250) // exceeds MAX_SEARCH_LIMIT (100)
+                .offset(20)
+                .build();
+        Map<String, Object> params = new HashMap<>();
+
+        String sql = queryBuilder.buildRuralPropertySearchQuery(criteria, params);
+
+        assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
+        assertEquals(UserPropertyQueryBuilder.MAX_SEARCH_LIMIT, params.get("limit"));
+        assertEquals(20, params.get("offset"));
     }
 
     @Test

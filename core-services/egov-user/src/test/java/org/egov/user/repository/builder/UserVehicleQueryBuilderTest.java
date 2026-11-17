@@ -110,6 +110,26 @@ public class UserVehicleQueryBuilderTest {
         assertNotNull(sql);
         assertTrue(sql.contains("v.status = 'ACTIVE'"));
         assertTrue(sql.contains("ORDER BY v.created_time DESC"));
+        assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
+        assertEquals(UserVehicleQueryBuilder.DEFAULT_SEARCH_LIMIT, params.get("limit"));
+        assertEquals(UserVehicleQueryBuilder.DEFAULT_SEARCH_OFFSET, params.get("offset"));
+    }
+
+    @Test
+    @DisplayName("Should cap vehicle search limit to MAX_SEARCH_LIMIT when requested limit exceeds cap")
+    public void testBuildSearchQuery_CappedLimit() {
+        Map<String, Object> params = new HashMap<>();
+        VehicleSearchCriteria criteria = VehicleSearchCriteria.builder()
+                .userUuid("user-uuid-001")
+                .limit(200)
+                .offset(15)
+                .build();
+
+        String sql = queryBuilder.buildSearchQuery(criteria, params);
+
+        assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
+        assertEquals(UserVehicleQueryBuilder.MAX_SEARCH_LIMIT, params.get("limit"));
+        assertEquals(15, params.get("offset"));
     }
 
     @Test
