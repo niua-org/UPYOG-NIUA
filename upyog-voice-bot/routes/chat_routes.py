@@ -7,10 +7,7 @@ from typing import Dict, Any, Optional
 from flask import Blueprint, request, jsonify, Response
 from dotenv import load_dotenv
 
-try:
-    from groq import Groq
-except ImportError:
-    Groq = None
+from services.llm_client import get_llm_client
 
 load_dotenv()
 
@@ -43,31 +40,31 @@ def summarize_and_store_memory(phone_anchor, messages_to_summarize):
             role = "User" if msg.get("role") == "user" else "Assistant"
             convo_text += f"{role}: {msg.get('content')}\n"
 
-        if not groq_client and Groq:
-            groq_client = Groq(api_key=GROQ_API_KEY)
+        client = get_llm_client()
+        if not client.is_configured():
+            return
 
         from prompts.memory_prompts import build_memory_summary_prompt
         prompt = build_memory_summary_prompt(convo_text=convo_text)
 
-        if groq_client:
-            response = groq_client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=GROQ_MODEL,
-                max_tokens=400,
-                temperature=0.3
-            )
-            summary_text = response.choices[0].message.content.strip()
+        response = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=GROQ_MODEL,
+            max_tokens=400,
+            temperature=0.3
+        )
+        summary_text = response.choices[0].message.content.strip()
 
-            embedding = model.encode([summary_text])[0].tolist()
+        embedding = model.encode([summary_text])[0].tolist()
 
-            success = MemoryManager.save_long_term_interaction(
-                phone_number=phone_anchor,
-                role="system_summary",
-                content=summary_text,
-                embedding=embedding
-            )
-            if success:
-                logger.info(f"Successfully summarized and stored memory for {phone_anchor}")
+        success = MemoryManager.save_long_term_interaction(
+            phone_number=phone_anchor,
+            role="system_summary",
+            content=summary_text,
+            embedding=embedding
+        )
+        if success:
+            logger.info(f"Successfully summarized and stored memory for {phone_anchor}")
     except Exception as e:
         logger.error(f"Error in summarize_and_store_memory: {e}")
 
