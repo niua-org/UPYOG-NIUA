@@ -1,7 +1,9 @@
 package org.egov.user.repository.builder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.web.contract.asset.IncomeSearchCriteria;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -59,9 +61,49 @@ public class UserIncomeQueryBuilder {
     public static final String SELECT_ACTIVE_INCOME_ID_BY_USER_SQL =
             "SELECT id FROM ug_user_income WHERE user_uuid = :user_uuid AND status = 'ACTIVE' LIMIT 1";
 
+    @Deprecated
     public static final int DEFAULT_SEARCH_LIMIT = 50;
+    @Deprecated
     public static final int MAX_SEARCH_LIMIT = 100;
+    @Deprecated
     public static final int DEFAULT_SEARCH_OFFSET = 0;
+
+    private final UserConfiguration userConfiguration;
+
+    /**
+     * Constructs a {@code UserIncomeQueryBuilder} with optional application configuration for pagination.
+     *
+     * @param userConfiguration application configuration
+     */
+    @Autowired
+    public UserIncomeQueryBuilder(@Autowired(required = false) UserConfiguration userConfiguration) {
+        this.userConfiguration = userConfiguration;
+    }
+
+    /**
+     * Default constructor for backward compatibility and unit tests.
+     */
+    public UserIncomeQueryBuilder() {
+        this(null);
+    }
+
+    public int getDefaultSearchLimit() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultLimit() != null)
+                ? userConfiguration.getAssetSearchDefaultLimit()
+                : DEFAULT_SEARCH_LIMIT;
+    }
+
+    public int getMaxSearchLimit() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchMaxLimit() != null)
+                ? userConfiguration.getAssetSearchMaxLimit()
+                : MAX_SEARCH_LIMIT;
+    }
+
+    public int getDefaultSearchOffset() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultOffset() != null)
+                ? userConfiguration.getAssetSearchDefaultOffset()
+                : DEFAULT_SEARCH_OFFSET;
+    }
 
     public static final String SELECT_INCOME_USER_UUID_BY_ID_SQL =
             "SELECT user_uuid FROM ug_user_income WHERE id = :id";
@@ -104,12 +146,7 @@ public class UserIncomeQueryBuilder {
             "LEFT JOIN ug_user_document td ON i.tax_proof_doc_id = td.id " +
             "WHERE i.user_uuid = :user_uuid";
 
-    /**
-     * Default constructor for Spring component lifecycle.
-     */
-    public UserIncomeQueryBuilder() {
-        // Default constructor
-    }
+
 
     /**
      * Builds dynamic parameterized SQL query for retrieving citizen income declarations.
@@ -243,11 +280,11 @@ public class UserIncomeQueryBuilder {
 
         query.append(" ORDER BY i.created_time DESC");
 
-        int limit = DEFAULT_SEARCH_LIMIT;
+        int limit = getDefaultSearchLimit();
         if (criteria != null && criteria.getLimit() != null && criteria.getLimit() > 0) {
-            limit = Math.min(criteria.getLimit(), MAX_SEARCH_LIMIT);
+            limit = Math.min(criteria.getLimit(), getMaxSearchLimit());
         }
-        int offset = DEFAULT_SEARCH_OFFSET;
+        int offset = getDefaultSearchOffset();
         if (criteria != null && criteria.getOffset() != null && criteria.getOffset() >= 0) {
             offset = criteria.getOffset();
         }

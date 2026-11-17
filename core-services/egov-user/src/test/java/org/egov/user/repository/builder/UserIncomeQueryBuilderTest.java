@@ -84,8 +84,8 @@ public class UserIncomeQueryBuilderTest {
         assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
         assertEquals("user-uuid-001", params.get("user_uuid"));
         assertEquals("pg.citya", params.get("tenant_id"));
-        assertEquals(UserIncomeQueryBuilder.DEFAULT_SEARCH_LIMIT, params.get("limit"));
-        assertEquals(UserIncomeQueryBuilder.DEFAULT_SEARCH_OFFSET, params.get("offset"));
+        assertEquals(queryBuilder.getDefaultSearchLimit(), params.get("limit"));
+        assertEquals(queryBuilder.getDefaultSearchOffset(), params.get("offset"));
     }
 
     @Test
@@ -101,7 +101,26 @@ public class UserIncomeQueryBuilderTest {
         String sql = queryBuilder.buildSearchQuery(criteria, params);
 
         assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
-        assertEquals(UserIncomeQueryBuilder.MAX_SEARCH_LIMIT, params.get("limit"));
+        assertEquals(queryBuilder.getMaxSearchLimit(), params.get("limit"));
         assertEquals(25, params.get("offset"));
+    }
+
+    @Test
+    @DisplayName("Should use income search pagination limits from UserConfiguration when configured")
+    public void testBuildSearchQuery_CustomConfiguration() {
+        org.egov.user.config.UserConfiguration config = org.egov.user.config.UserConfiguration.builder()
+                .assetSearchDefaultLimit(20)
+                .assetSearchMaxLimit(60)
+                .assetSearchDefaultOffset(8)
+                .build();
+        UserIncomeQueryBuilder customBuilder = new UserIncomeQueryBuilder(config);
+        Map<String, Object> params = new HashMap<>();
+        customBuilder.buildSearchQuery(IncomeSearchCriteria.builder().userUuid("user-1").build(), params);
+        assertEquals(20, params.get("limit"));
+        assertEquals(8, params.get("offset"));
+
+        Map<String, Object> cappedParams = new HashMap<>();
+        customBuilder.buildSearchQuery(IncomeSearchCriteria.builder().userUuid("user-1").limit(200).build(), cappedParams);
+        assertEquals(60, cappedParams.get("limit"));
     }
 }

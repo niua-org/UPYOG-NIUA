@@ -111,8 +111,8 @@ public class UserVehicleQueryBuilderTest {
         assertTrue(sql.contains("v.status = 'ACTIVE'"));
         assertTrue(sql.contains("ORDER BY v.created_time DESC"));
         assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
-        assertEquals(UserVehicleQueryBuilder.DEFAULT_SEARCH_LIMIT, params.get("limit"));
-        assertEquals(UserVehicleQueryBuilder.DEFAULT_SEARCH_OFFSET, params.get("offset"));
+        assertEquals(queryBuilder.getDefaultSearchLimit(), params.get("limit"));
+        assertEquals(queryBuilder.getDefaultSearchOffset(), params.get("offset"));
     }
 
     @Test
@@ -128,8 +128,27 @@ public class UserVehicleQueryBuilderTest {
         String sql = queryBuilder.buildSearchQuery(criteria, params);
 
         assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
-        assertEquals(UserVehicleQueryBuilder.MAX_SEARCH_LIMIT, params.get("limit"));
+        assertEquals(queryBuilder.getMaxSearchLimit(), params.get("limit"));
         assertEquals(15, params.get("offset"));
+    }
+
+    @Test
+    @DisplayName("Should use vehicle search pagination limits from UserConfiguration when configured")
+    public void testBuildSearchQuery_CustomConfiguration() {
+        org.egov.user.config.UserConfiguration config = org.egov.user.config.UserConfiguration.builder()
+                .assetSearchDefaultLimit(30)
+                .assetSearchMaxLimit(80)
+                .assetSearchDefaultOffset(10)
+                .build();
+        UserVehicleQueryBuilder customBuilder = new UserVehicleQueryBuilder(config);
+        Map<String, Object> params = new HashMap<>();
+        customBuilder.buildSearchQuery(VehicleSearchCriteria.builder().userUuid("user-1").build(), params);
+        assertEquals(30, params.get("limit"));
+        assertEquals(10, params.get("offset"));
+
+        Map<String, Object> cappedParams = new HashMap<>();
+        customBuilder.buildSearchQuery(VehicleSearchCriteria.builder().userUuid("user-1").limit(200).build(), cappedParams);
+        assertEquals(80, cappedParams.get("limit"));
     }
 
     @Test

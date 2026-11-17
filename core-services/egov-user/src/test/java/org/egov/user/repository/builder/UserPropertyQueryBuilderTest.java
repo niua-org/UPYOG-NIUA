@@ -47,8 +47,8 @@ public class UserPropertyQueryBuilderTest {
         assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
         assertEquals("user-uuid-1", params.get("user_uuid"));
         assertEquals("ACTIVE", params.get("status"));
-        assertEquals(UserPropertyQueryBuilder.DEFAULT_SEARCH_LIMIT, params.get("limit"));
-        assertEquals(UserPropertyQueryBuilder.DEFAULT_SEARCH_OFFSET, params.get("offset"));
+        assertEquals(queryBuilder.getDefaultSearchLimit(), params.get("limit"));
+        assertEquals(queryBuilder.getDefaultSearchOffset(), params.get("offset"));
     }
 
     @Test
@@ -64,8 +64,27 @@ public class UserPropertyQueryBuilderTest {
         String sql = queryBuilder.buildRuralPropertySearchQuery(criteria, params);
 
         assertTrue(sql.contains("LIMIT :limit OFFSET :offset"));
-        assertEquals(UserPropertyQueryBuilder.MAX_SEARCH_LIMIT, params.get("limit"));
+        assertEquals(queryBuilder.getMaxSearchLimit(), params.get("limit"));
         assertEquals(20, params.get("offset"));
+    }
+
+    @Test
+    @DisplayName("Should use search pagination limits from UserConfiguration when configured")
+    public void testBuildRuralPropertySearchQuery_CustomConfiguration() {
+        org.egov.user.config.UserConfiguration config = org.egov.user.config.UserConfiguration.builder()
+                .assetSearchDefaultLimit(25)
+                .assetSearchMaxLimit(75)
+                .assetSearchDefaultOffset(5)
+                .build();
+        UserPropertyQueryBuilder customBuilder = new UserPropertyQueryBuilder(config);
+        Map<String, Object> params = new HashMap<>();
+        customBuilder.buildRuralPropertySearchQuery(RuralPropertySearchCriteria.builder().userUuid("user-1").build(), params);
+        assertEquals(25, params.get("limit"));
+        assertEquals(5, params.get("offset"));
+
+        Map<String, Object> cappedParams = new HashMap<>();
+        customBuilder.buildRuralPropertySearchQuery(RuralPropertySearchCriteria.builder().userUuid("user-1").limit(200).build(), cappedParams);
+        assertEquals(75, cappedParams.get("limit"));
     }
 
     @Test

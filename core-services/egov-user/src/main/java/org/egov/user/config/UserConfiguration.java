@@ -243,6 +243,16 @@ public class UserConfiguration {
     @Value("${egov.asset.privileged.roles}")
     private String assetPrivilegedRoles;
 
+    // Asset Search Pagination Configuration
+    @Value("${egov.asset.search.default.limit}")
+    private Integer assetSearchDefaultLimit;
+
+    @Value("${egov.asset.search.max.limit}")
+    private Integer assetSearchMaxLimit;
+
+    @Value("${egov.asset.search.default.offset}")
+    private Integer assetSearchDefaultOffset;
+
     /**
      * Resolves the configured set of privileged role codes permitted to access citizen assets.
      *

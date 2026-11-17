@@ -1,8 +1,10 @@
 package org.egov.user.repository.builder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.asset.RuralPropertySearchCriteria;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -199,15 +201,48 @@ public class UserPropertyQueryBuilder {
             "UPDATE ug_user_property_owner SET active = false, last_modified_by = :last_modified_by, " +
             "last_modified_time = :last_modified_time WHERE property_id = :property_id";
 
+    @Deprecated
     public static final int DEFAULT_SEARCH_LIMIT = 50;
+    @Deprecated
     public static final int MAX_SEARCH_LIMIT = 100;
+    @Deprecated
     public static final int DEFAULT_SEARCH_OFFSET = 0;
 
+    private final UserConfiguration userConfiguration;
+
     /**
-     * Default constructor for Spring component lifecycle.
+     * Constructs a {@code UserPropertyQueryBuilder} with optional application configuration for pagination.
+     *
+     * @param userConfiguration application configuration
+     */
+    @Autowired
+    public UserPropertyQueryBuilder(@Autowired(required = false) UserConfiguration userConfiguration) {
+        this.userConfiguration = userConfiguration;
+    }
+
+    /**
+     * Default constructor for backward compatibility and unit tests.
      */
     public UserPropertyQueryBuilder() {
-        // Default constructor
+        this(null);
+    }
+
+    public int getDefaultSearchLimit() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultLimit() != null)
+                ? userConfiguration.getAssetSearchDefaultLimit()
+                : DEFAULT_SEARCH_LIMIT;
+    }
+
+    public int getMaxSearchLimit() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchMaxLimit() != null)
+                ? userConfiguration.getAssetSearchMaxLimit()
+                : MAX_SEARCH_LIMIT;
+    }
+
+    public int getDefaultSearchOffset() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultOffset() != null)
+                ? userConfiguration.getAssetSearchDefaultOffset()
+                : DEFAULT_SEARCH_OFFSET;
     }
 
     /**
@@ -333,11 +368,11 @@ public class UserPropertyQueryBuilder {
 
         query.append(" ORDER BY p.created_time DESC");
 
-        int limit = DEFAULT_SEARCH_LIMIT;
+        int limit = getDefaultSearchLimit();
         if (criteria != null && criteria.getLimit() != null && criteria.getLimit() > 0) {
-            limit = Math.min(criteria.getLimit(), MAX_SEARCH_LIMIT);
+            limit = Math.min(criteria.getLimit(), getMaxSearchLimit());
         }
-        int offset = DEFAULT_SEARCH_OFFSET;
+        int offset = getDefaultSearchOffset();
         if (criteria != null && criteria.getOffset() != null && criteria.getOffset() >= 0) {
             offset = criteria.getOffset();
         }

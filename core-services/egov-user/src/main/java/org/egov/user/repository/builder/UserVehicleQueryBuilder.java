@@ -1,8 +1,10 @@
 package org.egov.user.repository.builder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.asset.VehicleSearchCriteria;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -58,9 +60,49 @@ public class UserVehicleQueryBuilder {
     public static final String SELECT_ACTIVE_VEHICLE_OWNER_BY_NUMBER_SQL =
             "SELECT user_uuid FROM ug_user_vehicle WHERE UPPER(vehicle_number) = UPPER(:vehicle_number) AND status = 'ACTIVE' LIMIT 1";
 
+    @Deprecated
     public static final int DEFAULT_SEARCH_LIMIT = 50;
+    @Deprecated
     public static final int MAX_SEARCH_LIMIT = 100;
+    @Deprecated
     public static final int DEFAULT_SEARCH_OFFSET = 0;
+
+    private final UserConfiguration userConfiguration;
+
+    /**
+     * Constructs a {@code UserVehicleQueryBuilder} with optional application configuration for pagination.
+     *
+     * @param userConfiguration application configuration
+     */
+    @Autowired
+    public UserVehicleQueryBuilder(@Autowired(required = false) UserConfiguration userConfiguration) {
+        this.userConfiguration = userConfiguration;
+    }
+
+    /**
+     * Default constructor for backward compatibility and unit tests.
+     */
+    public UserVehicleQueryBuilder() {
+        this(null);
+    }
+
+    public int getDefaultSearchLimit() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultLimit() != null)
+                ? userConfiguration.getAssetSearchDefaultLimit()
+                : DEFAULT_SEARCH_LIMIT;
+    }
+
+    public int getMaxSearchLimit() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchMaxLimit() != null)
+                ? userConfiguration.getAssetSearchMaxLimit()
+                : MAX_SEARCH_LIMIT;
+    }
+
+    public int getDefaultSearchOffset() {
+        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultOffset() != null)
+                ? userConfiguration.getAssetSearchDefaultOffset()
+                : DEFAULT_SEARCH_OFFSET;
+    }
 
     public static final String SELECT_VEHICLE_USER_UUID_BY_ID_SQL =
             "SELECT user_uuid FROM ug_user_vehicle WHERE id = :id";
@@ -97,12 +139,7 @@ public class UserVehicleQueryBuilder {
             "LEFT JOIN ug_user_document rd ON v.rc_doc_id = rd.id " +
             "WHERE v.user_uuid = :user_uuid";
 
-    /**
-     * Default constructor for Spring component lifecycle.
-     */
-    public UserVehicleQueryBuilder() {
-        // Default constructor
-    }
+
 
     /**
      * Builds dynamic parameterized SQL query for retrieving citizen vehicle ownership declarations.
@@ -180,8 +217,8 @@ public class UserVehicleQueryBuilder {
 
         if (criteria == null) {
             query.append(" AND v.status = 'ACTIVE' ORDER BY v.created_time DESC LIMIT :limit OFFSET :offset");
-            params.put("limit", DEFAULT_SEARCH_LIMIT);
-            params.put("offset", DEFAULT_SEARCH_OFFSET);
+            params.put("limit", getDefaultSearchLimit());
+            params.put("offset", getDefaultSearchOffset());
             return query.toString();
         }
 
@@ -244,11 +281,11 @@ public class UserVehicleQueryBuilder {
 
         query.append(" ORDER BY v.created_time DESC");
 
-        int limit = DEFAULT_SEARCH_LIMIT;
+        int limit = getDefaultSearchLimit();
         if (criteria.getLimit() != null && criteria.getLimit() > 0) {
-            limit = Math.min(criteria.getLimit(), MAX_SEARCH_LIMIT);
+            limit = Math.min(criteria.getLimit(), getMaxSearchLimit());
         }
-        int offset = DEFAULT_SEARCH_OFFSET;
+        int offset = getDefaultSearchOffset();
         if (criteria.getOffset() != null && criteria.getOffset() >= 0) {
             offset = criteria.getOffset();
         }
