@@ -55,10 +55,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class IncomeServiceImpl implements IncomeService {
 
-    private static final Set<String> DEFAULT_IDENTIFIER_TYPES = Collections.unmodifiableSet(
-            new HashSet<>(Arrays.asList("PAN", "TAN", "GSTIN"))
-    );
-
     private final Map<String, CacheEntry> identifierTypeCache = new ConcurrentHashMap<>();
 
     private final UserIncomeRepository incomeRepository;
@@ -482,10 +478,12 @@ public class IncomeServiceImpl implements IncomeService {
      * @return set of valid uppercase identifier types (e.g. PAN, TAN, GSTIN)
      */
     public Set<String> getAllowedIdentifierTypes(RequestInfo requestInfo, String tenantId) {
+        if (userConfiguration == null || userConfiguration.getIncomeIdentifierTypeCacheTtlMillis() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "income.identifier.type.cache.ttl.millis is not configured");
+        }
         String stateTenant = getStateLevelTenant(tenantId);
-        long ttlMillis = (userConfiguration != null && userConfiguration.getIncomeIdentifierTypeCacheTtlMillis() != null)
-                ? userConfiguration.getIncomeIdentifierTypeCacheTtlMillis()
-                : 300000L;
+        long ttlMillis = userConfiguration.getIncomeIdentifierTypeCacheTtlMillis();
 
         CacheEntry entry = identifierTypeCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis)) {
@@ -493,11 +491,19 @@ public class IncomeServiceImpl implements IncomeService {
         }
 
         Set<String> allowedTypes = new HashSet<>();
-        boolean mdmsEnabled = userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getMdmsIncomeIdentifierTypeEnabled());
-        String mdmsHost = userConfiguration != null ? userConfiguration.getMdmsHost() : null;
-        String mdmsPath = userConfiguration != null ? userConfiguration.getMdmsPath() : null;
+        if (userConfiguration.getMdmsIncomeIdentifierTypeEnabled() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "mdms.income.identifier.type.enabled is not configured");
+        }
+        boolean mdmsEnabled = Boolean.TRUE.equals(userConfiguration.getMdmsIncomeIdentifierTypeEnabled());
+        String mdmsHost = userConfiguration.getMdmsHost();
+        String mdmsPath = userConfiguration.getMdmsPath();
 
-        if (mdmsEnabled && restTemplate != null && StringUtils.isNotBlank(mdmsHost) && StringUtils.isNotBlank(mdmsPath)) {
+        if (mdmsEnabled) {
+            if (restTemplate == null || StringUtils.isBlank(mdmsHost) || StringUtils.isBlank(mdmsPath)) {
+                throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                        "MDMS host and path must be configured when MDMS is enabled for income identifier types");
+            }
             try {
                 allowedTypes = fetchIdentifierTypesFromMdms(requestInfo, stateTenant, mdmsHost, mdmsPath);
                 if (allowedTypes != null && !allowedTypes.isEmpty()) {
@@ -507,15 +513,21 @@ public class IncomeServiceImpl implements IncomeService {
                     identifierTypeCache.put(stateTenant, newEntry);
                     return newEntry.getTypes();
                 }
+            } catch (CustomException ce) {
+                throw ce;
             } catch (Exception e) {
-                log.warn("[INCOME-MDMS] Failed to fetch IdentifierType from MDMS ({}). Falling back to application.properties: {}",
+                log.warn("[INCOME-MDMS] Failed to fetch identifier types from MDMS ({}). Falling back to application.properties: {}",
                         e.getClass().getSimpleName(), e.getMessage());
             }
         }
 
-        // Fallback to application.properties
+        // Fallback to application.properties (configured in income.identifier.types.allowed)
         allowedTypes = parsePropertiesAllowedTypes();
-        log.info("[INCOME-MDMS] Loaded {} default identifier types from application.properties: {}",
+        if (allowedTypes.isEmpty()) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "No valid identifier types found in income.identifier.types.allowed");
+        }
+        log.info("[INCOME-MDMS] Loaded {} identifier types from application.properties: {}",
                 allowedTypes.size(), allowedTypes);
         CacheEntry newEntry = new CacheEntry(allowedTypes, System.currentTimeMillis());
         identifierTypeCache.put(stateTenant, newEntry);
@@ -523,15 +535,19 @@ public class IncomeServiceImpl implements IncomeService {
     }
 
     private Set<String> fetchIdentifierTypesFromMdms(RequestInfo requestInfo, String stateTenant, String mdmsHost, String mdmsPath) {
-        String moduleName = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsIncomeIdentifierTypeModuleName()))
-                ? userConfiguration.getMdmsIncomeIdentifierTypeModuleName()
-                : "common-masters";
-        String masterName = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsIncomeIdentifierTypeMasterName()))
-                ? userConfiguration.getMdmsIncomeIdentifierTypeMasterName()
-                : "IncomeIdentifier";
-        String filter = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsIncomeIdentifierTypeFilter()))
-                ? userConfiguration.getMdmsIncomeIdentifierTypeFilter()
-                : "[?(@.active==true)]";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getMdmsIncomeIdentifierTypeModuleName())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "mdms.income.identifier.type.moduleName is not configured");
+        }
+        if (StringUtils.isBlank(userConfiguration.getMdmsIncomeIdentifierTypeMasterName())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "mdms.income.identifier.type.masterName is not configured");
+        }
+        if (StringUtils.isBlank(userConfiguration.getMdmsIncomeIdentifierTypeFilter())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "mdms.income.identifier.type.filter is not configured");
+        }
+
+        String moduleName = userConfiguration.getMdmsIncomeIdentifierTypeModuleName();
+        String masterName = userConfiguration.getMdmsIncomeIdentifierTypeMasterName();
+        String filter = userConfiguration.getMdmsIncomeIdentifierTypeFilter();
 
         String url = mdmsHost.endsWith("/")
                 ? mdmsHost + mdmsPath
@@ -560,10 +576,6 @@ public class IncomeServiceImpl implements IncomeService {
         Set<String> types = new HashSet<>();
         if (responseNode != null) {
             JsonNode mdmsRes = responseNode.path("MdmsRes").path(moduleName).path(masterName);
-            if (mdmsRes.isMissingNode() || mdmsRes.isNull() || !mdmsRes.isArray()) {
-                String altName = "IncomeIdentifier".equalsIgnoreCase(masterName) ? "IncomeIdentifierType" : "IncomeIdentifier";
-                mdmsRes = responseNode.path("MdmsRes").path(moduleName).path(altName);
-            }
             if (mdmsRes != null && mdmsRes.isArray()) {
                 for (JsonNode item : mdmsRes) {
                     if (item.hasNonNull("code")) {
@@ -576,19 +588,19 @@ public class IncomeServiceImpl implements IncomeService {
     }
 
     private Set<String> parsePropertiesAllowedTypes() {
-        if (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getAllowedIncomeIdentifierTypes())) {
-            return Arrays.stream(userConfiguration.getAllowedIncomeIdentifierTypes().split(","))
-                    .map(String::trim)
-                    .map(String::toUpperCase)
-                    .filter(StringUtils::isNotBlank)
-                    .collect(Collectors.toSet());
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getAllowedIncomeIdentifierTypes())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "income.identifier.types.allowed is not configured");
         }
-        return DEFAULT_IDENTIFIER_TYPES;
+        return Arrays.stream(userConfiguration.getAllowedIncomeIdentifierTypes().split(","))
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toSet());
     }
 
     private String getStateLevelTenant(String tenantId) {
         if (StringUtils.isBlank(tenantId)) {
-            return "pg";
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "tenantId cannot be null or blank");
         }
         return tenantId.split("\\.")[0];
     }

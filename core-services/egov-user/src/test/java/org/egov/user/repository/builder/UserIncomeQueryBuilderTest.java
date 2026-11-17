@@ -1,5 +1,6 @@
 package org.egov.user.repository.builder;
 
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.web.contract.asset.IncomeSearchCriteria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests verifying SQL query generation in {@link UserIncomeQueryBuilder}.
@@ -22,10 +25,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UserIncomeQueryBuilderTest {
 
     private UserIncomeQueryBuilder queryBuilder;
+    private UserConfiguration userConfiguration;
 
     @BeforeEach
     public void setUp() {
-        queryBuilder = new UserIncomeQueryBuilder();
+        userConfiguration = mock(UserConfiguration.class);
+        when(userConfiguration.getAssetSearchDefaultLimit()).thenReturn(50);
+        when(userConfiguration.getAssetSearchMaxLimit()).thenReturn(100);
+        when(userConfiguration.getAssetSearchDefaultOffset()).thenReturn(0);
+        queryBuilder = new UserIncomeQueryBuilder(userConfiguration);
     }
 
     @Test

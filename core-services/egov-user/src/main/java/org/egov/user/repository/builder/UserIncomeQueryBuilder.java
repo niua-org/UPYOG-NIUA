@@ -1,7 +1,9 @@
 package org.egov.user.repository.builder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
 import org.egov.user.config.UserConfiguration;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.asset.IncomeSearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -81,21 +83,27 @@ public class UserIncomeQueryBuilder {
     }
 
     public int getDefaultSearchLimit() {
-        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultLimit() != null)
-                ? userConfiguration.getAssetSearchDefaultLimit()
-                : 50;
+        if (userConfiguration == null || userConfiguration.getAssetSearchDefaultLimit() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "egov.asset.search.default.limit is not configured");
+        }
+        return userConfiguration.getAssetSearchDefaultLimit();
     }
 
     public int getMaxSearchLimit() {
-        return (userConfiguration != null && userConfiguration.getAssetSearchMaxLimit() != null)
-                ? userConfiguration.getAssetSearchMaxLimit()
-                : 100;
+        if (userConfiguration == null || userConfiguration.getAssetSearchMaxLimit() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "egov.asset.search.max.limit is not configured");
+        }
+        return userConfiguration.getAssetSearchMaxLimit();
     }
 
     public int getDefaultSearchOffset() {
-        return (userConfiguration != null && userConfiguration.getAssetSearchDefaultOffset() != null)
-                ? userConfiguration.getAssetSearchDefaultOffset()
-                : 0;
+        if (userConfiguration == null || userConfiguration.getAssetSearchDefaultOffset() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "egov.asset.search.default.offset is not configured");
+        }
+        return userConfiguration.getAssetSearchDefaultOffset();
     }
 
     public static final String SELECT_INCOME_USER_UUID_BY_ID_SQL =

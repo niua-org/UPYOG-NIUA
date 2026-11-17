@@ -46,6 +46,7 @@ public class IncomeServiceImplTest {
     private UserDocumentRepository documentRepository;
     private org.egov.user.persistence.repository.FamilyRestRepository familyRestRepository;
     private AssetAuthorizationService assetAuthorizationService;
+    private org.egov.user.config.UserConfiguration userConfiguration;
     private IncomeServiceImpl incomeService;
 
     private static final String TEST_USER_UUID = "citizen-uuid-001";
@@ -64,11 +65,18 @@ public class IncomeServiceImplTest {
 
         assetAuthorizationService = new AssetAuthorizationService(userRepository, familyRestRepository);
 
+        userConfiguration = mock(org.egov.user.config.UserConfiguration.class);
+        when(userConfiguration.getIncomeIdentifierTypeCacheTtlMillis()).thenReturn(300000L);
+        when(userConfiguration.getMdmsIncomeIdentifierTypeEnabled()).thenReturn(false);
+        when(userConfiguration.getAllowedIncomeIdentifierTypes()).thenReturn("PAN,TAN,GSTIN");
+
         incomeService = new IncomeServiceImpl(
                 incomeRepository,
                 userRepository,
                 documentRepository,
-                assetAuthorizationService
+                assetAuthorizationService,
+                userConfiguration,
+                null
         );
     }
 

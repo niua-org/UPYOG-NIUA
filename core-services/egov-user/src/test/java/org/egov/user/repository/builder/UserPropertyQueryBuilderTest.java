@@ -1,5 +1,6 @@
 package org.egov.user.repository.builder;
 
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.web.contract.asset.RuralPropertySearchCriteria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests verifying dynamic SQL generation and parameter binding in {@link UserPropertyQueryBuilder}.
@@ -23,10 +26,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UserPropertyQueryBuilderTest {
 
     private UserPropertyQueryBuilder queryBuilder;
+    private UserConfiguration userConfiguration;
 
     @BeforeEach
     public void setUp() {
-        queryBuilder = new UserPropertyQueryBuilder();
+        userConfiguration = mock(UserConfiguration.class);
+        when(userConfiguration.getAssetSearchDefaultLimit()).thenReturn(50);
+        when(userConfiguration.getAssetSearchMaxLimit()).thenReturn(100);
+        when(userConfiguration.getAssetSearchDefaultOffset()).thenReturn(0);
+        queryBuilder = new UserPropertyQueryBuilder(userConfiguration);
     }
 
     @Test
