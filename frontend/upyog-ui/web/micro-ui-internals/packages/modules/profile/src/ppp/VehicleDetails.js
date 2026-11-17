@@ -14,7 +14,7 @@ import FamilyCreateTabs from "../config/FamilyCreateTabs";
  *  3. Buying Year of Vehicle
  */
 
-const VEHICLE_NO_REGEX = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$/;
+const VEHICLE_NO_REGEX = /^([A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}|[0-9]{2}BH[0-9]{4}[A-Z]{1,2})$/;
 const fullWidth = { width: "100%" };
 
 const VEHICLE_TYPE = [
@@ -71,7 +71,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
 
   const handleVehicleNoChange = (e) => {
     const val = e.target.value.toUpperCase();
-    if (val.length > 10) return;
+    if (val.length > 13) return;
     setVehicleNo(val);
     setVehicleNoValidated(false);
     setVehicleNoValidateStatus(null);
@@ -179,7 +179,7 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
                   name="vehicleNo"
                   value={vehicleNo}
                   onChange={handleVehicleNoChange}
-                  placeholder="MH12AB1234"
+                  placeholder="MH12AB1234 / 22BH1234AB"
                   maxLength={10}
                   style={fullWidth}
                   disable={isViewMode}
