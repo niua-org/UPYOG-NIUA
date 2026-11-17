@@ -1,3 +1,5 @@
+import { pad } from "lodash";
+
 // All inline styles for the ProfileDetails page
 export const profileStyles = {
   message: { padding: 16 },
@@ -170,7 +172,7 @@ export const profileStyles = {
   tabs: { display: "flex", gap: 8, marginBottom: 16 },
   tab: {
     margin: 0,
-    background: "#F4F5F7",
+    background: "#D6D6D6",
     padding: "0 28px",
     height: 44,
     color: "#0B0C0C",
@@ -357,6 +359,7 @@ export const profileStyles = {
     actionDisabled: {
       color: "#9CA3AF",
     },
+    actionsWrap: { display: "flex", alignItems: "center", gap: "12px" },
     deleteBtn: {
       background: "none",
       border: "none",
@@ -619,6 +622,249 @@ myFamilyDashboard: {
     boxSizing: "border-box",
   },
 },
+propertyDetails: {
+  container: {
+    width: "100%",
+  },
+
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "600",
+    marginBottom: "24px",
+  },
+
+   actions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: "12px",
+    marginTop: "32px",
+    paddingTop: "24px",
+    borderTop: "1px solid #e0e0e0",
+  },
+
+  cancelButton: {
+    minWidth: "100px",
+    padding: "10px 20px",
+    border: "1px solid #D6D6D6",
+    cursor: "pointer",
+    fontSize: "14px",
+  },
+},
+urbanPropertyForm: {
+  container: {
+    width: "100%",
+  },
+
+  field: {
+    marginBottom: "24px",
+  },
+
+  searchInput: {
+    width: "100%",
+  },
+
+  searchRow: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: "16px",
+  },
+
+  searchSubmitButton: {
+    height: "40px",
+    padding: "0 16px",
+    borderRadius: "4px",
+    fontSize: "13px",
+    marginTop: 0,
+  },
+
+  results: {
+    width: "60%",
+    marginTop: "16px",
+  },
+
+  primaryAddressLabel: {
+    marginBottom: "8px",
+    fontSize: "14px",
+    fontWeight: "600",
+  },
+
+  propertyCard: {
+    position: "relative",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "16px",
+    padding: "12px 44px 12px 16px",
+    marginBottom: "12px",
+    backgroundColor: "#F7F7F7",
+    border: "1px solid #E8E8E8",
+    borderRadius: "8px",
+    boxShadow: "none",
+  },
+
+  propertyCardWithActions: {
+    paddingTop: "48px",
+  },
+
+  propertyDetails: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: "8px",
+  },
+
+  propertyField: {
+    fontSize: "12px",
+  },
+
+  propertyLabel: {
+    color: "#505A5F",
+    fontWeight: "600",
+  },
+
+  propertyValue: {
+    color: "#0B0C0C",
+    marginTop: "2px",
+    overflowWrap: "anywhere",
+  },
+
+  propertyActions: {
+    position: "absolute",
+    top: "10px",
+    right: "12px",
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: "8px",
+  },
+
+  propertyActionButton: {
+    padding: "6px 10px",
+    border: "1px solid #b1afb4",
+    borderRadius: "16px",
+    background: "#FFFFFF",
+    color: "#000000",
+    fontSize: "12px",
+    fontWeight: "600",
+    cursor: "pointer",
+  },
+
+  defaultPropertyButton: {
+    background: "#ebebeb",
+    color: "#000000",
+    cursor: "default",
+  },
+
+  removePropertyButton: {
+    borderColor: "#D4353A",
+    color: "#D4353A",
+  },
+
+  noProperty: {
+    marginTop: "16px",
+    fontSize: "14px",
+  },
+
+  createProperty: {
+    marginTop: "20px",
+    marginBottom:"10px",
+  },
+
+  registerPropertyLink: {
+    color: "#D4353A",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+    padding: "0 5px",
+    textDecoration:"underline"
+  },
+
+  createPropertyButton: {
+    padding: "8px 0",
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: "600",
+  },
+},
+ruralPropertyForm: {
+  container: {
+    width: "100%",
+  },
+  fieldRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    columnGap: "24px",
+    alignItems: "start",
+  },
+
+  field: {
+    marginBottom: "20px",
+  },
+
+  header: {
+    marginBottom: "24px",
+  },
+
+  quickRegistration: {
+    fontSize: "12px",
+    fontWeight: "600",
+    marginBottom: "8px",
+  },
+
+  title: {
+    fontSize: "24px",
+    fontWeight: "600",
+    marginBottom: "8px",
+  },
+
+  description: {
+    fontSize: "14px",
+    lineHeight: "20px",
+    marginBottom: "24px",
+  },
+
+  section: {
+    marginBottom: "32px",
+  },
+
+  sectionTitle: {
+    fontSize: "16px",
+    fontWeight: "600",
+    marginBottom: "20px",
+  },
+
+  // field: {
+  //   marginBottom: "20px",
+  // },
+
+radioGroup: {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: "24px",
+  width: "100%",
+  flexWrap: "nowrap",
+},
+  jointOwnerSection: {
+    marginTop: "20px",
+    padding: "20px",
+    border: "1px solid #E0E0E0",
+  },
+
+  jointOwnerTitle: {
+    fontSize: "14px",
+    fontWeight: "600",
+    marginBottom: "20px",
+  },
+
+  hint: {
+    fontSize: "12px",
+    marginTop: "8px",
+  },
+},
   aadhaarVerification: {
     consentBox: {
       background: "#F8F9FA",
@@ -773,6 +1019,87 @@ myFamilyDashboard: {
     uploadLabel: { fontSize: 14, fontWeight: 500, color: "#505A5F", marginBottom: 6 },
     hint: { fontSize: 12, color: "#6B7280", marginTop: 6 },
   },
+
+  componentBottomMargin:{
+    marginBottom:"20px"
+  },
+
+  familyCreateTabs:{
+    wrapper: {
+      display: "flex",
+      gap: "8px",
+      flexWrap: "wrap",
+      marginBottom: "24px",
+      borderBottom: "2px solid #E8EAED",
+      paddingBottom: "0",
+    },
+    tab: {
+      padding: "10px 20px",
+      border: "none",
+      borderBottom: "3px solid transparent",
+      background: "transparent",
+      fontSize: "14px",
+      fontWeight: "500",
+      color: "#505A5F",
+      cursor: "pointer",
+      marginBottom: "-2px",
+      transition: "all 0.2s ease",
+    },
+    active: {
+      color: "#A82227",
+      borderBottom: "3px solid #A82227",
+      fontWeight: "700",
+    },
+    completed: {
+      color: "#00703C",
+      borderBottom: "3px solid #00703C",
+    },
+  },
+    // Tax ID validate button (IncomeDetails)
+  taxIdInputRow: {
+    display: "flex",
+    gap: "8px",
+    alignItems: "flex-start",
+  },
+  taxIdInputWrap: {
+    flex: 1,
+  },
+  validateBtn: {
+    height: "40px",
+    padding: "0 16px",
+    borderRadius: "4px",
+    border: "none",
+    background: "var(--app-btn-primary-gradient, linear-gradient(90deg, #6A4A91 0%, #3E285F 100%))",
+    color: "#ffffff",
+    fontWeight: 600,
+    fontSize: "13px",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    flexShrink: 0,
+    transition: "all 0.2s ease",
+  },
+  validateBtnSuccess: {
+    background: "linear-gradient(90deg, #00703C 0%, #005a30 100%)",
+  },
+  validateBtnDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
+  },
+  validateSuccessMsg: {
+    color: "#00703C",
+    fontSize: "12px",
+    margin: "4px 0 0",
+    fontWeight: 500,
+  },
+
+  gridStyle: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gap: "20px 24px",
+    width: "100%",
+    boxSizing: "border-box",
+  }
+
   
 };
 

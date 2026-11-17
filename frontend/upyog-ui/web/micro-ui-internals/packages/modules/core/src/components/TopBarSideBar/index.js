@@ -35,8 +35,12 @@ const TopBarSideBar = ({
   const handleOnCancel = () => {
     setShowDialog(false);
   }
+  // const userProfile = () => {
+  //   navigate("/upyog-ui/employee/user/profile");
+  // };
   const userProfile = () => {
-    navigate("/upyog-ui/employee/user/profile");
+    const isEmployee = Digit.UserService?.getType?.() === "employee" || window.location.href.includes("/employee");
+    navigate(isEmployee ? "/upyog-ui/employee/user/profile" : "/upyog-ui/citizen/profile/profile-details");
   };
   const userOptions = [
     { name: t("EDIT_PROFILE"), icon: <EditPencilIcon className="icon" />, func: userProfile },

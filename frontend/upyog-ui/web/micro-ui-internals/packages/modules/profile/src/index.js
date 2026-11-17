@@ -16,6 +16,7 @@ const App = () => {
   const FamilyMemberAdded = Digit?.ComponentRegistryService?.getComponent("FamilyMemberAdded");
   const FamilyCreatedResponse = Digit?.ComponentRegistryService?.getComponent("FamilyCreatedResponse");
   const FamilyDashboard = Digit?.ComponentRegistryService?.getComponent("FamilyDashboard");
+  const FamilyCreate = Digit?.ComponentRegistryService?.getComponent("FamilyCreate");
 
 
 
@@ -36,6 +37,7 @@ const App = () => {
           <Route path="family-member-added" element={<PrivateRoute><FamilyMemberAdded /></PrivateRoute>} />
           <Route path="family-created" element={<PrivateRoute><FamilyCreatedResponse /></PrivateRoute>} />
           <Route path="family-dashboard" element={<PrivateRoute><FamilyDashboard /></PrivateRoute>} />
+          <Route path="create-family/*" element={<PrivateRoute><FamilyCreate /></PrivateRoute>} />
         </Routes>
       </AppContainer>
     </span>

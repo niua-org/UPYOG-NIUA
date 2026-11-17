@@ -5,7 +5,7 @@ import EditProfile from "./components/EditProfile";
 import EditProfileForm from "./components/EditProfileForm";
 import EditAddress from "./components/EditAddress";
 import EditDocuments from "./components/EditDocuments";
-import AadhaarVerification from "./components/AadhaarVerification";
+import AadhaarVerification from "./verifications/AadhaarVerification";
 import JoinExistingFamily from "./familyFeatureComponents/JoinExistingFamily";
 import FamilyJoinedResponse from "./familyFeatureComponents/FamilyJoinedResponse";
 import FoundFamily from "./familyFeatureComponents/FoundFamily";
@@ -15,6 +15,12 @@ import FamilyMemberVerified from "./familyFeatureComponents/FamilyMemberVerified
 import FamilyMemberAdded from "./familyFeatureComponents/FamilyMemberAdded";
 import FamilyCreatedResponse from "./familyFeatureComponents/FamilyCreatedResponse";
 import FamilyDashboard from "./familyFeatureComponents/FamilyDashboard";
+import FamilyCreate from "./ppp";
+import CreateProfile from "./ppp/CreateProfile";
+import IncomeDetails from "./ppp/IncomeDetails";
+import VehicleDetails from "./ppp/VehicleDetails";
+import PropertyDetails from "./ppp/PropertyDetails/PropertyDetails";
+import DocumentDetails from "./ppp/DocumentDetails";
 
 
 
@@ -47,6 +53,12 @@ FamilyMemberVerified,
 FamilyMemberAdded,
 FamilyCreatedResponse,
 FamilyDashboard,
+FamilyCreate,
+CreateProfile,
+IncomeDetails,
+VehicleDetails,
+PropertyDetails,
+DocumentDetails
 };
 
 export const initPROFILEComponents = () => {

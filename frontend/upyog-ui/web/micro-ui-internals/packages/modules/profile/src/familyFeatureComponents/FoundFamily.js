@@ -1,42 +1,9 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Card, CardHeader, CardLabel, Dropdown, SubmitBar, Loader,Toast } from "@nudmcdgnpm/digit-ui-react-components";
-import { FieldGrid, Section, getFamilyHeadFields, getPersonalFields } from "../utils";
+import { FieldGrid, Section, getFamilyHeadFields, getPersonalFields, useProfileUser } from "../utils";
 import { PROFILE_ROUTES } from "../utils/constants";
-
-// Function to get user Details
-const useProfileUser = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const uuid = Digit.UserService.getUser()?.info?.uuid;
-  const tenantId = Digit.ULBService.getCurrentTenantId();
-
-  useEffect(() => {
-    let isActive = true; // avoids state update after unmount
-    const fetchUser = async () => {
-      if (!uuid) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
-        if (isActive) setUser(response?.user?.[0] || null);
-      } catch (e) {
-        if (isActive) setError(true);
-      } finally {
-        if (isActive) setLoading(false);
-      }
-    };
-    fetchUser();
-    return () => {
-      isActive = false;
-    };
-  }, [uuid, tenantId]);
-
-  return { user, loading, error };
-};
 
 /**
  * Shows the verified head-of-family details and lets the applicant

@@ -225,7 +225,7 @@ export const UserService = {
       params: { tenantId },
       auth: true,
       method: "POST",
-      userService: false,
+      userService: true,
     }),
 
   /**
@@ -350,6 +350,16 @@ export const UserService = {
       method: "POST",
       auth: false,
       params: { tenantId, ...params },
+    }),
+
+  familyDashboard: (tenantId, familyId) =>
+    ServiceRequest({
+      url: Urls.profile.familyDashboard,
+      data: {},
+      params: { tenantId, familyId },
+      auth: true,
+      method: "POST",
+      userService: true,
     }),
 
   /**
