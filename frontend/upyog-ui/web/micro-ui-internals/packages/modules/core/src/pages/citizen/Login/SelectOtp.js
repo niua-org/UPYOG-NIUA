@@ -121,6 +121,14 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
     );
   }
 
+  const isOtpComplete = otp && String(otp).trim().length === 6;
+  const canSubmitForm = !(!isOtpComplete || canSubmit === false);
+
+  const handleSubmit = () => {
+    if (!canSubmitForm) return;
+    onSelect();
+  };
+
   return (
     <>
     <div className="login-form-header">
@@ -143,9 +151,8 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
         <button
           type="button"
           className="login-primary-button"
-          // disabled={checkDisbaled()}
-          disabled={false}
-          onClick={() => onSelect()}
+          disabled={!canSubmitForm}
+          onClick={handleSubmit}
         >
           {"Submit"}
         </button>
