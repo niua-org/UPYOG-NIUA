@@ -400,6 +400,7 @@ const Urls = {
     verifyProfile: "/user/profile/aadhaar/_verifyProfile",
     createFamily: "/family/v1/family/_create",
     familySearch: "/family/v1/family/_search",
+    familyDashboard: "/family/v1/dashboard/_search",
     isHof: "/family/v1/head/_isHof",
   }
 };

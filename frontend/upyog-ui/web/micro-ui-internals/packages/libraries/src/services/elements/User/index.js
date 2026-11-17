@@ -352,6 +352,16 @@ export const UserService = {
       params: { tenantId, ...params },
     }),
 
+  familyDashboard: (tenantId, familyId) =>
+    ServiceRequest({
+      url: Urls.profile.familyDashboard,
+      data: {},
+      params: { tenantId, familyId },
+      auth: true,
+      method: "POST",
+      userService: true,
+    }),
+
   /**
    * Service method for Family QR code verification search.
    * @param {string} tenantId - ULB / state tenant identifier.

@@ -37,34 +37,7 @@ const FamilyDashboard = () => {
         if (!familyId) {
           throw new Error("FAMILY_ID_NOT_FOUND");
         }
-        const response = await fetch(`/family/v1/dashboard/_search?tenantId=${tenantId}&familyId=${familyId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              RequestInfo: {
-                apiId: "Rainmaker",
-                ver: "1.0",
-                ts: Date.now(),
-                action: "",
-                did: "1",
-                key: "",
-                msgId: `${Date.now()}|en_IN`,
-                requesterId: "",
-                authToken:
-                  Digit.UserService.getUser()?.access_token,
-              },
-            }),
-          }
-        );
-
-        const data = await response.json();
-        console.log("Family Dashboard Response:", data);
-        if (!response.ok) {
-          throw new Error("FAMILY_DASHBOARD_FAILED");
-        }
+        const data = await Digit.UserService.familyDashboard(tenantId, familyId);
         setDashboard(data?.dashboard);
       } catch (error) {
         console.error( "Family Dashboard Error:", error);

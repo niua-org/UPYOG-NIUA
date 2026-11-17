@@ -89,7 +89,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
   const headProperty = headMemberData.property || {};
 
   // Derive family-level fields from head's session data
-  const familyAddressPropertyId = headProperty.primaryPropertyId || headProperty.propertyId || undefined;
+  const familyAddressPropertyId = headProperty.primaryPropertyId || undefined;
   const category = headProfile.caste?.code || undefined;
 
   const finalMembers = members.map((member) => {
