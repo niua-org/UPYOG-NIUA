@@ -38,12 +38,12 @@ public class UserDocument {
     private String referenceId;
     private Object additionalDetails;
 
-    private Long createdBy;
+    private String createdBy;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
 
-    private Long lastModifiedBy;
+    private String lastModifiedBy;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date lastModifiedDate;

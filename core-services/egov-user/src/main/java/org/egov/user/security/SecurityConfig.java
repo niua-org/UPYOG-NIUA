@@ -74,7 +74,8 @@ public class SecurityConfig {
 				
 								   // TODO: need to check how to handle this later , currently allowing all
 				// Controller modules - access control is enforced centrally by Zuul Gateway via MDMS
-				.requestMatchers("/profile/**", "/address/**", "/document/**", "/users/**", "/citizen/**").permitAll()
+				.requestMatchers("/profile/**", "/address/**", "/document/**", "/users/**", "/citizen/**",
+								 "/v1/rural-property/**", "/v1/vehicle/**", "/v1/income/**").permitAll()
 
                 .anyRequest().authenticated()
             )

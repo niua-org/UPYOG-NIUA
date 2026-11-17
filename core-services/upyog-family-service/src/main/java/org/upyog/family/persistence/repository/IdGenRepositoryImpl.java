@@ -56,7 +56,7 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(configuration.getIdGenFamilyIdName())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.family.id.name is not configured");
         }
-        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenFamilyIdName(), configuration.getIdGenFamilyIdFormat(), 1);
+        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenFamilyIdName(), null, 1);
         if (CollectionUtils.isEmpty(ids)) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Failed to generate family ID from idgen");
         }
@@ -83,7 +83,7 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(configuration.getIdGenMemberIdName())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.member.id.name is not configured");
         }
-        return getIdList(requestInfo, tenantId, configuration.getIdGenMemberIdName(), configuration.getIdGenMemberIdFormat(), count);
+        return getIdList(requestInfo, tenantId, configuration.getIdGenMemberIdName(), null, count);
     }
 
     /**
@@ -104,8 +104,11 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(idName)) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "idName is mandatory for ID generation");
         }
+        if (StringUtils.isBlank(tenantId)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "tenantId is mandatory for ID generation");
+        }
 
-        String rootTenant = StringUtils.isNotBlank(tenantId) ? tenantId.split("\\.")[0] : "pg";
+        String rootTenant = tenantId.split("\\.")[0];
         String url = buildUrl(configuration.getIdGenHost(), configuration.getIdGenPath());
         log.info("[UPYOG-IDGEN-CLIENT] Requesting ID generation for idName: {}, tenant: {}, count: {} from: {}",
                 idName, rootTenant, count, url);

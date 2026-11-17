@@ -36,12 +36,11 @@ class IdGenRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("generateCitizenId: Successfully generates citizen ID via IDGen")
+    @DisplayName("generateCitizenId: Successfully generates citizen ID via IDGen without format")
     void testGenerateCitizenId_Success() {
         when(configuration.getIdGenHost()).thenReturn("http://localhost:8088");
         when(configuration.getIdGenPath()).thenReturn("/egov-idgen/id/_generate");
         when(configuration.getIdGenCitizenIdName()).thenReturn("user.citizen.id");
-        when(configuration.getIdGenCitizenIdFormat()).thenReturn("CITIZEN-[cy:yyyy]-[seq_citizen_id]");
 
         Map<String, Object> mockResponse = new HashMap<>();
         Map<String, Object> idRes = new HashMap<>();
@@ -62,15 +61,15 @@ class IdGenRepositoryImplTest {
         assertEquals(1, requests.size());
         assertEquals("user.citizen.id", requests.get(0).get("idName"));
         assertEquals("pg", requests.get(0).get("tenantId"));
+        assertNull(requests.get(0).get("format"));
     }
 
     @Test
-    @DisplayName("generateUserDocumentId: Successfully generates user document ID via IDGen")
+    @DisplayName("generateUserDocumentId: Successfully generates user document ID via IDGen without format")
     void testGenerateUserDocumentId_Success() {
         when(configuration.getIdGenHost()).thenReturn("http://localhost:8088");
         when(configuration.getIdGenPath()).thenReturn("/egov-idgen/id/_generate");
         when(configuration.getIdGenUserDocIdName()).thenReturn("user.document.id");
-        when(configuration.getIdGenUserDocIdFormat()).thenReturn("DOC-[cy:yyyy]-[seq_user_doc_id]");
 
         Map<String, Object> mockResponse = new HashMap<>();
         Map<String, Object> idRes = new HashMap<>();
@@ -83,6 +82,43 @@ class IdGenRepositoryImplTest {
         String docId = idGenRepository.generateUserDocumentId(new RequestInfo(), "pg.citya");
 
         assertEquals("DOC-2026-000001", docId);
+    }
+
+    @Test
+    @DisplayName("generateRuralPropertyId: Successfully generates rural property ID via IDGen without format")
+    void testGenerateRuralPropertyId_Success() {
+        when(configuration.getIdGenHost()).thenReturn("http://localhost:8088");
+        when(configuration.getIdGenPath()).thenReturn("/egov-idgen/id/_generate");
+        when(configuration.getIdGenRuralPropertyIdName()).thenReturn("rural.property.id");
+
+        Map<String, Object> mockResponse = new HashMap<>();
+        Map<String, Object> idRes = new HashMap<>();
+        idRes.put("id", "PG-RP-2026-11-16-000001");
+        mockResponse.put("idResponses", Collections.singletonList(idRes));
+
+        when(restTemplate.postForObject(eq("http://localhost:8088/egov-idgen/id/_generate"), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockResponse);
+
+        String propertyId = idGenRepository.generateRuralPropertyId(new RequestInfo(), "pg.citya");
+
+        assertEquals("PG-RP-2026-11-16-000001", propertyId);
+
+        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate, atLeastOnce()).postForObject(anyString(), captor.capture(), eq(Map.class));
+        Map<String, Object> body = (Map<String, Object>) captor.getValue().getBody();
+        List<Map<String, Object>> requests = (List<Map<String, Object>>) body.get("idRequests");
+        assertEquals(1, requests.size());
+        assertEquals("rural.property.id", requests.get(0).get("idName"));
+        assertEquals("pg", requests.get(0).get("tenantId"));
+        assertNull(requests.get(0).get("format"));
+    }
+
+    @Test
+    @DisplayName("generateRuralPropertyId: Throws CustomException when rural property id name is missing")
+    void testGenerateRuralPropertyId_MissingName_ThrowsCustomException() {
+        when(configuration.getIdGenRuralPropertyIdName()).thenReturn(null);
+
+        assertThrows(CustomException.class, () -> idGenRepository.generateRuralPropertyId(new RequestInfo(), "pg.citya"));
     }
 
     @Test

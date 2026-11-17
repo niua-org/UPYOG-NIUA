@@ -429,4 +429,41 @@ public final class UserConstants {
     public static final String MSG_AADHAAR_OTP_MAX_ATTEMPTS_NOT_CONFIGURED = "aadhaar.otp.max.attempts is not configured";
     public static final String GENDER_FEMALE_CODE = "F";
     public static final String DEFAULT_MOCK_DOB = "1990-01-01";
+
+    // =========================================================================
+    // 13. Rural Property & Asset CRUD Constants
+    // =========================================================================
+    public static final String STATUS_INACTIVE_UPPERCASE = "INACTIVE";
+    public static final String STATUS_ALL = "ALL";
+    public static final String ERROR_PROPERTY_NOT_FOUND = "PROPERTY_NOT_FOUND";
+    public static final String ERROR_INVALID_PROPERTY_REQUEST = "INVALID_PROPERTY_REQUEST";
+    public static final String ERROR_RURAL_PROPERTY_MANDATORY_FIELDS = "RURAL_PROPERTY_MANDATORY_FIELDS";
+    public static final String MSG_RURAL_MANDATORY_FIELDS = "gramPanchayat, villageName, and tenantId are mandatory for rural property declarations";
+    public static final String MSG_PROPERTY_NOT_FOUND = "Rural property not found with ID: ";
+    public static final String MSG_PROPERTY_ACCESS_DENIED = "Unauthorized access: Property does not belong to specified citizen";
+    public static final String MSG_PROPERTY_DEACTIVATED_SUCCESS = "Rural property marked as inactive successfully";
+
+    // =========================================================================
+    // 14. Vehicle CRUD Constants
+    // =========================================================================
+    public static final String ERROR_VEHICLE_NOT_FOUND = "VEHICLE_NOT_FOUND";
+    public static final String ERROR_INVALID_VEHICLE_REQUEST = "INVALID_VEHICLE_REQUEST";
+    public static final String ERROR_VEHICLE_MANDATORY_FIELDS = "VEHICLE_MANDATORY_FIELDS";
+    public static final String ERROR_VEHICLE_ALREADY_REGISTERED = "VEHICLE_ALREADY_REGISTERED";
+    public static final String MSG_VEHICLE_MANDATORY_FIELDS = "vehicleNumber, vehicleType, and tenantId are mandatory for vehicle declarations";
+    public static final String MSG_VEHICLE_NOT_FOUND = "Vehicle record not found with ID: ";
+    public static final String MSG_VEHICLE_ACCESS_DENIED = "Unauthorized access: Vehicle does not belong to specified citizen";
+    public static final String MSG_VEHICLE_ALREADY_REGISTERED = "Vehicle is already actively registered to another citizen with registration number: ";
+    public static final String MSG_VEHICLE_DEACTIVATED_SUCCESS = "Vehicle marked as inactive successfully";
+
+    // =========================================================================
+    // 15. Income CRUD Constants
+    // =========================================================================
+    public static final String ERROR_INCOME_NOT_FOUND = "INCOME_NOT_FOUND";
+    public static final String ERROR_INVALID_INCOME_REQUEST = "INVALID_INCOME_REQUEST";
+    public static final String ERROR_INCOME_MANDATORY_FIELDS = "INCOME_MANDATORY_FIELDS";
+    public static final String MSG_INCOME_MANDATORY_FIELDS = "occupation, annualIncome, identifierType, and tenantId are mandatory for income declarations";
+    public static final String MSG_INCOME_NOT_FOUND = "Income record not found with ID: ";
+    public static final String MSG_INCOME_ACCESS_DENIED = "Unauthorized access: Income record does not belong to specified citizen";
+    public static final String MSG_INCOME_DEACTIVATED_SUCCESS = "Income declaration marked as inactive successfully";
 }

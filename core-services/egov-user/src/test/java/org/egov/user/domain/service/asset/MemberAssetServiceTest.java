@@ -2,7 +2,6 @@ package org.egov.user.domain.service.asset;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
-import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.UserSearchCriteria;
@@ -64,21 +63,23 @@ class MemberAssetServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Fix for PR Comment #4: Explicitly configure system actor credentials without inline fallback defaults
-        UserConfiguration userConfig = UserConfiguration.builder()
-                .systemActorId(1L)
-                .systemActorUuid("SYSTEM")
-                .requireCallerForSync(false)
-                .build();
         MemberAssetProcessor processor = new MemberAssetProcessor(
                 userRepository,
                 propertyRepository,
                 incomeRepository,
                 vehicleRepository,
-                documentRepository,
-                userConfig
+                documentRepository
         );
-        memberAssetService = new MemberAssetServiceImpl(processor, userConfig);
+        memberAssetService = new MemberAssetServiceImpl(processor);
+    }
+
+    private RequestInfo createTestRequestInfo() {
+        return RequestInfo.builder()
+                .userInfo(org.egov.common.contract.request.User.builder()
+                        .id(1L)
+                        .uuid("test-operator-uuid")
+                        .build())
+                .build();
     }
 
     @Test
@@ -89,7 +90,7 @@ class MemberAssetServiceTest {
     @Test
     void syncMemberAssets_emptyMembers_returnsSuccessWithEmptyResults() {
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(createTestRequestInfo())
                 .members(Collections.emptyList())
                 .build();
 
@@ -108,7 +109,7 @@ class MemberAssetServiceTest {
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(createTestRequestInfo())
                 .member(detail)
                 .build();
 
@@ -144,7 +145,7 @@ class MemberAssetServiceTest {
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(createTestRequestInfo())
                 .member(detail)
                 .build();
 
@@ -264,7 +265,7 @@ class MemberAssetServiceTest {
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(RequestInfo.builder().build())
+                .requestInfo(createTestRequestInfo())
                 .members(Collections.singletonList(memberDetail))
                 .build();
 
@@ -358,7 +359,7 @@ class MemberAssetServiceTest {
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(RequestInfo.builder().build())
+                .requestInfo(createTestRequestInfo())
                 .members(Collections.singletonList(memberDetail))
                 .build();
 
@@ -407,7 +408,7 @@ class MemberAssetServiceTest {
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(RequestInfo.builder().build())
+                .requestInfo(createTestRequestInfo())
                 .members(Collections.singletonList(memberDetail))
                 .build();
 
@@ -451,7 +452,7 @@ class MemberAssetServiceTest {
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(RequestInfo.builder().build())
+                .requestInfo(createTestRequestInfo())
                 .members(Collections.singletonList(detail))
                 .build();
 
@@ -512,7 +513,7 @@ class MemberAssetServiceTest {
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(RequestInfo.builder().build())
+                .requestInfo(createTestRequestInfo())
                 .members(List.of(detail1, detail2))
                 .build();
 
@@ -571,19 +572,8 @@ class MemberAssetServiceTest {
     }
 
     @Test
-    void syncMemberAssets_auditActor_usesConfiguredSystemActorWhenUserInfoAbsent() {
-        // Fix for PR Comment #4: Missing userInfo must fall back to configured system actor, NEVER citizen's own ID
+    void syncMemberAssets_auditActor_rejectsRequestWhenUserInfoAbsent() {
         String citizenUuid = "citizen-uuid-actor-002";
-        User existingUser = User.builder()
-                .id(999L)
-                .uuid(citizenUuid)
-                .tenantId("pg.citya")
-                .type(UserType.CITIZEN)
-                .fatherName("Old Father")
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingUser));
-
         MemberAssetDetail detail = MemberAssetDetail.builder()
                 .userUuid(citizenUuid)
                 .tenantId("pg.citya")
@@ -596,35 +586,9 @@ class MemberAssetServiceTest {
                 .members(Collections.singletonList(detail))
                 .build();
 
-        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
-
-        assertNotNull(response);
-        assertEquals("SUCCESS", response.getStatus());
-
-        // Verify that userRepository.update received DEFAULT_SYSTEM_ACTOR_ID (1L) and "SYSTEM", NOT citizen's 999L / citizenUuid
-        verify(userRepository).update(any(User.class), any(User.class), eq(1L), eq("SYSTEM"));
-    }
-
-    @Test
-    void syncMemberAssets_auditActor_rejectsRequestWhenCallerRequiredAndMissing() {
-        // Fix for PR Comment #4: When requireCallerForSync is configured, missing userInfo must be rejected
-        UserConfiguration config = UserConfiguration.builder()
-                .requireCallerForSync(true)
-                .build();
-
-        MemberAssetProcessor processor = new MemberAssetProcessor(userRepository, propertyRepository,
-                incomeRepository, vehicleRepository, documentRepository, config);
-        MemberAssetServiceImpl serviceWithEnforcement = new MemberAssetServiceImpl(processor, config);
-
-        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(RequestInfo.builder().build())
-                .members(Collections.singletonList(MemberAssetDetail.builder().userUuid("some-uuid").build()))
-                .build();
-
         CustomException exception = assertThrows(CustomException.class, () ->
-                serviceWithEnforcement.syncMemberAssets(request)
+                memberAssetService.syncMemberAssets(request)
         );
-
         assertEquals("CALLER_INFO_REQUIRED", exception.getCode());
     }
 }

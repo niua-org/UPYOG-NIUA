@@ -44,7 +44,7 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(configuration.getIdGenCitizenIdName())) {
             throw new CustomException("INVALID_CONFIGURATION", "egov.idgen.citizen.id.name is not configured");
         }
-        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenCitizenIdName(), configuration.getIdGenCitizenIdFormat(), 1);
+        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenCitizenIdName(), null, 1);
         if (CollectionUtils.isEmpty(ids)) {
             throw new CustomException("IDGEN_ERROR", "Failed to generate citizen ID from idgen");
         }
@@ -59,9 +59,24 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(configuration.getIdGenUserDocIdName())) {
             throw new CustomException("INVALID_CONFIGURATION", "egov.idgen.user.doc.id.name is not configured");
         }
-        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenUserDocIdName(), configuration.getIdGenUserDocIdFormat(), 1);
+        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenUserDocIdName(), null, 1);
         if (CollectionUtils.isEmpty(ids)) {
             throw new CustomException("IDGEN_ERROR", "Failed to generate user document ID from idgen");
+        }
+        return ids.get(0);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String generateRuralPropertyId(RequestInfo requestInfo, String tenantId) {
+        if (StringUtils.isBlank(configuration.getIdGenRuralPropertyIdName())) {
+            throw new CustomException("INVALID_CONFIGURATION", "egov.idgen.rural.property.id.name is not configured");
+        }
+        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenRuralPropertyIdName(), null, 1);
+        if (CollectionUtils.isEmpty(ids)) {
+            throw new CustomException("IDGEN_ERROR", "Failed to generate rural property ID from idgen");
         }
         return ids.get(0);
     }
@@ -84,8 +99,11 @@ public class IdGenRepositoryImpl implements IdGenRepository {
         if (StringUtils.isBlank(idName)) {
             throw new CustomException("INVALID_CONFIGURATION", "idName is mandatory for ID generation");
         }
+        if (StringUtils.isBlank(tenantId)) {
+            throw new CustomException("INVALID_TENANT_ID", "tenantId is mandatory for ID generation");
+        }
 
-        String rootTenant = StringUtils.isNotBlank(tenantId) ? tenantId.split("\\.")[0] : "pg";
+        String rootTenant = tenantId.split("\\.")[0];
         String url = buildUrl(configuration.getIdGenHost(), configuration.getIdGenPath());
         log.info("[EGOV-USER-IDGEN] Requesting ID generation for idName: {}, tenant: {}, count: {} from: {}",
                 idName, rootTenant, count, url);

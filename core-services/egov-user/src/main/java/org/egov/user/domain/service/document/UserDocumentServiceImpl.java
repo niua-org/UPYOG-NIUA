@@ -127,7 +127,7 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         String defaultTenant = StringUtils.isNotBlank(userTenant)
                 ? userTenant
                 : (StringUtils.isNotBlank(request.getTenantId()) ? request.getTenantId() : UserConstants.DEFAULT_TENANT_ID);
-        Long operatorId = resolveOperatorId(request.getRequestInfo(), resolvedUserId);
+        String operatorUuid = resolveOperatorUuid(request.getRequestInfo(), resolvedUuid);
 
         log.info("[USER-DOC-SERVICE] Creating {} document(s) for userUuid: {}, tenant: {}",
                 request.getEffectiveDocuments().size(), resolvedUuid, defaultTenant);
@@ -148,8 +148,8 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             if (StringUtils.isBlank(doc.getId())) {
                 doc.setId(generateDocumentIdOrDefault(request.getRequestInfo(), defaultTenant));
             }
-            doc.setCreatedBy(operatorId);
-            doc.setLastModifiedBy(operatorId);
+            doc.setCreatedBy(operatorUuid);
+            doc.setLastModifiedBy(operatorUuid);
             doc.setDocumentUid(maskSensitiveUid(doc.getDocumentType(), doc.getDocumentUid()));
 
             UserDocument saved = documentRepository.create(doc);
@@ -191,12 +191,12 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         }
 
         UserDocument existingDoc = existing.get(0);
-        Long operatorId = resolveOperatorId(request.getRequestInfo(), existingDoc.getUserId());
+        String operatorUuid = resolveOperatorUuid(request.getRequestInfo(), existingDoc.getUserUuid());
 
         // SCD Type 2 Soft-versioning:
         // 1. Soft-deactivate the previous document version
-        log.info("[USER-DOC-SERVICE] Soft-deactivating previous document ID: {} for userId: {}", existingDoc.getId(), existingDoc.getUserId());
-        documentRepository.delete(existingDoc.getId(), operatorId);
+        log.info("[USER-DOC-SERVICE] Soft-deactivating previous document ID: {} for userUuid: {}", existingDoc.getId(), existingDoc.getUserUuid());
+        documentRepository.delete(existingDoc.getId(), operatorUuid);
 
         // 2. Insert new active document record with updated attributes
         if (StringUtils.isBlank(doc.getTenantId())) {
@@ -214,8 +214,8 @@ public class UserDocumentServiceImpl implements UserDocumentService {
         }
         doc.setUserUuid(userUuid);
         doc.setActive(true);
-        doc.setCreatedBy(operatorId);
-        doc.setLastModifiedBy(operatorId);
+        doc.setCreatedBy(operatorUuid);
+        doc.setLastModifiedBy(operatorUuid);
         doc.setDocumentUid(maskSensitiveUid(doc.getDocumentType(), doc.getDocumentUid()));
 
         UserDocument saved = documentRepository.create(doc);
@@ -304,9 +304,9 @@ public class UserDocumentServiceImpl implements UserDocumentService {
             throw new CustomException(UserConstants.ERROR_DOCUMENT_NOT_FOUND, UserConstants.MSG_DOCUMENT_NOT_FOUND_PREFIX + documentId);
         }
 
-        Long operatorId = resolveOperatorId(request.getRequestInfo(), existing.get(0).getUserId());
+        String operatorUuid = resolveOperatorUuid(request.getRequestInfo(), existing.get(0).getUserUuid());
         log.info("[USER-DOC-SERVICE] Soft-deleting document ID: {}", documentId);
-        documentRepository.delete(documentId, operatorId);
+        documentRepository.delete(documentId, operatorUuid);
 
         UserDocument doc = existing.get(0);
         doc.setActive(false);
@@ -463,15 +463,15 @@ public class UserDocumentServiceImpl implements UserDocumentService {
     }
 
     /**
-     * Resolves the operator / creator ID from the RequestInfo or defaults to fallback ID.
+     * Resolves the operator / creator UUID from RequestInfo or defaults to fallback UUID.
      *
      * @param requestInfo request metadata containing operator context
-     * @param fallback    fallback ID if operator context is absent
-     * @return operator user ID
+     * @param fallback    fallback UUID if operator context is absent
+     * @return operator user UUID string
      */
-    private Long resolveOperatorId(RequestInfo requestInfo, Long fallback) {
-        return (requestInfo != null && requestInfo.getUserInfo() != null && requestInfo.getUserInfo().getId() != null)
-                ? requestInfo.getUserInfo().getId()
+    private String resolveOperatorUuid(RequestInfo requestInfo, String fallback) {
+        return (requestInfo != null && requestInfo.getUserInfo() != null && StringUtils.isNotBlank(requestInfo.getUserInfo().getUuid()))
+                ? requestInfo.getUserInfo().getUuid().trim()
                 : fallback;
     }
 

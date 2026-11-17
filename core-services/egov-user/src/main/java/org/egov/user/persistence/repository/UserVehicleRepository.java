@@ -3,15 +3,20 @@ package org.egov.user.persistence.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.repository.builder.UserVehicleQueryBuilder;
+import org.egov.user.web.contract.asset.VehicleSearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -135,7 +140,7 @@ public class UserVehicleRepository {
             SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
             return new Date(sdf.parse(dateStr).getTime());
         } catch (Exception e) {
-            log.warn("[USER-VEHICLE-REPO] Unable to parse purchase date '\''{}'\'': {}", dateStr, e.getMessage());
+            log.warn("[USER-VEHICLE-REPO] Unable to parse purchase date '{}': {}", dateStr, e.getMessage());
             return null;
         }
     }
@@ -184,6 +189,31 @@ public class UserVehicleRepository {
     }
 
     /**
+     * Looks up the citizen {@code userUuid} who actively owns the vehicle with the specified registration plate number.
+     * Prevents a vehicle actively registered to one citizen from being registered to another.
+     *
+     * @param vehicleNumber registration plate number (e.g. DL01AB1234)
+     * @return citizen userUuid owning the active vehicle, or null if unassigned
+     */
+    public String findActiveOwnerByVehicleNumber(String vehicleNumber) {
+        if (StringUtils.isBlank(vehicleNumber)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("vehicle_number", vehicleNumber.trim());
+            List<String> list = namedParameterJdbcTemplate.query(
+                    UserVehicleQueryBuilder.SELECT_ACTIVE_VEHICLE_OWNER_BY_NUMBER_SQL,
+                    params,
+                    (rs, rowNum) -> rs.getString("user_uuid")
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.debug("[USER-VEHICLE-REPO] Failed to lookup active vehicle owner by number: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Looks up user_uuid of existing vehicle record by primary key ID.
      *
      * @param vehicleId vehicle primary key ID
@@ -205,5 +235,167 @@ public class UserVehicleRepository {
             log.debug("[USER-VEHICLE-REPO] Failed to lookup vehicle owner userUuid: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Retrieves a single citizen vehicle record by primary key identifier.
+     * Hydrates child Registration Certificate (RC) verification document if present.
+     *
+     * @param id vehicle record primary key identifier
+     * @return matched {@link UserVehicle} entity or null if not found
+     */
+    public UserVehicle findVehicleById(String id) {
+        if (StringUtils.isBlank(id)) {
+            return null;
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("id", id.trim());
+            List<UserVehicle> list = namedParameterJdbcTemplate.query(
+                    UserVehicleQueryBuilder.SELECT_VEHICLE_BY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> mapRowToUserVehicle(rs)
+            );
+            return (list != null && !list.isEmpty()) ? list.get(0) : null;
+        } catch (Exception e) {
+            log.error("[USER-VEHICLE-REPO] Failed to lookup vehicle by ID {}: {}", id, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Executes a dynamic search for citizen vehicle declarations based on criteria filters.
+     *
+     * @param criteria search criteria filters
+     * @return list of matched {@link UserVehicle} entities
+     */
+    public List<UserVehicle> searchVehicles(VehicleSearchCriteria criteria) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            String sql = queryBuilder.buildSearchQuery(criteria, params);
+            return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToUserVehicle(rs));
+        } catch (Exception e) {
+            log.error("[USER-VEHICLE-REPO] Failed to search vehicles with criteria {}: {}", criteria, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Retrieves declared citizen vehicle records for the specified citizen user UUID.
+     * Hydrates child Registration Certificate (RC) verification documents.
+     *
+     * @param userUuid citizen user UUID
+     * @param active   optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return list of matching {@link UserVehicle} domain instances
+     */
+    public List<UserVehicle> findVehiclesByUserUuid(String userUuid, Boolean active) {
+        if (StringUtils.isBlank(userUuid)) {
+            return Collections.emptyList();
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("user_uuid", userUuid.trim());
+            String sql = queryBuilder.buildVehiclesByUserQuery(active);
+            return namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToUserVehicle(rs));
+        } catch (Exception e) {
+            log.error("[USER-VEHICLE-REPO] Failed to lookup vehicles by user UUID {}: {}", userUuid, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Batch retrieves citizen vehicle ownership declarations for multiple user UUIDs in a single query.
+     * Prevents N+1 query overhead during bulk citizen profile searches.
+     *
+     * @param userUuids collection of citizen user UUIDs
+     * @param active    optional status filter (true = ACTIVE, false = INACTIVE, null = ALL)
+     * @return map associating each citizen user UUID to their corresponding list of vehicle declarations
+     */
+    public Map<String, List<UserVehicle>> findVehiclesByUserUuids(List<String> userUuids, Boolean active) {
+        if (userUuids == null || userUuids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        try {
+            Map<String, Object> params = Collections.singletonMap("user_uuids", userUuids);
+            String sql = queryBuilder.buildVehiclesByUserUuidsQuery(active);
+            List<UserVehicle> vehicles = namedParameterJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToUserVehicle(rs));
+            Map<String, List<UserVehicle>> result = new HashMap<>();
+            if (vehicles != null) {
+                for (UserVehicle v : vehicles) {
+                    if (v != null && StringUtils.isNotBlank(v.getUserUuid())) {
+                        result.computeIfAbsent(v.getUserUuid(), k -> new ArrayList<>()).add(v);
+                    }
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("[USER-VEHICLE-REPO] Failed to batch lookup vehicles by user UUIDs: {}", e.getMessage(), e);
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Overloaded convenience method retrieving active vehicle declarations for a citizen user UUID.
+     *
+     * @param userUuid citizen user UUID
+     * @return list of active {@link UserVehicle} domain instances
+     */
+    public List<UserVehicle> findVehiclesByUserUuid(String userUuid) {
+        return findVehiclesByUserUuid(userUuid, Boolean.TRUE);
+    }
+
+    /**
+     * Maps a JDBC {@link ResultSet} row to a fully populated {@link UserVehicle} domain entity.
+     *
+     * @param rs JDBC result set positioned at current row
+     * @return populated {@link UserVehicle} instance
+     * @throws SQLException if a database access error occurs
+     */
+    private UserVehicle mapRowToUserVehicle(ResultSet rs) throws SQLException {
+        UserDocument rcDoc = null;
+        String rdId = rs.getString("rd_id");
+        if (StringUtils.isNotBlank(rdId)) {
+            rcDoc = UserDocument.builder()
+                    .id(rdId)
+                    .documentType(rs.getString("rd_document_type"))
+                    .filestoreId(rs.getString("rd_filestore_id"))
+                    .documentUid(rs.getString("rd_document_uid"))
+                    .fileName(rs.getString("rd_file_name"))
+                    .isVerified(rs.getObject("rd_is_verified") != null ? rs.getBoolean("rd_is_verified") : null)
+                    .build();
+        }
+
+        Object additionalDetails = null;
+        String jsonStr = rs.getString("v_additional_details");
+        if (StringUtils.isNotBlank(jsonStr)) {
+            try {
+                additionalDetails = objectMapper.readValue(jsonStr, Object.class);
+            } catch (Exception e) {
+                log.debug("[USER-VEHICLE-REPO] Unable to deserialize additional_details: {}", e.getMessage());
+            }
+        }
+
+        Date pDate = rs.getDate("v_purchase_date");
+        String purchaseDateStr = pDate != null ? pDate.toString() : null;
+
+        return UserVehicle.builder()
+                .id(rs.getString("v_id"))
+                .userUuid(rs.getString("v_user_uuid"))
+                .tenantId(rs.getString("v_tenant_id"))
+                .vehicleNumber(rs.getString("v_vehicle_number"))
+                .purchaseDate(purchaseDateStr)
+                .isVerified(rs.getObject("v_is_verified") != null ? rs.getBoolean("v_is_verified") : null)
+                .validationSource(rs.getString("v_validation_source"))
+                .rcDocId(rs.getString("v_rc_doc_id"))
+                .rcDocument(rcDoc)
+                .vehicleType(rs.getString("v_vehicle_type"))
+                .makerModel(rs.getString("v_maker_model"))
+                .fuelType(rs.getString("v_fuel_type"))
+                .category(rs.getString("v_category"))
+                .status(rs.getString("v_status"))
+                .additionalDetails(additionalDetails)
+                .createdBy(rs.getString("v_created_by"))
+                .createdTime(rs.getLong("v_created_time"))
+                .lastModifiedBy(rs.getString("v_last_modified_by"))
+                .lastModifiedTime(rs.getObject("v_last_modified_time") != null ? rs.getLong("v_last_modified_time") : null)
+                .build();
     }
 }

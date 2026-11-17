@@ -37,6 +37,13 @@ public class RuralPropertyDetail {
     private String id;
 
     /**
+     * Unique business identifier for the rural property generated via IdGen (e.g. {@code PG-RP-2026-11-17-000001}).
+     * Legacy pre-migration properties use documented backfill format {@code <TENANT>-RP-LEGACY-<UUID_PREFIX_8>}.
+     */
+    @JsonProperty("propertyId")
+    private String propertyId;
+
+    /**
      * Tenant identifier scoping the rural property.
      */
     @JsonProperty("tenantId")
@@ -83,6 +90,12 @@ public class RuralPropertyDetail {
      */
     @JsonProperty("surveyNumber")
     private String surveyNumber;
+
+    /**
+     * Citizen UUID owning the parent property record (used for authorization guard).
+     */
+    @JsonProperty("userUuid")
+    private String userUuid;
 
     /**
      * Actor UUID who created this record.
