@@ -604,15 +604,29 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           locale: Digit.StoreData.getCurrentLanguage(),
         });
 
-        const { responseInfo } = await Digit.UserService.updateUser(payload, stateId);
-        if (responseInfo?.status === "SUCCESS") {
+        const res = await Digit.UserService.updateUser(payload, stateId);
+        if (res?.responseInfo?.status === "SUCCESS" || res?.user) {
           const sessionUser = Digit.UserService.getUser();
           if (sessionUser) {
             Digit.UserService.setUser(buildSessionUser({ sessionUser, form, photoThumb }));
           }
+        } else {
+          throw new Error(res?.Errors?.[0]?.message || res?.Errors?.[0]?.description || "FAILED_TO_UPDATE_PROFILE");
         }
       } catch (err) {
-        console.warn("User update background error:", err);
+        console.error("User update error:", err);
+        const errorMessage =
+          err?.response?.data?.Errors?.[0]?.message ||
+          err?.response?.data?.Errors?.[0]?.description ||
+          err?.Errors?.[0]?.message ||
+          err?.Errors?.[0]?.description ||
+          t("CORE_COMMON_PROFILE_UPDATE_ERROR", "Failed to update profile. Please try again.");
+        setToast({
+          error: true,
+          label: errorMessage,
+        });
+        setSaving(false);
+        return; // Stop the flow; do not advance to the next step when save fails
       } finally {
         setSaving(false);
       }

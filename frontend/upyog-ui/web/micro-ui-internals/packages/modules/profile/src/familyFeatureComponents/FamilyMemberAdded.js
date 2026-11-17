@@ -270,12 +270,6 @@ const FamilyMemberAdded = () => {
   const handleCreateFamilyId = async () => {
     if (submitting || !selectedHeadUuid) return;
 
-    // 1. Client-side validation: Family must have at least 2 members
-    if (members.length < 2) {
-      showToast("error", t("ERR_FAMILY_MIN_MEMBERS", "Please add at least one family member before creating Family ID."));
-      return;
-    }
-
     // 2. Validation: Ensure non-head members have an assigned relationship
     const unassignedMember = members.find((m) => m.userUuid !== selectedHeadUuid && !m.relationshipWithHead);
     if (unassignedMember) {
