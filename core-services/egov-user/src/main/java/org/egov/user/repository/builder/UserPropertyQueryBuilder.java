@@ -201,13 +201,6 @@ public class UserPropertyQueryBuilder {
             "UPDATE ug_user_property_owner SET active = false, last_modified_by = :last_modified_by, " +
             "last_modified_time = :last_modified_time WHERE property_id = :property_id";
 
-    @Deprecated
-    public static final int DEFAULT_SEARCH_LIMIT = 50;
-    @Deprecated
-    public static final int MAX_SEARCH_LIMIT = 100;
-    @Deprecated
-    public static final int DEFAULT_SEARCH_OFFSET = 0;
-
     private final UserConfiguration userConfiguration;
 
     /**
@@ -230,19 +223,19 @@ public class UserPropertyQueryBuilder {
     public int getDefaultSearchLimit() {
         return (userConfiguration != null && userConfiguration.getAssetSearchDefaultLimit() != null)
                 ? userConfiguration.getAssetSearchDefaultLimit()
-                : DEFAULT_SEARCH_LIMIT;
+                : 50;
     }
 
     public int getMaxSearchLimit() {
         return (userConfiguration != null && userConfiguration.getAssetSearchMaxLimit() != null)
                 ? userConfiguration.getAssetSearchMaxLimit()
-                : MAX_SEARCH_LIMIT;
+                : 100;
     }
 
     public int getDefaultSearchOffset() {
         return (userConfiguration != null && userConfiguration.getAssetSearchDefaultOffset() != null)
                 ? userConfiguration.getAssetSearchDefaultOffset()
-                : DEFAULT_SEARCH_OFFSET;
+                : 0;
     }
 
     /**

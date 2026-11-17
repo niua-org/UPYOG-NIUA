@@ -61,13 +61,6 @@ public class UserIncomeQueryBuilder {
     public static final String SELECT_ACTIVE_INCOME_ID_BY_USER_SQL =
             "SELECT id FROM ug_user_income WHERE user_uuid = :user_uuid AND status = 'ACTIVE' LIMIT 1";
 
-    @Deprecated
-    public static final int DEFAULT_SEARCH_LIMIT = 50;
-    @Deprecated
-    public static final int MAX_SEARCH_LIMIT = 100;
-    @Deprecated
-    public static final int DEFAULT_SEARCH_OFFSET = 0;
-
     private final UserConfiguration userConfiguration;
 
     /**
@@ -90,19 +83,19 @@ public class UserIncomeQueryBuilder {
     public int getDefaultSearchLimit() {
         return (userConfiguration != null && userConfiguration.getAssetSearchDefaultLimit() != null)
                 ? userConfiguration.getAssetSearchDefaultLimit()
-                : DEFAULT_SEARCH_LIMIT;
+                : 50;
     }
 
     public int getMaxSearchLimit() {
         return (userConfiguration != null && userConfiguration.getAssetSearchMaxLimit() != null)
                 ? userConfiguration.getAssetSearchMaxLimit()
-                : MAX_SEARCH_LIMIT;
+                : 100;
     }
 
     public int getDefaultSearchOffset() {
         return (userConfiguration != null && userConfiguration.getAssetSearchDefaultOffset() != null)
                 ? userConfiguration.getAssetSearchDefaultOffset()
-                : DEFAULT_SEARCH_OFFSET;
+                : 0;
     }
 
     public static final String SELECT_INCOME_USER_UUID_BY_ID_SQL =

@@ -60,13 +60,6 @@ public class UserVehicleQueryBuilder {
     public static final String SELECT_ACTIVE_VEHICLE_OWNER_BY_NUMBER_SQL =
             "SELECT user_uuid FROM ug_user_vehicle WHERE UPPER(vehicle_number) = UPPER(:vehicle_number) AND status = 'ACTIVE' LIMIT 1";
 
-    @Deprecated
-    public static final int DEFAULT_SEARCH_LIMIT = 50;
-    @Deprecated
-    public static final int MAX_SEARCH_LIMIT = 100;
-    @Deprecated
-    public static final int DEFAULT_SEARCH_OFFSET = 0;
-
     private final UserConfiguration userConfiguration;
 
     /**
@@ -89,19 +82,19 @@ public class UserVehicleQueryBuilder {
     public int getDefaultSearchLimit() {
         return (userConfiguration != null && userConfiguration.getAssetSearchDefaultLimit() != null)
                 ? userConfiguration.getAssetSearchDefaultLimit()
-                : DEFAULT_SEARCH_LIMIT;
+                : 50;
     }
 
     public int getMaxSearchLimit() {
         return (userConfiguration != null && userConfiguration.getAssetSearchMaxLimit() != null)
                 ? userConfiguration.getAssetSearchMaxLimit()
-                : MAX_SEARCH_LIMIT;
+                : 100;
     }
 
     public int getDefaultSearchOffset() {
         return (userConfiguration != null && userConfiguration.getAssetSearchDefaultOffset() != null)
                 ? userConfiguration.getAssetSearchDefaultOffset()
-                : DEFAULT_SEARCH_OFFSET;
+                : 0;
     }
 
     public static final String SELECT_VEHICLE_USER_UUID_BY_ID_SQL =
