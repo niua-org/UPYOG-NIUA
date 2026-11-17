@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
-import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserDocumentRepository;
 import org.egov.user.persistence.repository.UserIncomeRepository;
@@ -39,23 +38,22 @@ import java.util.List;
 public class MemberAssetServiceImpl implements MemberAssetService {
 
     private final MemberAssetProcessor memberAssetProcessor;
-    private final UserConfiguration userConfiguration;
 
     /**
-     * Primary constructor injecting the isolated transactional {@link MemberAssetProcessor} and configuration.
+     * Primary constructor injecting the isolated transactional {@link MemberAssetProcessor}.
      *
      * @param memberAssetProcessor per-member isolated transactional processor
-     * @param userConfiguration   centralized user configuration
      */
     @Autowired
-    public MemberAssetServiceImpl(MemberAssetProcessor memberAssetProcessor,
-                                 @Autowired(required = false) UserConfiguration userConfiguration) {
+    public MemberAssetServiceImpl(MemberAssetProcessor memberAssetProcessor) {
         this.memberAssetProcessor = memberAssetProcessor;
-        this.userConfiguration = userConfiguration;
     }
 
-    public MemberAssetServiceImpl(MemberAssetProcessor memberAssetProcessor) {
-        this(memberAssetProcessor, null);
+    /**
+     * Overloaded constructor for backwards compatibility in existing tests.
+     */
+    public MemberAssetServiceImpl(MemberAssetProcessor memberAssetProcessor, Object ignoredConfig) {
+        this(memberAssetProcessor);
     }
 
     /**
@@ -72,7 +70,7 @@ public class MemberAssetServiceImpl implements MemberAssetService {
                                   UserIncomeRepository incomeRepository,
                                   UserVehicleRepository vehicleRepository,
                                   UserDocumentRepository documentRepository) {
-        this(new MemberAssetProcessor(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository), null);
+        this(new MemberAssetProcessor(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository));
     }
 
     /**
@@ -85,7 +83,7 @@ public class MemberAssetServiceImpl implements MemberAssetService {
      *
      * @param request the member asset sync request payload
      * @return synchronization response envelope detailing per-member results and overall status
-     * @throws CustomException if request payload is null or caller is missing when required
+     * @throws CustomException if request payload is null or caller is missing
      */
     @Override
     public MemberAssetSyncResponse syncMemberAssets(MemberAssetSyncRequest request) {
@@ -93,12 +91,12 @@ public class MemberAssetServiceImpl implements MemberAssetService {
             throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_MEMBER_ASSET_SYNC_PAYLOAD_NULL);
         }
 
-        // Fix for PR Comment #4 (Audit actor): Validate caller presence if configured to require caller
-        if (userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getRequireCallerForSync())) {
-            if (request.getRequestInfo() == null || request.getRequestInfo().getUserInfo() == null) {
-                log.error("[MEMBER-ASSET-SERVICE] Caller userInfo in RequestInfo is mandatory but was not provided");
-                throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
-            }
+        // Validate caller presence strictly: unauthenticated asset synchronization is rejected
+        if (request.getRequestInfo() == null || request.getRequestInfo().getUserInfo() == null
+                || StringUtils.isBlank(request.getRequestInfo().getUserInfo().getUuid())
+                || request.getRequestInfo().getUserInfo().getId() == null) {
+            log.error("[MEMBER-ASSET-SERVICE] Caller userInfo (both id and uuid) in RequestInfo is mandatory but was not provided");
+            throw new CustomException(UserConstants.ERROR_CALLER_INFO_REQUIRED, UserConstants.MSG_CALLER_INFO_REQUIRED);
         }
 
         List<MemberAssetDetail> members = request.getNormalizedMembers();

@@ -366,7 +366,7 @@ public class ProfileResyncAndScdSecurityTest {
             assertEquals("file-store-new", result.getFilestoreId());
 
             // Verifies old document ID was soft-deleted
-            verify(documentRepository, times(1)).delete(eq("doc-uuid-1"), anyLong());
+            verify(documentRepository, times(1)).delete(eq("doc-uuid-1"), anyString());
             verify(documentRepository, times(1)).create(any(UserDocument.class));
         }
 

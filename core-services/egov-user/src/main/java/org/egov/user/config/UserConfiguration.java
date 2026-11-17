@@ -5,9 +5,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Centralized configuration class managing application properties for the egov-user service.
@@ -62,6 +68,25 @@ public class UserConfiguration {
 
     @Value("${address.type.cache.cron}")
     private String addressTypeCacheCron;
+
+    // Income Identifier Type MDMS & Fallback Configuration
+    @Value("${mdms.income.identifier.type.enabled}")
+    private Boolean mdmsIncomeIdentifierTypeEnabled;
+
+    @Value("${mdms.income.identifier.type.moduleName}")
+    private String mdmsIncomeIdentifierTypeModuleName;
+
+    @Value("${mdms.income.identifier.type.masterName}")
+    private String mdmsIncomeIdentifierTypeMasterName;
+
+    @Value("${mdms.income.identifier.type.filter}")
+    private String mdmsIncomeIdentifierTypeFilter;
+
+    @Value("${income.identifier.types.allowed}")
+    private String allowedIncomeIdentifierTypes;
+
+    @Value("${income.identifier.type.cache.ttl.millis}")
+    private Long incomeIdentifierTypeCacheTtlMillis;
 
     // Token Validity & Format Configuration
     @Value("${access.token.validity.in.minutes}")
@@ -208,23 +233,39 @@ public class UserConfiguration {
     @Value("${egov.idgen.citizen.id.name}")
     private String idGenCitizenIdName;
 
-    @Value("${egov.idgen.citizen.id.format}")
-    private String idGenCitizenIdFormat;
-
     @Value("${egov.idgen.user.doc.id.name}")
     private String idGenUserDocIdName;
 
-    @Value("${egov.idgen.user.doc.id.format}")
-    private String idGenUserDocIdFormat;
+    @Value("${egov.idgen.rural.property.id.name}")
+    private String idGenRuralPropertyIdName;
 
-    // Fix for PR Comment #4: Audit actor configuration for member asset synchronization
-    // Explicit property bindings loaded strictly from application.properties without inline fallback values
-    @Value("${user.system.actor.id}")
-    private Long systemActorId;
+    // Asset Authorization Configuration
+    @Value("${egov.asset.privileged.roles}")
+    private String assetPrivilegedRoles;
 
-    @Value("${user.system.actor.uuid}")
-    private String systemActorUuid;
+    // Asset Search Pagination Configuration
+    @Value("${egov.asset.search.default.limit}")
+    private Integer assetSearchDefaultLimit;
 
-    @Value("${user.member.asset.sync.require.caller}")
-    private Boolean requireCallerForSync;
+    @Value("${egov.asset.search.max.limit}")
+    private Integer assetSearchMaxLimit;
+
+    @Value("${egov.asset.search.default.offset}")
+    private Integer assetSearchDefaultOffset;
+
+    /**
+     * Resolves the configured set of privileged role codes permitted to access citizen assets.
+     *
+     * @return set of uppercase role codes
+     */
+    public Set<String> getAssetPrivilegedRoles() {
+        if (StringUtils.isBlank(assetPrivilegedRoles)) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(assetPrivilegedRoles.split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .map(String::toUpperCase)
+                .collect(Collectors.toSet());
+    }
 }

@@ -277,4 +277,79 @@ public class FamilyRestRepository {
             }
         }
     }
+
+    /**
+     * Determines whether the specified caller is the active Head of Family (HoF)
+     * of the household containing the target member.
+     *
+     * @param callerUuid  UUID of the calling citizen
+     * @param memberUuid  UUID of the target family member
+     * @param tenantId    tenant identifier
+     * @param requestInfo standard UPYOG RequestInfo context
+     * @return true if caller is HoF of member's active family, false otherwise
+     */
+    public boolean isCallerHeadOfFamilyForMember(String callerUuid, String memberUuid, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(callerUuid) || StringUtils.isBlank(memberUuid) || restTemplate == null) {
+            return false;
+        }
+
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping HOF check.", tenantId);
+                return false;
+            }
+        }
+
+        try {
+            String host = resolveHost();
+            String endpoint = resolveEndpoint();
+            UriComponentsBuilder uriBuilder = buildBaseUri(host, endpoint)
+                    .queryParam(UserConstants.FAMILY_PARAM_MEMBER_USER_UUID, memberUuid)
+                    .queryParam(UserConstants.FAMILY_PARAM_STATUS, UserConstants.FAMILY_STATUS_ACTIVE);
+
+            if (StringUtils.isNotBlank(tenantId)) {
+                uriBuilder.queryParam(UserConstants.PARAM_TENANT_ID, tenantId);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<RequestInfo> entity = new HttpEntity<>(requestInfo != null ? requestInfo : new RequestInfo(), headers);
+
+            String url = uriBuilder.toUriString();
+            log.debug("[FAMILY-REST-REPO] Checking HOF relationship at: {}", url);
+            String responseStr = restTemplate.postForObject(url, entity, String.class);
+
+            JsonNode families = parseFamiliesNode(responseStr);
+            if (families != null && families.isArray()) {
+                for (JsonNode familyNode : families) {
+                    String status = familyNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(null);
+                    if (UserConstants.FAMILY_STATUS_ACTIVE.equalsIgnoreCase(status)) {
+                        String headUserUuid = familyNode.path("headUserUuid").asText(null);
+                        if (callerUuid.equalsIgnoreCase(headUserUuid)) {
+                            log.info("[FAMILY-REST-REPO] Caller {} confirmed as HoF (headUserUuid) for member {}", callerUuid, memberUuid);
+                            return true;
+                        }
+
+                        JsonNode membersNode = familyNode.path(UserConstants.JSON_KEY_MEMBERS);
+                        if (membersNode.isArray()) {
+                            for (JsonNode memberNode : membersNode) {
+                                String mUuid = memberNode.path(UserConstants.JSON_KEY_USER_UUID).asText(null);
+                                boolean isHead = memberNode.path("isHead").asBoolean(false);
+                                if (callerUuid.equalsIgnoreCase(mUuid) && isHead) {
+                                    log.info("[FAMILY-REST-REPO] Caller {} confirmed as HoF (member.isHead) for member {}", callerUuid, memberUuid);
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[FAMILY-REST-REPO] Error checking HOF relationship for caller {} and member {}: {}",
+                    callerUuid, memberUuid, e.getMessage());
+        }
+
+        return false;
+    }
 }

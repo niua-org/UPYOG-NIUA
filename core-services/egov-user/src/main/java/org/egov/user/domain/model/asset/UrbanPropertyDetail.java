@@ -63,6 +63,12 @@ public class UrbanPropertyDetail {
     private String urbanAddress;
 
     /**
+     * Citizen UUID owning the parent property record (used for authorization guard).
+     */
+    @JsonProperty("userUuid")
+    private String userUuid;
+
+    /**
      * Actor UUID who created this record.
      */
     @JsonProperty("createdBy")
