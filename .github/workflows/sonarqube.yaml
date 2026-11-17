@@ -1,6 +1,6 @@
 name: SonarQube PR Analysis
 on:
-  pull_request:
+  pull_request_target:
     branches: [niua-dev-3.0]
     types: [opened, synchronize, reopened, ready_for_review]
   schedule:
@@ -21,7 +21,7 @@ jobs:
     # no secrets.SONAR_TOKEN and a read-only GITHUB_TOKEN, so they can neither
     # scan nor comment. A PR opened inside your own fork still matches this.
     if: >-
-      github.event_name == 'pull_request' &&
+      github.event_name == 'pull_request_target' &&
       github.event.pull_request.draft == false &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
@@ -31,7 +31,10 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
+        with:
+         repository: ${{ github.event.pull_request.head.repo.full_name }}
+         ref: ${{ github.event.pull_request.head.sha }}
+         persist-credentials: false
       # The repo mixes Java 17 (most modules), 1.8 and 11. Install all three and
       # select the matching JDK per module so older modules build on their own
       # release instead of failing on JDK 17.
