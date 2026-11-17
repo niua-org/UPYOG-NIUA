@@ -17,6 +17,9 @@ permissions:
 jobs:
   sonar:
     name: sonar
+    # Only PRs whose head branch lives in this repo are scanned. Fork runs get
+    # no secrets.SONAR_TOKEN and a read-only GITHUB_TOKEN, so they can neither
+    # scan nor comment. A PR opened inside your own fork still matches this.
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.draft == false &&
@@ -27,29 +30,37 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-java@v4
+      # The repo mixes Java 17 (most modules), 1.8 and 11. Install all three and
+      # select the matching JDK per module so older modules build on their own
+      # release instead of failing on JDK 17.
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: |
+            8
+            11
+            17
           cache: maven
 
       - name: Detect the service
         id: detect
         env:
           GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
+
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[].filename' > "$RUNNER_TEMP/changed.txt"
 
           # Every Maven module is a candidate (longest matching path wins).
           # Exclude build output to avoid discovering generated POM files.
           find . -name pom.xml -not -path '*/target/*' -print \
             | sed 's#^./##; s#/pom.xml$##' | sort -u > "$RUNNER_TEMP/roots.txt"
 
-          services=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
-            --jq '.[].filename' | awk '
+          services=$(awk '
               NR == FNR { root[++n] = $0; next }
               {
                 best = ""
@@ -57,7 +68,7 @@ jobs:
                   if (index($0, root[i] "/") == 1 && length(root[i]) > length(best)) best = root[i]
                 if (best != "") print best
               }
-            ' "$RUNNER_TEMP/roots.txt" - | sort -u)
+            ' "$RUNNER_TEMP/roots.txt" "$RUNNER_TEMP/changed.txt" | sort -u)
 
           {
             echo "services<<EOF"
@@ -75,8 +86,7 @@ jobs:
             : > "$RUNNER_TEMP/fe-roots.txt"
           fi
 
-          frontends=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" \
-            --jq '.[].filename' | awk '
+          frontends=$(awk '
               NR == FNR { root[++n] = $0; next }
               {
                 best = ""
@@ -84,7 +94,7 @@ jobs:
                   if (index($0, root[i] "/") == 1 && length(root[i]) > length(best)) best = root[i]
                 if (best != "") print best
               }
-            ' "$RUNNER_TEMP/fe-roots.txt" - | sort -u)
+            ' "$RUNNER_TEMP/fe-roots.txt" "$RUNNER_TEMP/changed.txt" | sort -u)
 
           {
             echo "frontends<<EOF"
@@ -95,7 +105,7 @@ jobs:
 
       - name: Set up Node.js
         if: steps.detect.outputs.frontends != ''
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
@@ -103,65 +113,116 @@ jobs:
         id: scan
         if: steps.detect.outputs.services != ''
         env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SERVICES: ${{ steps.detect.outputs.services }}
-          PR: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
-
+          host="${SONAR_HOST_URL%/}"
           MVN=(-B -ntp)
+          failed=()
+
+          # Read the module's target Java release, then map it to the JDK that
+          # setup-java installed (JAVA_HOME_<major>_X64).
+          select_java_home() {
+            local dir="$1" v=""
+            for expr in maven.compiler.release java.version maven.compiler.source; do
+              v=$(cd "$dir" && mvn "${MVN[@]}" -q help:evaluate \
+                    -Dexpression="$expr" -DforceStdout 2>/dev/null \
+                    | grep -m1 -E '^[[:space:]]*[0-9][0-9.]*[[:space:]]*$' \
+                    | tr -d '[:space:]' || true)
+              [ -n "$v" ] && break
+            done
+            v=${v#1.}; v=${v%%.*}
+            case "$v" in
+              8|11|17) local name="JAVA_HOME_${v}_X64"; printf '%s' "${!name:-}" ;;
+              *) printf '%s' "" ;;
+            esac
+          }
 
           while read -r service; do
             [ -n "$service" ] || continue
-            echo "::group::scan $service"
-            (
+            base=$(printf '%s' "$service" | tr '/_' '-' | tr -cd '[:alnum:]-')
+            project_key="upyog_${base}-pr-$PR_NUMBER"
+            java_home=$(select_java_home "$service" || true)
+
+            echo "::group::scan $service ($project_key)"
+            if (
+              if [ -n "$java_home" ]; then
+                export JAVA_HOME="$java_home"
+                export PATH="$JAVA_HOME/bin:$PATH"
+              fi
               cd "$service"
-              project_key=$(printf '%s' "$service" | tr '/_' '-' | tr -cd '[:alnum:]-')
-              mvn "${MVN[@]}" clean package -Dmaven.test.skip=true
+              mvn "${MVN[@]}" clean package -DskipTests
               mvn "${MVN[@]}" org.sonarsource.scanner.maven:sonar-maven-plugin:3.11.0.3922:sonar \
-                -Dsonar.projectKey="upyog_${project_key}-pr-$PR" \
+                -Dsonar.host.url="$host" \
+                -Dsonar.projectKey="$project_key" \
                 -Dsonar.projectName="$service" \
                 -Dsonar.qualitygate.wait=true
-            )
+            ); then
+              echo "scan passed: $service"
+            else
+              echo "::error::scan failed: $service"
+              failed+=("$service")
+            fi
             echo "::endgroup::"
           done <<< "$SERVICES"
+
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "Failed services: ${failed[*]}"
+            exit 1
+          fi
 
       - name: Scan frontend applications
         id: scan-frontend
         if: steps.detect.outputs.frontends != ''
         env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           FRONTENDS: ${{ steps.detect.outputs.frontends }}
-          PR: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
+          host="${SONAR_HOST_URL%/}"
+          failed=()
 
           while read -r app; do
             [ -n "$app" ] || continue
             # The project lives in <app>/web when present, otherwise at the app root.
             workdir="$app/web"
             [ -d "$workdir" ] || workdir="$app"
-            echo "::group::scan $app"
-            (
+            base=$(printf '%s' "$app" | tr '/_' '-' | tr -cd '[:alnum:]-')
+            project_key="upyog_${base}-pr-$PR_NUMBER"
+
+            echo "::group::scan $app ($project_key)"
+            if (
               cd "$workdir"
-              project_key=$(printf '%s' "$app" | tr '/_' '-' | tr -cd '[:alnum:]-')
-              npx --yes @sonar/scan \
-                -Dsonar.host.url="$SONAR_HOST_URL" \
+              npx --yes @sonar/scan@5.1.0 \
+                -Dsonar.host.url="$host" \
                 -Dsonar.token="$SONAR_TOKEN" \
-                -Dsonar.projectKey="upyog_${project_key}-pr-$PR" \
+                -Dsonar.projectKey="$project_key" \
                 -Dsonar.projectName="$app" \
                 -Dsonar.sources=. \
                 -Dsonar.exclusions="**/node_modules/**,**/dist/**,**/build/**,**/public/**,**/coverage/**,**/*.min.js,**/*.test.*,**/*.spec.*,**/__tests__/**" \
                 -Dsonar.qualitygate.wait=true
-            )
+            ); then
+              echo "scan passed: $app"
+            else
+              echo "::error::scan failed: $app"
+              failed+=("$app")
+            fi
             echo "::endgroup::"
           done <<< "$FRONTENDS"
 
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "Failed frontends: ${failed[*]}"
+            exit 1
+          fi
+
       - name: Comment on the pull request
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           OUTCOME: ${{ steps.scan.outcome }}
           OUTCOME_FE: ${{ steps.scan-frontend.outcome }}
@@ -173,6 +234,7 @@ jobs:
         with:
           script: |
             const marker = '<!-- sonarqube-pr-analysis -->';
+            const host = (process.env.SONAR_HOST_URL || '').replace(/\/+$/, '');
             const outcomes = [process.env.OUTCOME, process.env.OUTCOME_FE].filter(Boolean);
             const state = outcomes.includes('failure') ? 'FAILED'
               : outcomes.includes('success') ? 'PASSED'
@@ -180,7 +242,7 @@ jobs:
             const toLinks = (value, label) => value
               ? value.trim().split('\n').map(project => {
                   const projectKey = `upyog_${project.replace(/[\/_]/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-pr-${process.env.PR}`;
-                  const url = `${process.env.SONAR_HOST_URL}dashboard?id=${encodeURIComponent(projectKey)}`;
+                  const url = `${host}/dashboard?id=${encodeURIComponent(projectKey)}`;
                   return `- **${project}**: [View SonarQube Scan](${url})`;
                 }).join('\n')
               : `_No ${label} affected._`;
@@ -212,7 +274,9 @@ jobs:
             }
 
   # ------------------------------------------------------------------------ #
-  # Weekly remove the ephemeral <key>-pr-<n> projects.
+  # Weekly remove the ephemeral upyog_<module>-pr-<n> projects.
+  # Only projects with the upyog_ prefix are touched, so other teams' projects
+  # on a shared SonarQube are never deleted.
   # ------------------------------------------------------------------------ #
   cleanup:
     name: cleanup
@@ -228,20 +292,21 @@ jobs:
           DRY_RUN: ${{ vars.SONAR_CLEANUP_DRY_RUN || 'true' }}
         run: |
           set -euo pipefail
+          host="${SONAR_HOST_URL%/}"
           cutoff=$(date -u -d "-${MAX_AGE_DAYS} days" +%Y-%m-%dT%H:%M:%S%z)
           page=1
           while :; do
-            body=$(curl -fsS -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/projects/search?ps=100&p=$page")
+            body=$(curl -fsS -u "$SONAR_TOKEN:" "$host/api/projects/search?ps=100&p=$page")
             stale=$(printf '%s' "$body" | jq -r --arg c "$cutoff" '
               .components[]?
-              | select(.key | test("-pr-[0-9]+$"))
+              | select(.key | test("^upyog_.*-pr-[0-9]+$"))
               | select((.lastAnalysisDate // "1970-01-01T00:00:00+0000") < $c)
               | .key')
             for key in $stale; do
               if [ "$DRY_RUN" = "true" ]; then
                 echo "[dry-run] would delete $key"
               else
-                curl -fsS -X POST -u "$SONAR_TOKEN:" "$SONAR_HOST_URL/api/projects/delete" \
+                curl -fsS -X POST -u "$SONAR_TOKEN:" "$host/api/projects/delete" \
                   --data-urlencode "project=$key" > /dev/null && echo "deleted $key"
               fi
             done
