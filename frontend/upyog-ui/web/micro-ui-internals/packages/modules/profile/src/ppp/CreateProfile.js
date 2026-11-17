@@ -58,7 +58,7 @@ const speciallyAbledOptions = [
 
 // Relationship with Head of Family (HOF)
 const relationWithHof = [
-  { i18nKey: "RELATION_SELF", code: "Self", name: "Self" },
+  { i18nKey: "RELATION_SELF", code: "Hof", name: "Hof" },
   { i18nKey: "RELATION_SPOUSE", code: "Spouse", name: "Spouse" },
   { i18nKey: "RELATION_SON", code: "Son", name: "Son" },
   { i18nKey: "RELATION_DAUGHTER", code: "Daughter", name: "Daughter" },
@@ -686,7 +686,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           </FormField>
 
           {/* Divyang (appears right after Relationship with HOF) */}
-          <FormField label={t("PROFILE_SPECIALLY_ABLED", "Divyang")} required error={errors.speciallyAbled} t={t}>
+          <FormField label={t("PROFILE_SPECIALLY_ABLED", "Divyang/Handicapped")} required error={errors.speciallyAbled} t={t}>
             <Dropdown
               selected={speciallyAbled}
               select={handleSpeciallyAbledChange}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Loader, EditIcon, Dropdown, ArrowDown, TickMark, CloseSvg, Toast } from "@nudmcdgnpm/digit-ui-react-components";
+import { Card, Loader, EditIcon, TickMark, CloseSvg, Toast, AddIcon, PersonIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument, clearFamilyMembers } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
@@ -152,6 +152,18 @@ const ProfileDetails = () => {
     }
   };
 
+  const getFamilyOptionIcon = (code) => {
+    switch (code) {
+      case "PROFILE_CREATE_FAMILY":
+        return <AddIcon fill="#a82227" styles={{ width: 14, height: 14 }} />;
+      case "PROFILE_JOIN_EXISTING_FAMILY":
+      case "PROFILE_FAMILY_DASHBOARD":
+        return <PersonIcon styles={{ fill: "#a82227", width: 20, height: 20 }} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <React.Fragment>
       <Card>
@@ -205,24 +217,18 @@ const ProfileDetails = () => {
               )}
             </div>
           )}
-          {/* Show the My Family dropdown dynamically based on available options */}
-          {familyOptions.length > 0 && (
-            <div>
-              <Dropdown
-                option={familyOptions}
-                optionKey="name"
-                select={handleFamilySelection}
-                style={profileStyles.dropdownWrap}
-                optionCardStyles={profileStyles.dropdownMenu}
-                customSelector={
-                  <div style={profileStyles.dropdownButton}>
-                    <span>{t("PROFILE_ADD_FAMILY")}</span>
-                    <ArrowDown />
-                  </div>
-                }
-              />
-            </div>
-          )}
+          {/* Show family action options as top-level buttons */}
+          {familyOptions.map((option) => (
+            <button
+              key={option.code}
+              type="button"
+              onClick={() => handleFamilySelection(option)}
+              style={profileStyles.actionButton}
+            >
+              {getFamilyOptionIcon(option.code)}
+              <span>{t(option.i18nKey, option.name)}</span>
+            </button>
+          ))}
           <button type="button" onClick={() => navigate(PROFILE_ROUTES.EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
             <EditIcon /> {t("CORE_COMMON_EDIT")}
           </button>

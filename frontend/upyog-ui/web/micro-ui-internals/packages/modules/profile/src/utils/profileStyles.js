@@ -89,6 +89,19 @@ export const profileStyles = {
     fontWeight: 500,
     cursor: "pointer",
   },
+  actionButton: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    background: "#F4F5F7",
+    color: "#0B0C0C",
+    border: "none",
+    borderRadius: 8,
+    padding: "12px 20px",
+    fontSize: 16,
+    fontWeight: 500,
+    cursor: "pointer",
+  },
 
   // Section + card
   section: { marginBottom: 24 },
