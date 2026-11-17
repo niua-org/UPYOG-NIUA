@@ -5,6 +5,14 @@ import { Card, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { PROFILE_ROUTES } from "../utils/constants";
 import { profileStyles } from "../utils/profileStyles";
 
+/**
+ * Family dashboard screen. 
+ * Loads the logged-in user's family details using the family dashboard API
+ * and displays the family members and their relationships.
+ * Routed from the MDMS route `PROFILE_FAMILY_DASHBOARD`.
+ */
+
+
 const FamilyDashboard = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
@@ -52,6 +60,10 @@ const FamilyDashboard = () => {
 
     fetchFamilyDashboard();
   }, [tenantId]);
+  /**
+ * Generates initials from a member's name. Uses the first two characters for a single-word name
+ * and the first character of the first and last words for a multi-word name.
+ */
 
   const handleAddNewMember = () => {
     navigate(PROFILE_ROUTES.ADD_FAMILY_MEMBER);
@@ -147,7 +159,10 @@ const FamilyDashboard = () => {
                      {isCurrentUser ? (
                       <span style={styles.youText}>{t("CORE_COMMON_YOU")}</span>
                     ) : (
-                      relationship
+                      <>
+                      {relationship}
+                      {isHead && <span style={styles.youText}>{t("CORE_COMMON_YOU_HEAD")}</span>}
+                      </>
                     )}
                   </span>
                 </div>
