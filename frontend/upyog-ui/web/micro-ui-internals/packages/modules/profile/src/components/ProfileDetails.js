@@ -162,13 +162,13 @@ const ProfileDetails = () => {
           <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
           {user?.isIdentityVerified ? (
             <span
-              title={t("AADHAAR_VERIFIED", "Aadhaar Verified")}
+              title={t("AADHAAR_VERIFIED")}
               style={profileStyles.verifiedBadge}
             >
               <span style={profileStyles.verifiedIconWrap}>
                 <TickMark fillColor="white" />
               </span>
-              <span>{t("PROFILE_AADHAAR_VERIFIED", "Aadhaar Verified")}</span>
+              <span>{t("PROFILE_AADHAAR_VERIFIED")}</span>
             </span>
           ) : (
             <span
@@ -184,7 +184,7 @@ const ProfileDetails = () => {
                 </span>
               </span>
               <span style={profileStyles.unverifiedText}>
-                {t("PROFILE_AADHAAR_NOT_VERIFIED", "Aadhaar Not Verified")}
+                {t("PROFILE_AADHAAR_NOT_VERIFIED")}
               </span>
             </span>
           )}

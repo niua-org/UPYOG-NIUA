@@ -4,6 +4,7 @@ import { FormStep, Dropdown, TextInput, UploadFile } from "@nudmcdgnpm/digit-ui-
 import { TAX_VALIDATORS, FormField } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
+import DocumentUploadCard from "../utils/DocumentUploadCard";
 
 /// TODO - Need to Add all these in MDMS
 const TAX_ID_OPTIONS = [
@@ -20,6 +21,12 @@ const OCCUPATION_OPTIONS = [
   { i18nKey: "PROFILE_OCCUPATION_UNEMPLOYED", code: "UNEMPLOYED" },
   { i18nKey: "PROFILE_OCCUPATION_OTHER", code: "OTHER" },
 ];
+
+const INCOME_PROOF_OPTIONS = [
+  { i18nKey: "PROFILE_INCOME_PROOF_SALARY_SLIP", code: "SALARY_SLIP", name: "Salary Slip" },
+  { i18nKey: "PROFILE_INCOME_PROOF_ITR", code: "ITR", name: "ITR" },
+];
+
 
 /**
  * Income Details Page Developed to get the Income details of the family Members
@@ -38,47 +45,42 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
-  const [incomeProof, setIncomeProof] = useState(saved.uploadedIncomeFile ? { name: t("PROFILE_FILE_UPLOADED") } : null);
   const [taxIdType, setTaxIdType] = useState(saved.taxIdType || null);
   const [taxIdNumber, setTaxIdNumber] = useState(saved.taxIdNumber || "");
   const [annualIncome, setAnnualIncome] = useState(saved.annualIncome || "");
   const [occupation, setOccupation] = useState(saved.occupation || null);
-  const [fileError, setFileError] = useState(null);
-  const [uploadedIncomeFile, setUploadedIncomeFile] = useState(saved.uploadedIncomeFile || null);
   const [taxIdError, setTaxIdError] = useState(null);
   const [taxProof, setTaxProof] = useState(saved.uploadedTaxProof ? { name: t("PROFILE_FILE_UPLOADED") } : null);
   const [uploadedTaxProof, setUploadedTaxProof] = useState(saved.uploadedTaxProof || null);
   const [taxProofError, setTaxProofError] = useState(null);
   const [taxIdValidated, setTaxIdValidated] = useState(saved.taxIdValidated || false);
   const [validateStatus, setValidateStatus] = useState(null);
+  const [incomeProofType, setIncomeProofType] = useState(saved.incomeProofType || null);
+  const [incomeProofFile, setIncomeProofFile] = useState(saved.incomeProofFile || null);
 
   const goNext = () => {
     if (isViewMode) {
       onSelect(config.key, saved, false);
       return;
     }
-    onSelect(
-      config.key,
-      {
-        incomeProof,
-        uploadedIncomeFile,
+   onSelect(config.key, {
+        occupation,
+        annualIncome,
         taxIdType,
         taxIdNumber,
         taxIdValidated,
-        taxProof,
         uploadedTaxProof,
-        annualIncome,
-        occupation,
-      },
-      false,
-    );
+        incomeProofType,                                    
+        incomeProofFile,                                   
+        uploadedIncomeFile: incomeProofFile?.fileStoreId || null,
+    }, false);
   };
 
   const onSkip = () => onSelect();
 
   useEffect(() => {
     if (userType === "citizen" && !isViewMode) goNext();
-  }, [taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, uploadedIncomeFile, uploadedTaxProof]);
+  }, [taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, incomeProofFile, uploadedTaxProof]);
 
   const handleTaxIdNumberChange = (e) => {
     const val = e.target.value.toUpperCase();
@@ -116,25 +118,6 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
     }
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size >= 5242880) {
-      setFileError(t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
-      return;
-    }
-    setFileError(null);
-    setIncomeProof(file);
-    (async () => {
-      try {
-        const response = await Digit.UploadServices.Filestorage("profile", file, Digit.ULBService.getStateId());
-        if (response?.data?.files?.length > 0) setUploadedIncomeFile(response.data.files[0].fileStoreId);
-        else setFileError(t("CS_FILE_UPLOAD_ERROR"));
-      } catch {
-        setFileError(t("CS_FILE_UPLOAD_ERROR"));
-      }
-    })();
-  };
 
   const handleTaxProofSelect = (e) => {
     const file = e.target.files[0];
@@ -156,10 +139,27 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
     })();
   };
 
+  // When Salariedd only Pan and GST will render
+  const filteredTaxIdOptions = occupation?.code === "SALARIED"
+  ? TAX_ID_OPTIONS.filter((opt) => opt.code !== "TAN")
+  : TAX_ID_OPTIONS;
+
+  const handleOccupationChange = (val) => {
+  setOccupation(val);
+  if (val?.code === "SALARIED" && taxIdType?.code === "TAN") {
+    setTaxIdType(null);
+    setTaxIdNumber("");
+    setTaxIdValidated(false);
+    setValidateStatus(null);
+    setTaxIdError(null);
+  }
+};
+
+
   const isValidateBtnDisabled = !taxIdNumber || !!taxIdError;
   const showTaxProof = validateStatus === "error";
   const taxIdSatisfied = !taxIdType || taxIdValidated || !!uploadedTaxProof;
-  const isDisabled = !annualIncome || !occupation || !uploadedIncomeFile || !!taxIdError || (taxIdType && !taxIdNumber) || !taxIdSatisfied;
+  const isDisabled = !annualIncome || !occupation || !incomeProofType || !incomeProofFile?.fileStoreId || !!taxIdError || (taxIdType && !taxIdNumber) || !taxIdSatisfied;
 
   return (
     <React.Fragment>
@@ -182,7 +182,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
           <FormField label={t("PROFILE_OCCUPATION")} required t={t}>
             <Dropdown
               selected={occupation}
-              select={setOccupation}
+              select={handleOccupationChange}
               option={OCCUPATION_OPTIONS}
               optionKey="i18nKey"
               t={t}
@@ -209,7 +209,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
             <Dropdown
               selected={taxIdType}
               select={handleTaxIdTypeChange}
-              option={TAX_ID_OPTIONS}
+              option={filteredTaxIdOptions}
               optionKey="i18nKey"
               t={t}
               style={fullWidth}
@@ -270,20 +270,19 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
             </FormField>
           )}
 
-          <FormField label={t("PROFILE_INCOME_PROOF")} required t={t} error={fileError}>
-            <UploadFile
-              onUpload={handleFileSelect}
-              onDelete={isViewMode ? undefined : () => {
-                setIncomeProof(null);
-                setUploadedIncomeFile(null);
-                setFileError(null);
-              }}
-              message={incomeProof ? incomeProof.name : t("PROFILE_NO_FILE_SELECTED")}
-              accept=".pdf,.jpg,.jpeg,.png"
-              iserror={fileError}
-              disabled={isViewMode}
-            />
-          </FormField>
+          <DocumentUploadCard
+            label={t("PROFILE_INCOME_PROOF")}
+            required
+            options={INCOME_PROOF_OPTIONS}
+            selectedType={incomeProofType}
+            onSelectType={(v) => setIncomeProofType(v)}
+            typePlaceholder={t("PROFILE_SELECT_PROOF_TYPE", "Select proof type")}
+            file={incomeProofFile}
+            onFileChange={(f) => setIncomeProofFile(f)}
+            t={t}
+            stateId={Digit.ULBService.getStateId()}
+            disabled={isViewMode}
+          />
         </div>
       </FormStep>
     </React.Fragment>

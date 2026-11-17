@@ -1098,7 +1098,89 @@ radioGroup: {
     gap: "20px 24px",
     width: "100%",
     boxSizing: "border-box",
-  }
+    marginBottom: "20px"
+  },
+
+  dropDownHeight:{
+    maxHeight: "220px",
+    overflowY: "auto",
+  },
+
+  documentUploadCard: {
+    wrapper: {
+      display: "flex",
+      flexDirection: "column",
+      width: "100%",
+    },
+    dropdownMargin: {
+      width: "100%",
+      marginBottom: "8px",
+    },
+    fileBox: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      border: "1px solid #D6D5D5",
+      borderRadius: "6px",
+      padding: "6px 10px",
+      background: "#FFFFFF",
+      minHeight: "44px",
+      boxSizing: "border-box",
+    },
+    fileBoxError: {
+      border: "1px solid #D4351C",
+    },
+    fileBoxDisabled: {
+      background: "#F4F5F7",
+    },
+    fileInner: {
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      overflow: "hidden",
+      flex: 1,
+    },
+    chooseBtn: {
+      background: "#D1D1D6",
+      color: "#0B0C0C",
+      border: "none",
+      borderRadius: "4px",
+      padding: "6px 14px",
+      fontSize: "13px",
+      fontWeight: 500,
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+      flexShrink: 0,
+    },
+    chooseBtnDisabled: {
+      background: "#E0E0E0",
+      cursor: "not-allowed",
+    },
+    fileName: {
+      fontSize: "13px",
+      color: "#7C7E80",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+    },
+    fileNameUploaded: {
+      color: "#0B0C0C",
+    },
+    deleteBtn: {
+      background: "transparent",
+      border: "none",
+      cursor: "pointer",
+      padding: "4px 8px",
+      color: "#505A5F",
+      fontSize: "16px",
+      fontWeight: "bold",
+      lineHeight: 1,
+    },
+    errorMargin: {
+      marginTop: "4px",
+    },
+  },
+
 
   
 };

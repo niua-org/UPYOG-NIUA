@@ -2,7 +2,7 @@ import { Banner, Card, LinkButton, Loader, Row, StatusTable, SubmitBar, Toast } 
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
-import getGcAcknowledgementData from "../../../getGcAcknowledgementData";
+import { downloadGCAcknowledgement } from "../../../utils";
 
 // Resolves the banner message based on the current submission state
 const GetActionMessage = (props) => {
@@ -86,9 +86,7 @@ const GCAcknowledgement = () => {
   const handleDownloadPdf = async () => {
     try {
       const application = state?.data?.garbageAccounts?.[0];
-      const tenantInfo = tenants.find((tenant) => tenant.code === application?.tenantId);
-      const acknowledgementData = await getGcAcknowledgementData(application, tenantInfo, t);
-      Digit.Utils.pdf.generate(acknowledgementData);
+      await downloadGCAcknowledgement(application, tenants, t);
     } catch (error) {
       setShowToast({ error: true, label: "CS_SOMETHING_WENT_WRONG" });
     }

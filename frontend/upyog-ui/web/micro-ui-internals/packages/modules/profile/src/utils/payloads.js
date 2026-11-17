@@ -66,8 +66,8 @@ export const buildUpdateDocumentPayload = ({ existingDoc, tenantId, filestoreId,
 });
 
 // Body item for Digit.UserService.createUserDocument (`documents` is an array)
-export const buildCreateDocumentPayload = ({ uuid, tenantId, documentType, filestoreId, fileName }) => ({
-  uuid,
+export const buildCreateDocumentPayload = ({ userUuid, tenantId, documentType, filestoreId, fileName }) => ({
+  userUuid,
   tenantId,
   documentType,
   filestoreId,
@@ -165,9 +165,10 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       otpVerified: incomeDetails.otpVerified || false,
       ...(incomeDetails.uploadedIncomeFile && {
         salaryProofDocument: {
-          documentType: "SALARY_PROOF",
+          documentType: incomeDetails.incomeProofType?.code || "SALARY_PROOF",
           filestoreId: incomeDetails.uploadedIncomeFile,
           referenceType: "INCOME",
+          fileName: incomeDetails.incomeProofType?.code,
           active: true,
         },
       }),

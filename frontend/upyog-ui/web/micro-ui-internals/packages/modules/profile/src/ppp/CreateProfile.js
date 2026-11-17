@@ -18,6 +18,7 @@ import { profileStyles } from "../utils/profileStyles";
 import { DEFAULT_CASTE, SPECIALLY_ABLED_YES } from "../utils/constants";
 import { buildUpdateUserPayload, buildSessionUser } from "../utils/payloads";
 import { validators } from "../utils/profileValidators";
+import DocumentUploadCard from "../utils/DocumentUploadCard";
 
 /**
  * CreateProfile — Step 1 ("Personal Details") of the Create Family flow.
@@ -33,10 +34,6 @@ import { validators } from "../utils/profileValidators";
  *   5. Divyang / Specially Abled Proof (disabilityDocumentOptions) + document upload
  * - Save as Draft & Save & Next actions.
  */
-
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-const ACCEPTED = ".jpg,.jpeg,.png,.pdf";
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
 
 // Default gender choices
 const defaultGenderOptions = [
@@ -143,198 +140,6 @@ const normalizeGender = (gender) => {
     value: code,
     name,
   };
-};
-
-/**
- * Document Upload Card: matches Figma design with Type Dropdown on top and
- * styled file upload button below ([Choose file] File uploaded).
- */
-const DocumentUploadCard = ({
-  label,
-  required,
-  options,
-  selectedType,
-  onSelectType,
-  typePlaceholder,
-  file,
-  onFileChange,
-  error,
-  t,
-  stateId,
-  disabled = false,
-}) => {
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
-  const fileInputRef = useRef(null);
-
-  const handleFileSelect = async (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    // Validate file type (checks mime type and extension case-insensitively)
-    const isExtensionValid = /(.*?)\.(jpg|jpeg|png|pdf)$/i.test(selectedFile.name);
-    const isMimeValid = ALLOWED_TYPES.includes(selectedFile.type?.toLowerCase());
-    if (!isExtensionValid && !isMimeValid) {
-      setUploadError(t("PROFILE_DOC_INVALID_TYPE", "Only JPG, PNG, and PDF files are allowed"));
-      onFileChange(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-
-    // Validate file size (max 5 MB)
-    if (selectedFile.size > MAX_SIZE) {
-      setUploadError(t("PROFILE_DOC_SIZE_EXCEEDED", "File size cannot exceed 5MB"));
-      onFileChange(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return;
-    }
-
-    setUploadError(null);
-    setUploading(true);
-    try {
-      const res = await Digit.UploadServices.Filestorage("profile", selectedFile, stateId);
-      const fileStoreId = res?.data?.files?.[0]?.fileStoreId;
-      if (!fileStoreId) throw new Error("NO_FILESTORE_ID");
-      onFileChange({ name: selectedFile.name, fileStoreId });
-    } catch (err) {
-      setUploadError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR", "Failed to upload file"));
-      onFileChange(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFileDelete = (e) => {
-    e.stopPropagation();
-    onFileChange(null);
-    setUploadError(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-      <label style={profileStyles.label}>
-        {label}
-        {required && <span style={profileStyles.required}> *</span>}
-      </label>
-
-      {/* Document Type Dropdown */}
-      <Dropdown
-        selected={selectedType}
-        select={onSelectType}
-        option={options}
-        optionKey="name"
-        t={t}
-        placeholder={typePlaceholder}
-        disable={disabled}
-        style={{ width: "100%", marginBottom: "8px" }}
-      />
-
-      {/* Styled File Upload Box */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          border: uploadError || error ? "1px solid #D4351C" : "1px solid #D6D5D5",
-          borderRadius: "6px",
-          padding: "6px 10px",
-          background: disabled ? "#F4F5F7" : "#FFFFFF",
-          minHeight: "44px",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden", flex: 1 }}>
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept={ACCEPTED}
-            onChange={handleFileSelect}
-            onClick={(e) => {
-              e.target.value = "";
-            }}
-            disabled={disabled || uploading}
-            style={{ display: "none" }}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={disabled || uploading}
-            style={{
-              background: disabled ? "#E0E0E0" : "#D1D1D6",
-              color: "#0B0C0C",
-              border: "none",
-              borderRadius: "4px",
-              padding: "6px 14px",
-              fontSize: "13px",
-              fontWeight: 500,
-              cursor: disabled || uploading ? "not-allowed" : "pointer",
-              whiteSpace: "nowrap",
-              flexShrink: 0,
-            }}
-          >
-            {uploading ? t("UPLOADING", "Uploading...") : t("CHOOSE_FILE", "Choose file")}
-          </button>
-
-          <span
-            style={{
-              fontSize: "13px",
-              color: file?.name ? "#0B0C0C" : "#7C7E80",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-            title={file?.name || ""}
-          >
-            {uploading
-              ? t("UPLOADING", "Uploading...")
-              : file?.name
-              ? file.name
-              : t("NO_FILE_SELECTED", "No file selected")}
-          </span>
-        </div>
-
-        {file && !disabled && (
-          <button
-            type="button"
-            onClick={handleFileDelete}
-            title={t("REMOVE", "Remove file")}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px 8px",
-              color: "#505A5F",
-              fontSize: "16px",
-              fontWeight: "bold",
-              lineHeight: 1,
-            }}
-          >
-            ✕
-          </button>
-        )}
-      </div>
-
-      {/* Allowed File Formats & Size Restriction */}
-      <div
-        style={{
-          fontSize: "12px",
-          color: "#64748b",
-          marginTop: "4px",
-          lineHeight: "1.3",
-        }}
-      >
-        {t("CS_FILE_SIZE_RESTRICTIONS", "Only .jpg, .jpeg, .png and .pdf files up to 5MB are allowed")}
-      </div>
-
-      {(uploadError || error) && (
-        <CardLabelError style={{ marginTop: "4px" }}>
-          {t(uploadError || error)}
-        </CardLabelError>
-      )}
-    </div>
-  );
 };
 
 const CreateProfile = ({ config, onSelect, formData }) => {
@@ -876,6 +681,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               t={t}
               placeholder={t("SELECT", "Select")}
               disable={isViewMode}
+              optionCardStyles={profileStyles.dropDownHeight}
             />
           </FormField>
 
