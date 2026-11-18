@@ -189,7 +189,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
     } : undefined;
 
     // --- Vehicle Details ---
-    const vehicles = vehicleDetails.vehicleNo ? [{
+    const vehicles = vehicleDetails?.vehicleNo ? [{
       vehicleNumber: vehicleDetails.vehicleNo,
       purchaseDate: vehicleDetails.purchaseYear,
       vehicleType: vehicleDetails.vehicleType?.code,
