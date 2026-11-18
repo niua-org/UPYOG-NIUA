@@ -8,6 +8,7 @@ import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.persistence.repository.ServiceRequestRepository;
 import org.upyog.family.util.FamilyConstants;
@@ -22,6 +23,10 @@ import org.upyog.family.web.contract.workflow.State;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Service orchestrating workflow lifecycle transitions and process instance queries
+ * for the Family module via {@code egov-workflow-v2}.
+ */
 @Service
 @Slf4j
 public class WorkflowService {
@@ -30,6 +35,13 @@ public class WorkflowService {
     private final ServiceRequestRepository serviceRequestRepository;
     private final ObjectMapper mapper;
 
+    /**
+     * Constructs a new {@code WorkflowService} with required configuration and dependencies.
+     *
+     * @param configs                  Family module configuration
+     * @param serviceRequestRepository Repository for external service communication
+     * @param mapper                   Jackson object mapper
+     */
     @Autowired
     public WorkflowService(FamilyConfiguration configs, ServiceRequestRepository serviceRequestRepository,
                            ObjectMapper mapper) {
@@ -38,6 +50,13 @@ public class WorkflowService {
         this.mapper = mapper;
     }
 
+    /**
+     * Transitions the workflow state for the specified family request.
+     *
+     * @param familyRequest the incoming family request containing family details and workflow action
+     * @return the resulting {@link State} after transition, or {@code null} if no workflow block is provided
+     * @throws CustomException if familyRequest or family is null, or if workflow transition fails
+     */
     public State updateWorkflowStatus(FamilyRequest familyRequest) {
         if (familyRequest == null || familyRequest.getFamily() == null) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_FAMILY_WORKFLOW_REQ_NULL);
@@ -84,10 +103,11 @@ public class WorkflowService {
     }
 
     /**
-     * Method to integrate with workflow
+     * Dispatches a workflow transition request to {@code egov-workflow-v2} and returns the resulting state.
      *
-     * takes the Family request as parameter constructs the workflow request
-     * and sets the resultant status from wf-response
+     * @param workflowReq the workflow transition request payload
+     * @return resulting {@link State} of the process instance
+     * @throws CustomException if response is empty or contains no process instances
      */
     public State callWorkFlow(ProcessInstanceRequest workflowReq) {
         StringBuilder url = new StringBuilder(configs.getWfHost().concat(configs.getWfTransitionPath()));
@@ -101,12 +121,24 @@ public class WorkflowService {
         return response.getProcessInstances().get(0).getState();
     }
 
+    /**
+     * Queries workflow process instances for a specific business ID and tenant.
+     *
+     * @param requestInfo authentication and request metadata
+     * @param tenantId    tenant identifier
+     * @param businessId  family identifier
+     * @return list of matching {@link ProcessInstance} records, or an empty list if none found
+     */
     public List<ProcessInstance> getProcessInstances(RequestInfo requestInfo, String tenantId, String businessId) {
-        StringBuilder url = new StringBuilder(configs.getWfHost().concat(configs.getWfProcessInstanceSearchPath()));
-        url.append("?tenantId=").append(tenantId).append("&businessIds=").append(businessId);
+        String url = UriComponentsBuilder.fromHttpUrl(configs.getWfHost())
+                .path(configs.getWfProcessInstanceSearchPath())
+                .queryParam("tenantId", tenantId)
+                .queryParam("businessIds", businessId)
+                .build()
+                .toUriString();
 
         Object requestBody = Collections.singletonMap("RequestInfo", requestInfo);
-        Object optional = serviceRequestRepository.fetchResult(url, requestBody);
+        Object optional = serviceRequestRepository.fetchResult(new StringBuilder(url), requestBody);
         ProcessInstanceResponse response = mapper.convertValue(optional, ProcessInstanceResponse.class);
 
         return (response != null && response.getProcessInstances() != null)

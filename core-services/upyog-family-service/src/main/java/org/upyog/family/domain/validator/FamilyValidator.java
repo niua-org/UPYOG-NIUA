@@ -435,15 +435,22 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, FamilyConstants.MSG_TARGET_FAMILY_NOT_EXISTS);
         }
 
+        if (existingFamily.getStatus() != null
+                && existingFamily.getStatus() != FamilyStatus.ACTIVE
+                && existingFamily.getStatus() != FamilyStatus.PENDING_FOR_APPROVAL) {
+            throw new CustomException(FamilyConstants.ERROR_OPERATION_NOT_ALLOWED,
+                    "Family can only be updated when in ACTIVE or PENDING_FOR_APPROVAL status");
+        }
+
         // Ensure caller is identity-verified in user registry database
         userClient.validateCallerIsVerified(request.getRequestInfo());
 
         Family family = request.getFamily();
-        boolean isWorkflowAction = family != null && family.getWorkflow() != null
-                && StringUtils.isNotBlank(family.getWorkflow().getAction());
+        boolean isEmployee = request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null
+                && "EMPLOYEE".equalsIgnoreCase(request.getRequestInfo().getUserInfo().getType());
 
-        if (!isWorkflowAction) {
-            // Caller authorization: Only current HoF is authorized to update family metadata
+        // Citizen callers must always be the current HoF
+        if (!isEmployee) {
             if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
                 String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
                 if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {

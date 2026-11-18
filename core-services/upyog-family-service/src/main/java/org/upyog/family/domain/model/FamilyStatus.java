@@ -18,7 +18,6 @@ public enum FamilyStatus {
     SPLIT(FamilyConstants.STATUS_SPLIT),
     MERGED(FamilyConstants.STATUS_MERGED),
     PENDING_FOR_APPROVAL(FamilyConstants.STATUS_PENDING_FOR_APPROVAL),
-    PENDING_APPROVAL(FamilyConstants.STATUS_PENDING_APPROVAL),
     APPROVED(FamilyConstants.STATUS_APPROVED),
     REJECTED(FamilyConstants.STATUS_REJECTED);
 

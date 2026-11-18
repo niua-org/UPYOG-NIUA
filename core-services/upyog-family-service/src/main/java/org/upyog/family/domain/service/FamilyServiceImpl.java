@@ -92,6 +92,17 @@ public class FamilyServiceImpl implements FamilyService {
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
     }
 
+    /**
+     * Constructs a new {@code FamilyServiceImpl} with workflow integration dependencies.
+     *
+     * @param familyRepository   repository for database persistence
+     * @param familyValidator    domain validator component
+     * @param idGenRepository    ID generation service repository
+     * @param userClient         client for user registry service
+     * @param kafkaProducer      Kafka message producer
+     * @param configuration      family module application configuration
+     * @param workflowService    workflow lifecycle integration service
+     */
     public FamilyServiceImpl(FamilyRepository familyRepository,
                              FamilyValidator familyValidator,
                              IdGenRepository idGenRepository,
