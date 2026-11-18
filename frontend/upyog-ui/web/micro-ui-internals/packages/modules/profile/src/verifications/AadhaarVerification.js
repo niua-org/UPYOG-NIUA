@@ -13,25 +13,7 @@ import { profileStyles } from "../utils/profileStyles";
 import { buildVerifiedMemberInfo } from "../utils/payloads";
 
 /**
- * AadhaarVerification Component
- *
- * Reusable single-card Aadhaar verification widget.
- *
- * Capabilities:
- * 1. Formatted 12-digit Aadhaar input (XXXX XXXX XXXX).
- * 2. Informational consent callout banner.
- * 3. Triggers Aadhaar OTP via `Digit.UserService.sendAadhaarOtp`.
- * 4. Displays simplified "Enter OTP" prompt and captures dispatch metadata.
- * 5. 30-second countdown timer for resending OTP.
- * 6. "Edit Aadhaar Number" action to cancel current OTP session and unlock the input.
- * 7. Verifies 6-digit OTP via `Digit.UserService.verifyAadhaarOtp` and triggers `onVerified`.
- *
- * @param {Object} props
- * @param {string} [props.label] - Custom input label for Aadhaar number field
- * @param {boolean} [props.showConsentBox=true] - Whether to display the informational Aadhaar consent box
- * @param {(data: { verifiedMember: Object, aadhaarLast4: string, maskedMobile: string }) => void} props.onVerified - Callback invoked on successful OTP verification
- * @param {(msg: string) => void} [props.onError] - Callback invoked when an error occurs during OTP send or verify
- * @returns {JSX.Element} Rendered Aadhaar verification card content
+ * OUTDATED, NOT USING ANYWHERE, WILL REMOVE, ONCE THE FUNCTIONALITY FREEZED
  */
 const AadhaarVerification = ({
   label,
