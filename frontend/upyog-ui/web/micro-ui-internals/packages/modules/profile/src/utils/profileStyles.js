@@ -630,30 +630,195 @@ export const profileStyles = {
        BOTTOM CTA
     ============================== */
 
-    dashboardButton: {
-      width: "30%",
-      height: "46px",
-      border: "none",
-      borderRadius: "7px",
-      background: "#292929",
-      color: "#FFFFFF",
-      fontSize: "16px",
-      fontWeight: "500",
-      cursor: "pointer",
-      padding: "0 18px",
-      boxSizing: "border-box",
-    },
+  dashboardButton: {
+    width: "30%",
+    height: "46px",
+    border: "none",
+    borderRadius: "7px",
+    background: "#292929",
+    color: "#FFFFFF",
+    fontSize: "16px",
+    fontWeight: "500",
+    cursor: "pointer",
+    padding: "0 18px",
+    boxSizing: "border-box",
   },
-  propertyDetails: {
-    container: {
-      width: "100%",
-    },
-
-    pageTitle: {
-      fontSize: "24px",
-      fontWeight: "600",
-      marginBottom: "24px",
-    },
+},
+propertyDetails: {
+  container: {
+    width: "100%",
+    backgroundColor: "#FFFFFF",
+    padding: "16px",
+    borderRadius: "8px",
+    boxSizing: "border-box",
+  },
+  emptyState: {
+    padding: "24px",
+    marginBottom: "16px",
+    border: "1px solid #d6d5d5",
+    borderRadius: "8px",
+    color: "#505A5F",
+  },
+  list: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    width: "60%",
+    maxWidth: "720px",
+  },
+  summaryCard: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    boxSizing: "border-box",
+    width: "100%",
+    padding: "12px 14px",
+    backgroundColor: "#FFFFFF",
+    border: "1px solid #D6D6D6",
+    borderRadius: "8px",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.16)",
+  },
+  summaryTitle: {
+    fontWeight: "700",
+    fontSize: "16px",
+  },
+  summaryLocation: {
+    marginTop: "6px",
+  },
+  summaryType: {
+    marginTop: "8px",
+  },
+  summaryMeta: {
+    marginTop: "6px",
+  },
+  propertyOwnershipQuestion: {
+    marginBottom: "12px",
+  },
+  ruralBadge: {
+    background: "#E7F5EC",
+    borderRadius: "12px",
+    padding: "3px 8px",
+  },
+  urbanBadge: {
+    background: "#E8F1F8",
+    borderRadius: "12px",
+    padding: "3px 8px",
+  },
+  cardActions: {
+    display: "flex",
+    gap: "8px",
+  },
+  iconButton: {
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+  },
+  addPropertyButton: {
+    marginTop: "16px",
+    minHeight: "40px",
+    border: "1px solid #0B4F9C",
+    borderRadius: "4px",
+    background: "#FFFFFF",
+    color: "#0B4F9C",
+    padding: "8px 16px",
+    cursor: "pointer",
+  },
+  addPropertySticky: {
+    position: "sticky",
+    top: 0,
+    zIndex: 5,
+    width: "fit-content",
+    padding: "8px 0",
+    backgroundColor: "#FFFFFF",
+  },
+  primaryBadge: {
+    display: "inline-block",
+    marginLeft: "8px",
+    padding: "3px 8px",
+    borderRadius: "12px",
+    backgroundColor: "#E7F5EC",
+    color: "#216E39",
+    fontSize: "12px",
+    fontWeight: "600",
+    verticalAlign: "middle",
+  },
+  primaryActionButton: {
+    padding: "6px 10px",
+    border: "1px solid #0B4F9C",
+    borderRadius: "4px",
+    backgroundColor: "#FFFFFF",
+    color: "#0B4F9C",
+    fontSize: "12px",
+    cursor: "pointer",
+  },
+  saveNextWrapper: {
+    marginTop: "24px",
+  },
+  drawerOverlay: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 10000,
+    background: "rgba(11, 12, 12, 0.35)",
+  },
+  drawer: {
+    position: "absolute",
+    right: 0,
+    top: "16px",
+    bottom: 0,
+    width: "min(460px, 92vw)",
+    background: "#FFFFFF",
+    display: "flex",
+    flexDirection: "column",
+    borderTopLeftRadius: "8px",
+    boxShadow: "-4px 0 16px rgba(0, 0, 0, 0.12)",
+  },
+  drawerHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "16px 20px",
+    borderBottom: "1px solid #d6d5d5",
+  },
+  closeButton: {
+    border: "none",
+    background: "transparent",
+    fontSize: "28px",
+    cursor: "pointer",
+  },
+  drawerBody: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "20px",
+  },
+  drawerFooter: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "12px",
+    padding: "16px 20px",
+    borderTop: "1px solid #d6d5d5",
+  },
+  drawerCancelButton: {
+    width: "100%",
+    height: "33px",
+    boxSizing: "border-box",
+    border: "1px solid #505A5F",
+    background: "#FFFFFF",
+    color: "#505A5F",
+    fontSize: "14px",
+    cursor: "pointer",
+  },
+  cancelButton: {
+    minWidth: "100px",
+    height: "40px",
+    border: "1px solid #505A5F",
+    borderRadius: "4px",
+    background: "#FFFFFF",
+  },
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: "600",
+    marginBottom: "24px",
+  },
 
     actions: {
       display: "flex",
@@ -700,10 +865,10 @@ export const profileStyles = {
       marginTop: 0,
     },
 
-    results: {
-      width: "60%",
-      marginTop: "16px",
-    },
+  results: {
+    width: "100%",
+    marginTop: "16px",
+  },
 
     primaryAddressLabel: {
       marginBottom: "8px",
@@ -772,21 +937,32 @@ export const profileStyles = {
       cursor: "pointer",
     },
 
-    defaultPropertyButton: {
-      background: "#ebebeb",
-      color: "#000000",
-      cursor: "default",
-    },
+  defaultPropertyButton: {
+    padding: "6px 12px",
+    border: "1px solid #2E7D32",
+    borderRadius: "16px",
+    background: "#E8F5E9",
+    color: "#1B5E20",
+    fontSize: "12px",
+    fontWeight: "700",
+    cursor: "default",
+  },
 
     removePropertyButton: {
       borderColor: "#D4353A",
       color: "#D4353A",
     },
 
-    noProperty: {
-      marginTop: "16px",
-      fontSize: "14px",
-    },
+  noProperty: {
+    marginTop: "16px",
+    fontSize: "14px",
+  },
+  duplicatePropertyError: {
+    marginTop: "16px",
+    color: "#D4351C",
+    fontSize: "14px",
+    fontWeight: "600",
+  },
 
     createProperty: {
       marginTop: "20px",
@@ -1331,5 +1507,79 @@ export const addressModalCss = `
     }
   }
 };
+`;
 
+export const propertyDetailsResponsiveCss = `
+  @media (max-width: 600px) {
+    .profile-property-drawer {
+      top: 12px !important;
+      right: 12px !important;
+      bottom: 12px !important;
+      left: 12px !important;
+      width: auto !important;
+      max-height: calc(100dvh - 24px);
+      border-radius: 8px !important;
+    }
+
+    .profile-property-drawer-body {
+      padding: 16px !important;
+    }
+
+    .profile-property-drawer-footer {
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+    }
+
+    .profile-property-drawer-footer .submit-bar,
+    .profile-property-drawer-footer .submit-bar-disabled {
+      width: 100% !important;
+    }
+
+    .profile-property-drawer-footer > button {
+      min-height: 40px;
+    }
+
+    .profile-property-rural-row {
+      grid-template-columns: minmax(0, 1fr) !important;
+      column-gap: 0 !important;
+    }
+
+    .profile-property-urban-search-row {
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+
+    .profile-property-urban-search-row > * {
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    .profile-property-urban-card {
+      padding: 12px !important;
+    }
+
+    .profile-property-urban-actions {
+      position: static !important;
+      justify-content: flex-start !important;
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .profile-property-urban-actions button {
+      min-height: 40px;
+    }
+
+    .profile-property-summary-card {
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+
+    .profile-property-summary-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    .profile-property-summary-list {
+      width: 100% !important;
+    }
+  }
 `;
