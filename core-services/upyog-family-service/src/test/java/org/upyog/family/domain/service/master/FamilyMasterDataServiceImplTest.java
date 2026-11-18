@@ -14,6 +14,7 @@ import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.util.FamilyConstants;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -315,7 +316,7 @@ class FamilyMasterDataServiceImplTest {
     void getAllowedOwnershipTypes_FromMdms_Success() {
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> mdmsRes = new HashMap<>();
-        Map<String, Object> ptMasters = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
         List<Map<String, Object>> ownList = new ArrayList<>();
 
         Map<String, Object> o1 = new HashMap<>();
@@ -329,8 +330,8 @@ class FamilyMasterDataServiceImplTest {
         ownList.add(o2);
         ownList.add(o3);
 
-        ptMasters.put("OwnerShipCategory", ownList);
-        mdmsRes.put("PropertyTax", ptMasters);
+        commonMasters.put("PropertyOwnershipType", ownList);
+        mdmsRes.put("common-masters", commonMasters);
         response.put("MdmsRes", mdmsRes);
 
         when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
@@ -378,21 +379,62 @@ class FamilyMasterDataServiceImplTest {
     void validateOwnershipType_UnknownFails() {
         Map<String, Object> response = new HashMap<>();
         Map<String, Object> mdmsRes = new HashMap<>();
-        Map<String, Object> ptMasters = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
         List<Map<String, Object>> ownList = new ArrayList<>();
 
         Map<String, Object> o1 = new HashMap<>();
         o1.put("code", "INDIVIDUAL");
         ownList.add(o1);
 
-        ptMasters.put("OwnerShipCategory", ownList);
-        mdmsRes.put("PropertyTax", ptMasters);
+        commonMasters.put("PropertyOwnershipType", ownList);
+        mdmsRes.put("common-masters", commonMasters);
         response.put("MdmsRes", mdmsRes);
 
         when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
 
         CustomException ex = assertThrows(CustomException.class, () ->
                 masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "INSTITUTION"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateOwnershipType should reject prefix and compound codes with exact match")
+    void validateOwnershipType_PrefixAndCompoundFails() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> ownList = new ArrayList<>();
+
+        Map<String, Object> o1 = new HashMap<>();
+        o1.put("code", "INDIVIDUAL");
+        ownList.add(o1);
+
+        commonMasters.put("PropertyOwnershipType", ownList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "INDIVIDUAL.SINGLEOWNER"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+
+        CustomException ex2 = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "INSTITUTIONALPRIVATE"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex2.getCode());
+    }
+
+    @Test
+    @DisplayName("validateOwnershipType should fallback to DB check values when MDMS is unseeded or empty")
+    void validateOwnershipType_FallbackToDbValues() {
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(Collections.emptyMap());
+
+        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "INDIVIDUAL"));
+        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "JOINT"));
+        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "ORGANISATION"));
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "INDIVIDUAL.SINGLEOWNER"));
         assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
     }
 

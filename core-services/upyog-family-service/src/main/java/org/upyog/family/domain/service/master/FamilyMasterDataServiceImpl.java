@@ -86,6 +86,14 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     private final Map<String, CacheEntry> tenantOwnershipTypeCache = new ConcurrentHashMap<>();
 
     /**
+     * Set of property ownership types matching ug_user_property DB check constraint:
+     * CHECK (ownership_type IN ('INDIVIDUAL', 'JOINT', 'ORGANISATION'))
+     */
+    private static final Set<String> DEFAULT_DB_OWNERSHIP_TYPES = Collections.unmodifiableSet(
+            new HashSet<>(Arrays.asList("INDIVIDUAL", "JOINT", "ORGANISATION"))
+    );
+
+    /**
      * Constructs a FamilyMasterDataServiceImpl with RestTemplate and configuration.
      *
      * @param restTemplate Spring RestTemplate for remote HTTP calls to MDMS
@@ -385,19 +393,9 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
         }
-        // 1. Query dedicated separate master under common-masters: PropertyOwnershipType
+        // Read strictly from dedicated separate master under common-masters: PropertyOwnershipType
         Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
                 FamilyConstants.MDMS_MODULE_COMMON_MASTERS, FamilyConstants.MDMS_MASTER_PROPERTY_OWNERSHIP_TYPE);
-        // 2. Fallback to PropertyTax.OwnerShipCategory if not defined
-        if (fromMdms == null || fromMdms.isEmpty()) {
-            fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
-                    FamilyConstants.MDMS_MODULE_PROPERTY_TAX, FamilyConstants.MDMS_MASTER_OWNERSHIP_CATEGORY);
-        }
-        // 3. Fallback to common-masters.OwnerShipCategory
-        if (fromMdms == null || fromMdms.isEmpty()) {
-            fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
-                    FamilyConstants.MDMS_MODULE_COMMON_MASTERS, FamilyConstants.MDMS_MASTER_OWNERSHIP_CATEGORY);
-        }
         if (fromMdms != null && !fromMdms.isEmpty()) {
             tenantOwnershipTypeCache.put(stateTenant, new CacheEntry(fromMdms, System.currentTimeMillis()));
             return fromMdms;
@@ -408,11 +406,13 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
             log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached ownership types for tenant: {}", stateTenant);
             return entry.getAllowedRelationships();
         }
-        return Collections.emptySet();
+        // Fallback to strict DB check constraint values if MDMS is down or not seeded yet
+        return DEFAULT_DB_OWNERSHIP_TYPES;
     }
 
     /**
      * Validates whether the supplied property ownership type is defined within MDMS for the tenant.
+     * Performs exact code matching and fails closed if allowed master codes cannot be resolved.
      *
      * @param requestInfo incoming request metadata
      * @param tenantId tenant identifier
@@ -425,16 +425,17 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_MANDATORY);
         }
         Set<String> allowed = getAllowedOwnershipTypes(requestInfo, tenantId);
-        if (allowed != null && !allowed.isEmpty()) {
-            String normalized = ownershipType.trim().toUpperCase();
-            boolean matched = allowed.contains(normalized)
-                    || allowed.stream().anyMatch(a -> a.equalsIgnoreCase(normalized) || a.startsWith(normalized + ".") || normalized.startsWith(a + "."));
-            if (!matched) {
-                log.error("[UPYOG-FAMILY-MASTER] Invalid property ownershipType '{}' for tenant '{}'. Allowed: {}",
-                        ownershipType, tenantId, allowed);
-                throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
-                        FamilyConstants.MSG_INVALID_OWNERSHIP_TYPE_PREFIX + ownershipType + FamilyConstants.MSG_ALLOWED_SUFFIX + allowed);
-            }
+        if (allowed == null || allowed.isEmpty()) {
+            log.error("[UPYOG-FAMILY-MASTER] Failed to resolve property ownership types for tenant: {}. Failing closed.", tenantId);
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    FamilyConstants.MSG_INVALID_OWNERSHIP_TYPE_PREFIX + ownershipType);
+        }
+        String normalized = ownershipType.trim().toUpperCase();
+        if (!allowed.contains(normalized)) {
+            log.error("[UPYOG-FAMILY-MASTER] Invalid property ownershipType '{}' for tenant '{}'. Allowed: {}",
+                    ownershipType, tenantId, allowed);
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    FamilyConstants.MSG_INVALID_OWNERSHIP_TYPE_PREFIX + ownershipType + FamilyConstants.MSG_ALLOWED_SUFFIX + allowed);
         }
     }
 
