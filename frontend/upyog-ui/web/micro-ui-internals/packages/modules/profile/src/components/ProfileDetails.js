@@ -307,7 +307,7 @@ const ProfileDetails = () => {
         onClose={() => setShowVerifyModal(false)}
         onSuccess={() => {
           setShowVerifyModal(false);
-          refetch();
+          window.location.reload();
         }}
       />
     )}

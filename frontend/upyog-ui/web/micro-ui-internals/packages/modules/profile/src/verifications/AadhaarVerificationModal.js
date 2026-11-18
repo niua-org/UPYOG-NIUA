@@ -115,8 +115,14 @@ const AadhaarVerificationModal = ({
 
   const handleClose = () => {
     resetForm();
+    if (mode === "family") {
+      sessionStorage.removeItem("Digit.family.verifiedMember");
+      sessionStorage.removeItem("Digit.family.aadhaarLast4");
+      sessionStorage.removeItem("Digit.family.maskedMobile");
+    }
     onClose?.();
   };
+
 
   /**
    * Format input into 4-digit groups (XXXX XXXX XXXX)
@@ -241,8 +247,13 @@ const AadhaarVerificationModal = ({
 
           Digit.UserService.setUser(updatedUser);
           Digit.SessionStorage.set("citizen.userRequestObject", updatedUser);
-          localStorage.setItem("user-info", JSON.stringify(updatedUser.info));
-          localStorage.setItem("Citizen.user-info", JSON.stringify(updatedUser.info));
+          const minimalInfo = {
+            isIdentityVerified: verifiedFields.isIdentityVerified,
+            name: verifiedFields.name,
+          };
+          localStorage.setItem("user-info", JSON.stringify({ ...JSON.parse(localStorage.getItem("user-info") || "{}"), ...minimalInfo }));
+          localStorage.setItem("Citizen.user-info", JSON.stringify({ ...JSON.parse(localStorage.getItem("Citizen.user-info") || "{}"), ...minimalInfo }));
+
         }
 
         setToast({
@@ -285,7 +296,8 @@ const AadhaarVerificationModal = ({
         }
 
         try {
-          sessionStorage.setItem("Digit.family.verifiedMember", JSON.stringify(verifiedMember));
+          const memberToStore = { ...verifiedMember, mobileNumber: undefined };
+          sessionStorage.setItem("Digit.family.verifiedMember", JSON.stringify(memberToStore));
           sessionStorage.setItem("Digit.family.aadhaarLast4", aadhaarLast4);
           sessionStorage.setItem("Digit.family.maskedMobile", maskedMobile);
         } catch (storageErr) {
