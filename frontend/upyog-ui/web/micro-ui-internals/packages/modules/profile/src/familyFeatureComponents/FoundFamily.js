@@ -93,7 +93,7 @@ const FoundFamily = () => {
     const baseFields = user ? getPersonalFields(user) : [];
     if (relationship) {
       baseFields.push([
-        "PROFILE_RELATIONSHIP_WITH_HEAD",
+        "CORE_RELATIONSHIP_WITH_HEAD",
         t(relationship?.code || relationship?.name || relationship),
       ]);
     }
