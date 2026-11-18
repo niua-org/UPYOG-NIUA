@@ -396,13 +396,14 @@ const Urls = {
     updateDocument: "/user/document/_update",
     addFamilyMember: "/family/v1/member/_add",
     joinFamily: "/family/v1/member/_join",
-    sendFamilyIdOtp : "/family/v1/family/_sendOtp",
-    verifyFamilyOtp : "/family/v1/family/_verifyOtp",
+    sendFamilyIdOtp: "/family/v1/family/_sendOtp",
+    verifyFamilyOtp: "/family/v1/family/_verifyOtp",
     verifyProfile: "/user/profile/aadhaar/_verifyProfile",
     createFamily: "/family/v1/family/_create",
     familySearch: "/family/v1/family/_search",
     familyDashboard: "/family/v1/dashboard/_search",
     isHof: "/family/v1/head/_isHof",
+    checkAadhaarHof: "/user/profile/aadhaar/_checkHof",
   }
 };
 

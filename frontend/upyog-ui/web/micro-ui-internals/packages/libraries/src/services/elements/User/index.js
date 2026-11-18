@@ -361,6 +361,15 @@ export const UserService = {
       method: "POST",
       userService: true,
     }),
+  checkAadhaarHof: (data) =>
+    ServiceRequest({
+      serviceName: "checkAadhaarHof",
+      url: Urls.profile.checkAadhaarHof,
+      data: { ...data },
+      auth: true,
+      method: "POST",
+      userService: true,
+    }),
 
   /**
    * Service method for Family QR code verification search.

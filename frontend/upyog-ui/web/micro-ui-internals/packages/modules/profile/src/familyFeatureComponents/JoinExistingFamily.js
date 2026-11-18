@@ -12,11 +12,11 @@ import { AADHAAR_LENGTH, FAMILY_ID_LENGTH, PROFILE_ROUTES, getFamilyIdLength } f
  * 2. Head of Family (HOF) Aadhaar Number (12 digits)
  * 
  * Flow:
- * - User enters either Family ID or HOF Aadhaar.
- * - OTP is triggered and verified via `OtpVerify` component.
- * - On successful verification, the verified family context is cached in `sessionStorage` (`"Digit.family.joinData"`).
- * - User is redirected to `createfamilyconfig` multi-step flow (`/create-family/profileDetails?flow=join`)
- *   to fill in their personal, property, income, and vehicle details before final submission.
+ * - If searching via Aadhaar:
+ *   1. Calls standard `Digit.UserService.checkAadhaarHof` service.
+ *   2. Only if `res.isHof === true`, triggers `sendAadhaarOtp()`.
+ *   3. If false, displays error toast and stops.
+ * - If searching via Family ID: Triggers Family ID OTP directly.
  * 
  * @returns {React.ReactElement} Join Existing Family search & OTP verification UI.
  */
@@ -57,6 +57,9 @@ const JoinExistingFamily = () => {
     }
   };
 
+  /**
+   * Triggers Aadhaar OTP for HOF validation.
+   */
   const sendAadhaarOtp = async () => {
     setLoading(true);
     try {
@@ -72,6 +75,33 @@ const JoinExistingFamily = () => {
     }
   };
 
+  /**
+   * Validates HOF status via UPYOG Digit.UserService.checkAadhaarHof service.
+   * Calls sendAadhaarOtp ONLY if isHof is true.
+   */
+  const handleAadhaarSearch = async () => {
+    setLoading(true);
+    try {
+      const res = await Digit.UserService.checkAadhaarHof({ aadhaarNumber: aadhaar, tenantId });
+      if (res?.isHof) {
+        await sendAadhaarOtp();
+      } else {
+        showError(res?.message || t("ERR_PROFILE_NOT_HOF", "Entered Aadhaar does not belong to a Head of Family"));
+      }
+    } catch (err) {
+      console.log("error while checking HOF status", err);
+      showError(
+        err?.response?.data?.Errors?.[0]?.message ||
+        t("ERR_PROFILE_CHECK_HOF_FAILED", "Failed to verify Head of Family status. Please try again.")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Triggers Family ID OTP for family validation.
+   */
   const searchFamilyById = async (familyId, tenantId) => {
     setLoading(true);
     try {
@@ -87,8 +117,11 @@ const JoinExistingFamily = () => {
     }
   };
 
-  const handleSearch = () => (aadhaar ? sendAadhaarOtp() : searchFamilyById(familyId, tenantId));
+  const handleSearch = () => (aadhaar ? handleAadhaarSearch() : searchFamilyById(familyId, tenantId));
 
+  /**
+   * Handler executed when OTP is successfully verified.
+   */
   const handleVerified = (res) => {
     const verifiedData =
       otpType === "FAMILY_ID"
