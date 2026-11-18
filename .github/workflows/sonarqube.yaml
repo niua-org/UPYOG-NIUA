@@ -35,7 +35,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
-                    allow-unsafe-pr-checkout: true
+          allow-unsafe-pr-checkout: true
       # The repo mixes Java 17 (most modules), 1.8 and 11. Install all three and
       # select the matching JDK per module so older modules build on their own
       # release instead of failing on JDK 17.
