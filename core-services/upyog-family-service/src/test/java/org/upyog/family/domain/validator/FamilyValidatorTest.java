@@ -318,6 +318,7 @@ class FamilyValidatorTest {
 
         UserProperty ruralProp = UserProperty.builder()
                 .localityType("RURAL")
+                .ownershipType("INDIVIDUAL")
                 .ruralPropertyDetail(RuralPropertyDetail.builder()
                         .gramPanchayat("Rampur GP")
                         .villageName("Rampur Khas")

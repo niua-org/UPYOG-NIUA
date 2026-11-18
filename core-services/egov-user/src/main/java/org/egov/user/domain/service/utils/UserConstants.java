@@ -374,6 +374,7 @@ public final class UserConstants {
     public static final String FAMILY_PARAM_MEMBER_USER_UUID = "memberUserUuid";
     public static final String FAMILY_PARAM_MEMBER_USER_UUIDS = "memberUserUuids";
     public static final String FAMILY_PARAM_HEAD_USER_UUID = "headUserUuid";
+    public static final String FAMILY_PARAM_IS_HEAD = "isHead";
     public static final String PARAM_TENANT_ID = "tenantId";
     public static final String JSON_KEY_FAMILIES_UPPER = "Families";
     public static final String JSON_KEY_FAMILIES_LOWER = "families";
@@ -480,4 +481,5 @@ public final class UserConstants {
     public static final String MSG_CITIZEN_NOT_MAPPED_TO_FAMILY = "Citizen is not mapped to any active family unit";
     public static final String MSG_CITIZEN_NOT_HEAD_OF_FAMILY = "Citizen is not the designated Head of Family (HoF) for their household";
     public static final String MSG_CITIZEN_HOF_VERIFIED_SUCCESS = "Citizen is verified as Head of Family";
+    public static final String MSG_FAMILY_SERVICE_COMMUNICATION_ERROR = "Failed to communicate with Family service. Please try again later.";
 }

@@ -144,15 +144,17 @@ public class JoinFamilyValidator {
             familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), request.getTenantId());
         }
 
-        // Caller authorization: Applicant userUuid must match the authenticated caller
-        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
-            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
-            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
-                if (!callerUuid.equals(request.getApplicantUserUuid())) {
-                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
-                            "Applicant userUuid must match the authenticated caller.");
-                }
-            }
+        // Caller authorization: Authenticated caller details in RequestInfo.userInfo are mandatory to prevent impersonation
+        if (request.getRequestInfo() == null || request.getRequestInfo().getUserInfo() == null
+                || StringUtils.isBlank(request.getRequestInfo().getUserInfo().getUuid())) {
+            throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                    "Authenticated caller details in RequestInfo.userInfo are mandatory.");
+        }
+        String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+        if (!FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)
+                && !callerUuid.equals(request.getApplicantUserUuid())) {
+            throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                    "Applicant userUuid must match the authenticated caller.");
         }
 
         // Ensure applicant is identity-verified in user registry database
@@ -238,6 +240,7 @@ public class JoinFamilyValidator {
             if (StringUtils.isBlank(prop.getLocalityType())) {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_LOCALITY_TYPE_MANDATORY);
             }
+            masterDataService.validateOwnershipType(request.getRequestInfo(), tenantId, prop.getOwnershipType());
             String locality = prop.getLocalityType().trim().toUpperCase();
             if (FamilyConstants.LOCALITY_TYPE_RURAL.equals(locality)) {
                 if (prop.getRuralPropertyDetail() == null) {

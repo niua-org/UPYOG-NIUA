@@ -2438,12 +2438,10 @@ public class ProfileServiceImpl implements ProfileService {
 
         // 1. Check if citizen exists in eg_user
         User citizen = findCitizenByAadhaar(normalizedAadhaar, stateTenant, request.getRequestInfo());
-        if (citizen == null || StringUtils.isBlank(citizen.getUuid())) {
-            throw new CustomException(UserConstants.ERROR_CITIZEN_NOT_FOUND, UserConstants.MSG_CITIZEN_NOT_FOUND_FOR_AADHAAR);
-        }
-
-        if (!Boolean.TRUE.equals(citizen.getActive())) {
-            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, "Citizen account associated with this Aadhaar number is inactive");
+        if (citizen == null || StringUtils.isBlank(citizen.getUuid()) || !Boolean.TRUE.equals(citizen.getActive())) {
+            log.warn("[PROFILE-SERVICE] Citizen not found or inactive for provided Aadhaar");
+            // Fix for PR Comment #1 (Security/Anti-Enumeration): Return generic error to prevent oracle enumeration of registered Aadhaar numbers
+            throw new CustomException(UserConstants.ERROR_NOT_HEAD_OF_FAMILY, UserConstants.MSG_CITIZEN_NOT_HEAD_OF_FAMILY);
         }
 
         // 2. Query family service to verify active family mapping and HoF status
@@ -2454,21 +2452,30 @@ public class ProfileServiceImpl implements ProfileService {
         FamilyHofStatus hofStatus = familyRestRepository.checkUserHofStatus(
                 citizen.getUuid(), stateTenant, request.getRequestInfo());
 
-        if (hofStatus == null || !hofStatus.isFamilyFound()) {
-            throw new CustomException(UserConstants.ERROR_FAMILY_NOT_MAPPED, UserConstants.MSG_CITIZEN_NOT_MAPPED_TO_FAMILY);
-        }
-
-        if (!hofStatus.isHof()) {
+        if (hofStatus == null || !hofStatus.isFamilyFound() || !hofStatus.isHof()) {
+            log.warn("[PROFILE-SERVICE] Citizen {} is not mapped to an active family or is not HoF", citizen.getUuid());
+            // Fix for PR Comment #1 (Security/Anti-Enumeration): Return uniform error code
             throw new CustomException(UserConstants.ERROR_NOT_HEAD_OF_FAMILY, UserConstants.MSG_CITIZEN_NOT_HEAD_OF_FAMILY);
         }
+
+        // Fix for PR Comment #1 (Security/PII Protection):
+        // Prevent identity harvesting: If the caller is an outside citizen (not self and not privileged employee/system),
+        // return only isHof: true, maskedAadhaar, and tenantId. Never leak userName, userUuid, or familyId to unauthorized callers.
+        String callerUuid = request.getRequestInfo().getUserInfo() != null ? request.getRequestInfo().getUserInfo().getUuid() : null;
+        boolean isSelf = citizen.getUuid().equalsIgnoreCase(callerUuid);
+        boolean isPrivileged = getAssetAuthorizationService().isPrivilegedCaller(request.getRequestInfo());
+
+        String returnUserUuid = (isSelf || isPrivileged) ? citizen.getUuid() : null;
+        String returnUserName = (isSelf || isPrivileged) ? citizen.getName() : null;
+        String returnFamilyId = (isSelf || isPrivileged) ? hofStatus.getFamilyId() : null;
 
         return AadhaarHofCheckResponse.builder()
                 .responseInfo(createResponseInfo(request.getRequestInfo(), UserConstants.STATUS_SUCCESS))
                 .isHof(true)
-                .userUuid(citizen.getUuid())
-                .userName(citizen.getName())
+                .userUuid(returnUserUuid)
+                .userName(returnUserName)
                 .maskedAadhaar(MaskUtils.maskAadhaar(normalizedAadhaar))
-                .familyId(hofStatus.getFamilyId())
+                .familyId(returnFamilyId)
                 .tenantId(stateTenant)
                 .message(UserConstants.MSG_CITIZEN_HOF_VERIFIED_SUCCESS)
                 .build();

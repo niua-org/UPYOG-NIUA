@@ -137,6 +137,51 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         Long now = System.currentTimeMillis();
 
         FamilyMember newMember = request.getMember();
+
+        // Bind resolved assets and demographics from request to newMember adhering to 3NF architecture
+        if (newMember.getCitizenDetails() == null && request.getCitizenDetails() != null) {
+            newMember.setCitizenDetails(request.getCitizenDetails());
+        }
+        if ((newMember.getProperties() == null || newMember.getProperties().isEmpty()) && !request.getProperties().isEmpty()) {
+            newMember.setProperties(request.getProperties());
+        }
+        if (newMember.getIncome() == null && request.getIncome() != null) {
+            newMember.setIncome(request.getIncome());
+        }
+        if ((newMember.getVehicles() == null || newMember.getVehicles().isEmpty()) && !request.getVehicles().isEmpty()) {
+            newMember.setVehicles(request.getVehicles());
+        }
+
+        // Derive transient demographic attributes from citizenDetails if present
+        if (newMember.getCitizenDetails() != null) {
+            CitizenProfile profile = newMember.getCitizenDetails();
+            if (StringUtils.isBlank(newMember.getName()) && StringUtils.isNotBlank(profile.getName())) {
+                newMember.setName(profile.getName());
+            }
+            if (StringUtils.isBlank(newMember.getMobileNumber()) && StringUtils.isNotBlank(profile.getMobileNumber())) {
+                newMember.setMobileNumber(profile.getMobileNumber());
+            }
+            if (StringUtils.isBlank(newMember.getGender()) && StringUtils.isNotBlank(profile.getGender())) {
+                newMember.setGender(profile.getGender());
+            }
+            if (newMember.getDob() == null && profile.getDob() != null) {
+                newMember.setDob(profile.getDob());
+            }
+            if (StringUtils.isBlank(newMember.getPhoto()) && StringUtils.isNotBlank(profile.getPhoto())) {
+                newMember.setPhoto(profile.getPhoto());
+            }
+            if (StringUtils.isBlank(newMember.getUserUuid()) && StringUtils.isNotBlank(profile.getUuid())) {
+                newMember.setUserUuid(profile.getUuid());
+            }
+        }
+
+        if (StringUtils.isBlank(newMember.getUserUuid()) && StringUtils.isNotBlank(request.getUserUuid())) {
+            newMember.setUserUuid(request.getUserUuid());
+        }
+        if (StringUtils.isBlank(newMember.getRelationshipWithHead()) && StringUtils.isNotBlank(request.getRelationshipWithHead())) {
+            newMember.setRelationshipWithHead(request.getRelationshipWithHead());
+        }
+
         if (StringUtils.isBlank(newMember.getUserUuid()) && StringUtils.isNotBlank(newMember.getMobileNumber())) {
             List<CitizenProfile> profiles = userClient.searchUsersByMobile(newMember.getMobileNumber(), request.getTenantId(), requestInfo);
             if (profiles != null && !profiles.isEmpty()) {
@@ -202,18 +247,23 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         // is queued to Kafka persister. If failOnAssetSyncError is enabled (default true) and assets are declared,
         // aborts transaction to prevent unattached or orphaned asset declarations.
         boolean hasAddedAssets = hasDeclaredAssets(newMember);
-        log.info("[UPYOG-MEMBER-SERVICE] Synchronizing added member assets to egov-user for family: {}, hasDeclaredAssets: {}",
-                existingFamily.getFamilyId(), hasAddedAssets);
-        boolean addedSyncSuccess = userClient.syncMemberAssets(Collections.singletonList(newMember), existingFamily.getTenantId(), requestInfo);
-        if (!addedSyncSuccess) {
-            log.error("[UPYOG-MEMBER-SERVICE] Member asset synchronization failed for added member: {} in family: {}",
-                    newMember.getUserUuid(), existingFamily.getFamilyId());
-            if (hasAddedAssets && configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
-                throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+        if (hasAddedAssets) {
+            log.info("[UPYOG-MEMBER-SERVICE] Synchronizing added member assets to egov-user for family: {}",
+                    existingFamily.getFamilyId());
+            boolean addedSyncSuccess = userClient.syncMemberAssets(Collections.singletonList(newMember), existingFamily.getTenantId(), requestInfo);
+            if (!addedSyncSuccess) {
+                log.error("[UPYOG-MEMBER-SERVICE] Member asset synchronization failed for added member: {} in family: {}",
+                        newMember.getUserUuid(), existingFamily.getFamilyId());
+                if (configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
+                    throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+                }
+            } else {
+                log.info("[UPYOG-MEMBER-SERVICE] Successfully synchronized assets for added member: {} in family: {}",
+                        newMember.getUserUuid(), existingFamily.getFamilyId());
             }
         } else {
-            log.info("[UPYOG-MEMBER-SERVICE] Successfully synchronized assets for added member: {} in family: {}",
-                    newMember.getUserUuid(), existingFamily.getFamilyId());
+            log.info("[UPYOG-MEMBER-SERVICE] No assets declared for added member: {}, skipping egov-user sync",
+                    newMember.getUserUuid());
         }
 
         if (existingFamily.getMembers() == null) {
@@ -302,18 +352,23 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         // Adheres to the createFamily architecture: ensures 3NF records in egov-user are updated synchronously
         // before the family membership record is committed to Kafka persister topic.
         boolean hasAssets = hasDeclaredAssets(joinedMember);
-        log.info("[UPYOG-MEMBER-SERVICE] Synchronizing joined member assets to egov-user for family: {}, hasDeclaredAssets: {}",
-                existingFamily.getFamilyId(), hasAssets);
-        boolean syncSuccess = userClient.syncMemberAssets(Collections.singletonList(joinedMember), existingFamily.getTenantId(), requestInfo);
-        if (!syncSuccess) {
-            log.error("[UPYOG-MEMBER-SERVICE] Member asset synchronization failed for joined member: {} in family: {}",
-                    joinedMember.getUserUuid(), existingFamily.getFamilyId());
-            if (hasAssets && configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
-                throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+        if (hasAssets) {
+            log.info("[UPYOG-MEMBER-SERVICE] Synchronizing joined member assets to egov-user for family: {}",
+                    existingFamily.getFamilyId());
+            boolean syncSuccess = userClient.syncMemberAssets(Collections.singletonList(joinedMember), existingFamily.getTenantId(), requestInfo);
+            if (!syncSuccess) {
+                log.error("[UPYOG-MEMBER-SERVICE] Member asset synchronization failed for joined member: {} in family: {}",
+                        joinedMember.getUserUuid(), existingFamily.getFamilyId());
+                if (configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
+                    throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+                }
+            } else {
+                log.info("[UPYOG-MEMBER-SERVICE] Successfully synchronized assets for joined member: {} in family: {}",
+                        joinedMember.getUserUuid(), existingFamily.getFamilyId());
             }
         } else {
-            log.info("[UPYOG-MEMBER-SERVICE] Successfully synchronized assets for joined member: {} in family: {}",
-                    joinedMember.getUserUuid(), existingFamily.getFamilyId());
+            log.info("[UPYOG-MEMBER-SERVICE] No assets declared for joined member: {}, skipping egov-user sync",
+                    joinedMember.getUserUuid());
         }
 
         if (existingFamily.getMembers() == null) {
@@ -510,7 +565,8 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     }
 
     /**
-     * Enriches declared member assets with citizen user UUID and tenant ID where absent.
+     * Enriches declared member assets with citizen user UUID and tenant ID.
+     * Force-overwrites userUuid and tenantId to prevent client parameter tampering or cross-tenant injection.
      *
      * @param member target family member
      * @param tenantId common tenant identifier
@@ -522,30 +578,18 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
         String userUuid = member.getUserUuid();
         if (member.getProperties() != null) {
             for (UserProperty prop : member.getProperties()) {
-                if (StringUtils.isBlank(prop.getUserUuid())) {
-                    prop.setUserUuid(userUuid);
-                }
-                if (StringUtils.isBlank(prop.getTenantId())) {
-                    prop.setTenantId(tenantId);
-                }
+                prop.setUserUuid(userUuid);
+                prop.setTenantId(tenantId);
             }
         }
         if (member.getIncome() != null) {
-            if (StringUtils.isBlank(member.getIncome().getUserUuid())) {
-                member.getIncome().setUserUuid(userUuid);
-            }
-            if (StringUtils.isBlank(member.getIncome().getTenantId())) {
-                member.getIncome().setTenantId(tenantId);
-            }
+            member.getIncome().setUserUuid(userUuid);
+            member.getIncome().setTenantId(tenantId);
         }
         if (member.getVehicles() != null) {
             for (UserVehicleDetail vehicle : member.getVehicles()) {
-                if (StringUtils.isBlank(vehicle.getUserUuid())) {
-                    vehicle.setUserUuid(userUuid);
-                }
-                if (StringUtils.isBlank(vehicle.getTenantId())) {
-                    vehicle.setTenantId(tenantId);
-                }
+                vehicle.setUserUuid(userUuid);
+                vehicle.setTenantId(tenantId);
             }
         }
     }

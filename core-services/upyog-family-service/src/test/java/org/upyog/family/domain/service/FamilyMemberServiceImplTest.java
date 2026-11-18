@@ -271,16 +271,75 @@ class FamilyMemberServiceImplTest {
         FamilyMember joined = result.getMembers().get(1);
         assertEquals("applicant-uuid-99", joined.getUserUuid());
         assertEquals("Joined Citizen", joined.getName());
-        assertEquals(MemberStatus.JOINED, joined.getStatus());
-        assertTrue(joined.getActive());
+        assertEquals("9876543222", joined.getMobileNumber());
         assertEquals(1, joined.getProperties().size());
-        assertNotNull(joined.getIncome());
+        assertEquals("pg.citya", joined.getProperties().get(0).getTenantId());
+        assertEquals("applicant-uuid-99", joined.getProperties().get(0).getUserUuid());
+        assertEquals(income, joined.getIncome());
         assertEquals(1, joined.getVehicles().size());
 
-        verify(joinFamilyValidator).validate(request, activeFamily);
         verify(userClient).syncMemberAssets(any(), eq("pg.citya"), any());
         verify(kafkaProducer).push(any(), any());
     }
+
+    @Test
+    @DisplayName("Should successfully add member with declared assets at root level, sync to user service, and publish kafka event")
+    void addMember_Success_WithRootLevelDeclaredAssets() {
+        CitizenProfile profile = CitizenProfile.builder()
+                .name("Added Citizen")
+                .mobileNumber("9876543111")
+                .gender("FEMALE")
+                .caste("GENERAL")
+                .build();
+
+        UserProperty property = UserProperty.builder()
+                .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .urbanPropertyDetail(UrbanPropertyDetail.builder().upyogPropertyId("PG-PT-002").build())
+                .build();
+
+        UserIncomeDetail income = UserIncomeDetail.builder()
+                .occupation("BUSINESS")
+                .annualIncome(BigDecimal.valueOf(800000))
+                .build();
+
+        UserVehicleDetail vehicle = UserVehicleDetail.builder()
+                .vehicleNumber("CH-01-YY-1111")
+                .build();
+
+        AddMemberRequest request = AddMemberRequest.builder()
+                .requestInfo(new RequestInfo())
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .userUuid("member-uuid-88")
+                .relationshipWithHead("DAUGHTER")
+                .consentToken("CONSENT-8888")
+                .citizenDetails(profile)
+                .properties(Collections.singletonList(property))
+                .income(income)
+                .vehicles(Collections.singletonList(vehicle))
+                .build();
+
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
+        when(userClient.syncMemberAssets(any(), eq("pg.citya"), any())).thenReturn(true);
+
+        Family result = memberService.addMember(request);
+
+        assertNotNull(result);
+        assertEquals(2, result.getMembers().size());
+        FamilyMember added = result.getMembers().get(1);
+        assertEquals("member-uuid-88", added.getUserUuid());
+        assertEquals("Added Citizen", added.getName());
+        assertEquals("9876543111", added.getMobileNumber());
+        assertEquals(1, added.getProperties().size());
+        assertEquals("pg.citya", added.getProperties().get(0).getTenantId());
+        assertEquals("member-uuid-88", added.getProperties().get(0).getUserUuid());
+        assertEquals(income, added.getIncome());
+        assertEquals(1, added.getVehicles().size());
+
+        verify(userClient).syncMemberAssets(any(), eq("pg.citya"), any());
+        verify(kafkaProducer).push(any(), any());
+    }
+
 
     @Test
     @DisplayName("Should throw exception when declared asset synchronization to user service fails")

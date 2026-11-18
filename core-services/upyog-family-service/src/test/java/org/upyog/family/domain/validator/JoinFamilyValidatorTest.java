@@ -1,6 +1,7 @@
 package org.upyog.family.domain.validator;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,9 +61,14 @@ class JoinFamilyValidatorTest {
     private JoinFamilyValidator validator;
 
     private Family activeFamily;
+    private RequestInfo validRequestInfo;
 
     @BeforeEach
     void setUp() {
+        validRequestInfo = RequestInfo.builder()
+                .userInfo(User.builder().uuid("applicant-uuid-5").build())
+                .build();
+
         activeFamily = Family.builder()
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
@@ -74,7 +81,7 @@ class JoinFamilyValidatorTest {
     @DisplayName("Should pass when citizen joins with valid relationship and txnId")
     void validate_Success() {
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -91,7 +98,7 @@ class JoinFamilyValidatorTest {
     @DisplayName("Should throw exception if txnId is missing")
     void validate_MissingTxnId_ThrowsException() {
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -109,7 +116,7 @@ class JoinFamilyValidatorTest {
     @DisplayName("Should throw exception if applicant already in an active family")
     void validate_AlreadyInActiveFamily() {
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -128,6 +135,7 @@ class JoinFamilyValidatorTest {
     void validate_WithValidAssets_Success() {
         UserProperty urbanProp = UserProperty.builder()
                 .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .ownershipType("INDIVIDUAL")
                 .urbanPropertyDetail(UrbanPropertyDetail.builder()
                         .upyogPropertyId("PG-PT-2026-0012")
                         .build())
@@ -147,7 +155,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -164,6 +172,7 @@ class JoinFamilyValidatorTest {
         assertDoesNotThrow(() -> validator.validate(request, activeFamily));
         verify(masterDataService).validateCategory(any(), eq("pg.citya"), eq("GENERAL"));
         verify(masterDataService).validateOccupation(any(), eq("pg.citya"), eq("SALARIED_PRIVATE"));
+        verify(masterDataService).validateOwnershipType(any(), eq("pg.citya"), eq("INDIVIDUAL"));
     }
 
     @Test
@@ -171,6 +180,7 @@ class JoinFamilyValidatorTest {
     void validate_RuralProperty_MissingGramPanchayat_ThrowsException() {
         UserProperty ruralProp = UserProperty.builder()
                 .localityType(FamilyConstants.LOCALITY_TYPE_RURAL)
+                .ownershipType("INDIVIDUAL")
                 .ruralPropertyDetail(RuralPropertyDetail.builder()
                         .gramPanchayat("")
                         .villageName("Rampur")
@@ -178,7 +188,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -198,13 +208,14 @@ class JoinFamilyValidatorTest {
     void validate_UrbanProperty_MissingUpyogPropertyId_ThrowsException() {
         UserProperty urbanProp = UserProperty.builder()
                 .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .ownershipType("INDIVIDUAL")
                 .urbanPropertyDetail(UrbanPropertyDetail.builder()
                         .upyogPropertyId(null)
                         .build())
                 .build();
 
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -227,7 +238,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -252,7 +263,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -278,7 +289,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -301,7 +312,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         JoinFamilyRequest request = JoinFamilyRequest.builder()
-                .requestInfo(new RequestInfo())
+                .requestInfo(validRequestInfo)
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-5")
@@ -314,5 +325,95 @@ class JoinFamilyValidatorTest {
 
         CustomException ex = assertThrows(CustomException.class, () -> validator.validate(request, activeFamily));
         assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when RequestInfo userInfo is missing (Anti-Impersonation)")
+    void validate_MissingUserInfo_ThrowsException() {
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .requestInfo(new RequestInfo())
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-5")
+                .relationshipWithHead("SON")
+                .txnId("OTP-1234")
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validate(request, activeFamily));
+        assertEquals(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when caller userUuid does not match applicant userUuid (Anti-Impersonation)")
+    void validate_CallerMismatch_ThrowsException() {
+        RequestInfo mismatchedRequestInfo = RequestInfo.builder()
+                .userInfo(User.builder().uuid("different-caller-uuid").build())
+                .build();
+
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .requestInfo(mismatchedRequestInfo)
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-5")
+                .relationshipWithHead("SON")
+                .txnId("OTP-1234")
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validate(request, activeFamily));
+        assertEquals(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when property ownershipType is missing")
+    void validate_Property_MissingOwnershipType_ThrowsException() {
+        UserProperty prop = UserProperty.builder()
+                .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .ownershipType(null)
+                .build();
+
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .requestInfo(validRequestInfo)
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-5")
+                .relationshipWithHead("SON")
+                .txnId("OTP-1234")
+                .properties(Collections.singletonList(prop))
+                .build();
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5")).thenReturn(Collections.emptyList());
+        doThrow(new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_MANDATORY))
+                .when(masterDataService).validateOwnershipType(any(), eq("pg.citya"), eq(null));
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validate(request, activeFamily));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_MANDATORY, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when property ownershipType is invalid (e.g. INSTITUTION)")
+    void validate_Property_InvalidOwnershipType_ThrowsException() {
+        UserProperty prop = UserProperty.builder()
+                .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .ownershipType("INSTITUTION")
+                .build();
+
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .requestInfo(validRequestInfo)
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-5")
+                .relationshipWithHead("SON")
+                .txnId("OTP-1234")
+                .properties(Collections.singletonList(prop))
+                .build();
+
+        when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5")).thenReturn(Collections.emptyList());
+        doThrow(new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_INVALID_OWNERSHIP_TYPE_PREFIX + "INSTITUTION"))
+                .when(masterDataService).validateOwnershipType(any(), eq("pg.citya"), eq("INSTITUTION"));
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validate(request, activeFamily));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_INVALID_OWNERSHIP_TYPE_PREFIX + "INSTITUTION", ex.getMessage());
     }
 }

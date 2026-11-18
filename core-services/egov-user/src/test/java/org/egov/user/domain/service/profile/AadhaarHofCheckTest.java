@@ -31,6 +31,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -148,7 +149,7 @@ class AadhaarHofCheckTest {
     }
 
     @Test
-    @DisplayName("checkAadhaarHof: Throws CustomException when citizen not found in eg_user")
+    @DisplayName("checkAadhaarHof: Throws CustomException when citizen not found in eg_user (Anti-Enumeration)")
     void checkAadhaarHof_CitizenNotFound_ThrowsException() {
         AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
                 .requestInfo(requestInfo)
@@ -159,12 +160,12 @@ class AadhaarHofCheckTest {
         when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.emptyList());
 
         CustomException ex = assertThrows(CustomException.class, () -> profileService.checkAadhaarHof(request));
-        assertEquals(UserConstants.ERROR_CITIZEN_NOT_FOUND, ex.getCode());
-        assertEquals(UserConstants.MSG_CITIZEN_NOT_FOUND_FOR_AADHAAR, ex.getMessage());
+        assertEquals(UserConstants.ERROR_NOT_HEAD_OF_FAMILY, ex.getCode());
+        assertEquals(UserConstants.MSG_CITIZEN_NOT_HEAD_OF_FAMILY, ex.getMessage());
     }
 
     @Test
-    @DisplayName("checkAadhaarHof: Throws CustomException when citizen account is inactive")
+    @DisplayName("checkAadhaarHof: Throws CustomException when citizen account is inactive (Anti-Enumeration)")
     void checkAadhaarHof_CitizenInactive_ThrowsException() {
         AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
                 .requestInfo(requestInfo)
@@ -183,11 +184,12 @@ class AadhaarHofCheckTest {
                 .thenReturn(Collections.singletonList(inactiveCitizen));
 
         CustomException ex = assertThrows(CustomException.class, () -> profileService.checkAadhaarHof(request));
-        assertEquals(UserConstants.ERROR_ACCOUNT_INACTIVE, ex.getCode());
+        assertEquals(UserConstants.ERROR_NOT_HEAD_OF_FAMILY, ex.getCode());
+        assertEquals(UserConstants.MSG_CITIZEN_NOT_HEAD_OF_FAMILY, ex.getMessage());
     }
 
     @Test
-    @DisplayName("checkAadhaarHof: Throws CustomException when citizen is not mapped to any family")
+    @DisplayName("checkAadhaarHof: Throws CustomException when citizen is not mapped to any family (Anti-Enumeration)")
     void checkAadhaarHof_NoFamilyMapped_ThrowsException() {
         AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
                 .requestInfo(requestInfo)
@@ -210,8 +212,8 @@ class AadhaarHofCheckTest {
                 .thenReturn(noFamily);
 
         CustomException ex = assertThrows(CustomException.class, () -> profileService.checkAadhaarHof(request));
-        assertEquals(UserConstants.ERROR_FAMILY_NOT_MAPPED, ex.getCode());
-        assertEquals(UserConstants.MSG_CITIZEN_NOT_MAPPED_TO_FAMILY, ex.getMessage());
+        assertEquals(UserConstants.ERROR_NOT_HEAD_OF_FAMILY, ex.getCode());
+        assertEquals(UserConstants.MSG_CITIZEN_NOT_HEAD_OF_FAMILY, ex.getMessage());
     }
 
     @Test
@@ -249,10 +251,15 @@ class AadhaarHofCheckTest {
     }
 
     @Test
-    @DisplayName("checkAadhaarHof: Returns success response when citizen is confirmed Head of Family")
-    void checkAadhaarHof_CitizenIsHof_ReturnsSuccess() {
+    @DisplayName("checkAadhaarHof: Returns full details when caller is self")
+    void checkAadhaarHof_CitizenIsHof_CallerIsSelf_ReturnsFullDetails() {
+        RequestInfo selfRequestInfo = RequestInfo.builder()
+                .apiId("rainmaker")
+                .userInfo(org.egov.common.contract.request.User.builder().uuid("citizen-head-uuid").build())
+                .build();
+
         AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
-                .requestInfo(requestInfo)
+                .requestInfo(selfRequestInfo)
                 .aadhaarNumber("123456789012")
                 .tenantId("pg.citya")
                 .build();
@@ -290,10 +297,62 @@ class AadhaarHofCheckTest {
     }
 
     @Test
+    @DisplayName("checkAadhaarHof: Masks PII when caller is an outside citizen (Anti-Harvesting)")
+    void checkAadhaarHof_CitizenIsHof_CallerIsOutsideCitizen_MasksPii() {
+        RequestInfo outsideRequestInfo = RequestInfo.builder()
+                .apiId("rainmaker")
+                .userInfo(org.egov.common.contract.request.User.builder().uuid("outside-caller-uuid").build())
+                .build();
+
+        AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
+                .requestInfo(outsideRequestInfo)
+                .aadhaarNumber("123456789012")
+                .tenantId("pg.citya")
+                .build();
+
+        User activeCitizen = User.builder()
+                .uuid("citizen-head-uuid")
+                .name("Ramesh Kumar")
+                .aadhaarNumber("123456789012")
+                .active(true)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(activeCitizen));
+
+        FamilyHofStatus hofStatus = FamilyHofStatus.builder()
+                .familyFound(true)
+                .familyId("FAM-2026-0001")
+                .headUserUuid("citizen-head-uuid")
+                .isHof(true)
+                .build();
+
+        when(familyRestRepository.checkUserHofStatus(eq("citizen-head-uuid"), any(), any()))
+                .thenReturn(hofStatus);
+
+        AadhaarHofCheckResponse response = profileService.checkAadhaarHof(request);
+
+        assertNotNull(response);
+        assertTrue(response.getIsHof());
+        // Verify PII fields are protected
+        assertNull(response.getUserUuid());
+        assertNull(response.getUserName());
+        assertNull(response.getFamilyId());
+        assertEquals("XXXXXXXX9012", response.getMaskedAadhaar());
+        assertEquals("pg", response.getTenantId());
+        assertEquals(UserConstants.MSG_CITIZEN_HOF_VERIFIED_SUCCESS, response.getMessage());
+    }
+
+    @Test
     @DisplayName("Controller: POST /aadhaar/_checkHof returns HTTP 200 and response envelope")
     void controller_CheckAadhaarHof_ReturnsHttp200() {
+        RequestInfo selfRequestInfo = RequestInfo.builder()
+                .apiId("rainmaker")
+                .userInfo(org.egov.common.contract.request.User.builder().uuid("citizen-head-uuid").build())
+                .build();
+
         AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
-                .requestInfo(requestInfo)
+                .requestInfo(selfRequestInfo)
                 .aadhaarNumber("123456789012")
                 .tenantId("pg.citya")
                 .build();

@@ -419,7 +419,7 @@ public class FamilyRestRepository {
                     String status = familyNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(null);
                     if (UserConstants.FAMILY_STATUS_ACTIVE.equalsIgnoreCase(status)) {
                         String familyId = familyNode.path(UserConstants.FIELD_FAMILY_ID).asText(null);
-                        String headUserUuid = familyNode.path("headUserUuid").asText(null);
+                        String headUserUuid = familyNode.path(UserConstants.FAMILY_PARAM_HEAD_USER_UUID).asText(null);
 
                         boolean isHof = userUuid.equalsIgnoreCase(headUserUuid);
                         if (!isHof) {
@@ -427,7 +427,7 @@ public class FamilyRestRepository {
                             if (membersNode.isArray()) {
                                 for (JsonNode memberNode : membersNode) {
                                     String mUuid = memberNode.path(UserConstants.JSON_KEY_USER_UUID).asText(null);
-                                    boolean isHead = memberNode.path("isHead").asBoolean(false);
+                                    boolean isHead = memberNode.path(UserConstants.FAMILY_PARAM_IS_HEAD).asBoolean(false);
                                     boolean isActive = memberNode.path(UserConstants.JSON_KEY_ACTIVE).asBoolean(true);
                                     if (userUuid.equalsIgnoreCase(mUuid) && isHead && isActive) {
                                         isHof = true;
@@ -452,9 +452,9 @@ public class FamilyRestRepository {
         } catch (CustomException ce) {
             throw ce;
         } catch (Exception e) {
-            log.error("[FAMILY-REST-REPO] Error checking family HoF status for user {}: {}", userUuid, e.getMessage());
+            log.error("[FAMILY-REST-REPO] Error checking family HoF status for user {}: {}", userUuid, e.getMessage(), e);
             throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE,
-                    "Failed to communicate with Family service: " + e.getMessage());
+                    UserConstants.MSG_FAMILY_SERVICE_COMMUNICATION_ERROR);
         }
 
         return FamilyHofStatus.builder().familyFound(false).isHof(false).build();
