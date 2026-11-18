@@ -3,9 +3,32 @@ import { Dropdown, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components"
 import { profileStyles } from "./profileStyles";
 
 /**
- * New Document Upload Card Component
- * Used Accross Whole Profile Module to show the New Document Fields
+ * DocumentUploadCard
+ *
+ * Reusable document upload field used across the Profile module.
+ * Renders a document type dropdown, a file picker (JPG/PNG/PDF, max 5MB),
+ * an upload restriction hint, and an inline error label.
+ *
+ * Uploads the selected file to Digit Filestorage and returns `{ name, fileStoreId }`
+ * via `onFileChange`. Validates file type and size before uploading.
+ *
+ * @param {object}   props
+ * @param {string}   props.label             - Field label text.
+ * @param {boolean}  [props.required]        - Appends a required asterisk to the label.
+ * @param {Array}    props.options            - Dropdown options array (each item must have a `name` key).
+ * @param {object}   props.selectedType      - Currently selected dropdown option.
+ * @param {Function} props.onSelectType      - Callback fired when dropdown selection changes.
+ * @param {string}   [props.typePlaceholder] - Placeholder text for the dropdown.
+ * @param {object}   props.file              - Currently uploaded file `{ name, fileStoreId }`, or null.
+ * @param {Function} props.onFileChange      - Callback fired with `{ name, fileStoreId }` on upload, or `null` on delete.
+ * @param {string}   [props.error]           - External error message to display below the file box.
+ * @param {Function} props.t                 - i18n translation function.
+ * @param {string}   props.stateId           - State ID passed to Digit Filestorage for upload scoping.
+ * @param {boolean}  [props.disabled=false]  - Disables the dropdown and file picker when true.
+ *
+ * @returns {JSX.Element}
  */
+
 
 
 const DocumentUploadCard = ({ label, required, options, selectedType, onSelectType, typePlaceholder, file, onFileChange, error, t, stateId, disabled = false }) => {
