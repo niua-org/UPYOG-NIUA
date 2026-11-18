@@ -18,9 +18,9 @@ jobs:
   sonar:
     name: sonar
     # Fork PRs are scanned via pull_request_target, which runs in the base
-        # repo context with secrets. The PR head is checked out explicitly below,
-            # with allow-unsafe-pr-checkout because fork code is untrusted — the
-                # scan step runs that code, so review fork PRs before merging.
+    # repo context with secrets. The PR head is checked out explicitly below,
+    # with allow-unsafe-pr-checkout because fork code is untrusted — the
+    # scan step runs that code, so review fork PRs before merging.
     if: >-
       github.event_name == 'pull_request_target' &&
       github.event.pull_request.draft == false
@@ -225,7 +225,7 @@ jobs:
           fi
 
       - name: Comment on the pull request
-        if: always()
+        if: always() && (steps.detect.outputs.services != '' || steps.detect.outputs.frontends != '')
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           OUTCOME: ${{ steps.scan.outcome }}
@@ -293,7 +293,7 @@ jobs:
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           MAX_AGE_DAYS: ${{ vars.SONAR_CLEANUP_MAX_AGE_DAYS || '14' }}
-          DRY_RUN: ${{ vars.SONAR_CLEANUP_DRY_RUN || 'true' }}
+          DRY_RUN: ${{ vars.SONAR_CLEANUP_DRY_RUN || 'false' }}
         run: |
           set -euo pipefail
           host="${SONAR_HOST_URL%/}"
