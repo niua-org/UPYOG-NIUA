@@ -225,6 +225,9 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               iserror={fileError}
               disabled={isViewMode}
             />
+            <p style={profileStyles.documentUploadCard.fileRestrictionText}>
+              {t("CS_FILE_SIZE_RESTRICTIONS")}
+            </p>
           </FormField>
         </div>
       </FormStep>

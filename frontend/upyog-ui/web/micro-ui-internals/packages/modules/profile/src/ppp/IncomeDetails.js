@@ -267,6 +267,9 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                 iserror={taxProofError}
                 disabled={isViewMode}
               />
+              <p style={profileStyles.documentUploadCard.fileRestrictionText}>
+                {t("CS_FILE_SIZE_RESTRICTIONS")}
+              </p>
             </FormField>
           )}
 
