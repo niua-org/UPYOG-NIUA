@@ -19,6 +19,7 @@ import { getFamilyMembers, clearFamilyMembers, setFamilyMembers } from "../utils
 import { buildCreateFamilyPayload } from "../utils/payloads";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
+import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
 /**
  * Helper to retrieve applicant's relationship with HOF chosen in CreateProfile (Step 1).
@@ -108,6 +109,7 @@ const FamilyMemberAdded = () => {
   // Declaration must be ticked before the family can be submitted
   const [agree, setAgree] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 
   // Toast notification helper
   const showToast = (type, message, duration = 4000) => {
@@ -252,9 +254,9 @@ const FamilyMemberAdded = () => {
     },
   ], [members, selectedHeadUuid, loggedInUuid, t, styles]);
 
-  // Navigate to Aadhaar verification to add another family member
+  // Open Aadhaar verification modal to add another family member
   const handleAddAnother = () => {
-    navigate(PROFILE_ROUTES.ADD_FAMILY_MEMBER);
+    setShowAddMemberModal(true);
   };
 
   /**
@@ -393,6 +395,20 @@ const FamilyMemberAdded = () => {
         <div className="profile-toast-container">
           <Toast error={toast.type === "error"} label={toast.message} onClose={() => setToast(null)} />
         </div>
+      )}
+
+      {/* Aadhaar Verification Modal to add family member */}
+      {showAddMemberModal && (
+        <AadhaarVerificationModal
+          isOpen={showAddMemberModal}
+          isModal={true}
+          mode="family"
+          onClose={() => setShowAddMemberModal(false)}
+          onSuccess={({ verifiedMember }) => {
+            setShowAddMemberModal(false);
+            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
+          }}
+        />
       )}
     </React.Fragment>
   );

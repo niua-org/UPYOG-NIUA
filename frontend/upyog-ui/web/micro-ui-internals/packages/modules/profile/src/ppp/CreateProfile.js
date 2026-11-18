@@ -293,6 +293,13 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     const thumb = fileStoreId ? await fetchThumbnail(fileStoreId, stateId) : null;
     setPhotoThumb(thumb);
     setShowUploadDrawer(false);
+    if (fileStoreId) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.photo;
+        return next;
+      });
+    }
     setToast({ error: false, label: t("PROFILE_PHOTO_UPLOAD_SUCCESS", "Profile photo uploaded successfully") });
   };
 
@@ -300,12 +307,21 @@ const CreateProfile = ({ config, onSelect, formData }) => {
     setPhotoId(null);
     setPhotoThumb(null);
     setShowUploadDrawer(false);
+    setErrors((prev) => ({
+      ...prev,
+      photo: "CORE_COMMON_PROFILE_PHOTO_REQUIRED",
+    }));
     setToast({ error: false, label: t("PROFILE_PHOTO_REMOVED", "Profile photo removed") });
   };
 
   // Collects every validation error for the current values (pure: does not touch state)
   const collectErrors = () => {
     const nextErrors = {};
+
+    // Profile photo validation (mandatory)
+    if (!photoId) {
+      nextErrors.photo = "CORE_COMMON_PROFILE_PHOTO_REQUIRED";
+    }
 
     if (!form.name?.trim()) nextErrors.name = "CORE_COMMON_PROFILE_NAME_REQUIRED";
     if (!form.gender) nextErrors.gender = "CORE_COMMON_PROFILE_GENDER_REQUIRED";
@@ -484,7 +500,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             marginBottom: "24px",
             background: "#F8F9FA",
             borderRadius: "10px",
-            border: "1px solid #E8EAED",
+            border: errors.photo ? "1px solid #D4351C" : "1px solid #E8EAED",
             width: "100%",
             boxSizing: "border-box",
           }}
@@ -500,7 +516,13 @@ const CreateProfile = ({ config, onSelect, formData }) => {
             </h3>
             <span style={{ fontSize: "14px", color: "#505A5F" }}>
               {t("PROFILE_PHOTO_UPLOAD_HELP", "Click on the camera icon to upload or update your profile photo.")}
+              <span style={{ color: "#D4351C", fontWeight: 600, marginLeft: "4px" }}>*</span>
             </span>
+            {errors.photo && (
+              <span style={{ color: "#D4351C", fontSize: "12px", fontWeight: 500, marginTop: "2px" }}>
+                {t(errors.photo, "Profile photo is mandatory.")}
+              </span>
+            )}
             <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
               {!isViewMode && (
                 <button
@@ -508,12 +530,12 @@ const CreateProfile = ({ config, onSelect, formData }) => {
                   onClick={() => setShowUploadDrawer(true)}
                   style={{
                     background: "#FFFFFF",
-                    border: "1px solid #D6D5D5",
+                    border: errors.photo ? "1px solid #D4351C" : "1px solid #D6D5D5",
                     borderRadius: "6px",
                     padding: "6px 14px",
                     fontSize: "13px",
                     fontWeight: 500,
-                    color: "#0B0C0C",
+                    color: errors.photo ? "#D4351C" : "#0B0C0C",
                     cursor: "pointer",
                   }}
                 >
@@ -701,7 +723,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
           {/* Divyang Proof appears in the next column dynamically when Divyang is Yes */}
           {isSpeciallyAbled && (
             <DocumentUploadCard
-              label={t("PROFILE_DISABILITY_PROOF", "Divyang Proof")}
+              label={t("PROFILE_DISABILITY_PROOF", "Divyang/Handicapped Proof")}
               required={true}
               options={disabilityDocumentOptions}
               selectedType={disabilityProofType}

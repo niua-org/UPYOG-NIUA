@@ -4,6 +4,7 @@ import { Card, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { PROFILE_ROUTES } from "../utils/constants";
 import { profileStyles } from "../utils/profileStyles";
+import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
 /**
  * Family dashboard screen. 
@@ -21,6 +22,7 @@ const FamilyDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const loggedInUserUuid = Digit.UserService.getUser()?.info?.uuid;
 
   useEffect(() => {
@@ -66,7 +68,7 @@ const FamilyDashboard = () => {
  */
 
   const handleAddNewMember = () => {
-    navigate(PROFILE_ROUTES.ADD_FAMILY_MEMBER);
+    setShowAddMemberModal(true);
   };
 
   const handleGoToDashboard = () => {
@@ -178,6 +180,20 @@ const FamilyDashboard = () => {
       </Card>
       {toast && (
         <Toast error={toast.error}  label={toast.label} onClose={() => setToast(null)} />
+      )}
+
+      {/* Aadhaar Verification Modal to add family member */}
+      {showAddMemberModal && (
+        <AadhaarVerificationModal
+          isOpen={showAddMemberModal}
+          isModal={true}
+          mode="family"
+          onClose={() => setShowAddMemberModal(false)}
+          onSuccess={({ verifiedMember }) => {
+            setShowAddMemberModal(false);
+            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
+          }}
+        />
       )}
     </React.Fragment>
   );

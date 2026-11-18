@@ -4,6 +4,7 @@ import { Card, Loader, EditIcon, TickMark, CloseSvg, Toast, AddIcon, PersonIcon 
 import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument, clearFamilyMembers } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
+import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
 // Function to get user Details
 const useProfileUser = () => {
@@ -13,25 +14,24 @@ const useProfileUser = () => {
   const uuid = Digit.UserService.getUser()?.info?.uuid;
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
+  const fetchUser = async () => {
+    if (!uuid) { setLoading(false); return; }
+    try {
+      // The updated /user/profile/_search endpoint expects a single uuid string rather than a list of UUIDs
+      const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
+      setUser(response?.user?.[0] || null);
+    } catch (e) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let isActive = true; // avoids state update after unmount
-    const fetchUser = async () => {
-      if (!uuid) { setLoading(false); return; }
-      try {
-        // The updated /user/profile/_search endpoint expects a single uuid string rather than a list of UUIDs
-        const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
-        if (isActive) setUser(response?.user?.[0] || null);
-      } catch (e) {
-        if (isActive) setError(true);
-      } finally {
-        if (isActive) setLoading(false);
-      }
-    };
     fetchUser();
-    return () => { isActive = false; };
   }, [uuid, tenantId]);
 
-  return { user, loading, error };
+  return { user, loading, error, refetch: fetchUser };
 };
 
 const ProfileDetails = () => {
@@ -39,10 +39,11 @@ const ProfileDetails = () => {
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
-  const { user, loading, error } = useProfileUser();
+  const { user, loading, error, refetch } = useProfileUser();
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [toast, setToast] = useState(null);
   const [isHof, setIsHof] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -140,6 +141,7 @@ const ProfileDetails = () => {
         error: true,
         message: t("ERR_PROFILE_NOT_AADHAAR_VERIFIED"),
       });
+      setShowVerifyModal(true);
       return;
     }
 
@@ -186,7 +188,7 @@ const ProfileDetails = () => {
             <span
               role="button"
               tabIndex={0}
-              onClick={() => navigate(PROFILE_ROUTES.VERIFY)}
+              onClick={() => setShowVerifyModal(true)}
               title={t("CLICK_TO_VERIFY_AADHAAR")}
               style={profileStyles.unverifiedBadge}
             >
@@ -294,6 +296,20 @@ const ProfileDetails = () => {
           onClose={() => setToast(null)}
         />
       </div>
+    )}
+
+    {/* Aadhaar Verification Modal */}
+    {showVerifyModal && (
+      <AadhaarVerificationModal
+        isModal={true}
+        isOpen={showVerifyModal}
+        mode="profile"
+        onClose={() => setShowVerifyModal(false)}
+        onSuccess={() => {
+          setShowVerifyModal(false);
+          refetch();
+        }}
+      />
     )}
   </React.Fragment>
   );
