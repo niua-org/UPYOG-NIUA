@@ -17,9 +17,10 @@ permissions:
 jobs:
   sonar:
     name: sonar
-    # Only PRs whose head branch lives in this repo are scanned. Fork runs get
-    # no secrets.SONAR_TOKEN and a read-only GITHUB_TOKEN, so they can neither
-    # scan nor comment. A PR opened inside your own fork still matches this.
+    # Fork PRs are scanned via pull_request_target, which runs in the base
+        # repo context with secrets. The PR head is checked out explicitly below,
+            # with allow-unsafe-pr-checkout because fork code is untrusted — the
+                # scan step runs that code, so review fork PRs before merging.
     if: >-
       github.event_name == 'pull_request_target' &&
       github.event.pull_request.draft == false
@@ -31,9 +32,10 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-         repository: ${{ github.event.pull_request.head.repo.full_name }}
-         ref: ${{ github.event.pull_request.head.sha }}
-         persist-credentials: false
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+                    allow-unsafe-pr-checkout: true
       # The repo mixes Java 17 (most modules), 1.8 and 11. Install all three and
       # select the matching JDK per module so older modules build on their own
       # release instead of failing on JDK 17.
