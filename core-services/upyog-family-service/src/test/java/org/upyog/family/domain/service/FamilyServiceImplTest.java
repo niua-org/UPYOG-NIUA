@@ -23,6 +23,8 @@ import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.upyog.family.web.contract.FamilySplitRequest;
 import org.upyog.family.web.contract.UserVehicleDetail;
+import org.upyog.family.web.contract.Workflow;
+import org.upyog.family.web.contract.workflow.State;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,6 +72,9 @@ class FamilyServiceImplTest {
 
     @Mock
     private FamilyConfiguration configuration;
+
+    @Mock
+    private WorkflowService workflowService;
 
     @InjectMocks
     private FamilyServiceImpl familyService;
@@ -446,5 +451,100 @@ class FamilyServiceImplTest {
         assertEquals(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, ex.getCode());
 
         verify(kafkaProducer, never()).push(any(), any());
+    }
+
+    @Test
+    @DisplayName("createFamily with workflow should call workflowService and set status to PENDING_FOR_APPROVAL")
+    void createFamily_WithWorkflow_TransitionsToPendingApproval() {
+        when(idGenRepository.generateFamilyId(any(), any())).thenReturn("FAM-2026-0001");
+        when(configuration.getCreateFamilyTopic()).thenReturn("save-ug-family");
+
+        family.setWorkflow(Workflow.builder().action(FamilyConstants.ACTION_APPLY).build());
+
+        State wfState = State.builder()
+                .state(FamilyConstants.STATUS_PENDING_FOR_APPROVAL)
+                .applicationStatus(FamilyConstants.STATUS_PENDING_FOR_APPROVAL)
+                .build();
+        when(workflowService.updateWorkflowStatus(any(FamilyRequest.class))).thenReturn(wfState);
+
+        Family result = familyService.createFamily(request);
+
+        assertNotNull(result);
+        assertEquals(FamilyStatus.INACTIVE, result.getStatus());
+        assertEquals(FamilyConstants.STATUS_PENDING_FOR_APPROVAL, result.getApplicationStatus());
+        verify(workflowService).updateWorkflowStatus(any(FamilyRequest.class));
+        verify(kafkaProducer).push(eq("save-ug-family"), any(FamilyRequest.class));
+    }
+
+    @Test
+    @DisplayName("updateFamily with workflow APPROVE action should transition status to ACTIVE and applicationStatus to APPROVED")
+    void updateFamily_WithWorkflow_Approve_TransitionsToApproved() {
+        family.setFamilyId("FAM-2026-0001");
+        family.setWorkflow(Workflow.builder().action(FamilyConstants.ACTION_APPROVE).comments("Approved by officer").build());
+
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.INACTIVE)
+                .applicationStatus(FamilyConstants.STATUS_PENDING_FOR_APPROVAL)
+                .members(new ArrayList<>(Collections.singletonList(
+                        FamilyMember.builder().userUuid("user-uuid-head").relationshipWithHead("HEAD").isHead(true).active(true).build()
+                )))
+                .auditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).lastModifiedTime(100L).build())
+                .build();
+
+        when(familyRepository.search(any())).thenReturn(Collections.singletonList(existingFamily));
+        when(configuration.getUpdateFamilyTopic()).thenReturn("update-ug-family");
+
+        State wfState = State.builder()
+                .state(FamilyConstants.STATUS_APPROVED)
+                .applicationStatus(FamilyConstants.STATUS_APPROVED)
+                .build();
+        when(workflowService.updateWorkflowStatus(any(FamilyRequest.class))).thenReturn(wfState);
+
+        Family result = familyService.updateFamily(request);
+
+        assertNotNull(result);
+        assertEquals(FamilyStatus.ACTIVE, result.getStatus());
+        assertEquals(FamilyConstants.STATUS_APPROVED, result.getApplicationStatus());
+        verify(workflowService).updateWorkflowStatus(any(FamilyRequest.class));
+        verify(kafkaProducer).push(eq("update-ug-family"), any(FamilyRequest.class));
+    }
+
+    @Test
+    @DisplayName("updateFamily with workflow REJECT action should transition status to INACTIVE and applicationStatus to REJECTED")
+    void updateFamily_WithWorkflow_Reject_TransitionsToRejected() {
+        family.setFamilyId("FAM-2026-0001");
+        family.setWorkflow(Workflow.builder().action(FamilyConstants.ACTION_REJECT).comments("Rejected due to document mismatch").build());
+
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.INACTIVE)
+                .applicationStatus(FamilyConstants.STATUS_PENDING_FOR_APPROVAL)
+                .members(new ArrayList<>(Collections.singletonList(
+                        FamilyMember.builder().userUuid("user-uuid-head").relationshipWithHead("HEAD").isHead(true).active(true).build()
+                )))
+                .auditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).lastModifiedTime(100L).build())
+                .build();
+
+        when(familyRepository.search(any())).thenReturn(Collections.singletonList(existingFamily));
+        when(configuration.getUpdateFamilyTopic()).thenReturn("update-ug-family");
+
+        State wfState = State.builder()
+                .state(FamilyConstants.STATUS_REJECTED)
+                .applicationStatus(FamilyConstants.STATUS_REJECTED)
+                .build();
+        when(workflowService.updateWorkflowStatus(any(FamilyRequest.class))).thenReturn(wfState);
+
+        Family result = familyService.updateFamily(request);
+
+        assertNotNull(result);
+        assertEquals(FamilyStatus.INACTIVE, result.getStatus());
+        assertEquals(FamilyConstants.STATUS_REJECTED, result.getApplicationStatus());
+        verify(workflowService).updateWorkflowStatus(any(FamilyRequest.class));
+        verify(kafkaProducer).push(eq("update-ug-family"), any(FamilyRequest.class));
     }
 }

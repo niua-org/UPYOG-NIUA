@@ -32,8 +32,18 @@ public final class FamilyConstants {
     public static final String STATUS_STAGED = "STAGED";
     public static final String STATUS_FOUND = "FOUND";
     public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
+    public static final String STATUS_PENDING_FOR_APPROVAL = "PENDING_FOR_APPROVAL";
+    public static final String STATUS_APPROVED = "APPROVED";
+    public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_JOINED = "JOINED";
     public static final String STATUS_READY_FOR_JIT = "READY_FOR_JIT_PROVISION";
+
+    // ==========================================
+    // Workflow Actions
+    // ==========================================
+    public static final String ACTION_APPLY = "APPLY";
+    public static final String ACTION_APPROVE = "APPROVE";
+    public static final String ACTION_REJECT = "REJECT";
 
     // ==========================================
     // Family Types
@@ -137,6 +147,7 @@ public final class FamilyConstants {
     public static final String ERROR_UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS";
     public static final String ERROR_USER_NOT_VERIFIED = "USER_NOT_VERIFIED";
     public static final String ERROR_MEMBER_ASSET_SYNC_FAILED = "MEMBER_ASSET_SYNC_FAILED";
+    public static final String ERROR_WORKFLOW = "WORKFLOW_ERROR";
 
     // State Registry Integration Error Codes
     public static final String ERROR_INVALID_STATE_FAMILY_REQUEST = "INVALID_STATE_FAMILY_REQUEST";
@@ -285,4 +296,6 @@ public final class FamilyConstants {
     public static final String MSG_TENANT_ID_MANDATORY = "tenantId is mandatory";
     public static final String MSG_INVALID_RESIDENCE_PROPERTY_PREFIX = "Family residence property ID '";
     public static final String MSG_INVALID_RESIDENCE_PROPERTY_SUFFIX = "' does not match any declared property or survey number of family members";
+    public static final String MSG_FAMILY_WORKFLOW_REQ_NULL = "FamilyRequest or Family object cannot be null for workflow transition";
+    public static final String MSG_WORKFLOW_EMPTY_PROCESS_INSTANCES = "Workflow response contains no process instances";
 }

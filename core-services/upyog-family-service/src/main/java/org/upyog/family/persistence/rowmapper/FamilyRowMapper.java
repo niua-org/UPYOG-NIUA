@@ -88,9 +88,11 @@ public class FamilyRowMapper implements ResultSetExtractor<List<Family>> {
 
                 String familyAddressPropertyId = null;
                 String familySource = null;
+                String applicationStatus = null;
                 try {
                     familyAddressPropertyId = rs.getString("f_family_address_property_id");
                     familySource = rs.getString("f_family_source");
+                    applicationStatus = rs.getString("f_application_status");
                 } catch (Exception ignored) {
                 }
 
@@ -101,6 +103,7 @@ public class FamilyRowMapper implements ResultSetExtractor<List<Family>> {
                         .headUserUuid(rs.getString("f_head_user_uuid"))
                         .category(rs.getString("f_category"))
                         .status(FamilyStatus.fromValue(rs.getString("f_status")))
+                        .applicationStatus(applicationStatus)
                         .familyType(rs.getString("f_family_type"))
                         .familyAddressPropertyId(familyAddressPropertyId)
                         .familySource(familySource)

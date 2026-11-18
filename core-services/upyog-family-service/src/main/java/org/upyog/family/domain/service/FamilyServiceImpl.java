@@ -27,6 +27,7 @@ import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.upyog.family.web.contract.FamilySplitRequest;
 import org.upyog.family.web.contract.UserProperty;
 import org.upyog.family.web.contract.UserVehicleDetail;
+import org.upyog.family.web.contract.workflow.State;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,7 @@ public class FamilyServiceImpl implements FamilyService {
     private final UserClient userClient;
     private final KafkaProducer kafkaProducer;
     private final FamilyConfiguration configuration;
+    private final WorkflowService workflowService;
     private final ObjectMapper objectMapper;
 
     @Autowired
@@ -78,6 +80,7 @@ public class FamilyServiceImpl implements FamilyService {
                              UserClient userClient,
                              KafkaProducer kafkaProducer,
                              FamilyConfiguration configuration,
+                             @Autowired(required = false) WorkflowService workflowService,
                              @Autowired(required = false) ObjectMapper objectMapper) {
         this.familyRepository = familyRepository;
         this.familyValidator = familyValidator;
@@ -85,6 +88,7 @@ public class FamilyServiceImpl implements FamilyService {
         this.userClient = userClient;
         this.kafkaProducer = kafkaProducer;
         this.configuration = configuration;
+        this.workflowService = workflowService;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
     }
 
@@ -93,8 +97,18 @@ public class FamilyServiceImpl implements FamilyService {
                              IdGenRepository idGenRepository,
                              UserClient userClient,
                              KafkaProducer kafkaProducer,
+                             FamilyConfiguration configuration,
+                             WorkflowService workflowService) {
+        this(familyRepository, familyValidator, idGenRepository, userClient, kafkaProducer, configuration, workflowService, null);
+    }
+
+    public FamilyServiceImpl(FamilyRepository familyRepository,
+                             FamilyValidator familyValidator,
+                             IdGenRepository idGenRepository,
+                             UserClient userClient,
+                             KafkaProducer kafkaProducer,
                              FamilyConfiguration configuration) {
-        this(familyRepository, familyValidator, idGenRepository, userClient, kafkaProducer, configuration, null);
+        this(familyRepository, familyValidator, idGenRepository, userClient, kafkaProducer, configuration, null, null);
     }
 
     /**
@@ -248,10 +262,19 @@ public class FamilyServiceImpl implements FamilyService {
             recordAssetSyncStatus(family, FamilyConstants.ASSET_SYNC_STATUS_NOT_APPLICABLE);
         }
 
-        // 4. Persist to Database via Kafka Persister (standard UPYOG pattern)
+        // 4. Workflow transition integration
+        if (family.getWorkflow() != null) {
+            State state = workflowService.updateWorkflowStatus(request);
+            family.setApplicationStatus(state.getApplicationStatus());
+            family.setStatus(FamilyStatus.INACTIVE);
+        } else {
+            family.setStatus(FamilyStatus.ACTIVE);
+        }
+
+        // 5. Persist to Database via Kafka Persister (standard UPYOG pattern)
         kafkaProducer.push(configuration.getCreateFamilyTopic(), request);
 
-        // 5. Enrich citizen demographics
+        // 6. Enrich citizen demographics
         enrichCitizenDemographics(Collections.singletonList(family), requestInfo);
 
         log.info("[UPYOG-FAMILY-SERVICE] Successfully queued family creation to Kafka persister: {}", family.getFamilyId());
@@ -412,6 +435,16 @@ public class FamilyServiceImpl implements FamilyService {
             recordAssetSyncStatus(existingFamily, FamilyConstants.ASSET_SYNC_STATUS_NOT_APPLICABLE);
             log.debug("[UPYOG-FAMILY-SERVICE] No modified members with declared assets to synchronize for family update: {}",
                     existingFamily.getFamilyId());
+        }
+
+        // Workflow transition integration
+        if (updatePayload.getWorkflow() != null) {
+            existingFamily.setWorkflow(updatePayload.getWorkflow());
+            State state = workflowService.updateWorkflowStatus(new FamilyRequest(requestInfo, existingFamily));
+            existingFamily.setApplicationStatus(state.getApplicationStatus());
+            existingFamily.setStatus(FamilyConstants.STATUS_APPROVED.equalsIgnoreCase(state.getApplicationStatus())
+                    ? FamilyStatus.ACTIVE
+                    : FamilyStatus.INACTIVE);
         }
 
         // Asynchronously persist via Kafka Persister (standard UPYOG pattern)

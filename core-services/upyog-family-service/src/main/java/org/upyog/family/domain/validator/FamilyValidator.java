@@ -438,8 +438,21 @@ public class FamilyValidator {
         // Ensure caller is identity-verified in user registry database
         userClient.validateCallerIsVerified(request.getRequestInfo());
 
-        if (!FamilyStatus.ACTIVE.equals(existingFamily.getStatus())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_CANNOT_UPDATE_FAMILY_STATUS_PREFIX + existingFamily.getStatus());
+        Family family = request.getFamily();
+        boolean isWorkflowAction = family != null && family.getWorkflow() != null
+                && StringUtils.isNotBlank(family.getWorkflow().getAction());
+
+        if (!isWorkflowAction) {
+            // Caller authorization: Only current HoF is authorized to update family metadata
+            if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+                String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
+                if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
+                    if (!callerUuid.equals(existingFamily.getHeadUserUuid())) {
+                        throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
+                                FamilyConstants.MSG_ONLY_HOF_AUTHORIZED_UPDATE);
+                    }
+                }
+            }
         }
 
         // Validate state family configuration policy
@@ -447,20 +460,7 @@ public class FamilyValidator {
             familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), existingFamily.getTenantId());
         }
 
-        // Caller authorization: Only current HoF is authorized to update family metadata
-        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
-            String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
-            if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {
-                if (!callerUuid.equals(existingFamily.getHeadUserUuid())) {
-                    throw new CustomException(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS,
-                            FamilyConstants.MSG_ONLY_HOF_AUTHORIZED_UPDATE);
-                }
-            }
-        }
-
-        Family family = request.getFamily();
-
-        if (family.getMembers() != null && !family.getMembers().isEmpty()) {
+        if (family != null && family.getMembers() != null && !family.getMembers().isEmpty()) {
             long headCount = family.getMembers().stream()
                     .filter(m -> Boolean.TRUE.equals(m.getIsHead()) && (m.getActive() == null || m.getActive()))
                     .count();

@@ -16,7 +16,11 @@ public enum FamilyStatus {
     ACTIVE(FamilyConstants.STATUS_ACTIVE),
     INACTIVE(FamilyConstants.STATUS_INACTIVE),
     SPLIT(FamilyConstants.STATUS_SPLIT),
-    MERGED(FamilyConstants.STATUS_MERGED);
+    MERGED(FamilyConstants.STATUS_MERGED),
+    PENDING_FOR_APPROVAL(FamilyConstants.STATUS_PENDING_FOR_APPROVAL),
+    PENDING_APPROVAL(FamilyConstants.STATUS_PENDING_APPROVAL),
+    APPROVED(FamilyConstants.STATUS_APPROVED),
+    REJECTED(FamilyConstants.STATUS_REJECTED);
 
     private final String value;
 

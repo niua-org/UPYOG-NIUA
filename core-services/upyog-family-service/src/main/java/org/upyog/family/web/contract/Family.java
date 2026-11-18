@@ -72,10 +72,16 @@ public class Family {
     private String category;
 
     /**
-     * Operational lifecycle state of the family unit (e.g. {@link FamilyStatus#ACTIVE}, {@link FamilyStatus#MERGED}, {@link FamilyStatus#SPLIT}).
+     * Operational lifecycle state of the family unit (e.g. {@link FamilyStatus#ACTIVE}, {@link FamilyStatus#INACTIVE}, {@link FamilyStatus#MERGED}, {@link FamilyStatus#SPLIT}).
      */
     @JsonProperty("status")
     private FamilyStatus status;
+
+    /**
+     * Workflow application status of the family registration request (e.g. PENDING_FOR_APPROVAL, APPROVED, REJECTED).
+     */
+    @JsonProperty("applicationStatus")
+    private String applicationStatus;
 
     /**
      * Property ID representing the residential address property linked to this household unit.
@@ -124,6 +130,13 @@ public class Family {
      */
     @JsonProperty("auditDetails")
     private AuditDetails auditDetails;
+
+    /**
+     * Workflow transition details associated with this family unit.
+     */
+    @Valid
+    @JsonProperty("workflow")
+    private Workflow workflow;
 
     /**
      * Enriches the headName attribute based on the designated Head of Family's resolved member name.
