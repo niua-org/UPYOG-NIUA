@@ -413,471 +413,471 @@ export const profileStyles = {
       lineHeight: 1,
     },
   },
-  
-myFamilyDashboard: {
-  pageCard: {
-    maxWidth: "355px",
-    minHeight: "710px",
-    margin: "0 auto",
-    padding: "24px 20px 20px",
-    boxSizing: "border-box",
+
+  myFamilyDashboard: {
+    pageCard: {
+      maxWidth: "355px",
+      minHeight: "710px",
+      margin: "0 auto",
+      padding: "24px 20px 20px",
+      boxSizing: "border-box",
+    },
+
+    stepText: {
+      fontSize: "12px",
+      fontWeight: "700",
+      color: "#6B7280",
+      letterSpacing: "0.4px",
+      marginBottom: "14px",
+    },
+
+    /* ==============================
+       HEADER
+    ============================== */
+
+    headerRow: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "8px",
+      marginBottom: "8px",
+    },
+
+    pageTitle: {
+      fontSize: "24px",
+      fontWeight: "700",
+      color: "#172033",
+      lineHeight: "1.2",
+    },
+
+    familyIdBadge: {
+      background: "#D9F7E1",
+      color: "#087A36",
+      borderRadius: "8px",
+      padding: "5px 9px",
+      fontSize: "11px",
+      fontWeight: "700",
+      whiteSpace: "nowrap",
+    },
+
+    /* ==============================
+       FAMILY SUMMARY
+    ============================== */
+
+    familySummary: {
+      marginBottom: "28px",
+    },
+
+    summaryLine: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "4px",
+      flexWrap: "wrap",
+      lineHeight: "1.45",
+    },
+
+    summaryLabel: {
+      fontSize: "15px",
+      color: "#65758B",
+      fontWeight: "400",
+    },
+
+    summaryValue: {
+      fontSize: "15px",
+      color: "#65758B",
+      fontWeight: "400",
+    },
+
+    /* ==============================
+       REGISTERED MEMBERS HEADER
+    ============================== */
+
+    membersHeader: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: "14px",
+    },
+
+    membersTitle: {
+      fontSize: "11px",
+      fontWeight: "700",
+      color: "#65758B",
+      letterSpacing: "0.2px",
+    },
+
+    addMemberLink: {
+      border: "none",
+      background: "transparent",
+      padding: "0",
+      color: "#1769E0",
+      fontSize: "13px",
+      fontWeight: "600",
+      textDecoration: "underline",
+      cursor: "pointer",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "5px",
+    },
+
+    addMemberPlus: {
+      fontSize: "18px",
+      fontWeight: "700",
+      lineHeight: "1",
+      textDecoration: "none",
+    },
+
+    /* ==============================
+       MEMBER GRID
+    ============================== */
+
+    membersGrid: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "8px 20px",
+      marginBottom: "28px",
+    },
+
+    memberCard: {
+      minHeight: "166px",
+      border: "1px solid #DCE3EC",
+      borderRadius: "12px",
+      background: "#FFFFFF",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      padding: "16px 10px 14px",
+      boxSizing: "border-box",
+    },
+
+    /* ==============================
+       AVATAR
+    ============================== */
+
+    avatar: {
+      width: "44px",
+      height: "44px",
+      borderRadius: "50%",
+      background: "#292929",
+      color: "#FFFFFF",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "17px",
+      fontWeight: "400",
+      marginBottom: "12px",
+    },
+
+    /* ==============================
+       MEMBER DETAILS
+    ============================== */
+
+    memberName: {
+      fontSize: "14px",
+      fontWeight: "700",
+      color: "#172033",
+      textAlign: "center",
+      marginBottom: "5px",
+    },
+
+    memberRelationship: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "3px",
+      color: "#65758B",
+      fontSize: "12px",
+      textAlign: "center",
+      lineHeight: "1.3",
+      minHeight: "18px",
+    },
+
+    bullet: {
+      fontSize: "12px",
+      lineHeight: "1",
+    },
+
+    youText: {
+      color: "#65758B",
+    },
+
+    /* ==============================
+       VERIFIED BADGE
+    ============================== */
+
+    verifiedBadge: {
+      marginTop: "10px",
+      background: "#D9F7E1",
+      color: "#087A36",
+      borderRadius: "4px",
+      padding: "4px 9px",
+      fontSize: "10px",
+      fontWeight: "700",
+      letterSpacing: "0.1px",
+    },
+
+    /* ==============================
+       BOTTOM CTA
+    ============================== */
+
+    dashboardButton: {
+      width: "30%",
+      height: "46px",
+      border: "none",
+      borderRadius: "7px",
+      background: "#292929",
+      color: "#FFFFFF",
+      fontSize: "16px",
+      fontWeight: "500",
+      cursor: "pointer",
+      padding: "0 18px",
+      boxSizing: "border-box",
+    },
   },
-
-  stepText: {
-    fontSize: "12px",
-    fontWeight: "700",
-    color: "#6B7280",
-    letterSpacing: "0.4px",
-    marginBottom: "14px",
-  },
-
-  /* ==============================
-     HEADER
-  ============================== */
-
-  headerRow: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "8px",
-    marginBottom: "8px",
-  },
-
-  pageTitle: {
-    fontSize: "24px",
-    fontWeight: "700",
-    color: "#172033",
-    lineHeight: "1.2",
-  },
-
-  familyIdBadge: {
-    background: "#D9F7E1",
-    color: "#087A36",
-    borderRadius: "8px",
-    padding: "5px 9px",
-    fontSize: "11px",
-    fontWeight: "700",
-    whiteSpace: "nowrap",
-  },
-
-  /* ==============================
-     FAMILY SUMMARY
-  ============================== */
-
-  familySummary: {
-    marginBottom: "28px",
-  },
-
-  summaryLine: {
-    display: "flex",
-    alignItems: "baseline",
-    gap: "4px",
-    flexWrap: "wrap",
-    lineHeight: "1.45",
-  },
-
-  summaryLabel: {
-    fontSize: "15px",
-    color: "#65758B",
-    fontWeight: "400",
-  },
-
-  summaryValue: {
-    fontSize: "15px",
-    color: "#65758B",
-    fontWeight: "400",
-  },
-
-  /* ==============================
-     REGISTERED MEMBERS HEADER
-  ============================== */
-
-  membersHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "14px",
-  },
-
-  membersTitle: {
-    fontSize: "11px",
-    fontWeight: "700",
-    color: "#65758B",
-    letterSpacing: "0.2px",
-  },
-
-  addMemberLink: {
-    border: "none",
-    background: "transparent",
-    padding: "0",
-    color: "#1769E0",
-    fontSize: "13px",
-    fontWeight: "600",
-    textDecoration: "underline",
-    cursor: "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "5px",
-  },
-
-  addMemberPlus: {
-    fontSize: "18px",
-    fontWeight: "700",
-    lineHeight: "1",
-    textDecoration: "none",
-  },
-
-  /* ==============================
-     MEMBER GRID
-  ============================== */
-
-  membersGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "8px 20px",
-    marginBottom: "28px",
-  },
-
-  memberCard: {
-    minHeight: "166px",
-    border: "1px solid #DCE3EC",
-    borderRadius: "12px",
-    background: "#FFFFFF",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    padding: "16px 10px 14px",
-    boxSizing: "border-box",
-  },
-
-  /* ==============================
-     AVATAR
-  ============================== */
-
-  avatar: {
-    width: "44px",
-    height: "44px",
-    borderRadius: "50%",
-    background: "#292929",
-    color: "#FFFFFF",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "17px",
-    fontWeight: "400",
-    marginBottom: "12px",
-  },
-
-  /* ==============================
-     MEMBER DETAILS
-  ============================== */
-
-  memberName: {
-    fontSize: "14px",
-    fontWeight: "700",
-    color: "#172033",
-    textAlign: "center",
-    marginBottom: "5px",
-  },
-
-  memberRelationship: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "3px",
-    color: "#65758B",
-    fontSize: "12px",
-    textAlign: "center",
-    lineHeight: "1.3",
-    minHeight: "18px",
-  },
-
-  bullet: {
-    fontSize: "12px",
-    lineHeight: "1",
-  },
-
-  youText: {
-    color: "#65758B",
-  },
-
-  /* ==============================
-     VERIFIED BADGE
-  ============================== */
-
-  verifiedBadge: {
-    marginTop: "10px",
-    background: "#D9F7E1",
-    color: "#087A36",
-    borderRadius: "4px",
-    padding: "4px 9px",
-    fontSize: "10px",
-    fontWeight: "700",
-    letterSpacing: "0.1px",
-  },
-
-  /* ==============================
-     BOTTOM CTA
-  ============================== */
-
-  dashboardButton: {
-    width: "30%",
-    height: "46px",
-    border: "none",
-    borderRadius: "7px",
-    background: "#292929",
-    color: "#FFFFFF",
-    fontSize: "16px",
-    fontWeight: "500",
-    cursor: "pointer",
-    padding: "0 18px",
-    boxSizing: "border-box",
-  },
-},
-propertyDetails: {
-  container: {
-    width: "100%",
-  },
-
-  pageTitle: {
-    fontSize: "24px",
-    fontWeight: "600",
-    marginBottom: "24px",
-  },
-
-   actions: {
-    display: "flex",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    gap: "12px",
-    marginTop: "32px",
-    paddingTop: "24px",
-    borderTop: "1px solid #e0e0e0",
-  },
-
-  cancelButton: {
-    minWidth: "100px",
-    padding: "10px 20px",
-    border: "1px solid #D6D6D6",
-    cursor: "pointer",
-    fontSize: "14px",
-  },
-},
-urbanPropertyForm: {
-  container: {
-    width: "100%",
-  },
-
-  field: {
-    marginBottom: "24px",
-  },
-
-  searchInput: {
-    width: "100%",
-  },
-
-  searchRow: {
-    display: "flex",
-    alignItems: "flex-start",
-    gap: "16px",
-  },
-
-  searchSubmitButton: {
-    height: "40px",
-    padding: "0 16px",
-    borderRadius: "4px",
-    fontSize: "13px",
-    marginTop: 0,
-  },
-
-  results: {
-    width: "60%",
-    marginTop: "16px",
-  },
-
-  primaryAddressLabel: {
-    marginBottom: "8px",
-    fontSize: "14px",
-    fontWeight: "600",
-  },
-
-  propertyCard: {
-    position: "relative",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: "16px",
-    padding: "12px 44px 12px 16px",
-    marginBottom: "12px",
-    backgroundColor: "#F7F7F7",
-    border: "1px solid #E8E8E8",
-    borderRadius: "8px",
-    boxShadow: "none",
-  },
-
-  propertyCardWithActions: {
-    paddingTop: "48px",
-  },
-
   propertyDetails: {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: "8px",
-  },
+    container: {
+      width: "100%",
+    },
 
-  propertyField: {
-    fontSize: "12px",
-  },
+    pageTitle: {
+      fontSize: "24px",
+      fontWeight: "600",
+      marginBottom: "24px",
+    },
 
-  propertyLabel: {
-    color: "#505A5F",
-    fontWeight: "600",
-  },
+    actions: {
+      display: "flex",
+      justifyContent: "flex-end",
+      alignItems: "center",
+      gap: "12px",
+      marginTop: "32px",
+      paddingTop: "24px",
+      borderTop: "1px solid #e0e0e0",
+    },
 
-  propertyValue: {
-    color: "#0B0C0C",
-    marginTop: "2px",
-    overflowWrap: "anywhere",
+    cancelButton: {
+      minWidth: "100px",
+      padding: "10px 20px",
+      border: "1px solid #D6D6D6",
+      cursor: "pointer",
+      fontSize: "14px",
+    },
   },
+  urbanPropertyForm: {
+    container: {
+      width: "100%",
+    },
 
-  propertyActions: {
-    position: "absolute",
-    top: "10px",
-    right: "12px",
-    display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap",
-    justifyContent: "flex-end",
-    gap: "8px",
-  },
+    field: {
+      marginBottom: "24px",
+    },
 
-  propertyActionButton: {
-    padding: "6px 10px",
-    border: "1px solid #b1afb4",
-    borderRadius: "16px",
-    background: "#FFFFFF",
-    color: "#000000",
-    fontSize: "12px",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
+    searchInput: {
+      width: "100%",
+    },
 
-  defaultPropertyButton: {
-    background: "#ebebeb",
-    color: "#000000",
-    cursor: "default",
-  },
+    searchRow: {
+      display: "flex",
+      alignItems: "flex-start",
+      gap: "16px",
+    },
 
-  removePropertyButton: {
-    borderColor: "#D4353A",
-    color: "#D4353A",
-  },
+    searchSubmitButton: {
+      height: "40px",
+      padding: "0 16px",
+      borderRadius: "4px",
+      fontSize: "13px",
+      marginTop: 0,
+    },
 
-  noProperty: {
-    marginTop: "16px",
-    fontSize: "14px",
-  },
+    results: {
+      width: "60%",
+      marginTop: "16px",
+    },
 
-  createProperty: {
-    marginTop: "20px",
-    marginBottom:"10px",
-  },
+    primaryAddressLabel: {
+      marginBottom: "8px",
+      fontSize: "14px",
+      fontWeight: "600",
+    },
 
-  registerPropertyLink: {
-    color: "#D4353A",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "600",
-    padding: "0 5px",
-    textDecoration:"underline"
-  },
+    propertyCard: {
+      position: "relative",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      gap: "16px",
+      padding: "12px 44px 12px 16px",
+      marginBottom: "12px",
+      backgroundColor: "#F7F7F7",
+      border: "1px solid #E8E8E8",
+      borderRadius: "8px",
+      boxShadow: "none",
+    },
 
-  createPropertyButton: {
-    padding: "8px 0",
-    border: "none",
-    background: "transparent",
-    cursor: "pointer",
-    fontSize: "14px",
-    fontWeight: "600",
-  },
-},
-ruralPropertyForm: {
-  container: {
-    width: "100%",
-  },
-  fieldRow: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    columnGap: "24px",
-    alignItems: "start",
-  },
+    propertyCardWithActions: {
+      paddingTop: "48px",
+    },
 
-  field: {
-    marginBottom: "20px",
-  },
+    propertyDetails: {
+      display: "grid",
+      gridTemplateColumns: "1fr",
+      gap: "8px",
+    },
 
-  header: {
-    marginBottom: "24px",
-  },
+    propertyField: {
+      fontSize: "12px",
+    },
 
-  quickRegistration: {
-    fontSize: "12px",
-    fontWeight: "600",
-    marginBottom: "8px",
-  },
+    propertyLabel: {
+      color: "#505A5F",
+      fontWeight: "600",
+    },
 
-  title: {
-    fontSize: "24px",
-    fontWeight: "600",
-    marginBottom: "8px",
-  },
+    propertyValue: {
+      color: "#0B0C0C",
+      marginTop: "2px",
+      overflowWrap: "anywhere",
+    },
 
-  description: {
-    fontSize: "14px",
-    lineHeight: "20px",
-    marginBottom: "24px",
-  },
+    propertyActions: {
+      position: "absolute",
+      top: "10px",
+      right: "12px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "wrap",
+      justifyContent: "flex-end",
+      gap: "8px",
+    },
 
-  section: {
-    marginBottom: "32px",
-  },
+    propertyActionButton: {
+      padding: "6px 10px",
+      border: "1px solid #b1afb4",
+      borderRadius: "16px",
+      background: "#FFFFFF",
+      color: "#000000",
+      fontSize: "12px",
+      fontWeight: "600",
+      cursor: "pointer",
+    },
 
-  sectionTitle: {
-    fontSize: "16px",
-    fontWeight: "600",
-    marginBottom: "20px",
-  },
+    defaultPropertyButton: {
+      background: "#ebebeb",
+      color: "#000000",
+      cursor: "default",
+    },
 
-  // field: {
-  //   marginBottom: "20px",
-  // },
+    removePropertyButton: {
+      borderColor: "#D4353A",
+      color: "#D4353A",
+    },
 
-radioGroup: {
-  display: "flex",
-  flexDirection: "row",
-  alignItems: "center",
-  gap: "24px",
-  width: "100%",
-  flexWrap: "nowrap",
-},
-  jointOwnerSection: {
-    marginTop: "20px",
-    padding: "20px",
-    border: "1px solid #E0E0E0",
-  },
+    noProperty: {
+      marginTop: "16px",
+      fontSize: "14px",
+    },
 
-  jointOwnerTitle: {
-    fontSize: "14px",
-    fontWeight: "600",
-    marginBottom: "20px",
-  },
+    createProperty: {
+      marginTop: "20px",
+      marginBottom: "10px",
+    },
 
-  hint: {
-    fontSize: "12px",
-    marginTop: "8px",
+    registerPropertyLink: {
+      color: "#D4353A",
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: "600",
+      padding: "0 5px",
+      textDecoration: "underline"
+    },
+
+    createPropertyButton: {
+      padding: "8px 0",
+      border: "none",
+      background: "transparent",
+      cursor: "pointer",
+      fontSize: "14px",
+      fontWeight: "600",
+    },
   },
-},
+  ruralPropertyForm: {
+    container: {
+      width: "100%",
+    },
+    fieldRow: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      columnGap: "24px",
+      alignItems: "start",
+    },
+
+    field: {
+      marginBottom: "20px",
+    },
+
+    header: {
+      marginBottom: "24px",
+    },
+
+    quickRegistration: {
+      fontSize: "12px",
+      fontWeight: "600",
+      marginBottom: "8px",
+    },
+
+    title: {
+      fontSize: "24px",
+      fontWeight: "600",
+      marginBottom: "8px",
+    },
+
+    description: {
+      fontSize: "14px",
+      lineHeight: "20px",
+      marginBottom: "24px",
+    },
+
+    section: {
+      marginBottom: "32px",
+    },
+
+    sectionTitle: {
+      fontSize: "16px",
+      fontWeight: "600",
+      marginBottom: "20px",
+    },
+
+    // field: {
+    //   marginBottom: "20px",
+    // },
+
+    radioGroup: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: "24px",
+      width: "100%",
+      flexWrap: "nowrap",
+    },
+    jointOwnerSection: {
+      marginTop: "20px",
+      padding: "20px",
+      border: "1px solid #E0E0E0",
+    },
+
+    jointOwnerTitle: {
+      fontSize: "14px",
+      fontWeight: "600",
+      marginBottom: "20px",
+    },
+
+    hint: {
+      fontSize: "12px",
+      marginTop: "8px",
+    },
+  },
   aadhaarVerification: {
     consentBox: {
       background: "#F8F9FA",
@@ -1033,11 +1033,11 @@ radioGroup: {
     hint: { fontSize: 12, color: "#6B7280", marginTop: 6 },
   },
 
-  componentBottomMargin:{
-    marginBottom:"20px"
+  componentBottomMargin: {
+    marginBottom: "20px"
   },
 
-  familyCreateTabs:{
+  familyCreateTabs: {
     wrapper: {
       display: "flex",
       gap: "8px",
@@ -1068,7 +1068,7 @@ radioGroup: {
       borderBottom: "3px solid #00703C",
     },
   },
-    // Tax ID validate button (IncomeDetails)
+  // Tax ID validate button (IncomeDetails)
   taxIdInputRow: {
     display: "flex",
     gap: "8px",
@@ -1114,7 +1114,7 @@ radioGroup: {
     marginBottom: "20px"
   },
 
-  dropDownHeight:{
+  dropDownHeight: {
     maxHeight: "220px",
     overflowY: "auto",
   },
@@ -1192,7 +1192,7 @@ radioGroup: {
     errorMargin: {
       marginTop: "4px",
     },
-    fileRestrictionText:{
+    fileRestrictionText: {
       fontSize: "12px",
       color: "#64748b",
       marginTop: "4px",
@@ -1200,16 +1200,16 @@ radioGroup: {
     }
   },
 
-  foundFamilyDetailSection:{
-    sectionBoxStyle : {
+  foundFamilyDetailSection: {
+    sectionBoxStyle: {
       marginBottom: "24px",
       padding: "16px 20px",
       background: "#FAFAFA",
       borderRadius: "6px",
       border: "1px solid #E8E8E8",
     },
-    
-    sectionTitleStyle : {
+
+    sectionTitleStyle: {
       fontSize: "20px",
       fontWeight: "700",
       color: "#0B0C0C",
@@ -1220,7 +1220,51 @@ radioGroup: {
       alignItems: "center",
       gap: "8px",
     },
-  }
+  },
+  foundFamilyDetailSection: {
+    sectionBoxStyle: {
+      marginBottom: "24px",
+      padding: "16px 20px",
+      background: "#FAFAFA",
+      borderRadius: "6px",
+      border: "1px solid #E8E8E8",
+    },
+    sectionTitleStyle: {
+      fontSize: "20px",
+      fontWeight: "700",
+      color: "#0B0C0C",
+      marginBottom: "16px",
+      paddingBottom: "8px",
+      borderBottom: "2px solid #D6D5D4",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    },
+    headerWrap: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "20px",
+    },
+    actionsWrap: {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+    },
+    actionBtn: {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      background: "#F4F5F7",
+      color: "#0B0C0C",
+      border: "none",
+      borderRadius: "8px",
+      padding: "8px 16px",
+      fontSize: "14px",
+      fontWeight: "500",
+      cursor: "pointer",
+    },
+  },
 };
 
 

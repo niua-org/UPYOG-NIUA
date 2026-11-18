@@ -5,12 +5,12 @@
  * 
  * Features:
  * - Displays verified Head of Family (HOF) information in a structured `StatusTable`.
- * - Categorizes and presents Applicant details into 4 visually distinct sections:
+ * - Categorizes and presents Applicant details into 4 clean, distinct sections:
  *   1. Personal Details (including selected Relationship with HOF)
  *   2. Minimal Property Details (Locality Type, Property ID / Address, Property Type)
  *   3. Minimal Income Details (Occupation, Annual Income, Tax ID Type & Number)
  *   4. Minimal Vehicle Details (Vehicle Type, Vehicle Number, Purchase Year)
- * - Uses official UPYOG `StatusTable` & `Row` components for clear label-value alignment.
+ * - Single set of View (eye) & Edit (pencil) buttons in the top applicant header.
  * - Submits `Digit.UserService.joinFamily` request with the working backend payload.
  * - Navigates to `FAMILY_JOINED` on successful submission.
  * 
@@ -28,17 +28,20 @@ import {
   SubmitBar,
   Loader,
   Toast,
+  ViewsIcon,
+  EditIcon,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { getFamilyHeadFields, getPersonalFields, useProfileUser, withValues } from "../utils";
 import { PROFILE_ROUTES } from "../utils/constants";
 import { profileStyles } from "../utils/profileStyles";
-
 
 const FoundFamily = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const locationState = useLocation().state || {};
+
+  const styles = profileStyles.foundFamilyDetailSection;
 
   // Retrieve cached join session state from sessionStorage as fallback
   const storedJoinData = useMemo(() => {
@@ -71,6 +74,16 @@ const FoundFamily = () => {
   // Direct relationship code extraction from CreateProfile step
   const relationship = profileDetails.relationshipWithHof;
   const relationshipCode = relationship?.code || relationship;
+
+  // View entire form in read-only mode
+  const handleViewApplicant = () => {
+    navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?flow=join&mode=view`);
+  };
+
+  // Edit form starting from personal details step
+  const handleEditApplicant = () => {
+    navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?flow=join`);
+  };
 
   // Head of family display summary fields
   const familyHeadFields = useMemo(() => getFamilyHeadFields(verifiedData, t), [verifiedData, t]);
@@ -192,7 +205,7 @@ const FoundFamily = () => {
         <CardHeader style={{ fontSize: "24px", marginBottom: "16px" }}>
           {t("PROFILE_FOUND_FAMILY")}
         </CardHeader>
-        <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
+        <div style={styles.sectionBoxStyle}>
           <StatusTable>
             {familyHeadFields.map(([key, val], idx) => (
               <Row key={idx} label={t(key)} text={val || "NA"} />
@@ -203,13 +216,36 @@ const FoundFamily = () => {
 
       {/* 2. Applicant Review Details Card */}
       <Card>
-        <CardHeader style={{ fontSize: "24px", marginBottom: "20px" }}>
-          {t("PROFILE_APPLICANT_DETAILS")}
-        </CardHeader>
+        {/* Main Header with View and Edit Buttons */}
+        <div style={styles.headerWrap}>
+          <CardHeader style={{ fontSize: "24px", margin: 0 }}>
+            {t("PROFILE_APPLICANT_DETAILS")}
+          </CardHeader>
+          <div style={styles.actionsWrap}>
+            <button
+              type="button"
+              style={styles.actionBtn}
+              title={t("CORE_COMMON_VIEW")}
+              onClick={handleViewApplicant}
+            >
+              <ViewsIcon />
+              <span>{t("CORE_COMMON_VIEW")}</span>
+            </button>
+            <button
+              type="button"
+              style={styles.actionBtn}
+              title={t("CORE_COMMON_EDIT")}
+              onClick={handleEditApplicant}
+            >
+              <EditIcon />
+              <span>{t("CORE_COMMON_EDIT")}</span>
+            </button>
+          </div>
+        </div>
 
         {/* Section A: Personal Details */}
-        <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
-          <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
+        <div style={styles.sectionBoxStyle}>
+          <div style={styles.sectionTitleStyle}>
             <span>{t("CORE_COMMON_PROFILE_PERSONAL_DETAILS")}</span>
           </div>
           {loading ? (
@@ -225,8 +261,8 @@ const FoundFamily = () => {
 
         {/* Section B: Property Details */}
         {propertyFields.length > 0 && (
-          <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
-            <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
+          <div style={styles.sectionBoxStyle}>
+            <div style={styles.sectionTitleStyle}>
               <span>{t("ES_TITILE_PROPERTY_DETAILS")}</span>
             </div>
             <StatusTable>
@@ -239,8 +275,8 @@ const FoundFamily = () => {
 
         {/* Section C: Income Details */}
         {incomeFields.length > 0 && (
-          <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
-            <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
+          <div style={styles.sectionBoxStyle}>
+            <div style={styles.sectionTitleStyle}>
               <span>{t("ES_TITLE_INCOME_DETAILS")}</span>
             </div>
             <StatusTable>
@@ -253,8 +289,8 @@ const FoundFamily = () => {
 
         {/* Section D: Vehicle Details */}
         {vehicleFields.length > 0 && (
-          <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
-            <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
+          <div style={styles.sectionBoxStyle}>
+            <div style={styles.sectionTitleStyle}>
               <span>{t("ES_TITLE_VEHICLE_DETAILS")}</span>
             </div>
             <StatusTable>
