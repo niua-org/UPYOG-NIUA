@@ -1192,10 +1192,13 @@ radioGroup: {
     errorMargin: {
       marginTop: "4px",
     },
-  },
-
-
-  
+    fileRestrictionText:{
+      fontSize: "12px",
+      color: "#64748b",
+      marginTop: "4px",
+      lineHeight: "1.3",
+    }
+  }
 };
 
 

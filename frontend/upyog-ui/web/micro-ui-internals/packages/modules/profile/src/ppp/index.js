@@ -29,7 +29,6 @@ const FamilyCreate = ({ parentRoute }) => {
   const [searchParams] = useSearchParams();
   const navigate = Digit.Hooks.useCustomNavigate();
   let config = [];
-  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();; 
 
   /**
    * Step data is kept per family member: Family_Details = { [memberId]: { profileDetails, income, vehicles } }.
@@ -58,9 +57,7 @@ const FamilyCreate = ({ parentRoute }) => {
     const currentPath = pathname.split("/").pop();
 
     // Find current step by route or by key as fallback
-    const currentRoute =
-      config.find((r) => r.route === currentPath) ||
-      config.find((r) => r.key === key);
+    const currentRoute = config.find((r) => r.route === currentPath) || config.find((r) => r.key === key);
 
     if (!currentRoute) {
       console.error(`[FamilyCreate] No config found for route "${currentPath}" or key "${key}".`);

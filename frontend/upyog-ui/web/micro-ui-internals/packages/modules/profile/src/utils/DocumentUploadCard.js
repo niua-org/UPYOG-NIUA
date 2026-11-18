@@ -18,11 +18,11 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
     if (!["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(selectedFile.type)) {
-      setUploadError(t("PROFILE_DOC_INVALID_TYPE", "Only JPG, PNG, and PDF files are allowed"));
+      setUploadError(t("PROFILE_DOC_INVALID_TYPE"));
       return;
     }
     if (selectedFile.size > 5 * 1024 * 1024) {
-      setUploadError(t("PROFILE_DOC_SIZE_EXCEEDED", "File size cannot exceed 5MB"));
+      setUploadError(t("PROFILE_DOC_SIZE_EXCEEDED"));
       return;
     }
     setUploadError(null);
@@ -33,7 +33,7 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
       if (!fileStoreId) throw new Error("NO_FILESTORE_ID");
       onFileChange({ name: selectedFile.name, fileStoreId });
     } catch {
-      setUploadError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR", "Failed to upload file"));
+      setUploadError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR"));
     } finally {
       setUploading(false);
     }
@@ -59,7 +59,7 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
         option={options}
         optionKey="name"
         t={t}
-        placeholder={typePlaceholder || t("CHOOSE_DOCUMENT_TYPE", "Choose Document Type")}
+        placeholder={typePlaceholder || t("CHOOSE_DOCUMENT_TYPE")}
         disable={disabled}
         style={styles.dropdownMargin}
       />
@@ -68,15 +68,18 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
           <input type="file" ref={fileInputRef} accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileSelect} disabled={disabled || uploading} style={{ display: "none" }} />
           <button type="button" onClick={() => fileInputRef.current?.click()} disabled={disabled || uploading}
             style={{ ...styles.chooseBtn, ...(disabled || uploading ? styles.chooseBtnDisabled : {}) }}>
-            {uploading ? t("UPLOADING", "Uploading...") : t("CHOOSE_FILE", "Choose file")}
+            {uploading ? t("UPLOADING") : t("CHOOSE_FILE")}
           </button>
           <span style={{ ...styles.fileName, ...(file?.name ? styles.fileNameUploaded : {}) }}>
-            {uploading ? t("UPLOADING", "Uploading...") : file?.name || t("NO_FILE_SELECTED", "No file selected")}
+            {uploading ? t("UPLOADING") : file?.name || t("NO_FILE_SELECTED")}
           </span>
         </div>
         {file && !disabled && (
           <button type="button" onClick={handleDelete} style={styles.deleteBtn}>✕</button>
         )}
+      </div>
+       <div style={styles.fileRestrictionText}>
+        {t("CS_FILE_SIZE_RESTRICTIONS")}
       </div>
       {hasError && <CardLabelError style={styles.errorMargin}>{t(uploadError || error)}</CardLabelError>}
     </div>
