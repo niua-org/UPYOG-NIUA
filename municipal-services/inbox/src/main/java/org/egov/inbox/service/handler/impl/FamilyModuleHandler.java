@@ -89,7 +89,7 @@ public class FamilyModuleHandler implements ModuleInboxHandler {
      * Specifies the list of request parameters that should be stripped from the
      * criteria map before forwarding queries to the downstream Family service search endpoint.
      *
-     * @return List of parameter names to remove: {@code applicationStatus}, {@code locality},
+     * @return List of parameter names to remove: {@code status}, {@code locality},
      *         {@code offset}, and {@code familyId}.
      */
     @Override
