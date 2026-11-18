@@ -23,6 +23,9 @@ import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.upyog.family.web.contract.JoinFamilyRequest;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
+import org.upyog.family.web.contract.UserIncomeDetail;
+import org.upyog.family.web.contract.UserProperty;
+import org.upyog.family.web.contract.UserVehicleDetail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -190,6 +193,29 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 .lastModifiedTime(now)
                 .build());
 
+        // Fix for PR parity with createFamily / 3NF member assets:
+        // Ensure userUuid and tenantId are properly populated on declared properties, income, and vehicles
+        enrichMemberAssets(newMember, existingFamily.getTenantId());
+
+        // Synchronize added member profile demographics and declared 3NF assets to egov-user BEFORE Kafka push.
+        // This ensures asset records (properties, income, vehicles) exist in egov-user before the family update event
+        // is queued to Kafka persister. If failOnAssetSyncError is enabled (default true) and assets are declared,
+        // aborts transaction to prevent unattached or orphaned asset declarations.
+        boolean hasAddedAssets = hasDeclaredAssets(newMember);
+        log.info("[UPYOG-MEMBER-SERVICE] Synchronizing added member assets to egov-user for family: {}, hasDeclaredAssets: {}",
+                existingFamily.getFamilyId(), hasAddedAssets);
+        boolean addedSyncSuccess = userClient.syncMemberAssets(Collections.singletonList(newMember), existingFamily.getTenantId(), requestInfo);
+        if (!addedSyncSuccess) {
+            log.error("[UPYOG-MEMBER-SERVICE] Member asset synchronization failed for added member: {} in family: {}",
+                    newMember.getUserUuid(), existingFamily.getFamilyId());
+            if (hasAddedAssets && configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
+                throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+            }
+        } else {
+            log.info("[UPYOG-MEMBER-SERVICE] Successfully synchronized assets for added member: {} in family: {}",
+                    newMember.getUserUuid(), existingFamily.getFamilyId());
+        }
+
         if (existingFamily.getMembers() == null) {
             existingFamily.setMembers(new ArrayList<>());
         }
@@ -211,13 +237,14 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
     /**
      * Processes an independent citizen request to join an existing family unit upon Head of Family authorization in UPYOG.
      *
-     * <p>Validates applicant credentials and the verified HoF consent token via {@link JoinFamilyValidator},
-     * adds the applicant to the active members roster with status {@link MemberStatus#JOINED}, pushes the event
-     * to Kafka persister, and decorates the family aggregate with demographics from {@code egov-user}.</p>
+     * <p>Validates applicant credentials, 3NF profile and asset declarations, and the verified HoF consent token via
+     * {@link JoinFamilyValidator}. Synchronizes declared assets to {@code egov-user}, adds the applicant to the active
+     * members roster with status {@link MemberStatus#JOINED}, pushes the event to Kafka persister, and decorates the
+     * family aggregate with demographics from {@code egov-user}.</p>
      *
-     * @param request join family request containing applicant UUID, relationship with head, and verified HoF consent token.
+     * @param request join family request containing applicant UUID, relationship with head, verified HoF consent token, and asset declarations.
      * @return the updated {@link Family} aggregate including the newly joined member.
-     * @throws CustomException if target family does not exist, consent is invalid, or applicant already belongs to another family.
+     * @throws CustomException if target family does not exist, consent is invalid, applicant already belongs to another family, or asset sync fails.
      */
     @Override
     @Transactional
@@ -234,11 +261,20 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
+        // Citizen demographics (name, mobile, gender, dob, photo) are derived from citizenDetails as the Single Source of Truth (3NF)
+        CitizenProfile profile = request.getCitizenDetails();
+
+        // Construct joined member aggregate binding 3NF asset declarations (properties, income, vehicles)
         FamilyMember joinedMember = FamilyMember.builder()
                 .id(generateMemberIdOrDefault(requestInfo, existingFamily.getTenantId()))
                 .familyId(existingFamily.getFamilyId())
                 .tenantId(existingFamily.getTenantId())
                 .userUuid(request.getApplicantUserUuid())
+                .name(profile != null && StringUtils.isNotBlank(profile.getName()) ? profile.getName() : null)
+                .mobileNumber(profile != null && StringUtils.isNotBlank(profile.getMobileNumber()) ? profile.getMobileNumber() : null)
+                .gender(profile != null && StringUtils.isNotBlank(profile.getGender()) ? profile.getGender() : null)
+                .dob(profile != null ? profile.getDob() : null)
+                .photo(profile != null ? profile.getPhoto() : null)
                 .relationshipWithHead(request.getRelationshipWithHead())
                 .isHead(false)
                 .isVerified(StringUtils.isNotBlank(request.getTxnId()))
@@ -247,6 +283,10 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                 .consentToken(maskOrHashConsentToken(request.getTxnId()))
                 .consentDate(now)
                 .effectiveFrom(now)
+                .citizenDetails(profile)
+                .properties(request.getProperties() != null ? request.getProperties() : new ArrayList<>())
+                .income(request.getIncome())
+                .vehicles(request.getVehicles() != null ? request.getVehicles() : new ArrayList<>())
                 .auditDetails(AuditDetails.builder()
                         .createdBy(userUuid)
                         .createdTime(now)
@@ -254,6 +294,27 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
                         .lastModifiedTime(now)
                         .build())
                 .build();
+
+        // Propagate citizen userUuid and tenantId across declared properties, income, and vehicles
+        enrichMemberAssets(joinedMember, existingFamily.getTenantId());
+
+        // Synchronize joined member profile and declared 3NF assets to egov-user BEFORE Kafka push.
+        // Adheres to the createFamily architecture: ensures 3NF records in egov-user are updated synchronously
+        // before the family membership record is committed to Kafka persister topic.
+        boolean hasAssets = hasDeclaredAssets(joinedMember);
+        log.info("[UPYOG-MEMBER-SERVICE] Synchronizing joined member assets to egov-user for family: {}, hasDeclaredAssets: {}",
+                existingFamily.getFamilyId(), hasAssets);
+        boolean syncSuccess = userClient.syncMemberAssets(Collections.singletonList(joinedMember), existingFamily.getTenantId(), requestInfo);
+        if (!syncSuccess) {
+            log.error("[UPYOG-MEMBER-SERVICE] Member asset synchronization failed for joined member: {} in family: {}",
+                    joinedMember.getUserUuid(), existingFamily.getFamilyId());
+            if (hasAssets && configuration != null && Boolean.TRUE.equals(configuration.getFailOnAssetSyncError())) {
+                throw new CustomException(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, FamilyConstants.MSG_MEMBER_ASSET_SYNC_FAILED);
+            }
+        } else {
+            log.info("[UPYOG-MEMBER-SERVICE] Successfully synchronized assets for joined member: {} in family: {}",
+                    joinedMember.getUserUuid(), existingFamily.getFamilyId());
+        }
 
         if (existingFamily.getMembers() == null) {
             existingFamily.setMembers(new ArrayList<>());
@@ -413,5 +474,79 @@ public class FamilyMemberServiceImpl implements FamilyMemberService {
             return token;
         }
         return "CONSENT-REF-" + Integer.toHexString(token.hashCode()).toUpperCase();
+    }
+
+    /**
+     * Checks if an individual family member declares properties, vehicles, income, or demographic proof documents.
+     *
+     * @param m family member contract
+     * @return true if member contains declared assets or demographic documents
+     */
+    private boolean hasDeclaredAssets(FamilyMember m) {
+        if (m == null) {
+            return false;
+        }
+        if (m.getCitizenDetails() != null) {
+            if (m.getCitizenDetails().getDocuments() != null && !m.getCitizenDetails().getDocuments().isEmpty()) {
+                return true;
+            }
+            if (StringUtils.isNotBlank(m.getCitizenDetails().getCaste())) {
+                return true;
+            }
+            if (m.getCitizenDetails().getIsSpeciallyAbled() != null) {
+                return true;
+            }
+        }
+        if (m.getProperties() != null && !m.getProperties().isEmpty()) {
+            return true;
+        }
+        if (m.getIncome() != null) {
+            return true;
+        }
+        if (m.getVehicles() != null && !m.getVehicles().isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Enriches declared member assets with citizen user UUID and tenant ID where absent.
+     *
+     * @param member target family member
+     * @param tenantId common tenant identifier
+     */
+    private void enrichMemberAssets(FamilyMember member, String tenantId) {
+        if (member == null) {
+            return;
+        }
+        String userUuid = member.getUserUuid();
+        if (member.getProperties() != null) {
+            for (UserProperty prop : member.getProperties()) {
+                if (StringUtils.isBlank(prop.getUserUuid())) {
+                    prop.setUserUuid(userUuid);
+                }
+                if (StringUtils.isBlank(prop.getTenantId())) {
+                    prop.setTenantId(tenantId);
+                }
+            }
+        }
+        if (member.getIncome() != null) {
+            if (StringUtils.isBlank(member.getIncome().getUserUuid())) {
+                member.getIncome().setUserUuid(userUuid);
+            }
+            if (StringUtils.isBlank(member.getIncome().getTenantId())) {
+                member.getIncome().setTenantId(tenantId);
+            }
+        }
+        if (member.getVehicles() != null) {
+            for (UserVehicleDetail vehicle : member.getVehicles()) {
+                if (StringUtils.isBlank(vehicle.getUserUuid())) {
+                    vehicle.setUserUuid(userUuid);
+                }
+                if (StringUtils.isBlank(vehicle.getTenantId())) {
+                    vehicle.setTenantId(tenantId);
+                }
+            }
+        }
     }
 }
