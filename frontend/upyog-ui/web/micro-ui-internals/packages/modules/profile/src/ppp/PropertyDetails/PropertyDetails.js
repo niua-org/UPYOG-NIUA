@@ -19,14 +19,21 @@ const LOCALITY_TYPE_OPTIONS = [
 ];
 
 /**
- * Property Details Page Developed to get the Property details of the family Members
- * These Details Will be filled by the Family Head
- * Head should have to provide below details :-
+ * Collects and manages a family's urban and rural property portfolio.
+ *
  *  1. Property Proof
  *  2. Locality Type
  *  3. Rural / Urban Property Details
  *  5. Owner Name
  *  6. Property Address
+ *
+ * @param {object} props Component props.
+ * @param {Function} props.t Translation function.
+ * @param {object} props.config Form-step configuration; its key identifies this property's saved value.
+ * @param {Function} props.onSelect Completes the step and submits the final property value.
+ * @param {Function} [props.onUpdate] Persists partial property changes while the step is active.
+ * @param {object} props.formData Form data keyed by step configuration key.
+ * @returns {JSX.Element} Property portfolio form with add, edit, and primary-property controls.
  */
 const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
   const styles = profileStyles.propertyDetails;

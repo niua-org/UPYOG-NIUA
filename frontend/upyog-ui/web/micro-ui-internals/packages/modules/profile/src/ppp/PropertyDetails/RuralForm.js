@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-import {
-  Dropdown,
-  TextInput,
-  RadioButtons, UploadFile
-} from "@nudmcdgnpm/digit-ui-react-components";
+import {Dropdown, TextInput, RadioButtons, UploadFile} from "@nudmcdgnpm/digit-ui-react-components";
 
 import { profileStyles } from "../../utils/profileStyles";
 

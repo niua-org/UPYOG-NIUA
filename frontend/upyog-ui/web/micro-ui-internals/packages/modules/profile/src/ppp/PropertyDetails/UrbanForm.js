@@ -44,6 +44,7 @@ const getPropertyAddress = (property) => {
  * @param {object} [props.data={}] Existing property details and selected default address.
  * @param {Function} props.onChange Callback invoked when the property selection changes.
  * @param {boolean} [props.disabled=false] Whether property search and editing are disabled.
+ * @param {string[]} [props.existingPropertyIds=[]] Property IDs already in the portfolio, used to block duplicates.
  * @returns {JSX.Element} The urban property search form and property cards.
  */
 const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingPropertyIds = [] }) => {
