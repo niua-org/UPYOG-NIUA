@@ -21,6 +21,8 @@ import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
 import org.egov.user.web.contract.profile.AadhaarEkycMarkVerifiedRequest;
+import org.egov.user.web.contract.profile.AadhaarHofCheckRequest;
+import org.egov.user.web.contract.profile.AadhaarHofCheckResponse;
 import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
@@ -404,6 +406,32 @@ public class ProfileController {
                 .user(contents)
                 .build();
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Checks if a citizen with the given Aadhaar number exists in the system and is the active Head of Family (HoF).
+     *
+     * @param request Aadhaar HoF check request payload containing Aadhaar number and tenantId
+     * @return {@link AadhaarHofCheckResponse} stating whether the citizen exists and is confirmed HoF
+     */
+    @Operation(
+            summary = "Check Citizen Existence and Head of Family (HoF) Status by Aadhaar",
+            description = "Validates if the provided 12-digit Aadhaar number belongs to an existing citizen in the system and whether that citizen is the designated Head of Family (HoF) in upyog-family-service."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Citizen exists and is confirmed as Head of Family",
+                    content = @Content(schema = @Schema(implementation = AadhaarHofCheckResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid Aadhaar format, citizen not found, citizen not in family, or citizen not HoF"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/aadhaar/_checkHof")
+    public ResponseEntity<AadhaarHofCheckResponse> checkAadhaarHof(@RequestBody @Valid AadhaarHofCheckRequest request) {
+        log.info("[PROFILE-CONTROLLER] Received Aadhaar HoF check request. tenant: {}, aadhaar: {}",
+                request != null ? request.getTenantId() : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        AadhaarHofCheckResponse response = profileService.checkAadhaarHof(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

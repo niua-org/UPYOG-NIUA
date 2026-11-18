@@ -46,7 +46,10 @@ import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarHofCheckRequest;
+import org.egov.user.web.contract.profile.AadhaarHofCheckResponse;
 import org.egov.user.web.contract.profile.AadhaarSearchRequest;
+import org.egov.user.web.contract.profile.FamilyHofStatus;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -2402,6 +2405,73 @@ public class ProfileServiceImpl implements ProfileService {
         // Aadhaar search participates in the same SSOT familyId enrichment as other profile endpoints
         enrichFamilyId(citizen, stateTenant, request.getRequestInfo());
         return Collections.singletonList(citizen);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AadhaarHofCheckResponse checkAadhaarHof(AadhaarHofCheckRequest request) {
+        if (request == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "Aadhaar HoF check request cannot be null");
+        }
+
+        if (request.getRequestInfo() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "RequestInfo is mandatory");
+        }
+
+        if (StringUtils.isBlank(request.getAadhaarNumber())) {
+            throw new CustomException(UserConstants.ERROR_AADHAAR_NUMBER_REQUIRED, "Aadhaar number is mandatory");
+        }
+
+        String normalizedAadhaar = AadhaarNumberUtils.normalizeToTwelveDigits(request.getAadhaarNumber());
+        if (normalizedAadhaar == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_AADHAAR_FORMAT, UserConstants.MSG_INVALID_AADHAAR_FORMAT);
+        }
+
+        String rawTenant = StringUtils.isNotBlank(request.getTenantId())
+                ? request.getTenantId().trim()
+                : (request.getRequestInfo().getUserInfo() != null ? request.getRequestInfo().getUserInfo().getTenantId() : null);
+        String stateTenant = resolveStateTenant(rawTenant);
+        log.info("[PROFILE-SERVICE] Checking HoF status for Aadhaar: {} in tenant: {}",
+                MaskUtils.maskAadhaar(normalizedAadhaar), stateTenant);
+
+        // 1. Check if citizen exists in eg_user
+        User citizen = findCitizenByAadhaar(normalizedAadhaar, stateTenant, request.getRequestInfo());
+        if (citizen == null || StringUtils.isBlank(citizen.getUuid())) {
+            throw new CustomException(UserConstants.ERROR_CITIZEN_NOT_FOUND, UserConstants.MSG_CITIZEN_NOT_FOUND_FOR_AADHAAR);
+        }
+
+        if (!Boolean.TRUE.equals(citizen.getActive())) {
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, "Citizen account associated with this Aadhaar number is inactive");
+        }
+
+        // 2. Query family service to verify active family mapping and HoF status
+        if (familyRestRepository == null) {
+            throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE, "Family service repository is not configured");
+        }
+
+        FamilyHofStatus hofStatus = familyRestRepository.checkUserHofStatus(
+                citizen.getUuid(), stateTenant, request.getRequestInfo());
+
+        if (hofStatus == null || !hofStatus.isFamilyFound()) {
+            throw new CustomException(UserConstants.ERROR_FAMILY_NOT_MAPPED, UserConstants.MSG_CITIZEN_NOT_MAPPED_TO_FAMILY);
+        }
+
+        if (!hofStatus.isHof()) {
+            throw new CustomException(UserConstants.ERROR_NOT_HEAD_OF_FAMILY, UserConstants.MSG_CITIZEN_NOT_HEAD_OF_FAMILY);
+        }
+
+        return AadhaarHofCheckResponse.builder()
+                .responseInfo(createResponseInfo(request.getRequestInfo(), UserConstants.STATUS_SUCCESS))
+                .isHof(true)
+                .userUuid(citizen.getUuid())
+                .userName(citizen.getName())
+                .maskedAadhaar(MaskUtils.maskAadhaar(normalizedAadhaar))
+                .familyId(hofStatus.getFamilyId())
+                .tenantId(stateTenant)
+                .message(UserConstants.MSG_CITIZEN_HOF_VERIFIED_SUCCESS)
+                .build();
     }
 
     /**
