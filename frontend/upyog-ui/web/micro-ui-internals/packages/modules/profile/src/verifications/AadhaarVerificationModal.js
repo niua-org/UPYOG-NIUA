@@ -28,7 +28,24 @@ import { OTP_LENGTH } from "../utils/constants";
  * 2. "family" mode: Family member addition (verifies candidate & caches to sessionStorage)
  *
  * Can be rendered either as an interactive popup (<Modal>) or as a standalone page (<Card>).
+ *
+ * @param {boolean}  [isOpen=true]          - Controls modal visibility (only relevant when isModal=true).
+ * @param {boolean}  [isModal=true]         - If true renders inside a <Modal> popup; false renders as a <Card> page.
+ * @param {"profile"|"family"} [mode="profile"] - Verification flow:
+ *                                             "profile" → self-verification, updates localStorage session.
+ *                                             "family"  → member addition, caches minimal fields to sessionStorage.
+ * @param {Function} [onClose]              - Called when the modal is dismissed (X button or cancel).
+ * @param {Function} [onSuccess]            - Called after successful verification.
+ *                                             profile mode: receives (user) object.
+ *                                             family mode:  receives ({ verifiedMember, aadhaarLast4, maskedMobile }).
+ * @param {string}   [title]                - Override the modal/card heading.
+ * @param {string}   [subtext]              - Optional descriptive text shown below the heading.
+ * @param {boolean}  [showConsentBox=true]  - Whether to show the OTP consent callout banner.
+ * @returns {React.ReactElement|null}       - Renders null when isModal=true and isOpen=false.
  */
+
+
+
 const AadhaarVerificationModal = ({
   isOpen = true,
   isModal = true,
