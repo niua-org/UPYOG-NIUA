@@ -82,8 +82,9 @@ Examples: "delete my drafts", "delete draft", "clear drafts", "cancel draft", "d
 "draft_save" — User wants to SAVE their currently filled draft or form to finish later.
 Examples: "save draft", "save my application", "draft save karo"
 
-"draft_continue_application" — User wants to CONTINUE or RESUME filling their pending form/draft.
-Examples: "continue my application", "resume complaint", "continue"
+"draft_continue_application" — User explicitly asks to CONTINUE, OPEN, or RESUME filling their saved pending form/draft.
+Examples: "continue my application", "resume complaint", "continue", "continue my draft"
+CRITICAL: Never classify field answers, addresses, names, dates, localities, or answers to questions (e.g., "south ex, 110003") as "draft_continue_application". If the assistant just asked for a detail and the citizen is providing it, classify as the ongoing candidate intent (e.g. "adv_candidate" or "grievance_candidate").
 
 "login_query" — User is asking HOW to log in, WHERE to find the login button, or asking for the login procedure/OTP steps.
 Examples: "how to login", "login kaise kare", "where is login button", "sign in kaise kare", "login process"
@@ -115,6 +116,7 @@ CRITICAL: Never classify municipal/urban questions (e.g., trade license, propert
 5. If the user is answering a form prompt or question (e.g. providing an address, locality, landmark, area, date, name, number, problem description, or option):
    - Set "is_question": false.
    - If the previous turn asked for form details, classify under the ongoing candidate intent (e.g. "adv_candidate" or "grievance_candidate").
+   - CRITICAL: NEVER classify form answers (e.g. "south ex, 110003", pin codes, addresses, names, dates) as "draft_continue_application", "faq", or "out_of_domain".
 6. Municipal & Urban Domain Rule: Queries about business licenses, trade licenses (e.g. "trade license for my restaurant"), property taxes, birth/death certificates, water/sewerage, streetlights, garbage, or municipal administration are WITHIN municipal domain (classify as "faq", NEVER "out_of_domain").
 
 ━━━ CONVERSATION CONTEXT (last 3 turns) ━━━

@@ -747,6 +747,27 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
     ui_lower = user_input.lower()
 
     if intent == "draft_continue_application":
+        continue_keywords = {
+            "continue", "resume", "continue draft", "resume draft",
+            "continue application", "resume application", "continue my draft",
+            "continue my application", "resume my draft", "resume my application",
+            "aage badho", "jaari rakho", "draft continue", "draft resume"
+        }
+        ui_clean = user_input.strip().lower()
+        is_explicit_continue = (
+            ui_clean in continue_keywords or
+            any(ui_clean.startswith(kw) for kw in ["continue", "resume", "aage", "jaari"])
+        )
+
+        # If a workflow is already active and the user is entering form values (e.g. address, name, locality),
+        # do not hijack their input as a draft-resume operation. Let it flow to the active workflow!
+        if active_plugin and not is_explicit_continue:
+            logger.info(
+                f"[handle_draft_management] Active workflow '{active_plugin}' in progress. "
+                f"Treating '{user_input}' as field input rather than draft resume."
+            )
+            return False, None
+
         all_drafts = MemoryManager.get_all_draft_states(phone)
         if len(all_drafts) == 1:
             target_wf = all_drafts[0].get("plugin_name", "adv_booking")
@@ -757,7 +778,8 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
                     config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
                     workflows[target_wf].update_state(config_update, {draft_key: draft_data})
 
-            agent_res = process_user_message("continue", phone, session_id, target_workflow=target_wf, user_language=user_language)
+            msg_to_send = "continue" if is_explicit_continue else user_input
+            agent_res = process_user_message(msg_to_send, phone, session_id, target_workflow=target_wf, user_language=user_language)
             audio = text_to_speech(agent_res.get("response", ""), user_language)
             return True, {
                 "response": agent_res.get("response", ""),
