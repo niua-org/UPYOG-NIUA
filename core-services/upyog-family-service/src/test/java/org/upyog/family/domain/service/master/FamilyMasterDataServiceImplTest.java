@@ -432,6 +432,18 @@ class FamilyMasterDataServiceImplTest {
         CustomException ex = assertThrows(CustomException.class, () ->
                 masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "INDIVIDUAL"));
         assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertTrue(ex.getMessage().contains(FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_NOT_CONFIGURED));
+    }
+
+    @Test
+    @DisplayName("getAllowedOwnershipTypes should throw CustomException when MDMS returns empty")
+    void getAllowedOwnershipTypes_MdmsEmpty_ThrowsCustomException() {
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(Collections.emptyMap());
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.getAllowedOwnershipTypes(new RequestInfo(), "pg.cityc"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertTrue(ex.getMessage().contains(FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_NOT_CONFIGURED));
     }
 
     @Test

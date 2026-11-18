@@ -209,6 +209,7 @@ public final class FamilyConstants {
 
     public static final String MSG_PROPERTY_OWNERSHIP_TYPE_MANDATORY = "Property ownershipType is mandatory.";
     public static final String MSG_INVALID_OWNERSHIP_TYPE_PREFIX = "Invalid property ownershipType: ";
+    public static final String MSG_PROPERTY_OWNERSHIP_TYPE_NOT_CONFIGURED = "Property ownership types master is not configured or unavailable in MDMS for tenant: ";
 
     // ==========================================
     // Validation & Error Messages
