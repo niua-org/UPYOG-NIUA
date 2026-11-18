@@ -1,6 +1,7 @@
 package com.example.gateway.filters.pre;
 
 import com.example.gateway.filters.pre.helpers.RbacFilterHelper;
+import com.example.gateway.utils.UpyogMcpGatewaySupport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -31,6 +32,16 @@ public class RbacFilter implements GlobalFilter , Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         Boolean rbacFlag = exchange.getAttribute(RBAC_BOOLEAN_FLAG_NAME);
+
+        // UPYOG MCP: RBAC uses user from gateway RequestInfo attribute + optional tenantId in JSON-RPC/tool args, not RequestInfo in body.
+        if (UpyogMcpGatewaySupport.isMcpPath(exchange.getRequest().getPath().value())) {
+            if (Boolean.TRUE.equals(rbacFlag)) {
+                return modifyRequestBodyFilter.apply(new ModifyRequestBodyGatewayFilterFactory.Config()
+                                .setRewriteFunction(Map.class, Map.class, rbacFilterHelper))
+                        .filter(exchange, chain);
+            }
+            return chain.filter(exchange);
+        }
 
         if(rbacFlag) {
             String contentType = exchange.getRequest().getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);

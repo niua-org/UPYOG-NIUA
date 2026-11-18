@@ -1,0 +1,187 @@
+id: venue-booking
+displayName: Community hall and venue booking
+description: Search and create venue bookings. Cancellation is not available in this release.
+allowedRolesHint:
+  - CITIZEN
+  - CHB_CEMP
+  - CHB_APPROVER
+  - CHB_VERIFIER
+masters:
+  - module: CHB
+    name: CommunityHalls
+  - module: CHB
+    name: VenueType
+  - module: CHB
+    name: Purpose
+  - module: CHB
+    name: SpecialCategory
+operations:
+  search:
+    type: READ
+    description: Search venue bookings.
+    readOnly: true
+    destructive: false
+    requiresConfirmation: false
+    httpMethod: POST
+    gatewayPath: /chb-services/booking/v1/_search
+    supportsStatus: true
+    statusArgument: bookingNo
+    inputSchema:
+      type: object
+      additionalProperties: false
+      required: [tenantId]
+      properties:
+        tenantId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        bookingNo:
+          type: string
+          maxLength: 128
+        status:
+          type: string
+          maxLength: 64
+        venueCode:
+          type: string
+          maxLength: 128
+        mobileNumber:
+          type: string
+          maxLength: 15
+    query:
+      tenantId:
+        "$payload": tenantId
+      bookingNo:
+        "$payload": bookingNo
+      status:
+        "$payload": status
+      venueCode:
+        "$payload": venueCode
+      mobileNumber:
+        "$payload": mobileNumber
+      limit:
+        "$page": size
+      offset:
+        "$page": offset
+    response:
+      listPath: venueBookingApplication
+      keep:
+        - bookingNo
+        - bookingId
+        - bookingStatus
+        - tenantId
+        - venueCode
+    examples:
+      - tenantId: pg.citya
+        bookingNo: CHB-555
+  create:
+    type: WRITE
+    description: Create a venue booking. Slot and purpose codes must come from lookup_master.
+    readOnly: false
+    destructive: false
+    requiresConfirmation: true
+    httpMethod: POST
+    gatewayPath: /chb-services/booking/v1/_create
+    filestoreModule: CHB
+    documentsTarget: venueBookingApplication.documents
+    inputSchema:
+      type: object
+      additionalProperties: false
+      required: [tenantId, purpose, specialCategory, bookingSlotDetails]
+      properties:
+        tenantId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        venueCode:
+          type: string
+        venueType:
+          type: string
+        purpose:
+          type: object
+          additionalProperties: false
+          required: [purpose]
+          properties:
+            purpose:
+              type: string
+        specialCategory:
+          type: object
+          additionalProperties: false
+          required: [category]
+          properties:
+            category:
+              type: string
+        bookingSlotDetails:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [bookingDate, bookingFromTime, bookingToTime]
+            properties:
+              bookingDate:
+                type: string
+              bookingFromTime:
+                type: string
+              bookingToTime:
+                type: string
+              unitCode:
+                type: string
+        applicantDetail:
+          type: object
+          additionalProperties: false
+          properties:
+            applicantName:
+              type: string
+            applicantMobileNo:
+              type: string
+            applicantEmailId:
+              type: string
+        documents:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [documentType, fileName, contentType, contentBase64]
+            properties:
+              documentType:
+                type: string
+              fileName:
+                type: string
+              contentType:
+                type: string
+              contentBase64:
+                type: string
+    requestBody:
+      venueBookingApplication:
+        tenantId:
+          "$payload": tenantId
+        venueCode:
+          "$payload": venueCode
+        venueType:
+          "$payload": venueType
+        purpose:
+          "$payload": purpose
+        specialCategory:
+          "$payload": specialCategory
+        bookingSlotDetails:
+          "$payload": bookingSlotDetails
+        applicantDetail:
+          "$payload": applicantDetail
+    response:
+      listPath: venueBookingApplication
+      keep:
+        - bookingNo
+        - bookingId
+        - bookingStatus
+        - tenantId
+    examples:
+      - tenantId: pg.citya
+        venueCode: HALL-1
+        purpose:
+          purpose: Marriage
+        specialCategory:
+          category: General
+        bookingSlotDetails:
+          - bookingDate: "2026-10-20"
+            bookingFromTime: "10:00:00"
+            bookingToTime: "14:00:00"

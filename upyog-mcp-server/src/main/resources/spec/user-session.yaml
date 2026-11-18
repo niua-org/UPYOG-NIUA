@@ -1,0 +1,23 @@
+# MCP inbound session: POST /user/_search only (NIUA citizen UI). Not an MCP tool.
+# Swagger: spec/egov-user-contract.yml
+
+contract: spec/egov-user-contract.yml
+gatewayPath: /user/_search
+
+headers:
+  Auth-Token: $sessionToken
+
+body:
+  tenantId: $tenantId
+  pageSize: "100"
+  uuid:
+    - $userUuid
+  RequestInfo:
+    apiId: Rainmaker
+    authToken: $sessionToken
+    msgId: $timestamp|en_IN
+    plainAccessRequest: {}
+    userInfo: $userInfoFromHeaderOrMinimal
+
+response:
+  usersJsonField: user

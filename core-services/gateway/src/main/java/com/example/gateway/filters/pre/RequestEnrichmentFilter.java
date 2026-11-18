@@ -1,6 +1,7 @@
 package com.example.gateway.filters.pre;
 
 import com.example.gateway.filters.pre.helpers.RequestEnrichmentFilterHelper;
+import com.example.gateway.utils.UpyogMcpGatewaySupport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -28,6 +29,9 @@ public class RequestEnrichmentFilter implements GlobalFilter , Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        if (UpyogMcpGatewaySupport.isMcpPath(exchange.getRequest().getPath().value())) {
+            return chain.filter(exchange);
+        }
         String contentType = exchange.getRequest().getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
 
         if (contentType != null && (contentType.contains("multipart/form-data") || contentType.contains("application/x-www-form-urlencoded"))) {
