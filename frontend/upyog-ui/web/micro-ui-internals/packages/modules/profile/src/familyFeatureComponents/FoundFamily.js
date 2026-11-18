@@ -1,6 +1,4 @@
 /**
- * @file FoundFamily.js
- * @module modules/profile/familyFeatureComponents/FoundFamily
  * 
  * @description
  * Standardized review and submission screen for joining an existing family.
@@ -35,26 +33,6 @@ import { getFamilyHeadFields, getPersonalFields, useProfileUser, withValues } fr
 import { PROFILE_ROUTES } from "../utils/constants";
 import { profileStyles } from "../utils/profileStyles";
 
-// Custom styles for distinct section cards and prominent headings
-const sectionBoxStyle = {
-  marginBottom: "24px",
-  padding: "16px 20px",
-  background: "#FAFAFA",
-  borderRadius: "6px",
-  border: "1px solid #E8E8E8",
-};
-
-const sectionTitleStyle = {
-  fontSize: "20px",
-  fontWeight: "700",
-  color: "#0B0C0C",
-  marginBottom: "16px",
-  paddingBottom: "8px",
-  borderBottom: "2px solid #D6D5D4",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-};
 
 const FoundFamily = () => {
   const { t } = useTranslation();
@@ -214,7 +192,7 @@ const FoundFamily = () => {
         <CardHeader style={{ fontSize: "24px", marginBottom: "16px" }}>
           {t("PROFILE_FOUND_FAMILY")}
         </CardHeader>
-        <div style={sectionBoxStyle}>
+        <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
           <StatusTable>
             {familyHeadFields.map(([key, val], idx) => (
               <Row key={idx} label={t(key)} text={val || "NA"} />
@@ -230,8 +208,8 @@ const FoundFamily = () => {
         </CardHeader>
 
         {/* Section A: Personal Details */}
-        <div style={sectionBoxStyle}>
-          <div style={sectionTitleStyle}>
+        <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
+          <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
             <span>{t("CORE_COMMON_PROFILE_PERSONAL_DETAILS")}</span>
           </div>
           {loading ? (
@@ -247,8 +225,8 @@ const FoundFamily = () => {
 
         {/* Section B: Property Details */}
         {propertyFields.length > 0 && (
-          <div style={sectionBoxStyle}>
-            <div style={sectionTitleStyle}>
+          <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
+            <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
               <span>{t("ES_TITILE_PROPERTY_DETAILS")}</span>
             </div>
             <StatusTable>
@@ -261,8 +239,8 @@ const FoundFamily = () => {
 
         {/* Section C: Income Details */}
         {incomeFields.length > 0 && (
-          <div style={sectionBoxStyle}>
-            <div style={sectionTitleStyle}>
+          <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
+            <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
               <span>{t("ES_TITLE_INCOME_DETAILS")}</span>
             </div>
             <StatusTable>
@@ -275,8 +253,8 @@ const FoundFamily = () => {
 
         {/* Section D: Vehicle Details */}
         {vehicleFields.length > 0 && (
-          <div style={sectionBoxStyle}>
-            <div style={sectionTitleStyle}>
+          <div style={profileStyles.foundFamilyDetailSection.sectionBoxStyle}>
+            <div style={profileStyles.foundFamilyDetailSection.sectionTitleStyle}>
               <span>{t("ES_TITLE_VEHICLE_DETAILS")}</span>
             </div>
             <StatusTable>

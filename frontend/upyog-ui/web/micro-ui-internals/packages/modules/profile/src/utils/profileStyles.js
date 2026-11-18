@@ -1198,6 +1198,28 @@ radioGroup: {
       marginTop: "4px",
       lineHeight: "1.3",
     }
+  },
+
+  foundFamilyDetailSection:{
+    sectionBoxStyle : {
+      marginBottom: "24px",
+      padding: "16px 20px",
+      background: "#FAFAFA",
+      borderRadius: "6px",
+      border: "1px solid #E8E8E8",
+    },
+    
+    sectionTitleStyle : {
+      fontSize: "20px",
+      fontWeight: "700",
+      color: "#0B0C0C",
+      marginBottom: "16px",
+      paddingBottom: "8px",
+      borderBottom: "2px solid #D6D5D4",
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    },
   }
 };
 
