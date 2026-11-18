@@ -6,8 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.inbox.config.InboxConfiguration;
 import org.egov.inbox.repository.ServiceRequestRepository;
+import org.egov.inbox.util.ErrorConstants;
 import org.egov.inbox.web.model.InboxSearchCriteria;
 import org.egov.inbox.web.model.workflow.ProcessInstanceSearchCriteria;
+import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -54,12 +56,12 @@ public class FamilyInboxFilterService {
      * </p>
      *
      * @param criteria         Search criteria specified in the Inbox request (tenant, module, pagination).
-     * @param StatusIdNameMap  Mapping of workflow status IDs to names for multi-status filtering.
+     * @param statusIdNameMap  Mapping of workflow status IDs to names for multi-status filtering.
      * @param requestInfo      Authentication and auditing metadata for the request.
      * @return List of matching family application IDs ({@code family_id}), or an empty list if none found.
      */
     public List<String> fetchApplicationNumbersFromSearcher(InboxSearchCriteria criteria,
-            HashMap<String, String> StatusIdNameMap, RequestInfo requestInfo) {
+            HashMap<String, String> statusIdNameMap, RequestInfo requestInfo) {
         List<String> applicationNumbers = new ArrayList<>();
         HashMap moduleSearchCriteria = criteria.getModuleSearchCriteria();
         ProcessInstanceSearchCriteria processCriteria = criteria.getProcessSearchCriteria();
@@ -80,9 +82,9 @@ public class FamilyInboxFilterService {
         if (!ObjectUtils.isEmpty(processCriteria.getStatus())) {
             searchCriteria.put(STATUS_PARAM, processCriteria.getStatus());
         } else {
-            if (StatusIdNameMap != null && StatusIdNameMap.values().size() > 0) {
+            if (statusIdNameMap != null && !statusIdNameMap.isEmpty()) {
                 if (CollectionUtils.isEmpty(processCriteria.getStatus())) {
-                    searchCriteria.put(STATUS_PARAM, StatusIdNameMap.keySet());
+                    searchCriteria.put(STATUS_PARAM, statusIdNameMap.keySet());
                 }
             }
         }
@@ -101,15 +103,19 @@ public class FamilyInboxFilterService {
         } else {
             uri.append(config.getSearcherHost()).append(config.getFamilyInboxSearcherEndpoint());
         }
-        log.info("Checking Family searcherRequest: {}", searcherRequest);
+        log.debug("Family inbox searcher criteria: tenantId={}, status={}, offset={}, limit={}",
+                searchCriteria.get(TENANT_ID_PARAM), searchCriteria.get(STATUS_PARAM), searchCriteria.get(OFFSET_PARAM), searchCriteria.get(NO_OF_RECORDS_PARAM));
         Object result = restTemplate.postForObject(uri.toString(), searcherRequest, Map.class);
 
         try {
-            String jsonString = mapper.writeValueAsString(result);
-            applicationNumbers = JsonPath.read(jsonString, "$.families[*].family_id");
-            log.info("Family Application Numbers: {}", applicationNumbers);
+            if (result != null) {
+                String jsonString = mapper.writeValueAsString(result);
+                applicationNumbers = JsonPath.read(jsonString, "$.families[*].family_id");
+                log.debug("Family Application Numbers: {}", applicationNumbers);
+            }
         } catch (Exception e) {
-            log.error("Error while parsing Family searcher results", e);
+            log.warn("Failed to parse family application numbers from searcher definition: {}", uri, e);
+            throw new CustomException(ErrorConstants.PARSING_ERROR, "Failed to parse family searcher response");
         }
 
         return applicationNumbers;
@@ -119,12 +125,12 @@ public class FamilyInboxFilterService {
      * Queries {@code egov-searcher} to retrieve the total count of family applications matching the search criteria.
      *
      * @param criteria         Search criteria specified in the Inbox request.
-     * @param StatusIdNameMap  Mapping of workflow status IDs to names.
+     * @param statusIdNameMap  Mapping of workflow status IDs to names.
      * @param requestInfo      Authentication and auditing metadata.
      * @return Total count of matching family records, or {@code 0} if an error occurs.
      */
     public Integer fetchApplicationCountFromSearcher(InboxSearchCriteria criteria,
-            HashMap<String, String> StatusIdNameMap, RequestInfo requestInfo) {
+            HashMap<String, String> statusIdNameMap, RequestInfo requestInfo) {
         Integer totalCount = 0;
         HashMap moduleSearchCriteria = criteria.getModuleSearchCriteria();
         ProcessInstanceSearchCriteria processCriteria = criteria.getProcessSearchCriteria();
@@ -145,9 +151,9 @@ public class FamilyInboxFilterService {
         if (!ObjectUtils.isEmpty(processCriteria.getStatus())) {
             searchCriteria.put(STATUS_PARAM, processCriteria.getStatus());
         } else {
-            if (StatusIdNameMap != null && StatusIdNameMap.values().size() > 0) {
+            if (statusIdNameMap != null && !statusIdNameMap.isEmpty()) {
                 if (CollectionUtils.isEmpty(processCriteria.getStatus())) {
-                    searchCriteria.put(STATUS_PARAM, StatusIdNameMap.keySet());
+                    searchCriteria.put(STATUS_PARAM, statusIdNameMap.keySet());
                 }
             }
         }
@@ -158,15 +164,20 @@ public class FamilyInboxFilterService {
         StringBuilder uri = new StringBuilder();
         uri.append(config.getSearcherHost()).append(config.getFamilyInboxSearcherCountEndpoint());
 
-        log.info("Checking Family count searcherRequest: {}", searcherRequest);
+        log.debug("Family inbox count searcher criteria: tenantId={}, status={}, offset={}, limit={}",
+                searchCriteria.get(TENANT_ID_PARAM), searchCriteria.get(STATUS_PARAM), searchCriteria.get(OFFSET_PARAM), searchCriteria.get(NO_OF_RECORDS_PARAM));
         Object result = restTemplate.postForObject(uri.toString(), searcherRequest, Map.class);
 
         try {
-            String jsonString = mapper.writeValueAsString(result);
-            double count = JsonPath.read(jsonString, "$.TotalCount[0].count");
-            totalCount = (int) count;
+            if (result != null) {
+                String jsonString = mapper.writeValueAsString(result);
+                Number count = JsonPath.read(jsonString, "$.TotalCount[0].count");
+                totalCount = count == null ? 0 : count.intValue();
+            }
         } catch (Exception e) {
-            log.error("Error while parsing Family count results", e);
+            log.warn("Failed to parse family inbox count result from searcher definition: {}",
+                    config.getFamilyInboxSearcherCountEndpoint(), e);
+            throw new CustomException(ErrorConstants.PARSING_ERROR, "Failed to parse family inbox count result");
         }
         return totalCount;
     }
