@@ -86,14 +86,6 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     private final Map<String, CacheEntry> tenantOwnershipTypeCache = new ConcurrentHashMap<>();
 
     /**
-     * Set of property ownership types matching ug_user_property DB check constraint:
-     * CHECK (ownership_type IN ('INDIVIDUAL', 'JOINT', 'ORGANISATION'))
-     */
-    private static final Set<String> DEFAULT_DB_OWNERSHIP_TYPES = Collections.unmodifiableSet(
-            new HashSet<>(Arrays.asList("INDIVIDUAL", "JOINT", "ORGANISATION"))
-    );
-
-    /**
      * Constructs a FamilyMasterDataServiceImpl with RestTemplate and configuration.
      *
      * @param restTemplate Spring RestTemplate for remote HTTP calls to MDMS
@@ -406,8 +398,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
             log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached ownership types for tenant: {}", stateTenant);
             return entry.getAllowedRelationships();
         }
-        // Fallback to strict DB check constraint values if MDMS is down or not seeded yet
-        return DEFAULT_DB_OWNERSHIP_TYPES;
+        return Collections.emptySet();
     }
 
     /**

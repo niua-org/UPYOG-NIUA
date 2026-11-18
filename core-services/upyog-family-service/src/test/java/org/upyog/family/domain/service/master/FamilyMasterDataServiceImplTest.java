@@ -425,16 +425,12 @@ class FamilyMasterDataServiceImplTest {
     }
 
     @Test
-    @DisplayName("validateOwnershipType should fallback to DB check values when MDMS is unseeded or empty")
-    void validateOwnershipType_FallbackToDbValues() {
+    @DisplayName("validateOwnershipType should fail closed when MDMS returns empty or unreachable")
+    void validateOwnershipType_FailsClosedWhenMdmsEmpty() {
         when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(Collections.emptyMap());
 
-        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "INDIVIDUAL"));
-        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "JOINT"));
-        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "ORGANISATION"));
-
         CustomException ex = assertThrows(CustomException.class, () ->
-                masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "INDIVIDUAL.SINGLEOWNER"));
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "INDIVIDUAL"));
         assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
     }
 
