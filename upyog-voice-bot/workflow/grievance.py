@@ -7,7 +7,7 @@ import yaml
 
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langgraph.graph import StateGraph, END, START
-from langchain_groq import ChatGroq
+from services.llm_client import get_unified_chat_model
 
 from storage.qdrant_manager import MemoryManager, shared_memory
 from prompts.workflow_prompts import (
@@ -19,7 +19,7 @@ from workflow.base_state import BaseAgentState
 
 logger = logging.getLogger(__name__)
 
-llm = ChatGroq(model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b"), temperature=0) if os.environ.get("GROQ_API_KEY") else None
+llm = get_unified_chat_model(temperature=0)
 
 
 # ==========================================

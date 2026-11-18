@@ -12,10 +12,7 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from prompts.intent_prompts import build_intent_classifier_prompt
 
-try:
-    from groq import Groq
-except ImportError:
-    Groq = None
+from services.llm_client import get_llm_client
 
 load_dotenv()
 
@@ -68,14 +65,12 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
     classifier_prompt = build_intent_classifier_prompt(query=query, history_text=history_text, lang=lang)
 
     try:
-        if not groq_client and Groq:
-            groq_client = Groq(api_key=GROQ_API_KEY)
-
-        if not groq_client:
-            logger.warning("[INTENT CLASSIFIER] Groq client unconfigured — defaulting to 'unknown'")
+        client = get_llm_client()
+        if not client.is_configured():
+            logger.warning("[INTENT CLASSIFIER] LLM client unconfigured — defaulting to 'unknown'")
             return {
                 "intent": "unknown",
-                "reasoning": "Groq client unconfigured",
+                "reasoning": "LLM client unconfigured",
                 "service": None,
                 "emotion": "neutral",
                 "extracted_name": None,
@@ -83,7 +78,7 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
                 "classifier_failed": True,
             }
 
-        response = groq_client.chat.completions.create(
+        response = client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": classifier_prompt}],
             max_tokens=400,
@@ -97,7 +92,7 @@ def classify_intent(query: str, history: list, lang: str) -> dict:
         else:
             raw_clean = raw.replace("```json", "").replace("```", "").strip()
             result = json.loads(raw_clean)
-        logger.info(f"[INTENT CLASSIFIER] Groq parsed response: {result}")
+        logger.info(f"[INTENT CLASSIFIER] Parsed response: {result}")
 
         valid_intents = [
             "greeting", "faq", "profile", "out_of_domain", "login_query", "login_claim",

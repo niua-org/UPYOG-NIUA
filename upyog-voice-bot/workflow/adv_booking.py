@@ -7,7 +7,7 @@ import yaml
 
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langgraph.graph import StateGraph, END, START
-from langchain_groq import ChatGroq
+from services.llm_client import get_unified_chat_model
 
 
 from storage.qdrant_manager import MemoryManager, shared_memory
@@ -24,7 +24,7 @@ from workflow.base_state import BaseAgentState
 
 logger = logging.getLogger(__name__)
 
-llm = ChatGroq(model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b"), temperature=0) if os.environ.get("GROQ_API_KEY") else None
+llm = get_unified_chat_model(temperature=0)
 
 # ==========================================
 # STATE
@@ -542,8 +542,13 @@ def extraction_node(state: AdvBookingState):
         )
         try:
             ext = llm.invoke([SystemMessage(content=extract_prompt)])
-            # The prompt requests JSON only; reject responses that are not JSON objects.
-            extracted_data = json.loads(ext.content.strip())
+            raw_text = ext.content.strip()
+            m = re.search(r'\{.*\}', raw_text, re.DOTALL)
+            if m:
+                extracted_data = json.loads(m.group(0))
+            else:
+                raw_clean = raw_text.replace("```json", "").replace("```", "").strip()
+                extracted_data = json.loads(raw_clean)
             if not isinstance(extracted_data, dict):
                 raise ValueError("Extraction response must be a JSON object")
             for field in llm_extractable_fields:
