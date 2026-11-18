@@ -279,7 +279,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
             options={INCOME_PROOF_OPTIONS}
             selectedType={incomeProofType}
             onSelectType={(v) => setIncomeProofType(v)}
-            typePlaceholder={t("PROFILE_SELECT_PROOF_TYPE", "Select proof type")}
+            typePlaceholder={t("PROFILE_SELECT_PROOF_TYPE")}
             file={incomeProofFile}
             onFileChange={(f) => setIncomeProofFile(f)}
             t={t}

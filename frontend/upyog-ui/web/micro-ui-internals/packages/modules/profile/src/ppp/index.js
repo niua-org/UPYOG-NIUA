@@ -1,16 +1,20 @@
 /**
- * FamilyCreate Component
  * 
- * This component handles the creation of Family Process
- * and rendering different steps of the application process.
+ * @description
+ * FamilyCreate multi-step orchestrator component.
+ * Dynamically resolves step routes defined in `createfamilyconfig.js`.
  * 
- * Features:
- * - Uses React hooks for state management, routing, and API calls.
- * - Fetches common fields configuration and application data from the MDMS service.
- * - Supports navigation between different steps of the form.
- * - Caches form data using session storage to persist user inputs.
- * - Dynamically renders routes based on configuration.
- * - Handles multi-step form submissions and navigates to acknowledgment or summary pages.
+ * Capabilities:
+ * - Manages session storage cache (`Family_Details`) mapped per `memberId`.
+ * - Handles forward and backward multi-step navigation via `goNext`.
+ * - Supports two distinct business workflows:
+ *   1. Create Family: Navigates to `FAMILY_MEMBER_ADDED` at the final step.
+ *   2. Join Family: Navigates to `FOUND_FAMILY` when `isJoinFlow` is active.
+ * - Dynamically renders steps registered in `Digit.ComponentRegistryService`.
+ * 
+ * @param {Object} props
+ * @param {string} [props.parentRoute] - Base parent route string.
+ * @returns {React.ReactElement} Dynamic React Router Routes configuration.
  */
 
 import { Loader } from "@nudmcdgnpm/digit-ui-react-components";
@@ -29,17 +33,25 @@ const FamilyCreate = ({ parentRoute }) => {
   const [searchParams] = useSearchParams();
   const navigate = Digit.Hooks.useCustomNavigate();
   let config = [];
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
-  /**
-   * Step data is kept per family member: Family_Details = { [memberId]: { profileDetails, income, vehicles } }.
-   * memberId comes from `?member=<userUuid>` (defaults to the logged-in applicant), so filling in another
-   * member never overwrites the details already stored for someone else.
-  */
   const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
   const memberId = searchParams.get("member") || loggedInUuid;
   const isViewMode = searchParams.get("mode") === "view";
   const [allParams, setAllParams, clearParams] = Digit.Hooks.useSessionStorage("Family_Details", {});
   const params = allParams?.[memberId] || {};
+
+  // Check if current flow is Join Family
+  const isJoinFlow =
+    searchParams.get("flow") === "join" ||
+    (() => {
+      try {
+        const jd = JSON.parse(sessionStorage.getItem("Digit.family.joinData") || "null");
+        return !!jd?.isJoinFlow;
+      } catch {
+        return false;
+      }
+    })();
 
   // Fetches common field configurations from MDMS
   ///TODO - Need to remove it later / add Profile Details
@@ -69,10 +81,16 @@ const FamilyCreate = ({ parentRoute }) => {
     // Preserve ?member= query param on relative navigations
     const withMember = (to) => (to.startsWith("/") ? to : `${to}${search}`);
 
-    const redirect = (to, state) => navigate(withMember(to),skipStep ? { replace: true, ...(state != null && { state }) } : state != null ? { state } : undefined);
+    const redirect = (to, state) => navigate(withMember(to), skipStep ? { replace: true, ...(state != null && { state }) } : state != null ? { state } : undefined);
 
-    // Last step — stage member if added via Aadhaar, then go to summary
+    // Final step completed
     if (nextStep === null) {
+      // If Join Family flow, navigate to Found Family review screen
+      if (isJoinFlow) {
+        return navigate(PROFILE_ROUTES.FOUND_FAMILY);
+      }
+
+      // Default Create Family flow
       if (!isViewMode) {
         const rel = params.profileDetails?.relationshipWithHof;
         const relCode = String(rel?.code || rel?.name || rel || "").toUpperCase().replace(/\s+/g, "_");
@@ -96,17 +114,13 @@ const FamilyCreate = ({ parentRoute }) => {
     redirect(nextStep);
   };
 
- 
- // Clears parameters on back navigation
-  if(params && Object.keys(params).length>0 && window.location.href.includes("/info") && sessionStorage.getItem("docReqScreenByBack") !== "true")
-    {
-      clearParams();
-      queryClient.invalidateQueries("Family_Details");
-
-    }
-
-  // clear session after successfull Submit
- const clearSession = () => {
+  // Clears parameters on back navigation
+  if (
+    params &&
+    Object.keys(params).length > 0 &&
+    window.location.href.includes("/info") &&
+    sessionStorage.getItem("docReqScreenByBack") !== "true"
+  ) {
     clearParams();
     queryClient.invalidateQueries("Family_Details");
   };
@@ -128,21 +142,16 @@ const FamilyCreate = ({ parentRoute }) => {
   const handleSkip = () => { };
   const handleMultiple = () => { };
 
-  // Clears params and cache on success
   if (isLoading) {
     return <Loader />;
   }
 
-// Merges common fields configuration with citizen configuration
   commonFields = createfamilyconfig;
   commonFields.forEach((obj) => {
     config = config.concat(obj.body.filter((a) => !a.hideInCitizen));
   });
 
   config.indexRoute = "profileDetails";
-
-
-
 
   return (
     <Routes>

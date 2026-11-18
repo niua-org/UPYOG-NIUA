@@ -121,9 +121,7 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
       >
         <div style={styles.container}>
           <div style={profileStyles.componentBottomMargin}>
-            <CardLabel> Locality Type{" "}
-              <span className="astericColor">*</span>
-            </CardLabel>
+            <CardLabel>{`${t("PROFILE_LOCALITY_TYPE")}`} <span className="astericColor">*</span></CardLabel>
             <Dropdown
               className="form-field"
               selected={localityType}

@@ -5,9 +5,20 @@ import OtpVerify from "../verifications/OtpVerify";
 import { AADHAAR_LENGTH, FAMILY_ID_LENGTH, PROFILE_ROUTES, getFamilyIdLength } from "../utils/constants";
 
 /**
- * JoinExistingFamily allows users to join an existing family using either
- * their Family ID or the Head of Family's Aadhaar number. Aadhaar-based
- * verification is completed through OTP before navigating to the found family details.
+ * 
+ * @description
+ * Screen allowing a citizen to join an existing family group by searching via:
+ * 1. Family ID (alphanumeric ID)
+ * 2. Head of Family (HOF) Aadhaar Number (12 digits)
+ * 
+ * Flow:
+ * - User enters either Family ID or HOF Aadhaar.
+ * - OTP is triggered and verified via `OtpVerify` component.
+ * - On successful verification, the verified family context is cached in `sessionStorage` (`"Digit.family.joinData"`).
+ * - User is redirected to `createfamilyconfig` multi-step flow (`/create-family/profileDetails?flow=join`)
+ *   to fill in their personal, property, income, and vehicle details before final submission.
+ * 
+ * @returns {React.ReactElement} Join Existing Family search & OTP verification UI.
  */
 
 const JoinExistingFamily = () => {
@@ -22,7 +33,7 @@ const JoinExistingFamily = () => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [otpType, setOtpType] = useState(null);
 
-  // auto-dismiss toast
+  // Auto-dismiss toast
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), 5000);
@@ -61,10 +72,10 @@ const JoinExistingFamily = () => {
     }
   };
 
-  const searchFamilyById = async (familyId,tenantId) => {
+  const searchFamilyById = async (familyId, tenantId) => {
     setLoading(true);
     try {
-      const res = await Digit.UserService.sendFamilyOtp({familyId, tenantId});
+      const res = await Digit.UserService.sendFamilyOtp({ familyId, tenantId });
       if (!res?.isSent) throw new Error("FAMILY_NOT_FOUND");
       setReferenceId(res.referenceId);
       setOtpType("FAMILY_ID");
@@ -83,7 +94,17 @@ const JoinExistingFamily = () => {
       otpType === "FAMILY_ID"
         ? { consentToken: res.consentToken, familyId: res.family?.familyId, family: res.family }
         : res;
-    navigate(PROFILE_ROUTES.FOUND_FAMILY, { state: { verifiedData, familyId } });
+
+    // Persist verified family context so it survives tab navigations in createfamilyconfig
+    const joinData = {
+      verifiedData,
+      familyId: verifiedData?.familyId || familyId,
+      isJoinFlow: true,
+    };
+    sessionStorage.setItem("Digit.family.joinData", JSON.stringify(joinData));
+
+    // Redirect to Create Family multi-step flow starting at profileDetails
+    navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?flow=join`);
   };
 
   const canSearch = aadhaar.length === AADHAAR_LENGTH || getFamilyIdLength(familyId) === FAMILY_ID_LENGTH;
