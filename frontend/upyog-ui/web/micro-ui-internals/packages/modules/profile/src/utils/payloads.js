@@ -293,7 +293,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       members: finalMembers,
       workflow: {
         action: "APPLY",
-        businessService: "FAMILY_REGISTRATION",
+        businessService: "family-service",
         comment: "",
         assignees: [],
       },
