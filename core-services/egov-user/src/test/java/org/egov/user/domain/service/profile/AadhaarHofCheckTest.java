@@ -344,6 +344,110 @@ class AadhaarHofCheckTest {
     }
 
     @Test
+    @DisplayName("checkAadhaarHof: Masks PII when caller is generic EMPLOYEE without explicit privileged role")
+    void checkAadhaarHof_CallerIsGenericEmployee_MasksPii() {
+        org.egov.common.contract.request.Role employeeRole = org.egov.common.contract.request.Role.builder()
+                .code("EMPLOYEE")
+                .name("Employee")
+                .build();
+        RequestInfo employeeRequestInfo = RequestInfo.builder()
+                .apiId("rainmaker")
+                .userInfo(org.egov.common.contract.request.User.builder()
+                        .uuid("generic-employee-uuid")
+                        .type("EMPLOYEE")
+                        .roles(Collections.singletonList(employeeRole))
+                        .build())
+                .build();
+
+        AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
+                .requestInfo(employeeRequestInfo)
+                .aadhaarNumber("123456789012")
+                .tenantId("pg.citya")
+                .build();
+
+        User activeCitizen = User.builder()
+                .uuid("citizen-head-uuid")
+                .name("Ramesh Kumar")
+                .aadhaarNumber("123456789012")
+                .active(true)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(activeCitizen));
+
+        FamilyHofStatus hofStatus = FamilyHofStatus.builder()
+                .familyFound(true)
+                .familyId("FAM-2026-0001")
+                .headUserUuid("citizen-head-uuid")
+                .isHof(true)
+                .build();
+
+        when(familyRestRepository.checkUserHofStatus(eq("citizen-head-uuid"), any(), any()))
+                .thenReturn(hofStatus);
+
+        AadhaarHofCheckResponse response = profileService.checkAadhaarHof(request);
+
+        assertNotNull(response);
+        assertTrue(response.getIsHof());
+        // Generic employee must NOT receive PII
+        assertNull(response.getUserUuid());
+        assertNull(response.getUserName());
+        assertNull(response.getFamilyId());
+        assertEquals("XXXXXXXX9012", response.getMaskedAadhaar());
+    }
+
+    @Test
+    @DisplayName("checkAadhaarHof: Returns full details when caller has explicit ADMIN role")
+    void checkAadhaarHof_CallerIsAdmin_ReturnsFullDetails() {
+        org.egov.common.contract.request.Role adminRole = org.egov.common.contract.request.Role.builder()
+                .code("ADMIN")
+                .name("Admin")
+                .build();
+        RequestInfo adminRequestInfo = RequestInfo.builder()
+                .apiId("rainmaker")
+                .userInfo(org.egov.common.contract.request.User.builder()
+                        .uuid("admin-caller-uuid")
+                        .type("EMPLOYEE")
+                        .roles(Collections.singletonList(adminRole))
+                        .build())
+                .build();
+
+        AadhaarHofCheckRequest request = AadhaarHofCheckRequest.builder()
+                .requestInfo(adminRequestInfo)
+                .aadhaarNumber("123456789012")
+                .tenantId("pg.citya")
+                .build();
+
+        User activeCitizen = User.builder()
+                .uuid("citizen-head-uuid")
+                .name("Ramesh Kumar")
+                .aadhaarNumber("123456789012")
+                .active(true)
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(activeCitizen));
+
+        FamilyHofStatus hofStatus = FamilyHofStatus.builder()
+                .familyFound(true)
+                .familyId("FAM-2026-0001")
+                .headUserUuid("citizen-head-uuid")
+                .isHof(true)
+                .build();
+
+        when(familyRestRepository.checkUserHofStatus(eq("citizen-head-uuid"), any(), any()))
+                .thenReturn(hofStatus);
+
+        AadhaarHofCheckResponse response = profileService.checkAadhaarHof(request);
+
+        assertNotNull(response);
+        assertTrue(response.getIsHof());
+        assertEquals("citizen-head-uuid", response.getUserUuid());
+        assertEquals("Ramesh Kumar", response.getUserName());
+        assertEquals("FAM-2026-0001", response.getFamilyId());
+    }
+
+    @Test
     @DisplayName("Controller: POST /aadhaar/_checkHof returns HTTP 200 and response envelope")
     void controller_CheckAadhaarHof_ReturnsHttp200() {
         RequestInfo selfRequestInfo = RequestInfo.builder()
