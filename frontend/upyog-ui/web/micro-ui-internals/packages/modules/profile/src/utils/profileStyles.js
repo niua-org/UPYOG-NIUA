@@ -116,7 +116,16 @@ export const profileStyles = {
     background: "#FCFCFD",
     marginBottom: 12,
   },
-  cardLabel: { width: "100%", fontWeight: 600, color: "#505A5F" },
+  
+  cardLabel: {
+    width: "100%",
+    fontWeight: 700,
+    color: "#0B0C0C",
+    fontSize: "15px",
+    paddingBottom: "10px",
+    borderBottom: "2px solid #E8EAED",
+    marginBottom: "4px",
+  },
 
   // Photo and its fallback
   photo: { width: 160, height: 176, borderRadius: 12, objectFit: "cover", background: "#F4F5F7" },
@@ -1200,27 +1209,6 @@ export const profileStyles = {
     }
   },
 
-  foundFamilyDetailSection: {
-    sectionBoxStyle: {
-      marginBottom: "24px",
-      padding: "16px 20px",
-      background: "#FAFAFA",
-      borderRadius: "6px",
-      border: "1px solid #E8E8E8",
-    },
-
-    sectionTitleStyle: {
-      fontSize: "20px",
-      fontWeight: "700",
-      color: "#0B0C0C",
-      marginBottom: "16px",
-      paddingBottom: "8px",
-      borderBottom: "2px solid #D6D5D4",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-  },
   foundFamilyDetailSection: {
     sectionBoxStyle: {
       marginBottom: "24px",
