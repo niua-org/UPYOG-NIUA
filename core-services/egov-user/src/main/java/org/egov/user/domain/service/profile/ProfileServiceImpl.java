@@ -2458,17 +2458,15 @@ public class ProfileServiceImpl implements ProfileService {
             throw new CustomException(UserConstants.ERROR_NOT_HEAD_OF_FAMILY, UserConstants.MSG_CITIZEN_NOT_HEAD_OF_FAMILY);
         }
 
-        // Fix for PR Comment #1 & Review (Security/PII Protection):
-        // Prevent identity harvesting: If the caller is not self and does not have an explicit privileged role
-        // (excluding generic EMPLOYEE/CITIZEN), return only isHof: true, maskedAadhaar, and tenantId.
-        // Never leak userName, userUuid, or familyId to unauthorized callers.
+        // Fix for PR Comment #1 & Keshav Review (Security/PII Protection):
+        // Prevent identity harvesting: Only the self citizen caller is permitted to see full details (userUuid, userName, familyId).
+        // Any other citizen or employee caller receives only the limited verification envelope (isHof, maskedAadhaar, tenantId).
         String callerUuid = request.getRequestInfo().getUserInfo() != null ? request.getRequestInfo().getUserInfo().getUuid() : null;
         boolean isSelf = citizen.getUuid().equalsIgnoreCase(callerUuid);
-        boolean isPrivileged = isExplicitlyPrivilegedForHofResponse(request.getRequestInfo());
 
-        String returnUserUuid = (isSelf || isPrivileged) ? citizen.getUuid() : null;
-        String returnUserName = (isSelf || isPrivileged) ? citizen.getName() : null;
-        String returnFamilyId = (isSelf || isPrivileged) ? hofStatus.getFamilyId() : null;
+        String returnUserUuid = isSelf ? citizen.getUuid() : null;
+        String returnUserName = isSelf ? citizen.getName() : null;
+        String returnFamilyId = isSelf ? hofStatus.getFamilyId() : null;
 
         return AadhaarHofCheckResponse.builder()
                 .responseInfo(createResponseInfo(request.getRequestInfo(), UserConstants.STATUS_SUCCESS))
@@ -2480,51 +2478,6 @@ public class ProfileServiceImpl implements ProfileService {
                 .tenantId(stateTenant)
                 .message(UserConstants.MSG_CITIZEN_HOF_VERIFIED_SUCCESS)
                 .build();
-    }
-
-    /**
-     * Determines whether the caller possesses an explicit privileged administrative, verifier,
-     * or internal system role to receive unmasked PII (userName, userUuid, familyId) in the HoF check response.
-     *
-     * <p>Excludes generic EMPLOYEE and CITIZEN user types and roles to prevent staff logins across ULBs
-     * from harvesting citizen identity details across families.</p>
-     *
-     * @param requestInfo incoming request metadata
-     * @return true if caller has an explicit privileged role or is an internal SYSTEM caller, false otherwise
-     */
-    private boolean isExplicitlyPrivilegedForHofResponse(RequestInfo requestInfo) {
-        if (requestInfo == null || requestInfo.getUserInfo() == null) {
-            return false;
-        }
-
-        org.egov.common.contract.request.User callerInfo = requestInfo.getUserInfo();
-
-        // 1. Internal system-to-system calls (e.g. trusted internal microservices)
-        if (UserType.SYSTEM.name().equalsIgnoreCase(callerInfo.getType())) {
-            return true;
-        }
-
-        // 2. Explicit role check against configured asset privileged roles (excluding generic EMPLOYEE)
-        Set<String> privilegedRoles = (this.userConfiguration != null && this.userConfiguration.getAssetPrivilegedRoles() != null)
-                ? this.userConfiguration.getAssetPrivilegedRoles()
-                : Collections.emptySet();
-
-        if (callerInfo.getRoles() != null) {
-            for (org.egov.common.contract.request.Role role : callerInfo.getRoles()) {
-                if (role != null && StringUtils.isNotBlank(role.getCode())) {
-                    String roleCode = role.getCode().trim().toUpperCase();
-                    // Do not allow generic EMPLOYEE or CITIZEN role to grant full PII access
-                    if ("EMPLOYEE".equals(roleCode) || "CITIZEN".equals(roleCode)) {
-                        continue;
-                    }
-                    if (privilegedRoles.contains(roleCode) || "SUPERUSER".equals(roleCode) || "ADMIN".equals(roleCode)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
     }
 
     /**

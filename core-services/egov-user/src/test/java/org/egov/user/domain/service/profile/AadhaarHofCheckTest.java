@@ -397,8 +397,8 @@ class AadhaarHofCheckTest {
     }
 
     @Test
-    @DisplayName("checkAadhaarHof: Returns full details when caller has explicit ADMIN role")
-    void checkAadhaarHof_CallerIsAdmin_ReturnsFullDetails() {
+    @DisplayName("checkAadhaarHof: Masks PII when caller is employee/admin (only self sees full details)")
+    void checkAadhaarHof_CallerIsEmployeeOrAdmin_MasksPii() {
         org.egov.common.contract.request.Role adminRole = org.egov.common.contract.request.Role.builder()
                 .code("ADMIN")
                 .name("Admin")
@@ -442,9 +442,11 @@ class AadhaarHofCheckTest {
 
         assertNotNull(response);
         assertTrue(response.getIsHof());
-        assertEquals("citizen-head-uuid", response.getUserUuid());
-        assertEquals("Ramesh Kumar", response.getUserName());
-        assertEquals("FAM-2026-0001", response.getFamilyId());
+        // Employee/Admin does not see PII; only self sees full details
+        assertNull(response.getUserUuid());
+        assertNull(response.getUserName());
+        assertNull(response.getFamilyId());
+        assertEquals("XXXXXXXX9012", response.getMaskedAadhaar());
     }
 
     @Test
