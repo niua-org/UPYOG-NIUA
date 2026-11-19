@@ -72,6 +72,10 @@ public final class UserConstants {
     public static final String ERROR_INVALID_MOBILE_NUMBER = "INVALID_MOBILE_NUMBER";
     public static final String ERROR_AADHAAR_NUMBER_REQUIRED = "AADHAAR_NUMBER_REQUIRED";
     public static final String ERROR_INVALID_AADHAAR_NUMBER = "INVALID_AADHAAR_NUMBER";
+    public static final String ERROR_INVALID_AADHAAR_FORMAT = "INVALID_AADHAAR_FORMAT";
+    public static final String ERROR_CITIZEN_NOT_FOUND = "CITIZEN_NOT_FOUND";
+    public static final String ERROR_FAMILY_NOT_MAPPED = "FAMILY_NOT_MAPPED";
+    public static final String ERROR_NOT_HEAD_OF_FAMILY = "NOT_HEAD_OF_FAMILY";
     public static final String ERROR_AADHAAR_CANNOT_BE_CHANGED = "AADHAAR_CANNOT_BE_CHANGED";
     public static final String ERROR_FAMILY_ID_REQUIRED = "FAMILY_ID_REQUIRED";
     public static final String ERROR_INVALID_FAMILY_ID = "INVALID_FAMILY_ID";
@@ -369,6 +373,8 @@ public final class UserConstants {
     public static final String FIELD_FAMILY_STATUS = "status";
     public static final String FAMILY_PARAM_MEMBER_USER_UUID = "memberUserUuid";
     public static final String FAMILY_PARAM_MEMBER_USER_UUIDS = "memberUserUuids";
+    public static final String FAMILY_PARAM_HEAD_USER_UUID = "headUserUuid";
+    public static final String FAMILY_PARAM_IS_HEAD = "isHead";
     public static final String PARAM_TENANT_ID = "tenantId";
     public static final String JSON_KEY_FAMILIES_UPPER = "Families";
     public static final String JSON_KEY_FAMILIES_LOWER = "families";
@@ -466,4 +472,14 @@ public final class UserConstants {
     public static final String MSG_INCOME_NOT_FOUND = "Income record not found with ID: ";
     public static final String MSG_INCOME_ACCESS_DENIED = "Unauthorized access: Income record does not belong to specified citizen";
     public static final String MSG_INCOME_DEACTIVATED_SUCCESS = "Income declaration marked as inactive successfully";
+
+    // =========================================================================
+    // 16. Aadhaar HoF Check Constants
+    // =========================================================================
+    public static final String MSG_INVALID_AADHAAR_FORMAT = "Aadhaar number must be a valid 12-digit numeric identifier";
+    public static final String MSG_CITIZEN_NOT_FOUND_FOR_AADHAAR = "No citizen profile found associated with the provided Aadhaar number";
+    public static final String MSG_CITIZEN_NOT_MAPPED_TO_FAMILY = "Citizen is not mapped to any active family unit";
+    public static final String MSG_CITIZEN_NOT_HEAD_OF_FAMILY = "Citizen is not the designated Head of Family (HoF) for their household";
+    public static final String MSG_CITIZEN_HOF_VERIFIED_SUCCESS = "Citizen is verified as Head of Family";
+    public static final String MSG_FAMILY_SERVICE_COMMUNICATION_ERROR = "Failed to communicate with Family service. Please try again later.";
 }

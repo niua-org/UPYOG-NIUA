@@ -224,7 +224,7 @@ public class FamilyValidator {
             validateCitizenDetails(member, request, family.getTenantId());
 
             // Validate declared properties for member
-            validateMemberProperties(member, family.getTenantId(), declaredPropertyIds);
+            validateMemberProperties(member, request, family.getTenantId(), declaredPropertyIds);
 
             // Validate declared income for member
             validateMemberIncome(member, request, family.getTenantId());
@@ -293,17 +293,19 @@ public class FamilyValidator {
      * <p>Enforces:</p>
      * <ul>
      *   <li>Mandatory locality type ({@code URBAN} or {@code RURAL}).</li>
+     *   <li>Dynamic MDMS property ownership type validation ({@code PropertyTax.OwnerShipCategory}).</li>
      *   <li>Presence of Gram Panchayat and village name for rural properties.</li>
      *   <li>Presence of valid UPYOG Property Tax assessment ID for urban properties.</li>
      *   <li>FileStore accessibility for attached property ownership documents.</li>
      * </ul>
      *
      * @param member family member declaring properties
+     * @param request UPYOG family request envelope
      * @param tenantId common tenant identifier
      * @param declaredPropertyIds set tracking declared property and survey identifiers for residence linkage
      * @throws CustomException if mandatory property attributes or proof documents are missing or invalid
      */
-    private void validateMemberProperties(FamilyMember member, String tenantId, Set<String> declaredPropertyIds) {
+    private void validateMemberProperties(FamilyMember member, FamilyRequest request, String tenantId, Set<String> declaredPropertyIds) {
         if (member.getProperties() == null || member.getProperties().isEmpty()) {
             return;
         }
@@ -311,6 +313,7 @@ public class FamilyValidator {
             if (StringUtils.isBlank(prop.getLocalityType())) {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_LOCALITY_TYPE_MANDATORY);
             }
+            familyMasterDataService.validateOwnershipType(request.getRequestInfo(), tenantId, prop.getOwnershipType());
             String locality = prop.getLocalityType().trim().toUpperCase();
             if (FamilyConstants.LOCALITY_TYPE_RURAL.equals(locality)) {
                 if (prop.getRuralPropertyDetail() == null) {
