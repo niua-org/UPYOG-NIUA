@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Card, CardText, SubmitBar,} from "@nudmcdgnpm/digit-ui-react-components";
+import { Banner, Card, CardText, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { PROFILE_ROUTES } from "../utils/constants";
 import getPPPAcknowledgementData from "../getPPPAcknowledgementData";
 
@@ -34,7 +34,7 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
   };
 
   const message = isPending
-    ? t(("PROFILE_PPP_ACKNOWLEDGEMENT_PENDING"))
+    ? t("PROFILE_PPP_ACKNOWLEDGEMENT_PENDING")
     : isSuccess
       ? t(isCreate ? "PROFILE_FAMILY_CREATED_SUCCESSFULLY" : "PROFILE_FAMILY_JOINED_SUCCESSFULLY")
       : t(isCreate ? "PROFILE_FAMILY_CREATE_FAILED" : "PROFILE_JOIN_FAMILY_FAILED");
@@ -45,17 +45,17 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
         <Banner
           successful={isSuccess}
           message={message}
-          info={isSuccess && isCreate ? t("CORE_COMMON_FAMILY_ID") : ""}
-          applicationNumber={isSuccess && isCreate ? familyId : undefined}
-          infoStyles={isSuccess && isCreate ? { fontSize: "24px", marginBottom: "12px" } : undefined}
-          applicationNumberStyles={isSuccess && isCreate ? { fontSize: "24px", marginTop: "12px" } : undefined}
+          info={isSuccess ? t(isCreate ? "CORE_COMMON_FAMILY_ID" : "CORE_JOINED_FAMILY_ID") : ""}
+          applicationNumber={isSuccess ? familyId : undefined}
+          infoStyles={isSuccess ? { fontSize: "24px", marginBottom: "12px" } : undefined}
+          applicationNumberStyles={isSuccess ? { fontSize: "24px", marginTop: "12px" } : undefined}
         />
 
         {!isSuccess && !isPending && (
           <CardText>
             {error?.response?.data?.Errors?.[0]?.message ||
               error?.message ||
-              t(("PROFILE_PPP_ACKNOWLEDGEMENT_RETRY"))}
+              t("PROFILE_PPP_ACKNOWLEDGEMENT_RETRY")}
           </CardText>
         )}
 
@@ -70,9 +70,9 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
           />
           {isSuccess && (
             <SubmitBar
-              label={t(("PPP_DOWNLOAD_ACK_FORM"))}
+              label={t("PPP_DOWNLOAD_ACK_FORM")}
               onSubmit={handleDownload}
-              style={{ maxWidth: "100%"}}
+              style={{ maxWidth: "100%" }}
             />
           )}
         </div>
