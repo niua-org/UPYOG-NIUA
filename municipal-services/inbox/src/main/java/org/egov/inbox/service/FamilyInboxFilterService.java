@@ -59,6 +59,7 @@ public class FamilyInboxFilterService {
      * @param statusIdNameMap  Mapping of workflow status IDs to names for multi-status filtering.
      * @param requestInfo      Authentication and auditing metadata for the request.
      * @return List of matching family application IDs ({@code family_id}), or an empty list if none found.
+     * @throws CustomException if the searcher response cannot be parsed
      */
     public List<String> fetchApplicationNumbersFromSearcher(InboxSearchCriteria criteria,
             HashMap<String, String> statusIdNameMap, RequestInfo requestInfo) {
@@ -127,7 +128,8 @@ public class FamilyInboxFilterService {
      * @param criteria         Search criteria specified in the Inbox request.
      * @param statusIdNameMap  Mapping of workflow status IDs to names.
      * @param requestInfo      Authentication and auditing metadata.
-     * @return Total count of matching family records, or {@code 0} if an error occurs.
+     * @return Total count of matching family records.
+     * @throws CustomException if the searcher response cannot be parsed
      */
     public Integer fetchApplicationCountFromSearcher(InboxSearchCriteria criteria,
             HashMap<String, String> statusIdNameMap, RequestInfo requestInfo) {
