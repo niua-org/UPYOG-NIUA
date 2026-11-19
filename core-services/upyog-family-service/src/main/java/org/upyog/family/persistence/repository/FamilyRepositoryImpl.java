@@ -58,7 +58,12 @@ public class FamilyRepositoryImpl implements FamilyRepository {
     }
 
     /**
-     * Persists a new Family aggregate, members, and documents to ug_family, ug_family_member, and ug_family_document.
+     * Persists a new Family aggregate, associated members, and verification documents to {@code ug_family},
+     * {@code ug_family_member}, and {@code ug_family_document} relational tables.
+     *
+     * <p>Binds all household attributes including {@code application_status}, {@code application_no},
+     * {@code approved_by}, {@code approval_date}, {@code family_certificate_id}, and creates an immutable snapshot
+     * in {@code ug_family_audit}.</p>
      *
      * @param family the Family aggregate to persist
      * @return the persisted Family aggregate

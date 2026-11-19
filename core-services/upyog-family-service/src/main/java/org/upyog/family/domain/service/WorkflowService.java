@@ -2,6 +2,7 @@ package org.upyog.family.domain.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
@@ -54,8 +55,8 @@ public class WorkflowService {
      * Transitions the workflow state for the specified family request.
      *
      * @param familyRequest the incoming family request containing family details and workflow action
-     * @return the resulting {@link State} after transition, or {@code null} if no workflow block is provided
-     * @throws CustomException if familyRequest or family is null, or if workflow transition fails
+     * @return the resulting {@link State} after transition
+     * @throws CustomException if familyRequest or family is null, if workflow data is empty or missing, or if workflow transition fails
      */
     public State updateWorkflowStatus(FamilyRequest familyRequest) {
         if (familyRequest == null || familyRequest.getFamily() == null) {
@@ -65,9 +66,9 @@ public class WorkflowService {
         Family family = familyRequest.getFamily();
         Workflow workflow = family.getWorkflow();
 
-        if (workflow == null) {
-            log.info("[UPYOG-FAMILY-SERVICE] No workflow payload found for familyId: {}, skipping workflow transition", family.getFamilyId());
-            return null;
+        if (workflow == null || StringUtils.isBlank(workflow.getAction())) {
+            log.error("[UPYOG-FAMILY-SERVICE] Workflow payload or action is empty for familyId: {}", family.getFamilyId());
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_WORKFLOW_DATA_EMPTY);
         }
 
         ProcessInstance processInstance = getProcessInstanceForFamily(familyRequest);
@@ -76,6 +77,13 @@ public class WorkflowService {
         return callWorkFlow(workflowRequest);
     }
 
+    /**
+     * Builds and maps a {@link ProcessInstance} model from the incoming {@link FamilyRequest}
+     * for submission to the workflow engine.
+     *
+     * @param familyRequest family request payload containing target family unit and workflow metadata
+     * @return populated {@link ProcessInstance} ready for transition processing
+     */
     private ProcessInstance getProcessInstanceForFamily(FamilyRequest familyRequest) {
         Family family = familyRequest.getFamily();
         Workflow workflow = family.getWorkflow();

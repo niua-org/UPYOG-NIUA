@@ -41,6 +41,12 @@ public class FamilyConfiguration {
     @Value("${egov.idgen.member.id.name}")
     private String idGenMemberIdName;
 
+    /**
+     * IdGen format template name configured for generating sequential family registration application numbers (e.g. family.application.num).
+     */
+    @Value("${egov.idgen.family.application.num}")
+    private String idGenApplicationNum;
+
     @Value("${egov.user.host}")
     private String userHost;
 

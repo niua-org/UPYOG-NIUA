@@ -73,6 +73,19 @@ public class FamilyServiceImpl implements FamilyService {
     private final WorkflowService workflowService;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Constructs a new {@code FamilyServiceImpl} with all required service dependencies,
+     * optional workflow service integration, and JSON object mapper.
+     *
+     * @param familyRepository   repository for database persistence
+     * @param familyValidator    domain validator component
+     * @param idGenRepository    ID generation service repository
+     * @param userClient         client for user registry service
+     * @param kafkaProducer      Kafka message producer
+     * @param configuration      family module application configuration
+     * @param workflowService    optional workflow lifecycle integration service
+     * @param objectMapper       optional Jackson object mapper instance
+     */
     @Autowired
     public FamilyServiceImpl(FamilyRepository familyRepository,
                              FamilyValidator familyValidator,
@@ -93,47 +106,27 @@ public class FamilyServiceImpl implements FamilyService {
     }
 
     /**
-     * Constructs a new {@code FamilyServiceImpl} with workflow integration dependencies.
+     * Creates a new household Family Unit in UPYOG with sequential ID and Application Number generation,
+     * audit logging, member asset synchronization, workflow application status initialization, and Kafka persistence.
      *
-     * @param familyRepository   repository for database persistence
-     * @param familyValidator    domain validator component
-     * @param idGenRepository    ID generation service repository
-     * @param userClient         client for user registry service
-     * @param kafkaProducer      Kafka message producer
-     * @param configuration      family module application configuration
-     * @param workflowService    workflow lifecycle integration service
-     */
-    public FamilyServiceImpl(FamilyRepository familyRepository,
-                             FamilyValidator familyValidator,
-                             IdGenRepository idGenRepository,
-                             UserClient userClient,
-                             KafkaProducer kafkaProducer,
-                             FamilyConfiguration configuration,
-                             WorkflowService workflowService) {
-        this(familyRepository, familyValidator, idGenRepository, userClient, kafkaProducer, configuration, workflowService, null);
-    }
-
-    public FamilyServiceImpl(FamilyRepository familyRepository,
-                             FamilyValidator familyValidator,
-                             IdGenRepository idGenRepository,
-                             UserClient userClient,
-                             KafkaProducer kafkaProducer,
-                             FamilyConfiguration configuration) {
-        this(familyRepository, familyValidator, idGenRepository, userClient, kafkaProducer, configuration, null, null);
-    }
-
-    /**
-     * Creates a new household Family Unit in UPYOG with sequential ID generation, audit logging, and persistence.
+     * <p>Executes the following operations sequentially:</p>
+     * <ol>
+     *   <li>Enforces statutory and domain validations via {@link FamilyValidator#validateCreate}.</li>
+     *   <li>Generates a globally unique formatted {@code familyId} using {@link IdGenRepository#generateFamilyId}.</li>
+     *   <li>Generates a unique sequential {@code applicationNo} using {@link IdGenRepository#generateApplicationNo}
+     *       backed by IdGen format template {@code family.application.num}.</li>
+     *   <li>Decorates household and all member/document sub-entities with system audit metadata and default {@link FamilyStatus#ACTIVE}.</li>
+     *   <li>Synchronizes declared member assets and demographics to {@code egov-user} prior to persistence.</li>
+     *   <li>Transitions workflow state via {@link WorkflowService#updateWorkflowStatus} to establish {@code applicationStatus}
+     *       (e.g. {@code PENDING_FOR_APPROVAL}) without mutating the household operational status.</li>
+     *   <li>Enqueues the complete creation command to the Kafka topic {@code configuration.getCreateFamilyTopic()}.</li>
+     *   <li>Enriches the returned aggregate with live citizen profiles from {@code egov-user}.</li>
+     * </ol>
      *
-     * <p>Enforces domain validations via {@link FamilyValidator#validateCreate}, generates a unique
-     * family identifier using {@link IdGenRepository#generateFamilyId}, decorates all sub-entities
-     * with system audit metadata, enqueues the creation command to Kafka topic {@code configuration.getCreateFamilyTopic()},
-     * and synchronously enriches the returned aggregate with demographics from {@code egov-user}.</p>
-     *
-     * @param request the family creation request containing metadata, head of family, and members; must not be {@code null}.
-     * @return the created {@link Family} aggregate populated with the generated {@code familyId} and enriched member profiles.
+     * @param request the family creation request containing metadata, Head of Family, and members; must not be {@code null}.
+     * @return the created {@link Family} aggregate populated with {@code familyId}, {@code applicationNo}, and enriched member profiles.
      * @throws CustomException if validation fails (e.g. invalid tenant, missing or multiple heads, duplicate member UUIDs,
-     *                         or multi-family exclusivity violation).
+     *                         or multi-family exclusivity violation) or if inter-service dependencies fail.
      */
     @Override
     @Transactional
@@ -149,9 +142,11 @@ public class FamilyServiceImpl implements FamilyService {
                 : FamilyConstants.SYSTEM_USER;
         Long now = System.currentTimeMillis();
 
-        // 1. Generate formatted family_id
+        // 1. Generate formatted family_id and application_no
         String familyId = idGenRepository.generateFamilyId(requestInfo, family.getTenantId());
         family.setFamilyId(familyId);
+        String applicationNo = idGenRepository.generateApplicationNo(requestInfo, family.getTenantId());
+        family.setApplicationNo(applicationNo);
         family.setStatus(FamilyStatus.ACTIVE);
         if (StringUtils.isBlank(family.getFamilySource())) {
             family.setFamilySource(FamilyConstants.SOURCE_CITIZEN_PORTAL);
@@ -276,10 +271,9 @@ public class FamilyServiceImpl implements FamilyService {
         // 4. Workflow transition integration
         if (family.getWorkflow() != null) {
             State state = workflowService.updateWorkflowStatus(request);
-            family.setApplicationStatus(state.getApplicationStatus());
-            family.setStatus(FamilyStatus.INACTIVE);
-        } else {
-            family.setStatus(FamilyStatus.ACTIVE);
+            if (state != null) {
+                family.setApplicationStatus(state.getApplicationStatus());
+            }
         }
 
         // 5. Persist to Database via Kafka Persister (standard UPYOG pattern)
@@ -331,12 +325,21 @@ public class FamilyServiceImpl implements FamilyService {
     }
 
     /**
-     * Updates an existing Family Unit's metadata and active member roster in UPYOG.
+     * Updates an existing Family Unit's metadata, active member roster, and workflow lifecycle status in UPYOG.
      *
-     * <p>Retrieves the existing family record, runs domain validations via {@link FamilyValidator#validateUpdate},
-     * stamps audit attributes, merges modified fields (category, headUserUuid, additionalDetails, members, documents),
-     * publishes the update command to the Kafka topic {@code configuration.getUpdateFamilyTopic()},
-     * and refreshes demographic profile caches for all active members.</p>
+     * <p>Executes the following operations atomically:</p>
+     * <ol>
+     *   <li>Retrieves the existing family record from database and enforces validations via {@link FamilyValidator#validateUpdate}.</li>
+     *   <li>Stamps audit attributes (caller UUID and modification epoch timestamp).</li>
+     *   <li>Merges modified attributes (category, Head of Family UUID, certificate ID, additionalDetails, members, documents).</li>
+     *   <li>Selectively synchronizes modified/new declared member assets with {@code egov-user}.</li>
+     *   <li>Transitions workflow state via {@link WorkflowService#updateWorkflowStatus} updating {@code applicationStatus}
+     *       without altering the household operational {@code status}.</li>
+     *   <li>If workflow action is {@code APPROVE}, stamps {@code approvedBy} with the approver UUID and {@code approvalDate}
+     *       with the current epoch timestamp.</li>
+     *   <li>Dispatches the updated aggregate to Kafka topic {@code configuration.getUpdateFamilyTopic()} for asynchronous persistence.</li>
+     *   <li>Enriches returned member records with live demographic profiles from {@code egov-user}.</li>
+     * </ol>
      *
      * @param request the family update request containing modified attributes and the active {@link RequestInfo}; must not be {@code null}.
      * @return the updated and enriched {@link Family} aggregate.
@@ -345,6 +348,7 @@ public class FamilyServiceImpl implements FamilyService {
      *           <li>Target family is not found in database (Code: {@code FAMILY_NOT_FOUND})</li>
      *           <li>Caller does not have permission to mutate the family (Code: {@code UNAUTHORIZED_ACCESS})</li>
      *           <li>The updated member list lacks an active Head of Family (Code: {@code HEAD_OF_FAMILY_REQUIRED})</li>
+     *           <li>Workflow transition or asset synchronization fails</li>
      *         </ul>
      */
     @Override
@@ -448,14 +452,22 @@ public class FamilyServiceImpl implements FamilyService {
                     existingFamily.getFamilyId());
         }
 
+        if (StringUtils.isNotBlank(updatePayload.getFamilyCertificateId())) {
+            existingFamily.setFamilyCertificateId(updatePayload.getFamilyCertificateId());
+        }
+
         // Workflow transition integration
         if (updatePayload.getWorkflow() != null) {
             existingFamily.setWorkflow(updatePayload.getWorkflow());
             State state = workflowService.updateWorkflowStatus(new FamilyRequest(requestInfo, existingFamily));
-            existingFamily.setApplicationStatus(state.getApplicationStatus());
-            existingFamily.setStatus(FamilyConstants.STATUS_APPROVED.equalsIgnoreCase(state.getApplicationStatus())
-                    ? FamilyStatus.ACTIVE
-                    : FamilyStatus.INACTIVE);
+            if (state != null) {
+                existingFamily.setApplicationStatus(state.getApplicationStatus());
+            }
+            if (updatePayload.getWorkflow().getAction() != null
+                    && FamilyConstants.ACTION_APPROVE.equalsIgnoreCase(updatePayload.getWorkflow().getAction())) {
+                existingFamily.setApprovedBy(userUuid);
+                existingFamily.setApprovalDate(now);
+            }
         }
 
         // Asynchronously persist via Kafka Persister (standard UPYOG pattern)

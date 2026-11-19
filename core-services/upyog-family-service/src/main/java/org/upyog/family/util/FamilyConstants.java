@@ -31,10 +31,6 @@ public final class FamilyConstants {
     public static final String STATUS_MERGED = "MERGED";
     public static final String STATUS_STAGED = "STAGED";
     public static final String STATUS_FOUND = "FOUND";
-    public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
-    public static final String STATUS_PENDING_FOR_APPROVAL = "PENDING_FOR_APPROVAL";
-    public static final String STATUS_APPROVED = "APPROVED";
-    public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_JOINED = "JOINED";
     public static final String STATUS_READY_FOR_JIT = "READY_FOR_JIT_PROVISION";
 
@@ -304,5 +300,17 @@ public final class FamilyConstants {
     public static final String MSG_INVALID_RESIDENCE_PROPERTY_PREFIX = "Family residence property ID '";
     public static final String MSG_INVALID_RESIDENCE_PROPERTY_SUFFIX = "' does not match any declared property or survey number of family members";
     public static final String MSG_FAMILY_WORKFLOW_REQ_NULL = "FamilyRequest or Family object cannot be null for workflow transition";
+    public static final String MSG_WORKFLOW_DATA_EMPTY = "Workflow data cannot be empty in payload";
     public static final String MSG_WORKFLOW_EMPTY_PROCESS_INSTANCES = "Workflow response contains no process instances";
+
+    // ==========================================
+    // IdGen Configuration & Execution Messages
+    // ==========================================
+    public static final String MSG_IDGEN_HOST_NOT_CONFIGURED = "egov.idgen.host is not configured";
+    public static final String MSG_IDGEN_FAMILY_ID_NOT_CONFIGURED = "egov.idgen.family.id.name is not configured";
+    public static final String MSG_IDGEN_FAMILY_ID_FAILED = "Failed to generate family ID from idgen";
+    public static final String MSG_IDGEN_MEMBER_ID_NOT_CONFIGURED = "egov.idgen.member.id.name is not configured";
+    public static final String MSG_IDGEN_MEMBER_ID_FAILED = "Failed to generate member ID from idgen";
+    public static final String MSG_IDGEN_APPLICATION_NUM_NOT_CONFIGURED = "egov.idgen.family.application.num is not configured";
+    public static final String MSG_IDGEN_APPLICATION_NUM_FAILED = "Failed to generate application number from idgen";
 }

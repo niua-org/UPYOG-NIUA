@@ -6,7 +6,7 @@ serviceMaps:
       fromTopic: save-ug-family
       isTransaction: true
       queryMaps:
-        - query: INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
+        - query: INSERT INTO ug_family (id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, application_no, approved_by, approval_date, family_certificate_id, additional_details, created_by, created_time, last_modified_by, last_modified_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.id
@@ -19,6 +19,10 @@ serviceMaps:
             - jsonPath: $.Family.familyAddressPropertyId
             - jsonPath: $.Family.familySource
             - jsonPath: $.Family.applicationStatus
+            - jsonPath: $.Family.applicationNo
+            - jsonPath: $.Family.approvedBy
+            - jsonPath: $.Family.approvalDate
+            - jsonPath: $.Family.familyCertificateId
             - jsonPath: $.Family.additionalDetails
               type: JSON
               dbType: JSONB
@@ -27,7 +31,7 @@ serviceMaps:
             - jsonPath: $.Family.auditDetails.lastModifiedBy
             - jsonPath: $.Family.auditDetails.lastModifiedTime
 
-        - query: INSERT INTO ug_family_audit (id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, additional_details, created_by, created_time, last_modified_by, last_modified_time) SELECT id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, additional_details, created_by, created_time, last_modified_by, last_modified_time FROM ug_family WHERE family_id = ?;
+        - query: INSERT INTO ug_family_audit (id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, application_no, approved_by, approval_date, family_certificate_id, additional_details, created_by, created_time, last_modified_by, last_modified_time) SELECT id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, application_no, approved_by, approval_date, family_certificate_id, additional_details, created_by, created_time, last_modified_by, last_modified_time FROM ug_family WHERE family_id = ?;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.familyId
@@ -63,7 +67,7 @@ serviceMaps:
       fromTopic: update-ug-family
       isTransaction: true
       queryMaps:
-        - query: UPDATE ug_family SET head_user_uuid = ?, category = ?, status = ?, family_type = ?, family_address_property_id = ?, family_source = ?, application_status = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? WHERE family_id = ?;
+        - query: UPDATE ug_family SET head_user_uuid = ?, category = ?, status = ?, family_type = ?, family_address_property_id = ?, family_source = ?, application_status = ?, application_no = ?, approved_by = ?, approval_date = ?, family_certificate_id = ?, additional_details = ?::jsonb, last_modified_by = ?, last_modified_time = ? WHERE family_id = ?;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.headUserUuid
@@ -73,6 +77,10 @@ serviceMaps:
             - jsonPath: $.Family.familyAddressPropertyId
             - jsonPath: $.Family.familySource
             - jsonPath: $.Family.applicationStatus
+            - jsonPath: $.Family.applicationNo
+            - jsonPath: $.Family.approvedBy
+            - jsonPath: $.Family.approvalDate
+            - jsonPath: $.Family.familyCertificateId
             - jsonPath: $.Family.additionalDetails
               type: JSON
               dbType: JSONB
@@ -80,7 +88,7 @@ serviceMaps:
             - jsonPath: $.Family.auditDetails.lastModifiedTime
             - jsonPath: $.Family.familyId
 
-        - query: INSERT INTO ug_family_audit (id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, additional_details, created_by, created_time, last_modified_by, last_modified_time) SELECT id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, additional_details, created_by, created_time, last_modified_by, last_modified_time FROM ug_family WHERE family_id = ?;
+        - query: INSERT INTO ug_family_audit (id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, application_no, approved_by, approval_date, family_certificate_id, additional_details, created_by, created_time, last_modified_by, last_modified_time) SELECT id, family_id, tenant_id, head_user_uuid, category, status, family_type, family_address_property_id, family_source, application_status, application_no, approved_by, approval_date, family_certificate_id, additional_details, created_by, created_time, last_modified_by, last_modified_time FROM ug_family WHERE family_id = ?;
           basePath: Family
           jsonMaps:
             - jsonPath: $.Family.familyId

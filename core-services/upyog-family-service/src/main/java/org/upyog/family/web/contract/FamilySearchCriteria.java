@@ -92,6 +92,12 @@ public class FamilySearchCriteria {
     private String applicationStatus;
 
     /**
+     * Filter households by exact unique application number generated during creation (e.g. {@code FAM-APP-2026-000001}).
+     */
+    @JsonProperty("applicationNo")
+    private String applicationNo;
+
+    /**
      * Pagination offset index for SQL query.
      */
     @JsonProperty("offset")
@@ -112,6 +118,6 @@ public class FamilySearchCriteria {
         boolean hasIdent = StringUtils.isNotBlank(familyId) || !CollectionUtils.isEmpty(familyIds) || StringUtils.isNotBlank(tenantId);
         boolean hasMembers = StringUtils.isNotBlank(headUserUuid) || StringUtils.isNotBlank(memberUserUuid)
                 || !CollectionUtils.isEmpty(memberUserUuids) || StringUtils.isNotBlank(mobileNumber);
-        return !hasIdent && !hasMembers && StringUtils.isBlank(category) && status == null && StringUtils.isBlank(familyType) && StringUtils.isBlank(applicationStatus);
+        return !hasIdent && !hasMembers && StringUtils.isBlank(category) && status == null && StringUtils.isBlank(familyType) && StringUtils.isBlank(applicationStatus) && StringUtils.isBlank(applicationNo);
     }
 }

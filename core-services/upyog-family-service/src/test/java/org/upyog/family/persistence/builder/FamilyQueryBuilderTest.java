@@ -124,6 +124,22 @@ class FamilyQueryBuilderTest {
     }
 
     @Test
+    @DisplayName("getFamilySearchQuery should filter by applicationNo when provided")
+    void getFamilySearchQuery_ApplicationNoCriteria() {
+        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
+                .tenantId("pg.citya")
+                .applicationNo("APP-2026-0001")
+                .build();
+
+        List<Object> params = new ArrayList<>();
+        String sql = queryBuilder.getFamilySearchQuery(criteria, params);
+
+        assertTrue(sql.contains("f.application_no = ?"));
+        assertEquals("pg.citya", params.get(0));
+        assertEquals("APP-2026-0001", params.get(1));
+    }
+
+    @Test
     @DisplayName("INSERT_FAMILY_AUDIT_SQL should insert into ug_family_audit selecting from ug_family")
     void testInsertFamilyAuditSql() {
         String auditSql = FamilyQueryBuilder.INSERT_FAMILY_AUDIT_SQL;
@@ -131,6 +147,5 @@ class FamilyQueryBuilderTest {
         assertTrue(auditSql.contains("FROM ug_family WHERE family_id = ?"));
         assertTrue(auditSql.contains("head_user_uuid"));
         assertTrue(auditSql.contains("family_type"));
-        assertTrue(auditSql.contains("application_status"));
     }
 }

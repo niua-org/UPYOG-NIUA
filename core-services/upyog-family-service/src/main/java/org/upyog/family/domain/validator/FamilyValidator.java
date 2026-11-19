@@ -133,6 +133,11 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_FAMILY_TENANT_REQUIRED);
         }
 
+        // Validate workflow payload if provided
+        if (family.getWorkflow() != null && StringUtils.isBlank(family.getWorkflow().getAction())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_WORKFLOW_DATA_EMPTY);
+        }
+
         // Validate state family configuration policy
         if (familyConfigurationService != null) {
             familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), family.getTenantId());
@@ -438,22 +443,24 @@ public class FamilyValidator {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND, FamilyConstants.MSG_TARGET_FAMILY_NOT_EXISTS);
         }
 
-        if (existingFamily.getStatus() != null
-                && existingFamily.getStatus() != FamilyStatus.ACTIVE
-                && existingFamily.getStatus() != FamilyStatus.PENDING_FOR_APPROVAL) {
-            throw new CustomException(FamilyConstants.ERROR_OPERATION_NOT_ALLOWED,
-                    "Family can only be updated when in ACTIVE or PENDING_FOR_APPROVAL status");
-        }
-
         // Ensure caller is identity-verified in user registry database
         userClient.validateCallerIsVerified(request.getRequestInfo());
 
         Family family = request.getFamily();
-        boolean isEmployee = request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null
-                && "EMPLOYEE".equalsIgnoreCase(request.getRequestInfo().getUserInfo().getType());
+        if (family != null && family.getWorkflow() != null && StringUtils.isBlank(family.getWorkflow().getAction())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_WORKFLOW_DATA_EMPTY);
+        }
 
-        // Citizen callers must always be the current HoF
-        if (!isEmployee) {
+        boolean isWorkflowAction = family != null && family.getWorkflow() != null
+                && StringUtils.isNotBlank(family.getWorkflow().getAction());
+
+        if (!isWorkflowAction) {
+            if (existingFamily.getStatus() != null && existingFamily.getStatus() != FamilyStatus.ACTIVE) {
+                throw new CustomException(FamilyConstants.ERROR_OPERATION_NOT_ALLOWED,
+                        FamilyConstants.MSG_CANNOT_UPDATE_FAMILY_STATUS_PREFIX + existingFamily.getStatus());
+            }
+
+            // Citizen callers must always be the current HoF
             if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
                 String callerUuid = request.getRequestInfo().getUserInfo().getUuid();
                 if (StringUtils.isNotBlank(callerUuid) && !FamilyConstants.SYSTEM_USER.equalsIgnoreCase(callerUuid)) {

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.upyog.family.config.FamilyConfiguration;
+import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.persistence.repository.ServiceRequestRepository;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
@@ -65,8 +66,8 @@ class WorkflowServiceTest {
     }
 
     @Test
-    @DisplayName("updateWorkflowStatus should return null when workflow object is not present")
-    void updateWorkflowStatus_NoWorkflowObject() {
+    @DisplayName("updateWorkflowStatus should throw exception when workflow object is not present in payload")
+    void updateWorkflowStatus_NoWorkflowObject_ThrowsException() {
         Family family = Family.builder()
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
@@ -75,14 +76,32 @@ class WorkflowServiceTest {
                 .family(family)
                 .build();
 
-        State state = workflowService.updateWorkflowStatus(request);
-        assertNull(state);
+        CustomException ex = assertThrows(CustomException.class, () -> workflowService.updateWorkflowStatus(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_WORKFLOW_DATA_EMPTY, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("updateWorkflowStatus should throw exception when workflow action is blank in payload")
+    void updateWorkflowStatus_BlankWorkflowAction_ThrowsException() {
+        Family family = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .workflow(Workflow.builder().action("").build())
+                .build();
+        FamilyRequest request = FamilyRequest.builder()
+                .family(family)
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> workflowService.updateWorkflowStatus(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_WORKFLOW_DATA_EMPTY, ex.getMessage());
     }
 
     @Test
     @DisplayName("updateWorkflowStatus should successfully transition and return state")
     void updateWorkflowStatus_Success() {
-        when(configs.getWfHost()).thenReturn("http://localhost:8082");
+        when(configs.getWfHost()).thenReturn("http://localhost:8280");
         when(configs.getWfTransitionPath()).thenReturn("/egov-workflow-v2/egov-wf/process/_transition");
         when(configs.getFamilyModuleName()).thenReturn("family-service");
         when(configs.getFamilyBusinessService()).thenReturn("family-service");
@@ -115,8 +134,8 @@ class WorkflowServiceTest {
                 .build();
 
         State stateResponse = State.builder()
-                .state(FamilyConstants.STATUS_PENDING_FOR_APPROVAL)
-                .applicationStatus(FamilyConstants.STATUS_PENDING_FOR_APPROVAL)
+                .state(FamilyStatus.PENDING_FOR_APPROVAL.name())
+                .applicationStatus(FamilyStatus.PENDING_FOR_APPROVAL.name())
                 .build();
 
         ProcessInstance piResponse = ProcessInstance.builder()
@@ -135,15 +154,15 @@ class WorkflowServiceTest {
         State result = workflowService.updateWorkflowStatus(request);
 
         assertNotNull(result);
-        assertEquals(FamilyConstants.STATUS_PENDING_FOR_APPROVAL, result.getState());
-        assertEquals(FamilyConstants.STATUS_PENDING_FOR_APPROVAL, result.getApplicationStatus());
+        assertEquals(FamilyStatus.PENDING_FOR_APPROVAL.name(), result.getState());
+        assertEquals(FamilyStatus.PENDING_FOR_APPROVAL.name(), result.getApplicationStatus());
         verify(serviceRequestRepository).fetchResult(any(StringBuilder.class), any(ProcessInstanceRequest.class));
     }
 
     @Test
     @DisplayName("updateWorkflowStatus should throw exception when response contains no process instances")
     void updateWorkflowStatus_EmptyResponse_ThrowsException() {
-        when(configs.getWfHost()).thenReturn("http://localhost:8082");
+        when(configs.getWfHost()).thenReturn("http://localhost:8280");
         when(configs.getWfTransitionPath()).thenReturn("/egov-workflow-v2/egov-wf/process/_transition");
         when(configs.getFamilyModuleName()).thenReturn("family-service");
         when(configs.getFamilyBusinessService()).thenReturn("family-service");
@@ -174,7 +193,7 @@ class WorkflowServiceTest {
     @Test
     @DisplayName("getProcessInstances should fetch workflow history by tenant and businessId")
     void getProcessInstances_Success() {
-        when(configs.getWfHost()).thenReturn("http://localhost:8082");
+        when(configs.getWfHost()).thenReturn("http://localhost:8280");
         when(configs.getWfProcessInstanceSearchPath()).thenReturn("/egov-workflow-v2/egov-wf/process/_search");
 
         RequestInfo requestInfo = RequestInfo.builder().build();
@@ -182,7 +201,7 @@ class WorkflowServiceTest {
         ProcessInstance pi = ProcessInstance.builder()
                 .businessId("FAM-2026-0001")
                 .action(FamilyConstants.ACTION_APPLY)
-                .state(State.builder().state(FamilyConstants.STATUS_PENDING_FOR_APPROVAL).build())
+                .state(State.builder().state(FamilyStatus.PENDING_FOR_APPROVAL.name()).build())
                 .build();
 
         ProcessInstanceResponse response = ProcessInstanceResponse.builder()

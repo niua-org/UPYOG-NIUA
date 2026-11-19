@@ -545,4 +545,39 @@ class FamilyValidatorTest {
         CustomException ex = assertThrows(CustomException.class, () -> validator.validateUpdate(updateRequest, existingFamily));
         assertEquals(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
     }
+
+    @Test
+    @DisplayName("validateCreate should throw exception when workflow action is blank in payload")
+    void validateCreate_BlankWorkflowAction_ThrowsException() {
+        family.setWorkflow(Workflow.builder().action("").build());
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_WORKFLOW_DATA_EMPTY, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("validateUpdate should throw exception when workflow action is blank in payload")
+    void validateUpdate_BlankWorkflowAction_ThrowsException() {
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.ACTIVE)
+                .build();
+
+        Family updatePayload = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .workflow(Workflow.builder().action(" ").build())
+                .build();
+
+        FamilyRequest updateRequest = FamilyRequest.builder()
+                .family(updatePayload)
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("officer-uuid").build()).build())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateUpdate(updateRequest, existingFamily));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_WORKFLOW_DATA_EMPTY, ex.getMessage());
+    }
 }
