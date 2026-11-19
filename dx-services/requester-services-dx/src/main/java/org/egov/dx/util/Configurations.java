@@ -184,5 +184,89 @@ public class Configurations {
 
 	@Value("${family.service.search.endpoint}")
 	private String familyServiceSearchEndpoint;
-	
+
+	// ---------------- TAN Verification Configurations ----------------
+	@Value("${tan.verification.mock.enabled}")
+	private Boolean tanVerificationMockEnabled;
+
+	@Value("${tan.verification.mock.records.path}")
+	private String tanVerificationMockRecordsPath;
+
+	@Value("${tan.verification.base.url}")
+	private String tanVerificationBaseUrl;
+
+	@Value("${tan.verification.path}")
+	private String tanVerificationPath;
+
+	@Value("${tan.verification.client.id}")
+	private String tanVerificationClientId;
+
+	@Value("${tan.verification.client.secret}")
+	private String tanVerificationClientSecret;
+
+	@Value("${tan.verification.connect.timeout}")
+	private Integer tanVerificationConnectTimeout;
+
+	@Value("${tan.verification.read.timeout}")
+	private Integer tanVerificationReadTimeout;
+
+	// ---------------- PAN Verification Configurations ----------------
+	@Value("${pan.verification.mock.enabled}")
+	private Boolean panVerificationMockEnabled;
+
+	@Value("${pan.verification.mock.records.path}")
+	private String panVerificationMockRecordsPath;
+
+	@Value("${pan.verification.base.url}")
+	private String panVerificationBaseUrl;
+
+	@Value("${pan.verification.path}")
+	private String panVerificationPath;
+
+	@Value("${pan.verification.client.id}")
+	private String panVerificationClientId;
+
+	@Value("${pan.verification.client.secret}")
+	private String panVerificationClientSecret;
+
+	@Value("${pan.verification.connect.timeout}")
+	private Integer panVerificationConnectTimeout;
+
+	@Value("${pan.verification.read.timeout}")
+	private Integer panVerificationReadTimeout;
+
+	// ---------------- GST Verification Configurations ----------------
+	@Value("${gst.verification.mock.enabled}")
+	private Boolean gstVerificationMockEnabled;
+
+	@Value("${gst.verification.mock.records.path}")
+	private String gstVerificationMockRecordsPath;
+
+	@Value("${gst.verification.base.url}")
+	private String gstVerificationBaseUrl;
+
+	@Value("${gst.verification.path}")
+	private String gstVerificationPath;
+
+	@Value("${gst.verification.api.key}")
+	private String gstVerificationApiKey;
+
+	@Value("${gst.verification.connect.timeout}")
+	private Integer gstVerificationConnectTimeout;
+
+	@Value("${gst.verification.read.timeout}")
+	private Integer gstVerificationReadTimeout;
+
+	// ---------------- MDMS Configurations ----------------
+	@Value("${egov.mdms.host}")
+	private String mdmsHost;
+
+	@Value("${egov.mdms.search.endpoint}")
+	private String mdmsSearchEndpoint;
+
+	@Value("${mdms.verification.module}")
+	private String mdmsVerificationModule;
+
+	@Value("${mdms.verification.master}")
+	private String mdmsVerificationMaster;
 }
