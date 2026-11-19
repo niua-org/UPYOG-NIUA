@@ -5,18 +5,13 @@ import AddressTranformer from "./AddressTranformer";
 import { ADDRESS_FIELDS, Field } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 
-/*
+/**
  * EditAddress
  *
- * Handles everything related to a user's saved addresses.
- * Displays the list of existing addresses with an edit option on each card.
- * Allows adding a new address or editing an existing one via the AddressTranformer modal.
- * After any add/edit operation, refreshes the address list from the API to stay in sync.
- * Manages its own addresses state independently — no prop drilling from parent.
+ * Displays the list of existing addresses and manages Add / Edit modals.
+ * Synchronizes updates back to the parent component via `onAddressUpdate`.
  */
-
-
-const EditAddress = ({ initialAddresses = [] }) => {
+const EditAddress = ({ initialAddresses = [], onAddressUpdate }) => {
   const { t } = useTranslation();
   const userInfo = Digit.UserService.getUser()?.info || {};
   const tenantId = Digit.ULBService.getCurrentTenantId();
@@ -25,6 +20,11 @@ const EditAddress = ({ initialAddresses = [] }) => {
   const [addressModal, setAddressModal] = useState({ open: false, address: null });
   const [toast, setToast] = useState(null);
 
+  // Auto-sync when parent fetches fresh addresses
+  useEffect(() => {
+    setAddresses(initialAddresses);
+  }, [initialAddresses]);
+
   // Auto-dismiss toast after 3 seconds
   useEffect(() => {
     if (!toast) return;
@@ -32,12 +32,14 @@ const EditAddress = ({ initialAddresses = [] }) => {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  // callback to fetch the new address once updated
+  // Callback to fetch new addresses once added or updated
   const refreshAddresses = useCallback(async () => {
     if (!userInfo.uuid) return;
     const res = await Digit.UserService.searchAddress(userInfo.uuid, tenantId);
-    setAddresses(res?.address || []);
-  }, [userInfo.uuid, tenantId]);
+    const updated = res?.address || [];
+    setAddresses(updated);
+    onAddressUpdate?.(updated);
+  }, [userInfo.uuid, tenantId, onAddressUpdate]);
 
   const closeAddressModal = () => setAddressModal({ open: false, address: null });
 

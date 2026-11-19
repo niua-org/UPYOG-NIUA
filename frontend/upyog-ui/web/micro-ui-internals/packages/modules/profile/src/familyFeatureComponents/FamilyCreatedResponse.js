@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Card, Banner, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import { useLocation } from "react-router-dom";
+import PPPAcknowledgement from "../ppp/PPPAcknowledgement";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 /**
@@ -17,12 +16,12 @@ import { PROFILE_ROUTES } from "../utils/constants";
  * 4. Displays a success `Banner` containing the generated Family ID and a primary button to return to Profile.
  */
 const FamilyCreatedResponse = () => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const location = useLocation();
 
   // Extract generated family ID from navigation state
-  const familyId = location.state?.familyId;
+  const acknowledgement = location.state?.acknowledgement || Digit.SessionStorage.get("PPP_FAMILY_CREATE_ACKNOWLEDGEMENT");
+  const familyId = location.state?.familyId || acknowledgement?.familyId;
 
   /**
    * Route Guard:
@@ -59,21 +58,15 @@ const FamilyCreatedResponse = () => {
   if (!familyId) return null;
 
   return (
-    <Card>
-      {/* Success Banner displaying the generated Family ID */}
-      <Banner
-        successful={true}
-        message={t("PROFILE_FAMILY_CREATED_SUCCESSFULLY")}
-        info={t("CORE_COMMON_FAMILY_ID")}
-        applicationNumber={familyId}
-      />
-
-      {/* Action button to return to the Citizen Profile Details dashboard */}
-      <SubmitBar
-        label={t("PROFILE_GO_BACK_TO_PROFILE")}
-        onSubmit={() => navigate(PROFILE_ROUTES.DETAILS)}
-      />
-    </Card>
+    <PPPAcknowledgement
+      mode="create"
+      familyId={familyId}
+      acknowledgement={acknowledgement}
+      onGoToProfile={() => {
+        Digit.SessionStorage.del("PPP_FAMILY_CREATE_ACKNOWLEDGEMENT");
+        navigate(PROFILE_ROUTES.DETAILS);
+      }}
+    />
   );
 };
 

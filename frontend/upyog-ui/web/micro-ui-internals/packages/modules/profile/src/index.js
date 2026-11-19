@@ -30,12 +30,14 @@ const App = () => {
           <Route path="edit-details" element={<PrivateRoute><EditProfile /></PrivateRoute>} />
           <Route path="join-family" element={<PrivateRoute><JoinExistingFamily /></PrivateRoute>} />
           <Route path="family-joined" element={<PrivateRoute><FamilyJoinedResponse /></PrivateRoute>} />
+          <Route path="family-join-acknowledgement" element={<PrivateRoute><FamilyJoinedResponse /></PrivateRoute>} />
           <Route path="found-family" element={<PrivateRoute><FoundFamily /></PrivateRoute>} />
           <Route path="verify-profile" element={<PrivateRoute><VerifyProfile /></PrivateRoute>} />
           <Route path="add-family-member" element={<PrivateRoute><AddFamilyMember /></PrivateRoute>} />
           <Route path="family-member-verified" element={<PrivateRoute><FamilyMemberVerified /></PrivateRoute>} />
           <Route path="family-member-added" element={<PrivateRoute><FamilyMemberAdded /></PrivateRoute>} />
           <Route path="family-created" element={<PrivateRoute><FamilyCreatedResponse /></PrivateRoute>} />
+          <Route path="family-create-acknowledgement" element={<PrivateRoute><FamilyCreatedResponse /></PrivateRoute>} />
           <Route path="family-dashboard" element={<PrivateRoute><FamilyDashboard /></PrivateRoute>} />
           <Route path="create-family/*" element={<PrivateRoute><FamilyCreate /></PrivateRoute>} />
         </Routes>

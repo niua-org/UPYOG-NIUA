@@ -120,6 +120,14 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
       </Fragment>
     );
   }
+// Take the validation has been added to the OTP verification page 
+  const isOtpComplete = otp && String(otp).trim().length === 6;
+  const canSubmitForm = !(!isOtpComplete || canSubmit === false);
+
+  const handleSubmit = () => {
+    if (!canSubmitForm) return;
+    onSelect();
+  };
 
   return (
     <>
@@ -143,9 +151,8 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
         <button
           type="button"
           className="login-primary-button"
-          // disabled={checkDisbaled()}
-          disabled={false}
-          onClick={() => onSelect()}
+          disabled={!canSubmitForm}
+          onClick={handleSubmit}
         >
           {"Submit"}
         </button>

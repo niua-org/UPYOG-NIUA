@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -19,6 +18,7 @@ import { getFamilyMembers, clearFamilyMembers, setFamilyMembers } from "../utils
 import { buildCreateFamilyPayload } from "../utils/payloads";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
+import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
 /**
  * Helper to retrieve applicant's relationship with HOF chosen in CreateProfile (Step 1).
@@ -71,7 +71,7 @@ const createInitialApplicant = (currentUser, relationshipWithHead = "") => ({
  */
 const FamilyMemberAdded = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const styles = profileStyles.familyMemberAdded;
   const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
   const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
@@ -108,6 +108,7 @@ const FamilyMemberAdded = () => {
   // Declaration must be ticked before the family can be submitted
   const [agree, setAgree] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 
   // Toast notification helper
   const showToast = (type, message, duration = 4000) => {
@@ -252,9 +253,9 @@ const FamilyMemberAdded = () => {
     },
   ], [members, selectedHeadUuid, loggedInUuid, t, styles]);
 
-  // Navigate to Aadhaar verification to add another family member
+  // Open Aadhaar verification modal to add another family member
   const handleAddAnother = () => {
-    navigate(PROFILE_ROUTES.ADD_FAMILY_MEMBER);
+    setShowAddMemberModal(true);
   };
 
   /**
@@ -302,6 +303,33 @@ const FamilyMemberAdded = () => {
         );
       }
 
+      const acknowledgement = {
+        familyId: createdFamilyId,
+        tenantId,
+        applicationDate: Date.now(),
+        members: members.map((member) => {
+          const memberDetails = familyDetails[member.userUuid] || {};
+          const profileDetails = memberDetails.profileDetails || {};
+          const property = memberDetails.property || {};
+          return {
+            name: member.name || profileDetails.name,
+            mobileNumber: member.mobileNumber || profileDetails.mobileNumber,
+            emailId: profileDetails.emailId,
+            relationshipWithHead: member.relationshipWithHead || profileDetails.relationshipWithHof?.code,
+            isHead: member.userUuid === selectedHeadUuid,
+            profileDetails: { ...profileDetails },
+            income: { ...(memberDetails.income || {}) },
+            vehicles: { ...(memberDetails.vehicles || {}) },
+            property: {
+              ...property,
+              noProperty: property.noProperty,
+              propertiesPortfolio: (property.propertiesPortfolio || []).map((item) => ({ ...item })),
+            },
+          };
+        }),
+      };
+      Digit.SessionStorage.set("PPP_FAMILY_CREATE_ACKNOWLEDGEMENT", acknowledgement);
+
       // Clear cached family data and temporary verification tokens from session
       clearFamilyMembers();
       Digit.SessionStorage.del("Family_Details"); // per-member step data of the Create Family flow
@@ -317,7 +345,7 @@ const FamilyMemberAdded = () => {
       // Navigate to success response screen
       navigate(PROFILE_ROUTES.FAMILY_CREATED, {
         replace: true,
-        state: { familyId: createdFamilyId },
+        state: { familyId: createdFamilyId, acknowledgement },
       });
     } catch (err) {
       // 5. Fallback string is now localized via t(...)
@@ -393,6 +421,20 @@ const FamilyMemberAdded = () => {
         <div className="profile-toast-container">
           <Toast error={toast.type === "error"} label={toast.message} onClose={() => setToast(null)} />
         </div>
+      )}
+
+      {/* Aadhaar Verification Modal to add family member */}
+      {showAddMemberModal && (
+        <AadhaarVerificationModal
+          isOpen={showAddMemberModal}
+          isModal={true}
+          mode="family"
+          onClose={() => setShowAddMemberModal(false)}
+          onSuccess={({ verifiedMember }) => {
+            setShowAddMemberModal(false);
+            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
+          }}
+        />
       )}
     </React.Fragment>
   );

@@ -5,9 +5,20 @@ import OtpVerify from "../verifications/OtpVerify";
 import { AADHAAR_LENGTH, FAMILY_ID_LENGTH, PROFILE_ROUTES, getFamilyIdLength } from "../utils/constants";
 
 /**
- * JoinExistingFamily allows users to join an existing family using either
- * their Family ID or the Head of Family's Aadhaar number. Aadhaar-based
- * verification is completed through OTP before navigating to the found family details.
+ * 
+ * @description
+ * Screen allowing a citizen to join an existing family group by searching via:
+ * 1. Family ID (alphanumeric ID)
+ * 2. Head of Family (HOF) Aadhaar Number (12 digits)
+ * 
+ * Flow:
+ * - If searching via Aadhaar:
+ *   1. Calls standard `Digit.UserService.checkAadhaarHof` service.
+ *   2. Only if `res.isHof === true`, triggers `sendAadhaarOtp()`.
+ *   3. If false, displays error toast and stops.
+ * - If searching via Family ID: Triggers Family ID OTP directly.
+ * 
+ * @returns {React.ReactElement} Join Existing Family search & OTP verification UI.
  */
 
 const JoinExistingFamily = () => {
@@ -22,7 +33,7 @@ const JoinExistingFamily = () => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const [otpType, setOtpType] = useState(null);
 
-  // auto-dismiss toast
+  // Auto-dismiss toast
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), 5000);
@@ -46,6 +57,9 @@ const JoinExistingFamily = () => {
     }
   };
 
+  /**
+   * Triggers Aadhaar OTP for HOF validation.
+   */
   const sendAadhaarOtp = async () => {
     setLoading(true);
     try {
@@ -61,10 +75,37 @@ const JoinExistingFamily = () => {
     }
   };
 
-  const searchFamilyById = async (familyId,tenantId) => {
+  /**
+   * Validates HOF status via UPYOG Digit.UserService.checkAadhaarHof service.
+   * Calls sendAadhaarOtp ONLY if isHof is true.
+   */
+  const handleAadhaarSearch = async () => {
     setLoading(true);
     try {
-      const res = await Digit.UserService.sendFamilyOtp({familyId, tenantId});
+      const res = await Digit.UserService.checkAadhaarHof({ aadhaarNumber: aadhaar, tenantId });
+      if (res?.isHof) {
+        await sendAadhaarOtp();
+      } else {
+        showError(res?.message || t("ERR_PROFILE_NOT_HOF"));
+      }
+    } catch (err) {
+      console.log("error while checking HOF status", err);
+      showError(
+        err?.response?.data?.Errors?.[0]?.code ||
+        t("ERR_PROFILE_CHECK_HOF_FAILED")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Triggers Family ID OTP for family validation.
+   */
+  const searchFamilyById = async (familyId, tenantId) => {
+    setLoading(true);
+    try {
+      const res = await Digit.UserService.sendFamilyOtp({ familyId, tenantId });
       if (!res?.isSent) throw new Error("FAMILY_NOT_FOUND");
       setReferenceId(res.referenceId);
       setOtpType("FAMILY_ID");
@@ -76,14 +117,27 @@ const JoinExistingFamily = () => {
     }
   };
 
-  const handleSearch = () => (aadhaar ? sendAadhaarOtp() : searchFamilyById(familyId, tenantId));
+  const handleSearch = () => (aadhaar ? handleAadhaarSearch() : searchFamilyById(familyId, tenantId));
 
+  /**
+   * Handler executed when OTP is successfully verified.
+   */
   const handleVerified = (res) => {
     const verifiedData =
       otpType === "FAMILY_ID"
         ? { consentToken: res.consentToken, familyId: res.family?.familyId, family: res.family }
         : res;
-    navigate(PROFILE_ROUTES.FOUND_FAMILY, { state: { verifiedData, familyId } });
+
+    // Persist verified family context so it survives tab navigations in createfamilyconfig
+    const joinData = {
+      verifiedData,
+      familyId: verifiedData?.familyId || familyId,
+      isJoinFlow: true,
+    };
+    sessionStorage.setItem("Digit.family.joinData", JSON.stringify(joinData));
+
+    // Redirect to Create Family multi-step flow starting at profileDetails
+    navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?flow=join`);
   };
 
   const canSearch = aadhaar.length === AADHAAR_LENGTH || getFamilyIdLength(familyId) === FAMILY_ID_LENGTH;

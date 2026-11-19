@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FormStep, Dropdown, TextInput, UploadFile, DatePicker } from "@nudmcdgnpm/digit-ui-react-components";
+import { FormStep, Dropdown, TextInput, UploadFile, DatePicker, RadioButtons } from "@nudmcdgnpm/digit-ui-react-components";
 import { FormField } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 
 /**
- * Vehicle Details Page Developed to get the Vehicle details of the family Members
- * These Details Will be filled by the Family Head
- * Head should have to provide below details :-
- *  1. Vehicle RC 
- *  2. Vehicle Number
- *  3. Buying Year of Vehicle
+ * VehicleDetails — Step component in the Create Family Flow.
+ *
+ * Asks the user "Do you have a vehicle?" via a Yes/No radio (RadioButtons).
+ *
+ * - "No"  → saves { hasVehicle: "No" } and proceeds; no vehicle data goes into the payload.
+ * - "Yes" → renders all vehicle fields and requires them to be filled before proceeding.
+ *
+ * Fields ( If User Have Vehicle)
+ *  - Vehicle Type
+ *  - Vehicle Category
+ *  - Fuel Type
+ *  - Vehicle Number
+ *  - Purchase Year
+ *  - RC Document
+ *
+ * View mode: all fields and the radio are read-only; state is restored from saved formData.
  */
+
+
 
 const VEHICLE_NO_REGEX = /^([A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}|[0-9]{2}BH[0-9]{4}[A-Z]{1,2})$/;
 const fullWidth = { width: "100%" };
@@ -43,6 +55,8 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
+
+  const [hasVehicle, setHasVehicle] = useState(saved.hasVehicle || null);
   const [vehicleRc, setVehicleRc] = useState(saved.uploadedRCFile ? { name: t("PROFILE_FILE_UPLOADED") } : null);
   const [purchaseYear, setPurchaseYear] = useState(saved.purchaseYear || "");
   const [vehicleNo, setVehicleNo] = useState(saved.vehicleNo || "");
@@ -60,7 +74,11 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
       onSelect(config.key, saved, false);
       return;
     }
-    onSelect(config.key, { vehicleRc, uploadedRCFile, purchaseYear, vehicleNo, vehicleNoValidated, fuelType, vehicleCategory, vehicleType }, false);
+    if (hasVehicle === "No") {
+      onSelect(config.key, { hasVehicle: "No" }, false);
+      return;
+    }
+    onSelect(config.key, { hasVehicle: "Yes", vehicleRc, uploadedRCFile, purchaseYear, vehicleNo, vehicleNoValidated, fuelType, vehicleCategory, vehicleType }, false);
   };
 
   const onSkip = () => onSelect();
@@ -112,7 +130,11 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
   };
 
   const isValidateBtnDisabled = !vehicleNo || !!vehicleNoError;
-  const isDisabled = !uploadedRCFile || !purchaseYear || !fuelType || !vehicleCategory || !vehicleType || !vehicleNoValidated;
+  const isDisabled = hasVehicle === null
+    ? true
+    : hasVehicle === "No"
+    ? false
+    : !uploadedRCFile || !purchaseYear || !fuelType || !vehicleCategory || !vehicleType || !vehicleNoValidated;
 
   return (
     <React.Fragment>
@@ -130,6 +152,20 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
         t={t}
         isDisabled={isViewMode ? false : isDisabled}
       >
+
+          <FormField label={t("PROFILE_DO_YOU_HAVE_VEHICLE")} required t={t}></FormField>
+          <RadioButtons
+            options={[{ code: "Yes", i18nKey: "COMMON_YES" }, { code: "No", i18nKey: "COMMON_NO" }]}
+            optionsKey="i18nKey"
+            isDependent={true}
+            selectedOption={hasVehicle ? { code: hasVehicle } : null}
+            onSelect={(val) => !isViewMode && setHasVehicle(val.code)}
+            disabled={isViewMode}
+            name="hasVehicle"
+          />
+
+        {/* Fields — only when Yes */}
+      {hasVehicle === "Yes" && (
         <div style={profileStyles.gridStyle}>
           <FormField label={t("PROFILE_VEHICLE_TYPE")} required t={t}>
             <Dropdown
@@ -225,8 +261,12 @@ const VehicleDetails = ({ t, config, onSelect, userType, formData }) => {
               iserror={fileError}
               disabled={isViewMode}
             />
+            <p style={profileStyles.documentUploadCard.fileRestrictionText}>
+              {t("CS_FILE_SIZE_RESTRICTIONS")}
+            </p>
           </FormField>
         </div>
+      )}
       </FormStep>
     </React.Fragment>
   );

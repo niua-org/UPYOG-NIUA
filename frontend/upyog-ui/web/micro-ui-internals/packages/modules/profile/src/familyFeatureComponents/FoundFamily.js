@@ -1,61 +1,202 @@
+/**
+ * 
+ * @description
+ * Standardized review and submission screen for joining an existing family.
+ * 
+ * Features:
+ * - Displays verified Head of Family (HOF) information in a structured `StatusTable`.
+ * - Categorizes and presents Applicant details into 4 clean, distinct sections:
+ *   1. Personal Details (including selected Relationship with HOF)
+ *   2. Minimal Property Details (Locality Type, Property ID / Address, Property Type)
+ *   3. Minimal Income Details (Occupation, Annual Income, Tax ID Type & Number)
+ *   4. Minimal Vehicle Details (Vehicle Type, Vehicle Number, Purchase Year)
+ * - Single set of View (eye) & Edit (pencil) buttons in the top applicant header.
+ * - Submits `Digit.UserService.joinFamily` request with the working backend payload.
+ * - Navigates to `FAMILY_JOINED` on successful submission.
+ * 
+ * @returns {React.ReactElement} Formatted Found Family review & Join Family action UI.
+ */
+
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import { Card, CardHeader, CardLabel, Dropdown, SubmitBar, Loader,Toast } from "@nudmcdgnpm/digit-ui-react-components";
-import { FieldGrid, Section, getFamilyHeadFields, getPersonalFields, useProfileUser } from "../utils";
+import {
+  Card,
+  CardHeader,
+  StatusTable,
+  Row,
+  SubmitBar,
+  Loader,
+  Toast,
+  ViewsIcon,
+  EditIcon,
+} from "@nudmcdgnpm/digit-ui-react-components";
+import { getFamilyHeadFields, getPersonalFields, useProfileUser, withValues } from "../utils";
 import { PROFILE_ROUTES } from "../utils/constants";
+import { profileStyles } from "../utils/profileStyles";
+import { buildJoinFamilyPayload } from "../utils/payloads";
 
-/**
- * Shows the verified head-of-family details and lets the applicant
- * Pick a relationship and join the family.
- */
 const FoundFamily = () => {
   const { t } = useTranslation();
-  const stateId = Digit.ULBService.getStateId();
   const navigate = Digit.Hooks.useCustomNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const { verifiedData, familyId } = useLocation().state || {};
-  const { user, loading, error } = useProfileUser();
+  const locationState = useLocation().state || {};
+
+  const styles = profileStyles.foundFamilyDetailSection;
+
+  // Retrieve cached join session state from sessionStorage as fallback
+  const storedJoinData = useMemo(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("Digit.family.joinData") || "null");
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const verifiedData = locationState.verifiedData || storedJoinData?.verifiedData;
+  const familyId = locationState.familyId || storedJoinData?.familyId || verifiedData?.familyId;
+
+  const { user, loading } = useProfileUser();
   const [submitting, setSubmitting] = useState(false);
-  const [relationship, setRelationship] = useState(null);
-  const userUuid = Digit.UserService.getUser()?.info?.uuid;
   const [toast, setToast] = useState(null);
+
+  // Retrieve applicant's filled multi-step form data from sessionStorage
+  const userUuid = Digit.UserService.getUser()?.info?.uuid;
+  const [allParams] = Digit.Hooks.useSessionStorage("Family_Details", {});
+  const applicantParams = allParams?.[userUuid] || {};
+
+  const profileDetails = applicantParams.profileDetails || {};
+  const propertyDetails = applicantParams.property || {};
+  const incomeDetails = applicantParams.income || {};
+  const vehicleDetails = applicantParams.vehicles || {};
+
   const showError = (label) => setToast({ error: true, label });
 
-  // Mdms Hook Call to get the Family Relationship Master Data
-  const { data: FamilyRelationShips } = Digit.Hooks.useEnabledMDMS(stateId, "common-masters", [{ name: "FamilyRelationship" }], {
-    select: (data) => {
-      const formattedData = data?.["common-masters"]?.["FamilyRelationship"];
-      const activeData = formattedData?.filter((option) => option.active);
-      return activeData;
-    },
-  });
-  let familyRelationShips = [];
-  FamilyRelationShips &&
-    FamilyRelationShips.map((relation) => {
-      familyRelationShips.push({ i18nKey: `${relation.code}`, code: `${relation.code}`, name: `${relation.name}` });
-    });
+  // Direct relationship code extraction from CreateProfile step
+  const relationship = profileDetails.relationshipWithHof;
+  const relationshipCode = relationship?.code || relationship;
 
+  // View entire form in read-only mode
+  const handleViewApplicant = () => {
+    navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?flow=join&mode=view`);
+  };
 
-  // memorized fields to avoid unnecessary re-renders, will show the data of the family head and the applicant
+  // Edit form starting from personal details step
+  const handleEditApplicant = () => {
+    navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?flow=join`);
+  };
+
+  // Head of family display summary fields
   const familyHeadFields = useMemo(() => getFamilyHeadFields(verifiedData, t), [verifiedData, t]);
-  const applicantFields = useMemo(() => (user ? getPersonalFields(user) : []), [user]);
-  if (!verifiedData) return null;
 
-  // Thsi function will make a payload and call the join family API to join the family
+  // Applicant personal fields including selected relationship with HOF
+  const applicantFields = useMemo(() => {
+    const baseFields = user ? getPersonalFields(user) : [];
+    if (relationship) {
+      baseFields.push([
+        "CORE_RELATIONSHIP_WITH_HEAD",
+        t(relationship?.code || relationship?.name || relationship),
+      ]);
+    }
+    return baseFields;
+  }, [user, relationship, t]);
+
+  // Minimal Property details summary
+  const propertyFields = useMemo(() => {
+    if (!propertyDetails || Object.keys(propertyDetails).length === 0) return [];
+    const isUrban = propertyDetails.localityType === "URBAN";
+
+    const pairs = [
+      ["PROFILE_LOCALITY_TYPE", propertyDetails.localityType ? t(`${propertyDetails.localityType}`) : null],
+      isUrban
+        ? ["PROFILE_PROPERTY_ID", propertyDetails.primaryPropertyId || propertyDetails.propertyId]
+        : ["PROFILE_GRAM_PANCHAYAT", propertyDetails.gramPanchayat?.name || propertyDetails.gramPanchayat],
+      isUrban
+        ? ["PROFILE_PROPERTY_LOCATION", propertyDetails.propertyAddress]
+        : ["PROFILE_VILLAGE", propertyDetails.village?.name || propertyDetails.village],
+      !isUrban
+        ? ["PROFILE_PROPERTY_TYPE", propertyDetails.propertyType?.code || propertyDetails.propertyType?.name || propertyDetails.propertyType]
+        : null,
+      !isUrban
+        ? ["COMMON_ADDRESS", propertyDetails.propertyAddress]
+        : null,
+    ].filter(Boolean);
+
+    return withValues(pairs);
+  }, [propertyDetails, t]);
+
+  // Minimal Income details summary
+  const incomeFields = useMemo(() => {
+    if (!incomeDetails || Object.keys(incomeDetails).length === 0) return [];
+    const pairs = [
+      [
+        "PROFILE_OCCUPATION",
+        incomeDetails.occupation
+          ? t(incomeDetails.occupation?.i18nKey || incomeDetails.occupation?.code || incomeDetails.occupation?.name || incomeDetails.occupation)
+          : null,
+      ],
+      ["PROFILE_ANNUAL_INCOME", incomeDetails.annualIncome ? `₹ ${incomeDetails.annualIncome}` : null],
+      ["PROFILE_TAX_ID_TYPE", incomeDetails.taxIdType?.code || incomeDetails.taxIdType?.name || incomeDetails.taxIdType],
+      ["PROFILE_TAX_ID_NUMBER", incomeDetails.taxIdNumber],
+    ].filter(Boolean);
+
+    return withValues(pairs);
+  }, [incomeDetails, t]);
+
+  // Minimal Vehicle details summary
+  const vehicleFields = useMemo(() => {
+    if (!vehicleDetails || Object.keys(vehicleDetails).length === 0) return [];
+    const pairs = [
+      [
+        "PROFILE_VEHICLE_TYPE",
+        vehicleDetails.vehicleType
+          ? t(vehicleDetails.vehicleType?.i18nKey || vehicleDetails.vehicleType?.code || vehicleDetails.vehicleType?.name || vehicleDetails.vehicleType)
+          : null,
+      ],
+      ["PROFILE_VEHICLE_NO", vehicleDetails.vehicleNo],
+      ["PROFILE_VEHICLE_PURCHASE_YEAR", vehicleDetails.purchaseYear],
+    ].filter(Boolean);
+
+    return withValues(pairs);
+  }, [vehicleDetails, t]);
+
+  if (!verifiedData) {
+    return (
+      <Card>
+        <CardHeader>{t("PROFILE_FOUND_FAMILY")}</CardHeader>
+        <div style={profileStyles.message}>{t("PROFILE_FAMILY_NOT_FOUND")}</div>
+      </Card>
+    );
+  }
+
+
+  /**
+  * Dispatches the Join Family API call using the new contract payload.
+  */
   const handleJoin = async () => {
     setSubmitting(true);
     try {
-      const res = await Digit.UserService.joinFamily({
-        familyId: verifiedData?.familyId,
+      const payload = buildJoinFamilyPayload({
+        familyId: verifiedData?.familyId || familyId,
         tenantId,
         applicantUserUuid: userUuid,
-        relationshipWithHead: relationship.code,
-        txnId: verifiedData?.txnId || verifiedData?.consentToken,
+        verifiedData,
+        applicantParams,
+        relationshipCode,
+        user,
       });
-      // if we get a response with status not equal to JOINED then we will show an error toast
+
+      const res = await Digit.UserService.joinFamily(payload);
+
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");
-      navigate(PROFILE_ROUTES.FAMILY_JOINED, { replace: true, state: { joinData: res.JoinRequest } });
+
+      // Clean up join session state on successful submission
+      sessionStorage.removeItem("Digit.family.joinData");
+
+      navigate(PROFILE_ROUTES.FAMILY_JOINED, {
+        replace: true,
+        state: { joinData: res.JoinRequest },
+      });
     } catch (err) {
       console.log("error on join family page", err);
       showError(err?.response?.data?.Errors?.[0]?.message || t("PROFILE_JOIN_FAMILY_FAILED"));
@@ -65,29 +206,112 @@ const FoundFamily = () => {
 
   return (
     <React.Fragment>
+      {/* 1. Found Family / Head of Family Card */}
       <Card>
-        <CardHeader>{t("PROFILE_FOUND_FAMILY")}</CardHeader>
-        <FieldGrid fields={familyHeadFields} t={t} />
+        <CardHeader style={{ fontSize: "24px", marginBottom: "16px" }}>
+          {t("PROFILE_FOUND_FAMILY")}
+        </CardHeader>
+        <div style={styles.sectionBoxStyle}>
+          <StatusTable>
+            {familyHeadFields.map(([key, val], idx) => (
+              <Row key={idx} label={t(key)} text={val || "NA"} />
+            ))}
+          </StatusTable>
+        </div>
       </Card>
 
+      {/* 2. Applicant Review Details Card */}
       <Card>
-        <CardLabel>{t("PROFILE_RELATIONSHIP_WITH_HEAD")} *</CardLabel>
-        <Dropdown
-          option={familyRelationShips}
-          selected={relationship}
-          select={setRelationship}
-          optionKey="i18nKey"
-          t={t}
-          placeholder={t("COMMON_SELECT")}
-          optionCardStyles={{
-            maxHeight: "220px",
-            overflowY: "auto",
-          }}
+        {/* Main Header with View and Edit Buttons */}
+        <div style={styles.headerWrap}>
+          <CardHeader style={{ fontSize: "24px", margin: 0 }}>
+            {t("PROFILE_APPLICANT_DETAILS")}
+          </CardHeader>
+          <div style={styles.actionsWrap}>
+            <button
+              type="button"
+              style={styles.actionBtn}
+              title={t("CORE_COMMON_VIEW")}
+              onClick={handleViewApplicant}
+            >
+              <ViewsIcon />
+              <span>{t("CORE_COMMON_VIEW")}</span>
+            </button>
+            <button
+              type="button"
+              style={styles.actionBtn}
+              title={t("CORE_COMMON_EDIT")}
+              onClick={handleEditApplicant}
+            >
+              <EditIcon />
+              <span>{t("CORE_COMMON_EDIT")}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Section A: Personal Details */}
+        <div style={styles.sectionBoxStyle}>
+          <div style={styles.sectionTitleStyle}>
+            <span>{t("CORE_COMMON_PROFILE_PERSONAL_DETAILS")}</span>
+          </div>
+          {loading ? (
+            <Loader />
+          ) : (
+            <StatusTable>
+              {applicantFields.map(([key, val], idx) => (
+                <Row key={idx} label={t(key)} text={val || "NA"} />
+              ))}
+            </StatusTable>
+          )}
+        </div>
+
+        {/* Section B: Property Details */}
+        {propertyFields.length > 0 && (
+          <div style={styles.sectionBoxStyle}>
+            <div style={styles.sectionTitleStyle}>
+              <span>{t("ES_TITILE_PROPERTY_DETAILS")}</span>
+            </div>
+            <StatusTable>
+              {propertyFields.map(([key, val], idx) => (
+                <Row key={idx} label={t(key)} text={val || "NA"} />
+              ))}
+            </StatusTable>
+          </div>
+        )}
+
+        {/* Section C: Income Details */}
+        {incomeFields.length > 0 && (
+          <div style={styles.sectionBoxStyle}>
+            <div style={styles.sectionTitleStyle}>
+              <span>{t("ES_TITLE_INCOME_DETAILS")}</span>
+            </div>
+            <StatusTable>
+              {incomeFields.map(([key, val], idx) => (
+                <Row key={idx} label={t(key)} text={val || "NA"} />
+              ))}
+            </StatusTable>
+          </div>
+        )}
+
+        {/* Section D: Vehicle Details */}
+        {vehicleFields.length > 0 && (
+          <div style={styles.sectionBoxStyle}>
+            <div style={styles.sectionTitleStyle}>
+              <span>{t("ES_TITLE_VEHICLE_DETAILS")}</span>
+            </div>
+            <StatusTable>
+              {vehicleFields.map(([key, val], idx) => (
+                <Row key={idx} label={t(key)} text={val || "NA"} />
+              ))}
+            </StatusTable>
+          </div>
+        )}
+
+        <SubmitBar
+          label={t("PROFILE_JOIN_FAMILY")}
+          onSubmit={handleJoin}
+          disabled={submitting}
         />
-
-        <Section /*title={t("PROFILE_JOINING_AS")}*/>{loading ? <Loader /> : <FieldGrid fields={applicantFields} t={t} />}</Section>
-
-        <SubmitBar label={t("PROFILE_JOIN_FAMILY")} onSubmit={handleJoin} disabled={!relationship || submitting} />
       </Card>
 
       {toast && <Toast error={toast.error} label={toast.label} onClose={() => setToast(null)} />}

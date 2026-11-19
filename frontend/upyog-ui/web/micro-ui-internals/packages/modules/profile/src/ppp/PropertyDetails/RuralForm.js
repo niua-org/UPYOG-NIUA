@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-import {
-  Dropdown,
-  TextInput,
-  RadioButtons, UploadFile
-} from "@nudmcdgnpm/digit-ui-react-components";
+import {Dropdown, TextInput, RadioButtons, UploadFile} from "@nudmcdgnpm/digit-ui-react-components";
 
 import { profileStyles } from "../../utils/profileStyles";
 
@@ -223,7 +219,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
 
         {/* Row 1 */}
-        <div style={styles.fieldRow}>
+        <div className="profile-property-rural-row" style={styles.fieldRow}>
           {/* Gram Panchayat */}
           <div style={styles.field}>
             <label style={profileStyles.label}>{t("PROFILE_GRAM_PANCHAYAT")}{" "}
@@ -258,7 +254,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
 
         {/* Row 2 */}
-        <div style={styles.fieldRow}>
+        <div className="profile-property-rural-row" style={styles.fieldRow}>
 
           {/* Ward */}
           <div style={styles.field}>
@@ -301,7 +297,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
 
         {/* Row 1 */}
-        <div style={styles.fieldRow}>
+        <div className="profile-property-rural-row" style={styles.fieldRow}>
           <div style={styles.field}>
             <label style={profileStyles.label}>
               {t("PROFILE_PROPERTY_TYPE")}{" "}
@@ -334,7 +330,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
 
         {/* Row 2 */}
-        <div style={styles.fieldRow}>
+        <div className="profile-property-rural-row" style={styles.fieldRow}>
 
           {/* Survey Number */}
           <div style={styles.field}>
@@ -364,7 +360,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         <div style={styles.sectionTitle}>
           {t("PROFILE_OWNERSHIP_DETAILS")}
         </div>
-        <div style={styles.fieldRow}>
+        <div className="profile-property-rural-row" style={styles.fieldRow}>
           <div style={styles.field}>
             <label style={profileStyles.label}>
               {t("PROFILE_OWNERSHIP_TYPE")}{" "}
@@ -388,7 +384,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
               {t("PROFILE_JOINT_OWNER_DETAILS")}
             </div>
 
-            <div style={styles.fieldRow}>
+            <div className="profile-property-rural-row" style={styles.fieldRow}>
 
               {/* Joint Owner Name */}
               <div style={styles.field}>

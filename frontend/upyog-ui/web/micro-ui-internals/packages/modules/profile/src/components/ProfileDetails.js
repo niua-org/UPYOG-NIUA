@@ -1,11 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Loader, EditIcon, Dropdown, ArrowDown, TickMark, CloseSvg, Toast } from "@nudmcdgnpm/digit-ui-react-components";
+import { Card, Loader, EditIcon, TickMark, CloseSvg, Toast, AddIcon, PersonIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument, clearFamilyMembers } from "../utils";
 import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
+import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
-// Function to get user Details
+/**
+ * Custom hook to fetch and manage the logged-in citizen's profile details.
+ * Fetches user profile, addresses, and documents from userSearch API with unmount
+ * and race-condition guards.
+ *
+ * @returns {{
+ *   user: Object|null,
+ *   loading: boolean,
+ *   error: boolean,
+ *   refetch: Function
+ * }} Profile user state and actions
+ */
 const useProfileUser = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,36 +25,73 @@ const useProfileUser = () => {
   const uuid = Digit.UserService.getUser()?.info?.uuid;
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
+  const isMountedRef = useRef(true);
+  const requestIdRef = useRef(0);
+
   useEffect(() => {
-    let isActive = true; // avoids state update after unmount
-    const fetchUser = async () => {
-      if (!uuid) { setLoading(false); return; }
-      try {
-        // The updated /user/profile/_search endpoint expects a single uuid string rather than a list of UUIDs
-        const response = await Digit.UserService.userSearch(tenantId, { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] }, {});
-        if (isActive) setUser(response?.user?.[0] || null);
-      } catch (e) {
-        if (isActive) setError(true);
-      } finally {
-        if (isActive) setLoading(false);
-      }
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
     };
-    fetchUser();
-    return () => { isActive = false; };
+  }, []);
+
+  const fetchUser = useCallback(async () => {
+    if (!uuid) {
+      if (isMountedRef.current) setLoading(false);
+      return;
+    }
+
+    const currentRequestId = ++requestIdRef.current;
+    if (isMountedRef.current) setLoading(true);
+
+    try {
+      // The updated /user/profile/_search endpoint expects a single uuid string rather than a list of UUIDs
+      const response = await Digit.UserService.userSearch(
+        tenantId,
+        { uuid: uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] },
+        {}
+      );
+      if (isMountedRef.current && currentRequestId === requestIdRef.current) {
+        setUser(response?.user?.[0] || null);
+        setError(false);
+      }
+    } catch (e) {
+      if (isMountedRef.current && currentRequestId === requestIdRef.current) {
+        setError(true);
+      }
+    } finally {
+      if (isMountedRef.current && currentRequestId === requestIdRef.current) {
+        setLoading(false);
+      }
+    }
   }, [uuid, tenantId]);
 
-  return { user, loading, error };
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  return { user, loading, error, refetch: fetchUser };
 };
 
+/**
+ * ProfileDetails Component
+ *
+ * Renders the citizen profile details view including personal info, verified status badges,
+ * family management actions (Create Family, Join Existing Family, Verify Profile),
+ * address details, and uploaded documents.
+ *
+ * @returns {JSX.Element} Rendered profile details screen
+ */
 const ProfileDetails = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const stateId = Digit.ULBService.getStateId();
-  const { user, loading, error } = useProfileUser();
+  const { user, loading, error, refetch } = useProfileUser();
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [toast, setToast] = useState(null);
   const [isHof, setIsHof] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -140,6 +189,7 @@ const ProfileDetails = () => {
         error: true,
         message: t("ERR_PROFILE_NOT_AADHAAR_VERIFIED"),
       });
+      setShowVerifyModal(true);
       return;
     }
 
@@ -149,6 +199,18 @@ const ProfileDetails = () => {
         clearFamilyMembers();
       }
       navigate(targetRoute);
+    }
+  };
+
+  const getFamilyOptionIcon = (code) => {
+    switch (code) {
+      case "PROFILE_CREATE_FAMILY":
+        return <AddIcon fill="#a82227" styles={profileStyles.actionIconAdd} />;
+      case "PROFILE_JOIN_EXISTING_FAMILY":
+      case "PROFILE_FAMILY_DASHBOARD":
+        return <PersonIcon styles={profileStyles.actionIconPerson} />;
+      default:
+        return null;
     }
   };
 
@@ -162,19 +224,19 @@ const ProfileDetails = () => {
           <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
           {user?.isIdentityVerified ? (
             <span
-              title={t("AADHAAR_VERIFIED", "Aadhaar Verified")}
+              title={t("AADHAAR_VERIFIED")}
               style={profileStyles.verifiedBadge}
             >
               <span style={profileStyles.verifiedIconWrap}>
                 <TickMark fillColor="white" />
               </span>
-              <span>{t("PROFILE_AADHAAR_VERIFIED", "Aadhaar Verified")}</span>
+              <span>{t("PROFILE_AADHAAR_VERIFIED")}</span>
             </span>
           ) : (
             <span
               role="button"
               tabIndex={0}
-              onClick={() => navigate(PROFILE_ROUTES.VERIFY)}
+              onClick={() => setShowVerifyModal(true)}
               title={t("CLICK_TO_VERIFY_AADHAAR")}
               style={profileStyles.unverifiedBadge}
             >
@@ -184,7 +246,7 @@ const ProfileDetails = () => {
                 </span>
               </span>
               <span style={profileStyles.unverifiedText}>
-                {t("PROFILE_AADHAAR_NOT_VERIFIED", "Aadhaar Not Verified")}
+                {t("PROFILE_AADHAAR_NOT_VERIFIED")}
               </span>
             </span>
           )}
@@ -205,24 +267,18 @@ const ProfileDetails = () => {
               )}
             </div>
           )}
-          {/* Show the My Family dropdown dynamically based on available options */}
-          {familyOptions.length > 0 && (
-            <div>
-              <Dropdown
-                option={familyOptions}
-                optionKey="name"
-                select={handleFamilySelection}
-                style={profileStyles.dropdownWrap}
-                optionCardStyles={profileStyles.dropdownMenu}
-                customSelector={
-                  <div style={profileStyles.dropdownButton}>
-                    <span>{t("PROFILE_ADD_FAMILY")}</span>
-                    <ArrowDown />
-                  </div>
-                }
-              />
-            </div>
-          )}
+          {/* Show family action options as top-level buttons */}
+          {familyOptions.map((option) => (
+            <button
+              key={option.code}
+              type="button"
+              onClick={() => handleFamilySelection(option)}
+              style={profileStyles.actionButton}
+            >
+              {getFamilyOptionIcon(option.code)}
+              <span>{t(option.i18nKey, option.name)}</span>
+            </button>
+          ))}
           <button type="button" onClick={() => navigate(PROFILE_ROUTES.EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
             <EditIcon /> {t("CORE_COMMON_EDIT")}
           </button>
@@ -288,6 +344,20 @@ const ProfileDetails = () => {
           onClose={() => setToast(null)}
         />
       </div>
+    )}
+
+    {/* Aadhaar Verification Modal */}
+    {showVerifyModal && (
+      <AadhaarVerificationModal
+        isModal={true}
+        isOpen={showVerifyModal}
+        mode="profile"
+        onClose={() => setShowVerifyModal(false)}
+        onSuccess={() => {
+          setShowVerifyModal(false);
+          window.location.reload();
+        }}
+      />
     )}
   </React.Fragment>
   );

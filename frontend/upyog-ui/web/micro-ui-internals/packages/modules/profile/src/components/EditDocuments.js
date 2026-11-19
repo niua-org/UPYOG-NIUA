@@ -270,7 +270,7 @@ const EditDocuments = ({ userDetails, onDocumentsUpdate }) => {
           toUpdate.push(document);
         } else {
           const document = buildCreateDocumentPayload({
-            uuid: userInfo.uuid,
+            userUuid: userInfo.uuid,
             tenantId,
             documentType: item.documentType,
             filestoreId: item.filestoreId,
