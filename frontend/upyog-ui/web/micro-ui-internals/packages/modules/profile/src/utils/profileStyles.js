@@ -828,15 +828,7 @@ propertyDetails: {
       marginTop: "32px",
       paddingTop: "24px",
       borderTop: "1px solid #e0e0e0",
-    },
-
-    cancelButton: {
-      minWidth: "100px",
-      padding: "10px 20px",
-      border: "1px solid #D6D6D6",
-      cursor: "pointer",
-      fontSize: "14px",
-    },
+    }
   },
   urbanPropertyForm: {
     container: {
