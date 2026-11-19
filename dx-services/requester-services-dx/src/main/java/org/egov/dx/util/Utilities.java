@@ -1,11 +1,12 @@
 package org.egov.dx.util;
 
 import java.io.BufferedReader;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -13,49 +14,40 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-public class Utilities {
+public final class Utilities {
 
-    public static String getStringFromInputStream(InputStream is) throws Exception {
-        BufferedReader br = null;
+    private Utilities() {
+        // Utility class
+    }
+
+    public static String getStringFromInputStream(InputStream is) throws IOException {
         StringBuilder sb = new StringBuilder();
         String line;
-        try {
-
-            br = new BufferedReader(new InputStreamReader(is));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             while ((line = br.readLine()) != null) {
                 sb.append(line);
-            }
-
-        } catch (IOException e) {
-            throw e;
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    throw e;
-                }
             }
         }
         return sb.toString();
     }
 
     public static Document convertStringToDocument(String xmlStr) throws Exception {
-        Document doc = null;
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder;
-            builder = factory.newDocumentBuilder();
-            doc = builder.parse(new InputSource(new StringReader(xmlStr)));
-        } catch (Exception e) {
-            throw e;
-        }
-        return doc;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(new InputSource(new StringReader(xmlStr)));
     }
 
     public static String GetXpathValue(XPath xPath, String RequestPath, Document doc) throws XPathExpressionException {
-        String XpathValue = xPath.compile(RequestPath).evaluate(doc);
+        String xpathValue = xPath.compile(RequestPath).evaluate(doc);
         xPath.reset();
-        return XpathValue;
+        return xpathValue;
     }
 }

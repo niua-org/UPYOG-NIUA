@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class MockGstGatewayAdapterTest {
+class MockGstGatewayAdapterTest {
 
     private Configurations configurations;
     private MockGstGatewayAdapter adapter;

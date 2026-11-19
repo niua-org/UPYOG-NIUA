@@ -137,33 +137,7 @@ public class GstProfileServiceImpl implements GstProfileService {
         String pan = GstNumberUtils.extractPanFromGstin(vData.getGstin());
         String stateCode = GstNumberUtils.extractStateCode(vData.getGstin());
         String stateName = GstNumberUtils.resolveStateName(stateCode);
-
-        GstTaxpayerDetails.GstAddress addr = null;
-        if (vData.getPrincipalPlaceOfBusiness() != null && vData.getPrincipalPlaceOfBusiness().getAddress() != null) {
-            VendorGstProfileResponse.Address vAddr = vData.getPrincipalPlaceOfBusiness().getAddress();
-
-            List<String> addressParts = new ArrayList<>();
-            if (StringUtils.isNotBlank(vAddr.getDoorNumber())) addressParts.add(vAddr.getDoorNumber().trim());
-            if (StringUtils.isNotBlank(vAddr.getBuildingName())) addressParts.add(vAddr.getBuildingName().trim());
-            if (StringUtils.isNotBlank(vAddr.getStreet())) addressParts.add(vAddr.getStreet().trim());
-            if (StringUtils.isNotBlank(vAddr.getLocation())) addressParts.add(vAddr.getLocation().trim());
-            if (StringUtils.isNotBlank(vAddr.getCity())) addressParts.add(vAddr.getCity().trim());
-            if (StringUtils.isNotBlank(vAddr.getState())) addressParts.add(vAddr.getState().trim());
-            if (StringUtils.isNotBlank(vAddr.getPincode())) addressParts.add(vAddr.getPincode().trim());
-            String fullAddress = String.join(", ", addressParts);
-
-            addr = GstTaxpayerDetails.GstAddress.builder()
-                    .doorNumber(vAddr.getDoorNumber())
-                    .buildingName(vAddr.getBuildingName())
-                    .street(vAddr.getStreet())
-                    .location(vAddr.getLocation())
-                    .city(vAddr.getCity())
-                    .district(vAddr.getDistrict())
-                    .state(StringUtils.isNotBlank(vAddr.getState()) ? vAddr.getState() : stateName)
-                    .pincode(vAddr.getPincode())
-                    .fullAddress(fullAddress)
-                    .build();
-        }
+        GstTaxpayerDetails.GstAddress addr = mapToGstAddress(vData, stateName);
 
         return GstTaxpayerDetails.builder()
                 .gstin(vData.getGstin())
@@ -179,6 +153,35 @@ public class GstProfileServiceImpl implements GstProfileService {
                 .stateCode(stateCode)
                 .state(stateName)
                 .principalPlaceOfBusiness(addr)
+                .build();
+    }
+
+    private GstTaxpayerDetails.GstAddress mapToGstAddress(VendorGstProfileResponse.TaxpayerData vData, String fallbackStateName) {
+        if (vData.getPrincipalPlaceOfBusiness() == null || vData.getPrincipalPlaceOfBusiness().getAddress() == null) {
+            return null;
+        }
+
+        VendorGstProfileResponse.Address vAddr = vData.getPrincipalPlaceOfBusiness().getAddress();
+        List<String> addressParts = new ArrayList<>();
+        if (StringUtils.isNotBlank(vAddr.getDoorNumber())) addressParts.add(vAddr.getDoorNumber().trim());
+        if (StringUtils.isNotBlank(vAddr.getBuildingName())) addressParts.add(vAddr.getBuildingName().trim());
+        if (StringUtils.isNotBlank(vAddr.getStreet())) addressParts.add(vAddr.getStreet().trim());
+        if (StringUtils.isNotBlank(vAddr.getLocation())) addressParts.add(vAddr.getLocation().trim());
+        if (StringUtils.isNotBlank(vAddr.getCity())) addressParts.add(vAddr.getCity().trim());
+        if (StringUtils.isNotBlank(vAddr.getState())) addressParts.add(vAddr.getState().trim());
+        if (StringUtils.isNotBlank(vAddr.getPincode())) addressParts.add(vAddr.getPincode().trim());
+        String fullAddress = String.join(", ", addressParts);
+
+        return GstTaxpayerDetails.GstAddress.builder()
+                .doorNumber(vAddr.getDoorNumber())
+                .buildingName(vAddr.getBuildingName())
+                .street(vAddr.getStreet())
+                .location(vAddr.getLocation())
+                .city(vAddr.getCity())
+                .district(vAddr.getDistrict())
+                .state(StringUtils.isNotBlank(vAddr.getState()) ? vAddr.getState() : fallbackStateName)
+                .pincode(vAddr.getPincode())
+                .fullAddress(fullAddress)
                 .build();
     }
 }

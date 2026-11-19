@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class MockPanGatewayAdapterTest {
+class MockPanGatewayAdapterTest {
 
     private Configurations configurations;
     private MockPanGatewayAdapter adapter;

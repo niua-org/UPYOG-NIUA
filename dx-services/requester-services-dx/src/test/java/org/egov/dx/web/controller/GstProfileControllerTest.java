@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class GstProfileControllerTest {
+class GstProfileControllerTest {
 
     private GstProfileService gstProfileService;
     private GstProfileController controller;

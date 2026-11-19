@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
@@ -42,6 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @ConditionalOnProperty(name = "tan.verification.mock.enabled", havingValue = "true", matchIfMissing = true)
 @Slf4j
 public class MockTanGatewayAdapter implements TanGatewayAdapter {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Configurations configurations;
     private final Map<String, VendorTanVerificationResponse.VendorTanDetails> mockRecordMap = new ConcurrentHashMap<>();
@@ -77,27 +80,28 @@ public class MockTanGatewayAdapter implements TanGatewayAdapter {
         try {
             ClassPathResource resource = new ClassPathResource(mockRecordsPath);
             if (resource.exists()) {
-                ObjectMapper mapper = new ObjectMapper();
                 try (InputStream is = resource.getInputStream()) {
-                    List<VendorTanVerificationResponse.VendorTanDetails> records = mapper.readValue(
+                    List<VendorTanVerificationResponse.VendorTanDetails> records = OBJECT_MAPPER.readValue(
                             is, new TypeReference<List<VendorTanVerificationResponse.VendorTanDetails>>() {});
-                    if (records != null) {
-                        for (VendorTanVerificationResponse.VendorTanDetails details : records) {
-                            if (StringUtils.isNotBlank(details.getTan())) {
-                                mockRecordMap.put(details.getTan().trim().toUpperCase(), details);
-                            }
-                        }
-                        log.info("[MOCK-TAN-ADAPTER] Successfully loaded {} mock TAN records from configured path: {}",
-                                mockRecordMap.size(), mockRecordsPath);
-                    }
+                    populateRecords(records, mockRecordsPath);
                 }
             } else {
                 log.warn("[MOCK-TAN-ADAPTER] Mock TAN records resource not found at configured path: {}", mockRecordsPath);
             }
-        } catch (CustomException ce) {
-            throw ce;
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("[MOCK-TAN-ADAPTER] Failed to load mock TAN records: {}", e.getMessage(), e);
+        }
+    }
+
+    private void populateRecords(List<VendorTanVerificationResponse.VendorTanDetails> records, String mockRecordsPath) {
+        if (records != null) {
+            for (VendorTanVerificationResponse.VendorTanDetails details : records) {
+                if (StringUtils.isNotBlank(details.getTan())) {
+                    mockRecordMap.put(details.getTan().trim().toUpperCase(), details);
+                }
+            }
+            log.info("[MOCK-TAN-ADAPTER] Successfully loaded {} mock TAN records from configured path: {}",
+                    mockRecordMap.size(), mockRecordsPath);
         }
     }
 

@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class TanVerificationControllerTest {
+class TanVerificationControllerTest {
 
     private TanVerificationService tanVerificationService;
     private TanVerificationController controller;

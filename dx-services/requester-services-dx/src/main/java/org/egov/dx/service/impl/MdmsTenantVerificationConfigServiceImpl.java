@@ -1,7 +1,6 @@
 package org.egov.dx.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
@@ -35,22 +34,18 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
 
     private final RestTemplate restTemplate;
     private final Configurations configurations;
-    private final ObjectMapper objectMapper;
 
     /**
      * Constructor injection satisfying Dependency Inversion Principle (DIP).
      *
      * @param restTemplate standard Spring RestTemplate bean
      * @param configurations centralized application configurations
-     * @param objectMapper Jackson ObjectMapper bean
      */
     @Autowired
     public MdmsTenantVerificationConfigServiceImpl(RestTemplate restTemplate,
-                                                   Configurations configurations,
-                                                   ObjectMapper objectMapper) {
+                                                   Configurations configurations) {
         this.restTemplate = restTemplate;
         this.configurations = configurations;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -61,55 +56,25 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
             return false;
         }
 
-        String stateTenant = tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
         String host = configurations.getMdmsHost();
         String endpoint = configurations.getMdmsSearchEndpoint();
-        String moduleName = configurations.getMdmsVerificationModule();
-        String masterName = configurations.getMdmsVerificationMaster();
-
         if (StringUtils.isBlank(host) || StringUtils.isBlank(endpoint)) {
             log.error("[MDMS-VERIFICATION-CHECK] egov.mdms.host or egov.mdms.search.endpoint is not configured");
             return false;
         }
 
-        String url = host.endsWith("/") ? host + endpoint : host + "/" + endpoint;
-
-        MasterDetail masterDetail = MasterDetail.builder()
-                .name(masterName)
-                .build();
-
-        ModuleDetail moduleDetail = ModuleDetail.builder()
-                .moduleName(moduleName)
-                .masterDetails(Collections.singletonList(masterDetail))
-                .build();
-
-        MdmsCriteria criteria = new MdmsCriteria();
-        criteria.setTenantId(stateTenant);
-        criteria.setModuleDetails(Collections.singletonList(moduleDetail));
-
-        MdmsCriteriaReq criteriaReq = new MdmsCriteriaReq();
-        criteriaReq.setRequestInfo(requestInfo != null ? requestInfo : new RequestInfo());
-        criteriaReq.setMdmsCriteria(criteria);
+        String stateTenant = tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
+        String moduleName = configurations.getMdmsVerificationModule();
+        String masterName = configurations.getMdmsVerificationMaster();
+        String url = buildMdmsUrl(host, endpoint);
+        MdmsCriteriaReq criteriaReq = buildCriteriaReq(requestInfo, stateTenant, moduleName, masterName);
 
         try {
             log.debug("[MDMS-VERIFICATION-CHECK] Calling MDMS at {} for tenant {} and service {}", url, tenantId, serviceType);
             JsonNode responseNode = restTemplate.postForObject(url, criteriaReq, JsonNode.class);
-
-            if (responseNode != null) {
-                JsonNode configs = responseNode.path("MdmsRes").path(moduleName).path(masterName);
-                if (configs.isArray() && configs.size() > 0) {
-                    for (JsonNode config : configs) {
-                        String type = config.hasNonNull("type")
-                                ? config.path("type").asText()
-                                : config.path("service").asText();
-                        if (serviceType.equalsIgnoreCase(type)) {
-                            boolean enabled = config.path("enabled").asBoolean(false);
-                            log.info("[MDMS-VERIFICATION-CHECK] Verification service {} is {} in MDMS for tenant {}",
-                                    serviceType, enabled ? "ENABLED" : "DISABLED", tenantId);
-                            return enabled;
-                        }
-                    }
-                }
+            Boolean enabled = isServiceEnabledInResponse(responseNode, moduleName, masterName, serviceType, tenantId);
+            if (enabled != null) {
+                return enabled;
             }
         } catch (Exception e) {
             log.error("[MDMS-VERIFICATION-CHECK] Failed to query MDMS for tenant verification check (tenant={}, service={}): {}",
@@ -119,5 +84,48 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
 
         log.warn("[MDMS-VERIFICATION-CHECK] No MDMS configuration found for service {} and tenant {}", serviceType, tenantId);
         return false;
+    }
+
+    private String buildMdmsUrl(String host, String endpoint) {
+        return host.endsWith("/") ? host + endpoint : host + "/" + endpoint;
+    }
+
+    private MdmsCriteriaReq buildCriteriaReq(RequestInfo requestInfo, String stateTenant, String moduleName, String masterName) {
+        MasterDetail masterDetail = MasterDetail.builder().name(masterName).build();
+        ModuleDetail moduleDetail = ModuleDetail.builder()
+                .moduleName(moduleName)
+                .masterDetails(Collections.singletonList(masterDetail))
+                .build();
+        MdmsCriteria criteria = new MdmsCriteria();
+        criteria.setTenantId(stateTenant);
+        criteria.setModuleDetails(Collections.singletonList(moduleDetail));
+
+        MdmsCriteriaReq criteriaReq = new MdmsCriteriaReq();
+        criteriaReq.setRequestInfo(requestInfo != null ? requestInfo : new RequestInfo());
+        criteriaReq.setMdmsCriteria(criteria);
+        return criteriaReq;
+    }
+
+    private Boolean isServiceEnabledInResponse(JsonNode responseNode, String moduleName, String masterName,
+                                               String serviceType, String tenantId) {
+        if (responseNode == null) {
+            return null;
+        }
+        JsonNode configs = responseNode.path("MdmsRes").path(moduleName).path(masterName);
+        if (!configs.isArray() || configs.isEmpty()) {
+            return null;
+        }
+        for (JsonNode config : configs) {
+            String type = config.hasNonNull("type")
+                    ? config.path("type").asText()
+                    : config.path("service").asText();
+            if (serviceType.equalsIgnoreCase(type)) {
+                boolean enabled = config.path("enabled").asBoolean(false);
+                log.info("[MDMS-VERIFICATION-CHECK] Verification service {} is {} in MDMS for tenant {}",
+                        serviceType, enabled ? "ENABLED" : "DISABLED", tenantId);
+                return enabled;
+            }
+        }
+        return null;
     }
 }

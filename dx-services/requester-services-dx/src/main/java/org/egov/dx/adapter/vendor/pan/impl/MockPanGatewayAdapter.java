@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @ConditionalOnProperty(name = "pan.verification.mock.enabled", havingValue = "true", matchIfMissing = true)
 @Slf4j
 public class MockPanGatewayAdapter implements PanGatewayAdapter {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String RES_PAN_PREFIX = "RES-PAN-";
 
     private final Configurations configurations;
     private final Map<String, VendorPanVerificationResponse.ResponseParams> mockRecordMap = new ConcurrentHashMap<>();
@@ -77,27 +81,28 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
         try {
             ClassPathResource resource = new ClassPathResource(mockRecordsPath);
             if (resource.exists()) {
-                ObjectMapper mapper = new ObjectMapper();
                 try (InputStream is = resource.getInputStream()) {
-                    List<VendorPanVerificationResponse.ResponseParams> records = mapper.readValue(
+                    List<VendorPanVerificationResponse.ResponseParams> records = OBJECT_MAPPER.readValue(
                             is, new TypeReference<List<VendorPanVerificationResponse.ResponseParams>>() {});
-                    if (records != null) {
-                        for (VendorPanVerificationResponse.ResponseParams details : records) {
-                            if (StringUtils.isNotBlank(details.getPan())) {
-                                mockRecordMap.put(details.getPan().trim().toUpperCase(), details);
-                            }
-                        }
-                        log.info("[MOCK-PAN-ADAPTER] Successfully loaded {} mock PAN records from configured path: {}",
-                                mockRecordMap.size(), mockRecordsPath);
-                    }
+                    populateRecords(records, mockRecordsPath);
                 }
             } else {
                 log.warn("[MOCK-PAN-ADAPTER] Mock PAN records resource not found at configured path: {}", mockRecordsPath);
             }
-        } catch (CustomException ce) {
-            throw ce;
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("[MOCK-PAN-ADAPTER] Failed to load mock PAN records: {}", e.getMessage(), e);
+        }
+    }
+
+    private void populateRecords(List<VendorPanVerificationResponse.ResponseParams> records, String mockRecordsPath) {
+        if (records != null) {
+            for (VendorPanVerificationResponse.ResponseParams details : records) {
+                if (StringUtils.isNotBlank(details.getPan())) {
+                    mockRecordMap.put(details.getPan().trim().toUpperCase(), details);
+                }
+            }
+            log.info("[MOCK-PAN-ADAPTER] Successfully loaded {} mock PAN records from configured path: {}",
+                    mockRecordMap.size(), mockRecordsPath);
         }
     }
 
@@ -128,7 +133,7 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
                     .header(VendorPanVerificationResponse.ResponseHeader.builder()
                             .requestId(reqId)
                             .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                            .responseId("RES-PAN-" + UUID.randomUUID())
+                            .responseId(RES_PAN_PREFIX + UUID.randomUUID())
                             .status(PanConstants.STATUS_FAILURE)
                             .statusCode("404")
                             .build())
@@ -162,7 +167,7 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
                     .header(VendorPanVerificationResponse.ResponseHeader.builder()
                             .requestId(reqId)
                             .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                            .responseId("RES-PAN-" + UUID.randomUUID())
+                            .responseId(RES_PAN_PREFIX + UUID.randomUUID())
                             .status(PanConstants.STATUS_SUCCESS)
                             .statusCode("200")
                             .build())
@@ -174,7 +179,6 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
         if (PanNumberUtils.isValidPan(normalizedPan)) {
             String category = PanNumberUtils.resolvePanCategory(normalizedPan);
             String syntheticName = StringUtils.isNotBlank(inputFullName) ? inputFullName.trim().toUpperCase() : "SIMULATED TAXPAYER";
-            String syntheticDob = PanNumberUtils.normalizeDobToDdMmYyyy(inputDob);
 
             VendorPanVerificationResponse.ResponseParams generatedParams = VendorPanVerificationResponse.ResponseParams.builder()
                     .pan(normalizedPan)
@@ -193,7 +197,7 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
                     .header(VendorPanVerificationResponse.ResponseHeader.builder()
                             .requestId(reqId)
                             .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                            .responseId("RES-PAN-" + UUID.randomUUID())
+                            .responseId(RES_PAN_PREFIX + UUID.randomUUID())
                             .status(PanConstants.STATUS_SUCCESS)
                             .statusCode("200")
                             .build())
@@ -206,7 +210,7 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
                 .header(VendorPanVerificationResponse.ResponseHeader.builder()
                         .requestId(reqId)
                         .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                        .responseId("RES-PAN-" + UUID.randomUUID())
+                        .responseId(RES_PAN_PREFIX + UUID.randomUUID())
                         .status(PanConstants.STATUS_FAILURE)
                         .statusCode("400")
                         .build())

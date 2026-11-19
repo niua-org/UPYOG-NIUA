@@ -18,6 +18,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Production implementation of {@link PanGatewayAdapter} connecting to the official
  * Income Tax Department (ITD) e-Filing External Agency Web Service for PAN verification.
@@ -102,7 +104,7 @@ public class ItdPanGatewayAdapter implements PanGatewayAdapter {
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (clientRequest, clientResponse) -> {
-                        String responseBody = new String(clientResponse.getBody().readAllBytes());
+                        String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
                         log.error("[LIVE-PAN] ITD Gateway returned HTTP error {} for masked PAN {}: {}",
                                 clientResponse.getStatusCode(), maskedPan, responseBody);
                         throw new CustomException(PanConstants.ERR_CODE_GATEWAY_ERROR,

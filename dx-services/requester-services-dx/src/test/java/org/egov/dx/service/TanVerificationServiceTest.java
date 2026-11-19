@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class TanVerificationServiceTest {
+class TanVerificationServiceTest {
 
     private TanGatewayAdapter gatewayAdapter;
     private TanVerificationValidator validator;

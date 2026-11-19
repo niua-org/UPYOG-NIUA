@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-public class GstProfileServiceTest {
+class GstProfileServiceTest {
 
     private GstGatewayAdapter gatewayAdapter;
     private GstVerificationValidator validator;

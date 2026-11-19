@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-public class UserRegistryServiceImplTest {
+class UserRegistryServiceImplTest {
 
     private RestTemplate restTemplate;
     private Configurations configurations;
@@ -54,18 +54,19 @@ public class UserRegistryServiceImplTest {
 
     @Test
     void testSearchUserUuidByAadhaar_MatchesFullAadhaar_ReturnsUuid() {
-        String mockResponse = "{\n" +
-                "  \"responseInfo\": {\"status\": \"SUCCESS\"},\n" +
-                "  \"user\": [\n" +
-                "    {\n" +
-                "      \"id\": 9154,\n" +
-                "      \"uuid\": \"0b90ae1c-7506-4114-b409-d48093e5db45\",\n" +
-                "      \"active\": true,\n" +
-                "      \"aadhaarNumber\": \"548796521458\",\n" +
-                "      \"isIdentityVerified\": true\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+        String mockResponse = """
+                {
+                  "responseInfo": {"status": "SUCCESS"},
+                  "user": [
+                    {
+                      "id": 9154,
+                      "uuid": "0b90ae1c-7506-4114-b409-d48093e5db45",
+                      "active": true,
+                      "aadhaarNumber": "548796521458",
+                      "isIdentityVerified": true
+                    }
+                  ]
+                }""";
 
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(mockResponse);
@@ -82,16 +83,17 @@ public class UserRegistryServiceImplTest {
 
     @Test
     void testSearchUserUuidByAadhaar_LastFourOnlyMaskedRecord_DoesNotMatch() {
-        String mockResponse = "{\n" +
-                "  \"responseInfo\": {\"status\": \"SUCCESS\"},\n" +
-                "  \"user\": [\n" +
-                "    {\n" +
-                "      \"uuid\": \"legacy-user\",\n" +
-                "      \"active\": true,\n" +
-                "      \"aadhaarNumber\": \"XXXXXXXX1458\"\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+        String mockResponse = """
+                {
+                  "responseInfo": {"status": "SUCCESS"},
+                  "user": [
+                    {
+                      "uuid": "legacy-user",
+                      "active": true,
+                      "aadhaarNumber": "XXXXXXXX1458"
+                    }
+                  ]
+                }""";
 
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(mockResponse);
@@ -103,15 +105,16 @@ public class UserRegistryServiceImplTest {
     @Test
     void testResolveOrCreateUserUuid_CitizenDoesNotExist_AutoProvisionsWithoutIdentityVerifiedFlag() {
         String emptySearchResponse = "{\"responseInfo\":{\"status\":\"SUCCESS\"},\"user\":[]}";
-        String createResponse = "{\n" +
-                "  \"responseInfo\": {\"status\": \"200\"},\n" +
-                "  \"user\": [\n" +
-                "    {\n" +
-                "      \"uuid\": \"newly-created-citizen-uuid-456\",\n" +
-                "      \"active\": true\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+        String createResponse = """
+                {
+                  "responseInfo": {"status": "200"},
+                  "user": [
+                    {
+                      "uuid": "newly-created-citizen-uuid-456",
+                      "active": true
+                    }
+                  ]
+                }""";
 
         when(restTemplate.postForObject(contains("_search"), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(emptySearchResponse);
@@ -141,8 +144,9 @@ public class UserRegistryServiceImplTest {
                 .name("Citizen")
                 .build();
 
+        RequestInfo requestInfo = new RequestInfo();
         assertThrows(CustomException.class, () ->
-                userRegistryService.resolveOrCreateUserUuid("invalid", demographics, "pg.citya", new RequestInfo()));
+                userRegistryService.resolveOrCreateUserUuid("invalid", demographics, "pg.citya", requestInfo));
         verifyNoInteractions(restTemplate);
     }
 
@@ -158,15 +162,17 @@ public class UserRegistryServiceImplTest {
     @Test
     void testSearchUserUuidByAadhaar_MissingUserHost_ThrowsCustomException() {
         when(configurations.getUserHost()).thenReturn(null);
+        RequestInfo requestInfo = new RequestInfo();
         assertThrows(CustomException.class, () ->
-                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo()));
+                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", requestInfo));
     }
 
     @Test
     void testSearchUserUuidByAadhaar_MissingSearchPath_ThrowsCustomException() {
         ReflectionTestUtils.setField(userRegistryService, "aadhaarSearchPath", "");
+        RequestInfo requestInfo = new RequestInfo();
         assertThrows(CustomException.class, () ->
-                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", new RequestInfo()));
+                userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", requestInfo));
     }
 
     @Test
@@ -175,39 +181,42 @@ public class UserRegistryServiceImplTest {
         org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
                 .name("Citizen")
                 .build();
+        RequestInfo requestInfo = new RequestInfo();
         assertThrows(CustomException.class, () ->
-                userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", new RequestInfo()));
+                userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", requestInfo));
     }
 
     @Test
     void testMarkCitizenAadhaarVerifiedAfterEkyc_MissingMarkVerifiedPath_ThrowsCustomException() {
         ReflectionTestUtils.setField(userRegistryService, "markVerifiedPath", null);
+        RequestInfo requestInfo = new RequestInfo();
         assertThrows(CustomException.class, () ->
-                userRegistryService.markCitizenAadhaarVerifiedAfterEkyc("uuid-1", "548796521458", "pg.citya", new RequestInfo()));
+                userRegistryService.markCitizenAadhaarVerifiedAfterEkyc("uuid-1", "548796521458", "pg.citya", requestInfo));
     }
 
     @Test
     void testSearchCitizenByAadhaar_MatchesFullAadhaar_ReturnsRecordWithUuidAndFamilyId() {
-        String mockResponse = "{\n" +
-                "  \"responseInfo\": {\"status\": \"SUCCESS\"},\n" +
-                "  \"user\": [\n" +
-                "    {\n" +
-                "      \"id\": 9154,\n" +
-                "      \"uuid\": \"0b90ae1c-7506-4114-b409-d48093e5db45\",\n" +
-                "      \"active\": true,\n" +
-                "      \"aadhaarNumber\": \"548796521458\",\n" +
-                "      \"familyId\": \"FAM-2026-F638A3E1\",\n" +
-                "      \"isIdentityVerified\": true\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+        String mockResponse = """
+                {
+                  "responseInfo": {"status": "SUCCESS"},
+                  "user": [
+                    {
+                      "id": 9154,
+                      "uuid": "0b90ae1c-7506-4114-b409-d48093e5db45",
+                      "active": true,
+                      "aadhaarNumber": "548796521458",
+                      "familyId": "FAM-2026-F638A3E1",
+                      "isIdentityVerified": true
+                    }
+                  ]
+                }""";
 
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(mockResponse);
 
-        UserRegistryRecord record = userRegistryService.searchCitizenByAadhaar("548796521458", "pg.citya", new RequestInfo());
-        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", record.getUserUuid());
-        assertEquals("FAM-2026-F638A3E1", record.getFamilyId());
+        UserRegistryRecord userRecord = userRegistryService.searchCitizenByAadhaar("548796521458", "pg.citya", new RequestInfo());
+        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", userRecord.getUserUuid());
+        assertEquals("FAM-2026-F638A3E1", userRecord.getFamilyId());
         assertEquals("FAM-2026-F638A3E1", userRegistryService.searchFamilyIdByAadhaar("548796521458", "pg.citya", new RequestInfo()));
     }
 
@@ -216,14 +225,15 @@ public class UserRegistryServiceImplTest {
         when(configurations.getFamilyServiceHost()).thenReturn("http://localhost:8092/");
         when(configurations.getFamilyServiceSearchEndpoint()).thenReturn("family/v1/family/_search");
 
-        String mockFamilyResponse = "{\n" +
-                "  \"families\": [\n" +
-                "    {\n" +
-                "      \"familyId\": \"FAM-DIRECT-123\",\n" +
-                "      \"status\": \"ACTIVE\"\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+        String mockFamilyResponse = """
+                {
+                  "families": [
+                    {
+                      "familyId": "FAM-DIRECT-123",
+                      "status": "ACTIVE"
+                    }
+                  ]
+                }""";
 
         when(restTemplate.postForObject(contains("family/v1/family/_search"), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(mockFamilyResponse);
@@ -236,14 +246,15 @@ public class UserRegistryServiceImplTest {
     void testSearchFamilyIdByUserUuid_WithoutFamilyServiceHost_QueriesProfileSearch() {
         when(configurations.getFamilyServiceHost()).thenReturn(null);
 
-        String mockProfileResponse = "{\n" +
-                "  \"user\": [\n" +
-                "    {\n" +
-                "      \"uuid\": \"usr-123\",\n" +
-                "      \"familyId\": \"FAM-FROM-PROFILE-456\"\n" +
-                "    }\n" +
-                "  ]\n" +
-                "}";
+        String mockProfileResponse = """
+                {
+                  "user": [
+                    {
+                      "uuid": "usr-123",
+                      "familyId": "FAM-FROM-PROFILE-456"
+                    }
+                  ]
+                }""";
 
         when(restTemplate.postForObject(contains("/user/profile/_search"), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(mockProfileResponse);
@@ -284,7 +295,7 @@ public class UserRegistryServiceImplTest {
 
         String assignedMobile = (String) userMap.get("mobileNumber");
         org.junit.jupiter.api.Assertions.assertNotNull(assignedMobile, "Mobile number must not be null");
-        org.junit.jupiter.api.Assertions.assertTrue(assignedMobile.matches("^[6-9][0-9]{9}$"),
+        org.junit.jupiter.api.Assertions.assertTrue(assignedMobile.matches("^[6-9]\\d{9}$"),
                 "Generated mobile must be a valid 10-digit Indian mobile number");
         assertEquals(assignedMobile, userMap.get("userName"));
         assertEquals(assignedMobile, demographics.getMobileNumber());

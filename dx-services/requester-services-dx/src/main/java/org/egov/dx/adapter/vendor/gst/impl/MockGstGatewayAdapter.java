@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +42,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @ConditionalOnProperty(name = "gst.verification.mock.enabled", havingValue = "true", matchIfMissing = true)
 @Slf4j
 public class MockGstGatewayAdapter implements GstGatewayAdapter {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Configurations configurations;
     private final Map<String, VendorGstProfileResponse.TaxpayerData> mockRecordMap = new ConcurrentHashMap<>();
@@ -76,27 +79,28 @@ public class MockGstGatewayAdapter implements GstGatewayAdapter {
         try {
             ClassPathResource resource = new ClassPathResource(mockRecordsPath);
             if (resource.exists()) {
-                ObjectMapper mapper = new ObjectMapper();
                 try (InputStream is = resource.getInputStream()) {
-                    List<VendorGstProfileResponse.TaxpayerData> records = mapper.readValue(
+                    List<VendorGstProfileResponse.TaxpayerData> records = OBJECT_MAPPER.readValue(
                             is, new TypeReference<List<VendorGstProfileResponse.TaxpayerData>>() {});
-                    if (records != null) {
-                        for (VendorGstProfileResponse.TaxpayerData data : records) {
-                            if (StringUtils.isNotBlank(data.getGstin())) {
-                                mockRecordMap.put(data.getGstin().trim().toUpperCase(), data);
-                            }
-                        }
-                        log.info("[MOCK-GST-ADAPTER] Successfully loaded {} mock GST records from configured path: {}",
-                                mockRecordMap.size(), mockRecordsPath);
-                    }
+                    populateRecords(records, mockRecordsPath);
                 }
             } else {
                 log.warn("[MOCK-GST-ADAPTER] Mock GST records resource not found at configured path: {}", mockRecordsPath);
             }
-        } catch (CustomException ce) {
-            throw ce;
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("[MOCK-GST-ADAPTER] Failed to load mock GST records: {}", e.getMessage(), e);
+        }
+    }
+
+    private void populateRecords(List<VendorGstProfileResponse.TaxpayerData> records, String mockRecordsPath) {
+        if (records != null) {
+            for (VendorGstProfileResponse.TaxpayerData data : records) {
+                if (StringUtils.isNotBlank(data.getGstin())) {
+                    mockRecordMap.put(data.getGstin().trim().toUpperCase(), data);
+                }
+            }
+            log.info("[MOCK-GST-ADAPTER] Successfully loaded {} mock GST records from configured path: {}",
+                    mockRecordMap.size(), mockRecordsPath);
         }
     }
 

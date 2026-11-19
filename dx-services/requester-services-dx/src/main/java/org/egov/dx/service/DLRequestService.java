@@ -4,10 +4,10 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.util.Configurations;
@@ -111,20 +111,19 @@ public class DLRequestService {
     	return encoded;              
     	}
     
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     public String getCodeVerifier()
     {
     	 int leftLimit = 45; // numeral '0'
     	    int rightLimit = 126; // letter 'z'
     	    int targetStringLength = 60;
-    	    Random random = new Random();
 
-    	    String generatedString = random.ints(leftLimit, rightLimit + 1)
+    	    return SECURE_RANDOM.ints(leftLimit, rightLimit + 1)
     	      .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 95) && i!=47 && i!=96 && i!=123 && i!=124 && i!=125)
     	      .limit(targetStringLength)
     	      .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
     	      .toString();
-
-    	    return generatedString;
     }
     
     public TokenRes getToken(TokenReq tokenReq)
@@ -220,7 +219,7 @@ public class DLRequestService {
                  request, String.class);
                
          
-         return entity.getBody().getBytes();
+         return (entity != null && entity.getBody() != null) ? entity.getBody().getBytes(StandardCharsets.UTF_8) : new byte[0];
     }
 
     public Object getOauthToken(RequestInfo requestinfo , TokenRes tokenRes)

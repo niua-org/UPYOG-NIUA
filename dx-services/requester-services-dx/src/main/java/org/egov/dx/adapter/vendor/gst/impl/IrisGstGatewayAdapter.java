@@ -17,6 +17,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Production implementation of {@link GstGatewayAdapter} connecting to the official
  * IRIS Peridot / Taxpayer GST Search API suite.
@@ -97,7 +99,7 @@ public class IrisGstGatewayAdapter implements GstGatewayAdapter {
                     .header("x-api-key", configurations.getGstVerificationApiKey().trim())
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (clientRequest, clientResponse) -> {
-                        String responseBody = new String(clientResponse.getBody().readAllBytes());
+                        String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
                         log.error("[LIVE-GST] IRIS Gateway returned HTTP error {} for masked GSTIN {}: {}",
                                 clientResponse.getStatusCode(), maskedGstin, responseBody);
                         throw new CustomException(GstConstants.ERR_CODE_GATEWAY_ERROR,

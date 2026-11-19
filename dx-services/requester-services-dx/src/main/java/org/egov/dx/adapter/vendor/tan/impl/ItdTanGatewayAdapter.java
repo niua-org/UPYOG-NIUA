@@ -1,6 +1,5 @@
 package org.egov.dx.adapter.vendor.tan.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.dx.adapter.vendor.dto.VendorTanVerificationRequest;
@@ -18,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Production implementation of {@link TanGatewayAdapter} connecting to the official
@@ -103,7 +104,7 @@ public class ItdTanGatewayAdapter implements TanGatewayAdapter {
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (clientRequest, clientResponse) -> {
-                        String responseBody = new String(clientResponse.getBody().readAllBytes());
+                        String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
                         log.error("[LIVE-TAN] ITD Gateway returned HTTP error {} for masked TAN {}: {}",
                                 clientResponse.getStatusCode(), maskedTan, responseBody);
                         throw new CustomException(TanConstants.ERR_CODE_GATEWAY_ERROR,

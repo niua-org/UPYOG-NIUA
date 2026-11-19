@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-public class MdmsTenantVerificationConfigServiceImplTest {
+class MdmsTenantVerificationConfigServiceImplTest {
 
     private RestTemplate restTemplate;
     private Configurations configurations;
@@ -31,7 +31,7 @@ public class MdmsTenantVerificationConfigServiceImplTest {
         when(configurations.getMdmsVerificationModule()).thenReturn("common-masters");
         when(configurations.getMdmsVerificationMaster()).thenReturn("VerificationConfiguration");
 
-        service = new MdmsTenantVerificationConfigServiceImpl(restTemplate, configurations, objectMapper);
+        service = new MdmsTenantVerificationConfigServiceImpl(restTemplate, configurations);
     }
 
     private JsonNode createMockMdmsResponse(String serviceType, boolean enabled) throws Exception {
