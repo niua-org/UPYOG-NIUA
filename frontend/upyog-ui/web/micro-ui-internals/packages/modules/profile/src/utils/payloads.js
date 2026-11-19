@@ -344,21 +344,23 @@ export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) =>
 
 
 /**
- * Builds the new Join Family API payload matching the /family/v1/member/_join contract.
- * Maps session form data (profileDetails, property, income, vehicles) into the backend payload.
+ * Builds the Join Family API payload matching the updated /family/v1/member/_join contract.
+ * Standardizes applicant's personal, property, income, and vehicle details into the backend contract.
  * 
  * @param {Object} params
  * @param {string} params.familyId - The target family ID to join
  * @param {string} params.tenantId - Tenant identifier (e.g. pg.citya)
- * @param {Object} params.verifiedData - Verified data from OTP response (contains consentToken/txnId)
+ * @param {string} params.applicantUserUuid - Applicant's user UUID
+ * @param {Object} params.verifiedData - Verified data from OTP response (txnId / consentToken)
  * @param {Object} params.applicantParams - Form data from Family_Details session cache
- * @param {string} params.relationshipCode - Normalized relationship code (e.g. SON)
+ * @param {string} params.relationshipCode - Selected relationship with HOF (e.g. SON)
  * @param {Object} [params.user] - Logged in profile user fallback
  * @returns {Object} Final payload for joinFamily API
  */
 export const buildJoinFamilyPayload = ({
   familyId,
   tenantId,
+  applicantUserUuid,
   verifiedData = {},
   applicantParams = {},
   relationshipCode,
@@ -369,34 +371,56 @@ export const buildJoinFamilyPayload = ({
   const incomeDetails = applicantParams.income || {};
   const vehicleDetails = applicantParams.vehicles || {};
 
+  const effectiveUuid = applicantUserUuid || user?.uuid || Digit.UserService.getUser()?.info?.uuid;
+
   // 1. Citizen Documents
   const citizenDocuments = [
     profileDetails.identityProofFile?.fileStoreId && {
-      documentType: profileDetails.identityProofType?.code || "IDENTITY_PROOF",
+      documentType: profileDetails.identityProofType?.code || "AADHAAR",
       filestoreId: profileDetails.identityProofFile.fileStoreId,
+      fileName: profileDetails.identityProofFile.name,
+      referenceType: "CITIZEN_PROFILE",
+      active: true,
     },
     profileDetails.birthProofFile?.fileStoreId && {
-      documentType: profileDetails.birthProofType?.code || "BIRTH_PROOF",
+      documentType: profileDetails.birthProofType?.code,
       filestoreId: profileDetails.birthProofFile.fileStoreId,
+      fileName: profileDetails.birthProofFile.name,
+      referenceType: "CITIZEN_PROFILE",
+      active: true,
     },
     profileDetails.casteProof?.fileStoreId && {
-      documentType: profileDetails.casteProofType?.code || "CASTE_PROOF",
+      documentType: profileDetails.casteProofType?.code,
       filestoreId: profileDetails.casteProof.fileStoreId,
+      fileName: profileDetails.casteProof.name,
+      referenceType: "CITIZEN_PROFILE",
+      active: true,
     },
     profileDetails.disabilityProof?.fileStoreId && {
-      documentType: profileDetails.disabilityProofType?.code || "DISABILITY_PROOF",
+      documentType: profileDetails.disabilityProofType?.code,
       filestoreId: profileDetails.disabilityProof.fileStoreId,
+      fileName: profileDetails.disabilityProof.name,
+      referenceType: "CITIZEN_PROFILE",
+      active: true,
     },
   ].filter(Boolean);
 
   // 2. Citizen Details
   const citizenDetails = {
+    uuid: effectiveUuid,
+    userName: profileDetails.mobileNumber || user?.mobileNumber || user?.userName,
     name: profileDetails.name || user?.name,
     mobileNumber: profileDetails.mobileNumber || user?.mobileNumber,
     gender: (profileDetails.gender?.code || profileDetails.gender?.value || profileDetails.gender || user?.gender || "").toUpperCase(),
     dob: toEpoch(profileDetails.dob || user?.dob),
-    caste: (profileDetails.caste?.code || profileDetails.caste?.name || profileDetails.caste || "").toUpperCase() || undefined,
     photo: profileDetails.photo || user?.photo || undefined,
+    emailId: profileDetails.emailId || user?.emailId || undefined,
+    alternateMobileNumber: profileDetails.altContactNumber || user?.altContactNumber || undefined,
+    fatherName: profileDetails.fatherName || user?.fatherName || undefined,
+    motherName: profileDetails.motherName || user?.motherName || undefined,
+    spouseName: profileDetails.spouseName || user?.spouseName || undefined,
+    caste: (profileDetails.caste?.code || profileDetails.caste?.name || profileDetails.caste || "").toUpperCase() || undefined,
+    isSpeciallyAbled: profileDetails.speciallyAbled?.code === "Yes" || profileDetails.isSpeciallyAbled === true,
     ...(citizenDocuments.length > 0 && { documents: citizenDocuments }),
   };
 
@@ -407,19 +431,37 @@ export const buildJoinFamilyPayload = ({
   if (Array.isArray(portfolio) && portfolio.length > 0) {
     properties = portfolio.map((entry) => {
       const isRural = entry.localityType === "RURAL";
+      const ownerType = entry.ownershipType === "JOINT" ? "JOINT_OWNER" : "INDIVIDUAL";
+
       if (isRural) {
         return {
+          propertyId: entry.propertyId || undefined,
           localityType: "RURAL",
           ownershipType: entry.ownershipType || "INDIVIDUAL",
+          declarationConfirmed: true,
           ruralPropertyDetail: {
             gramPanchayat: entry.gramPanchayat?.name || entry.gramPanchayat,
             villageName: entry.village?.name || entry.village,
-            khasraNumber: entry.khasraNumber || entry.surveyNumber || undefined,
+            wardNumber: entry.ward?.name || entry.ward || undefined,
+            propertyAddress: entry.propertyAddress,
+            propertyType: entry.propertyType?.code || entry.propertyType,
+            propertyUsage: entry.propertyUsage?.code || entry.propertyUsage,
+            surveyNumber: entry.surveyNumber || entry.khasraNumber || undefined,
           },
+          owners: [
+            {
+              userUuid: effectiveUuid,
+              ownerType,
+              active: true,
+            },
+          ],
           ...(entry.propertyDocument?.fileStoreId && {
             document: {
-              documentType: entry.documentType?.code || "PROPERTY_REGISTRY",
+              documentType: entry.documentType?.code,
               filestoreId: entry.propertyDocument.fileStoreId,
+              fileName: entry.propertyDocument.name,
+              referenceType: "PROPERTY",
+              active: true,
             },
           }),
         };
@@ -427,15 +469,29 @@ export const buildJoinFamilyPayload = ({
 
       // Urban Property
       return {
+        propertyId: entry.propertyId || undefined,
         localityType: "URBAN",
         ownershipType: entry.ownershipType || "INDIVIDUAL",
+        declarationConfirmed: true,
         urbanPropertyDetail: {
           upyogPropertyId: entry.propertyId || entry.primaryPropertyId,
+          propertyTaxAmount: entry.propertyTaxAmount || 0,
+          urbanAddress: entry.propertyAddress,
         },
+        owners: [
+          {
+            userUuid: effectiveUuid,
+            ownerType: "INDIVIDUAL",
+            active: true,
+          },
+        ],
         ...(entry.propertyDocument?.fileStoreId && {
           document: {
-            documentType: entry.documentType?.code || "PROPERTY_REGISTRY",
+            documentType: entry.documentType?.code,
             filestoreId: entry.propertyDocument.fileStoreId,
+            fileName: entry.propertyDocument.name,
+            referenceType: "PROPERTY",
+            active: true,
           },
         }),
       };
@@ -443,33 +499,65 @@ export const buildJoinFamilyPayload = ({
   } else if (propertyDetails.localityType) {
     // Single Property Form fallback
     const isRural = propertyDetails.localityType === "RURAL";
+    const ownerType = propertyDetails.ownershipType === "JOINT" ? "JOINT_OWNER" : "INDIVIDUAL";
+
     if (isRural) {
       properties.push({
+        propertyId: propertyDetails.propertyId || undefined,
         localityType: "RURAL",
         ownershipType: propertyDetails.ownershipType || "INDIVIDUAL",
+        declarationConfirmed: true,
         ruralPropertyDetail: {
           gramPanchayat: propertyDetails.gramPanchayat?.name || propertyDetails.gramPanchayat,
           villageName: propertyDetails.village?.name || propertyDetails.village,
-          khasraNumber: propertyDetails.khasraNumber || propertyDetails.surveyNumber || undefined,
+          wardNumber: propertyDetails.ward?.name || propertyDetails.ward || undefined,
+          propertyAddress: propertyDetails.propertyAddress,
+          propertyType: propertyDetails.propertyType?.code || propertyDetails.propertyType,
+          propertyUsage: propertyDetails.propertyUsage?.code || propertyDetails.propertyUsage,
+          surveyNumber: propertyDetails.surveyNumber || propertyDetails.khasraNumber || undefined,
         },
+        owners: [
+          {
+            userUuid: effectiveUuid,
+            ownerType,
+            active: true,
+          },
+        ],
         ...(propertyDetails.propertyDocument?.fileStoreId && {
           document: {
-            documentType: propertyDetails.documentType?.code || "PROPERTY_REGISTRY",
+            documentType: propertyDetails.documentType?.code,
             filestoreId: propertyDetails.propertyDocument.fileStoreId,
+            fileName: propertyDetails.propertyDocument.name,
+            referenceType: "PROPERTY",
+            active: true,
           },
         }),
       });
     } else {
       properties.push({
+        propertyId: propertyDetails.propertyId || undefined,
         localityType: "URBAN",
         ownershipType: propertyDetails.ownershipType || "INDIVIDUAL",
+        declarationConfirmed: true,
         urbanPropertyDetail: {
           upyogPropertyId: propertyDetails.primaryPropertyId || propertyDetails.propertyId,
+          propertyTaxAmount: propertyDetails.propertyTaxAmount || 0,
+          urbanAddress: propertyDetails.propertyAddress,
         },
+        owners: [
+          {
+            userUuid: effectiveUuid,
+            ownerType: "INDIVIDUAL",
+            active: true,
+          },
+        ],
         ...(propertyDetails.propertyDocument?.fileStoreId && {
           document: {
-            documentType: propertyDetails.documentType?.code || "PROPERTY_REGISTRY",
+            documentType: propertyDetails.documentType?.code,
             filestoreId: propertyDetails.propertyDocument.fileStoreId,
+            fileName: propertyDetails.propertyDocument.name,
+            referenceType: "PROPERTY",
+            active: true,
           },
         }),
       });
@@ -479,30 +567,59 @@ export const buildJoinFamilyPayload = ({
   // 4. Income Object
   const income = incomeDetails.annualIncome
     ? {
-        annualIncome: Number(incomeDetails.annualIncome),
         occupation: (incomeDetails.occupation?.code || incomeDetails.occupation?.name || incomeDetails.occupation || "").toUpperCase(),
+        annualIncome: Number(incomeDetails.annualIncome),
         identifierType: (incomeDetails.taxIdType?.code || incomeDetails.taxIdType?.name || incomeDetails.taxIdType || "").toUpperCase(),
-        identifierId: incomeDetails.taxIdNumber || undefined,
+        identifierValue: incomeDetails.taxIdNumber || undefined,
+        isVerified: incomeDetails.taxIdValidated || true,
+        verificationSource: incomeDetails?.verificationSource,
+        otpVerified: incomeDetails.otpVerified || true,
         ...(incomeDetails.uploadedIncomeFile && {
           salaryProofDocument: {
-            documentType: incomeDetails.incomeProofType?.code || "SALARY_SLIP",
+            documentType: incomeDetails.incomeProofType?.code,
             filestoreId: incomeDetails.uploadedIncomeFile,
+            fileName: incomeDetails.incomeProofType?.code,
+            referenceType: "INCOME",
+            active: true,
+          },
+        }),
+        ...(incomeDetails.uploadedTaxProof && {
+          taxProofDocument: {
+            documentType: `${incomeDetails.taxIdType?.code}_PROOF`,
+            filestoreId: incomeDetails.uploadedTaxProof,
+            fileName: `${incomeDetails.taxIdType?.code}_PROOF`,
+            referenceType: "INCOME",
+            active: true,
+          },
+        }),
+        ...(incomeDetails.employerName && {
+          additionalDetails: {
+            employerName: incomeDetails.employerName,
+            designation: incomeDetails.designation,
           },
         }),
       }
     : undefined;
 
   // 5. Vehicles Array
-  const vehicles =
-    (vehicleDetails?.hasVehicle === "Yes" || vehicleDetails?.vehicleNo) && vehicleDetails?.vehicleNo
-      ? [
+  const vehicles = (vehicleDetails?.hasVehicle === "Yes" || vehicleDetails?.vehicleNo) && vehicleDetails?.vehicleNo ? 
+        [
           {
             vehicleNumber: vehicleDetails.vehicleNo,
+            purchaseDate: vehicleDetails.purchaseYear || undefined,
+            isVerified: vehicleDetails.vehicleNoValidated || true,
+            validationSource: vehicleDetails?.validationSource,
             vehicleType: (vehicleDetails.vehicleType?.code || vehicleDetails.vehicleType?.name || vehicleDetails.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
+            makerModel: vehicleDetails?.makerModel || undefined,
+            fuelType: vehicleDetails.fuelType?.code || undefined,
+            category: vehicleDetails.vehicleCategory?.code || undefined,
             ...(vehicleDetails.uploadedRCFile && {
               rcDocument: {
-                documentType: "VEHICLE_RC",
+                documentType: "RC_CERTIFICATE",
                 filestoreId: vehicleDetails.uploadedRCFile,
+                fileName: "RC_CERTIFICATE",
+                referenceType: "VEHICLE",
+                active: true,
               },
             }),
           },
@@ -512,8 +629,9 @@ export const buildJoinFamilyPayload = ({
   return {
     familyId,
     tenantId,
-    consentToken: verifiedData?.consentToken || verifiedData?.txnId,
+    applicantUserUuid: effectiveUuid,
     relationshipWithHead: relationshipCode,
+    txnId: verifiedData?.txnId || verifiedData?.consentToken,
     citizenDetails,
     properties,
     ...(income && { income }),

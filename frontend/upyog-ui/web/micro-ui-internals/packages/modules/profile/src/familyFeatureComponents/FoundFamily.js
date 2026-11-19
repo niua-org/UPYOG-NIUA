@@ -179,6 +179,7 @@ const FoundFamily = () => {
       const payload = buildJoinFamilyPayload({
         familyId: verifiedData?.familyId || familyId,
         tenantId,
+        applicantUserUuid: userUuid,
         verifiedData,
         applicantParams,
         relationshipCode,

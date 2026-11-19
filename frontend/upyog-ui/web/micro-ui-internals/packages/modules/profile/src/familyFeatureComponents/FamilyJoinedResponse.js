@@ -4,19 +4,28 @@ import PPPAcknowledgement from "../ppp/PPPAcknowledgement";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 /**
- * Response Page User will get when he success fully Join the family
- * He will get the family Id which he joined and a success message
- * He can go back to profile page by clicking on the button
+ * FamilyJoinedResponse Component
+ * 
+ * Clean acknowledgment screen displayed after successfully joining a family.
+ * - Reads data solely from React Router navigation state.
+ * - On page refresh or direct URL hit, redirects user directly to citizen home (/upyog-ui/citizen).
+ * - Allows downloading acknowledgment form or returning to Profile Details.
  */
 const FamilyJoinedResponse = () => {
   const navigate = Digit.Hooks.useCustomNavigate();
-  const joinData = useLocation().state?.joinData || Digit.SessionStorage.get("PPP_FAMILY_JOIN_ACKNOWLEDGEMENT");
+  const location = useLocation();
 
-  // direct URL / refresh -> no state, send the user back
+  const joinData = location.state?.joinData;
+  const familyId = location.state?.familyId || joinData?.familyId;
+
+  // Refresh or Direct URL hit -> redirect directly to citizen home page
   useEffect(() => {
-    if (!joinData) navigate(PROFILE_ROUTES.DETAILS, { replace: true });
-  }, [joinData, navigate]);
+    if (!familyId) {
+      navigate("/upyog-ui/citizen", { replace: true });
+    }
+  }, [familyId, navigate]);
 
+  // Browser Back Button -> clean redirect to Profile Details
   useEffect(() => {
     window.history.pushState(null, "", window.location.href);
     const handlePopState = () => navigate(PROFILE_ROUTES.DETAILS, { replace: true });
@@ -24,17 +33,14 @@ const FamilyJoinedResponse = () => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [navigate]);
 
-  if (!joinData) return null;
+  if (!familyId) return null;
 
   return (
     <PPPAcknowledgement
       mode="join"
-      familyId={joinData.familyId}
+      familyId={familyId}
       acknowledgement={joinData}
-      onGoToProfile={() => {
-        Digit.SessionStorage.del("PPP_FAMILY_JOIN_ACKNOWLEDGEMENT");
-        navigate(PROFILE_ROUTES.DETAILS);
-      }}
+      onGoToProfile={() => navigate(PROFILE_ROUTES.DETAILS)}
     />
   );
 };

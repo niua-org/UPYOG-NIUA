@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import PPPAcknowledgement from "../ppp/PPPAcknowledgement";
 import { PROFILE_ROUTES } from "../utils/constants";
 
@@ -16,7 +16,7 @@ import { PROFILE_ROUTES } from "../utils/constants";
  * 4. Displays a success `Banner` containing the generated Family ID and a primary button to return to Profile.
  */
 const FamilyCreatedResponse = () => {
-  const navigate = useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const location = useLocation();
 
   // Extract generated family ID from navigation state

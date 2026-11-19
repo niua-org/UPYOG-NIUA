@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 import { PROFILE_ROUTES } from "../utils/constants";
 
@@ -10,7 +9,7 @@ import { PROFILE_ROUTES } from "../utils/constants";
  * Delegates to the unified AadhaarVerificationModal in "family" mode.
  */
 const AddFamilyMember = ({ isModal = false, isOpen = true, onClose, onSuccess }) => {
-  const navigate = useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
 
   return (
     <AadhaarVerificationModal

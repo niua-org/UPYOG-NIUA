@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -32,7 +32,7 @@ import { PROFILE_ROUTES } from "../utils/constants";
 const FamilyMemberVerified = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
 
   // MDMS Hook: Fetch active relationship master data from common-masters.FamilyRelationship

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -72,7 +71,7 @@ const createInitialApplicant = (currentUser, relationshipWithHead = "") => ({
  */
 const FamilyMemberAdded = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const navigate = Digit.Hooks.useCustomNavigate();
   const styles = profileStyles.familyMemberAdded;
   const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
   const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;

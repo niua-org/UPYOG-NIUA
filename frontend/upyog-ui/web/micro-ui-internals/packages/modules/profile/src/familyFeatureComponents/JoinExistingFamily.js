@@ -86,13 +86,13 @@ const JoinExistingFamily = () => {
       if (res?.isHof) {
         await sendAadhaarOtp();
       } else {
-        showError(res?.message || t("ERR_PROFILE_NOT_HOF", "Entered Aadhaar does not belong to a Head of Family"));
+        showError(res?.message || t("ERR_PROFILE_NOT_HOF"));
       }
     } catch (err) {
       console.log("error while checking HOF status", err);
       showError(
-        err?.response?.data?.Errors?.[0]?.message ||
-        t("ERR_PROFILE_CHECK_HOF_FAILED", "Failed to verify Head of Family status. Please try again.")
+        err?.response?.data?.Errors?.[0]?.code ||
+        t("ERR_PROFILE_CHECK_HOF_FAILED")
       );
     } finally {
       setLoading(false);
