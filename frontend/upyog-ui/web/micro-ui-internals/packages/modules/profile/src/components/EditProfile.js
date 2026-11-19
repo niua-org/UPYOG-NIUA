@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Loader, Card } from "@nudmcdgnpm/digit-ui-react-components";
@@ -8,18 +8,14 @@ import EditDocuments from "./EditDocuments";
 import { profileStyles } from "../utils/profileStyles";
 
 /**
- * 
- * Edit Profile - Parent Component for edit purpose
+ * EditProfile - Parent Component for edit workflows (Profile, Address, Documents).
  *
- * Renders the page header and tab switcher (Profile / Address).
- * On direct navigation (no routeState), fetches the user's addresses as a fallback.
- * Delegates all profile form logic to EditProfileForm and all address logic to EditAddress.
- * For employees, the tab switcher is hidden — only the profile form is shown.
- * 
- * Component is following Single Responsibility Principal
+ * UPYOG Standard Enhancements:
+ * - Uses `routeState?.user` for instant zero-flicker initial render.
+ * - Runs a live background fetch via `userSearch` (with ADDRESS, PROFILE, DOCUMENT)
+ *   ensuring fresh data is always present even on page refresh (F5) or direct navigation.
+ * - Synchronizes Address, Document, and Profile updates into a single source of truth.
  */
-
-
 const EditProfile = ({ stateCode, userType, cityDetails }) => {
   const { t } = useTranslation();
   const { state: routeState } = useLocation();
@@ -27,7 +23,7 @@ const EditProfile = ({ stateCode, userType, cityDetails }) => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const userInfo = Digit.UserService.getUser()?.info || {};
   const userDetails = routeState?.user;
-  const [currentUser, setCurrentUser] = useState(routeState?.user); // TODO: Improve this part for callback
+  const [currentUser, setCurrentUser] = useState(userDetails || null);
   const [addresses, setAddresses] = useState(userDetails?.addresses || []);
   const [loading, setLoading] = useState(!userDetails);
   const [activeTab, setActiveTab] = useState("profile");
@@ -39,27 +35,51 @@ const EditProfile = ({ stateCode, userType, cityDetails }) => {
     { key: "documents", label: "CORE_DOCUMENTS" },
   ];
 
-  // Fallback fetch address only when navigated directly to edit profile page
-  useEffect(() => {
-    if (userDetails) return;
-    let isActive = true;
-    const loadAddressData = async () => {
-      try {
-        const res = await Digit.UserService.searchAddress(userInfo.uuid, tenantId);
-        if (isActive) setAddresses(res?.address || []);
-      } finally {
-        if (isActive) setLoading(false);
-      }
-    };
-    loadAddressData();
-    return () => { isActive = false; };
-  }, []);
+  /**
+   * Fetches fresh user data from /user/profile/_search with all sub-entities.
+   * Runs on mount and after critical updates.
+   */
+  const fetchUserData = useCallback(async (showLoader = false) => {
+    if (!userInfo?.uuid) return;
+    if (showLoader) setLoading(true);
 
-  // callback function to update userDetails state after profile update
+    try {
+      const res = await Digit.UserService.userSearch(
+        tenantId,
+        { uuid: userInfo.uuid, include: ["ADDRESS", "PROFILE", "DOCUMENT"] },
+        {}
+      );
+      const latestUser = res?.user?.[0];
+      if (latestUser) {
+        setCurrentUser(latestUser);
+        setAddresses(latestUser.addresses || []);
+      }
+    } catch (err) {
+      console.error("Error fetching live profile data in EditProfile:", err);
+    } finally {
+      if (showLoader) setLoading(false);
+    }
+  }, [userInfo?.uuid, tenantId]);
+
+  // Fetch on mount (silent if userDetails already exists, loader if direct URL/refresh)
+  useEffect(() => {
+    fetchUserData(!userDetails);
+  }, [fetchUserData]);
+
+  // Callback to update state after personal profile update
   const handleProfileUpdate = (updatedUserData) => {
-    setCurrentUser(prev => ({
+    setCurrentUser((prev) => ({
       ...prev,
-      ...updatedUserData
+      ...updatedUserData,
+    }));
+  };
+
+  // Callback when an address is added or updated in EditAddress
+  const handleAddressUpdate = (updatedAddresses) => {
+    setAddresses(updatedAddresses);
+    setCurrentUser((prev) => ({
+      ...prev,
+      addresses: updatedAddresses,
     }));
   };
 
