@@ -1,6 +1,13 @@
 import React from "react";
 import ProfileDetails from "./components/ProfileDetails";
 import CitizenApp from "./index";
+import EmployeeApp from "./pages/employee";
+import PROFILECard from "./components/ProfileCard";
+import ProfileInbox from "./pages/employee/Inbox";
+import ProfileApplicationDetails from "./pages/employee/ApplicationDetails";
+import SearchApp from "./pages/employee/SearchApp";
+import FamilyDesktopInbox from "./components/FamilyDesktopInbox";
+import { TableConfig as FamilyInboxTableConfig } from "./config/inbox-table-config";
 import EditProfile from "./components/EditProfile";
 import EditProfileForm from "./components/EditProfileForm";
 import EditAddress from "./components/EditAddress";
@@ -26,11 +33,19 @@ import DocumentDetails from "./ppp/DocumentDetails";
 
 
 
-// Main module function to get to the routes file of citizen or employee module
+/**
+ * Profile and Family Service root entry module component.
+ * Directs execution to EmployeeApp or CitizenApp based on authenticated userType.
+ *
+ * @param {Object} props - Module properties.
+ * @param {string} props.stateCode - State / ULB code.
+ * @param {string} props.userType - Authenticated user role type (employee | citizen).
+ * @param {Array<Object>} props.tenants - Tenant metadata list.
+ * @returns {React.ReactElement} Active app container view.
+ */
 export const PROFILEModule = ({ stateCode, userType, tenants }) => {
   const { path, url } = Digit.Hooks.useModuleBasePath();
   Digit.SessionStorage.set("PROFILE_TENANTS", tenants);
-    // Displaying employee module if userType is 'employee', otherwise displaying citizen module
   if (userType === "employee") {
     return <EmployeeApp path={path} url={url} userType={userType} />;
   } else return <CitizenApp />;
@@ -60,7 +75,14 @@ CreateProfile,
 IncomeDetails,
 VehicleDetails,
 PropertyDetails,
-DocumentDetails
+DocumentDetails,
+EmployeeApp,
+PROFILECard,
+ProfileInbox,
+ProfileApplicationDetails,
+ProfileSearchApp: SearchApp,
+FamilyDesktopInbox,
+FamilyInboxTableConfig,
 };
 
 export const initPROFILEComponents = () => {

@@ -1,0 +1,315 @@
+/* Family Registry - Employee & Inbox Styles */
+
+.family-inbox-wrapper {
+  padding: 0 16px;
+}
+
+.family-back-button-wrap {
+  margin-left: -4px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.family-header-title {
+  margin-left: 0px !important;
+  padding-top: 10px !important;
+  font-size: 32px !important;
+}
+
+.family-details-header {
+  margin-bottom: 16px;
+}
+
+/* Desktop Inbox Layout */
+.family-desktop-inbox {
+  display: flex;
+  gap: 24px;
+  padding: 16px 0;
+
+  .family-inbox-content {
+    flex: 1;
+    min-width: 0;
+
+    .family-inbox-result {
+      margin-top: 16px;
+    }
+  }
+
+  .filters-container {
+    width: 270px;
+    min-width: 270px;
+    max-width: 270px;
+
+    .inboxLinks {
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #ffffff !important;
+      border-radius: 4px !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+
+      .complaint-links-container {
+        background-color: #ffffff !important;
+        padding: 16px !important;
+        border-radius: 4px !important;
+
+        .header {
+          display: flex !important;
+          align-items: center !important;
+          border: none !important;
+
+          .logo {
+            background-color: transparent !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            svg {
+              width: 32px !important;
+              height: 32px !important;
+
+              path {
+                fill: #a82227 !important;
+              }
+            }
+          }
+
+          .text {
+            padding-left: 14px !important;
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: #0b0c0c !important;
+            line-height: 24px !important;
+          }
+        }
+      }
+    }
+
+    .filter {
+      margin-top: 16px !important;
+    }
+  }
+}
+
+/* Filter Sidebar */
+.family-filter-card {
+  min-width: 240px;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 4px;
+
+  .filter-card {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .family-filter-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-bottom: 20px !important;
+    height: 24px !important;
+    line-height: 24px !important;
+
+    .family-filter-title-wrap {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      height: 24px !important;
+      line-height: 24px !important;
+
+      svg {
+        display: block !important;
+        flex-shrink: 0 !important;
+      }
+
+      .family-filter-title-text {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #0b0c0c !important;
+        line-height: 24px !important;
+        margin: 0 !important;
+      }
+    }
+
+    .family-filter-refresh-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: 1px solid #e0e0e0 !important;
+      border-radius: 2px !important;
+      padding: 6px !important;
+      background-color: #ffffff !important;
+      cursor: pointer !important;
+      width: 32px !important;
+      height: 32px !important;
+      box-sizing: border-box !important;
+
+      &:hover {
+        background-color: #f3f4f6 !important;
+        border-color: #cbd5e1 !important;
+      }
+
+      svg {
+        display: block !important;
+      }
+    }
+  }
+
+  .family-filter-section {
+    margin-bottom: 20px;
+
+    .family-filter-label {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 12px;
+      color: #0b0c0c;
+    }
+
+    .family-filter-checkbox-item {
+      margin-bottom: 8px;
+
+      .checkbox-label {
+        height: unset !important;
+      }
+    }
+  }
+
+  .family-filter-action {
+    margin-top: 20px;
+  }
+}
+
+/* Search Bar & Card */
+.family-search-card {
+  padding: 16px 20px 24px 20px !important;
+  background-color: #ffffff !important;
+  border-radius: 4px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.family-search-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  margin-top: 53px !important;
+  padding: 0 !important;
+  width: 100% !important;
+
+  .family-search-submit-bar,
+  .submit-bar {
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #a82227 !important;
+  }
+
+  .family-clear-search-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    text-align: center !important;
+    color: #a82227 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    line-height: 20px !important;
+    text-decoration: underline !important;
+    margin-top: 8px !important;
+
+    &:hover {
+      color: #7a191d !important;
+    }
+  }
+}
+
+/* Table Cells & Status Badges */
+.family-table-cell {
+  padding: 20px 18px !important;
+  font-size: 16px !important;
+  vertical-align: middle !important;
+
+  &.family-id-cell {
+    min-width: 240px !important;
+  }
+}
+
+.family-search-clear-btn {
+  cursor: pointer !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  color: #a82227 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  display: block !important;
+  text-decoration: underline !important;
+
+  &:hover {
+    color: #7a191d !important;
+  }
+}
+
+.family-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.status-pending {
+    background-color: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #ffedd5;
+  }
+
+  &.status-approved,
+  &.status-active {
+    background-color: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+
+  &.status-rejected {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+
+  &.status-default {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+  }
+}
+
+/* Empty Card */
+.family-empty-card {
+  text-align: center !important;
+  margin-top: 20px !important;
+  padding: 40px 16px;
+
+  .family-empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center !important;
+  }
+
+  .family-empty-desc {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666666;
+    text-align: center !important;
+  }
+}
+

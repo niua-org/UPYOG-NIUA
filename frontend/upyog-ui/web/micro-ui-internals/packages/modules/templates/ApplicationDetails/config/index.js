@@ -17,6 +17,7 @@ import { configCHBApproverApplication } from "./CHBApproverApplication";
 import { configEWApproverApplication } from "./EWApproverApplication";
 import { configSVApproverApplication } from "./SVApproverApplication";
 import { configGCApproverApplication } from "./GCApproverApplication";
+import { configFamilyApproverApplication } from "./FamilyApproverApplication";
 import { configFireNocApproverApplication } from "./FireNocApproverApplication";
 
 
@@ -41,6 +42,7 @@ export {
   configEWApproverApplication,
   configSVApproverApplication,
   configGCApproverApplication,
+  configFamilyApproverApplication,
   configFireNocApproverApplication
 
 };

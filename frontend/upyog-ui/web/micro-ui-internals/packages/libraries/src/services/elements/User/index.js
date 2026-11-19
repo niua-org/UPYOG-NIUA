@@ -225,6 +225,23 @@ export const UserService = {
       params: { tenantId },
       auth: true,
       method: "POST",
+      userService: false,
+    }),
+
+  /**
+   * Updates family details and advances workflow transitions (e.g. APPROVE, REJECT).
+   *
+   * @param {Object} data - Update request body containing Family entity and workflow object.
+   * @param {Object} [params={}] - Optional URL query parameters.
+   * @returns {Promise<Object>} API response promise.
+   */
+  updateFamily: (data, params = {}) =>
+    ServiceRequest({
+      url: Urls.profile.updateFamily,
+      data: data,
+      params: params,
+      auth: true,
+      method: "POST",
       userService: true,
     }),
 
@@ -348,7 +365,8 @@ export const UserService = {
     Request({
       url: Urls.profile.familySearch,
       method: "POST",
-      auth: false,
+      auth: true,
+      userService: true,
       params: { tenantId, ...params },
     }),
 
