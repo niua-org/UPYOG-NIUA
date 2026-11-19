@@ -15,6 +15,9 @@ import org.upyog.family.domain.service.FamilyDashboardService;
 import org.upyog.family.web.advice.GlobalExceptionHandler;
 import org.upyog.family.web.contract.FamilyDashboardMetrics;
 import org.upyog.family.web.contract.FamilyDashboardResponse;
+import org.upyog.family.web.contract.FamilyMember;
+
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,14 +47,29 @@ class FamilyDashboardControllerTest {
     @Test
     @DisplayName("POST /v1/dashboard/_search should return HTTP 200 OK with dashboard metrics")
     void getDashboard_Success() throws Exception {
+        FamilyMember member = FamilyMember.builder()
+                .userUuid("user-uuid-1")
+                .name("Rajesh Sharma")
+                .photo("photo-123")
+                .relationshipWithHead("HEAD")
+                .mobileNumber("9876543210")
+                .gender("MALE")
+                .dob(631152000000L)
+                .isHead(true)
+                .active(true)
+                .build();
+
         FamilyDashboardMetrics metrics = FamilyDashboardMetrics.builder()
                 .familyId("FAM-2026-0001")
                 .tenantId("pg.citya")
-                .totalMembersCount(3)
-                .activeMembersCount(3)
-                .verifiedMembersCount(2)
+                .headName("Rajesh Sharma")
+                .headUserUuid("user-uuid-1")
+                .totalMembersCount(1)
+                .activeMembersCount(1)
+                .verifiedMembersCount(1)
                 .documentsCount(1)
                 .lineageEventsCount(0)
+                .activeMembers(Collections.singletonList(member))
                 .build();
 
         FamilyDashboardResponse response = FamilyDashboardResponse.builder()
@@ -68,7 +86,14 @@ class FamilyDashboardControllerTest {
                         .content("{}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dashboard.familyId").value("FAM-2026-0001"))
-                .andExpect(jsonPath("$.dashboard.totalMembersCount").value(3))
-                .andExpect(jsonPath("$.dashboard.activeMembersCount").value(3));
+                .andExpect(jsonPath("$.dashboard.headName").value("Rajesh Sharma"))
+                .andExpect(jsonPath("$.dashboard.totalMembersCount").value(1))
+                .andExpect(jsonPath("$.dashboard.activeMembersCount").value(1))
+                .andExpect(jsonPath("$.dashboard.activeMembers[0].name").value("Rajesh Sharma"))
+                .andExpect(jsonPath("$.dashboard.activeMembers[0].photo").value("photo-123"))
+                .andExpect(jsonPath("$.dashboard.activeMembers[0].relationshipWithHead").value("HEAD"))
+                .andExpect(jsonPath("$.dashboard.activeMembers[0].mobileNumber").value("9876543210"))
+                .andExpect(jsonPath("$.dashboard.activeMembers[0].gender").value("MALE"))
+                .andExpect(jsonPath("$.dashboard.activeMembers[0].dob").value(631152000000L));
     }
 }

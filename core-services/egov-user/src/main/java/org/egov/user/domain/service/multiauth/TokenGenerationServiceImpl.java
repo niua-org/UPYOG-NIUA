@@ -75,21 +75,27 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
     }
 
     private int getAccessTokenValidityInMinutes() {
-        return (userConfiguration != null && userConfiguration.getAccessTokenValidityInMinutes() != null)
-                ? userConfiguration.getAccessTokenValidityInMinutes()
-                : 10080;
+        if (userConfiguration == null || userConfiguration.getAccessTokenValidityInMinutes() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "access.token.validity.in.minutes is not configured");
+        }
+        return userConfiguration.getAccessTokenValidityInMinutes();
     }
 
     private int getRefreshTokenValidityInMinutes() {
-        return (userConfiguration != null && userConfiguration.getRefreshTokenValidityInMinutes() != null)
-                ? userConfiguration.getRefreshTokenValidityInMinutes()
-                : 20160;
+        if (userConfiguration == null || userConfiguration.getRefreshTokenValidityInMinutes() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "refresh.token.validity.in.minutes is not configured");
+        }
+        return userConfiguration.getRefreshTokenValidityInMinutes();
     }
 
     private String getTokenFormat() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getOauth2TokenFormat()))
-                ? userConfiguration.getOauth2TokenFormat()
-                : "opaque";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getOauth2TokenFormat())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "oauth2.token.format is not configured");
+        }
+        return userConfiguration.getOauth2TokenFormat();
     }
 
     /**
@@ -146,6 +152,7 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
                 .authenticatedVia(authType)
                 .isNewUser(isNewUser)
                 .isProfileCompleted(contractUser != null && Boolean.TRUE.equals(contractUser.getIsProfileCompleted()))
+                .familyId(domainUser.getFamilyId())
                 .build();
     }
 
@@ -198,6 +205,7 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
             userInfo.put("lastResyncDate", user.getLastResyncDate());
             userInfo.put("edittedCount", user.getEdittedCount());
             userInfo.put("lastLoginMethod", user.getLastLoginMethod());
+            userInfo.put("familyId", user.getFamilyId());
 
             if (user.getRoles() != null && !user.getRoles().isEmpty()) {
                 List<Map<String, String>> rolesList = user.getRoles().stream()
@@ -359,6 +367,7 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
                 .edittedCount(domainUser.getEdittedCount())
                 .lastLoginMethod(domainUser.getLastLoginMethod())
                 .isProfileCompleted(isProfileComplete)
+                .familyId(domainUser.getFamilyId())
                 .roles(authRoles)
                 .build();
     }

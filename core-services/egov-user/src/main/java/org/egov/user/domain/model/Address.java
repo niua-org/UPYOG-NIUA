@@ -1,7 +1,7 @@
 package org.egov.user.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
@@ -23,8 +23,8 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(of = {"id"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Address {
-    @JsonAlias({"pincode", "pin_code"})
     private String pinCode;
     private String city;
     private String address;
@@ -35,7 +35,6 @@ public class Address {
     private Long userId;
 
     @JsonProperty("uuid")
-    @JsonAlias({"userUuid", "user_uuid"})
     private String uuid;
 
     private String addressType;
@@ -43,10 +42,8 @@ public class Address {
     private Date LastModifiedDate;
 //    Adding new fields in Address model for profile update as part of V2 api
     private String address2;
-    @JsonAlias({"doorNo", "doorNumber", "house_number"})
     private String houseNumber;
     private String houseName;
-    @JsonAlias({"street", "street_name"})
     private String streetName;
     private String landmark;
     private String locality;
@@ -54,12 +51,10 @@ public class Address {
     private Double latitude;
     private Double longitude;
     @JsonProperty("filestoreId")
-    @JsonAlias({"filestore_id", "fileStoreId", "addressProofFileStoreId", "address_proof_filestore_id", "addressProof", "addressProofDocument"})
     private String filestoreId;
     private String status;
 
     @JsonProperty("addressProof")
-    @JsonAlias({"addressProofDocument", "document"})
     public void setAddressProof(Object proof) {
         if (proof == null) return;
         if (proof instanceof String) {
@@ -71,6 +66,25 @@ public class Address {
             } else if (map.containsKey("fileStoreId")) {
                 this.filestoreId = String.valueOf(map.get("fileStoreId"));
             }
+        }
+    }
+
+    @JsonProperty("addressProofFileStoreId")
+    public void setAddressProofFileStoreId(String fileStoreId) {
+        if (StringUtils.isNotBlank(fileStoreId)) {
+            this.filestoreId = fileStoreId;
+        }
+    }
+
+    @JsonProperty("filestoreId")
+    public void setFilestoreId(String filestoreId) {
+        this.filestoreId = filestoreId;
+    }
+
+    @JsonProperty("fileStoreId")
+    public void setFileStoreId(String fileStoreId) {
+        if (StringUtils.isNotBlank(fileStoreId)) {
+            this.filestoreId = fileStoreId;
         }
     }
 

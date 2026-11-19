@@ -90,4 +90,30 @@ class FamilyQueryBuilderTest {
         assertEquals("FAM-001", params.get(1));
         assertEquals("FAM-002", params.get(2));
     }
+
+    @Test
+    @DisplayName("getFamilySearchQuery should filter by familyType when provided")
+    void getFamilySearchQuery_FamilyTypeCriteria() {
+        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
+                .tenantId("pg.citya")
+                .familyType("STATE_REGISTRY")
+                .build();
+
+        List<Object> params = new ArrayList<>();
+        String sql = queryBuilder.getFamilySearchQuery(criteria, params);
+
+        assertTrue(sql.contains("f.family_type = ?"));
+        assertEquals("pg.citya", params.get(0));
+        assertEquals("STATE_REGISTRY", params.get(1));
+    }
+
+    @Test
+    @DisplayName("INSERT_FAMILY_AUDIT_SQL should insert into ug_family_audit selecting from ug_family")
+    void testInsertFamilyAuditSql() {
+        String auditSql = FamilyQueryBuilder.INSERT_FAMILY_AUDIT_SQL;
+        assertTrue(auditSql.startsWith("INSERT INTO ug_family_audit"));
+        assertTrue(auditSql.contains("FROM ug_family WHERE family_id = ?"));
+        assertTrue(auditSql.contains("head_user_uuid"));
+        assertTrue(auditSql.contains("family_type"));
+    }
 }

@@ -177,5 +177,12 @@ public class Configurations {
 	
 	@Value("${filestore.post.endpoint}")
 	private String fileStorePostUrl;
+
+	// ---------------- Family Service Integration Configurations ----------------
+	@Value("${family.service.host}")
+	private String familyServiceHost;
+
+	@Value("${family.service.search.endpoint}")
+	private String familyServiceSearchEndpoint;
 	
 }

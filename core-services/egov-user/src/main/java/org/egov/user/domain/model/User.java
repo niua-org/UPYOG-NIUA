@@ -22,6 +22,9 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.model.asset.UserIncome;
+import org.egov.user.domain.model.asset.UserProperty;
+import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.springframework.util.CollectionUtils;
 
@@ -76,6 +79,9 @@ public class User {
     private Address correspondenceAddress;
     private Set<Address> addresses;
     private List<UserDocument> documents;
+    private List<UserProperty> properties;
+    private UserIncome income;
+    private List<UserVehicle> vehicles;
     private Boolean active;
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
@@ -115,12 +121,18 @@ public class User {
     @Size(max = 100)
     private String spouseName;
 
+    @Size(max = 32)
+    private String caste;
+
+    private Boolean isSpeciallyAbled;
+
     private Boolean isIdentityVerified;
     private Date identityVerifiedDate;
     private String identityVerifiedSource;
     private Date lastResyncDate;
     private Integer edittedCount;
     private String lastLoginMethod;
+    private String familyId;
 
     /**
      * Appends an {@link Address} to this user's address collection.
@@ -150,10 +162,21 @@ public class User {
         return this;
     }
 
+    /**
+     * Validates that all baseline mandatory attributes are present for user creation, enforcing name validation by default.
+     *
+     * @throws InvalidUserCreateException if mandatory fields (username, name, mobile, active, type, roles, tenantId, or OTP) are missing
+     */
     public void validateNewUser() {
         validateNewUser(true);
     }
 
+    /**
+     * Validates that all baseline mandatory attributes are present for new user registration.
+     *
+     * @param createUserValidateName whether user {@code name} must be validated for presence
+     * @throws InvalidUserCreateException if mandatory fields are missing
+     */
     public void validateNewUser(boolean createUserValidateName) {
         if (isUsernameAbsent()
                 || (createUserValidateName && isNameAbsent())
@@ -168,7 +191,10 @@ public class User {
     }
 
     /**
-     * Validates user for v2 API with addresses array structure
+     * Validates user registration attributes for the V2 API, taking into account nested address array structures.
+     *
+     * @param createUserValidateName whether user {@code name} must be validated for presence
+     * @throws InvalidUserCreateException if required fields are missing
      */
     public void validateNewUserV2(boolean createUserValidateName) {
         if (isUsernameAbsent()
@@ -184,7 +210,10 @@ public class User {
     }
 
     /**
-     * Simple validation for v2 API that skips old address validation
+     * Simple validation for the V2 API that validates user fields while skipping legacy address format checks.
+     *
+     * @param createUserValidateName whether user {@code name} must be validated for presence
+     * @throws InvalidUserCreateException if mandatory fields are missing
      */
     public void validateNewUserV2Simple(boolean createUserValidateName) {
         if (isUsernameAbsent()
@@ -199,6 +228,11 @@ public class User {
         }
     }
 
+    /**
+     * Validates that the mandatory {@code tenantId} attribute is present prior to committing user modifications.
+     *
+     * @throws InvalidUserUpdateException if {@code tenantId} is absent or empty
+     */
     public void validateUserModification() {
         if (isTenantIdAbsent()) {
             throw new InvalidUserUpdateException(this);
@@ -288,6 +322,13 @@ public class User {
         }
     }
 
+    /**
+     * Determines whether an incoming string field has been modified relative to the existing record.
+     *
+     * @param incoming the incoming field value
+     * @param existing the existing field value from database
+     * @return {@code true} if both values are non-blank and differ ignoring case; {@code false} otherwise
+     */
     private boolean isFieldModified(String incoming, String existing) {
         if (StringUtils.isBlank(existing)) {
             return false;
@@ -298,16 +339,31 @@ public class User {
         return !incoming.trim().equalsIgnoreCase(existing.trim());
     }
 
+    /**
+     * Validates whether the correspondence address is invalid.
+     *
+     * @return {@code true} if correspondence address is provided and fails validity check; {@code false} otherwise
+     */
     @JsonIgnore
     public boolean isCorrespondenceAddressInvalid() {
         return correspondenceAddress != null && correspondenceAddress.isInvalid();
     }
 
+    /**
+     * Validates whether the permanent address is invalid.
+     *
+     * @return {@code true} if permanent address is provided and fails validity check; {@code false} otherwise
+     */
     @JsonIgnore
     public boolean isPermanentAddressInvalid() {
         return permanentAddress != null && permanentAddress.isInvalid();
     }
 
+    /**
+     * Validates whether any attached address in the collection is invalid.
+     *
+     * @return {@code true} if any address in the list is non-null and invalid; {@code false} otherwise
+     */
     @JsonIgnore
     public boolean isAddressesInvalid() {
         if (addresses == null || addresses.isEmpty()) {
@@ -316,56 +372,113 @@ public class User {
         return addresses.stream().anyMatch(address -> address != null && address.isInvalid());
     }
 
+    /**
+     * Checks if OTP reference is absent when OTP validation is configured as mandatory.
+     *
+     * @return {@code true} if OTP validation is required but reference token is empty
+     */
     @JsonIgnore
     public boolean isOtpReferenceAbsent() {
         return otpValidationMandatory && isEmpty(otpReference);
     }
 
+    /**
+     * Checks if the user classification type (e.g., CITIZEN, EMPLOYEE) is absent.
+     *
+     * @return {@code true} if user type is null or empty
+     */
     @JsonIgnore
     public boolean isTypeAbsent() {
         return isEmpty(type);
     }
 
+    /**
+     * Checks if the active account status flag is absent.
+     *
+     * @return {@code true} if active flag is null
+     */
     @JsonIgnore
     public boolean isActiveIndicatorAbsent() {
         return isEmpty(active);
     }
 
+    /**
+     * Checks if the mobile number is absent when mobile validation is mandatory.
+     *
+     * @return {@code true} if mobile validation is mandatory and mobile number is empty
+     */
     @JsonIgnore
     public boolean isMobileNumberAbsent() {
         return mobileValidationMandatory && isEmpty(mobileNumber);
     }
 
+    /**
+     * Checks if the user primary display name is absent.
+     *
+     * @return {@code true} if name is null or empty
+     */
     @JsonIgnore
     public boolean isNameAbsent() {
         return isEmpty(name);
     }
 
+    /**
+     * Checks if the unique login username is absent.
+     *
+     * @return {@code true} if username is null or empty
+     */
     @JsonIgnore
     public boolean isUsernameAbsent() {
         return isEmpty(username);
     }
 
+    /**
+     * Checks if the tenant identifier is absent.
+     *
+     * @return {@code true} if tenantId is null or empty
+     */
     @JsonIgnore
     public boolean isTenantIdAbsent() {
         return isEmpty(tenantId);
     }
 
+    /**
+     * Checks if the credential password is absent.
+     *
+     * @return {@code true} if password is null or empty
+     */
     @JsonIgnore
     public boolean isPasswordAbsent() {
         return isEmpty(password);
     }
 
+    /**
+     * Checks if user authorization roles are absent or contain empty codes.
+     *
+     * @return {@code true} if roles collection is empty or any role code is missing
+     */
     @JsonIgnore
     public boolean isRolesAbsent() {
         return CollectionUtils.isEmpty(roles) || roles.stream().anyMatch(r -> isEmpty(r.getCode()));
     }
 
+    /**
+     * Checks if the numeric primary key id is absent.
+     *
+     * @return {@code true} if id is null
+     */
     @JsonIgnore
     public boolean isIdAbsent() {
         return id == null;
     }
 
+    /**
+     * Clears sensitive or immutable security fields prior to executing a partial profile update.
+     * <p>
+     * Nullifies {@code username}, {@code type}, {@code mobileNumber}, {@code password},
+     * {@code passwordExpiryDate}, and account lock fields. Roles are preserved to maintain
+     * gateway RBAC authorization compatibility.
+     */
     public void nullifySensitiveFields() {
         username = null;
         type = null;
@@ -379,20 +492,39 @@ public class User {
         accountLockedDate = null;
     }
 
+    /**
+     * Checks if the currently logged-in caller's identity mismatches this user entity.
+     *
+     * @return {@code true} if the logged-in user's ID or UUID differs from this user's ID or UUID
+     */
     @JsonIgnore
     public boolean isLoggedInUserDifferentFromUpdatedUser() {
         return !id.equals(loggedInUserId) || !uuid.equals(loggedInUserUuid);
     }
 
+    /**
+     * Enriches this user entity with standard Citizen classification:
+     * sets {@code type = UserType.CITIZEN} and assigns the default {@code CITIZEN} role.
+     */
     public void setRoleToCitizen() {
         type = UserType.CITIZEN;
         roles = Collections.singleton(Role.getCitizenRole());
     }
 
+    /**
+     * Replaces the current password hash with a newly encoded password.
+     *
+     * @param newPassword encoded password hash
+     */
     public void updatePassword(String newPassword) {
         password = newPassword;
     }
 
+    /**
+     * Constructs an {@link OtpValidationRequest} domain object using this user's credentials.
+     *
+     * @return populated {@link OtpValidationRequest}
+     */
     @JsonIgnore
     public OtpValidationRequest getOtpValidationRequest() {
         return OtpValidationRequest.builder()
@@ -402,6 +534,11 @@ public class User {
                 .build();
     }
 
+    /**
+     * Extracts non-empty permanent and correspondence addresses as a combined list.
+     *
+     * @return list containing non-empty correspondence and permanent {@link Address} objects
+     */
     @JsonIgnore
     public List<Address> getPermanentAndCorrespondenceAddresses() {
         final ArrayList<Address> addresses = new ArrayList<>();
@@ -414,12 +551,22 @@ public class User {
         return addresses;
     }
 
+    /**
+     * Calculates and initializes the password expiration date if not already explicitly set.
+     *
+     * @param expiryInDays number of days until password expires
+     */
     public void setDefaultPasswordExpiry(int expiryInDays) {
         if (passwordExpiryDate == null) {
             passwordExpiryDate = DateUtils.addDays(new Date(), expiryInDays);
         }
     }
 
+    /**
+     * Sets the active status flag of this user.
+     *
+     * @param isActive whether the user account is active
+     */
     public void setActive(boolean isActive) {
         active = isActive;
     }

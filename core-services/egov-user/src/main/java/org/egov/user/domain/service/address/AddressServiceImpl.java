@@ -133,7 +133,14 @@ public class AddressServiceImpl implements AddressService {
             addressMasterDataService.validateAddressType(request.getRequestInfo(), tenantId, typeToValidate);
         }
 
-        // Validate attached address proof filestoreId if provided
+        // Validate attached address proof is mandatory for address creation
+        if (StringUtils.isBlank(address.getFilestoreId())) {
+            log.error("[ADDRESS-SERVICE] Address proof filestoreId is mandatory for creating address for userUuid: {}", resolvedUuid);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_FILESTORE_ID_MANDATORY,
+                    UserConstants.MSG_ADDRESS_FILESTORE_ID_MANDATORY);
+        }
+
+        // Validate attached address proof filestoreId
         validateFileStoreId(tenantId, address.getFilestoreId());
 
         // 1. Fetch existing active addresses for this user to check for duplicates
@@ -256,6 +263,11 @@ public class AddressServiceImpl implements AddressService {
             addressMasterDataService.validateAddressType(request.getRequestInfo(), tenantId, typeToValidate);
         }
 
+        // Preserve existing address proof if not provided in update request
+        if (StringUtils.isBlank(address.getFilestoreId()) && StringUtils.isNotBlank(existing.getFilestoreId())) {
+            address.setFilestoreId(existing.getFilestoreId());
+        }
+
         // Validate attached address proof filestoreId if provided
         validateFileStoreId(tenantId, address.getFilestoreId());
 
@@ -305,7 +317,7 @@ public class AddressServiceImpl implements AddressService {
             criteria.setStatus(criteria.getStatus().toLowerCase());
         }
 
-        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null) {
+        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null && CollectionUtils.isEmpty(criteria.getUserUuids())) {
             Long userId = userRepository.getUserIdByUuid(criteria.getUserUuid());
             if (userId != null) {
                 criteria.setUserId(userId);

@@ -215,4 +215,28 @@ public class FamilyIdAuthStrategyTest {
         assertEquals("ACCOUNT_INACTIVE", ex.getCode());
         assertEquals("Citizen account is inactive. Please contact support.", ex.getMessage());
     }
+
+    @Test
+    @DisplayName("authenticateAndResolveUser: Rejects login when FamilyConfigurationService throws FAMILY_NOT_SUPPORTED")
+    void authenticateAndResolveUser_FamilyNotSupported_ThrowsException() {
+        org.egov.user.domain.service.config.FamilyConfigurationService configService =
+                mock(org.egov.user.domain.service.config.FamilyConfigurationService.class);
+        doThrow(new CustomException("FAMILY_NOT_SUPPORTED", "Family concept is disabled for tenant: ul"))
+                .when(configService).validateFamilySupported(any(), eq("ul"));
+
+        FamilyIdAuthStrategy strategyWithConfig = new FamilyIdAuthStrategy(
+                userService, userRepository, otpRepository, encryptionDecryptionUtil, null, userConfiguration, configService
+        );
+
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.FAMILY_ID)
+                .familyId("UL-FAM-001")
+                .otp("123456")
+                .tenantId("ul")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> strategyWithConfig.authenticateAndResolveUser(request));
+        assertEquals("FAMILY_NOT_SUPPORTED", ex.getCode());
+    }
 }

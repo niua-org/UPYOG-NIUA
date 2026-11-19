@@ -1,0 +1,462 @@
+package org.egov.user.persistence.repository;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
+import org.egov.common.contract.request.RequestInfo;
+import org.egov.user.config.UserConfiguration;
+import org.egov.user.domain.service.config.FamilyConfigurationService;
+import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.web.contract.config.FamilyConfig;
+import org.egov.user.web.contract.profile.FamilyHofStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Repository;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * REST repository communicating with upyog-family-service to query active household memberships.
+ *
+ * <p>Enforces strict non-blocking fail-open resilience: if upyog-family-service is unreachable
+ * or returns an error, it safely returns null without failing user profile or authentication operations.</p>
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
+ */
+@Repository
+@Slf4j
+public class FamilyRestRepository {
+
+    private final RestTemplate restTemplate;
+    private final UserConfiguration userConfiguration;
+    private final ObjectMapper objectMapper;
+    private final FamilyConfigurationService familyConfigurationService;
+
+    /**
+     * Constructs a {@link FamilyRestRepository} with all required dependencies including MDMS family configuration support.
+     *
+     * @param restTemplate               HTTP client for making external service calls; optional
+     * @param userConfiguration          application-level user configuration properties; optional
+     * @param objectMapper               Jackson JSON mapper; if {@code null}, a default instance is created
+     * @param familyConfigurationService service to fetch state/tenant-specific family configuration from MDMS; optional
+     */
+    @Autowired
+    public FamilyRestRepository(@Autowired(required = false) RestTemplate restTemplate,
+                                @Autowired(required = false) UserConfiguration userConfiguration,
+                                @Autowired(required = false) ObjectMapper objectMapper,
+                                @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
+        this.restTemplate = restTemplate;
+        this.userConfiguration = userConfiguration;
+        this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    /**
+     * Overloaded constructor for backwards compatibility and standalone testing environments
+     * where the {@link FamilyConfigurationService} is not configured or required.
+     *
+     * @param restTemplate      HTTP client for making external service calls
+     * @param userConfiguration application-level user configuration properties
+     * @param objectMapper      Jackson JSON mapper
+     */
+    public FamilyRestRepository(RestTemplate restTemplate,
+                                UserConfiguration userConfiguration,
+                                ObjectMapper objectMapper) {
+        this(restTemplate, userConfiguration, objectMapper, null);
+    }
+
+    /**
+     * Resolves the active Family ID for a citizen user UUID by querying upyog-family-service.
+     *
+     * @param userUuid    citizen unique identifier
+     * @param tenantId    tenant identifier
+     * @param requestInfo standard UPYOG RequestInfo context
+     * @return active familyId string, or null if not found or on service error
+     */
+    public String getActiveFamilyIdByUserUuid(String userUuid, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(userUuid) || restTemplate == null) {
+            return null;
+        }
+
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping family resolution.", tenantId);
+                return null;
+            }
+        }
+
+        String host = resolveHost();
+
+        try {
+            String endpoint = resolveEndpoint();
+            UriComponentsBuilder uriBuilder = buildBaseUri(host, endpoint)
+                    .queryParam(UserConstants.FAMILY_PARAM_MEMBER_USER_UUID, userUuid)
+                    .queryParam(UserConstants.FAMILY_PARAM_STATUS, UserConstants.FAMILY_STATUS_ACTIVE);
+
+            if (StringUtils.isNotBlank(tenantId)) {
+                uriBuilder.queryParam(UserConstants.PARAM_TENANT_ID, tenantId);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<RequestInfo> entity = new HttpEntity<>(requestInfo != null ? requestInfo : new RequestInfo(), headers);
+
+            String url = uriBuilder.toUriString();
+            log.debug("[FAMILY-REST-REPO] Querying upyog-family-service at: {}", url);
+            String responseStr = restTemplate.postForObject(url, entity, String.class);
+
+            JsonNode families = parseFamiliesNode(responseStr);
+            String familyId = extractActiveFamilyId(families);
+            if (StringUtils.isNotBlank(familyId)) {
+                log.debug("[FAMILY-REST-REPO] Resolved active familyId: {} for user: {}", familyId, userUuid);
+                return familyId;
+            }
+        } catch (Exception e) {
+            log.warn("[FAMILY-REST-REPO] Non-blocking: Could not resolve familyId from upyog-family-service for user {}: {}",
+                    userUuid, e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Batch resolves active Family IDs for a list of citizen user UUIDs.
+     *
+     * @param userUuids   list of citizen UUIDs
+     * @param tenantId    tenant identifier
+     * @param requestInfo standard UPYOG RequestInfo context
+     * @return map of userUuid -> active familyId
+     */
+    public Map<String, String> getActiveFamilyIdsByUserUuids(List<String> userUuids, String tenantId, RequestInfo requestInfo) {
+        if (userUuids == null || userUuids.isEmpty() || restTemplate == null) {
+            return Collections.emptyMap();
+        }
+
+        List<String> cleanUuids = userUuids.stream()
+                .filter(StringUtils::isNotBlank)
+                .distinct()
+                .toList();
+
+        if (cleanUuids.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping batch family resolution.", tenantId);
+                return Collections.emptyMap();
+            }
+        }
+
+        String host = resolveHost();
+
+        try {
+            String endpoint = resolveEndpoint();
+            UriComponentsBuilder uriBuilder = buildBaseUri(host, endpoint)
+                    .queryParam(UserConstants.FAMILY_PARAM_MEMBER_USER_UUIDS, String.join(",", cleanUuids))
+                    .queryParam(UserConstants.FAMILY_PARAM_STATUS, UserConstants.FAMILY_STATUS_ACTIVE);
+
+            if (StringUtils.isNotBlank(tenantId)) {
+                uriBuilder.queryParam(UserConstants.PARAM_TENANT_ID, tenantId);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<RequestInfo> entity = new HttpEntity<>(requestInfo != null ? requestInfo : new RequestInfo(), headers);
+
+            String url = uriBuilder.toUriString();
+            log.debug("[FAMILY-REST-REPO] Batch querying upyog-family-service at: {}", url);
+            String responseStr = restTemplate.postForObject(url, entity, String.class);
+
+            return parseBatchFamilyMap(responseStr, cleanUuids);
+        } catch (Exception e) {
+            log.warn("[FAMILY-REST-REPO] Non-blocking: Could not batch resolve familyIds from upyog-family-service: {}",
+                    e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    private String resolveHost() {
+        String host = userConfiguration != null ? userConfiguration.getFamilyServiceHost() : null;
+        if (StringUtils.isBlank(host)) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "family.service.host is not configured");
+        }
+        return host;
+    }
+
+    private String resolveEndpoint() {
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFamilyServiceSearchEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "family.service.search.endpoint is not configured");
+        }
+        return userConfiguration.getFamilyServiceSearchEndpoint();
+    }
+
+    private UriComponentsBuilder buildBaseUri(String host, String endpoint) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(host);
+        if (!host.endsWith("/") && !endpoint.startsWith("/")) {
+            uriBuilder.path("/");
+        }
+        return uriBuilder.path(endpoint);
+    }
+
+    private JsonNode parseFamiliesNode(String responseStr) {
+        if (StringUtils.isBlank(responseStr)) {
+            return null;
+        }
+        try {
+            JsonNode root = objectMapper.readTree(responseStr);
+            JsonNode families = root.path(UserConstants.JSON_KEY_FAMILIES_UPPER);
+            if (!families.isArray() || families.isEmpty()) {
+                families = root.path(UserConstants.JSON_KEY_FAMILIES_LOWER);
+            }
+            return families.isArray() ? families : null;
+        } catch (Exception e) {
+            log.debug("[FAMILY-REST-REPO] Error parsing family response JSON: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private String extractActiveFamilyId(JsonNode families) {
+        if (families == null) {
+            return null;
+        }
+        for (JsonNode familyNode : families) {
+            String status = familyNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(null);
+            if (UserConstants.FAMILY_STATUS_ACTIVE.equalsIgnoreCase(status)) {
+                String familyId = familyNode.path(UserConstants.FIELD_FAMILY_ID).asText(null);
+                if (StringUtils.isNotBlank(familyId)) {
+                    return familyId;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Map<String, String> parseBatchFamilyMap(String responseStr, List<String> cleanUuids) {
+        JsonNode families = parseFamiliesNode(responseStr);
+        if (families == null) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, String> resultMap = new HashMap<>();
+        for (JsonNode familyNode : families) {
+            String status = familyNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(null);
+            if (UserConstants.FAMILY_STATUS_ACTIVE.equalsIgnoreCase(status)) {
+                String familyId = familyNode.path(UserConstants.FIELD_FAMILY_ID).asText(null);
+                if (StringUtils.isNotBlank(familyId)) {
+                    populateMembersForFamily(familyNode, familyId, cleanUuids, resultMap);
+                }
+            }
+        }
+        return resultMap;
+    }
+
+    private void populateMembersForFamily(JsonNode familyNode, String familyId, List<String> cleanUuids, Map<String, String> resultMap) {
+        JsonNode membersNode = familyNode.path(UserConstants.JSON_KEY_MEMBERS);
+        if (!membersNode.isArray()) {
+            return;
+        }
+        for (JsonNode memberNode : membersNode) {
+            boolean isActiveMember = memberNode.path(UserConstants.JSON_KEY_ACTIVE).asBoolean(true);
+            String memberUuid = memberNode.path(UserConstants.JSON_KEY_USER_UUID).asText(null);
+            if (isActiveMember && StringUtils.isNotBlank(memberUuid) && cleanUuids.contains(memberUuid)) {
+                resultMap.putIfAbsent(memberUuid, familyId);
+            }
+        }
+    }
+
+    /**
+     * Determines whether the specified caller is the active Head of Family (HoF)
+     * of the household containing the target member.
+     *
+     * @param callerUuid  UUID of the calling citizen
+     * @param memberUuid  UUID of the target family member
+     * @param tenantId    tenant identifier
+     * @param requestInfo standard UPYOG RequestInfo context
+     * @return true if caller is HoF of member's active family, false otherwise
+     */
+    public boolean isCallerHeadOfFamilyForMember(String callerUuid, String memberUuid, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(callerUuid) || StringUtils.isBlank(memberUuid) || restTemplate == null) {
+            return false;
+        }
+
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping HOF check.", tenantId);
+                return false;
+            }
+        }
+
+        try {
+            String host = resolveHost();
+            String endpoint = resolveEndpoint();
+            UriComponentsBuilder uriBuilder = buildBaseUri(host, endpoint)
+                    .queryParam(UserConstants.FAMILY_PARAM_MEMBER_USER_UUID, memberUuid)
+                    .queryParam(UserConstants.FAMILY_PARAM_STATUS, UserConstants.FAMILY_STATUS_ACTIVE);
+
+            if (StringUtils.isNotBlank(tenantId)) {
+                uriBuilder.queryParam(UserConstants.PARAM_TENANT_ID, tenantId);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<RequestInfo> entity = new HttpEntity<>(requestInfo != null ? requestInfo : new RequestInfo(), headers);
+
+            String url = uriBuilder.toUriString();
+            log.debug("[FAMILY-REST-REPO] Checking HOF relationship at: {}", url);
+            String responseStr = restTemplate.postForObject(url, entity, String.class);
+
+            JsonNode families = parseFamiliesNode(responseStr);
+            if (families != null && families.isArray()) {
+                for (JsonNode familyNode : families) {
+                    String status = familyNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(null);
+                    if (UserConstants.FAMILY_STATUS_ACTIVE.equalsIgnoreCase(status)) {
+                        String headUserUuid = familyNode.path("headUserUuid").asText(null);
+                        if (callerUuid.equalsIgnoreCase(headUserUuid)) {
+                            log.info("[FAMILY-REST-REPO] Caller {} confirmed as HoF (headUserUuid) for member {}", callerUuid, memberUuid);
+                            return true;
+                        }
+
+                        JsonNode membersNode = familyNode.path(UserConstants.JSON_KEY_MEMBERS);
+                        if (membersNode.isArray()) {
+                            for (JsonNode memberNode : membersNode) {
+                                String mUuid = memberNode.path(UserConstants.JSON_KEY_USER_UUID).asText(null);
+                                boolean isHead = memberNode.path("isHead").asBoolean(false);
+                                if (callerUuid.equalsIgnoreCase(mUuid) && isHead) {
+                                    log.info("[FAMILY-REST-REPO] Caller {} confirmed as HoF (member.isHead) for member {}", callerUuid, memberUuid);
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[FAMILY-REST-REPO] Error checking HOF relationship for caller {} and member {}: {}",
+                    callerUuid, memberUuid, e.getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * Queries active family mapping for a citizen user and evaluates whether they are the Head of Family (HoF).
+     *
+     * @param userUuid    UUID of the target citizen
+     * @param tenantId    tenant identifier
+     * @param requestInfo standard UPYOG RequestInfo context
+     * @return {@link FamilyHofStatus} indicating if family was found, familyId, and whether user is HoF
+     */
+    public FamilyHofStatus checkUserHofStatus(String userUuid, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(userUuid)) {
+            return FamilyHofStatus.builder().familyFound(false).isHof(false).build();
+        }
+
+        if (familyConfigurationService != null && StringUtils.isNotBlank(tenantId)) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(requestInfo, tenantId);
+            if (config != null && !config.isFamilySupported()) {
+                log.debug("[FAMILY-REST-REPO] Family concept disabled for tenant: {}. Skipping HOF check.", tenantId);
+                return FamilyHofStatus.builder().familyFound(false).isHof(false).build();
+            }
+        }
+
+        if (restTemplate == null) {
+            log.warn("[FAMILY-REST-REPO] RestTemplate is null. Cannot query family service.");
+            return FamilyHofStatus.builder().familyFound(false).isHof(false).build();
+        }
+
+        try {
+            String host = resolveHost();
+            String endpoint = resolveEndpoint();
+            UriComponentsBuilder uriBuilder = buildBaseUri(host, endpoint)
+                    .queryParam(UserConstants.FAMILY_PARAM_MEMBER_USER_UUID, userUuid)
+                    .queryParam(UserConstants.FAMILY_PARAM_STATUS, UserConstants.FAMILY_STATUS_ACTIVE);
+
+            if (StringUtils.isNotBlank(tenantId)) {
+                uriBuilder.queryParam(UserConstants.PARAM_TENANT_ID, tenantId);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<RequestInfo> entity = new HttpEntity<>(requestInfo != null ? requestInfo : new RequestInfo(), headers);
+
+            String url = uriBuilder.toUriString();
+            log.debug("[FAMILY-REST-REPO] Querying family status for user {} at: {}", userUuid, url);
+            String responseStr = restTemplate.postForObject(url, entity, String.class);
+
+            JsonNode families = parseFamiliesNode(responseStr);
+            if (families == null || !families.isArray() || families.isEmpty()) {
+                // Secondary lookup: search by headUserUuid in case user is indexed on household root
+                UriComponentsBuilder headUriBuilder = buildBaseUri(host, endpoint)
+                        .queryParam(UserConstants.FAMILY_PARAM_HEAD_USER_UUID, userUuid)
+                        .queryParam(UserConstants.FAMILY_PARAM_STATUS, UserConstants.FAMILY_STATUS_ACTIVE);
+                if (StringUtils.isNotBlank(tenantId)) {
+                    headUriBuilder.queryParam(UserConstants.PARAM_TENANT_ID, tenantId);
+                }
+                String headUrl = headUriBuilder.toUriString();
+                log.debug("[FAMILY-REST-REPO] Secondary lookup for headUserUuid {} at: {}", userUuid, headUrl);
+                String headResponseStr = restTemplate.postForObject(headUrl, entity, String.class);
+                families = parseFamiliesNode(headResponseStr);
+            }
+
+            if (families != null && families.isArray() && !families.isEmpty()) {
+                for (JsonNode familyNode : families) {
+                    String status = familyNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(null);
+                    if (UserConstants.FAMILY_STATUS_ACTIVE.equalsIgnoreCase(status)) {
+                        String familyId = familyNode.path(UserConstants.FIELD_FAMILY_ID).asText(null);
+                        String headUserUuid = familyNode.path(UserConstants.FAMILY_PARAM_HEAD_USER_UUID).asText(null);
+
+                        boolean isHof = userUuid.equalsIgnoreCase(headUserUuid);
+                        if (!isHof) {
+                            JsonNode membersNode = familyNode.path(UserConstants.JSON_KEY_MEMBERS);
+                            if (membersNode.isArray()) {
+                                for (JsonNode memberNode : membersNode) {
+                                    String mUuid = memberNode.path(UserConstants.JSON_KEY_USER_UUID).asText(null);
+                                    boolean isHead = memberNode.path(UserConstants.FAMILY_PARAM_IS_HEAD).asBoolean(false);
+                                    boolean isActive = memberNode.path(UserConstants.JSON_KEY_ACTIVE).asBoolean(true);
+                                    if (userUuid.equalsIgnoreCase(mUuid) && isHead && isActive) {
+                                        isHof = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        log.info("[FAMILY-REST-REPO] User {} evaluation in family {}: isHof={}, headUserUuid={}",
+                                userUuid, familyId, isHof, headUserUuid);
+
+                        return FamilyHofStatus.builder()
+                                .familyFound(true)
+                                .familyId(familyId)
+                                .headUserUuid(headUserUuid)
+                                .isHof(isHof)
+                                .build();
+                    }
+                }
+            }
+        } catch (CustomException ce) {
+            throw ce;
+        } catch (Exception e) {
+            log.error("[FAMILY-REST-REPO] Error checking family HoF status for user {}: {}", userUuid, e.getMessage(), e);
+            throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE,
+                    UserConstants.MSG_FAMILY_SERVICE_COMMUNICATION_ERROR);
+        }
+
+        return FamilyHofStatus.builder().familyFound(false).isHof(false).build();
+    }
+}

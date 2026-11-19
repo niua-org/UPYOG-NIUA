@@ -1,6 +1,5 @@
 package org.egov.dx.adapter.vendor.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,7 +39,6 @@ public class VendorVerifyOtpFailureResponse {
      * Unique vendor transaction ID.
      */
     @JsonProperty("transaction_id")
-    @JsonAlias({"transactionId", "txnId"})
     private String transactionId;
 
     /**
@@ -64,7 +62,6 @@ public class VendorVerifyOtpFailureResponse {
          * Gateway entity descriptor.
          */
         @JsonProperty("@entity")
-        @JsonAlias("entity")
         private String entity;
 
         /**

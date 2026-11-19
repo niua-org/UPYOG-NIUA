@@ -1,0 +1,21 @@
+// generated-by: generate_per_class_unit_tests.py
+package org.egov.noc.web.model.aai;
+
+    import org.junit.jupiter.api.Test;
+
+    import static org.assertj.core.api.Assertions.assertThat;
+
+    class AAIApplicationStatusTest {
+
+@Test
+void newInstance_whenCreated_isNotNull() {
+    assertThat(new AAIApplicationStatus()).isNotNull();
+}
+
+
+@Test
+void builder_whenDefaultBuilds_isNotNull() {
+    assertThat(AAIApplicationStatus.builder().build()).isNotNull();
+}
+
+    }

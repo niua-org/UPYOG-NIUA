@@ -1,10 +1,11 @@
 package org.egov.user.domain.model;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.egov.user.domain.model.enums.AddressType;
+
+import java.util.List;
 
 /**
  * Criteria DTO for filtering and searching address entities in the repository.
@@ -25,8 +26,13 @@ public class AddressSearchCriteria {
     private String status;
 
     @JsonProperty("uuid")
-    @JsonAlias({"userUuid", "user_uuid"})
     private String uuid; // Search address with particular user using uuid
+
+    @JsonProperty("userUuids")
+    private List<String> userUuids;
+
+    @JsonProperty("userIds")
+    private List<Long> userIds;
 
     /**
      * Compatibility getter for {@code userUuid} mapping to {@code uuid}.

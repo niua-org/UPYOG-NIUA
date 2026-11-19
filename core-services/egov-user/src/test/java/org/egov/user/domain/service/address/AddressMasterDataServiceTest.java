@@ -40,7 +40,7 @@ public class AddressMasterDataServiceTest {
     @Test
     @DisplayName("Should load allowed address types from UserConfiguration when MDMS is disabled")
     public void testGetAllowedAddressTypes_Fallback() {
-        Set<String> types = addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pb.amritsar");
+        Set<String> types = addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pg.citya");
         assertNotNull(types);
         assertTrue(types.contains("PERMANENT"));
         assertTrue(types.contains("CORRESPONDENCE"));
@@ -52,16 +52,16 @@ public class AddressMasterDataServiceTest {
     @DisplayName("Should cache allowed address types and return cached instance on subsequent calls")
     public void testAddressTypeCaching() {
         // Initial fetch populates cache
-        Set<String> initialTypes = addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pb.amritsar");
+        Set<String> initialTypes = addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pg.citya");
         assertNotNull(initialTypes);
 
-        // Verify cache snapshot contains tenant 'pb'
+        // Verify cache snapshot contains tenant 'pg'
         Map<String, Set<String>> cached = addressMasterDataService.getCachedAddressTypes();
-        assertTrue(cached.containsKey("pb"));
-        assertEquals(initialTypes, cached.get("pb"));
+        assertTrue(cached.containsKey("pg"));
+        assertEquals(initialTypes, cached.get("pg"));
 
         // Subsequent call returns cached types
-        Set<String> cachedTypes = addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pb.amritsar");
+        Set<String> cachedTypes = addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pg.citya");
         assertSame(initialTypes, cachedTypes);
     }
 
@@ -69,7 +69,7 @@ public class AddressMasterDataServiceTest {
     @DisplayName("Should manually clear and refresh cache on demand")
     public void testClearAndRefreshCache() {
         // Populate cache
-        addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pb.amritsar");
+        addressMasterDataService.getAllowedAddressTypes(new RequestInfo(), "pg.citya");
         assertFalse(addressMasterDataService.getCachedAddressTypes().isEmpty());
 
         // Clear cache
@@ -77,9 +77,9 @@ public class AddressMasterDataServiceTest {
         assertTrue(addressMasterDataService.getCachedAddressTypes().isEmpty());
 
         // Manually refresh cache for tenant
-        Set<String> refreshed = addressMasterDataService.refreshCache(new RequestInfo(), "pb.amritsar");
+        Set<String> refreshed = addressMasterDataService.refreshCache(new RequestInfo(), "pg.citya");
         assertNotNull(refreshed);
-        assertTrue(addressMasterDataService.getCachedAddressTypes().containsKey("pb"));
+        assertTrue(addressMasterDataService.getCachedAddressTypes().containsKey("pg"));
 
         // Scheduled eviction clears entries
         addressMasterDataService.scheduledDailyCacheEviction();
@@ -90,16 +90,16 @@ public class AddressMasterDataServiceTest {
     @DisplayName("Should successfully validate valid configured address types")
     public void testValidateAddressType_Valid() {
         assertDoesNotThrow(() ->
-                addressMasterDataService.validateAddressType(new RequestInfo(), "pb.amritsar", "PERMANENT")
+                addressMasterDataService.validateAddressType(new RequestInfo(), "pg.citya", "PERMANENT")
         );
         assertDoesNotThrow(() ->
-                addressMasterDataService.validateAddressType(new RequestInfo(), "pb.amritsar", "correspondence")
+                addressMasterDataService.validateAddressType(new RequestInfo(), "pg.citya", "correspondence")
         );
         assertDoesNotThrow(() ->
-                addressMasterDataService.validateAddressType(new RequestInfo(), "pb.amritsar", "CORRESPONDANCE") // Alias
+                addressMasterDataService.validateAddressType(new RequestInfo(), "pg.citya", "CORRESPONDANCE") // Alias
         );
         assertDoesNotThrow(() ->
-                addressMasterDataService.validateAddressType(new RequestInfo(), "pb.amritsar", "OFFICE")
+                addressMasterDataService.validateAddressType(new RequestInfo(), "pg.citya", "OFFICE")
         );
     }
 
@@ -107,7 +107,7 @@ public class AddressMasterDataServiceTest {
     @DisplayName("Should throw CustomException when address type is invalid")
     public void testValidateAddressType_Invalid() {
         CustomException ex = assertThrows(CustomException.class, () ->
-                addressMasterDataService.validateAddressType(new RequestInfo(), "pb.amritsar", "INVALID_TYPE")
+                addressMasterDataService.validateAddressType(new RequestInfo(), "pg.citya", "INVALID_TYPE")
         );
         assertEquals("INVALID_ADDRESS_TYPE", ex.getCode());
     }
@@ -116,7 +116,7 @@ public class AddressMasterDataServiceTest {
     @DisplayName("Should throw CustomException when address type is null or blank")
     public void testValidateAddressType_NullOrBlank() {
         CustomException ex = assertThrows(CustomException.class, () ->
-                addressMasterDataService.validateAddressType(new RequestInfo(), "pb.amritsar", "")
+                addressMasterDataService.validateAddressType(new RequestInfo(), "pg.citya", "")
         );
         assertEquals("MANDATORY_FIELD_MISSING", ex.getCode());
     }

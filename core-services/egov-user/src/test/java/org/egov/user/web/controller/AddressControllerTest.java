@@ -35,14 +35,14 @@ public class AddressControllerTest {
     @DisplayName("Should refresh address type cache for specific tenant")
     public void testRefreshAddressTypeCache_WithTenant() {
         Set<String> expectedTypes = new HashSet<>(Arrays.asList("PERMANENT", "CORRESPONDENCE", "OTHER"));
-        when(addressMasterDataService.refreshCache(any(RequestInfo.class), eq("pb.amritsar")))
+        when(addressMasterDataService.refreshCache(any(RequestInfo.class), eq("pg.citya")))
                 .thenReturn(expectedTypes);
         when(addressMasterDataService.getCachedAddressTypes())
                 .thenReturn(Collections.singletonMap("pg", expectedTypes));
 
         AddressCacheRefreshRequest request = AddressCacheRefreshRequest.builder()
                 .requestInfo(new RequestInfo())
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .build();
 
         ResponseEntity<AddressCacheRefreshResponse> response = addressController.refreshAddressTypeCache(request);
@@ -50,10 +50,10 @@ public class AddressControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("pb.amritsar", response.getBody().getTenantId());
+        assertEquals("pg.citya", response.getBody().getTenantId());
         assertEquals(expectedTypes, response.getBody().getAllowedAddressTypes());
-        assertTrue(response.getBody().getMessage().contains("pb.amritsar"));
-        verify(addressMasterDataService, times(1)).refreshCache(any(RequestInfo.class), eq("pb.amritsar"));
+        assertTrue(response.getBody().getMessage().contains("pg.citya"));
+        verify(addressMasterDataService, times(1)).refreshCache(any(RequestInfo.class), eq("pg.citya"));
     }
 
     @Test
@@ -114,7 +114,7 @@ public class AddressControllerTest {
 
         AddressSearchRequest request = AddressSearchRequest.builder()
                 .uuid("usr-123")
-                .tenantId("pb.amritsar")
+                .tenantId("pg.citya")
                 .build();
 
         ResponseEntity<AddressResponse> response = addressController.searchAddress(request);

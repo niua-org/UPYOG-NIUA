@@ -9,10 +9,21 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
+import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
+import org.egov.user.domain.service.asset.MemberAssetService;
 import org.egov.user.domain.service.profile.ProfileService;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserSearchResponseContent;
+import org.egov.user.web.contract.asset.MemberAssetSyncRequest;
+import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarEkycMarkVerifiedRequest;
+import org.egov.user.web.contract.profile.AadhaarHofCheckRequest;
+import org.egov.user.web.contract.profile.AadhaarHofCheckResponse;
+import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
@@ -21,13 +32,20 @@ import org.egov.user.web.contract.profile.ProfileResponse;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.egov.tracer.model.CustomException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.egov.tracer.http.HttpUtils.isInterServiceCall;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -62,15 +80,28 @@ import java.util.stream.Collectors;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final MemberAssetService memberAssetService;
 
     /**
-     * Constructs the profile controller with the citizen profile orchestrator service.
+     * Constructs the profile controller with citizen profile and member asset services.
      *
      * @param profileService citizen profile domain service
+     * @param memberAssetService citizen member asset domain service
      */
     @Autowired
-    public ProfileController(ProfileService profileService) {
+    public ProfileController(ProfileService profileService,
+                             @Autowired(required = false) MemberAssetService memberAssetService) {
         this.profileService = profileService;
+        this.memberAssetService = memberAssetService;
+    }
+
+    /**
+     * Backward-compatible constructor for ProfileController without {@link MemberAssetService}.
+     *
+     * @param profileService service handling citizen profile lifecycle operations
+     */
+    public ProfileController(ProfileService profileService) {
+        this(profileService, null);
     }
 
     /**
@@ -96,7 +127,7 @@ public class ProfileController {
             request.unpackUserIfPresent();
         }
         log.info("[PROFILE-CONTROLLER] Received profile create request for mobile: {}, tenant: {}",
-                maskMobile(request != null ? request.getMobileNumber() : null),
+                MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getTenantId() : null);
 
         User user = profileService.createProfile(request);
@@ -125,7 +156,7 @@ public class ProfileController {
             request.unpackUserIfPresent();
         }
         log.info("[PROFILE-CONTROLLER] Received profile init request for mobile: {}, tenant: {}",
-                maskMobile(request != null ? request.getMobileNumber() : null),
+                MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getTenantId() : null);
 
         User user = profileService.initProfile(request);
@@ -168,18 +199,24 @@ public class ProfileController {
      *   <li>{@code ADDRESS}: Enriches response with active postal addresses of matched citizens</li>
      *   <li>{@code DOCUMENT}: Enriches response with active uploaded KYC and identity proof documents</li>
      * </ul>
+     * <p>
+     * Supports graceful degradation: if enrichment of an included section fails (such as address or document service
+     * encountering an error), the partial user profile response is returned along with diagnostic error details
+     * under {@code errors} and status {@code PARTIAL_SUCCESS}.
      *
      * @param request profile search request payload containing filter criteria and optional include sections
-     * @return response containing list of matched decrypted profiles
+     * @return response containing list of matched decrypted profiles and any partial enrichment errors
      */
     @Operation(
             summary = "Search Profile",
-            description = "Searches citizen profiles by UUID, tenant ID, or mobile number, with automated PII decryption for authorized consumers. " +
+            description = "Searches a citizen profile by UUID, tenant ID, or mobile number, with automated PII decryption for authorized consumers. " +
+                    "Only a single user profile can be searched at a time, using UUID (searching by internal userId/id is not supported). " +
                     "The optional 'include' parameter controls which entity sections are returned (allowed values: PROFILE, ADDRESS, DOCUMENT; default: [PROFILE]). " +
-                    "Specifying ADDRESS enriches the response with citizen address details, while DOCUMENT enriches with uploaded KYC document proofs."
+                    "Specifying ADDRESS enriches the response with citizen address details, while DOCUMENT enriches with uploaded KYC document proofs. " +
+                    "If enrichment of any included section fails, a partial response is returned with status PARTIAL_SUCCESS and diagnostic error details."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Profiles retrieved successfully",
+            @ApiResponse(responseCode = "200", description = "Profiles retrieved successfully (including partial success with enrichment errors)",
                     content = @Content(schema = @Schema(implementation = ProfileResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid search criteria or invalid include entity"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
@@ -188,19 +225,27 @@ public class ProfileController {
     public ResponseEntity<ProfileResponse> searchProfile(@RequestBody @Valid ProfileSearchRequest request) {
         log.info("[PROFILE-CONTROLLER] Received profile search request. tenant: {}, mobile: {}, include: {}",
                 request != null ? request.getTenantId() : null,
-                maskMobile(request != null ? request.getMobileNumber() : null),
+                MaskUtils.maskMobile(request != null ? request.getMobileNumber() : null),
                 request != null ? request.getInclude() : null);
 
+        if (request != null && request.getActive() == null) {
+            request.setActive(true);
+        }
+
         Set<ProfileIncludeEntity> normalizedIncludes = profileService.resolveIncludes(request != null ? request.getInclude() : null);
-        List<User> users = profileService.searchProfile(request, normalizedIncludes);
+        List<Error> enrichmentErrors = new ArrayList<>();
+        List<User> users = profileService.searchProfile(request, normalizedIncludes, enrichmentErrors);
 
         List<UserSearchResponseContent> contents = users != null
                 ? users.stream().map(u -> new UserSearchResponseContent(u, normalizedIncludes)).collect(Collectors.toList())
                 : Collections.emptyList();
 
+        String status = !CollectionUtils.isEmpty(enrichmentErrors) ? UserConstants.STATUS_PARTIAL_SUCCESS : UserConstants.STATUS_SUCCESS;
+
         ProfileResponse response = ProfileResponse.builder()
-                .responseInfo(ResponseInfo.builder().status(UserConstants.STATUS_SUCCESS).build())
+                .responseInfo(ResponseInfo.builder().status(status).build())
                 .user(contents)
+                .errors(!CollectionUtils.isEmpty(enrichmentErrors) ? enrichmentErrors : null)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -238,6 +283,199 @@ public class ProfileController {
         return buildSingleUserResponse(user);
     }
 
+    /**
+     * Verifies Aadhaar OTP and resolves citizen identity during Head of Family (HOF) member addition or verification.
+     * If the citizen profile exists, returns their full profile details including active familyId (isNewUser=false).
+     * If no citizen profile exists, auto-provisions a new verified citizen profile and returns their details (isNewUser=true).
+     *
+     * @param request Aadhaar citizen verification request containing referenceId, OTP, and optional Aadhaar/mobile
+     * @return response containing verified citizen profile details and isNewUser flag
+     */
+    @Operation(
+            summary = "Verify Aadhaar OTP and Resolve Citizen Profile",
+            description = "Verifies Aadhaar OTP via identity gateway. Returns full citizen demographics and active familyId. Auto-provisions user if not found."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Aadhaar OTP verified and citizen profile resolved",
+                    content = @Content(schema = @Schema(implementation = AadhaarCitizenVerifyResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid OTP, missing referenceId, or verification failed"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/aadhaar/_verify")
+    public ResponseEntity<AadhaarCitizenVerifyResponse> verifyAadhaarCitizen(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
+        log.info("[PROFILE-CONTROLLER] Received Aadhaar citizen verify request. refId: {}, aadhaar: {}",
+                request != null ? MaskUtils.maskIdentifier(request.getReferenceId()) : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        AadhaarCitizenVerifyResponse response = profileService.verifyAndResolveAadhaarCitizen(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Verifies Aadhaar OTP and links Aadhaar to the currently logged-in citizen's profile.
+     * Enforces strict validation that the mobile number registered with Aadhaar matches the logged-in mobile number.
+     * On successful verification, updates the citizen's profile in the database with verified status and e-KYC demographics.
+     *
+     * @param request Aadhaar citizen verification request containing referenceId, OTP, and RequestInfo
+     * @return response containing verified citizen profile details and identity verification status
+     */
+    @Operation(
+            summary = "Verify Logged-in Citizen Profile with Aadhaar",
+            description = "Verifies Aadhaar OTP for an authenticated citizen who logged in with mobile number. Validates that the Aadhaar-registered mobile matches the logged-in mobile before linking Aadhaar and updating profile in the database."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profile verified with Aadhaar and updated successfully",
+                    content = @Content(schema = @Schema(implementation = AadhaarCitizenVerifyResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Aadhaar mobile mismatch, invalid OTP, or verification failure"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    /**
+     * Inter-service endpoint invoked after requester-services-dx Aadhaar OTP verification to persist verified identity.
+     *
+     * @param request inter-service mark-verified payload
+     * @param headers HTTP headers used to validate inter-service origin
+     * @return empty OK response
+     */
+    @PostMapping("/aadhaar/_markVerifiedAfterEkyc")
+    public ResponseEntity<Void> markVerifiedAfterEkyc(@RequestBody @Valid AadhaarEkycMarkVerifiedRequest request,
+                                                      @RequestHeader HttpHeaders headers) {
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_INTER_SERVICE_REQUIRED);
+        }
+        profileService.markCitizenVerifiedAfterAadhaarEkyc(
+                request.getUserUuid(),
+                request.getAadhaarNumber(),
+                request.getTenantId(),
+                request.getRequestInfo());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /**
+     * Verifies a logged-in citizen profile with UIDAI Aadhaar via OTP authentication.
+     *
+     * @param request Aadhaar verification request payload
+     * @return HTTP response containing Aadhaar verification result and demographic details
+     */
+    @PostMapping("/aadhaar/_verifyProfile")
+    public ResponseEntity<AadhaarCitizenVerifyResponse> verifyProfileWithAadhaar(@RequestBody @Valid AadhaarCitizenVerifyRequest request) {
+        log.info("[PROFILE-CONTROLLER] Received profile Aadhaar verification request. refId: {}, aadhaar: {}",
+                request != null ? MaskUtils.maskIdentifier(request.getReferenceId()) : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        AadhaarCitizenVerifyResponse response = profileService.verifyLoggedInCitizenProfile(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Dedicated secure endpoint to look up a citizen by Aadhaar number.
+     * Access is restricted strictly to trusted internal microservices.
+     *
+     * @param request Aadhaar search request payload containing 12-digit Aadhaar number
+     * @param headers HTTP headers used to validate inter-service origin
+     * @return {@link ProfileResponse} containing the resolved citizen profile, or empty list if not found
+     */
+    @Operation(
+            summary = "Search Citizen by Aadhaar (Internal Services Only)",
+            description = "Dedicated secure endpoint to lookup a citizen profile by UIDAI Aadhaar number. Strictly restricted to trusted internal microservices."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Citizen profile resolved successfully",
+                    content = @Content(schema = @Schema(implementation = ProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid Aadhaar number or missing parameters"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context - inter-service call required"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/aadhaar/_search")
+    public ResponseEntity<ProfileResponse> searchByAadhaar(@RequestBody @Valid AadhaarSearchRequest request,
+                                                           @RequestHeader HttpHeaders headers) {
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_SEARCH_CITIZEN_BY_AADHAAR_RESTRICTED);
+        }
+        log.info("[PROFILE-CONTROLLER] Received dedicated Aadhaar citizen search request. tenant: {}, aadhaar: {}",
+                request != null ? request.getTenantId() : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        List<User> users = profileService.searchProfileByAadhaar(request);
+        List<UserSearchResponseContent> contents = users != null
+                ? users.stream().map(UserSearchResponseContent::new).collect(Collectors.toList())
+                : Collections.emptyList();
+
+        ProfileResponse response = ProfileResponse.builder()
+                .responseInfo(ResponseInfo.builder().status(UserConstants.STATUS_SUCCESS).build())
+                .user(contents)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Checks if a citizen with the given Aadhaar number exists in the system and is the active Head of Family (HoF).
+     *
+     * @param request Aadhaar HoF check request payload containing Aadhaar number and tenantId
+     * @return {@link AadhaarHofCheckResponse} stating whether the citizen exists and is confirmed HoF
+     */
+    @Operation(
+            summary = "Check Citizen Existence and Head of Family (HoF) Status by Aadhaar",
+            description = "Validates if the provided 12-digit Aadhaar number belongs to an existing citizen in the system and whether that citizen is the designated Head of Family (HoF) in upyog-family-service."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Citizen exists and is confirmed as Head of Family",
+                    content = @Content(schema = @Schema(implementation = AadhaarHofCheckResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid Aadhaar format, citizen not found, citizen not in family, or citizen not HoF"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/aadhaar/_checkHof")
+    public ResponseEntity<AadhaarHofCheckResponse> checkAadhaarHof(@RequestBody @Valid AadhaarHofCheckRequest request) {
+        log.info("[PROFILE-CONTROLLER] Received Aadhaar HoF check request. tenant: {}, aadhaar: {}",
+                request != null ? request.getTenantId() : null,
+                MaskUtils.maskAadhaar(request != null ? request.getAadhaarNumber() : null));
+
+        AadhaarHofCheckResponse response = profileService.checkAadhaarHof(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Inter-service endpoint to synchronize member profile demographics, attached documents, and asset declarations
+     * (properties, income, vehicles) into egov-user core registry.
+     *
+     * @param request member asset sync request payload
+     * @param headers HTTP headers used to validate inter-service origin
+     * @return response summarizing synchronization results for each member
+     */
+    @Operation(
+            summary = "Synchronize Member Assets and Demographics",
+            description = "Synchronizes member profile demographics (father/mother/spouse name, caste, specially-abled status), attached documents, and declarations (properties, income, vehicles) into egov-user core registry. Restricted to trusted internal services."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Member assets synchronized successfully",
+                    content = @Content(schema = @Schema(implementation = MemberAssetSyncResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context - inter-service call required"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/_sync-member-assets")
+    public ResponseEntity<MemberAssetSyncResponse> syncMemberAssets(@RequestBody @Valid MemberAssetSyncRequest request,
+                                                                   @RequestHeader HttpHeaders headers) {
+        // Enforce inter-service access guard: reject external ingress calls forwarded through API gateway
+        if (!isInterServiceCall(headers)) {
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, UserConstants.MSG_INTER_SERVICE_REQUIRED);
+        }
+        log.info("[PROFILE-CONTROLLER] Received member asset sync request with {} member(s)",
+                request != null ? request.getNormalizedMembers().size() : 0);
+        if (memberAssetService == null) {
+            throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE, UserConstants.MSG_SERVICE_UNAVAILABLE_MEMBER_ASSET);
+        }
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Builds a standardized single-user {@link ProfileResponse} wrapper for internal service search endpoints.
+     *
+     * @param user domain user entity (may be null)
+     * @return HTTP 200 response enclosing the user search response content
+     */
     private ResponseEntity<ProfileResponse> buildSingleUserResponse(User user) {
         List<UserSearchResponseContent> contents = user != null
                 ? Collections.singletonList(new UserSearchResponseContent(user))
@@ -249,10 +487,5 @@ public class ProfileController {
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    private String maskMobile(String mobile) {
-        if (mobile == null || mobile.length() < 4) return "****";
-        return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
     }
 }

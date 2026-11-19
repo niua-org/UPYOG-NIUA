@@ -1,6 +1,5 @@
 package org.egov.user.web.contract;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -36,7 +35,6 @@ public class AddressRequest {
 
     @Schema(description = "Citizen UUID associated with this address", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
     @JsonProperty("uuid")
-    @JsonAlias({"userUuid", "user_uuid"})
     private String uuid;
 
     @Schema(description = "Unique address record ID (required for update/delete)", example = "addr-9876-uuid")

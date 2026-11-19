@@ -17,6 +17,9 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.model.asset.UserIncome;
+import org.egov.user.domain.model.asset.UserProperty;
+import org.egov.user.domain.model.asset.UserVehicle;
 
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 
@@ -70,6 +73,18 @@ public class UserSearchResponseContent {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<UserDocument> documents;
 
+    @JsonProperty("properties")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<UserProperty> properties;
+
+    @JsonProperty("income")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private UserIncome income;
+
+    @JsonProperty("vehicles")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<UserVehicle> vehicles;
+
     private Boolean active;
     private String locale;
     private UserType type;
@@ -90,6 +105,8 @@ public class UserSearchResponseContent {
     private String fatherName;
     private String motherName;
     private String spouseName;
+    private String caste;
+    private Boolean isSpeciallyAbled;
     private Boolean isIdentityVerified;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
@@ -102,6 +119,7 @@ public class UserSearchResponseContent {
 
     private Integer edittedCount;
     private String lastLoginMethod;
+    private String familyId;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date createdDate;
@@ -112,16 +130,6 @@ public class UserSearchResponseContent {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private Date pwdExpiryDate;
 
-    /**
-     * Legacy constructor for core search endpoints ({@code /_search}, {@code /v1/_search}, {@code /users/v2/_search}).
-     * <p>
-     * Populates core identity, audit, and demographic profile fields.
-     * Crucially, {@code addresses} and {@code documents} collections are <b>NOT</b> populated and remain {@code null}
-     * to preserve contract compatibility and prevent PII exposure for legacy and v2 callers
-     * (e.g. PT, TL, PGR, HRMS, and UI).
-     *
-     * @param user the domain {@link User} entity to copy fields from
-     */
     /**
      * Legacy constructor used by existing user search callers (e.g. {@code /_search},
      * {@code /v1/_search}, and {@code /users/v2/_search} consumed by PT, TL, PGR, and HRMS).
@@ -216,12 +224,15 @@ public class UserSearchResponseContent {
             this.fatherName = user.getFatherName();
             this.motherName = user.getMotherName();
             this.spouseName = user.getSpouseName();
+            this.caste = user.getCaste();
+            this.isSpeciallyAbled = user.getIsSpeciallyAbled();
             this.isIdentityVerified = user.getIsIdentityVerified();
             this.identityVerifiedDate = user.getIdentityVerifiedDate();
             this.identityVerifiedSource = user.getIdentityVerifiedSource();
             this.lastResyncDate = user.getLastResyncDate();
             this.edittedCount = user.getEdittedCount();
             this.lastLoginMethod = user.getLastLoginMethod();
+            this.familyId = user.getFamilyId();
         }
 
         if (includes != null && includes.contains(ProfileIncludeEntity.ADDRESS)) {
@@ -231,8 +242,25 @@ public class UserSearchResponseContent {
         if (includes != null && includes.contains(ProfileIncludeEntity.DOCUMENT)) {
             this.documents = user.getDocuments();
         }
+
+        if (includes != null && includes.contains(ProfileIncludeEntity.PROPERTY)) {
+            this.properties = user.getProperties();
+        }
+
+        if (includes != null && includes.contains(ProfileIncludeEntity.INCOME)) {
+            this.income = user.getIncome();
+        }
+
+        if (includes != null && includes.contains(ProfileIncludeEntity.VEHICLE)) {
+            this.vehicles = user.getVehicles();
+        }
     }
 
+    /**
+     * Extracts and maps correspondence address attributes from domain user to response fields.
+     *
+     * @param user source domain user
+     */
     private void mapCorrespondenceAddress(User user) {
         if (user.getCorrespondenceAddress() != null) {
             this.correspondenceAddress = user.getCorrespondenceAddress().getAddress();
@@ -241,6 +269,11 @@ public class UserSearchResponseContent {
         }
     }
 
+    /**
+     * Extracts and maps permanent address attributes from domain user to response fields.
+     *
+     * @param user source domain user
+     */
     private void mapPermanentAddress(User user) {
         if (user.getPermanentAddress() != null) {
             this.permanentAddress = user.getPermanentAddress().getAddress();
@@ -249,7 +282,12 @@ public class UserSearchResponseContent {
         }
     }
 
-
+    /**
+     * Converts domain roles collection into contract {@link RoleRequest} DTOs.
+     *
+     * @param roleEntities set of domain role entities
+     * @return non-null set of role contract objects
+     */
     private Set<RoleRequest> convertDomainRolesToContract(Set<Role> roleEntities) {
         if (roleEntities == null) return new HashSet<>();
         return roleEntities.stream().map(RoleRequest::new).collect(Collectors.toSet());
@@ -322,6 +360,7 @@ public class UserSearchResponseContent {
         user.setLastResyncDate(this.lastResyncDate);
         user.setEdittedCount(this.edittedCount);
         user.setLastLoginMethod(this.lastLoginMethod);
+        user.setFamilyId(this.familyId);
  
         // Address mappings
         if (this.permanentAddress != null || this.permanentCity != null || this.permanentPinCode != null) {
@@ -360,5 +399,32 @@ public class UserSearchResponseContent {
         }
 
         return user;
+    }
+
+    /**
+     * Gets the alternate mobile number (camelCase getter for JSON serialization).
+     *
+     * @return alternate mobile number
+     */
+    public String getAlternateMobileNumber() {
+        return this.alternatemobilenumber;
+    }
+
+    /**
+     * Gets the guardian name.
+     *
+     * @return guardian name
+     */
+    public String getGuardian() {
+        return this.fatherOrHusbandName;
+    }
+
+    /**
+     * Gets the guardian relation string.
+     *
+     * @return guardian relation string
+     */
+    public String getGuardianRelation() {
+        return this.relationship != null ? this.relationship.name() : null;
     }
 }

@@ -13,6 +13,7 @@ import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.OtpRepository;
 import org.egov.user.persistence.repository.UserRepository;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.Otp;
 import org.egov.user.web.contract.OtpValidateRequest;
 import org.egov.user.web.contract.multiauth.AuthType;
@@ -104,13 +105,13 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
             return null;
         }
         log.info("[MOBILE-AUTH-STRATEGY] Selecting primary citizen user for mobile: {} from {} candidates",
-                maskMobile(mobileNumber), matchedUsers.size());
+                MaskUtils.maskMobile(mobileNumber), matchedUsers.size());
 
         // 1. Prioritize active user whose username matches the login mobile number
         for (User u : matchedUsers) {
             if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && !Boolean.FALSE.equals(u.getActive())) {
                 log.info("[MOBILE-AUTH-STRATEGY] Selected primary citizen user with matching username: {} (UUID: {})",
-                        u.getUsername(), u.getUuid());
+                        MaskUtils.maskIdentifier(u.getUsername()), u.getUuid());
                 return u;
             }
         }
@@ -119,7 +120,7 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         for (User u : matchedUsers) {
             if (isUsernameMatchingMobile(u.getUsername(), mobileNumber) && Boolean.FALSE.equals(u.getActive())) {
                 log.error("[MOBILE-AUTH-STRATEGY] Primary citizen profile (username={}) for mobile {} is inactive",
-                        u.getUsername(), maskMobile(mobileNumber));
+                        MaskUtils.maskIdentifier(u.getUsername()), MaskUtils.maskMobile(mobileNumber));
                 throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
             }
         }
@@ -128,12 +129,12 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         for (User u : matchedUsers) {
             if (!Boolean.FALSE.equals(u.getActive())) {
                 log.warn("[MOBILE-AUTH-STRATEGY] No candidate has username matching mobile {}. Falling back to active candidate: {} (UUID: {})",
-                        maskMobile(mobileNumber), u.getUsername(), u.getUuid());
+                        MaskUtils.maskMobile(mobileNumber), MaskUtils.maskIdentifier(u.getUsername()), u.getUuid());
                 return u;
             }
         }
 
-        log.error("[MOBILE-AUTH-STRATEGY] All matching citizen accounts for mobile {} are inactive", maskMobile(mobileNumber));
+        log.error("[MOBILE-AUTH-STRATEGY] All matching citizen accounts for mobile {} are inactive", MaskUtils.maskMobile(mobileNumber));
         throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
     }
 
@@ -227,11 +228,11 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
             throw new CustomException(UserConstants.ERROR_INVALID_MOBILE_NUMBER, UserConstants.MSG_MOBILE_AUTH_MOBILE_REQUIRED);
         }
         if (StringUtils.isBlank(otp)) {
-            log.error("[MOBILE-AUTH-STRATEGY] Validation failed: OTP is blank for mobile: {}", maskMobile(mobileNumber));
+            log.error("[MOBILE-AUTH-STRATEGY] Validation failed: OTP is blank for mobile: {}", MaskUtils.maskMobile(mobileNumber));
             throw new CustomException(UserConstants.ERROR_INVALID_OTP, UserConstants.MSG_LOGIN_OTP_REQUIRED);
         }
 
-        log.info("[MOBILE-AUTH-STRATEGY] Processing login for mobile: {}, tenant: {}", maskMobile(mobileNumber), tenantId);
+        log.info("[MOBILE-AUTH-STRATEGY] Processing login for mobile: {}, tenant: {}", MaskUtils.maskMobile(mobileNumber), tenantId);
 
         // 1. Validate OTP
         validateOtp(mobileNumber, otp, tenantId, request);
@@ -240,13 +241,13 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         String stateTenant = resolveStateTenant(tenantId);
 
         // 2a. Query all citizen accounts associated with this verified mobile number
-        log.debug("[MOBILE-AUTH-STRATEGY] Querying citizen profiles for mobile: {} in tenant: {}", maskMobile(mobileNumber), stateTenant);
+        log.debug("[MOBILE-AUTH-STRATEGY] Querying citizen profiles for mobile: {} in tenant: {}", MaskUtils.maskMobile(mobileNumber), stateTenant);
         List<User> matchedUsers = findUsersByMobile(mobileNumber, stateTenant, request.getRequestInfo());
 
         // 2b. If client specified a selected user UUID, verify that it belongs to the matched accounts for this mobile
         if (StringUtils.isNotBlank(request.getSelectedUserUuid())) {
             log.info("[MOBILE-AUTH-STRATEGY] Resolving selected user UUID: {} for mobile: {}",
-                    request.getSelectedUserUuid(), maskMobile(mobileNumber));
+                    request.getSelectedUserUuid(), MaskUtils.maskMobile(mobileNumber));
             User selectedUser = matchedUsers.stream()
                     .filter(u -> request.getSelectedUserUuid().equals(u.getUuid()))
                     .findFirst()
@@ -272,12 +273,12 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() > 1) {
             boolean allInactive = matchedUsers.stream().allMatch(u -> !Boolean.TRUE.equals(u.getActive()));
             if (allInactive) {
-                log.error("[MOBILE-AUTH-STRATEGY] All matching citizen accounts for mobile {} are inactive", maskMobile(mobileNumber));
+                log.error("[MOBILE-AUTH-STRATEGY] All matching citizen accounts for mobile {} are inactive", MaskUtils.maskMobile(mobileNumber));
                 throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
             }
             if (isMultiAccountSelectionEnabled()) {
                 log.info("[MOBILE-AUTH-STRATEGY] Found {} citizen profiles linked to mobile: {}. Returning list for selection.",
-                        matchedUsers.size(), maskMobile(mobileNumber));
+                        matchedUsers.size(), MaskUtils.maskMobile(mobileNumber));
                 return AuthenticatedUserResult.builder()
                         .multipleUsersFound(true)
                         .matchedUsers(matchedUsers)
@@ -285,7 +286,7 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                         .build();
             } else {
                 log.info("[MOBILE-AUTH-STRATEGY] Found {} citizen profiles linked to mobile: {}. Multi-account selection disabled, returning single user.",
-                        matchedUsers.size(), maskMobile(mobileNumber));
+                        matchedUsers.size(), MaskUtils.maskMobile(mobileNumber));
                 User user = selectPrimaryCitizenUser(matchedUsers, mobileNumber);
                 user.setLastLoginMethod(AuthType.MOBILE_NUMBER.name());
                 return AuthenticatedUserResult.builder()
@@ -300,11 +301,11 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() == 1) {
             User user = matchedUsers.get(0);
             if (!Boolean.TRUE.equals(user.getActive())) {
-                log.error("[MOBILE-AUTH-STRATEGY] Citizen profile ID {} for mobile {} is inactive", user.getId(), maskMobile(mobileNumber));
+                log.error("[MOBILE-AUTH-STRATEGY] Citizen profile ID {} for mobile {} is inactive", user.getId(), MaskUtils.maskMobile(mobileNumber));
                 throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
             }
             log.info("[MOBILE-AUTH-STRATEGY] Matched single citizen ID: {}, UUID: {} for mobile: {}",
-                    user.getId(), user.getUuid(), maskMobile(mobileNumber));
+                    user.getId(), user.getUuid(), MaskUtils.maskMobile(mobileNumber));
             user.setLastLoginMethod(AuthType.MOBILE_NUMBER.name());
             return AuthenticatedUserResult.builder()
                     .user(user)
@@ -315,7 +316,7 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
 
         // 2e. Citizen account not found -> Auto-provision lightweight citizen profile
         log.info("[MOBILE-AUTH-STRATEGY] Citizen account not found for mobile: {}. Auto-provisioning lightweight profile.",
-                maskMobile(mobileNumber));
+                MaskUtils.maskMobile(mobileNumber));
         String name = StringUtils.isNotBlank(request.getName()) ? request.getName().trim() : "Citizen";
 
         String uniqueUsername = !userRepository.isUserPresent(mobileNumber, stateTenant, UserType.CITIZEN)
@@ -360,19 +361,19 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
      * @throws CustomException if OTP verification is rejected or expired
      */
     private void validateOtp(String mobileNumber, String otp, String tenantId, LoginV2Request request) {
-        log.debug("[MOBILE-AUTH-STRATEGY] Validating OTP (length: {}) for mobile: {}", otp.length(), maskMobile(mobileNumber));
+        log.debug("[MOBILE-AUTH-STRATEGY] Validating OTP (length: {}) for mobile: {}", otp.length(), MaskUtils.maskMobile(mobileNumber));
 
         if (StringUtils.isNotBlank(mobileNumber)) {
             int currentAttempts = invalidOtpAttempts.getOrDefault(mobileNumber, 0);
             if (currentAttempts >= getMaxOtpAttempts()) {
                 log.error("[MOBILE-AUTH-STRATEGY] Locked: mobile {} has exceeded maximum allowed OTP attempts ({})",
-                        maskMobile(mobileNumber), getMaxOtpAttempts());
+                        MaskUtils.maskMobile(mobileNumber), getMaxOtpAttempts());
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
             }
         }
 
         if (isFixedOTPEnabled() && StringUtils.isNotBlank(getFixedOTPPassword()) && getFixedOTPPassword().equals(otp)) {
-            log.info("[MOBILE-AUTH-STRATEGY] Fixed OTP matched successfully for mobile: {}", maskMobile(mobileNumber));
+            log.info("[MOBILE-AUTH-STRATEGY] Fixed OTP matched successfully for mobile: {}", MaskUtils.maskMobile(mobileNumber));
             if (StringUtils.isNotBlank(mobileNumber)) {
                 invalidOtpAttempts.remove(mobileNumber);
             }
@@ -396,18 +397,18 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
                 int attempts = invalidOtpAttempts.compute(mobileNumber, (k, v) -> (v == null ? 1 : v + 1));
                 if (attempts >= getMaxOtpAttempts()) {
                     log.error("[MOBILE-AUTH-STRATEGY] Mobile {} reached max invalid OTP attempts ({}). Invalidation triggered.",
-                            maskMobile(mobileNumber), getMaxOtpAttempts());
+                            MaskUtils.maskMobile(mobileNumber), getMaxOtpAttempts());
                     throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
                 }
             }
-            log.error("[MOBILE-AUTH-STRATEGY] OTP verification rejected by egov-otp for mobile: {}", maskMobile(mobileNumber));
-            throw new CustomException(UserConstants.ERROR_INVALID_OTP, "Invalid or expired OTP entered for mobile: " + maskMobile(mobileNumber));
+            log.error("[MOBILE-AUTH-STRATEGY] OTP verification rejected by egov-otp for mobile: {}", MaskUtils.maskMobile(mobileNumber));
+            throw new CustomException(UserConstants.ERROR_INVALID_OTP, "Invalid or expired OTP entered for mobile: " + MaskUtils.maskMobile(mobileNumber));
         }
 
         if (StringUtils.isNotBlank(mobileNumber)) {
             invalidOtpAttempts.remove(mobileNumber);
         }
-        log.info("[MOBILE-AUTH-STRATEGY] OTP verified successfully via egov-otp for mobile: {}", maskMobile(mobileNumber));
+        log.info("[MOBILE-AUTH-STRATEGY] OTP verified successfully via egov-otp for mobile: {}", MaskUtils.maskMobile(mobileNumber));
     }
 
     /**
@@ -531,17 +532,4 @@ public class MobileAuthStrategy implements MultiAuthStrategy {
         return tenantId;
     }
 
-    /**
-     * Masks mobile number for secure log masking.
-     *
-     * @param mobile 10-digit mobile number
-     * @return masked mobile string
-     */
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) return "N/A";
-        if (mobile.length() >= 6) {
-            return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-        }
-        return "******";
-    }
 }

@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    options { timeout(time: 10, unit: 'MINUTES') }
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'uat', 'prod'], description: 'Target environment')
+        string(name: 'SERVICE', defaultValue: 'ALL', description: 'Service name or ALL')
+        string(name: 'EXPECTED_VERSION', defaultValue: '', description: 'Optional build/version string')
+    }
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+        stage('Wait for rollout') {
+            steps {
+                echo 'Ensure deploy job completed; optional health gate via upstream build step.'
+            }
+        }
+        stage('Smoke Tests') {
+            steps {
+                withCredentials([
+                    string(credentialsId: "smoke-base-url-${params.ENVIRONMENT}", variable: 'BASE_URL'),
+                    string(credentialsId: 'smoke-tenant-id', variable: 'SMOKE_TENANT_ID'),
+                    usernamePassword(credentialsId: 'smoke-oauth-userpass', usernameVariable: 'SMOKE_USER', passwordVariable: 'SMOKE_PASSWORD')
+                ]) {
+                    sh '''
+                        export ENVIRONMENT=${ENVIRONMENT}
+                        export SERVICE=${SERVICE}
+                        export EXPECTED_VERSION=${EXPECTED_VERSION}
+                        mvn -f business-services/core-smoke-tests/pom.xml -Psmoke verify \
+                          -Dservice=${SERVICE} \
+                          -Denvironment=${ENVIRONMENT} \
+                          -Dbase.url=${BASE_URL} \
+                          -Dsmoke.tenant.id=${SMOKE_TENANT_ID} \
+                          -Dsmoke.user=${SMOKE_USER} \
+                          -Dsmoke.password=${SMOKE_PASSWORD} \
+                          -Dexpected.version=${EXPECTED_VERSION}
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        always {
+            junit 'business-services/core-smoke-tests/target/surefire-reports/*.xml'
+        }
+        failure {
+            echo 'Notify team channel and trigger helm rollback for dev/uat per service pipeline policy.'
+        }
+    }
+}

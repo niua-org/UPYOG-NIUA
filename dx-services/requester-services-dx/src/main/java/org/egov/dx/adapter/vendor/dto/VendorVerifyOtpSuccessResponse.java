@@ -1,6 +1,5 @@
 package org.egov.dx.adapter.vendor.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,7 +42,6 @@ public class VendorVerifyOtpSuccessResponse {
      * Unique vendor transaction ID associated with this verification.
      */
     @JsonProperty("transaction_id")
-    @JsonAlias({"transactionId", "txnId"})
     private String transactionId;
 
     /**
@@ -67,21 +65,18 @@ public class VendorVerifyOtpSuccessResponse {
          * Gateway entity descriptor.
          */
         @JsonProperty("@entity")
-        @JsonAlias("entity")
         private String entity;
 
         /**
          * Reference ID correlating this verification to the OTP session.
          */
         @JsonProperty("reference_id")
-        @JsonAlias("referenceId")
         private String referenceId;
 
         /**
          * Masked Aadhaar number (e.g. "XXXXXXXX1234").
          */
         @JsonProperty("aadhaar_number")
-        @JsonAlias("aadhaarNumber")
         private String aadhaarNumber;
 
         /**
@@ -118,42 +113,36 @@ public class VendorVerifyOtpSuccessResponse {
          * Care-of / Guardian details (e.g., "S/O: John Doe", "W/O: ...").
          */
         @JsonProperty("care_of")
-        @JsonAlias("careOf")
         private String careOf;
 
         /**
          * Complete concatenated address string.
          */
         @JsonProperty("full_address")
-        @JsonAlias("fullAddress")
         private String fullAddress;
 
         /**
          * Date of birth alternative format provided by gateway.
          */
         @JsonProperty("date_of_birth")
-        @JsonAlias("dateOfBirth")
         private String dateOfBirth;
 
         /**
          * SHA-256 hash of the citizen's registered email address (if available in UIDAI).
          */
         @JsonProperty("email_hash")
-        @JsonAlias("emailHash")
         private String emailHash;
 
         /**
          * Year of birth string (e.g. "1990").
          */
         @JsonProperty("year_of_birth")
-        @JsonAlias("yearOfBirth")
         private String yearOfBirth;
 
         /**
          * SHA-256 hash of the citizen's registered mobile number.
          */
         @JsonProperty("mobile_hash")
-        @JsonAlias("mobileHash")
         private String mobileHash;
 
         /**
@@ -166,7 +155,6 @@ public class VendorVerifyOtpSuccessResponse {
          * Security share code generated for offline e-KYC verification.
          */
         @JsonProperty("share_code")
-        @JsonAlias("shareCode")
         private String shareCode;
 
         /**
@@ -220,7 +208,6 @@ public class VendorVerifyOtpSuccessResponse {
              * Post office name.
              */
             @JsonProperty("post_office")
-            @JsonAlias("postOffice")
             private String postOffice;
 
             /**

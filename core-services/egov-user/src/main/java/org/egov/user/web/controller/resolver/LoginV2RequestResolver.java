@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Request;
+import org.egov.user.util.MaskUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -54,8 +55,8 @@ public class LoginV2RequestResolver {
         log.info("[LOGIN-V2-RESOLVER] Resolved request: authType={}, tenantId={}, mobile={}, aadhaar={}, familyId={}",
                 target.getAuthType(),
                 target.getTenantId(),
-                maskMobile(target.getMobileNumber()),
-                maskAadhaar(target.getAadhaarNumber()),
+                MaskUtils.maskMobile(target.getMobileNumber(), "N/A"),
+                MaskUtils.maskAadhaar(target.getAadhaarNumber(), "N/A"),
                 target.getFamilyId());
 
         return target;
@@ -135,34 +136,5 @@ public class LoginV2RequestResolver {
         } else if (StringUtils.isBlank(target.getSelectedUserUuid()) && request.getParameter("uuid") != null) {
             target.setSelectedUserUuid(request.getParameter("uuid").trim());
         }
-    }
-
-    /**
-     * Masks a mobile number showing only the first two and last two digits.
-     *
-     * @param mobile the raw mobile number
-     * @return masked mobile string
-     */
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) return "N/A";
-        if (mobile.length() >= 6) {
-            return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-        }
-        return "******";
-    }
-
-    /**
-     * Masks an Aadhaar number showing only the last four digits.
-     *
-     * @param aadhaar the raw Aadhaar number
-     * @return masked Aadhaar string
-     */
-    private String maskAadhaar(String aadhaar) {
-        if (StringUtils.isBlank(aadhaar)) return "N/A";
-        String clean = aadhaar.trim().replaceAll("\\s+", "");
-        if (clean.length() == 12) {
-            return "XXXXXXXX" + clean.substring(8);
-        }
-        return "XXXXXXXX" + (clean.length() >= 4 ? clean.substring(clean.length() - 4) : "****");
     }
 }

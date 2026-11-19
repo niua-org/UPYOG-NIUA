@@ -243,9 +243,9 @@ public class IdentityVerificationProtectionTest {
                 .build();
 
         User domainCreateV2 = requestV2.toDomain(1L, "uuid", true);
-        assertFalse(domainCreateV2.getIsIdentityVerified(), "toDomain(true) in V2 must set isIdentityVerified=false");
-        assertNull(domainCreateV2.getIdentityVerifiedDate(), "toDomain(true) in V2 must nullify identityVerifiedDate");
-        assertNull(domainCreateV2.getIdentityVerifiedSource(), "toDomain(true) in V2 must nullify identityVerifiedSource");
+        assertFalse(domainCreateV2.getIsIdentityVerified(), "V2 create ignores payload identity flags");
+        assertNull(domainCreateV2.getIdentityVerifiedDate());
+        assertNull(domainCreateV2.getIdentityVerifiedSource());
 
         User domainUpdateV2 = requestV2.toDomain(1L, "uuid", false);
         assertNull(domainUpdateV2.getIsIdentityVerified(), "toDomain(false) in V2 must not accept isIdentityVerified");

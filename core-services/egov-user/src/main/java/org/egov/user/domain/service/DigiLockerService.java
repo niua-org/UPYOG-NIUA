@@ -1,6 +1,7 @@
 package org.egov.user.domain.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.config.UserConfiguration;
@@ -9,6 +10,7 @@ import org.egov.user.domain.model.TokenRequest;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,18 +77,24 @@ public class DigiLockerService {
     }
 
     private String getRequesterServiceHost() {
-        return userConfiguration != null && userConfiguration.getRequesterServiceHost() != null
-                ? userConfiguration.getRequesterServiceHost() : "";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceHost())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.service.host is not configured");
+        }
+        return userConfiguration.getRequesterServiceHost();
     }
 
     private String getRequesterServiceEndpoint() {
-        return userConfiguration != null && userConfiguration.getRequesterServiceEndpoint() != null
-                ? userConfiguration.getRequesterServiceEndpoint() : "";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "requester.service.endpoint is not configured");
+        }
+        return userConfiguration.getRequesterServiceEndpoint();
     }
 
     private int getDefaultSearchSize() {
-        return userConfiguration != null && userConfiguration.getDefaultSearchSize() != null
-                ? userConfiguration.getDefaultSearchSize() : 10;
+        if (userConfiguration == null || userConfiguration.getDefaultSearchSize() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "egov.user.search.default.size is not configured");
+        }
+        return userConfiguration.getDefaultSearchSize();
     }
 
     /**
@@ -125,8 +133,8 @@ public class DigiLockerService {
         JSONObject jsonResponse = new JSONObject(validationApiResponseBody);
         JSONObject userRes = jsonResponse.getJSONObject("UserRes");
         String validationMobileNumber = userRes.getString("mobile");
-        log.info("validationMobileNumber" + validationMobileNumber);
-        log.info("user Mobile Number is" + (createUserRequest.getUser().getMobileNumber()));
+        log.info("validationMobileNumber: {}", MaskUtils.maskMobile(validationMobileNumber));
+        log.info("user Mobile Number is: {}", createUserRequest != null && createUserRequest.getUser() != null ? MaskUtils.maskMobile(createUserRequest.getUser().getMobileNumber()) : null);
 
         if (validationMobileNumber.equalsIgnoreCase(createUserRequest.getUser().getMobileNumber())) {
             log.info("entering IF condition");
@@ -146,7 +154,7 @@ public class DigiLockerService {
 
                 User existingUser = userContracts.get(0).toUser();
                 if (!Boolean.TRUE.equals(existingUser.getActive())) {
-                    log.error("[DIGILOCKER] Account is inactive for user: {}", existingUser.getUsername());
+                    log.error("[DIGILOCKER] Account is inactive for user: {}", MaskUtils.maskIdentifier(existingUser.getUsername()));
                     throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
                 }
                 User user = new User().toUser(existingUser);
@@ -176,7 +184,7 @@ public class DigiLockerService {
     private UserSearchResponse searchUsers(UserSearchRequest request, HttpHeaders headers) {
 
         UserSearchCriteria searchCriteria = request.toDomain();
-        log.info("searchCriteria_in controller" + searchCriteria);
+        log.info("searchCriteria in controller for tenant: {}, mobile: {}", searchCriteria.getTenantId(), MaskUtils.maskMobile(searchCriteria.getMobileNumber()));
         log.info("headers" + headers);
 
         if (!isInterServiceCall(headers)) {

@@ -2,9 +2,12 @@ package org.egov.user.domain.service;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
+import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserRepository;
 import org.egov.user.web.contract.CreateUserRequest;
 import org.egov.user.web.contract.UserRequest;
@@ -23,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,59 +65,8 @@ public class UpdateWithoutOtpValidationSecurityTest {
     }
 
     @Test
-    @DisplayName("Should reject updateWithoutOtpValidation when caller is CITIZEN in UserService")
-    public void testUpdateWithoutOtpValidation_WhenCallerIsCitizen_ThrowsUnauthorized() {
-        RequestInfo requestInfo = RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder()
-                        .id(101L)
-                        .uuid("citizen-uuid")
-                        .type("CITIZEN")
-                        .build())
-                .build();
-
-        User user = User.builder()
-                .id(101L)
-                .uuid("citizen-uuid")
-                .type(UserType.CITIZEN)
-                .build();
-
-        CustomException ex = assertThrows(CustomException.class, () ->
-                userService.updateWithoutOtpValidation(user, requestInfo)
-        );
-
-        assertEquals("UNAUTHORIZED_ACCESS", ex.getCode());
-        assertTrue(ex.getMessage().contains("CITIZEN"));
-    }
-
-    @Test
-    @DisplayName("Should reject /users/_updatenovalidate controller endpoint when caller is CITIZEN")
-    public void testController_WhenCallerIsCitizen_ThrowsUnauthorized() {
-        RequestInfo requestInfo = RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder()
-                        .id(101L)
-                        .uuid("citizen-uuid")
-                        .type("CITIZEN")
-                        .build())
-                .build();
-
-        UserRequest userRequest = UserRequest.builder()
-                .id(101L)
-                .uuid("citizen-uuid")
-                .type(UserType.EMPLOYEE)
-                .build();
-
-        CreateUserRequest request = new CreateUserRequest(requestInfo, userRequest, null);
-
-        CustomException ex = assertThrows(CustomException.class, () ->
-                userController.updateUserWithoutValidation(request, new HttpHeaders())
-        );
-
-        assertEquals("UNAUTHORIZED_ACCESS", ex.getCode());
-    }
-
-    @Test
-    @DisplayName("Should reject /users/_updatenovalidate controller endpoint when target user type is CITIZEN")
-    public void testController_WhenTargetUserIsCitizen_ThrowsInvalidUserType() {
+    @DisplayName("Should allow updateWithoutOtpValidation when target user is CITIZEN, matching createnovalidate behavior")
+    public void testUpdateWithoutOtpValidation_AllowsCitizenTargetUser() {
         RequestInfo requestInfo = RequestInfo.builder()
                 .userInfo(org.egov.common.contract.request.User.builder()
                         .id(501L)
@@ -122,18 +75,108 @@ public class UpdateWithoutOtpValidationSecurityTest {
                         .build())
                 .build();
 
-        UserRequest userRequest = UserRequest.builder()
+        User existingDbUser = User.builder()
                 .id(101L)
                 .uuid("citizen-uuid")
+                .username("9876543210")
                 .type(UserType.CITIZEN)
+                .tenantId("pg")
+                .password("encoded-pwd")
+                .roles(Collections.singleton(Role.getCitizenRole()))
                 .build();
 
-        CreateUserRequest request = new CreateUserRequest(requestInfo, userRequest, null);
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingDbUser));
+        when(encryptionDecryptionUtil.encryptObject(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User updatePayload = User.builder()
+                .id(101L)
+                .uuid("citizen-uuid")
+                .name("Updated Citizen")
+                .type(UserType.CITIZEN)
+                .tenantId("pg")
+                .roles(Collections.singleton(Role.getCitizenRole()))
+                .build();
+
+        User result = userService.updateWithoutOtpValidation(updatePayload, requestInfo);
+
+        assertNotNull(result);
+        verify(userRepository, times(1)).update(any(User.class), any(User.class), anyLong(), nullable(String.class));
+    }
+
+    @Test
+    @DisplayName("Should allow updateWithoutOtpValidation when caller is CITIZEN")
+    public void testUpdateWithoutOtpValidation_AllowsCitizenCaller() {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(org.egov.common.contract.request.User.builder()
+                        .id(101L)
+                        .uuid("citizen-uuid")
+                        .type("CITIZEN")
+                        .build())
+                .build();
+
+        User existingDbUser = User.builder()
+                .id(101L)
+                .uuid("citizen-uuid")
+                .username("9876543210")
+                .type(UserType.CITIZEN)
+                .tenantId("pg")
+                .password("encoded-pwd")
+                .roles(Collections.singleton(Role.getCitizenRole()))
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingDbUser));
+        when(encryptionDecryptionUtil.encryptObject(any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User updatePayload = User.builder()
+                .id(101L)
+                .uuid("citizen-uuid")
+                .name("Updated Citizen By Self")
+                .type(UserType.CITIZEN)
+                .tenantId("pg")
+                .roles(Collections.singleton(Role.getCitizenRole()))
+                .build();
+
+        User result = userService.updateWithoutOtpValidation(updatePayload, requestInfo);
+
+        assertNotNull(result);
+        verify(userRepository, times(1)).update(any(User.class), any(User.class), anyLong(), nullable(String.class));
+    }
+
+    @Test
+    @DisplayName("Should reject updateWithoutOtpValidation when provided ID mismatches DB ID")
+    public void testUpdateWithoutOtpValidation_WhenIdMismatch_ThrowsDataMismatch() {
+        RequestInfo requestInfo = RequestInfo.builder()
+                .userInfo(org.egov.common.contract.request.User.builder()
+                        .id(501L)
+                        .uuid("updater-uuid")
+                        .type("EMPLOYEE")
+                        .build())
+                .build();
+
+        User existingDbUser = User.builder()
+                .id(101L)
+                .uuid("target-uuid")
+                .username("9876543210")
+                .type(UserType.CITIZEN)
+                .tenantId("pg")
+                .roles(Collections.singleton(Role.getCitizenRole()))
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class))).thenReturn(Collections.singletonList(existingDbUser));
+
+        User updatePayload = User.builder()
+                .id(999L) // Mismatched ID
+                .uuid("target-uuid")
+                .type(UserType.CITIZEN)
+                .tenantId("pg")
+                .build();
 
         CustomException ex = assertThrows(CustomException.class, () ->
-                userController.updateUserWithoutValidation(request, new HttpHeaders())
+                userService.updateWithoutOtpValidation(updatePayload, requestInfo)
         );
 
-        assertEquals("INVALID_USER_TYPE", ex.getCode());
+        assertEquals(UserConstants.ERROR_DATA_MISMATCH, ex.getCode());
     }
 }

@@ -11,6 +11,7 @@ import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.auth.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -96,7 +97,7 @@ public class CustomPreAuthenticatedProvider implements AuthenticationProvider {
         }
 
         if (!Boolean.TRUE.equals(user.getActive())) {
-            log.warn("Account is inactive for user: {}", userName);
+            log.warn("Account is inactive for user: {}", MaskUtils.maskIdentifier(userName));
             throw new BadCredentialsException("Account inactive");
         }
 
