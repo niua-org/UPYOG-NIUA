@@ -78,6 +78,11 @@ public class FamilyQueryBuilder {
             "SELECT f.id as f_id, f.family_id as f_family_id, f.tenant_id as f_tenant_id, "
             + "f.head_user_uuid as f_head_user_uuid, f.category as f_category, "
             + "f.status as f_status, f.family_type as f_family_type, "
+            + "f.application_status as f_application_status, "
+            + "f.application_no as f_application_no, "
+            + "f.approved_by as f_approved_by, "
+            + "f.approval_date as f_approval_date, "
+            + "f.family_certificate_id as f_family_certificate_id, "
             + "f.family_address_property_id as f_family_address_property_id, "
             + "f.family_source as f_family_source, "
             + "f.additional_details as f_additional_details, f.created_by as f_created_by, "
@@ -168,6 +173,18 @@ public class FamilyQueryBuilder {
             addClause(whereClause);
             whereClause.append("f.family_type = ? ");
             preparedStmtList.add(criteria.getFamilyType());
+        }
+
+        if (StringUtils.isNotBlank(criteria.getApplicationStatus())) {
+            addClause(whereClause);
+            whereClause.append("f.application_status = ? ");
+            preparedStmtList.add(criteria.getApplicationStatus());
+        }
+
+        if (StringUtils.isNotBlank(criteria.getApplicationNo())) {
+            addClause(whereClause);
+            whereClause.append("f.application_no = ? ");
+            preparedStmtList.add(criteria.getApplicationNo());
         }
 
         if (StringUtils.isNotBlank(criteria.getMemberUserUuid())) {

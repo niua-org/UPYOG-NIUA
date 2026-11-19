@@ -41,6 +41,12 @@ public class FamilyConfiguration {
     @Value("${egov.idgen.member.id.name}")
     private String idGenMemberIdName;
 
+    /**
+     * IdGen format template name configured for generating sequential family registration application numbers (e.g. family.application.num).
+     */
+    @Value("${egov.idgen.family.application.num}")
+    private String idGenApplicationNum;
+
     @Value("${egov.user.host}")
     private String userHost;
 
@@ -159,6 +165,25 @@ public class FamilyConfiguration {
 
     @Value("${family.max.limit}")
     private Integer maxLimit;
+
+    // Workflow Configuration
+    @Value("${egov.workflow.host}")
+    private String wfHost;
+
+    @Value("${egov.workflow.transition.path}")
+    private String wfTransitionPath;
+
+    @Value("${egov.workflow.businessservice.search.path}")
+    private String wfBusinessServiceSearchPath;
+
+    @Value("${egov.workflow.processinstance.search.path}")
+    private String wfProcessInstanceSearchPath;
+
+    @Value("${family.workflow.business.service}")
+    private String familyBusinessService;
+
+    @Value("${family.workflow.module.name}")
+    private String familyModuleName;
 
     /**
      * Gets the configured time-to-live (TTL) for consent tokens in milliseconds.

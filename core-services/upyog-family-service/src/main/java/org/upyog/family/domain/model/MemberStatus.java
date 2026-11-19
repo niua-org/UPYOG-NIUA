@@ -4,39 +4,27 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang3.StringUtils;
 
-import org.upyog.family.util.FamilyConstants;
-
 /**
- * Enumeration representing the membership status of an individual within a Family Unit in UPYOG.
+ * Enumeration representing the membership lifecycle states of an individual within a Family Unit in UPYOG
+ * (ACTIVE, EXITED, PENDING_FOR_APPROVAL, JOINED).
  *
  * @author UPYOG Team
  * @since 1.0.0
  */
 public enum MemberStatus {
-    ACTIVE(FamilyConstants.STATUS_ACTIVE),
-    EXITED(FamilyConstants.STATUS_EXITED),
-    PENDING_APPROVAL(FamilyConstants.STATUS_PENDING_APPROVAL),
-    JOINED(FamilyConstants.STATUS_JOINED);
-
-    private final String value;
-
-    /**
-     * Constructs a {@code MemberStatus} enum constant with its backing string value.
-     *
-     * @param value serialized string code
-     */
-    MemberStatus(String value) {
-        this.value = value;
-    }
+    ACTIVE,
+    EXITED,
+    PENDING_FOR_APPROVAL,
+    JOINED;
 
     /**
      * Returns the serialized string representation of the MemberStatus enum in UPYOG.
      *
-     * @return enum string representation
+     * @return enum constant name as string representation
      */
     @JsonValue
     public String getValue() {
-        return value;
+        return this.name();
     }
 
     /**
@@ -48,7 +36,7 @@ public enum MemberStatus {
     @JsonCreator
     public static MemberStatus fromValue(String text) {
         for (MemberStatus b : MemberStatus.values()) {
-            if (StringUtils.equalsIgnoreCase(b.value, text)) {
+            if (StringUtils.equalsIgnoreCase(b.name(), text)) {
                 return b;
             }
         }

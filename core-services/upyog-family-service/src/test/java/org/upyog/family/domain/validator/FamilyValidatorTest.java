@@ -19,6 +19,7 @@ import org.upyog.family.web.contract.RuralPropertyDetail;
 import org.upyog.family.web.contract.UserIncomeDetail;
 import org.upyog.family.web.contract.UserProperty;
 import org.upyog.family.web.contract.UserVehicleDetail;
+import org.upyog.family.web.contract.Workflow;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -461,5 +462,122 @@ class FamilyValidatorTest {
 
         CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
         assertEquals("USER_NOT_VERIFIED", ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateUpdate with workflow APPROVE should succeed for PENDING_FOR_APPROVAL status even when caller is officer")
+    void validateUpdate_WithWorkflowAction_SucceedsForPendingApprovalStatus() {
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.PENDING_FOR_APPROVAL)
+                .members(new ArrayList<>(Collections.singletonList(
+                        FamilyMember.builder().userUuid("user-uuid-head").relationshipWithHead("HEAD").isHead(true).active(true).build()
+                )))
+                .build();
+
+        Family updatePayload = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .workflow(Workflow.builder().action(FamilyConstants.ACTION_APPROVE).comments("Approved").build())
+                .build();
+
+        FamilyRequest updateRequest = FamilyRequest.builder()
+                .family(updatePayload)
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("officer-uuid").build()).build())
+                .build();
+
+        assertDoesNotThrow(() -> validator.validateUpdate(updateRequest, existingFamily));
+    }
+
+    @Test
+    @DisplayName("validateUpdate with workflow APPROVE should succeed for INACTIVE status when approving newly created family")
+    void validateUpdate_WithWorkflowAction_SucceedsForInactiveFamily() {
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.INACTIVE)
+                .members(new ArrayList<>(Collections.singletonList(
+                        FamilyMember.builder().userUuid("user-uuid-head").relationshipWithHead("HEAD").isHead(true).active(true).build()
+                )))
+                .build();
+
+        Family updatePayload = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .workflow(Workflow.builder().action(FamilyConstants.ACTION_APPROVE).build())
+                .members(new ArrayList<>(Collections.singletonList(
+                        FamilyMember.builder().userUuid("user-uuid-head").relationshipWithHead("HEAD").isHead(true).active(true).build()
+                )))
+                .build();
+
+        FamilyRequest updateRequest = FamilyRequest.builder()
+                .family(updatePayload)
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("officer-uuid").build()).build())
+                .build();
+
+        assertDoesNotThrow(() -> validator.validateUpdate(updateRequest, existingFamily));
+    }
+
+    @Test
+    @DisplayName("validateUpdate without workflow should fail if caller is not the HoF")
+    void validateUpdate_WithoutWorkflow_UnauthorizedNonHoFCaller() {
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.ACTIVE)
+                .build();
+
+        Family updatePayload = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .category("GENERAL")
+                .build();
+
+        FamilyRequest updateRequest = FamilyRequest.builder()
+                .family(updatePayload)
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("random-caller-uuid").build()).build())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateUpdate(updateRequest, existingFamily));
+        assertEquals(FamilyConstants.ERROR_UNAUTHORIZED_ACCESS, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateCreate should throw exception when workflow action is blank in payload")
+    void validateCreate_BlankWorkflowAction_ThrowsException() {
+        family.setWorkflow(Workflow.builder().action("").build());
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_WORKFLOW_DATA_EMPTY, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("validateUpdate should throw exception when workflow action is blank in payload")
+    void validateUpdate_BlankWorkflowAction_ThrowsException() {
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.ACTIVE)
+                .build();
+
+        Family updatePayload = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .workflow(Workflow.builder().action(" ").build())
+                .build();
+
+        FamilyRequest updateRequest = FamilyRequest.builder()
+                .family(updatePayload)
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("officer-uuid").build()).build())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateUpdate(updateRequest, existingFamily));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_WORKFLOW_DATA_EMPTY, ex.getMessage());
     }
 }
