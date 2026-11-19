@@ -339,3 +339,184 @@ export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) =>
     gender: response?.gender,
   },
 });
+
+
+
+
+/**
+ * Builds the new Join Family API payload matching the /family/v1/member/_join contract.
+ * Maps session form data (profileDetails, property, income, vehicles) into the backend payload.
+ * 
+ * @param {Object} params
+ * @param {string} params.familyId - The target family ID to join
+ * @param {string} params.tenantId - Tenant identifier (e.g. pg.citya)
+ * @param {Object} params.verifiedData - Verified data from OTP response (contains consentToken/txnId)
+ * @param {Object} params.applicantParams - Form data from Family_Details session cache
+ * @param {string} params.relationshipCode - Normalized relationship code (e.g. SON)
+ * @param {Object} [params.user] - Logged in profile user fallback
+ * @returns {Object} Final payload for joinFamily API
+ */
+export const buildJoinFamilyPayload = ({
+  familyId,
+  tenantId,
+  verifiedData = {},
+  applicantParams = {},
+  relationshipCode,
+  user,
+}) => {
+  const profileDetails = applicantParams.profileDetails || {};
+  const propertyDetails = applicantParams.property || {};
+  const incomeDetails = applicantParams.income || {};
+  const vehicleDetails = applicantParams.vehicles || {};
+
+  // 1. Citizen Documents
+  const citizenDocuments = [
+    profileDetails.identityProofFile?.fileStoreId && {
+      documentType: profileDetails.identityProofType?.code || "IDENTITY_PROOF",
+      filestoreId: profileDetails.identityProofFile.fileStoreId,
+    },
+    profileDetails.birthProofFile?.fileStoreId && {
+      documentType: profileDetails.birthProofType?.code || "BIRTH_PROOF",
+      filestoreId: profileDetails.birthProofFile.fileStoreId,
+    },
+    profileDetails.casteProof?.fileStoreId && {
+      documentType: profileDetails.casteProofType?.code || "CASTE_PROOF",
+      filestoreId: profileDetails.casteProof.fileStoreId,
+    },
+    profileDetails.disabilityProof?.fileStoreId && {
+      documentType: profileDetails.disabilityProofType?.code || "DISABILITY_PROOF",
+      filestoreId: profileDetails.disabilityProof.fileStoreId,
+    },
+  ].filter(Boolean);
+
+  // 2. Citizen Details
+  const citizenDetails = {
+    name: profileDetails.name || user?.name,
+    mobileNumber: profileDetails.mobileNumber || user?.mobileNumber,
+    gender: (profileDetails.gender?.code || profileDetails.gender?.value || profileDetails.gender || user?.gender || "").toUpperCase(),
+    dob: toEpoch(profileDetails.dob || user?.dob),
+    caste: (profileDetails.caste?.code || profileDetails.caste?.name || profileDetails.caste || "").toUpperCase() || undefined,
+    photo: profileDetails.photo || user?.photo || undefined,
+    ...(citizenDocuments.length > 0 && { documents: citizenDocuments }),
+  };
+
+  // 3. Properties Array
+  let properties = [];
+  const portfolio = propertyDetails.propertiesPortfolio;
+
+  if (Array.isArray(portfolio) && portfolio.length > 0) {
+    properties = portfolio.map((entry) => {
+      const isRural = entry.localityType === "RURAL";
+      if (isRural) {
+        return {
+          localityType: "RURAL",
+          ownershipType: entry.ownershipType || "INDIVIDUAL",
+          ruralPropertyDetail: {
+            gramPanchayat: entry.gramPanchayat?.name || entry.gramPanchayat,
+            villageName: entry.village?.name || entry.village,
+            khasraNumber: entry.khasraNumber || entry.surveyNumber || undefined,
+          },
+          ...(entry.propertyDocument?.fileStoreId && {
+            document: {
+              documentType: entry.documentType?.code || "PROPERTY_REGISTRY",
+              filestoreId: entry.propertyDocument.fileStoreId,
+            },
+          }),
+        };
+      }
+
+      // Urban Property
+      return {
+        localityType: "URBAN",
+        ownershipType: entry.ownershipType || "INDIVIDUAL",
+        urbanPropertyDetail: {
+          upyogPropertyId: entry.propertyId || entry.primaryPropertyId,
+        },
+        ...(entry.propertyDocument?.fileStoreId && {
+          document: {
+            documentType: entry.documentType?.code || "PROPERTY_REGISTRY",
+            filestoreId: entry.propertyDocument.fileStoreId,
+          },
+        }),
+      };
+    });
+  } else if (propertyDetails.localityType) {
+    // Single Property Form fallback
+    const isRural = propertyDetails.localityType === "RURAL";
+    if (isRural) {
+      properties.push({
+        localityType: "RURAL",
+        ownershipType: propertyDetails.ownershipType || "INDIVIDUAL",
+        ruralPropertyDetail: {
+          gramPanchayat: propertyDetails.gramPanchayat?.name || propertyDetails.gramPanchayat,
+          villageName: propertyDetails.village?.name || propertyDetails.village,
+          khasraNumber: propertyDetails.khasraNumber || propertyDetails.surveyNumber || undefined,
+        },
+        ...(propertyDetails.propertyDocument?.fileStoreId && {
+          document: {
+            documentType: propertyDetails.documentType?.code || "PROPERTY_REGISTRY",
+            filestoreId: propertyDetails.propertyDocument.fileStoreId,
+          },
+        }),
+      });
+    } else {
+      properties.push({
+        localityType: "URBAN",
+        ownershipType: propertyDetails.ownershipType || "INDIVIDUAL",
+        urbanPropertyDetail: {
+          upyogPropertyId: propertyDetails.primaryPropertyId || propertyDetails.propertyId,
+        },
+        ...(propertyDetails.propertyDocument?.fileStoreId && {
+          document: {
+            documentType: propertyDetails.documentType?.code || "PROPERTY_REGISTRY",
+            filestoreId: propertyDetails.propertyDocument.fileStoreId,
+          },
+        }),
+      });
+    }
+  }
+
+  // 4. Income Object
+  const income = incomeDetails.annualIncome
+    ? {
+        annualIncome: Number(incomeDetails.annualIncome),
+        occupation: (incomeDetails.occupation?.code || incomeDetails.occupation?.name || incomeDetails.occupation || "").toUpperCase(),
+        identifierType: (incomeDetails.taxIdType?.code || incomeDetails.taxIdType?.name || incomeDetails.taxIdType || "").toUpperCase(),
+        identifierId: incomeDetails.taxIdNumber || undefined,
+        ...(incomeDetails.uploadedIncomeFile && {
+          salaryProofDocument: {
+            documentType: incomeDetails.incomeProofType?.code || "SALARY_SLIP",
+            filestoreId: incomeDetails.uploadedIncomeFile,
+          },
+        }),
+      }
+    : undefined;
+
+  // 5. Vehicles Array
+  const vehicles =
+    (vehicleDetails?.hasVehicle === "Yes" || vehicleDetails?.vehicleNo) && vehicleDetails?.vehicleNo
+      ? [
+          {
+            vehicleNumber: vehicleDetails.vehicleNo,
+            vehicleType: (vehicleDetails.vehicleType?.code || vehicleDetails.vehicleType?.name || vehicleDetails.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
+            ...(vehicleDetails.uploadedRCFile && {
+              rcDocument: {
+                documentType: "VEHICLE_RC",
+                filestoreId: vehicleDetails.uploadedRCFile,
+              },
+            }),
+          },
+        ]
+      : [];
+
+  return {
+    familyId,
+    tenantId,
+    consentToken: verifiedData?.consentToken || verifiedData?.txnId,
+    relationshipWithHead: relationshipCode,
+    citizenDetails,
+    properties,
+    ...(income && { income }),
+    vehicles,
+  };
+};

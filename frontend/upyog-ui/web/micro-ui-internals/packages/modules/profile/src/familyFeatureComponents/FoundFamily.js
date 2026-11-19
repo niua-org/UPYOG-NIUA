@@ -34,6 +34,7 @@ import {
 import { getFamilyHeadFields, getPersonalFields, useProfileUser, withValues } from "../utils";
 import { PROFILE_ROUTES } from "../utils/constants";
 import { profileStyles } from "../utils/profileStyles";
+import { buildJoinFamilyPayload } from "../utils/payloads";
 
 const FoundFamily = () => {
   const { t } = useTranslation();
@@ -168,48 +169,32 @@ const FoundFamily = () => {
     );
   }
 
+
   /**
-   * Dispatches the Join Family API call.
-   */
+  * Dispatches the Join Family API call using the new contract payload.
+  */
   const handleJoin = async () => {
     setSubmitting(true);
     try {
-      const res = await Digit.UserService.joinFamily({
+      const payload = buildJoinFamilyPayload({
         familyId: verifiedData?.familyId || familyId,
         tenantId,
-        applicantUserUuid: userUuid,
-        relationshipWithHead: relationshipCode,
-        txnId: verifiedData?.txnId || verifiedData?.consentToken,
+        verifiedData,
+        applicantParams,
+        relationshipCode,
+        user,
       });
+
+      const res = await Digit.UserService.joinFamily(payload);
 
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");
 
       // Clean up join session state on successful submission
       sessionStorage.removeItem("Digit.family.joinData");
-      const acknowledgement = {
-        ...res.JoinRequest,
-        familyId: res.JoinRequest.familyId || verifiedData?.familyId || familyId,
-        tenantId,
-        applicationDate: Date.now(),
-        members: [
-          {
-            name: user?.name,
-            mobileNumber: user?.mobileNumber,
-            emailId: user?.emailId,
-            relationshipWithHead: relationshipCode,
-            isHead: false,
-            profileDetails: { ...profileDetails },
-            property: { ...propertyDetails },
-            income: { ...incomeDetails },
-            vehicles: { ...vehicleDetails },
-          },
-        ],
-      };
-      Digit.SessionStorage.set("PPP_FAMILY_JOIN_ACKNOWLEDGEMENT", acknowledgement);
 
       navigate(PROFILE_ROUTES.FAMILY_JOINED, {
         replace: true,
-        state: { joinData: acknowledgement },
+        state: { joinData: res.JoinRequest },
       });
     } catch (err) {
       console.log("error on join family page", err);
