@@ -304,6 +304,33 @@ const FamilyMemberAdded = () => {
         );
       }
 
+      const acknowledgement = {
+        familyId: createdFamilyId,
+        tenantId,
+        applicationDate: Date.now(),
+        members: members.map((member) => {
+          const memberDetails = familyDetails[member.userUuid] || {};
+          const profileDetails = memberDetails.profileDetails || {};
+          const property = memberDetails.property || {};
+          return {
+            name: member.name || profileDetails.name,
+            mobileNumber: member.mobileNumber || profileDetails.mobileNumber,
+            emailId: profileDetails.emailId,
+            relationshipWithHead: member.relationshipWithHead || profileDetails.relationshipWithHof?.code,
+            isHead: member.userUuid === selectedHeadUuid,
+            profileDetails: { ...profileDetails },
+            income: { ...(memberDetails.income || {}) },
+            vehicles: { ...(memberDetails.vehicles || {}) },
+            property: {
+              ...property,
+              noProperty: property.noProperty,
+              propertiesPortfolio: (property.propertiesPortfolio || []).map((item) => ({ ...item })),
+            },
+          };
+        }),
+      };
+      Digit.SessionStorage.set("PPP_FAMILY_CREATE_ACKNOWLEDGEMENT", acknowledgement);
+
       // Clear cached family data and temporary verification tokens from session
       clearFamilyMembers();
       Digit.SessionStorage.del("Family_Details"); // per-member step data of the Create Family flow
@@ -319,7 +346,7 @@ const FamilyMemberAdded = () => {
       // Navigate to success response screen
       navigate(PROFILE_ROUTES.FAMILY_CREATED, {
         replace: true,
-        state: { familyId: createdFamilyId },
+        state: { familyId: createdFamilyId, acknowledgement },
       });
     } catch (err) {
       // 5. Fallback string is now localized via t(...)

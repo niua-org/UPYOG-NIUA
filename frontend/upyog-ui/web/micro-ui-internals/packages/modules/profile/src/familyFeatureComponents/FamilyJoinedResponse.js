@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Card, Banner, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
+import PPPAcknowledgement from "../ppp/PPPAcknowledgement";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 /**
@@ -10,27 +9,33 @@ import { PROFILE_ROUTES } from "../utils/constants";
  * He can go back to profile page by clicking on the button
  */
 const FamilyJoinedResponse = () => {
-  const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const joinData = useLocation().state?.joinData;
+  const joinData = useLocation().state?.joinData || Digit.SessionStorage.get("PPP_FAMILY_JOIN_ACKNOWLEDGEMENT");
 
   // direct URL / refresh -> no state, send the user back
   useEffect(() => {
     if (!joinData) navigate(PROFILE_ROUTES.DETAILS, { replace: true });
   }, [joinData, navigate]);
 
+  useEffect(() => {
+    window.history.pushState(null, "", window.location.href);
+    const handlePopState = () => navigate(PROFILE_ROUTES.DETAILS, { replace: true });
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [navigate]);
+
   if (!joinData) return null;
 
   return (
-    <Card>
-      <Banner
-        successful
-        message={t("PROFILE_FAMILY_JOINED_SUCCESSFULLY")}
-        info={t("CORE_COMMON_FAMILY_ID")}
-        complaintNumber={joinData.familyId}
-      />
-      <SubmitBar label={t("PROFILE_GO_BACK_TO_PROFILE")} onSubmit={() => navigate(PROFILE_ROUTES.DETAILS)} />
-    </Card>
+    <PPPAcknowledgement
+      mode="join"
+      familyId={joinData.familyId}
+      acknowledgement={joinData}
+      onGoToProfile={() => {
+        Digit.SessionStorage.del("PPP_FAMILY_JOIN_ACKNOWLEDGEMENT");
+        navigate(PROFILE_ROUTES.DETAILS);
+      }}
+    />
   );
 };
 

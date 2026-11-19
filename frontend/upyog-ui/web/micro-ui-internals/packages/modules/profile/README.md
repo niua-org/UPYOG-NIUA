@@ -86,11 +86,13 @@ All routes are registered under `/upyog-ui/citizen/profile/`:
 | `verify-profile` | `VerifyProfile` | Aadhaar verification entry |
 | `join-family` | `JoinExistingFamily` | Join a family using Family ID |
 | `found-family` | `FoundFamily` | Preview family before joining |
-| `family-joined` | `FamilyJoinedResponse` | Success after joining |
+| `family-joined` | `FamilyJoinedResponse` | Family join acknowledgement |
+| `family-join-acknowledgement` | `FamilyJoinedResponse` | Alias acknowledgement route for joining a family |
 | `add-family-member` | `AddFamilyMember` | Add member via Aadhaar |
 | `family-member-verified` | `FamilyMemberVerified` | Review verified member |
 | `family-member-added` | `FamilyMemberAdded` | Member staged confirmation |
-| `family-created` | `FamilyCreatedResponse` | Family creation success |
+| `family-created` | `FamilyCreatedResponse` | Family creation acknowledgement |
+| `family-create-acknowledgement` | `FamilyCreatedResponse` | Alias acknowledgement route for family creation |
 | `family-dashboard` | `FamilyDashboard` | View all family members |
 | `create-family/*` | `FamilyCreate` | Multi-step Create Family flow |
 
@@ -159,12 +161,18 @@ Step 4: vehicles         →  VehicleDetails.js
 - Citizen selects **Urban** or **Rural** locality type.
 - **Urban** (`UrbanForm`): Search and link an existing Property ID from the PT module. Supports multiple properties with one marked as primary address.
 - **Rural** (`RuralForm`): Collects Gram Panchayat, Village, Ward, Property Type, Usage, Survey Number, Ownership Type, and Address Proof document upload.
+- Saves `propertiesPortfolio` entries alongside `localityType`, `primaryPropertyId`, and `noProperty`. Each portfolio entry holds the fields for one urban or rural property; urban entries can be marked with `isPrimaryAddress`.
 
 ### `IncomeDetails` (Step 3)
 - Collects Occupation, Annual Income, Tax ID Type (PAN/TAN/GST), Tax ID Number with inline validation, Income Proof upload, and Tax Proof upload (shown only if Tax ID validation fails).
 
 ### `VehicleDetails` (Step 4)
 - Collects Vehicle Type, Category, Fuel Type, Vehicle Number (with regex validation + validate button), Purchase Year, and RC document upload.
+
+### Family acknowledgements
+- `FamilyCreatedResponse` and `FamilyJoinedResponse` share `PPPAcknowledgement`.
+- The response page displays the status message and actions, not the submitted form details. Family creation also displays the generated Family ID.
+- The Download acknowledgement action generates a PDF containing the available submitted member, property, income, and vehicle details.
 
 ---
 
@@ -206,7 +214,7 @@ Step 4: vehicles         →  VehicleDetails.js
 |---|---|
 | `buildUpdateUserPayload` | `EditProfileForm`, `CreateProfile` |
 | `buildSessionUser` | Updates localStorage session after profile save |
-| `buildCreateFamilyPayload` | `FamilyMemberAdded` — builds full family creation API body |
+| `buildCreateFamilyPayload` | `FamilyMemberAdded` — maps each member's `property.propertiesPortfolio` entry to an API `properties[]` item, and sets the head's primary urban property in `Family.familyAddressPropertyId` |
 | `buildVerifiedMemberInfo` | `AadhaarVerification` — normalizes OTP verify response |
 | `buildUpdateDocumentPayload` | `EditDocuments` |
 | `buildCreateDocumentPayload` | `EditDocuments` |

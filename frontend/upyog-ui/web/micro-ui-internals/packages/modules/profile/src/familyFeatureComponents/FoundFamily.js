@@ -186,10 +186,30 @@ const FoundFamily = () => {
 
       // Clean up join session state on successful submission
       sessionStorage.removeItem("Digit.family.joinData");
+      const acknowledgement = {
+        ...res.JoinRequest,
+        familyId: res.JoinRequest.familyId || verifiedData?.familyId || familyId,
+        tenantId,
+        applicationDate: Date.now(),
+        members: [
+          {
+            name: user?.name,
+            mobileNumber: user?.mobileNumber,
+            emailId: user?.emailId,
+            relationshipWithHead: relationshipCode,
+            isHead: false,
+            profileDetails: { ...profileDetails },
+            property: { ...propertyDetails },
+            income: { ...incomeDetails },
+            vehicles: { ...vehicleDetails },
+          },
+        ],
+      };
+      Digit.SessionStorage.set("PPP_FAMILY_JOIN_ACKNOWLEDGEMENT", acknowledgement);
 
       navigate(PROFILE_ROUTES.FAMILY_JOINED, {
         replace: true,
-        state: { joinData: res.JoinRequest },
+        state: { joinData: acknowledgement },
       });
     } catch (err) {
       console.log("error on join family page", err);

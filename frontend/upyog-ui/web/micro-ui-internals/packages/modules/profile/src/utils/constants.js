@@ -20,6 +20,8 @@ export const PROFILE_ROUTES = {
   VERIFY: "/upyog-ui/citizen/profile/verify-profile",
   EDIT_PROFILE_URL: "/upyog-ui/citizen/profile/edit-details",
   FAMILY_CREATED: "/upyog-ui/citizen/profile/family-created",
+  FAMILY_CREATED_ACKNOWLEDGEMENT: "/upyog-ui/citizen/profile/family-created",
+  FAMILY_JOINED_ACKNOWLEDGEMENT: "/upyog-ui/citizen/profile/family-joined",
 };
 
 // Create Family → Profile step: option codes (see casteOptions / speciallyAbledOptions in CreateProfile) that decide whether a proof upload is shown
