@@ -58,24 +58,24 @@ const speciallyAbledOptions = [
 
 // Relationship with Head of Family (HOF)
 const relationWithHof = [
-  { i18nKey: "RELATION_SELF", code: "Hof", name: "Hof" },
-  { i18nKey: "RELATION_SPOUSE", code: "Spouse", name: "Spouse" },
-  { i18nKey: "RELATION_SON", code: "Son", name: "Son" },
-  { i18nKey: "RELATION_DAUGHTER", code: "Daughter", name: "Daughter" },
-  { i18nKey: "RELATION_CHILD", code: "Child", name: "Child" },
-  { i18nKey: "RELATION_FATHER", code: "Father", name: "Father" },
-  { i18nKey: "RELATION_MOTHER", code: "Mother", name: "Mother" },
-  { i18nKey: "RELATION_BROTHER", code: "Brother", name: "Brother" },
-  { i18nKey: "RELATION_DEPENDENT", code: "Dependent", name: "Dependent" },
-  { i18nKey: "RELATION_SISTER", code: "Sister", name: "Sister" },
-  { i18nKey: "RELATION_GUARDIAN", code: "Guardian", name: "Guardian" },
-  { i18nKey: "RELATION_SON_IN_LAW", code: "Son In Law", name: "Son In Law" },
-  { i18nKey: "RELATION_DAUGHTERINLAW", code: "Daughter In Law", name: "Daughter In Law" },
-  { i18nKey: "RELATION_GRAND_SON", code: "Grandson", name: "Grandson" },
-  { i18nKey: "RELATION_GRAND_DAUGHTER", code: "Granddaughter", name: "Granddaughter" },
-  { i18nKey: "RELATION_GRAND_FATER", code: "Grandfather", name: "Grandfather" },
-  { i18nKey: "RELATION_GRAND_MOTHER", code: "Grandmother", name: "Grandmother" },
-  { i18nKey: "RELATION_OTHER", code: "Other", name: "Other" },
+  { i18nKey: "HOF", code: "HOF", name: "Hof" },
+  { i18nKey: "RELATION_SPOUSE", code: "SPOUSE", name: "Spouse" },
+  { i18nKey: "RELATION_SON", code: "SON", name: "Son" },
+  { i18nKey: "RELATION_DAUGHTER", code: "DAUGHTER", name: "Daughter" },
+  { i18nKey: "RELATION_CHILD", code: "CHILD", name: "Child" },
+  { i18nKey: "RELATION_FATHER", code: "FATHER", name: "Father" },
+  { i18nKey: "RELATION_MOTHER", code: "MOTHER", name: "Mother" },
+  { i18nKey: "RELATION_BROTHER", code: "BROTHER", name: "Brother" },
+  { i18nKey: "RELATION_DEPENDENT", code: "DEPENDENT", name: "Dependent" },
+  { i18nKey: "RELATION_SISTER", code: "SISTER", name: "Sister" },
+  { i18nKey: "RELATION_GUARDIAN", code: "GUARDIAN", name: "Guardian" },
+  { i18nKey: "RELATION_SON_IN_LAW", code: "SON IN LAW", name: "Son In Law" },
+  { i18nKey: "RELATION_DAUGHTERINLAW", code: "DAUGHTER IN LAW", name: "Daughter In Law" },
+  { i18nKey: "RELATION_GRAND_SON", code: "GRANDSON", name: "Grandson" },
+  { i18nKey: "RELATION_GRAND_DAUGHTER", code: "GRANDDAUGHTER", name: "Granddaughter" },
+  { i18nKey: "RELATION_GRAND_FATER", code: "GRANDFATHER", name: "Grandfather" },
+  { i18nKey: "RELATION_GRAND_MOTHER", code: "GRANDMOTHER", name: "Grandmother" },
+  { i18nKey: "RELATION_OTHER", code: "OTHER", name: "Other" }
 ];
 
 // Date of Birth Proof types
@@ -492,52 +492,32 @@ const CreateProfile = ({ config, onSelect, formData }) => {
       >
         {/* Profile Avatar / Photo Upload Card */}
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "24px",
-            padding: "16px 20px",
-            marginBottom: "24px",
-            background: "#F8F9FA",
-            borderRadius: "10px",
-            border: errors.photo ? "1px solid #D4351C" : "1px solid #E8EAED",
-            width: "100%",
-            boxSizing: "border-box",
-          }}
+          style={errors.photo ? profileStyles.photoUploadCardError : profileStyles.photoUploadCard}
         >
           <AvatarUpload
             imageUrl={photoThumb}
             name={form.name}
             onCameraClick={isViewMode ? undefined : () => setShowUploadDrawer(true)}
           />
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 600, color: "#0B0C0C" }}>
+          <div style={profileStyles.photoDetailsWrap}>
+            <h3 style={profileStyles.photoTitle}>
               {form.name || t("CORE_COMMON_PROFILE_DETAILS", "Profile Details")}
             </h3>
-            <span style={{ fontSize: "14px", color: "#505A5F" }}>
+            <span style={profileStyles.photoHelpText}>
               {t("PROFILE_PHOTO_UPLOAD_HELP", "Click on the camera icon to upload or update your profile photo.")}
-              <span style={{ color: "#D4351C", fontWeight: 600, marginLeft: "4px" }}>*</span>
+              <span style={profileStyles.requiredAsterisk}>*</span>
             </span>
             {errors.photo && (
-              <span style={{ color: "#D4351C", fontSize: "12px", fontWeight: 500, marginTop: "2px" }}>
+              <span style={profileStyles.photoErrorMessage}>
                 {t(errors.photo, "Profile photo is mandatory.")}
               </span>
             )}
-            <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+            <div style={profileStyles.photoButtonRow}>
               {!isViewMode && (
                 <button
                   type="button"
                   onClick={() => setShowUploadDrawer(true)}
-                  style={{
-                    background: "#FFFFFF",
-                    border: errors.photo ? "1px solid #D4351C" : "1px solid #D6D5D5",
-                    borderRadius: "6px",
-                    padding: "6px 14px",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: errors.photo ? "#D4351C" : "#0B0C0C",
-                    cursor: "pointer",
-                  }}
+                  style={errors.photo ? profileStyles.photoUploadBtnError : profileStyles.photoUploadBtn}
                 >
                   📷 {t("UPDATE_PHOTO", "Upload Photo")}
                 </button>
@@ -546,16 +526,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
                 <button
                   type="button"
                   onClick={removeProfilePic}
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #FAD2CF",
-                    borderRadius: "6px",
-                    padding: "6px 14px",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: "#D4351C",
-                    cursor: "pointer",
-                  }}
+                  style={profileStyles.photoRemoveBtn}
                 >
                   🗑️ {t("REMOVE_PHOTO", "Remove")}
                 </button>
@@ -565,16 +536,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
         </div>
 
         {/* Form Fields: Dynamic 3-Column Per Row Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-            gap: "20px 24px",
-            width: "100%",
-            boxSizing: "border-box",
-            alignItems: "start",
-          }}
-        >
+        <div style={profileStyles.gridStyle}>
           {/* Row 1 */}
           <FormField label={t("CORE_COMMON_PROFILE_NAME", "Name")} required error={errors.name} t={t}>
             <TextInput
