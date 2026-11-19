@@ -83,6 +83,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     private final Map<String, CacheEntry> tenantOccupationCache = new ConcurrentHashMap<>();
     private final Map<String, CacheEntry> tenantPropertyTypeCache = new ConcurrentHashMap<>();
     private final Map<String, CacheEntry> tenantPropertyUsageCache = new ConcurrentHashMap<>();
+    private final Map<String, CacheEntry> tenantOwnershipTypeCache = new ConcurrentHashMap<>();
 
     /**
      * Constructs a FamilyMasterDataServiceImpl with RestTemplate and configuration.
@@ -97,6 +98,19 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     }
 
     /**
+     * Resolves the configured cache TTL in milliseconds without hardcoded fallbacks.
+     *
+     * @return configured cache TTL milliseconds
+     * @throws CustomException if configuration or relationshipCacheTtl is not configured
+     */
+    private long getCacheTtlMillis() {
+        if (configuration == null || configuration.getRelationshipCacheTtl() == null) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_RELATIONSHIP_CACHE_TTL_NOT_CONFIGURED);
+        }
+        return configuration.getRelationshipCacheTtl();
+    }
+
+    /**
      * Retrieves allowed relationship codes for the specified tenant from cache or UPYOG MDMS.
      *
      * @param requestInfo caller's RequestInfo envelope
@@ -106,10 +120,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     @Override
     public Set<String> getAllowedRelationships(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
-        if (configuration == null || configuration.getRelationshipCacheTtl() == null) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_RELATIONSHIP_CACHE_TTL_NOT_CONFIGURED);
-        }
-        long ttlMillis = configuration.getRelationshipCacheTtl();
+        long ttlMillis = getCacheTtlMillis();
 
         CacheEntry entry = tenantRelationshipCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
@@ -152,8 +163,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     @Override
     public Set<String> getAllowedCategories(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
-        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
-                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        long ttlMillis = getCacheTtlMillis();
         CacheEntry entry = tenantCategoryCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
@@ -208,8 +218,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     @Override
     public Set<String> getAllowedOccupations(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
-        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
-                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        long ttlMillis = getCacheTtlMillis();
         CacheEntry entry = tenantOccupationCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
@@ -263,8 +272,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     @Override
     public Set<String> getAllowedPropertyTypes(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
-        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
-                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        long ttlMillis = getCacheTtlMillis();
         CacheEntry entry = tenantPropertyTypeCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
@@ -318,8 +326,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     @Override
     public Set<String> getAllowedPropertyUsages(RequestInfo requestInfo, String tenantId) {
         String stateTenant = resolveStateTenant(tenantId);
-        long ttlMillis = (configuration != null && configuration.getRelationshipCacheTtl() != null)
-                ? configuration.getRelationshipCacheTtl() : 86400000L;
+        long ttlMillis = getCacheTtlMillis();
         CacheEntry entry = tenantPropertyUsageCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
             return entry.getAllowedRelationships();
@@ -364,6 +371,62 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
     }
 
     /**
+     * Retrieves the set of allowed property ownership types configured in MDMS for the specified tenant.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @return set of valid upper-case property ownership types
+     */
+    @Override
+    public Set<String> getAllowedOwnershipTypes(RequestInfo requestInfo, String tenantId) {
+        String stateTenant = resolveStateTenant(tenantId);
+        long ttlMillis = getCacheTtlMillis();
+        CacheEntry entry = tenantOwnershipTypeCache.get(stateTenant);
+        if (entry != null && !entry.isExpired(ttlMillis) && !entry.getAllowedRelationships().isEmpty()) {
+            return entry.getAllowedRelationships();
+        }
+        // Read strictly from dedicated separate master under common-masters: PropertyOwnershipType
+        Set<String> fromMdms = fetchMasterCodesFromMdms(requestInfo, stateTenant,
+                FamilyConstants.MDMS_MODULE_COMMON_MASTERS, FamilyConstants.MDMS_MASTER_PROPERTY_OWNERSHIP_TYPE);
+        if (fromMdms != null && !fromMdms.isEmpty()) {
+            tenantOwnershipTypeCache.put(stateTenant, new CacheEntry(fromMdms, System.currentTimeMillis()));
+            return fromMdms;
+        }
+
+        log.error("[UPYOG-FAMILY-MASTER] Failed to resolve property ownership types from MDMS for tenant: {}. Skipping negative cache.", stateTenant);
+        if (entry != null && !entry.getAllowedRelationships().isEmpty()) {
+            log.info("[UPYOG-FAMILY-MASTER] Retaining previous valid cached ownership types for tenant: {}", stateTenant);
+            return entry.getAllowedRelationships();
+        }
+        throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_NOT_CONFIGURED + stateTenant);
+    }
+
+    /**
+     * Validates whether the supplied property ownership type is defined within MDMS for the tenant.
+     * Performs exact code matching and fails closed if allowed master codes cannot be resolved.
+     *
+     * @param requestInfo incoming request metadata
+     * @param tenantId tenant identifier
+     * @param ownershipType property ownership type to validate
+     * @throws CustomException if ownershipType is mandatory and missing, or invalid in MDMS
+     */
+    @Override
+    public void validateOwnershipType(RequestInfo requestInfo, String tenantId, String ownershipType) {
+        if (StringUtils.isBlank(ownershipType)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_MANDATORY);
+        }
+        Set<String> allowed = getAllowedOwnershipTypes(requestInfo, tenantId);
+        String normalized = ownershipType.trim().toUpperCase();
+        if (!allowed.contains(normalized)) {
+            log.error("[UPYOG-FAMILY-MASTER] Invalid property ownershipType '{}' for tenant '{}'. Allowed: {}",
+                    ownershipType, tenantId, allowed);
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    FamilyConstants.MSG_INVALID_OWNERSHIP_TYPE_PREFIX + ownershipType + FamilyConstants.MSG_ALLOWED_SUFFIX + allowed);
+        }
+    }
+
+    /**
      * Evicts cached relationship, occupation, and property sets across all tenants.
      */
     @Override
@@ -374,6 +437,7 @@ public class FamilyMasterDataServiceImpl implements FamilyMasterDataService {
         tenantOccupationCache.clear();
         tenantPropertyTypeCache.clear();
         tenantPropertyUsageCache.clear();
+        tenantOwnershipTypeCache.clear();
     }
 
     /**

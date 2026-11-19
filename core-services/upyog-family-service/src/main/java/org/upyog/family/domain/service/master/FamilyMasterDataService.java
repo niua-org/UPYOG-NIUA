@@ -106,6 +106,24 @@ public interface FamilyMasterDataService {
     void validatePropertyUsage(RequestInfo requestInfo, String tenantId, String propertyUsage);
 
     /**
+     * Retrieves allowed property ownership types from UPYOG MDMS (PropertyTax.OwnerShipCategory or common-masters).
+     *
+     * @param requestInfo RequestInfo of the caller
+     * @param tenantId    tenant identifier
+     * @return set of valid uppercase property ownership types
+     */
+    Set<String> getAllowedOwnershipTypes(RequestInfo requestInfo, String tenantId);
+
+    /**
+     * Validates whether the property ownership type is valid under MDMS taxonomy for the tenant.
+     *
+     * @param requestInfo   RequestInfo of the caller
+     * @param tenantId      tenant identifier
+     * @param ownershipType property ownership type to validate
+     */
+    void validateOwnershipType(RequestInfo requestInfo, String tenantId, String ownershipType);
+
+    /**
      * Evicts the relationship cache across all tenants.
      */
     void clearCache();

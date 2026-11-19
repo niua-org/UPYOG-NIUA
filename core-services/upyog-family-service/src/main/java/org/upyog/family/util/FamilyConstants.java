@@ -97,6 +97,8 @@ public final class FamilyConstants {
     public static final String MDMS_MODULE_PROPERTY_TAX = "PropertyTax";
     public static final String MDMS_MASTER_PROPERTY_TYPE = "PropertyType";
     public static final String MDMS_MASTER_USAGE_CATEGORY = "UsageCategory";
+    public static final String MDMS_MASTER_PROPERTY_OWNERSHIP_TYPE = "PropertyOwnershipType";
+    public static final String MDMS_MASTER_OWNERSHIP_CATEGORY = "OwnerShipCategory";
 
     // ==========================================
     // Prefixes & Sources
@@ -201,8 +203,13 @@ public final class FamilyConstants {
     public static final String KEY_MEMBER_ASSET_SYNC_STATUS = "memberAssetSyncStatus";
     public static final String KEY_MEMBER_ASSET_SYNC_TIMESTAMP = "memberAssetSyncTimestamp";
     public static final String STATUS_SUCCESS = "SUCCESS";
+    public static final String STATUS_PARTIAL_SUCCESS = "PARTIAL_SUCCESS";
     public static final String STATUS_FAILED = "FAILED";
     public static final String ASSET_SYNC_STATUS_NOT_APPLICABLE = "NOT_APPLICABLE";
+
+    public static final String MSG_PROPERTY_OWNERSHIP_TYPE_MANDATORY = "Property ownershipType is mandatory.";
+    public static final String MSG_INVALID_OWNERSHIP_TYPE_PREFIX = "Invalid property ownershipType: ";
+    public static final String MSG_PROPERTY_OWNERSHIP_TYPE_NOT_CONFIGURED = "Property ownership types master is not configured or unavailable in MDMS for tenant: ";
 
     // ==========================================
     // Validation & Error Messages

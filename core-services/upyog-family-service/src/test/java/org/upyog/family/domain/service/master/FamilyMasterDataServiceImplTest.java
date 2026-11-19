@@ -14,6 +14,7 @@ import org.upyog.family.config.FamilyConfiguration;
 import org.upyog.family.util.FamilyConstants;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -310,6 +311,150 @@ class FamilyMasterDataServiceImplTest {
         assertTrue(refreshed.contains("SON"));
     }
 
+    @Test
+    @DisplayName("getAllowedOwnershipTypes should fetch from MDMS and cache results")
+    void getAllowedOwnershipTypes_FromMdms_Success() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> ownList = new ArrayList<>();
+
+        Map<String, Object> o1 = new HashMap<>();
+        o1.put("code", "INDIVIDUAL");
+        Map<String, Object> o2 = new HashMap<>();
+        o2.put("code", "JOINT");
+        Map<String, Object> o3 = new HashMap<>();
+        o3.put("code", "ORGANISATION");
+
+        ownList.add(o1);
+        ownList.add(o2);
+        ownList.add(o3);
+
+        commonMasters.put("PropertyOwnershipType", ownList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        Set<String> result = masterDataService.getAllowedOwnershipTypes(new RequestInfo(), "pg.citya");
+
+        assertNotNull(result);
+        assertEquals(3, result.size());
+        assertTrue(result.contains("INDIVIDUAL"));
+        assertTrue(result.contains("JOINT"));
+        assertTrue(result.contains("ORGANISATION"));
+    }
+
+    @Test
+    @DisplayName("validateOwnershipType should succeed for valid MDMS ownership type")
+    void validateOwnershipType_Success() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> ownList = new ArrayList<>();
+
+        Map<String, Object> o1 = new HashMap<>();
+        o1.put("code", "INDIVIDUAL");
+        Map<String, Object> o2 = new HashMap<>();
+        o2.put("code", "JOINT");
+        Map<String, Object> o3 = new HashMap<>();
+        o3.put("code", "ORGANISATION");
+        ownList.add(o1);
+        ownList.add(o2);
+        ownList.add(o3);
+
+        commonMasters.put("PropertyOwnershipType", ownList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "INDIVIDUAL"));
+        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "JOINT"));
+        assertDoesNotThrow(() -> masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "ORGANISATION"));
+    }
+
+    @Test
+    @DisplayName("validateOwnershipType should throw CustomException for unknown ownership type")
+    void validateOwnershipType_UnknownFails() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> ownList = new ArrayList<>();
+
+        Map<String, Object> o1 = new HashMap<>();
+        o1.put("code", "INDIVIDUAL");
+        ownList.add(o1);
+
+        commonMasters.put("PropertyOwnershipType", ownList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "INSTITUTION"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateOwnershipType should reject prefix and compound codes with exact match")
+    void validateOwnershipType_PrefixAndCompoundFails() {
+        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> mdmsRes = new HashMap<>();
+        Map<String, Object> commonMasters = new HashMap<>();
+        List<Map<String, Object>> ownList = new ArrayList<>();
+
+        Map<String, Object> o1 = new HashMap<>();
+        o1.put("code", "INDIVIDUAL");
+        ownList.add(o1);
+
+        commonMasters.put("PropertyOwnershipType", ownList);
+        mdmsRes.put("common-masters", commonMasters);
+        response.put("MdmsRes", mdmsRes);
+
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(response);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "INDIVIDUAL.SINGLEOWNER"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+
+        CustomException ex2 = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "INSTITUTIONALPRIVATE"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex2.getCode());
+    }
+
+    @Test
+    @DisplayName("validateOwnershipType should fail closed when MDMS returns empty or unreachable")
+    void validateOwnershipType_FailsClosedWhenMdmsEmpty() {
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(Collections.emptyMap());
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.cityb", "INDIVIDUAL"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertTrue(ex.getMessage().contains(FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_NOT_CONFIGURED));
+    }
+
+    @Test
+    @DisplayName("getAllowedOwnershipTypes should throw CustomException when MDMS returns empty")
+    void getAllowedOwnershipTypes_MdmsEmpty_ThrowsCustomException() {
+        when(restTemplate.postForObject(anyString(), any(), eq(Map.class))).thenReturn(Collections.emptyMap());
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.getAllowedOwnershipTypes(new RequestInfo(), "pg.cityc"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertTrue(ex.getMessage().contains(FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_NOT_CONFIGURED));
+    }
+
+    @Test
+    @DisplayName("validateOwnershipType should throw CustomException when ownershipType is blank")
+    void validateOwnershipType_BlankFails() {
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.validateOwnershipType(new RequestInfo(), "pg.citya", "   "));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_PROPERTY_OWNERSHIP_TYPE_MANDATORY, ex.getMessage());
+    }
+
     /**
      * Fix for PR Comment #13 / High 5:
      * Verifies that missing MDMS host configuration throws CustomException rather than silently swallowing.
@@ -322,6 +467,28 @@ class FamilyMasterDataServiceImplTest {
         CustomException ex = assertThrows(CustomException.class, () ->
                 masterDataService.getAllowedCategories(new RequestInfo(), "pg.citya"));
         assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("getAllowedOwnershipTypes should throw CustomException when cache TTL is not configured")
+    void getAllowedOwnershipTypes_ThrowsExceptionWhenTtlNotConfigured() {
+        when(configuration.getRelationshipCacheTtl()).thenReturn(null);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.getAllowedOwnershipTypes(new RequestInfo(), "pg.citya"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_RELATIONSHIP_CACHE_TTL_NOT_CONFIGURED, ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("getAllowedRelationships should throw CustomException when cache TTL is not configured")
+    void getAllowedRelationships_ThrowsExceptionWhenTtlNotConfigured() {
+        when(configuration.getRelationshipCacheTtl()).thenReturn(null);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                masterDataService.getAllowedRelationships(new RequestInfo(), "pg.citya"));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(FamilyConstants.MSG_RELATIONSHIP_CACHE_TTL_NOT_CONFIGURED, ex.getMessage());
     }
 
     private Map<String, Object> createValidRelationshipResponse(String... codes) {

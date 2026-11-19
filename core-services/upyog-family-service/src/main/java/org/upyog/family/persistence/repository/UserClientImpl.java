@@ -366,9 +366,10 @@ public class UserClientImpl implements UserClient {
 
         try {
             Map<?, ?> response = restTemplate.postForObject(url, entity, Map.class);
-            log.info("[UPYOG-USER-CLIENT] Successfully synchronized member assets with egov-user. Response: {}",
-                    response != null ? response.get(FamilyConstants.JSON_KEY_STATUS) : FamilyConstants.STATUS_OK);
-            return true;
+            Object statusObj = response != null ? response.get(FamilyConstants.JSON_KEY_STATUS) : null;
+            String status = statusObj != null ? String.valueOf(statusObj) : null;
+            log.info("[UPYOG-USER-CLIENT] Synchronized member assets with egov-user. Response status: {}", status);
+            return FamilyConstants.STATUS_SUCCESS.equalsIgnoreCase(status);
         } catch (Exception e) {
             log.warn("[UPYOG-USER-CLIENT] Member asset synchronization to egov-user failed or unreachable: {}", e.getMessage());
             return false;

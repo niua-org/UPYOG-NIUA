@@ -6,6 +6,8 @@ import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarHofCheckRequest;
+import org.egov.user.web.contract.profile.AadhaarHofCheckResponse;
 import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
 import org.egov.user.web.contract.profile.ProfileIncludeEntity;
@@ -153,4 +155,13 @@ public interface ProfileService {
      * @return list containing the matching decrypted citizen profile, or empty list if not found
      */
     List<User> searchProfileByAadhaar(AadhaarSearchRequest request);
+
+    /**
+     * Verifies if a citizen profile exists with the provided Aadhaar number and is the active Head of Family (HoF).
+     *
+     * @param request Aadhaar HoF check request containing Aadhaar number, tenantId, and RequestInfo
+     * @return {@link AadhaarHofCheckResponse} containing verification outcome, citizen details, and familyId
+     * @throws org.egov.tracer.model.CustomException if validation fails, citizen not found, not mapped to family, or not HoF
+     */
+    AadhaarHofCheckResponse checkAadhaarHof(AadhaarHofCheckRequest request);
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.config.UserConfiguration;
+import org.egov.user.web.contract.profile.FamilyHofStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -171,5 +173,94 @@ class FamilyRestRepositoryTest {
 
         assertNull(result);
         verify(restTemplate, never()).postForObject(any(String.class), any(), any());
+    }
+
+    @Test
+    @DisplayName("checkUserHofStatus: Returns isHof=true when user matches headUserUuid")
+    void testCheckUserHofStatus_MatchesHeadUserUuid() {
+        when(userConfiguration.getFamilyServiceHost()).thenReturn("http://upyog-family-service:8080");
+        when(userConfiguration.getFamilyServiceSearchEndpoint()).thenReturn("/family/v1/family/_search");
+
+        String jsonResponse = "{\"Families\":[{" +
+                "\"familyId\":\"FAM-2026-001\"," +
+                "\"status\":\"ACTIVE\"," +
+                "\"headUserUuid\":\"user-hof-1\"," +
+                "\"members\":[{\"userUuid\":\"user-hof-1\",\"isHead\":true,\"active\":true}]" +
+                "}]}";
+
+        when(restTemplate.postForObject(any(String.class), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(jsonResponse);
+
+        FamilyHofStatus status = familyRestRepository.checkUserHofStatus("user-hof-1", "pg.citya", requestInfo);
+
+        assertNotNull(status);
+        assertTrue(status.isFamilyFound());
+        assertTrue(status.isHof());
+        assertEquals("FAM-2026-001", status.getFamilyId());
+        assertEquals("user-hof-1", status.getHeadUserUuid());
+    }
+
+    @Test
+    @DisplayName("checkUserHofStatus: Returns isHof=true when member has isHead=true")
+    void testCheckUserHofStatus_MatchesMemberIsHead() {
+        when(userConfiguration.getFamilyServiceHost()).thenReturn("http://upyog-family-service:8080");
+        when(userConfiguration.getFamilyServiceSearchEndpoint()).thenReturn("/family/v1/family/_search");
+
+        String jsonResponse = "{\"Families\":[{" +
+                "\"familyId\":\"FAM-2026-001\"," +
+                "\"status\":\"ACTIVE\"," +
+                "\"headUserUuid\":\"other-head\"," +
+                "\"members\":[{\"userUuid\":\"user-hof-2\",\"isHead\":true,\"active\":true}]" +
+                "}]}";
+
+        when(restTemplate.postForObject(any(String.class), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(jsonResponse);
+
+        FamilyHofStatus status = familyRestRepository.checkUserHofStatus("user-hof-2", "pg.citya", requestInfo);
+
+        assertNotNull(status);
+        assertTrue(status.isFamilyFound());
+        assertTrue(status.isHof());
+        assertEquals("FAM-2026-001", status.getFamilyId());
+    }
+
+    @Test
+    @DisplayName("checkUserHofStatus: Returns isHof=false when member is not head")
+    void testCheckUserHofStatus_NonHeadMember() {
+        when(userConfiguration.getFamilyServiceHost()).thenReturn("http://upyog-family-service:8080");
+        when(userConfiguration.getFamilyServiceSearchEndpoint()).thenReturn("/family/v1/family/_search");
+
+        String jsonResponse = "{\"Families\":[{" +
+                "\"familyId\":\"FAM-2026-001\"," +
+                "\"status\":\"ACTIVE\"," +
+                "\"headUserUuid\":\"other-head\"," +
+                "\"members\":[{\"userUuid\":\"user-member-1\",\"isHead\":false,\"active\":true}]" +
+                "}]}";
+
+        when(restTemplate.postForObject(any(String.class), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(jsonResponse);
+
+        FamilyHofStatus status = familyRestRepository.checkUserHofStatus("user-member-1", "pg.citya", requestInfo);
+
+        assertNotNull(status);
+        assertTrue(status.isFamilyFound());
+        assertFalse(status.isHof());
+        assertEquals("FAM-2026-001", status.getFamilyId());
+    }
+
+    @Test
+    @DisplayName("checkUserHofStatus: Returns familyFound=false when no family returned")
+    void testCheckUserHofStatus_NoFamily() {
+        when(userConfiguration.getFamilyServiceHost()).thenReturn("http://upyog-family-service:8080");
+        when(userConfiguration.getFamilyServiceSearchEndpoint()).thenReturn("/family/v1/family/_search");
+
+        when(restTemplate.postForObject(any(String.class), any(HttpEntity.class), eq(String.class)))
+                .thenReturn("{\"Families\":[]}");
+
+        FamilyHofStatus status = familyRestRepository.checkUserHofStatus("user-isolated", "pg.citya", requestInfo);
+
+        assertNotNull(status);
+        assertFalse(status.isFamilyFound());
+        assertFalse(status.isHof());
     }
 }
