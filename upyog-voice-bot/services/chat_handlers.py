@@ -230,8 +230,10 @@ def clear_multi_draft_pending(phone: str):
 def format_draft_summary(draft_data: dict, wf_name: str) -> str:
     title = wf_name.replace('_', ' ').title()
     summary = f"**{title} Draft**\n\n"
+    #Hide internal API codes and raw data payloads from citizen display
+    ignored_keys={"category_code","locality_code"}
     for k, v in draft_data.items():
-        if not k.startswith("_") and v is not None:
+        if not k.startswith("_") and not k.endswith("_code") and k not in ignored_keys and v is not None:
             clean_k = k.replace('_', ' ').title()
             summary += f"• **{clean_k}**: {v}\n"
     return summary
@@ -1296,10 +1298,27 @@ def dispatch_chat_request(
     cancel_intents = {"adv_cancel", "grievance_cancel", "booking_cancel"}
     if intent in cancel_intents:
         intended_plugin = "adv_booking" if ("adv" in intent or "booking" in intent) else ("grievance" if "grievance" in intent else None)
+        is_bare_no = clean_in in ["no", "nope", "nahi", "nahin", "na"]
+        is_mid_form_negation = False
+        if active_plugin and is_bare_no:
+            active_st = workflows[active_plugin].get_state(config)
+            d_key = get_workflow_draft_key(active_plugin)
+            d_val = (active_st.values.get(d_key) if active_st and active_st.values else {}) or {}
+            
+            # Only allow global cancel on "no" if they are at the final confirmation step
+            if not d_val.get("_awaiting_confirm"):
+                logger.info(f"[WorkflowCancel] Bare negation '{clean_in}' received mid-form for {active_plugin}. Routing to workflow validation.")
+                target_wf = active_plugin
+                intent = f"{active_plugin}_candidate"
+                is_mid_form_negation=True
 
+        if is_mid_form_negation:
+            pass
+
+        
         # Mismatch guard: If user is actively filling one workflow (e.g. grievance) but classifier
         # emitted a cancel intent for another workflow (e.g. adv_cancel), do NOT wipe the active workflow!
-        if active_plugin and intended_plugin and active_plugin != intended_plugin:
+        elif active_plugin and intended_plugin and active_plugin != intended_plugin:
             logger.warning(
                 f"[WorkflowCancel] Mismatch ignored: user active in '{active_plugin}' but received cancel intent '{intent}' for '{intended_plugin}'."
             )
@@ -1315,38 +1334,40 @@ def dispatch_chat_request(
             audio = text_to_speech(msg, user_language)
             return {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
 
-        target_cancelled_plugin = active_plugin or intended_plugin or "adv_booking"
-        meta = WORKFLOW_METADATA.get(target_cancelled_plugin, {})
-        plugin_display = meta.get("display_name", "Application")
-        plugin_display_hi = meta.get("display_name_hi", "आवेदन")
-
-        sys_cancel = (system_config or {}).get("system_messages", {}).get("cancellation", {})
-        target_cancel_cfg = sys_cancel.get(target_cancelled_plugin, {})
-
-        if active_plugin and active_plugin in workflows:
-            draft_key = get_workflow_draft_key(active_plugin)
-            if draft_key:
-                empty_draft = get_workflow_reset_draft(active_plugin, cancelled=True)
-                workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
-            try:
-                MemoryManager.delete_draft_state(phone, active_plugin)
-            except Exception as e:
-                logger.warning(f"[WorkflowCancel] Qdrant delete draft failed: {e}")
-            clear_pending_interruption(phone)
-            logger.info(f"[WorkflowCancel] Cleanly cancelled active workflow {active_plugin} for {phone}")
-
-            if user_language == 'hi':
-                msg = target_cancel_cfg.get("hi") or f"आपकी {plugin_display_hi} रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nमैं आपकी और क्या सहायता कर सकता हूँ?"
-            else:
-                msg = target_cancel_cfg.get("en") or f"Your {plugin_display} application has been cancelled. No submission was made to the portal.\n\nHow else can I assist you today?"
         else:
-            if user_language == 'hi':
-                msg = sys_cancel.get("general", {}).get("hi") or f"ठीक है, {plugin_display_hi} अनुरोध रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
-            else:
-                msg = sys_cancel.get("general", {}).get("en") or f"Understood. The {plugin_display.lower()} request has been cancelled. How else can I assist you today?"
 
-        audio = text_to_speech(msg, user_language)
-        return {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
+            target_cancelled_plugin = active_plugin or intended_plugin or "adv_booking"
+            meta = WORKFLOW_METADATA.get(target_cancelled_plugin, {})
+            plugin_display = meta.get("display_name", "Application")
+            plugin_display_hi = meta.get("display_name_hi", "आवेदन")
+
+            sys_cancel = (system_config or {}).get("system_messages", {}).get("cancellation", {})
+            target_cancel_cfg = sys_cancel.get(target_cancelled_plugin, {})
+
+            if active_plugin and active_plugin in workflows:
+                draft_key = get_workflow_draft_key(active_plugin)
+                if draft_key:
+                    empty_draft = get_workflow_reset_draft(active_plugin, cancelled=True)
+                    workflows[active_plugin].update_state(config, {draft_key: empty_draft, "missing_fields": []})
+                try:
+                    MemoryManager.delete_draft_state(phone, active_plugin)
+                except Exception as e:
+                    logger.warning(f"[WorkflowCancel] Qdrant delete draft failed: {e}")
+                clear_pending_interruption(phone)
+                logger.info(f"[WorkflowCancel] Cleanly cancelled active workflow {active_plugin} for {phone}")
+
+                if user_language == 'hi':
+                    msg = target_cancel_cfg.get("hi") or f"आपकी {plugin_display_hi} रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nमैं आपकी और क्या सहायता कर सकता हूँ?"
+                else:
+                    msg = target_cancel_cfg.get("en") or f"Your {plugin_display} application has been cancelled. No submission was made to the portal.\n\nHow else can I assist you today?"
+            else:
+                if user_language == 'hi':
+                    msg = sys_cancel.get("general", {}).get("hi") or f"ठीक है, {plugin_display_hi} अनुरोध रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
+                else:
+                    msg = sys_cancel.get("general", {}).get("en") or f"Understood. The {plugin_display.lower()} request has been cancelled. How else can I assist you today?"
+
+            audio = text_to_speech(msg, user_language)
+            return {"response": msg, "lang": user_language, "mode": "faq", "audio": audio}
 
     # 6. Pure greeting intent (only when NOT in an active transactional workflow)
     if not active_plugin and intent == "greeting":
@@ -1411,6 +1432,22 @@ def dispatch_chat_request(
         return execute_workflow_plugin(
             target_wf, user_input, user_language, phone, session_id, is_authenticated
         )
+
+        # Guard: Citizen targeted a workflow plugin that failed to load / is unavailable
+    if target_wf and target_wf not in workflows and (intent in workflow_intents or has_genuine_tracking_id):
+        logger.error(f"[dispatch_chat_request] Target service '{target_wf}' requested but not loaded in workflows.")
+        msg = (
+            "यह सेवा वर्तमान में तकनीकी समस्या के कारण अनुपलब्ध है। कृपया कुछ समय बाद पुनः प्रयास करें या सहायता केंद्र से संपर्क करें।"
+            if user_language == 'hi' else
+            "This service is currently unavailable due to technical maintenance. Please try again shortly or contact the municipal helpdesk."
+        )
+        audio_output = text_to_speech(msg, user_language)
+        return {
+            "response": msg,
+            "lang": user_language,
+            "mode": "service_unavailable",
+            "audio": audio_output
+        }
 
     # 12. Knowledge Base RAG / FAQ Retrieval Fallback
     return execute_rag_fallback(user_input, user_language, detected_script, history, session_id)

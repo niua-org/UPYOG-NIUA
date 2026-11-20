@@ -165,13 +165,13 @@ def _slot_search(draft: dict, phone_number: str = "default") -> list:
         return []
 
 # ==========================================
-_this_dir = os.path.dirname(os.path.abspath(__file__))
+_this_dir = os.path.dirname(os.path.abspath(__file__)) 
 config_path = os.path.join(os.path.dirname(_this_dir), "config.yml")
 if not os.path.exists(config_path):
     config_path = os.path.join(_this_dir, "config.yml")
 
 try:
-    with open(config_path, "r") as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         _raw_cfg = yaml.safe_load(f)
 except Exception as e:
     logger.error(f"Failed to load config.yml: {e}")
@@ -840,6 +840,12 @@ def router(state: AdvBookingState) -> str:
     draft_booking = state.get("draft_booking", {})
     messages = state.get("messages", [])
     user_msg = messages[-1].content if messages else ""
+
+    #DEFENSIVE GUARD: If form fields failed to load, cancel safely
+    #instead of evaluating all([]) as True and jumping to confirmation
+    if not ALL_FIELDS:
+        logger.error("[adv_booking.router] Route -> cancel: ALL_FIELDS is empty")
+        return "cancel"
     
     if all(draft_booking.get(f) for f in SEARCH_FIELDS) and not draft_booking.get("selected_slots"):
         logger.info("[adv_booking.router] Route -> slot_search")
