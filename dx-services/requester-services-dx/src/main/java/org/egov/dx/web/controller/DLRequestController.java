@@ -80,12 +80,10 @@ import lombok.extern.slf4j.Slf4j;
 public class DLRequestController {
 	
 	private final DLRequestService dlRequestService;
-	private final ResponseInfoFactory responseInfoFactory;
 
 	@Autowired
-	public DLRequestController(DLRequestService dlRequestService, ResponseInfoFactory responseInfoFactory) {
+	public DLRequestController(DLRequestService dlRequestService) {
 		this.dlRequestService = dlRequestService;
-		this.responseInfoFactory = responseInfoFactory;
 	}
 		
 	@RequestMapping(value = {"/authorization/url"}, method = RequestMethod.POST )

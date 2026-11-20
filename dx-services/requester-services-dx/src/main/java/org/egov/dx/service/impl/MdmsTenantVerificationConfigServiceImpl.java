@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -105,19 +106,19 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
         String url = buildMdmsUrl(host, endpoint);
 
         // Step 1: Query MDMS using specific requested tenantId (e.g., city/ULB tenant "pg.citya")
-        Boolean enabled = queryMdms(requestInfo, url, tenantId, moduleName, masterName, serviceType);
+        Optional<Boolean> enabled = queryMdms(requestInfo, url, tenantId, moduleName, masterName, serviceType);
 
         // Step 2: Tenant fallback hierarchy (Review comment Medium #3): If ULB tenant has no explicit master record,
         // fall back to state-level configuration (e.g. "pg") so municipal tenants inherit state-wide defaults
-        if (enabled == null && tenantId.contains(".")) {
+        if (enabled.isEmpty() && tenantId.contains(".")) {
             String stateTenant = tenantId.split("\\.")[0];
             log.debug("[MDMS-VERIFICATION-CHECK] Falling back to state tenant {} for service {}", stateTenant, serviceType);
             enabled = queryMdms(requestInfo, url, stateTenant, moduleName, masterName, serviceType);
         }
 
-        boolean finalEnabled = Boolean.TRUE.equals(enabled);
+        boolean finalEnabled = enabled.orElse(false);
         // Warning log: record when no configuration was located at either ULB or state tier
-        if (enabled == null) {
+        if (enabled.isEmpty()) {
             log.warn("[MDMS-VERIFICATION-CHECK] No MDMS configuration found for service {} and tenant {}", serviceType, tenantId);
         }
 
@@ -126,8 +127,8 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
         return finalEnabled;
     }
 
-    private Boolean queryMdms(RequestInfo requestInfo, String url, String tenantId,
-                              String moduleName, String masterName, String serviceType) {
+    private Optional<Boolean> queryMdms(RequestInfo requestInfo, String url, String tenantId,
+                                        String moduleName, String masterName, String serviceType) {
         MdmsCriteriaReq criteriaReq = buildCriteriaReq(requestInfo, tenantId, moduleName, masterName);
         try {
             log.debug("[MDMS-VERIFICATION-CHECK] Calling MDMS at {} for tenant {} and service {}", url, tenantId, serviceType);
@@ -136,7 +137,7 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
         } catch (Exception e) {
             log.error("[MDMS-VERIFICATION-CHECK] Failed to query MDMS for tenant verification check (tenant={}, service={}): {}",
                     tenantId, serviceType, e.getMessage(), e);
-            return false;
+            return Optional.of(false);
         }
     }
 
@@ -169,16 +170,16 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
         return criteriaReq;
     }
 
-    private Boolean isServiceEnabledInResponse(JsonNode responseNode, String moduleName, String masterName,
-                                               String serviceType, String tenantId) {
-        // Defensive check: return null if downstream response payload was unparseable or empty
+    private Optional<Boolean> isServiceEnabledInResponse(JsonNode responseNode, String moduleName, String masterName,
+                                                         String serviceType, String tenantId) {
+        // Defensive check: return empty if downstream response payload was unparseable or empty
         if (responseNode == null) {
-            return null;
+            return Optional.empty();
         }
         JsonNode configs = responseNode.path("MdmsRes").path(moduleName).path(masterName);
         // Master record validation: ensure master node is a non-empty JSON array
         if (!configs.isArray() || configs.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
         for (JsonNode config : configs) {
             // Flexible schema support: check 'type' or legacy 'service' field name
@@ -190,11 +191,11 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
                 boolean enabled = config.path("enabled").asBoolean(false);
                 log.info("[MDMS-VERIFICATION-CHECK] Verification service {} is {} in MDMS for tenant {}",
                         serviceType, enabled ? "ENABLED" : "DISABLED", tenantId);
-                return enabled;
+                return Optional.of(enabled);
             }
         }
         // No match found in the master array for this service type
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -288,29 +289,7 @@ public class MdmsTenantVerificationConfigServiceImpl implements TenantVerificati
                 String code = item.path("code").asText(null);
                 // Ensure code is non-blank
                 if (StringUtils.isNotBlank(code)) {
-                    String upper = code.trim().toUpperCase();
-                    validGenders.add(upper);
-                    // Single letter vs full name mapping to maintain ITD PAN verification standard compatibility
-                    if ("MALE".equals(upper)) {
-                        validGenders.add("M");
-                    } else if ("FEMALE".equals(upper)) {
-                        validGenders.add("F");
-                    } else if ("TRANSGENDER".equals(upper)) {
-                        validGenders.add("T");
-                        validGenders.add("O");
-                        validGenders.add("OTHER");
-                    } else if ("OTHER".equals(upper)) {
-                        validGenders.add("O");
-                        validGenders.add("T");
-                        validGenders.add("TRANSGENDER");
-                    } else if ("M".equals(upper)) {
-                        validGenders.add("MALE");
-                    } else if ("F".equals(upper)) {
-                        validGenders.add("FEMALE");
-                    } else if ("T".equals(upper) || "O".equals(upper)) {
-                        validGenders.add("TRANSGENDER");
-                        validGenders.add("OTHER");
-                    }
+                    validGenders.add(code.trim().toUpperCase());
                 }
             }
         }

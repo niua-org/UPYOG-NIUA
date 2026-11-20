@@ -226,7 +226,7 @@ public class DLRequestService {
                  request, String.class);
                
          
-         return (entity != null && entity.getBody() != null) ? entity.getBody().getBytes(StandardCharsets.UTF_8) : new byte[0];
+         return entity.getBody() != null ? entity.getBody().getBytes(StandardCharsets.UTF_8) : new byte[0];
     }
 
     public Object getOauthToken(RequestInfo requestinfo , TokenRes tokenRes)

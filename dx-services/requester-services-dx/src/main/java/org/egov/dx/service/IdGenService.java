@@ -7,7 +7,6 @@ import org.egov.dx.util.Configurations;
 import org.egov.dx.web.models.IdGenerationResponse;
 import org.egov.dx.web.models.RequestInfoWrapper;
 import org.egov.dx.web.models.Transaction;
-import org.egov.dx.repository.TransactionRepository;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.repository.IdGenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +16,12 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class IdGenService {
 
-
     private final IdGenRepository idGenRepository;
-    private final TransactionRepository transactionRepository;
     private final Configurations config;
 
     @Autowired
-    public IdGenService(IdGenRepository idGenRepository, TransactionRepository transactionRepository, Configurations config) {
+    public IdGenService(IdGenRepository idGenRepository, Configurations config) {
         this.idGenRepository = idGenRepository;
-        this.transactionRepository = transactionRepository;
         this.config = config;
     }
 

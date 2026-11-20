@@ -568,8 +568,8 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         try {
             String searchUrl = buildUrl(resolveUserHost(), userSearchPath);
             Map<String, Object> reqBody = new HashMap<>();
-            reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
-            reqBody.put("tenantId", tenantId);
+            reqBody.put(REQUEST_INFO, requestInfo != null ? requestInfo : new RequestInfo());
+            reqBody.put(TENANT_ID, tenantId);
             reqBody.put("mobileNumber", mobileNumber);
 
             HttpHeaders headers = new HttpHeaders();

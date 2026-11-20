@@ -142,43 +142,92 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
 
         log.debug("[MOCK-PAN-ADAPTER] Processing PAN verification for masked PAN: {}, reqId: {}", maskedPan, reqId);
 
-        // Simulated negative test trigger: PANs containing "NOTF" or ending in "0000X" simulate vendor 404 response
-        if (normalizedPan != null && (normalizedPan.contains("NOTF") || normalizedPan.endsWith("0000X"))) {
+        if (isNegativeSimulationPan(normalizedPan)) {
             log.info("[MOCK-PAN-ADAPTER] Simulating PAN NOT FOUND for masked PAN: {}", maskedPan);
-            return VendorPanVerificationResponse.builder()
-                    .header(VendorPanVerificationResponse.ResponseHeader.builder()
-                            .requestId(reqId)
-                            .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                            .responseId(RES_PAN_PREFIX + UUID.randomUUID())
-                            .status(PanConstants.STATUS_FAILURE)
-                            .statusCode("404")
-                            .build())
-                    .errorDetails(VendorPanVerificationResponse.VendorErrorDetails.builder()
-                            .errorCode(PanConstants.ERR_CODE_RECORD_NOT_FOUND)
-                            .errorMessage(PanConstants.MSG_RECORD_NOT_FOUND)
-                            .build())
-                    .build();
+            return buildNotFoundResponse(reqId);
         }
 
-        // Step 1: Lookup exact normalized PAN in pre-loaded mock dataset
         VendorPanVerificationResponse.ResponseParams existing = mockRecordMap.get(normalizedPan);
-        // If found in curated mock records, perform strict identity comparison against requested name and DOB
         if (existing != null) {
-            String nameMatch = evaluateNameMatch(inputFullName, existing.getFullName());
-            String dobMatch = evaluateDobMatch(inputDob, existing.getDob());
+            return buildCuratedSuccessResponse(reqId, maskedPan, inputFullName, inputDob, existing);
+        }
 
-            VendorPanVerificationResponse.ResponseParams responseParams = VendorPanVerificationResponse.ResponseParams.builder()
-                    .pan(existing.getPan())
-                    .panStatus(existing.getPanStatus())
-                    .fullName(existing.getFullName())
-                    .category(existing.getCategory())
-                    .nameMatch(nameMatch)
-                    .dobMatch(dobMatch)
-                    .seedingStatus(existing.getSeedingStatus())
+        if (PanNumberUtils.isValidPan(normalizedPan)) {
+            return handleUncuratedValidPan(reqId, maskedPan, normalizedPan, inputFullName);
+        }
+
+        return buildInvalidFormatResponse(reqId);
+    }
+
+    private boolean isNegativeSimulationPan(String normalizedPan) {
+        return normalizedPan != null && (normalizedPan.contains("NOTF") || normalizedPan.endsWith("0000X"));
+    }
+
+    private VendorPanVerificationResponse buildNotFoundResponse(String reqId) {
+        return VendorPanVerificationResponse.builder()
+                .header(VendorPanVerificationResponse.ResponseHeader.builder()
+                        .requestId(reqId)
+                        .serviceId(PanConstants.DEFAULT_SERVICE_ID)
+                        .responseId(RES_PAN_PREFIX + UUID.randomUUID())
+                        .status(PanConstants.STATUS_FAILURE)
+                        .statusCode("404")
+                        .build())
+                .errorDetails(VendorPanVerificationResponse.VendorErrorDetails.builder()
+                        .errorCode(PanConstants.ERR_CODE_RECORD_NOT_FOUND)
+                        .errorMessage(PanConstants.MSG_RECORD_NOT_FOUND)
+                        .build())
+                .build();
+    }
+
+    private VendorPanVerificationResponse buildCuratedSuccessResponse(String reqId, String maskedPan,
+                                                                      String inputFullName, String inputDob,
+                                                                      VendorPanVerificationResponse.ResponseParams existing) {
+        String nameMatch = evaluateNameMatch(inputFullName, existing.getFullName());
+        String dobMatch = evaluateDobMatch(inputDob, existing.getDob());
+
+        VendorPanVerificationResponse.ResponseParams responseParams = VendorPanVerificationResponse.ResponseParams.builder()
+                .pan(existing.getPan())
+                .panStatus(existing.getPanStatus())
+                .fullName(existing.getFullName())
+                .category(existing.getCategory())
+                .nameMatch(nameMatch)
+                .dobMatch(dobMatch)
+                .seedingStatus(existing.getSeedingStatus())
+                .build();
+
+        log.info("[MOCK-PAN-ADAPTER] Found matching mock record for masked PAN: {}, nameMatch: {}, dobMatch: {}",
+                maskedPan, nameMatch, dobMatch);
+
+        return VendorPanVerificationResponse.builder()
+                .header(VendorPanVerificationResponse.ResponseHeader.builder()
+                        .requestId(reqId)
+                        .serviceId(PanConstants.DEFAULT_SERVICE_ID)
+                        .responseId(RES_PAN_PREFIX + UUID.randomUUID())
+                        .status(PanConstants.STATUS_SUCCESS)
+                        .statusCode("200")
+                        .build())
+                .responseParams(responseParams)
+                .build();
+    }
+
+    private VendorPanVerificationResponse handleUncuratedValidPan(String reqId, String maskedPan,
+                                                                  String normalizedPan, String inputFullName) {
+        if (configurations != null && configurations.isPanVerificationMockSynthesizeUnknownEnabled()) {
+            String category = PanNumberUtils.resolvePanCategory(normalizedPan);
+            String syntheticName = StringUtils.isNotBlank(inputFullName) ? inputFullName.trim().toUpperCase() : "SIMULATED TAXPAYER";
+
+            VendorPanVerificationResponse.ResponseParams generatedParams = VendorPanVerificationResponse.ResponseParams.builder()
+                    .pan(normalizedPan)
+                    .panStatus(PanConstants.STATUS_EXISTING_AND_VALID)
+                    .fullName(syntheticName)
+                    .category(category)
+                    .nameMatch(PanConstants.MATCH_YES)
+                    .dobMatch(PanConstants.MATCH_YES)
+                    .seedingStatus(PanConstants.MATCH_YES)
                     .build();
 
-            log.info("[MOCK-PAN-ADAPTER] Found matching mock record for masked PAN: {}, nameMatch: {}, dobMatch: {}",
-                    maskedPan, nameMatch, dobMatch);
+            log.info("[MOCK-PAN-ADAPTER] Generating deterministic mock response for masked PAN: {}, category: {}",
+                    maskedPan, category);
 
             return VendorPanVerificationResponse.builder()
                     .header(VendorPanVerificationResponse.ResponseHeader.builder()
@@ -188,60 +237,15 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
                             .status(PanConstants.STATUS_SUCCESS)
                             .statusCode("200")
                             .build())
-                    .responseParams(responseParams)
+                    .responseParams(generatedParams)
                     .build();
         }
 
-        // Step 2: Handle valid PANs not present in curated static records
-        if (PanNumberUtils.isValidPan(normalizedPan)) {
-            // Safe fallback check (Review comment High #3): Only synthesize unknown records if explicitly enabled in config
-            if (configurations != null && configurations.isPanVerificationMockSynthesizeUnknownEnabled()) {
-                String category = PanNumberUtils.resolvePanCategory(normalizedPan);
-                String syntheticName = StringUtils.isNotBlank(inputFullName) ? inputFullName.trim().toUpperCase() : "SIMULATED TAXPAYER";
+        log.info("[MOCK-PAN-ADAPTER] Unlisted PAN returning RECORD_NOT_FOUND for masked PAN: {}", maskedPan);
+        return buildNotFoundResponse(reqId);
+    }
 
-                VendorPanVerificationResponse.ResponseParams generatedParams = VendorPanVerificationResponse.ResponseParams.builder()
-                        .pan(normalizedPan)
-                        .panStatus(PanConstants.STATUS_EXISTING_AND_VALID)
-                        .fullName(syntheticName)
-                        .category(category)
-                        .nameMatch(PanConstants.MATCH_YES)
-                        .dobMatch(PanConstants.MATCH_YES)
-                        .seedingStatus(PanConstants.MATCH_YES)
-                        .build();
-
-                log.info("[MOCK-PAN-ADAPTER] Generating deterministic mock response for masked PAN: {}, category: {}",
-                        maskedPan, category);
-
-                return VendorPanVerificationResponse.builder()
-                        .header(VendorPanVerificationResponse.ResponseHeader.builder()
-                                .requestId(reqId)
-                                .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                                .responseId(RES_PAN_PREFIX + UUID.randomUUID())
-                                .status(PanConstants.STATUS_SUCCESS)
-                                .statusCode("200")
-                                .build())
-                        .responseParams(generatedParams)
-                        .build();
-            } else {
-                // Production-safe default: unlisted PANs return 404 NOT_FOUND instead of fake approvals
-                log.info("[MOCK-PAN-ADAPTER] Unlisted PAN returning RECORD_NOT_FOUND for masked PAN: {}", maskedPan);
-                return VendorPanVerificationResponse.builder()
-                        .header(VendorPanVerificationResponse.ResponseHeader.builder()
-                                .requestId(reqId)
-                                .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                                .responseId(RES_PAN_PREFIX + UUID.randomUUID())
-                                .status(PanConstants.STATUS_FAILURE)
-                                .statusCode("404")
-                                .build())
-                        .errorDetails(VendorPanVerificationResponse.VendorErrorDetails.builder()
-                                .errorCode(PanConstants.ERR_CODE_RECORD_NOT_FOUND)
-                                .errorMessage(PanConstants.MSG_RECORD_NOT_FOUND)
-                                .build())
-                        .build();
-            }
-        }
-
-        // If not valid format
+    private VendorPanVerificationResponse buildInvalidFormatResponse(String reqId) {
         return VendorPanVerificationResponse.builder()
                 .header(VendorPanVerificationResponse.ResponseHeader.builder()
                         .requestId(reqId)

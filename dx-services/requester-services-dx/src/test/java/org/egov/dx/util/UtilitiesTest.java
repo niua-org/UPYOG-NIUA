@@ -57,9 +57,10 @@ class UtilitiesTest {
      */
     @Test
     void testConvertStringToDocument_RejectsXXEDoctype() {
-        String maliciousXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<!DOCTYPE foo [ <!ENTITY xxe SYSTEM \"file:///etc/passwd\"> ]>\n" +
-                "<foo>&xxe;</foo>";
+        String maliciousXml = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <!DOCTYPE foo [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+                <foo>&xxe;</foo>""";
 
         assertThrows(Exception.class, () -> Utilities.convertStringToDocument(maliciousXml));
     }

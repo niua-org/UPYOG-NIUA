@@ -157,28 +157,27 @@ class MdmsTenantVerificationConfigServiceImplTest {
      */
     @Test
     void testGetValidGenders_Success() throws Exception {
-        String json = "{\n" +
-                "  \"MdmsRes\": {\n" +
-                "    \"common-masters\": {\n" +
-                "      \"GenderType\": [\n" +
-                "        {\"code\": \"MALE\", \"active\": true},\n" +
-                "        {\"code\": \"FEMALE\", \"active\": true},\n" +
-                "        {\"code\": \"TRANSGENDER\", \"active\": true}\n" +
-                "      ]\n" +
-                "    }\n" +
-                "  }\n" +
-                "}";
+        String json = """
+                {
+                  "MdmsRes": {
+                    "common-masters": {
+                      "GenderType": [
+                        {"code": "MALE", "active": true},
+                        {"code": "FEMALE", "active": true},
+                        {"code": "TRANSGENDER", "active": true}
+                      ]
+                    }
+                  }
+                }""";
         JsonNode mockRes = objectMapper.readTree(json);
         when(restTemplate.postForObject(anyString(), any(), eq(JsonNode.class))).thenReturn(mockRes);
 
         Set<String> genders = service.getValidGenders(new RequestInfo(), "pg.citya");
         assertNotNull(genders);
+        assertEquals(3, genders.size());
         assertTrue(genders.contains("MALE"));
-        assertTrue(genders.contains("M"));
         assertTrue(genders.contains("FEMALE"));
-        assertTrue(genders.contains("F"));
         assertTrue(genders.contains("TRANSGENDER"));
-        assertTrue(genders.contains("T"));
     }
 
     /**
