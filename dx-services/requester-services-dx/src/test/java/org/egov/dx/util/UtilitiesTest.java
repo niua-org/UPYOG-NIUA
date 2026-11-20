@@ -14,6 +14,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UtilitiesTest {
 
+    /**
+     * Tests Get String From Input Stream behavior.
+     *
+     * Verifies that {@code Exception} is thrown when condition fails.
+     */
     @Test
     void testGetStringFromInputStream() throws Exception {
         String original = "line1\nline2\nline3";
@@ -23,6 +28,11 @@ class UtilitiesTest {
         assertEquals("line1line2line3", result);
     }
 
+    /**
+     * Tests Convert String To Document And Get Xpath Value behavior.
+     *
+     * Verifies that {@code Exception} is thrown when condition fails.
+     */
     @Test
     void testConvertStringToDocumentAndGetXpathValue() throws Exception {
         String xml = "<EsignResp status=\"1\" txn=\"TXN123456\"><Name>Citizen</Name></EsignResp>";
@@ -40,6 +50,11 @@ class UtilitiesTest {
         assertEquals("Citizen", name);
     }
 
+    /**
+     * Tests Convert String To Document under the rejects xxedoctype scenario.
+     *
+     * Verifies that {@code Exception} is thrown when rejects xxedoctype.
+     */
     @Test
     void testConvertStringToDocument_RejectsXXEDoctype() {
         String maliciousXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -49,6 +64,11 @@ class UtilitiesTest {
         assertThrows(Exception.class, () -> Utilities.convertStringToDocument(maliciousXml));
     }
 
+    /**
+     * Tests Private Constructor behavior.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testPrivateConstructor() throws Exception {
         Constructor<Utilities> constructor = Utilities.class.getDeclaredConstructor();

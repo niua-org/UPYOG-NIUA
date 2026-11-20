@@ -59,12 +59,19 @@ public class GstProfileServiceImpl implements GstProfileService {
         this.tenantConfigService = tenantConfigService;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Validates request, enforces MDMS tenant configuration, delegates to GST adapter,
+     * enriches taxpayer profile, and returns response.</p>
+     */
     @Override
     public GstProfileResponse searchGstin(GstProfileRequest request) {
         // 1. Validate incoming request (SRP)
         validator.validateGstRequest(request);
 
-        // 2. Validate tenant-level MDMS configuration
+        // Multi-tenant authorization guard (Review comment Medium #3): Verify that the tenant/ULB
+        // has enabled the GST verification module in MDMS configuration before invoking external APIs
         if (!tenantConfigService.isVerificationEnabled(request.getRequestInfo(), request.getTenantId(), "GST")) {
             log.warn("GST profile search is not enabled in MDMS for tenant: {}", request.getTenantId());
             throw new CustomException(GstConstants.ERR_CODE_TENANT_DISABLED,
@@ -83,12 +90,16 @@ public class GstProfileServiceImpl implements GstProfileService {
         // 2. Delegate to gateway adapter abstraction (DIP)
         VendorGstProfileResponse vendorRes = gatewayAdapter.searchGstin(normalizedGstin);
 
+        // Resilience guard: handle null return from adapter (e.g., unexpected network failure or unhandled exception)
         if (vendorRes == null) {
             log.error("GST Gateway returned null response for masked GSTIN: {}", maskedGstin);
             throw new CustomException(GstConstants.ERR_CODE_GATEWAY_ERROR, GstConstants.MSG_GATEWAY_ERROR);
         }
 
-        // 3. Handle vendor-level error payload
+        boolean isMock = gatewayAdapter.getClass().getSimpleName().startsWith("Mock");
+        String source = isMock ? GstConstants.SOURCE_MOCK : GstConstants.SOURCE_LIVE_IRIS;
+
+        // 3. Handle vendor-level error payload (e.g. record not found or invalid credentials)
         if (vendorRes.getError() != null) {
             log.warn("GST gateway returned error for masked GSTIN {}: {} - {}",
                     maskedGstin, vendorRes.getError().getErrorCode(), vendorRes.getError().getMessage());
@@ -98,6 +109,8 @@ public class GstProfileServiceImpl implements GstProfileService {
                     .responseInfo(responseInfo)
                     .isVerified(false)
                     .maskedGstin(maskedGstin)
+                    .source(source)
+                    .isMock(isMock)
                     .errorDetails(GstProfileResponse.GstErrorDetails.builder()
                             .errorCode(vendorRes.getError().getErrorCode())
                             .errorMessage(vendorRes.getError().getMessage())
@@ -115,6 +128,8 @@ public class GstProfileServiceImpl implements GstProfileService {
                 .responseInfo(responseInfo)
                 .isVerified(isVerified)
                 .maskedGstin(maskedGstin)
+                .source(source)
+                .isMock(isMock)
                 .taxpayerDetails(uDetails)
                 .build();
 
@@ -130,6 +145,7 @@ public class GstProfileServiceImpl implements GstProfileService {
      * @return enriched domain {@link GstTaxpayerDetails}
      */
     private GstTaxpayerDetails mapToGstTaxpayerDetails(VendorGstProfileResponse.TaxpayerData vData, String maskedGstin) {
+        // Defensive check: return null if vendor returned no taxpayer payload
         if (vData == null) {
             return null;
         }
@@ -157,6 +173,7 @@ public class GstProfileServiceImpl implements GstProfileService {
     }
 
     private GstTaxpayerDetails.GstAddress mapToGstAddress(VendorGstProfileResponse.TaxpayerData vData, String fallbackStateName) {
+        // Guard check: return null if address object is not provided by gateway
         if (vData.getPrincipalPlaceOfBusiness() == null || vData.getPrincipalPlaceOfBusiness().getAddress() == null) {
             return null;
         }

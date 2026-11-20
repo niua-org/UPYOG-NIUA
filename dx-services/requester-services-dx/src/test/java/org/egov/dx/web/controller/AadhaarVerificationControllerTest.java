@@ -37,6 +37,11 @@ class AadhaarVerificationControllerTest {
         controller = new AadhaarVerificationController(gatewayAdapter, validator);
     }
 
+    /**
+     * Tests Send Otp under the success scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testSendOtp_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -68,6 +73,11 @@ class AadhaarVerificationControllerTest {
         verify(gatewayAdapter, times(1)).sendOtp(any(VendorSendOtpRequest.class));
     }
 
+    /**
+     * Tests Send Otp under the validation error_returns bad request scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testSendOtp_ValidationError_ReturnsBadRequest() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder().build();
@@ -86,6 +96,11 @@ class AadhaarVerificationControllerTest {
         verify(gatewayAdapter, never()).sendOtp(any());
     }
 
+    /**
+     * Tests Verify Otp under the success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyOtp_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -121,6 +136,11 @@ class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerifyOtpRequest(request);
     }
 
+    /**
+     * Tests Verify Otp under the gateway failure_returns bad request scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testVerifyOtp_GatewayFailure_ReturnsBadRequest() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -142,6 +162,11 @@ class AadhaarVerificationControllerTest {
         assertEquals("Invalid OTP", body.getMessage());
     }
 
+    /**
+     * Tests Verify Otp under the resync flow_success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyOtp_ResyncFlow_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -181,6 +206,11 @@ class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerifyOtpRequest(request);
     }
 
+    /**
+     * Tests Validate Checksum under the success scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testValidateChecksum_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -203,6 +233,11 @@ class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerhoeffChecksum(request);
     }
 
+    /**
+     * Tests Validate Checksum under the invalid checksum scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testValidateChecksum_InvalidChecksum() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -225,6 +260,11 @@ class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerhoeffChecksum(request);
     }
 
+    /**
+     * Tests Validate Checksum under the validation error_returns bad request scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testValidateChecksum_ValidationError_ReturnsBadRequest() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder().build();
@@ -243,6 +283,11 @@ class AadhaarVerificationControllerTest {
         assertEquals("Invalid Aadhaar format", body.getMessage());
     }
 
+    /**
+     * Tests Verify Otp under the with existing citizen in egov user_returns user uuid scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyOtp_WithExistingCitizenInEgovUser_ReturnsUserUuid() {
         UserRegistryService userRegistryService = mock(UserRegistryService.class);
@@ -289,6 +334,11 @@ class AadhaarVerificationControllerTest {
         verify(userRegistryService, never()).searchFamilyIdByAadhaar(any(), any(), any());
     }
 
+    /**
+     * Tests Send Otp under the then verify otp_session carries aadhaar and resolves user uuid scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testSendOtp_ThenVerifyOtp_SessionCarriesAadhaarAndResolvesUserUuid() {
         UserRegistryService userRegistryService = mock(UserRegistryService.class);
@@ -353,6 +403,11 @@ class AadhaarVerificationControllerTest {
         assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", body.getUserUuid());
     }
 
+    /**
+     * Tests Verify Otp under the citizen not found in egov user_auto provisions and returns new user uuid scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyOtp_CitizenNotFoundInEgovUser_AutoProvisionsAndReturnsNewUserUuid() {
         UserRegistryService userRegistryService = mock(UserRegistryService.class);
@@ -393,6 +448,11 @@ class AadhaarVerificationControllerTest {
         assertEquals("newly-provisioned-citizen-uuid-999", body.getUserUuid());
     }
 
+    /**
+     * Tests Verify Otp under the with existing citizen and family id_returns user uuid and family id scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyOtp_WithExistingCitizenAndFamilyId_ReturnsUserUuidAndFamilyId() {
         UserRegistryService userRegistryService = mock(UserRegistryService.class);
@@ -443,6 +503,11 @@ class AadhaarVerificationControllerTest {
         verify(userRegistryService, never()).searchFamilyIdByAadhaar(any(), any(), any());
     }
 
+    /**
+     * Tests Verify Otp under the citizen found with null family id_fallback queries family id by user uuid scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testVerifyOtp_CitizenFoundWithNullFamilyId_FallbackQueriesFamilyIdByUserUuid() {
         UserRegistryService userRegistryService = mock(UserRegistryService.class);

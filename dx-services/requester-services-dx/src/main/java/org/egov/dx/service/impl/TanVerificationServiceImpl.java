@@ -60,12 +60,19 @@ public class TanVerificationServiceImpl implements TanVerificationService {
         this.tenantConfigService = tenantConfigService;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Validates request, enforces MDMS tenant configuration, delegates to TAN adapter,
+     * performs deductor name matching if supplied, and returns verification response.</p>
+     */
     @Override
     public TanVerificationResponse verifyTan(TanVerificationRequest request) {
         // 1. Validate incoming request (SRP)
         validator.validateTanRequest(request);
 
-        // 2. Validate tenant-level MDMS configuration
+        // Multi-tenant authorization guard (Review comment Medium #3): Verify that the tenant/ULB
+        // has enabled the TAN verification module in MDMS configuration before invoking external APIs
         if (!tenantConfigService.isVerificationEnabled(request.getRequestInfo(), request.getTenantId(), "TAN")) {
             log.warn("TAN verification is not enabled in MDMS for tenant: {}", request.getTenantId());
             throw new CustomException(TanConstants.ERR_CODE_TENANT_DISABLED,
@@ -101,12 +108,16 @@ public class TanVerificationServiceImpl implements TanVerificationService {
         // 3. Delegate to gateway adapter abstraction (DIP)
         VendorTanVerificationResponse vendorRes = gatewayAdapter.verifyTan(vendorReq);
 
+        // Resilience guard: handle null return from adapter (e.g., unexpected network failure or unhandled exception)
         if (vendorRes == null) {
             log.error("TAN Gateway returned null response for masked TAN: {}", maskedTan);
             throw new CustomException(TanConstants.ERR_CODE_GATEWAY_ERROR, TanConstants.MSG_GATEWAY_ERROR);
         }
 
-        // 4. Handle vendor-level error payload
+        boolean isMock = gatewayAdapter.getClass().getSimpleName().startsWith("Mock");
+        String source = isMock ? TanConstants.SOURCE_MOCK : TanConstants.SOURCE_LIVE_ITD;
+
+        // 4. Handle vendor-level error payload (e.g. record not found or invalid credentials)
         if (vendorRes.getErrorDetails() != null) {
             log.warn("ITD TAN gateway returned error for masked TAN {}: {} - {}",
                     maskedTan, vendorRes.getErrorDetails().getErrorCode(), vendorRes.getErrorDetails().getErrorMessage());
@@ -116,6 +127,8 @@ public class TanVerificationServiceImpl implements TanVerificationService {
                     .responseInfo(responseInfo)
                     .isVerified(false)
                     .maskedTan(maskedTan)
+                    .source(source)
+                    .isMock(isMock)
                     .errorDetails(TanVerificationResponse.TanErrorDetails.builder()
                             .errorCode(vendorRes.getErrorDetails().getErrorCode())
                             .errorMessage(vendorRes.getErrorDetails().getErrorMessage())
@@ -128,16 +141,36 @@ public class TanVerificationServiceImpl implements TanVerificationService {
         TanDetails uDetails = mapToTanDetails(vDetails, maskedTan);
         boolean isVerified = vDetails != null && TanConstants.STATUS_ACTIVE.equalsIgnoreCase(vDetails.getStatus());
 
+        // Deductor name matching: if caller supplied deductorName, compare with official registered name
+        if (vDetails != null && uDetails != null && StringUtils.isNotBlank(request.getDeductorName())) {
+            boolean nameMatched = evaluateDeductorNameMatch(request.getDeductorName(), vDetails.getNameOfDeductor());
+            uDetails.setNameMatch(nameMatched);
+            isVerified = isVerified && nameMatched;
+            log.info("TAN deductor name match evaluated for masked TAN: {}, nameMatched: {}", maskedTan, nameMatched);
+        }
+
         ResponseInfo responseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), isVerified);
         TanVerificationResponse response = TanVerificationResponse.builder()
                 .responseInfo(responseInfo)
                 .isVerified(isVerified)
                 .maskedTan(maskedTan)
+                .source(source)
+                .isMock(isMock)
                 .tanDetails(uDetails)
                 .build();
 
         log.info("TAN verification completed in service for masked TAN: {}, isVerified: {}", maskedTan, isVerified);
         return response;
+    }
+
+    private boolean evaluateDeductorNameMatch(String inputName, String recordName) {
+        // Missing name guard: if input or record deductor name is missing, cannot match
+        if (StringUtils.isBlank(inputName) || StringUtils.isBlank(recordName)) {
+            return false;
+        }
+        String cleanInput = inputName.trim().replaceAll("[^a-zA-Z0-9\\s]", "").replaceAll("\\s+", " ").toUpperCase();
+        String cleanRecord = recordName.trim().replaceAll("[^a-zA-Z0-9\\s]", "").replaceAll("\\s+", " ").toUpperCase();
+        return cleanInput.equalsIgnoreCase(cleanRecord);
     }
 
     /**
@@ -148,11 +181,13 @@ public class TanVerificationServiceImpl implements TanVerificationService {
      * @return enriched domain {@link TanDetails}
      */
     private TanDetails mapToTanDetails(VendorTanVerificationResponse.VendorTanDetails vDetails, String maskedTan) {
+        // Defensive check: return null if vendor returned no details payload
         if (vDetails == null) {
             return null;
         }
 
         TanDetails.TanAddress addr = null;
+        // Address check: map address fields if provided in vendor response
         if (vDetails.getAddress() != null) {
             addr = TanDetails.TanAddress.builder()
                     .line1(vDetails.getAddress().getLine1())
@@ -164,6 +199,7 @@ public class TanVerificationServiceImpl implements TanVerificationService {
         }
 
         TanDetails.TanJurisdiction jur = null;
+        // Jurisdiction check: map assessing officer (AO) details if provided in vendor response
         if (vDetails.getJurisdictionDetails() != null) {
             jur = TanDetails.TanJurisdiction.builder()
                     .aoCode(vDetails.getJurisdictionDetails().getAoCode())
@@ -175,7 +211,6 @@ public class TanVerificationServiceImpl implements TanVerificationService {
         }
 
         return TanDetails.builder()
-                .tan(vDetails.getTan())
                 .maskedTan(maskedTan)
                 .nameOfDeductor(vDetails.getNameOfDeductor())
                 .categoryOfDeductor(vDetails.getCategoryOfDeductor())

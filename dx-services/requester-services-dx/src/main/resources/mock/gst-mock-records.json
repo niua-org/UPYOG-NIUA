@@ -1,8 +1,8 @@
 [
   {
-    "gstin": "03PTLAM0012A1Z5",
-    "lgnm": "MUNICIPAL CORPORATION AMRITSAR",
-    "tradeNam": "MUNICIPAL CORPORATION AMRITSAR",
+    "gstin": "03PTLAM0012A1Z3",
+    "lgnm": "MOCK MUNICIPAL CORPORATION AMRITSAR",
+    "tradeNam": "MOCK MUNICIPAL CORPORATION AMRITSAR",
     "ctb": "Local Authority",
     "dty": "Tax Deductor",
     "sts": "Active",
@@ -24,7 +24,7 @@
     "adadr": []
   },
   {
-    "gstin": "29INFRC1234B1Z2",
+    "gstin": "29INFRC1234B1ZD",
     "lgnm": "INFRASTRUCTURE DEVELOPMENT CORPORATION (KARNATAKA) LTD",
     "tradeNam": "iDeCK",
     "ctb": "Private Limited Company",
@@ -48,7 +48,7 @@
     "adadr": []
   },
   {
-    "gstin": "07MOHUG5678C1Z8",
+    "gstin": "07MOHUG5678C1ZB",
     "lgnm": "MINISTRY OF HOUSING AND URBAN AFFAIRS",
     "tradeNam": "MOHUA GOI",
     "ctb": "Government",
@@ -72,7 +72,7 @@
     "adadr": []
   },
   {
-    "gstin": "03CANCEL0001Z9",
+    "gstin": "03CANCE0001L1Z1",
     "lgnm": "VINTAGE TRADERS ENTERPRISES",
     "tradeNam": "VINTAGE TRADERS",
     "ctb": "Proprietorship",
@@ -96,7 +96,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0001B1Z5",
+    "gstin": "03AAAPS0001B1ZW",
     "lgnm": "AARAV SHARMA",
     "tradeNam": "AARAV SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -120,7 +120,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0002C1Z5",
+    "gstin": "03AAAPV0002C1ZQ",
     "lgnm": "AARAV VERMA",
     "tradeNam": "AARAV VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -144,7 +144,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0003D1Z5",
+    "gstin": "03AAAPG0003D1Z2",
     "lgnm": "AARAV GUPTA",
     "tradeNam": "AARAV GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -168,7 +168,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0004E1Z5",
+    "gstin": "03AAAPS0004E1ZN",
     "lgnm": "AARAV SINGH",
     "tradeNam": "AARAV SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -192,7 +192,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0005F1Z5",
+    "gstin": "03AAAPK0005F1ZS",
     "lgnm": "AARAV KUMAR",
     "tradeNam": "AARAV KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -216,7 +216,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0006G1Z5",
+    "gstin": "04AAAPP0006G1ZI",
     "lgnm": "AARAV PATEL",
     "tradeNam": "AARAV PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -240,7 +240,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0007H1Z5",
+    "gstin": "03AAAPR0007H1ZF",
     "lgnm": "AARAV REDDY",
     "tradeNam": "AARAV REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -264,7 +264,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0008I1Z5",
+    "gstin": "06AAAPI0008I1ZE",
     "lgnm": "AARAV IYER",
     "tradeNam": "AARAV IYER TRADERS",
     "ctb": "Proprietorship",
@@ -288,7 +288,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0009J1Z5",
+    "gstin": "06AAAPN0009J1Z6",
     "lgnm": "AARAV NAIR",
     "tradeNam": "AARAV NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -336,7 +336,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0011L1Z5",
+    "gstin": "03AAAPJ0011L1ZI",
     "lgnm": "AARAV JOSHI",
     "tradeNam": "AARAV JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -360,7 +360,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0012M1Z5",
+    "gstin": "03AAAPD0012M1ZL",
     "lgnm": "AARAV DAS",
     "tradeNam": "AARAV DAS TRADERS",
     "ctb": "Proprietorship",
@@ -384,7 +384,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0013N1Z5",
+    "gstin": "03AAAPS0013N1Z3",
     "lgnm": "AARAV SEN",
     "tradeNam": "AARAV SEN TRADERS",
     "ctb": "Proprietorship",
@@ -408,7 +408,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0014O1Z5",
+    "gstin": "03AAAPM0014O1Z6",
     "lgnm": "AARAV MISHRA",
     "tradeNam": "AARAV MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -432,7 +432,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0015P1Z5",
+    "gstin": "03AAAPB0015P1ZE",
     "lgnm": "AARAV BHAT",
     "tradeNam": "AARAV BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -456,7 +456,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0016Q1Z5",
+    "gstin": "04AAAPK0016Q1Z0",
     "lgnm": "AARAV KAPOOR",
     "tradeNam": "AARAV KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -480,7 +480,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0017R1Z5",
+    "gstin": "03AAAPM0017R1ZX",
     "lgnm": "AARAV MUKHERJEE",
     "tradeNam": "AARAV MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -504,7 +504,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0018S1Z5",
+    "gstin": "06AAAPM0018S1ZO",
     "lgnm": "AARAV MEENA",
     "tradeNam": "AARAV MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -528,7 +528,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0019T1Z5",
+    "gstin": "06AAAPC0019T1ZV",
     "lgnm": "AARAV CHOUDHARY",
     "tradeNam": "AARAV CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -552,7 +552,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0020U1Z5",
+    "gstin": "07AAAPM0020U1ZO",
     "lgnm": "AARAV MALHOTRA",
     "tradeNam": "AARAV MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -576,7 +576,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0021V1Z5",
+    "gstin": "03AAAPB0021V1Z4",
     "lgnm": "AARAV BANSAL",
     "tradeNam": "AARAV BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -600,7 +600,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0022W1Z5",
+    "gstin": "03AAAPA0022W1Z2",
     "lgnm": "AARAV AGARWAL",
     "tradeNam": "AARAV AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -624,7 +624,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0023X1Z5",
+    "gstin": "03AAAPJ0023X1ZQ",
     "lgnm": "AARAV JAIN",
     "tradeNam": "AARAV JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -648,7 +648,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0024Y1Z5",
+    "gstin": "03AAAPK0024Y1ZM",
     "lgnm": "AARAV KHANNA",
     "tradeNam": "AARAV KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -672,7 +672,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0025Z1Z5",
+    "gstin": "03AAAPS0025Z1ZB",
     "lgnm": "AARAV SAXENA",
     "tradeNam": "AARAV SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -696,7 +696,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0026A1Z5",
+    "gstin": "04AAAPD0026A1Z2",
     "lgnm": "AARAV DUBEY",
     "tradeNam": "AARAV DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -720,7 +720,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0027B1Z5",
+    "gstin": "03AAAPT0027B1ZL",
     "lgnm": "AARAV TIWARI",
     "tradeNam": "AARAV TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -744,7 +744,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0028C1Z5",
+    "gstin": "06AAAPP0028C1ZG",
     "lgnm": "AARAV PANDEY",
     "tradeNam": "AARAV PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -768,7 +768,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0029D1Z5",
+    "gstin": "06AAAPR0029D1ZB",
     "lgnm": "AARAV ROY",
     "tradeNam": "AARAV ROY TRADERS",
     "ctb": "Proprietorship",
@@ -792,7 +792,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0030E1Z5",
+    "gstin": "07AAAPG0030E1ZP",
     "lgnm": "AARAV GHOSH",
     "tradeNam": "AARAV GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -816,7 +816,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0031F1Z5",
+    "gstin": "03AAAPB0031F1ZZ",
     "lgnm": "AARAV BHATTACHARYA",
     "tradeNam": "AARAV BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -840,7 +840,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0032G1Z5",
+    "gstin": "03AAAPC0032G1ZV",
     "lgnm": "AARAV CHATTERJEE",
     "tradeNam": "AARAV CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -864,7 +864,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0033H1Z5",
+    "gstin": "03AAAPK0033H1ZK",
     "lgnm": "AARAV KULKARNI",
     "tradeNam": "AARAV KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -888,7 +888,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0034I1Z5",
+    "gstin": "03AAAPD0034I1ZN",
     "lgnm": "AARAV DESHMUKH",
     "tradeNam": "AARAV DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -912,7 +912,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0035J1Z5",
+    "gstin": "03AAAPP0035J1Z8",
     "lgnm": "AARAV PATIL",
     "tradeNam": "AARAV PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -936,7 +936,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0036K1Z5",
+    "gstin": "04AAAPY0036K1ZU",
     "lgnm": "AARAV YADAV",
     "tradeNam": "AARAV YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -960,7 +960,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0037L1Z5",
+    "gstin": "03AAAPC0037L1ZF",
     "lgnm": "AARAV CHAUHAN",
     "tradeNam": "AARAV CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -984,7 +984,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0038M1Z5",
+    "gstin": "06AAAPT0038M1ZP",
     "lgnm": "AARAV THAKUR",
     "tradeNam": "AARAV THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -1008,7 +1008,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0039N1Z5",
+    "gstin": "06AAAPG0039N1ZZ",
     "lgnm": "AARAV GILL",
     "tradeNam": "AARAV GILL TRADERS",
     "ctb": "Proprietorship",
@@ -1056,7 +1056,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0041P1Z5",
+    "gstin": "03AAAPS0041P1ZV",
     "lgnm": "ROHAN SHARMA",
     "tradeNam": "ROHAN SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -1080,7 +1080,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0042Q1Z5",
+    "gstin": "03AAAPV0042Q1ZP",
     "lgnm": "ROHAN VERMA",
     "tradeNam": "ROHAN VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -1104,7 +1104,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0043R1Z5",
+    "gstin": "03AAAPG0043R1Z1",
     "lgnm": "ROHAN GUPTA",
     "tradeNam": "ROHAN GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -1128,7 +1128,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0044S1Z5",
+    "gstin": "03AAAPS0044S1ZM",
     "lgnm": "ROHAN SINGH",
     "tradeNam": "ROHAN SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -1152,7 +1152,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0045T1Z5",
+    "gstin": "03AAAPK0045T1ZR",
     "lgnm": "ROHAN KUMAR",
     "tradeNam": "ROHAN KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -1176,7 +1176,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0046U1Z5",
+    "gstin": "04AAAPP0046U1ZH",
     "lgnm": "ROHAN PATEL",
     "tradeNam": "ROHAN PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -1200,7 +1200,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0047V1Z5",
+    "gstin": "03AAAPR0047V1ZE",
     "lgnm": "ROHAN REDDY",
     "tradeNam": "ROHAN REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -1224,7 +1224,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0048W1Z5",
+    "gstin": "06AAAPI0048W1ZE",
     "lgnm": "ROHAN IYER",
     "tradeNam": "ROHAN IYER TRADERS",
     "ctb": "Proprietorship",
@@ -1248,7 +1248,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0049X1Z5",
+    "gstin": "06AAAPN0049X1Z6",
     "lgnm": "ROHAN NAIR",
     "tradeNam": "ROHAN NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -1296,7 +1296,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0051Z1Z5",
+    "gstin": "03AAAPJ0051Z1ZI",
     "lgnm": "ROHAN JOSHI",
     "tradeNam": "ROHAN JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -1320,7 +1320,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0052A1Z5",
+    "gstin": "03AAAPD0052A1Z2",
     "lgnm": "ROHAN DAS",
     "tradeNam": "ROHAN DAS TRADERS",
     "ctb": "Proprietorship",
@@ -1344,7 +1344,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0053B1Z5",
+    "gstin": "03AAAPS0053B1ZK",
     "lgnm": "ROHAN SEN",
     "tradeNam": "ROHAN SEN TRADERS",
     "ctb": "Proprietorship",
@@ -1368,7 +1368,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0054C1Z5",
+    "gstin": "03AAAPM0054C1ZN",
     "lgnm": "ROHAN MISHRA",
     "tradeNam": "ROHAN MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -1392,7 +1392,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0055D1Z5",
+    "gstin": "03AAAPB0055D1ZV",
     "lgnm": "ROHAN BHAT",
     "tradeNam": "ROHAN BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -1416,7 +1416,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0056E1Z5",
+    "gstin": "04AAAPK0056E1ZH",
     "lgnm": "ROHAN KAPOOR",
     "tradeNam": "ROHAN KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -1440,7 +1440,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0057F1Z5",
+    "gstin": "03AAAPM0057F1ZE",
     "lgnm": "ROHAN MUKHERJEE",
     "tradeNam": "ROHAN MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -1488,7 +1488,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0059H1Z5",
+    "gstin": "06AAAPC0059H1ZC",
     "lgnm": "ROHAN CHOUDHARY",
     "tradeNam": "ROHAN CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -1512,7 +1512,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0060I1Z5",
+    "gstin": "07AAAPM0060I1Z4",
     "lgnm": "ROHAN MALHOTRA",
     "tradeNam": "ROHAN MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -1536,7 +1536,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0061J1Z5",
+    "gstin": "03AAAPB0061J1ZK",
     "lgnm": "ROHAN BANSAL",
     "tradeNam": "ROHAN BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -1560,7 +1560,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0062K1Z5",
+    "gstin": "03AAAPA0062K1ZI",
     "lgnm": "ROHAN AGARWAL",
     "tradeNam": "ROHAN AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -1584,7 +1584,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0063L1Z5",
+    "gstin": "03AAAPJ0063L1Z6",
     "lgnm": "ROHAN JAIN",
     "tradeNam": "ROHAN JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -1608,7 +1608,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0064M1Z5",
+    "gstin": "03AAAPK0064M1Z2",
     "lgnm": "ROHAN KHANNA",
     "tradeNam": "ROHAN KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -1632,7 +1632,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0065N1Z5",
+    "gstin": "03AAAPS0065N1ZR",
     "lgnm": "ROHAN SAXENA",
     "tradeNam": "ROHAN SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -1656,7 +1656,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0066O1Z5",
+    "gstin": "04AAAPD0066O1Z1",
     "lgnm": "ROHAN DUBEY",
     "tradeNam": "ROHAN DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -1680,7 +1680,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0067P1Z5",
+    "gstin": "03AAAPT0067P1ZK",
     "lgnm": "ROHAN TIWARI",
     "tradeNam": "ROHAN TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -1704,7 +1704,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0068Q1Z5",
+    "gstin": "06AAAPP0068Q1ZF",
     "lgnm": "ROHAN PANDEY",
     "tradeNam": "ROHAN PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -1728,7 +1728,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0069R1Z5",
+    "gstin": "06AAAPR0069R1ZA",
     "lgnm": "ROHAN ROY",
     "tradeNam": "ROHAN ROY TRADERS",
     "ctb": "Proprietorship",
@@ -1752,7 +1752,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0070S1Z5",
+    "gstin": "07AAAPG0070S1ZO",
     "lgnm": "ROHAN GHOSH",
     "tradeNam": "ROHAN GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -1776,7 +1776,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0071T1Z5",
+    "gstin": "03AAAPB0071T1ZY",
     "lgnm": "ROHAN BHATTACHARYA",
     "tradeNam": "ROHAN BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -1800,7 +1800,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0072U1Z5",
+    "gstin": "03AAAPC0072U1ZU",
     "lgnm": "ROHAN CHATTERJEE",
     "tradeNam": "ROHAN CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -1824,7 +1824,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0073V1Z5",
+    "gstin": "03AAAPK0073V1ZJ",
     "lgnm": "ROHAN KULKARNI",
     "tradeNam": "ROHAN KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -1848,7 +1848,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0074W1Z5",
+    "gstin": "03AAAPD0074W1ZN",
     "lgnm": "ROHAN DESHMUKH",
     "tradeNam": "ROHAN DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -1872,7 +1872,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0075X1Z5",
+    "gstin": "03AAAPP0075X1Z8",
     "lgnm": "ROHAN PATIL",
     "tradeNam": "ROHAN PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -1896,7 +1896,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0076Y1Z5",
+    "gstin": "04AAAPY0076Y1ZU",
     "lgnm": "ROHAN YADAV",
     "tradeNam": "ROHAN YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -1920,7 +1920,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0077Z1Z5",
+    "gstin": "03AAAPC0077Z1ZF",
     "lgnm": "ROHAN CHAUHAN",
     "tradeNam": "ROHAN CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -1944,7 +1944,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0078A1Z5",
+    "gstin": "06AAAPT0078A1Z6",
     "lgnm": "ROHAN THAKUR",
     "tradeNam": "ROHAN THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -1968,7 +1968,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0079B1Z5",
+    "gstin": "06AAAPG0079B1ZG",
     "lgnm": "ROHAN GILL",
     "tradeNam": "ROHAN GILL TRADERS",
     "ctb": "Proprietorship",
@@ -1992,7 +1992,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0080C1Z5",
+    "gstin": "07AAAPD0080C1ZM",
     "lgnm": "ROHAN DHILLON",
     "tradeNam": "ROHAN DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -2016,7 +2016,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0081D1Z5",
+    "gstin": "03AAAPS0081D1ZC",
     "lgnm": "VIKRAM SHARMA",
     "tradeNam": "VIKRAM SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -2040,7 +2040,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0082E1Z5",
+    "gstin": "03AAAPV0082E1Z6",
     "lgnm": "VIKRAM VERMA",
     "tradeNam": "VIKRAM VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -2064,7 +2064,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0083F1Z5",
+    "gstin": "03AAAPG0083F1ZI",
     "lgnm": "VIKRAM GUPTA",
     "tradeNam": "VIKRAM GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -2088,7 +2088,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0084G1Z5",
+    "gstin": "03AAAPS0084G1Z3",
     "lgnm": "VIKRAM SINGH",
     "tradeNam": "VIKRAM SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -2112,7 +2112,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0085H1Z5",
+    "gstin": "03AAAPK0085H1Z8",
     "lgnm": "VIKRAM KUMAR",
     "tradeNam": "VIKRAM KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -2136,7 +2136,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0086I1Z5",
+    "gstin": "04AAAPP0086I1ZX",
     "lgnm": "VIKRAM PATEL",
     "tradeNam": "VIKRAM PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -2160,7 +2160,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0087J1Z5",
+    "gstin": "03AAAPR0087J1ZU",
     "lgnm": "VIKRAM REDDY",
     "tradeNam": "VIKRAM REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -2184,7 +2184,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0088K1Z5",
+    "gstin": "06AAAPI0088K1ZU",
     "lgnm": "VIKRAM IYER",
     "tradeNam": "VIKRAM IYER TRADERS",
     "ctb": "Proprietorship",
@@ -2208,7 +2208,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0089L1Z5",
+    "gstin": "06AAAPN0089L1ZM",
     "lgnm": "VIKRAM NAIR",
     "tradeNam": "VIKRAM NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -2232,7 +2232,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0090M1Z5",
+    "gstin": "07AAAPR0090M1ZL",
     "lgnm": "VIKRAM RAO",
     "tradeNam": "VIKRAM RAO TRADERS",
     "ctb": "Proprietorship",
@@ -2256,7 +2256,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0091N1Z5",
+    "gstin": "03AAAPJ0091N1ZY",
     "lgnm": "VIKRAM JOSHI",
     "tradeNam": "VIKRAM JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -2280,7 +2280,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0092O1Z5",
+    "gstin": "03AAAPD0092O1Z1",
     "lgnm": "VIKRAM DAS",
     "tradeNam": "VIKRAM DAS TRADERS",
     "ctb": "Proprietorship",
@@ -2304,7 +2304,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0093P1Z5",
+    "gstin": "03AAAPS0093P1ZJ",
     "lgnm": "VIKRAM SEN",
     "tradeNam": "VIKRAM SEN TRADERS",
     "ctb": "Proprietorship",
@@ -2328,7 +2328,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0094Q1Z5",
+    "gstin": "03AAAPM0094Q1ZM",
     "lgnm": "VIKRAM MISHRA",
     "tradeNam": "VIKRAM MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -2352,7 +2352,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0095R1Z5",
+    "gstin": "03AAAPB0095R1ZU",
     "lgnm": "VIKRAM BHAT",
     "tradeNam": "VIKRAM BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -2376,7 +2376,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0096S1Z5",
+    "gstin": "04AAAPK0096S1ZG",
     "lgnm": "VIKRAM KAPOOR",
     "tradeNam": "VIKRAM KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -2400,7 +2400,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0097T1Z5",
+    "gstin": "03AAAPM0097T1ZD",
     "lgnm": "VIKRAM MUKHERJEE",
     "tradeNam": "VIKRAM MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -2424,7 +2424,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0098U1Z5",
+    "gstin": "06AAAPM0098U1Z4",
     "lgnm": "VIKRAM MEENA",
     "tradeNam": "VIKRAM MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -2448,7 +2448,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0099V1Z5",
+    "gstin": "06AAAPC0099V1ZB",
     "lgnm": "VIKRAM CHOUDHARY",
     "tradeNam": "VIKRAM CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -2472,7 +2472,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0100W1Z5",
+    "gstin": "07AAAPM0100W1ZN",
     "lgnm": "VIKRAM MALHOTRA",
     "tradeNam": "VIKRAM MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -2496,7 +2496,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0101X1Z5",
+    "gstin": "03AAAPB0101X1Z3",
     "lgnm": "VIKRAM BANSAL",
     "tradeNam": "VIKRAM BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -2520,7 +2520,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0102Y1Z5",
+    "gstin": "03AAAPA0102Y1Z1",
     "lgnm": "VIKRAM AGARWAL",
     "tradeNam": "VIKRAM AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -2544,7 +2544,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0103Z1Z5",
+    "gstin": "03AAAPJ0103Z1ZP",
     "lgnm": "VIKRAM JAIN",
     "tradeNam": "VIKRAM JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -2568,7 +2568,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0104A1Z5",
+    "gstin": "03AAAPK0104A1Z2",
     "lgnm": "VIKRAM KHANNA",
     "tradeNam": "VIKRAM KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -2592,7 +2592,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0105B1Z5",
+    "gstin": "03AAAPS0105B1ZR",
     "lgnm": "VIKRAM SAXENA",
     "tradeNam": "VIKRAM SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -2616,7 +2616,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0106C1Z5",
+    "gstin": "04AAAPD0106C1Z1",
     "lgnm": "VIKRAM DUBEY",
     "tradeNam": "VIKRAM DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -2640,7 +2640,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0107D1Z5",
+    "gstin": "03AAAPT0107D1ZK",
     "lgnm": "VIKRAM TIWARI",
     "tradeNam": "VIKRAM TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -2664,7 +2664,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0108E1Z5",
+    "gstin": "06AAAPP0108E1ZF",
     "lgnm": "VIKRAM PANDEY",
     "tradeNam": "VIKRAM PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -2688,7 +2688,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0109F1Z5",
+    "gstin": "06AAAPR0109F1ZA",
     "lgnm": "VIKRAM ROY",
     "tradeNam": "VIKRAM ROY TRADERS",
     "ctb": "Proprietorship",
@@ -2712,7 +2712,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0110G1Z5",
+    "gstin": "07AAAPG0110G1ZO",
     "lgnm": "VIKRAM GHOSH",
     "tradeNam": "VIKRAM GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -2736,7 +2736,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0111H1Z5",
+    "gstin": "03AAAPB0111H1ZY",
     "lgnm": "VIKRAM BHATTACHARYA",
     "tradeNam": "VIKRAM BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -2760,7 +2760,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0112I1Z5",
+    "gstin": "03AAAPC0112I1ZT",
     "lgnm": "VIKRAM CHATTERJEE",
     "tradeNam": "VIKRAM CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -2784,7 +2784,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0113J1Z5",
+    "gstin": "03AAAPK0113J1ZI",
     "lgnm": "VIKRAM KULKARNI",
     "tradeNam": "VIKRAM KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -2808,7 +2808,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0114K1Z5",
+    "gstin": "03AAAPD0114K1ZM",
     "lgnm": "VIKRAM DESHMUKH",
     "tradeNam": "VIKRAM DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -2832,7 +2832,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0115L1Z5",
+    "gstin": "03AAAPP0115L1Z7",
     "lgnm": "VIKRAM PATIL",
     "tradeNam": "VIKRAM PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -2856,7 +2856,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0116M1Z5",
+    "gstin": "04AAAPY0116M1ZT",
     "lgnm": "VIKRAM YADAV",
     "tradeNam": "VIKRAM YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -2880,7 +2880,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0117N1Z5",
+    "gstin": "03AAAPC0117N1ZE",
     "lgnm": "VIKRAM CHAUHAN",
     "tradeNam": "VIKRAM CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -2904,7 +2904,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0118O1Z5",
+    "gstin": "06AAAPT0118O1ZO",
     "lgnm": "VIKRAM THAKUR",
     "tradeNam": "VIKRAM THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -2928,7 +2928,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0119P1Z5",
+    "gstin": "06AAAPG0119P1ZY",
     "lgnm": "VIKRAM GILL",
     "tradeNam": "VIKRAM GILL TRADERS",
     "ctb": "Proprietorship",
@@ -2952,7 +2952,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0120Q1Z5",
+    "gstin": "07AAAPD0120Q1Z4",
     "lgnm": "VIKRAM DHILLON",
     "tradeNam": "VIKRAM DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -2976,7 +2976,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0121R1Z5",
+    "gstin": "03AAAPS0121R1ZU",
     "lgnm": "RAHUL SHARMA",
     "tradeNam": "RAHUL SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -3000,7 +3000,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0122S1Z5",
+    "gstin": "03AAAPV0122S1ZO",
     "lgnm": "RAHUL VERMA",
     "tradeNam": "RAHUL VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -3024,7 +3024,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0123T1Z5",
+    "gstin": "03AAAPG0123T1Z0",
     "lgnm": "RAHUL GUPTA",
     "tradeNam": "RAHUL GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -3048,7 +3048,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0124U1Z5",
+    "gstin": "03AAAPS0124U1ZL",
     "lgnm": "RAHUL SINGH",
     "tradeNam": "RAHUL SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -3072,7 +3072,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0125V1Z5",
+    "gstin": "03AAAPK0125V1ZQ",
     "lgnm": "RAHUL KUMAR",
     "tradeNam": "RAHUL KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -3096,7 +3096,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0126W1Z5",
+    "gstin": "04AAAPP0126W1ZG",
     "lgnm": "RAHUL PATEL",
     "tradeNam": "RAHUL PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -3120,7 +3120,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0127X1Z5",
+    "gstin": "03AAAPR0127X1ZD",
     "lgnm": "RAHUL REDDY",
     "tradeNam": "RAHUL REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -3144,7 +3144,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0128Y1Z5",
+    "gstin": "06AAAPI0128Y1ZD",
     "lgnm": "RAHUL IYER",
     "tradeNam": "RAHUL IYER TRADERS",
     "ctb": "Proprietorship",
@@ -3192,7 +3192,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0130A1Z5",
+    "gstin": "07AAAPR0130A1ZL",
     "lgnm": "RAHUL RAO",
     "tradeNam": "RAHUL RAO TRADERS",
     "ctb": "Proprietorship",
@@ -3216,7 +3216,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0131B1Z5",
+    "gstin": "03AAAPJ0131B1ZY",
     "lgnm": "RAHUL JOSHI",
     "tradeNam": "RAHUL JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -3240,7 +3240,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0132C1Z5",
+    "gstin": "03AAAPD0132C1Z1",
     "lgnm": "RAHUL DAS",
     "tradeNam": "RAHUL DAS TRADERS",
     "ctb": "Proprietorship",
@@ -3264,7 +3264,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0133D1Z5",
+    "gstin": "03AAAPS0133D1ZJ",
     "lgnm": "RAHUL SEN",
     "tradeNam": "RAHUL SEN TRADERS",
     "ctb": "Proprietorship",
@@ -3288,7 +3288,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0134E1Z5",
+    "gstin": "03AAAPM0134E1ZM",
     "lgnm": "RAHUL MISHRA",
     "tradeNam": "RAHUL MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -3312,7 +3312,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0135F1Z5",
+    "gstin": "03AAAPB0135F1ZU",
     "lgnm": "RAHUL BHAT",
     "tradeNam": "RAHUL BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -3336,7 +3336,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0136G1Z5",
+    "gstin": "04AAAPK0136G1ZG",
     "lgnm": "RAHUL KAPOOR",
     "tradeNam": "RAHUL KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -3360,7 +3360,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0137H1Z5",
+    "gstin": "03AAAPM0137H1ZD",
     "lgnm": "RAHUL MUKHERJEE",
     "tradeNam": "RAHUL MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -3384,7 +3384,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0138I1Z5",
+    "gstin": "06AAAPM0138I1Z3",
     "lgnm": "RAHUL MEENA",
     "tradeNam": "RAHUL MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -3408,7 +3408,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0139J1Z5",
+    "gstin": "06AAAPC0139J1ZA",
     "lgnm": "RAHUL CHOUDHARY",
     "tradeNam": "RAHUL CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -3432,7 +3432,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0140K1Z5",
+    "gstin": "07AAAPM0140K1Z3",
     "lgnm": "RAHUL MALHOTRA",
     "tradeNam": "RAHUL MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -3456,7 +3456,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0141L1Z5",
+    "gstin": "03AAAPB0141L1ZJ",
     "lgnm": "RAHUL BANSAL",
     "tradeNam": "RAHUL BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -3480,7 +3480,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0142M1Z5",
+    "gstin": "03AAAPA0142M1ZH",
     "lgnm": "RAHUL AGARWAL",
     "tradeNam": "RAHUL AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -3528,7 +3528,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0144O1Z5",
+    "gstin": "03AAAPK0144O1Z1",
     "lgnm": "RAHUL KHANNA",
     "tradeNam": "RAHUL KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -3552,7 +3552,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0145P1Z5",
+    "gstin": "03AAAPS0145P1ZQ",
     "lgnm": "RAHUL SAXENA",
     "tradeNam": "RAHUL SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -3576,7 +3576,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0146Q1Z5",
+    "gstin": "04AAAPD0146Q1Z0",
     "lgnm": "RAHUL DUBEY",
     "tradeNam": "RAHUL DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -3600,7 +3600,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0147R1Z5",
+    "gstin": "03AAAPT0147R1ZJ",
     "lgnm": "RAHUL TIWARI",
     "tradeNam": "RAHUL TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -3624,7 +3624,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0148S1Z5",
+    "gstin": "06AAAPP0148S1ZE",
     "lgnm": "RAHUL PANDEY",
     "tradeNam": "RAHUL PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -3648,7 +3648,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0149T1Z5",
+    "gstin": "06AAAPR0149T1Z9",
     "lgnm": "RAHUL ROY",
     "tradeNam": "RAHUL ROY TRADERS",
     "ctb": "Proprietorship",
@@ -3672,7 +3672,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0150U1Z5",
+    "gstin": "07AAAPG0150U1ZN",
     "lgnm": "RAHUL GHOSH",
     "tradeNam": "RAHUL GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -3696,7 +3696,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0151V1Z5",
+    "gstin": "03AAAPB0151V1ZX",
     "lgnm": "RAHUL BHATTACHARYA",
     "tradeNam": "RAHUL BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -3720,7 +3720,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0152W1Z5",
+    "gstin": "03AAAPC0152W1ZT",
     "lgnm": "RAHUL CHATTERJEE",
     "tradeNam": "RAHUL CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -3744,7 +3744,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0153X1Z5",
+    "gstin": "03AAAPK0153X1ZI",
     "lgnm": "RAHUL KULKARNI",
     "tradeNam": "RAHUL KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -3768,7 +3768,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0154Y1Z5",
+    "gstin": "03AAAPD0154Y1ZM",
     "lgnm": "RAHUL DESHMUKH",
     "tradeNam": "RAHUL DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -3792,7 +3792,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0155Z1Z5",
+    "gstin": "03AAAPP0155Z1Z7",
     "lgnm": "RAHUL PATIL",
     "tradeNam": "RAHUL PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -3816,7 +3816,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0156A1Z5",
+    "gstin": "04AAAPY0156A1ZA",
     "lgnm": "RAHUL YADAV",
     "tradeNam": "RAHUL YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -3840,7 +3840,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0157B1Z5",
+    "gstin": "03AAAPC0157B1ZV",
     "lgnm": "RAHUL CHAUHAN",
     "tradeNam": "RAHUL CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -3888,7 +3888,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0159D1Z5",
+    "gstin": "06AAAPG0159D1ZF",
     "lgnm": "RAHUL GILL",
     "tradeNam": "RAHUL GILL TRADERS",
     "ctb": "Proprietorship",
@@ -3912,7 +3912,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0160E1Z5",
+    "gstin": "07AAAPD0160E1ZL",
     "lgnm": "RAHUL DHILLON",
     "tradeNam": "RAHUL DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -3936,7 +3936,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0161F1Z5",
+    "gstin": "03AAAPS0161F1ZB",
     "lgnm": "AMITABH SHARMA",
     "tradeNam": "AMITABH SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -3984,7 +3984,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0163H1Z5",
+    "gstin": "03AAAPG0163H1ZH",
     "lgnm": "AMITABH GUPTA",
     "tradeNam": "AMITABH GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -4008,7 +4008,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0164I1Z5",
+    "gstin": "03AAAPS0164I1Z1",
     "lgnm": "AMITABH SINGH",
     "tradeNam": "AMITABH SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -4032,7 +4032,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0165J1Z5",
+    "gstin": "03AAAPK0165J1Z6",
     "lgnm": "AMITABH KUMAR",
     "tradeNam": "AMITABH KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -4056,7 +4056,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0166K1Z5",
+    "gstin": "04AAAPP0166K1ZW",
     "lgnm": "AMITABH PATEL",
     "tradeNam": "AMITABH PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -4080,7 +4080,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0167L1Z5",
+    "gstin": "03AAAPR0167L1ZT",
     "lgnm": "AMITABH REDDY",
     "tradeNam": "AMITABH REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -4104,7 +4104,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0168M1Z5",
+    "gstin": "06AAAPI0168M1ZT",
     "lgnm": "AMITABH IYER",
     "tradeNam": "AMITABH IYER TRADERS",
     "ctb": "Proprietorship",
@@ -4128,7 +4128,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0169N1Z5",
+    "gstin": "06AAAPN0169N1ZL",
     "lgnm": "AMITABH NAIR",
     "tradeNam": "AMITABH NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -4152,7 +4152,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0170O1Z5",
+    "gstin": "07AAAPR0170O1ZK",
     "lgnm": "AMITABH RAO",
     "tradeNam": "AMITABH RAO TRADERS",
     "ctb": "Proprietorship",
@@ -4176,7 +4176,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0171P1Z5",
+    "gstin": "03AAAPJ0171P1ZX",
     "lgnm": "AMITABH JOSHI",
     "tradeNam": "AMITABH JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -4200,7 +4200,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0172Q1Z5",
+    "gstin": "03AAAPD0172Q1Z0",
     "lgnm": "AMITABH DAS",
     "tradeNam": "AMITABH DAS TRADERS",
     "ctb": "Proprietorship",
@@ -4224,7 +4224,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0173R1Z5",
+    "gstin": "03AAAPS0173R1ZI",
     "lgnm": "AMITABH SEN",
     "tradeNam": "AMITABH SEN TRADERS",
     "ctb": "Proprietorship",
@@ -4248,7 +4248,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0174S1Z5",
+    "gstin": "03AAAPM0174S1ZL",
     "lgnm": "AMITABH MISHRA",
     "tradeNam": "AMITABH MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -4272,7 +4272,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0175T1Z5",
+    "gstin": "03AAAPB0175T1ZT",
     "lgnm": "AMITABH BHAT",
     "tradeNam": "AMITABH BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -4296,7 +4296,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0176U1Z5",
+    "gstin": "04AAAPK0176U1ZF",
     "lgnm": "AMITABH KAPOOR",
     "tradeNam": "AMITABH KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -4320,7 +4320,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0177V1Z5",
+    "gstin": "03AAAPM0177V1ZC",
     "lgnm": "AMITABH MUKHERJEE",
     "tradeNam": "AMITABH MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -4344,7 +4344,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0178W1Z5",
+    "gstin": "06AAAPM0178W1Z3",
     "lgnm": "AMITABH MEENA",
     "tradeNam": "AMITABH MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -4368,7 +4368,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0179X1Z5",
+    "gstin": "06AAAPC0179X1ZA",
     "lgnm": "AMITABH CHOUDHARY",
     "tradeNam": "AMITABH CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -4392,7 +4392,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0180Y1Z5",
+    "gstin": "07AAAPM0180Y1Z3",
     "lgnm": "AMITABH MALHOTRA",
     "tradeNam": "AMITABH MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -4416,7 +4416,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0181Z1Z5",
+    "gstin": "03AAAPB0181Z1ZJ",
     "lgnm": "AMITABH BANSAL",
     "tradeNam": "AMITABH BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -4440,7 +4440,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0182A1Z5",
+    "gstin": "03AAAPA0182A1ZY",
     "lgnm": "AMITABH AGARWAL",
     "tradeNam": "AMITABH AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -4464,7 +4464,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0183B1Z5",
+    "gstin": "03AAAPJ0183B1ZM",
     "lgnm": "AMITABH JAIN",
     "tradeNam": "AMITABH JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -4488,7 +4488,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0184C1Z5",
+    "gstin": "03AAAPK0184C1ZI",
     "lgnm": "AMITABH KHANNA",
     "tradeNam": "AMITABH KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -4512,7 +4512,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0185D1Z5",
+    "gstin": "03AAAPS0185D1Z7",
     "lgnm": "AMITABH SAXENA",
     "tradeNam": "AMITABH SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -4536,7 +4536,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0186E1Z5",
+    "gstin": "04AAAPD0186E1ZH",
     "lgnm": "AMITABH DUBEY",
     "tradeNam": "AMITABH DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -4560,7 +4560,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0187F1Z5",
+    "gstin": "03AAAPT0187F1Z0",
     "lgnm": "AMITABH TIWARI",
     "tradeNam": "AMITABH TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -4584,7 +4584,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0188G1Z5",
+    "gstin": "06AAAPP0188G1ZV",
     "lgnm": "AMITABH PANDEY",
     "tradeNam": "AMITABH PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -4608,7 +4608,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0189H1Z5",
+    "gstin": "06AAAPR0189H1ZQ",
     "lgnm": "AMITABH ROY",
     "tradeNam": "AMITABH ROY TRADERS",
     "ctb": "Proprietorship",
@@ -4632,7 +4632,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0190I1Z5",
+    "gstin": "07AAAPG0190I1Z3",
     "lgnm": "AMITABH GHOSH",
     "tradeNam": "AMITABH GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -4656,7 +4656,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0191J1Z5",
+    "gstin": "03AAAPB0191J1ZD",
     "lgnm": "AMITABH BHATTACHARYA",
     "tradeNam": "AMITABH BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -4680,7 +4680,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0192K1Z5",
+    "gstin": "03AAAPC0192K1Z9",
     "lgnm": "AMITABH CHATTERJEE",
     "tradeNam": "AMITABH CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -4704,7 +4704,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0193L1Z5",
+    "gstin": "03AAAPK0193L1ZY",
     "lgnm": "AMITABH KULKARNI",
     "tradeNam": "AMITABH KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -4728,7 +4728,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0194M1Z5",
+    "gstin": "03AAAPD0194M1Z2",
     "lgnm": "AMITABH DESHMUKH",
     "tradeNam": "AMITABH DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -4752,7 +4752,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0195N1Z5",
+    "gstin": "03AAAPP0195N1ZN",
     "lgnm": "AMITABH PATIL",
     "tradeNam": "AMITABH PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -4776,7 +4776,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0196O1Z5",
+    "gstin": "04AAAPY0196O1Z9",
     "lgnm": "AMITABH YADAV",
     "tradeNam": "AMITABH YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -4800,7 +4800,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0197P1Z5",
+    "gstin": "03AAAPC0197P1ZU",
     "lgnm": "AMITABH CHAUHAN",
     "tradeNam": "AMITABH CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -4824,7 +4824,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0198Q1Z5",
+    "gstin": "06AAAPT0198Q1Z4",
     "lgnm": "AMITABH THAKUR",
     "tradeNam": "AMITABH THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -4848,7 +4848,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0199R1Z5",
+    "gstin": "06AAAPG0199R1ZE",
     "lgnm": "AMITABH GILL",
     "tradeNam": "AMITABH GILL TRADERS",
     "ctb": "Proprietorship",
@@ -4872,7 +4872,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0200S1Z5",
+    "gstin": "07AAAPD0200S1Z3",
     "lgnm": "AMITABH DHILLON",
     "tradeNam": "AMITABH DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -4896,7 +4896,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0201T1Z5",
+    "gstin": "03AAAPS0201T1ZT",
     "lgnm": "RAJESH SHARMA",
     "tradeNam": "RAJESH SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -4920,7 +4920,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0202U1Z5",
+    "gstin": "03AAAPV0202U1ZN",
     "lgnm": "RAJESH VERMA",
     "tradeNam": "RAJESH VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -4944,7 +4944,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0203V1Z5",
+    "gstin": "03AAAPG0203V1ZZ",
     "lgnm": "RAJESH GUPTA",
     "tradeNam": "RAJESH GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -4968,7 +4968,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0204W1Z5",
+    "gstin": "03AAAPS0204W1ZK",
     "lgnm": "RAJESH SINGH",
     "tradeNam": "RAJESH SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -4992,7 +4992,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0205X1Z5",
+    "gstin": "03AAAPK0205X1ZP",
     "lgnm": "RAJESH KUMAR",
     "tradeNam": "RAJESH KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -5016,7 +5016,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0206Y1Z5",
+    "gstin": "04AAAPP0206Y1ZF",
     "lgnm": "RAJESH PATEL",
     "tradeNam": "RAJESH PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -5040,7 +5040,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0207Z1Z5",
+    "gstin": "03AAAPR0207Z1ZC",
     "lgnm": "RAJESH REDDY",
     "tradeNam": "RAJESH REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -5064,7 +5064,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0208A1Z5",
+    "gstin": "06AAAPI0208A1ZT",
     "lgnm": "RAJESH IYER",
     "tradeNam": "RAJESH IYER TRADERS",
     "ctb": "Proprietorship",
@@ -5088,7 +5088,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0209B1Z5",
+    "gstin": "06AAAPN0209B1ZL",
     "lgnm": "RAJESH NAIR",
     "tradeNam": "RAJESH NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -5112,7 +5112,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0210C1Z5",
+    "gstin": "07AAAPR0210C1ZK",
     "lgnm": "RAJESH RAO",
     "tradeNam": "RAJESH RAO TRADERS",
     "ctb": "Proprietorship",
@@ -5136,7 +5136,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0211D1Z5",
+    "gstin": "03AAAPJ0211D1ZX",
     "lgnm": "RAJESH JOSHI",
     "tradeNam": "RAJESH JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -5160,7 +5160,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0212E1Z5",
+    "gstin": "03AAAPD0212E1Z0",
     "lgnm": "RAJESH DAS",
     "tradeNam": "RAJESH DAS TRADERS",
     "ctb": "Proprietorship",
@@ -5184,7 +5184,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0213F1Z5",
+    "gstin": "03AAAPS0213F1ZI",
     "lgnm": "RAJESH SEN",
     "tradeNam": "RAJESH SEN TRADERS",
     "ctb": "Proprietorship",
@@ -5208,7 +5208,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0214G1Z5",
+    "gstin": "03AAAPM0214G1ZL",
     "lgnm": "RAJESH MISHRA",
     "tradeNam": "RAJESH MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -5232,7 +5232,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0215H1Z5",
+    "gstin": "03AAAPB0215H1ZT",
     "lgnm": "RAJESH BHAT",
     "tradeNam": "RAJESH BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -5256,7 +5256,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0216I1Z5",
+    "gstin": "04AAAPK0216I1ZE",
     "lgnm": "RAJESH KAPOOR",
     "tradeNam": "RAJESH KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -5280,7 +5280,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0217J1Z5",
+    "gstin": "03AAAPM0217J1ZB",
     "lgnm": "RAJESH MUKHERJEE",
     "tradeNam": "RAJESH MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -5304,7 +5304,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0218K1Z5",
+    "gstin": "06AAAPM0218K1Z2",
     "lgnm": "RAJESH MEENA",
     "tradeNam": "RAJESH MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -5328,7 +5328,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0219L1Z5",
+    "gstin": "06AAAPC0219L1Z9",
     "lgnm": "RAJESH CHOUDHARY",
     "tradeNam": "RAJESH CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -5352,7 +5352,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0220M1Z5",
+    "gstin": "07AAAPM0220M1Z2",
     "lgnm": "RAJESH MALHOTRA",
     "tradeNam": "RAJESH MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -5376,7 +5376,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0221N1Z5",
+    "gstin": "03AAAPB0221N1ZI",
     "lgnm": "RAJESH BANSAL",
     "tradeNam": "RAJESH BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -5400,7 +5400,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0222O1Z5",
+    "gstin": "03AAAPA0222O1ZG",
     "lgnm": "RAJESH AGARWAL",
     "tradeNam": "RAJESH AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -5424,7 +5424,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0223P1Z5",
+    "gstin": "03AAAPJ0223P1Z4",
     "lgnm": "RAJESH JAIN",
     "tradeNam": "RAJESH JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -5448,7 +5448,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0224Q1Z5",
+    "gstin": "03AAAPK0224Q1Z0",
     "lgnm": "RAJESH KHANNA",
     "tradeNam": "RAJESH KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -5472,7 +5472,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0225R1Z5",
+    "gstin": "03AAAPS0225R1ZP",
     "lgnm": "RAJESH SAXENA",
     "tradeNam": "RAJESH SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -5496,7 +5496,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0226S1Z5",
+    "gstin": "04AAAPD0226S1ZZ",
     "lgnm": "RAJESH DUBEY",
     "tradeNam": "RAJESH DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -5520,7 +5520,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0227T1Z5",
+    "gstin": "03AAAPT0227T1ZI",
     "lgnm": "RAJESH TIWARI",
     "tradeNam": "RAJESH TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -5544,7 +5544,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0228U1Z5",
+    "gstin": "06AAAPP0228U1ZD",
     "lgnm": "RAJESH PANDEY",
     "tradeNam": "RAJESH PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -5568,7 +5568,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0229V1Z5",
+    "gstin": "06AAAPR0229V1Z8",
     "lgnm": "RAJESH ROY",
     "tradeNam": "RAJESH ROY TRADERS",
     "ctb": "Proprietorship",
@@ -5592,7 +5592,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0230W1Z5",
+    "gstin": "07AAAPG0230W1ZM",
     "lgnm": "RAJESH GHOSH",
     "tradeNam": "RAJESH GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -5616,7 +5616,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0231X1Z5",
+    "gstin": "03AAAPB0231X1ZW",
     "lgnm": "RAJESH BHATTACHARYA",
     "tradeNam": "RAJESH BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -5640,7 +5640,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0232Y1Z5",
+    "gstin": "03AAAPC0232Y1ZS",
     "lgnm": "RAJESH CHATTERJEE",
     "tradeNam": "RAJESH CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -5664,7 +5664,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0233Z1Z5",
+    "gstin": "03AAAPK0233Z1ZH",
     "lgnm": "RAJESH KULKARNI",
     "tradeNam": "RAJESH KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -5688,7 +5688,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0234A1Z5",
+    "gstin": "03AAAPD0234A1Z2",
     "lgnm": "RAJESH DESHMUKH",
     "tradeNam": "RAJESH DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -5712,7 +5712,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0235B1Z5",
+    "gstin": "03AAAPP0235B1ZN",
     "lgnm": "RAJESH PATIL",
     "tradeNam": "RAJESH PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -5736,7 +5736,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0236C1Z5",
+    "gstin": "04AAAPY0236C1Z9",
     "lgnm": "RAJESH YADAV",
     "tradeNam": "RAJESH YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -5760,7 +5760,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0237D1Z5",
+    "gstin": "03AAAPC0237D1ZU",
     "lgnm": "RAJESH CHAUHAN",
     "tradeNam": "RAJESH CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -5784,7 +5784,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0238E1Z5",
+    "gstin": "06AAAPT0238E1Z4",
     "lgnm": "RAJESH THAKUR",
     "tradeNam": "RAJESH THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -5808,7 +5808,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0239F1Z5",
+    "gstin": "06AAAPG0239F1ZE",
     "lgnm": "RAJESH GILL",
     "tradeNam": "RAJESH GILL TRADERS",
     "ctb": "Proprietorship",
@@ -5832,7 +5832,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0240G1Z5",
+    "gstin": "07AAAPD0240G1ZK",
     "lgnm": "RAJESH DHILLON",
     "tradeNam": "RAJESH DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -5856,7 +5856,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0241H1Z5",
+    "gstin": "03AAAPS0241H1ZA",
     "lgnm": "SURESH SHARMA",
     "tradeNam": "SURESH SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -5880,7 +5880,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0242I1Z5",
+    "gstin": "03AAAPV0242I1Z3",
     "lgnm": "SURESH VERMA",
     "tradeNam": "SURESH VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -5904,7 +5904,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0243J1Z5",
+    "gstin": "03AAAPG0243J1ZF",
     "lgnm": "SURESH GUPTA",
     "tradeNam": "SURESH GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -5928,7 +5928,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0244K1Z5",
+    "gstin": "03AAAPS0244K1Z0",
     "lgnm": "SURESH SINGH",
     "tradeNam": "SURESH SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -5976,7 +5976,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0246M1Z5",
+    "gstin": "04AAAPP0246M1ZV",
     "lgnm": "SURESH PATEL",
     "tradeNam": "SURESH PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -6000,7 +6000,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0247N1Z5",
+    "gstin": "03AAAPR0247N1ZS",
     "lgnm": "SURESH REDDY",
     "tradeNam": "SURESH REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -6024,7 +6024,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0248O1Z5",
+    "gstin": "06AAAPI0248O1ZS",
     "lgnm": "SURESH IYER",
     "tradeNam": "SURESH IYER TRADERS",
     "ctb": "Proprietorship",
@@ -6048,7 +6048,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0249P1Z5",
+    "gstin": "06AAAPN0249P1ZK",
     "lgnm": "SURESH NAIR",
     "tradeNam": "SURESH NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -6072,7 +6072,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0250Q1Z5",
+    "gstin": "07AAAPR0250Q1ZJ",
     "lgnm": "SURESH RAO",
     "tradeNam": "SURESH RAO TRADERS",
     "ctb": "Proprietorship",
@@ -6096,7 +6096,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0251R1Z5",
+    "gstin": "03AAAPJ0251R1ZW",
     "lgnm": "SURESH JOSHI",
     "tradeNam": "SURESH JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -6120,7 +6120,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0252S1Z5",
+    "gstin": "03AAAPD0252S1ZZ",
     "lgnm": "SURESH DAS",
     "tradeNam": "SURESH DAS TRADERS",
     "ctb": "Proprietorship",
@@ -6144,7 +6144,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0253T1Z5",
+    "gstin": "03AAAPS0253T1ZH",
     "lgnm": "SURESH SEN",
     "tradeNam": "SURESH SEN TRADERS",
     "ctb": "Proprietorship",
@@ -6168,7 +6168,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0254U1Z5",
+    "gstin": "03AAAPM0254U1ZK",
     "lgnm": "SURESH MISHRA",
     "tradeNam": "SURESH MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -6192,7 +6192,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0255V1Z5",
+    "gstin": "03AAAPB0255V1ZS",
     "lgnm": "SURESH BHAT",
     "tradeNam": "SURESH BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -6216,7 +6216,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0256W1Z5",
+    "gstin": "04AAAPK0256W1ZE",
     "lgnm": "SURESH KAPOOR",
     "tradeNam": "SURESH KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -6240,7 +6240,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0257X1Z5",
+    "gstin": "03AAAPM0257X1ZB",
     "lgnm": "SURESH MUKHERJEE",
     "tradeNam": "SURESH MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -6264,7 +6264,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0258Y1Z5",
+    "gstin": "06AAAPM0258Y1Z2",
     "lgnm": "SURESH MEENA",
     "tradeNam": "SURESH MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -6288,7 +6288,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0259Z1Z5",
+    "gstin": "06AAAPC0259Z1Z9",
     "lgnm": "SURESH CHOUDHARY",
     "tradeNam": "SURESH CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -6312,7 +6312,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0260A1Z5",
+    "gstin": "07AAAPM0260A1ZJ",
     "lgnm": "SURESH MALHOTRA",
     "tradeNam": "SURESH MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -6336,7 +6336,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0261B1Z5",
+    "gstin": "03AAAPS0261B1ZI",
     "lgnm": "PRIYA SHARMA",
     "tradeNam": "PRIYA SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -6360,7 +6360,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0262C1Z5",
+    "gstin": "03AAAPV0262C1ZC",
     "lgnm": "PRIYA VERMA",
     "tradeNam": "PRIYA VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -6384,7 +6384,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0263D1Z5",
+    "gstin": "03AAAPG0263D1ZO",
     "lgnm": "PRIYA GUPTA",
     "tradeNam": "PRIYA GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -6408,7 +6408,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0264E1Z5",
+    "gstin": "03AAAPS0264E1Z9",
     "lgnm": "PRIYA SINGH",
     "tradeNam": "PRIYA SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -6432,7 +6432,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0265F1Z5",
+    "gstin": "03AAAPK0265F1ZE",
     "lgnm": "PRIYA KUMAR",
     "tradeNam": "PRIYA KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -6456,7 +6456,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0266G1Z5",
+    "gstin": "04AAAPP0266G1Z4",
     "lgnm": "PRIYA PATEL",
     "tradeNam": "PRIYA PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -6480,7 +6480,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0267H1Z5",
+    "gstin": "03AAAPR0267H1Z1",
     "lgnm": "PRIYA REDDY",
     "tradeNam": "PRIYA REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -6504,7 +6504,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0268I1Z5",
+    "gstin": "06AAAPI0268I1Z0",
     "lgnm": "PRIYA IYER",
     "tradeNam": "PRIYA IYER TRADERS",
     "ctb": "Proprietorship",
@@ -6528,7 +6528,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0269J1Z5",
+    "gstin": "06AAAPN0269J1ZS",
     "lgnm": "PRIYA NAIR",
     "tradeNam": "PRIYA NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -6552,7 +6552,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0270K1Z5",
+    "gstin": "07AAAPR0270K1ZR",
     "lgnm": "PRIYA RAO",
     "tradeNam": "PRIYA RAO TRADERS",
     "ctb": "Proprietorship",
@@ -6576,7 +6576,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0271L1Z5",
+    "gstin": "03AAAPJ0271L1Z4",
     "lgnm": "PRIYA JOSHI",
     "tradeNam": "PRIYA JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -6600,7 +6600,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0272M1Z5",
+    "gstin": "03AAAPD0272M1Z7",
     "lgnm": "PRIYA DAS",
     "tradeNam": "PRIYA DAS TRADERS",
     "ctb": "Proprietorship",
@@ -6624,7 +6624,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0273N1Z5",
+    "gstin": "03AAAPS0273N1ZP",
     "lgnm": "PRIYA SEN",
     "tradeNam": "PRIYA SEN TRADERS",
     "ctb": "Proprietorship",
@@ -6648,7 +6648,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0274O1Z5",
+    "gstin": "03AAAPM0274O1ZS",
     "lgnm": "PRIYA MISHRA",
     "tradeNam": "PRIYA MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -6672,7 +6672,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0275P1Z5",
+    "gstin": "03AAAPB0275P1Z0",
     "lgnm": "PRIYA BHAT",
     "tradeNam": "PRIYA BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -6696,7 +6696,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0276Q1Z5",
+    "gstin": "04AAAPK0276Q1ZM",
     "lgnm": "PRIYA KAPOOR",
     "tradeNam": "PRIYA KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -6720,7 +6720,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0277R1Z5",
+    "gstin": "03AAAPM0277R1ZJ",
     "lgnm": "PRIYA MUKHERJEE",
     "tradeNam": "PRIYA MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -6744,7 +6744,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0278S1Z5",
+    "gstin": "06AAAPM0278S1ZA",
     "lgnm": "PRIYA MEENA",
     "tradeNam": "PRIYA MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -6768,7 +6768,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0279T1Z5",
+    "gstin": "06AAAPC0279T1ZH",
     "lgnm": "PRIYA CHOUDHARY",
     "tradeNam": "PRIYA CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -6792,7 +6792,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0280U1Z5",
+    "gstin": "07AAAPM0280U1ZA",
     "lgnm": "PRIYA MALHOTRA",
     "tradeNam": "PRIYA MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -6816,7 +6816,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0281V1Z5",
+    "gstin": "03AAAPB0281V1ZQ",
     "lgnm": "PRIYA BANSAL",
     "tradeNam": "PRIYA BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -6840,7 +6840,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0282W1Z5",
+    "gstin": "03AAAPA0282W1ZO",
     "lgnm": "PRIYA AGARWAL",
     "tradeNam": "PRIYA AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -6864,7 +6864,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0283X1Z5",
+    "gstin": "03AAAPJ0283X1ZC",
     "lgnm": "PRIYA JAIN",
     "tradeNam": "PRIYA JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -6888,7 +6888,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0284Y1Z5",
+    "gstin": "03AAAPK0284Y1Z8",
     "lgnm": "PRIYA KHANNA",
     "tradeNam": "PRIYA KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -6912,7 +6912,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0285Z1Z5",
+    "gstin": "03AAAPS0285Z1ZX",
     "lgnm": "PRIYA SAXENA",
     "tradeNam": "PRIYA SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -6936,7 +6936,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0286A1Z5",
+    "gstin": "04AAAPD0286A1ZO",
     "lgnm": "PRIYA DUBEY",
     "tradeNam": "PRIYA DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -6960,7 +6960,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0287B1Z5",
+    "gstin": "03AAAPT0287B1Z7",
     "lgnm": "PRIYA TIWARI",
     "tradeNam": "PRIYA TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -6984,7 +6984,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0288C1Z5",
+    "gstin": "06AAAPP0288C1Z2",
     "lgnm": "PRIYA PANDEY",
     "tradeNam": "PRIYA PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -7008,7 +7008,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0289D1Z5",
+    "gstin": "06AAAPR0289D1ZX",
     "lgnm": "PRIYA ROY",
     "tradeNam": "PRIYA ROY TRADERS",
     "ctb": "Proprietorship",
@@ -7032,7 +7032,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0290E1Z5",
+    "gstin": "07AAAPG0290E1ZB",
     "lgnm": "PRIYA GHOSH",
     "tradeNam": "PRIYA GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -7056,7 +7056,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0291F1Z5",
+    "gstin": "03AAAPB0291F1ZL",
     "lgnm": "PRIYA BHATTACHARYA",
     "tradeNam": "PRIYA BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -7080,7 +7080,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0292G1Z5",
+    "gstin": "03AAAPC0292G1ZH",
     "lgnm": "PRIYA CHATTERJEE",
     "tradeNam": "PRIYA CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -7104,7 +7104,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0293H1Z5",
+    "gstin": "03AAAPK0293H1Z6",
     "lgnm": "PRIYA KULKARNI",
     "tradeNam": "PRIYA KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -7128,7 +7128,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0294I1Z5",
+    "gstin": "03AAAPD0294I1Z9",
     "lgnm": "PRIYA DESHMUKH",
     "tradeNam": "PRIYA DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -7152,7 +7152,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0295J1Z5",
+    "gstin": "03AAAPP0295J1ZU",
     "lgnm": "PRIYA PATIL",
     "tradeNam": "PRIYA PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -7176,7 +7176,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0296K1Z5",
+    "gstin": "04AAAPY0296K1ZG",
     "lgnm": "PRIYA YADAV",
     "tradeNam": "PRIYA YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -7200,7 +7200,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0297L1Z5",
+    "gstin": "03AAAPC0297L1Z1",
     "lgnm": "PRIYA CHAUHAN",
     "tradeNam": "PRIYA CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -7224,7 +7224,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0298M1Z5",
+    "gstin": "06AAAPT0298M1ZB",
     "lgnm": "PRIYA THAKUR",
     "tradeNam": "PRIYA THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -7248,7 +7248,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0299N1Z5",
+    "gstin": "06AAAPG0299N1ZL",
     "lgnm": "PRIYA GILL",
     "tradeNam": "PRIYA GILL TRADERS",
     "ctb": "Proprietorship",
@@ -7272,7 +7272,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0300O1Z5",
+    "gstin": "07AAAPD0300O1ZA",
     "lgnm": "PRIYA DHILLON",
     "tradeNam": "PRIYA DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -7296,7 +7296,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0301P1Z5",
+    "gstin": "03AAAPS0301P1Z0",
     "lgnm": "ANANYA SHARMA",
     "tradeNam": "ANANYA SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -7320,7 +7320,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0302Q1Z5",
+    "gstin": "03AAAPV0302Q1ZU",
     "lgnm": "ANANYA VERMA",
     "tradeNam": "ANANYA VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -7344,7 +7344,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0303R1Z5",
+    "gstin": "03AAAPG0303R1Z6",
     "lgnm": "ANANYA GUPTA",
     "tradeNam": "ANANYA GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -7368,7 +7368,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0304S1Z5",
+    "gstin": "03AAAPS0304S1ZR",
     "lgnm": "ANANYA SINGH",
     "tradeNam": "ANANYA SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -7392,7 +7392,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0305T1Z5",
+    "gstin": "03AAAPK0305T1ZW",
     "lgnm": "ANANYA KUMAR",
     "tradeNam": "ANANYA KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -7416,7 +7416,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0306U1Z5",
+    "gstin": "04AAAPP0306U1ZM",
     "lgnm": "ANANYA PATEL",
     "tradeNam": "ANANYA PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -7440,7 +7440,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0307V1Z5",
+    "gstin": "03AAAPR0307V1ZJ",
     "lgnm": "ANANYA REDDY",
     "tradeNam": "ANANYA REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -7464,7 +7464,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0308W1Z5",
+    "gstin": "06AAAPI0308W1ZJ",
     "lgnm": "ANANYA IYER",
     "tradeNam": "ANANYA IYER TRADERS",
     "ctb": "Proprietorship",
@@ -7488,7 +7488,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0309X1Z5",
+    "gstin": "06AAAPN0309X1ZB",
     "lgnm": "ANANYA NAIR",
     "tradeNam": "ANANYA NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -7512,7 +7512,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0310Y1Z5",
+    "gstin": "07AAAPR0310Y1ZA",
     "lgnm": "ANANYA RAO",
     "tradeNam": "ANANYA RAO TRADERS",
     "ctb": "Proprietorship",
@@ -7536,7 +7536,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0311Z1Z5",
+    "gstin": "03AAAPJ0311Z1ZN",
     "lgnm": "ANANYA JOSHI",
     "tradeNam": "ANANYA JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -7560,7 +7560,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0312A1Z5",
+    "gstin": "03AAAPD0312A1Z7",
     "lgnm": "ANANYA DAS",
     "tradeNam": "ANANYA DAS TRADERS",
     "ctb": "Proprietorship",
@@ -7584,7 +7584,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0313B1Z5",
+    "gstin": "03AAAPS0313B1ZP",
     "lgnm": "ANANYA SEN",
     "tradeNam": "ANANYA SEN TRADERS",
     "ctb": "Proprietorship",
@@ -7608,7 +7608,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0314C1Z5",
+    "gstin": "03AAAPM0314C1ZS",
     "lgnm": "ANANYA MISHRA",
     "tradeNam": "ANANYA MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -7632,7 +7632,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0315D1Z5",
+    "gstin": "03AAAPB0315D1Z0",
     "lgnm": "ANANYA BHAT",
     "tradeNam": "ANANYA BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -7656,7 +7656,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0316E1Z5",
+    "gstin": "04AAAPK0316E1ZM",
     "lgnm": "ANANYA KAPOOR",
     "tradeNam": "ANANYA KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -7680,7 +7680,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0317F1Z5",
+    "gstin": "03AAAPM0317F1ZJ",
     "lgnm": "ANANYA MUKHERJEE",
     "tradeNam": "ANANYA MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -7704,7 +7704,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0318G1Z5",
+    "gstin": "06AAAPM0318G1ZA",
     "lgnm": "ANANYA MEENA",
     "tradeNam": "ANANYA MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -7728,7 +7728,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0319H1Z5",
+    "gstin": "06AAAPC0319H1ZH",
     "lgnm": "ANANYA CHOUDHARY",
     "tradeNam": "ANANYA CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -7752,7 +7752,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0320I1Z5",
+    "gstin": "07AAAPM0320I1Z9",
     "lgnm": "ANANYA MALHOTRA",
     "tradeNam": "ANANYA MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -7776,7 +7776,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0321J1Z5",
+    "gstin": "03AAAPB0321J1ZP",
     "lgnm": "ANANYA BANSAL",
     "tradeNam": "ANANYA BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -7800,7 +7800,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0322K1Z5",
+    "gstin": "03AAAPA0322K1ZN",
     "lgnm": "ANANYA AGARWAL",
     "tradeNam": "ANANYA AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -7824,7 +7824,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0323L1Z5",
+    "gstin": "03AAAPJ0323L1ZB",
     "lgnm": "ANANYA JAIN",
     "tradeNam": "ANANYA JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -7848,7 +7848,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0324M1Z5",
+    "gstin": "03AAAPK0324M1Z7",
     "lgnm": "ANANYA KHANNA",
     "tradeNam": "ANANYA KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -7872,7 +7872,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0325N1Z5",
+    "gstin": "03AAAPS0325N1ZW",
     "lgnm": "ANANYA SAXENA",
     "tradeNam": "ANANYA SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -7896,7 +7896,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0326O1Z5",
+    "gstin": "04AAAPD0326O1Z6",
     "lgnm": "ANANYA DUBEY",
     "tradeNam": "ANANYA DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -7920,7 +7920,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0327P1Z5",
+    "gstin": "03AAAPT0327P1ZP",
     "lgnm": "ANANYA TIWARI",
     "tradeNam": "ANANYA TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -7944,7 +7944,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0328Q1Z5",
+    "gstin": "06AAAPP0328Q1ZK",
     "lgnm": "ANANYA PANDEY",
     "tradeNam": "ANANYA PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -7968,7 +7968,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0329R1Z5",
+    "gstin": "06AAAPR0329R1ZF",
     "lgnm": "ANANYA ROY",
     "tradeNam": "ANANYA ROY TRADERS",
     "ctb": "Proprietorship",
@@ -7992,7 +7992,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0330S1Z5",
+    "gstin": "07AAAPG0330S1ZT",
     "lgnm": "ANANYA GHOSH",
     "tradeNam": "ANANYA GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -8016,7 +8016,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0331T1Z5",
+    "gstin": "03AAAPB0331T1Z3",
     "lgnm": "ANANYA BHATTACHARYA",
     "tradeNam": "ANANYA BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -8040,7 +8040,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0332U1Z5",
+    "gstin": "03AAAPC0332U1ZZ",
     "lgnm": "ANANYA CHATTERJEE",
     "tradeNam": "ANANYA CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -8064,7 +8064,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0333V1Z5",
+    "gstin": "03AAAPK0333V1ZO",
     "lgnm": "ANANYA KULKARNI",
     "tradeNam": "ANANYA KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -8088,7 +8088,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0334W1Z5",
+    "gstin": "03AAAPD0334W1ZS",
     "lgnm": "ANANYA DESHMUKH",
     "tradeNam": "ANANYA DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -8112,7 +8112,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0335X1Z5",
+    "gstin": "03AAAPP0335X1ZD",
     "lgnm": "ANANYA PATIL",
     "tradeNam": "ANANYA PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -8136,7 +8136,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0336Y1Z5",
+    "gstin": "04AAAPY0336Y1ZZ",
     "lgnm": "ANANYA YADAV",
     "tradeNam": "ANANYA YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -8160,7 +8160,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0337Z1Z5",
+    "gstin": "03AAAPC0337Z1ZK",
     "lgnm": "ANANYA CHAUHAN",
     "tradeNam": "ANANYA CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -8184,7 +8184,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0338A1Z5",
+    "gstin": "06AAAPT0338A1ZB",
     "lgnm": "ANANYA THAKUR",
     "tradeNam": "ANANYA THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -8208,7 +8208,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0339B1Z5",
+    "gstin": "06AAAPG0339B1ZL",
     "lgnm": "ANANYA GILL",
     "tradeNam": "ANANYA GILL TRADERS",
     "ctb": "Proprietorship",
@@ -8232,7 +8232,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0340C1Z5",
+    "gstin": "07AAAPD0340C1ZR",
     "lgnm": "ANANYA DHILLON",
     "tradeNam": "ANANYA DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -8256,7 +8256,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0341D1Z5",
+    "gstin": "03AAAPS0341D1ZH",
     "lgnm": "SNEHA SHARMA",
     "tradeNam": "SNEHA SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -8280,7 +8280,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0342E1Z5",
+    "gstin": "03AAAPV0342E1ZB",
     "lgnm": "SNEHA VERMA",
     "tradeNam": "SNEHA VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -8304,7 +8304,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0343F1Z5",
+    "gstin": "03AAAPG0343F1ZN",
     "lgnm": "SNEHA GUPTA",
     "tradeNam": "SNEHA GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -8328,7 +8328,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0344G1Z5",
+    "gstin": "03AAAPS0344G1Z8",
     "lgnm": "SNEHA SINGH",
     "tradeNam": "SNEHA SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -8352,7 +8352,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0345H1Z5",
+    "gstin": "03AAAPK0345H1ZD",
     "lgnm": "SNEHA KUMAR",
     "tradeNam": "SNEHA KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -8376,7 +8376,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0346I1Z5",
+    "gstin": "04AAAPP0346I1Z2",
     "lgnm": "SNEHA PATEL",
     "tradeNam": "SNEHA PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -8400,7 +8400,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0347J1Z5",
+    "gstin": "03AAAPR0347J1ZZ",
     "lgnm": "SNEHA REDDY",
     "tradeNam": "SNEHA REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -8424,7 +8424,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0348K1Z5",
+    "gstin": "06AAAPI0348K1ZZ",
     "lgnm": "SNEHA IYER",
     "tradeNam": "SNEHA IYER TRADERS",
     "ctb": "Proprietorship",
@@ -8448,7 +8448,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0349L1Z5",
+    "gstin": "06AAAPN0349L1ZR",
     "lgnm": "SNEHA NAIR",
     "tradeNam": "SNEHA NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -8472,7 +8472,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0350M1Z5",
+    "gstin": "07AAAPR0350M1ZQ",
     "lgnm": "SNEHA RAO",
     "tradeNam": "SNEHA RAO TRADERS",
     "ctb": "Proprietorship",
@@ -8496,7 +8496,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0351N1Z5",
+    "gstin": "03AAAPJ0351N1Z3",
     "lgnm": "SNEHA JOSHI",
     "tradeNam": "SNEHA JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -8520,7 +8520,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0352O1Z5",
+    "gstin": "03AAAPD0352O1Z6",
     "lgnm": "SNEHA DAS",
     "tradeNam": "SNEHA DAS TRADERS",
     "ctb": "Proprietorship",
@@ -8544,7 +8544,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0353P1Z5",
+    "gstin": "03AAAPS0353P1ZO",
     "lgnm": "SNEHA SEN",
     "tradeNam": "SNEHA SEN TRADERS",
     "ctb": "Proprietorship",
@@ -8568,7 +8568,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0354Q1Z5",
+    "gstin": "03AAAPM0354Q1ZR",
     "lgnm": "SNEHA MISHRA",
     "tradeNam": "SNEHA MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -8592,7 +8592,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0355R1Z5",
+    "gstin": "03AAAPB0355R1ZZ",
     "lgnm": "SNEHA BHAT",
     "tradeNam": "SNEHA BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -8616,7 +8616,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0356S1Z5",
+    "gstin": "04AAAPK0356S1ZL",
     "lgnm": "SNEHA KAPOOR",
     "tradeNam": "SNEHA KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -8640,7 +8640,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0357T1Z5",
+    "gstin": "03AAAPM0357T1ZI",
     "lgnm": "SNEHA MUKHERJEE",
     "tradeNam": "SNEHA MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -8664,7 +8664,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0358U1Z5",
+    "gstin": "06AAAPM0358U1Z9",
     "lgnm": "SNEHA MEENA",
     "tradeNam": "SNEHA MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -8688,7 +8688,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0359V1Z5",
+    "gstin": "06AAAPC0359V1ZG",
     "lgnm": "SNEHA CHOUDHARY",
     "tradeNam": "SNEHA CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -8712,7 +8712,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0360W1Z5",
+    "gstin": "07AAAPM0360W1Z9",
     "lgnm": "SNEHA MALHOTRA",
     "tradeNam": "SNEHA MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -8736,7 +8736,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0361X1Z5",
+    "gstin": "03AAAPB0361X1ZP",
     "lgnm": "SNEHA BANSAL",
     "tradeNam": "SNEHA BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -8760,7 +8760,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0362Y1Z5",
+    "gstin": "03AAAPA0362Y1ZN",
     "lgnm": "SNEHA AGARWAL",
     "tradeNam": "SNEHA AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -8784,7 +8784,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0363Z1Z5",
+    "gstin": "03AAAPJ0363Z1ZB",
     "lgnm": "SNEHA JAIN",
     "tradeNam": "SNEHA JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -8808,7 +8808,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0364A1Z5",
+    "gstin": "03AAAPK0364A1ZO",
     "lgnm": "SNEHA KHANNA",
     "tradeNam": "SNEHA KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -8832,7 +8832,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0365B1Z5",
+    "gstin": "03AAAPS0365B1ZD",
     "lgnm": "SNEHA SAXENA",
     "tradeNam": "SNEHA SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -8856,7 +8856,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0366C1Z5",
+    "gstin": "04AAAPD0366C1ZN",
     "lgnm": "SNEHA DUBEY",
     "tradeNam": "SNEHA DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -8880,7 +8880,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0367D1Z5",
+    "gstin": "03AAAPT0367D1Z6",
     "lgnm": "SNEHA TIWARI",
     "tradeNam": "SNEHA TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -8904,7 +8904,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0368E1Z5",
+    "gstin": "06AAAPP0368E1Z1",
     "lgnm": "SNEHA PANDEY",
     "tradeNam": "SNEHA PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -8928,7 +8928,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0369F1Z5",
+    "gstin": "06AAAPR0369F1ZW",
     "lgnm": "SNEHA ROY",
     "tradeNam": "SNEHA ROY TRADERS",
     "ctb": "Proprietorship",
@@ -8952,7 +8952,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0370G1Z5",
+    "gstin": "07AAAPG0370G1ZA",
     "lgnm": "SNEHA GHOSH",
     "tradeNam": "SNEHA GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -8976,7 +8976,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0371H1Z5",
+    "gstin": "03AAAPB0371H1ZK",
     "lgnm": "SNEHA BHATTACHARYA",
     "tradeNam": "SNEHA BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -9000,7 +9000,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0372I1Z5",
+    "gstin": "03AAAPC0372I1ZF",
     "lgnm": "SNEHA CHATTERJEE",
     "tradeNam": "SNEHA CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -9024,7 +9024,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0373J1Z5",
+    "gstin": "03AAAPK0373J1Z4",
     "lgnm": "SNEHA KULKARNI",
     "tradeNam": "SNEHA KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -9048,7 +9048,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0374K1Z5",
+    "gstin": "03AAAPD0374K1Z8",
     "lgnm": "SNEHA DESHMUKH",
     "tradeNam": "SNEHA DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -9072,7 +9072,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0375L1Z5",
+    "gstin": "03AAAPP0375L1ZT",
     "lgnm": "SNEHA PATIL",
     "tradeNam": "SNEHA PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -9096,7 +9096,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0376M1Z5",
+    "gstin": "04AAAPY0376M1ZF",
     "lgnm": "SNEHA YADAV",
     "tradeNam": "SNEHA YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -9120,7 +9120,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0377N1Z5",
+    "gstin": "03AAAPC0377N1Z0",
     "lgnm": "SNEHA CHAUHAN",
     "tradeNam": "SNEHA CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -9144,7 +9144,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0378O1Z5",
+    "gstin": "06AAAPT0378O1ZA",
     "lgnm": "SNEHA THAKUR",
     "tradeNam": "SNEHA THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -9168,7 +9168,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0379P1Z5",
+    "gstin": "06AAAPG0379P1ZK",
     "lgnm": "SNEHA GILL",
     "tradeNam": "SNEHA GILL TRADERS",
     "ctb": "Proprietorship",
@@ -9192,7 +9192,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0380Q1Z5",
+    "gstin": "07AAAPD0380Q1ZQ",
     "lgnm": "SNEHA DHILLON",
     "tradeNam": "SNEHA DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -9216,7 +9216,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0381R1Z5",
+    "gstin": "03AAAPS0381R1ZG",
     "lgnm": "POOJA SHARMA",
     "tradeNam": "POOJA SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -9240,7 +9240,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0382S1Z5",
+    "gstin": "03AAAPV0382S1ZA",
     "lgnm": "POOJA VERMA",
     "tradeNam": "POOJA VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -9264,7 +9264,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0383T1Z5",
+    "gstin": "03AAAPG0383T1ZM",
     "lgnm": "POOJA GUPTA",
     "tradeNam": "POOJA GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -9288,7 +9288,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0384U1Z5",
+    "gstin": "03AAAPS0384U1Z7",
     "lgnm": "POOJA SINGH",
     "tradeNam": "POOJA SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -9312,7 +9312,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0385V1Z5",
+    "gstin": "03AAAPK0385V1ZC",
     "lgnm": "POOJA KUMAR",
     "tradeNam": "POOJA KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -9336,7 +9336,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0386W1Z5",
+    "gstin": "04AAAPP0386W1Z2",
     "lgnm": "POOJA PATEL",
     "tradeNam": "POOJA PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -9360,7 +9360,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0387X1Z5",
+    "gstin": "03AAAPR0387X1ZZ",
     "lgnm": "POOJA REDDY",
     "tradeNam": "POOJA REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -9384,7 +9384,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0388Y1Z5",
+    "gstin": "06AAAPI0388Y1ZZ",
     "lgnm": "POOJA IYER",
     "tradeNam": "POOJA IYER TRADERS",
     "ctb": "Proprietorship",
@@ -9408,7 +9408,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0389Z1Z5",
+    "gstin": "06AAAPN0389Z1ZR",
     "lgnm": "POOJA NAIR",
     "tradeNam": "POOJA NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -9432,7 +9432,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0390A1Z5",
+    "gstin": "07AAAPR0390A1Z7",
     "lgnm": "POOJA RAO",
     "tradeNam": "POOJA RAO TRADERS",
     "ctb": "Proprietorship",
@@ -9456,7 +9456,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0391B1Z5",
+    "gstin": "03AAAPJ0391B1ZK",
     "lgnm": "POOJA JOSHI",
     "tradeNam": "POOJA JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -9480,7 +9480,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0392C1Z5",
+    "gstin": "03AAAPD0392C1ZN",
     "lgnm": "POOJA DAS",
     "tradeNam": "POOJA DAS TRADERS",
     "ctb": "Proprietorship",
@@ -9528,7 +9528,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0394E1Z5",
+    "gstin": "03AAAPM0394E1Z8",
     "lgnm": "POOJA MISHRA",
     "tradeNam": "POOJA MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -9552,7 +9552,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0395F1Z5",
+    "gstin": "03AAAPB0395F1ZG",
     "lgnm": "POOJA BHAT",
     "tradeNam": "POOJA BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -9576,7 +9576,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0396G1Z5",
+    "gstin": "04AAAPK0396G1Z2",
     "lgnm": "POOJA KAPOOR",
     "tradeNam": "POOJA KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -9600,7 +9600,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0397H1Z5",
+    "gstin": "03AAAPM0397H1ZZ",
     "lgnm": "POOJA MUKHERJEE",
     "tradeNam": "POOJA MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -9624,7 +9624,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0398I1Z5",
+    "gstin": "06AAAPM0398I1ZP",
     "lgnm": "POOJA MEENA",
     "tradeNam": "POOJA MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -9648,7 +9648,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0399J1Z5",
+    "gstin": "06AAAPC0399J1ZW",
     "lgnm": "POOJA CHOUDHARY",
     "tradeNam": "POOJA CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -9672,7 +9672,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0400K1Z5",
+    "gstin": "07AAAPM0400K1Z8",
     "lgnm": "POOJA MALHOTRA",
     "tradeNam": "POOJA MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -9696,7 +9696,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0401L1Z5",
+    "gstin": "03AAAPB0401L1ZO",
     "lgnm": "POOJA BANSAL",
     "tradeNam": "POOJA BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -9720,7 +9720,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0402M1Z5",
+    "gstin": "03AAAPA0402M1ZM",
     "lgnm": "POOJA AGARWAL",
     "tradeNam": "POOJA AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -9744,7 +9744,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0403N1Z5",
+    "gstin": "03AAAPJ0403N1ZA",
     "lgnm": "POOJA JAIN",
     "tradeNam": "POOJA JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -9768,7 +9768,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0404O1Z5",
+    "gstin": "03AAAPK0404O1Z6",
     "lgnm": "POOJA KHANNA",
     "tradeNam": "POOJA KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -9792,7 +9792,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0405P1Z5",
+    "gstin": "03AAAPS0405P1ZV",
     "lgnm": "POOJA SAXENA",
     "tradeNam": "POOJA SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -9840,7 +9840,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0407R1Z5",
+    "gstin": "03AAAPT0407R1ZO",
     "lgnm": "POOJA TIWARI",
     "tradeNam": "POOJA TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -9864,7 +9864,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0408S1Z5",
+    "gstin": "06AAAPP0408S1ZJ",
     "lgnm": "POOJA PANDEY",
     "tradeNam": "POOJA PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -9888,7 +9888,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0409T1Z5",
+    "gstin": "06AAAPR0409T1ZE",
     "lgnm": "POOJA ROY",
     "tradeNam": "POOJA ROY TRADERS",
     "ctb": "Proprietorship",
@@ -9912,7 +9912,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0410U1Z5",
+    "gstin": "07AAAPG0410U1ZS",
     "lgnm": "POOJA GHOSH",
     "tradeNam": "POOJA GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -9936,7 +9936,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0411V1Z5",
+    "gstin": "03AAAPB0411V1Z2",
     "lgnm": "POOJA BHATTACHARYA",
     "tradeNam": "POOJA BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -9960,7 +9960,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0412W1Z5",
+    "gstin": "03AAAPC0412W1ZY",
     "lgnm": "POOJA CHATTERJEE",
     "tradeNam": "POOJA CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -9984,7 +9984,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0413X1Z5",
+    "gstin": "03AAAPK0413X1ZN",
     "lgnm": "POOJA KULKARNI",
     "tradeNam": "POOJA KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -10008,7 +10008,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0414Y1Z5",
+    "gstin": "03AAAPD0414Y1ZR",
     "lgnm": "POOJA DESHMUKH",
     "tradeNam": "POOJA DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -10032,7 +10032,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0415Z1Z5",
+    "gstin": "03AAAPP0415Z1ZC",
     "lgnm": "POOJA PATIL",
     "tradeNam": "POOJA PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -10056,7 +10056,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0416A1Z5",
+    "gstin": "04AAAPY0416A1ZF",
     "lgnm": "POOJA YADAV",
     "tradeNam": "POOJA YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -10080,7 +10080,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0417B1Z5",
+    "gstin": "03AAAPC0417B1Z0",
     "lgnm": "POOJA CHAUHAN",
     "tradeNam": "POOJA CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -10104,7 +10104,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0418C1Z5",
+    "gstin": "06AAAPT0418C1ZA",
     "lgnm": "POOJA THAKUR",
     "tradeNam": "POOJA THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -10128,7 +10128,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0419D1Z5",
+    "gstin": "06AAAPG0419D1ZK",
     "lgnm": "POOJA GILL",
     "tradeNam": "POOJA GILL TRADERS",
     "ctb": "Proprietorship",
@@ -10152,7 +10152,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0420E1Z5",
+    "gstin": "07AAAPD0420E1ZQ",
     "lgnm": "POOJA DHILLON",
     "tradeNam": "POOJA DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -10176,7 +10176,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0421F1Z5",
+    "gstin": "03AAAPS0421F1ZG",
     "lgnm": "NEHA SHARMA",
     "tradeNam": "NEHA SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -10200,7 +10200,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0422G1Z5",
+    "gstin": "03AAAPV0422G1ZA",
     "lgnm": "NEHA VERMA",
     "tradeNam": "NEHA VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -10224,7 +10224,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0423H1Z5",
+    "gstin": "03AAAPG0423H1ZM",
     "lgnm": "NEHA GUPTA",
     "tradeNam": "NEHA GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -10248,7 +10248,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0424I1Z5",
+    "gstin": "03AAAPS0424I1Z6",
     "lgnm": "NEHA SINGH",
     "tradeNam": "NEHA SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -10272,7 +10272,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0425J1Z5",
+    "gstin": "03AAAPK0425J1ZB",
     "lgnm": "NEHA KUMAR",
     "tradeNam": "NEHA KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -10296,7 +10296,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0426K1Z5",
+    "gstin": "04AAAPP0426K1Z1",
     "lgnm": "NEHA PATEL",
     "tradeNam": "NEHA PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -10320,7 +10320,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0427L1Z5",
+    "gstin": "03AAAPR0427L1ZY",
     "lgnm": "NEHA REDDY",
     "tradeNam": "NEHA REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -10344,7 +10344,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0428M1Z5",
+    "gstin": "06AAAPI0428M1ZY",
     "lgnm": "NEHA IYER",
     "tradeNam": "NEHA IYER TRADERS",
     "ctb": "Proprietorship",
@@ -10368,7 +10368,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0429N1Z5",
+    "gstin": "06AAAPN0429N1ZQ",
     "lgnm": "NEHA NAIR",
     "tradeNam": "NEHA NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -10392,7 +10392,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0430O1Z5",
+    "gstin": "07AAAPR0430O1ZP",
     "lgnm": "NEHA RAO",
     "tradeNam": "NEHA RAO TRADERS",
     "ctb": "Proprietorship",
@@ -10416,7 +10416,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0431P1Z5",
+    "gstin": "03AAAPJ0431P1Z2",
     "lgnm": "NEHA JOSHI",
     "tradeNam": "NEHA JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -10464,7 +10464,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0433R1Z5",
+    "gstin": "03AAAPS0433R1ZN",
     "lgnm": "NEHA SEN",
     "tradeNam": "NEHA SEN TRADERS",
     "ctb": "Proprietorship",
@@ -10488,7 +10488,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0434S1Z5",
+    "gstin": "03AAAPM0434S1ZQ",
     "lgnm": "NEHA MISHRA",
     "tradeNam": "NEHA MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -10512,7 +10512,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0435T1Z5",
+    "gstin": "03AAAPB0435T1ZY",
     "lgnm": "NEHA BHAT",
     "tradeNam": "NEHA BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -10536,7 +10536,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0436U1Z5",
+    "gstin": "04AAAPK0436U1ZK",
     "lgnm": "NEHA KAPOOR",
     "tradeNam": "NEHA KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -10560,7 +10560,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0437V1Z5",
+    "gstin": "03AAAPM0437V1ZH",
     "lgnm": "NEHA MUKHERJEE",
     "tradeNam": "NEHA MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -10584,7 +10584,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0438W1Z5",
+    "gstin": "06AAAPM0438W1Z8",
     "lgnm": "NEHA MEENA",
     "tradeNam": "NEHA MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -10608,7 +10608,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0439X1Z5",
+    "gstin": "06AAAPC0439X1ZF",
     "lgnm": "NEHA CHOUDHARY",
     "tradeNam": "NEHA CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -10632,7 +10632,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0440Y1Z5",
+    "gstin": "07AAAPM0440Y1Z8",
     "lgnm": "NEHA MALHOTRA",
     "tradeNam": "NEHA MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -10656,7 +10656,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0441Z1Z5",
+    "gstin": "03AAAPB0441Z1ZO",
     "lgnm": "NEHA BANSAL",
     "tradeNam": "NEHA BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -10680,7 +10680,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0442A1Z5",
+    "gstin": "03AAAPA0442A1Z3",
     "lgnm": "NEHA AGARWAL",
     "tradeNam": "NEHA AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -10704,7 +10704,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0443B1Z5",
+    "gstin": "03AAAPJ0443B1ZR",
     "lgnm": "NEHA JAIN",
     "tradeNam": "NEHA JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -10728,7 +10728,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0444C1Z5",
+    "gstin": "03AAAPK0444C1ZN",
     "lgnm": "NEHA KHANNA",
     "tradeNam": "NEHA KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -10752,7 +10752,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0445D1Z5",
+    "gstin": "03AAAPS0445D1ZC",
     "lgnm": "NEHA SAXENA",
     "tradeNam": "NEHA SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -10776,7 +10776,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0446E1Z5",
+    "gstin": "04AAAPD0446E1ZM",
     "lgnm": "NEHA DUBEY",
     "tradeNam": "NEHA DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -10824,7 +10824,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0448G1Z5",
+    "gstin": "06AAAPP0448G1Z0",
     "lgnm": "NEHA PANDEY",
     "tradeNam": "NEHA PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -10848,7 +10848,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0449H1Z5",
+    "gstin": "06AAAPR0449H1ZV",
     "lgnm": "NEHA ROY",
     "tradeNam": "NEHA ROY TRADERS",
     "ctb": "Proprietorship",
@@ -10872,7 +10872,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0450I1Z5",
+    "gstin": "07AAAPG0450I1Z8",
     "lgnm": "NEHA GHOSH",
     "tradeNam": "NEHA GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -10896,7 +10896,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0451J1Z5",
+    "gstin": "03AAAPB0451J1ZI",
     "lgnm": "NEHA BHATTACHARYA",
     "tradeNam": "NEHA BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -10920,7 +10920,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0452K1Z5",
+    "gstin": "03AAAPC0452K1ZE",
     "lgnm": "NEHA CHATTERJEE",
     "tradeNam": "NEHA CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -10944,7 +10944,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0453L1Z5",
+    "gstin": "03AAAPK0453L1Z3",
     "lgnm": "NEHA KULKARNI",
     "tradeNam": "NEHA KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -10968,7 +10968,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0454M1Z5",
+    "gstin": "03AAAPD0454M1Z7",
     "lgnm": "NEHA DESHMUKH",
     "tradeNam": "NEHA DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -10992,7 +10992,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0455N1Z5",
+    "gstin": "03AAAPP0455N1ZS",
     "lgnm": "NEHA PATIL",
     "tradeNam": "NEHA PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -11016,7 +11016,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0456O1Z5",
+    "gstin": "04AAAPY0456O1ZE",
     "lgnm": "NEHA YADAV",
     "tradeNam": "NEHA YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -11040,7 +11040,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0457P1Z5",
+    "gstin": "03AAAPC0457P1ZZ",
     "lgnm": "NEHA CHAUHAN",
     "tradeNam": "NEHA CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -11064,7 +11064,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0458Q1Z5",
+    "gstin": "06AAAPT0458Q1Z9",
     "lgnm": "NEHA THAKUR",
     "tradeNam": "NEHA THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -11088,7 +11088,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0459R1Z5",
+    "gstin": "06AAAPG0459R1ZJ",
     "lgnm": "NEHA GILL",
     "tradeNam": "NEHA GILL TRADERS",
     "ctb": "Proprietorship",
@@ -11112,7 +11112,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0460S1Z5",
+    "gstin": "07AAAPD0460S1ZP",
     "lgnm": "NEHA DHILLON",
     "tradeNam": "NEHA DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -11136,7 +11136,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0461T1Z5",
+    "gstin": "03AAAPS0461T1ZF",
     "lgnm": "SUNITA SHARMA",
     "tradeNam": "SUNITA SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -11160,7 +11160,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0462U1Z5",
+    "gstin": "03AAAPV0462U1Z9",
     "lgnm": "SUNITA VERMA",
     "tradeNam": "SUNITA VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -11184,7 +11184,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0463V1Z5",
+    "gstin": "03AAAPG0463V1ZL",
     "lgnm": "SUNITA GUPTA",
     "tradeNam": "SUNITA GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -11208,7 +11208,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0464W1Z5",
+    "gstin": "03AAAPS0464W1Z6",
     "lgnm": "SUNITA SINGH",
     "tradeNam": "SUNITA SINGH TRADERS",
     "ctb": "Proprietorship",
@@ -11232,7 +11232,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0465X1Z5",
+    "gstin": "03AAAPK0465X1ZB",
     "lgnm": "SUNITA KUMAR",
     "tradeNam": "SUNITA KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -11256,7 +11256,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0466Y1Z5",
+    "gstin": "04AAAPP0466Y1Z1",
     "lgnm": "SUNITA PATEL",
     "tradeNam": "SUNITA PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -11280,7 +11280,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0467Z1Z5",
+    "gstin": "03AAAPR0467Z1ZY",
     "lgnm": "SUNITA REDDY",
     "tradeNam": "SUNITA REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -11304,7 +11304,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0468A1Z5",
+    "gstin": "06AAAPI0468A1ZF",
     "lgnm": "SUNITA IYER",
     "tradeNam": "SUNITA IYER TRADERS",
     "ctb": "Proprietorship",
@@ -11328,7 +11328,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0469B1Z5",
+    "gstin": "06AAAPN0469B1Z7",
     "lgnm": "SUNITA NAIR",
     "tradeNam": "SUNITA NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -11352,7 +11352,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0470C1Z5",
+    "gstin": "07AAAPR0470C1Z6",
     "lgnm": "SUNITA RAO",
     "tradeNam": "SUNITA RAO TRADERS",
     "ctb": "Proprietorship",
@@ -11376,7 +11376,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0471D1Z5",
+    "gstin": "03AAAPJ0471D1ZJ",
     "lgnm": "SUNITA JOSHI",
     "tradeNam": "SUNITA JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -11400,7 +11400,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0472E1Z5",
+    "gstin": "03AAAPD0472E1ZM",
     "lgnm": "SUNITA DAS",
     "tradeNam": "SUNITA DAS TRADERS",
     "ctb": "Proprietorship",
@@ -11424,7 +11424,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0473F1Z5",
+    "gstin": "03AAAPS0473F1Z4",
     "lgnm": "SUNITA SEN",
     "tradeNam": "SUNITA SEN TRADERS",
     "ctb": "Proprietorship",
@@ -11448,7 +11448,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0474G1Z5",
+    "gstin": "03AAAPM0474G1Z7",
     "lgnm": "SUNITA MISHRA",
     "tradeNam": "SUNITA MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -11472,7 +11472,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0475H1Z5",
+    "gstin": "03AAAPB0475H1ZF",
     "lgnm": "SUNITA BHAT",
     "tradeNam": "SUNITA BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -11496,7 +11496,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0476I1Z5",
+    "gstin": "04AAAPK0476I1Z0",
     "lgnm": "SUNITA KAPOOR",
     "tradeNam": "SUNITA KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -11520,7 +11520,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0477J1Z5",
+    "gstin": "03AAAPM0477J1ZX",
     "lgnm": "SUNITA MUKHERJEE",
     "tradeNam": "SUNITA MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -11544,7 +11544,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0478K1Z5",
+    "gstin": "06AAAPM0478K1ZO",
     "lgnm": "SUNITA MEENA",
     "tradeNam": "SUNITA MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -11568,7 +11568,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0479L1Z5",
+    "gstin": "06AAAPC0479L1ZV",
     "lgnm": "SUNITA CHOUDHARY",
     "tradeNam": "SUNITA CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -11592,7 +11592,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0480M1Z5",
+    "gstin": "07AAAPM0480M1ZO",
     "lgnm": "SUNITA MALHOTRA",
     "tradeNam": "SUNITA MALHOTRA TRADERS",
     "ctb": "Proprietorship",
@@ -11616,7 +11616,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0481N1Z5",
+    "gstin": "03AAAPB0481N1Z4",
     "lgnm": "SUNITA BANSAL",
     "tradeNam": "SUNITA BANSAL TRADERS",
     "ctb": "Proprietorship",
@@ -11640,7 +11640,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPA0482O1Z5",
+    "gstin": "03AAAPA0482O1Z2",
     "lgnm": "SUNITA AGARWAL",
     "tradeNam": "SUNITA AGARWAL TRADERS",
     "ctb": "Proprietorship",
@@ -11664,7 +11664,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0483P1Z5",
+    "gstin": "03AAAPJ0483P1ZQ",
     "lgnm": "SUNITA JAIN",
     "tradeNam": "SUNITA JAIN TRADERS",
     "ctb": "Proprietorship",
@@ -11688,7 +11688,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0484Q1Z5",
+    "gstin": "03AAAPK0484Q1ZM",
     "lgnm": "SUNITA KHANNA",
     "tradeNam": "SUNITA KHANNA TRADERS",
     "ctb": "Proprietorship",
@@ -11712,7 +11712,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0485R1Z5",
+    "gstin": "03AAAPS0485R1ZB",
     "lgnm": "SUNITA SAXENA",
     "tradeNam": "SUNITA SAXENA TRADERS",
     "ctb": "Proprietorship",
@@ -11736,7 +11736,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPD0486S1Z5",
+    "gstin": "04AAAPD0486S1ZL",
     "lgnm": "SUNITA DUBEY",
     "tradeNam": "SUNITA DUBEY TRADERS",
     "ctb": "Proprietorship",
@@ -11760,7 +11760,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPT0487T1Z5",
+    "gstin": "03AAAPT0487T1Z4",
     "lgnm": "SUNITA TIWARI",
     "tradeNam": "SUNITA TIWARI TRADERS",
     "ctb": "Proprietorship",
@@ -11784,7 +11784,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPP0488U1Z5",
+    "gstin": "06AAAPP0488U1ZZ",
     "lgnm": "SUNITA PANDEY",
     "tradeNam": "SUNITA PANDEY TRADERS",
     "ctb": "Proprietorship",
@@ -11808,7 +11808,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPR0489V1Z5",
+    "gstin": "06AAAPR0489V1ZU",
     "lgnm": "SUNITA ROY",
     "tradeNam": "SUNITA ROY TRADERS",
     "ctb": "Proprietorship",
@@ -11832,7 +11832,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPG0490W1Z5",
+    "gstin": "07AAAPG0490W1Z8",
     "lgnm": "SUNITA GHOSH",
     "tradeNam": "SUNITA GHOSH TRADERS",
     "ctb": "Proprietorship",
@@ -11856,7 +11856,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0491X1Z5",
+    "gstin": "03AAAPB0491X1ZI",
     "lgnm": "SUNITA BHATTACHARYA",
     "tradeNam": "SUNITA BHATTACHARYA TRADERS",
     "ctb": "Proprietorship",
@@ -11880,7 +11880,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0492Y1Z5",
+    "gstin": "03AAAPC0492Y1ZE",
     "lgnm": "SUNITA CHATTERJEE",
     "tradeNam": "SUNITA CHATTERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -11904,7 +11904,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0493Z1Z5",
+    "gstin": "03AAAPK0493Z1Z3",
     "lgnm": "SUNITA KULKARNI",
     "tradeNam": "SUNITA KULKARNI TRADERS",
     "ctb": "Proprietorship",
@@ -11928,7 +11928,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0494A1Z5",
+    "gstin": "03AAAPD0494A1ZO",
     "lgnm": "SUNITA DESHMUKH",
     "tradeNam": "SUNITA DESHMUKH TRADERS",
     "ctb": "Proprietorship",
@@ -11952,7 +11952,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPP0495B1Z5",
+    "gstin": "03AAAPP0495B1Z9",
     "lgnm": "SUNITA PATIL",
     "tradeNam": "SUNITA PATIL TRADERS",
     "ctb": "Proprietorship",
@@ -11976,7 +11976,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPY0496C1Z5",
+    "gstin": "04AAAPY0496C1ZV",
     "lgnm": "SUNITA YADAV",
     "tradeNam": "SUNITA YADAV TRADERS",
     "ctb": "Proprietorship",
@@ -12000,7 +12000,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPC0497D1Z5",
+    "gstin": "03AAAPC0497D1ZG",
     "lgnm": "SUNITA CHAUHAN",
     "tradeNam": "SUNITA CHAUHAN TRADERS",
     "ctb": "Proprietorship",
@@ -12024,7 +12024,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPT0498E1Z5",
+    "gstin": "06AAAPT0498E1ZQ",
     "lgnm": "SUNITA THAKUR",
     "tradeNam": "SUNITA THAKUR TRADERS",
     "ctb": "Proprietorship",
@@ -12048,7 +12048,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPG0499F1Z5",
+    "gstin": "06AAAPG0499F1Z0",
     "lgnm": "SUNITA GILL",
     "tradeNam": "SUNITA GILL TRADERS",
     "ctb": "Proprietorship",
@@ -12072,7 +12072,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPD0500G1Z5",
+    "gstin": "07AAAPD0500G1ZP",
     "lgnm": "SUNITA DHILLON",
     "tradeNam": "SUNITA DHILLON TRADERS",
     "ctb": "Proprietorship",
@@ -12096,7 +12096,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0501H1Z5",
+    "gstin": "03AAAPS0501H1ZF",
     "lgnm": "KAVITA SHARMA",
     "tradeNam": "KAVITA SHARMA TRADERS",
     "ctb": "Proprietorship",
@@ -12120,7 +12120,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPV0502I1Z5",
+    "gstin": "03AAAPV0502I1Z8",
     "lgnm": "KAVITA VERMA",
     "tradeNam": "KAVITA VERMA TRADERS",
     "ctb": "Proprietorship",
@@ -12144,7 +12144,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPG0503J1Z5",
+    "gstin": "03AAAPG0503J1ZK",
     "lgnm": "KAVITA GUPTA",
     "tradeNam": "KAVITA GUPTA TRADERS",
     "ctb": "Proprietorship",
@@ -12192,7 +12192,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPK0505L1Z5",
+    "gstin": "03AAAPK0505L1ZA",
     "lgnm": "KAVITA KUMAR",
     "tradeNam": "KAVITA KUMAR TRADERS",
     "ctb": "Proprietorship",
@@ -12216,7 +12216,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPP0506M1Z5",
+    "gstin": "04AAAPP0506M1Z0",
     "lgnm": "KAVITA PATEL",
     "tradeNam": "KAVITA PATEL TRADERS",
     "ctb": "Proprietorship",
@@ -12240,7 +12240,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPR0507N1Z5",
+    "gstin": "03AAAPR0507N1ZX",
     "lgnm": "KAVITA REDDY",
     "tradeNam": "KAVITA REDDY TRADERS",
     "ctb": "Proprietorship",
@@ -12264,7 +12264,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPI0508O1Z5",
+    "gstin": "06AAAPI0508O1ZX",
     "lgnm": "KAVITA IYER",
     "tradeNam": "KAVITA IYER TRADERS",
     "ctb": "Proprietorship",
@@ -12288,7 +12288,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPN0509P1Z5",
+    "gstin": "06AAAPN0509P1ZP",
     "lgnm": "KAVITA NAIR",
     "tradeNam": "KAVITA NAIR TRADERS",
     "ctb": "Proprietorship",
@@ -12312,7 +12312,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPR0510Q1Z5",
+    "gstin": "07AAAPR0510Q1ZO",
     "lgnm": "KAVITA RAO",
     "tradeNam": "KAVITA RAO TRADERS",
     "ctb": "Proprietorship",
@@ -12336,7 +12336,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPJ0511R1Z5",
+    "gstin": "03AAAPJ0511R1Z1",
     "lgnm": "KAVITA JOSHI",
     "tradeNam": "KAVITA JOSHI TRADERS",
     "ctb": "Proprietorship",
@@ -12360,7 +12360,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPD0512S1Z5",
+    "gstin": "03AAAPD0512S1Z4",
     "lgnm": "KAVITA DAS",
     "tradeNam": "KAVITA DAS TRADERS",
     "ctb": "Proprietorship",
@@ -12384,7 +12384,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPS0513T1Z5",
+    "gstin": "03AAAPS0513T1ZM",
     "lgnm": "KAVITA SEN",
     "tradeNam": "KAVITA SEN TRADERS",
     "ctb": "Proprietorship",
@@ -12408,7 +12408,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0514U1Z5",
+    "gstin": "03AAAPM0514U1ZP",
     "lgnm": "KAVITA MISHRA",
     "tradeNam": "KAVITA MISHRA TRADERS",
     "ctb": "Proprietorship",
@@ -12432,7 +12432,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPB0515V1Z5",
+    "gstin": "03AAAPB0515V1ZX",
     "lgnm": "KAVITA BHAT",
     "tradeNam": "KAVITA BHAT TRADERS",
     "ctb": "Proprietorship",
@@ -12456,7 +12456,7 @@
     "adadr": []
   },
   {
-    "gstin": "04AAAPK0516W1Z5",
+    "gstin": "04AAAPK0516W1ZJ",
     "lgnm": "KAVITA KAPOOR",
     "tradeNam": "KAVITA KAPOOR TRADERS",
     "ctb": "Proprietorship",
@@ -12480,7 +12480,7 @@
     "adadr": []
   },
   {
-    "gstin": "03AAAPM0517X1Z5",
+    "gstin": "03AAAPM0517X1ZG",
     "lgnm": "KAVITA MUKHERJEE",
     "tradeNam": "KAVITA MUKHERJEE TRADERS",
     "ctb": "Proprietorship",
@@ -12504,7 +12504,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPM0518Y1Z5",
+    "gstin": "06AAAPM0518Y1Z7",
     "lgnm": "KAVITA MEENA",
     "tradeNam": "KAVITA MEENA TRADERS",
     "ctb": "Proprietorship",
@@ -12528,7 +12528,7 @@
     "adadr": []
   },
   {
-    "gstin": "06AAAPC0519Z1Z5",
+    "gstin": "06AAAPC0519Z1ZE",
     "lgnm": "KAVITA CHOUDHARY",
     "tradeNam": "KAVITA CHOUDHARY TRADERS",
     "ctb": "Proprietorship",
@@ -12552,7 +12552,7 @@
     "adadr": []
   },
   {
-    "gstin": "07AAAPM0520A1Z5",
+    "gstin": "07AAAPM0520A1ZO",
     "lgnm": "KAVITA MALHOTRA",
     "tradeNam": "KAVITA MALHOTRA TRADERS",
     "ctb": "Proprietorship",

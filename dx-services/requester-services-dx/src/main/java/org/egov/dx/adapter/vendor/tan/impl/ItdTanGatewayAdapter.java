@@ -53,12 +53,15 @@ public class ItdTanGatewayAdapter implements TanGatewayAdapter {
     public ItdTanGatewayAdapter(Configurations configurations) {
         this.configurations = configurations;
 
+        // Startup sanity check: verify mandatory HTTP connect timeout configuration
         if (configurations.getTanVerificationConnectTimeout() == null) {
             throw new CustomException(TanConstants.ERR_CODE_INVALID_REQUEST, "tan.verification.connect.timeout is not configured");
         }
+        // Startup sanity check: verify mandatory HTTP socket read timeout configuration
         if (configurations.getTanVerificationReadTimeout() == null) {
             throw new CustomException(TanConstants.ERR_CODE_INVALID_REQUEST, "tan.verification.read.timeout is not configured");
         }
+        // Startup sanity check: verify mandatory ITD vendor endpoint base URL
         if (StringUtils.isBlank(configurations.getTanVerificationBaseUrl())) {
             throw new CustomException(TanConstants.ERR_CODE_INVALID_REQUEST, "tan.verification.base.url is not configured");
         }
@@ -75,15 +78,23 @@ public class ItdTanGatewayAdapter implements TanGatewayAdapter {
                 .build();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Submits outbound TAN verification request to ITD web service and maps vendor response.</p>
+     */
     @Override
     public VendorTanVerificationResponse verifyTan(VendorTanVerificationRequest request) {
         String path = configurations.getTanVerificationPath();
+        // Endpoint path verification: ensure target URI path is configured
         if (StringUtils.isBlank(path)) {
             throw new CustomException(TanConstants.ERR_CODE_INVALID_REQUEST, "tan.verification.path is not configured");
         }
+        // Credential validation: ensure client ID is present
         if (StringUtils.isBlank(configurations.getTanVerificationClientId())) {
             throw new CustomException(TanConstants.ERR_CODE_INVALID_REQUEST, "tan.verification.client.id is not configured");
         }
+        // Credential validation: ensure client secret is present
         if (StringUtils.isBlank(configurations.getTanVerificationClientSecret())) {
             throw new CustomException(TanConstants.ERR_CODE_INVALID_REQUEST, "tan.verification.client.secret is not configured");
         }
@@ -104,14 +115,19 @@ public class ItdTanGatewayAdapter implements TanGatewayAdapter {
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (clientRequest, clientResponse) -> {
-                        String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
-                        log.error("[LIVE-TAN] ITD Gateway returned HTTP error {} for masked TAN {}: {}",
-                                clientResponse.getStatusCode(), maskedTan, responseBody);
+                        log.error("[LIVE-TAN] ITD Gateway returned HTTP error {} for masked TAN {}",
+                                clientResponse.getStatusCode(), maskedTan);
+                        // Security & PII hygiene (Review comment Medium #2): Only capture full error payload at DEBUG level
+                        if (log.isDebugEnabled()) {
+                            String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                            log.debug("[LIVE-TAN] ITD Gateway error payload for masked TAN {}: {}", maskedTan, responseBody);
+                        }
                         throw new CustomException(TanConstants.ERR_CODE_GATEWAY_ERROR,
                                 "ITD TAN gateway failed with status " + clientResponse.getStatusCode());
                     })
                     .body(VendorTanVerificationResponse.class);
 
+            // Null response guard: fail safely if gateway returns 200 OK with empty body
             if (response == null) {
                 log.error("[LIVE-TAN] Empty response body from ITD Gateway for masked TAN: {}", maskedTan);
                 throw new CustomException(TanConstants.ERR_CODE_GATEWAY_ERROR, TanConstants.MSG_GATEWAY_ERROR);

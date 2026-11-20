@@ -6,6 +6,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PanNumberUtilsTest {
 
+    /**
+     * Tests Normalize Pan behavior.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testNormalizePan() {
         assertEquals("ABCDE1234F", PanNumberUtils.normalizePan("  abcde1234f "));
@@ -13,6 +18,11 @@ class PanNumberUtilsTest {
         assertNull(PanNumberUtils.normalizePan(null));
     }
 
+    /**
+     * Tests Is Valid Pan under the valid formats scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsValidPan_ValidFormats() {
         assertTrue(PanNumberUtils.isValidPan("ABCDE1234F"));
@@ -21,6 +31,11 @@ class PanNumberUtilsTest {
         assertTrue(PanNumberUtils.isValidPan("CHDGB5432B"));
     }
 
+    /**
+     * Tests Is Valid Pan under the invalid formats scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsValidPan_InvalidFormats() {
         assertFalse(PanNumberUtils.isValidPan(null));
@@ -32,6 +47,11 @@ class PanNumberUtilsTest {
         assertFalse(PanNumberUtils.isValidPan("ABCDEA234F")); // letter in digits section
     }
 
+    /**
+     * Tests Mask Pan behavior.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testMaskPan() {
         assertEquals("ABCDE****F", PanNumberUtils.maskPan("ABCDE1234F"));
@@ -42,6 +62,11 @@ class PanNumberUtilsTest {
         assertEquals("AB****YZ", PanNumberUtils.maskPan("ABCXYZ"));
     }
 
+    /**
+     * Tests Resolve Pan Category behavior.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testResolvePanCategory() {
         assertEquals("Individual", PanNumberUtils.resolvePanCategory("ABCPE1234F"));
@@ -59,6 +84,11 @@ class PanNumberUtilsTest {
         assertEquals("Other", PanNumberUtils.resolvePanCategory(null));
     }
 
+    /**
+     * Tests Normalize Dob To Dd Mm Yyyy behavior.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testNormalizeDobToDdMmYyyy() {
         assertEquals("15/08/1990", PanNumberUtils.normalizeDobToDdMmYyyy("1990-08-15"));

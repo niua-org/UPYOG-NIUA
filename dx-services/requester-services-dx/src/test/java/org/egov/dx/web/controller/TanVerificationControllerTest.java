@@ -6,6 +6,7 @@ import org.egov.dx.service.TanVerificationService;
 import org.egov.dx.web.models.TanDetails;
 import org.egov.dx.web.models.TanVerificationRequest;
 import org.egov.dx.web.models.TanVerificationResponse;
+import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,11 @@ class TanVerificationControllerTest {
         controller = new TanVerificationController(tanVerificationService);
     }
 
+    /**
+     * Tests Verify Tan under the delegates to service and returns ok scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testVerifyTan_DelegatesToServiceAndReturnsOk() {
         TanVerificationRequest request = TanVerificationRequest.builder()
@@ -52,5 +58,24 @@ class TanVerificationControllerTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(expectedResponse, responseEntity.getBody());
         verify(tanVerificationService, times(1)).verifyTan(request);
+    }
+
+    /**
+     * Tests Verify Tan under the when service throws exception scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
+    @Test
+    void testVerifyTan_WhenServiceThrowsException() {
+        TanVerificationRequest request = TanVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .tan("BLRM12345C")
+                .tenantId("pg.disabled")
+                .build();
+
+        when(tanVerificationService.verifyTan(request))
+                .thenThrow(new CustomException("VERIFICATION_DISABLED", "Disabled in MDMS"));
+
+        assertThrows(CustomException.class, () -> controller.verifyTan(request));
     }
 }

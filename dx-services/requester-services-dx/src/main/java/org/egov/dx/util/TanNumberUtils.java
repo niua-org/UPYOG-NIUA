@@ -27,6 +27,7 @@ public final class TanNumberUtils {
      * @return trimmed, upper-cased TAN string or null if blank
      */
     public static String normalizeTan(String tan) {
+        // Return null if input is blank or whitespace-only
         if (StringUtils.isBlank(tan)) {
             return null;
         }
@@ -41,6 +42,7 @@ public final class TanNumberUtils {
      */
     public static boolean isValidTan(String tan) {
         String normalized = normalizeTan(tan);
+        // Pre-check length: all Indian TAN numbers are exactly 10 characters
         if (normalized == null || normalized.length() != 10) {
             return false;
         }
@@ -54,16 +56,20 @@ public final class TanNumberUtils {
      * @return safely masked TAN or "XXXX****XX" if blank/invalid
      */
     public static String maskTan(String tan) {
+        // Guard check for blank/null string to prevent NPE in log statements
         if (StringUtils.isBlank(tan)) {
             return "XXXX****XX";
         }
         String normalized = tan.trim().toUpperCase();
+        // If string is truncated or short (<6 chars), mask completely
         if (normalized.length() < 6) {
             return "******";
         }
+        // Standard 10-character TAN masking: retain first 4 characters and last 2 characters, mask middle 4 digits
         if (normalized.length() == 10) {
             return normalized.substring(0, 4) + "****" + normalized.substring(8);
         }
+        // Non-standard length fallback: keep leading 2 and trailing 2 characters
         return normalized.substring(0, 2) + "****" + normalized.substring(normalized.length() - 2);
     }
 
@@ -75,6 +81,7 @@ public final class TanNumberUtils {
      */
     public static String resolveDeductorCategory(String tan) {
         String normalized = normalizeTan(tan);
+        // Bounds check: need at least 4 characters to inspect the 4th character (index 3)
         if (normalized == null || normalized.length() < 4) {
             return "Other";
         }

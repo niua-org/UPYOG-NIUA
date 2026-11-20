@@ -33,6 +33,9 @@ public class VendorPanVerificationRequest {
     @JsonProperty("searchParams")
     private SearchParams searchParams;
 
+    /**
+     * Standard request header required by ITD PAN external agency gateway.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -54,6 +57,9 @@ public class VendorPanVerificationRequest {
         private String version;
     }
 
+    /**
+     * Demographic search parameters sent to ITD for match validation.
+     */
     @Getter
     @Setter
     @AllArgsConstructor

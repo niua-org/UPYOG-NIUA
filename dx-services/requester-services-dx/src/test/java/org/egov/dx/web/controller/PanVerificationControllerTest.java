@@ -6,6 +6,7 @@ import org.egov.dx.service.PanVerificationService;
 import org.egov.dx.web.models.PanDetails;
 import org.egov.dx.web.models.PanVerificationRequest;
 import org.egov.dx.web.models.PanVerificationResponse;
+import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,11 @@ class PanVerificationControllerTest {
         controller = new PanVerificationController(panVerificationService);
     }
 
+    /**
+     * Tests Verify Pan under the delegates to service and returns ok scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testVerifyPan_DelegatesToServiceAndReturnsOk() {
         PanVerificationRequest request = PanVerificationRequest.builder()
@@ -56,5 +62,26 @@ class PanVerificationControllerTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(expectedResponse, responseEntity.getBody());
         verify(panVerificationService, times(1)).verifyPan(request);
+    }
+
+    /**
+     * Tests Verify Pan under the when service throws exception scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
+    @Test
+    void testVerifyPan_WhenServiceThrowsException() {
+        PanVerificationRequest request = PanVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .pan("BLRPA0001A")
+                .fullName("Rahul Sharma")
+                .dob("15/08/1990")
+                .tenantId("pg.disabled")
+                .build();
+
+        when(panVerificationService.verifyPan(request))
+                .thenThrow(new CustomException("VERIFICATION_DISABLED", "Disabled in MDMS"));
+
+        assertThrows(CustomException.class, () -> controller.verifyPan(request));
     }
 }

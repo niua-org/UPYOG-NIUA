@@ -11,6 +11,11 @@ import static org.mockito.Mockito.*;
 
 class IrisGstGatewayAdapterTest {
 
+    /**
+     * Tests Constructor under the missing connect timeout_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing connect timeout_throws custom exception.
+     */
     @Test
     void testConstructor_MissingConnectTimeout_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -21,6 +26,11 @@ class IrisGstGatewayAdapterTest {
         assertTrue(ce.getMessage().contains("gst.verification.connect.timeout is not configured"));
     }
 
+    /**
+     * Tests Constructor under the missing read timeout_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing read timeout_throws custom exception.
+     */
     @Test
     void testConstructor_MissingReadTimeout_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -32,6 +42,11 @@ class IrisGstGatewayAdapterTest {
         assertTrue(ce.getMessage().contains("gst.verification.read.timeout is not configured"));
     }
 
+    /**
+     * Tests Constructor under the missing base url_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing base url_throws custom exception.
+     */
     @Test
     void testConstructor_MissingBaseUrl_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -44,6 +59,11 @@ class IrisGstGatewayAdapterTest {
         assertTrue(ce.getMessage().contains("gst.verification.base.url is not configured"));
     }
 
+    /**
+     * Tests Search Gstin under the missing path_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing path_throws custom exception.
+     */
     @Test
     void testSearchGstin_MissingPath_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -54,11 +74,16 @@ class IrisGstGatewayAdapterTest {
 
         IrisGstGatewayAdapter adapter = new IrisGstGatewayAdapter(config);
 
-        CustomException ce = assertThrows(CustomException.class, () -> adapter.searchGstin("03AAAPS0001B1Z5"));
+        CustomException ce = assertThrows(CustomException.class, () -> adapter.searchGstin("03AAAPS0001B1ZW"));
         assertEquals(GstConstants.ERR_CODE_INVALID_REQUEST, ce.getCode());
         assertTrue(ce.getMessage().contains("gst.verification.path is not configured"));
     }
 
+    /**
+     * Tests Search Gstin under the missing api key_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing api key_throws custom exception.
+     */
     @Test
     void testSearchGstin_MissingApiKey_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -70,7 +95,7 @@ class IrisGstGatewayAdapterTest {
 
         IrisGstGatewayAdapter adapter = new IrisGstGatewayAdapter(config);
 
-        CustomException ce = assertThrows(CustomException.class, () -> adapter.searchGstin("03AAAPS0001B1Z5"));
+        CustomException ce = assertThrows(CustomException.class, () -> adapter.searchGstin("03AAAPS0001B1ZW"));
         assertEquals(GstConstants.ERR_CODE_INVALID_REQUEST, ce.getCode());
         assertTrue(ce.getMessage().contains("gst.verification.api.key is not configured"));
     }

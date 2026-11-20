@@ -27,6 +27,7 @@ public final class PanNumberUtils {
      * @return trimmed, upper-cased PAN string or null if blank
      */
     public static String normalizePan(String pan) {
+        // Return null if input is blank or whitespace-only
         if (StringUtils.isBlank(pan)) {
             return null;
         }
@@ -41,6 +42,7 @@ public final class PanNumberUtils {
      */
     public static boolean isValidPan(String pan) {
         String normalized = normalizePan(pan);
+        // Pre-check length: all Indian PAN numbers are exactly 10 characters
         if (normalized == null || normalized.length() != 10) {
             return false;
         }
@@ -54,16 +56,20 @@ public final class PanNumberUtils {
      * @return safely masked PAN or "XXXX****XX" if blank/invalid
      */
     public static String maskPan(String pan) {
+        // Guard check for blank/null string to prevent NPE in log statements
         if (StringUtils.isBlank(pan)) {
             return "XXXX****XX";
         }
         String normalized = pan.trim().toUpperCase();
+        // If string is truncated or short (<6 chars), mask completely
         if (normalized.length() < 6) {
             return "******";
         }
+        // Standard 10-character PAN masking: retain first 5 chars and last character, mask the 4 middle digits
         if (normalized.length() == 10) {
             return normalized.substring(0, 5) + "****" + normalized.substring(9);
         }
+        // Non-standard length fallback: keep leading 2 and trailing 2 characters
         return normalized.substring(0, 2) + "****" + normalized.substring(normalized.length() - 2);
     }
 
@@ -75,6 +81,7 @@ public final class PanNumberUtils {
      */
     public static String resolvePanCategory(String pan) {
         String normalized = normalizePan(pan);
+        // Bounds check: need at least 4 characters to inspect the 4th character (index 3)
         if (normalized == null || normalized.length() < 4) {
             return "Other";
         }
@@ -113,11 +120,12 @@ public final class PanNumberUtils {
      * @return formatted DD/MM/YYYY string or trimmed original
      */
     public static String normalizeDobToDdMmYyyy(String dob) {
+        // Return null on blank/null input
         if (StringUtils.isBlank(dob)) {
             return null;
         }
         String trimmed = dob.trim();
-        // If YYYY-MM-DD
+        // If input is in ISO format (YYYY-MM-DD), reorder parts to Indian standard (DD/MM/YYYY)
         if (trimmed.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             String[] parts = trimmed.split("-");
             return parts[2] + "/" + parts[1] + "/" + parts[0];

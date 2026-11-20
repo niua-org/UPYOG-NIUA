@@ -38,6 +38,9 @@ public class VendorGstProfileResponse {
     @JsonProperty("error")
     private VendorError error;
 
+    /**
+     * Payload containing verified taxpayer registration and address details from GST system.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -77,6 +80,9 @@ public class VendorGstProfileResponse {
         private List<PlaceOfBusiness> additionalPlacesOfBusiness;
     }
 
+    /**
+     * Business place wrapper containing address and nature of business.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -92,6 +98,9 @@ public class VendorGstProfileResponse {
         private String natureOfBusiness;
     }
 
+    /**
+     * Address fields returned by IRIS GST taxpayer API.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -125,6 +134,9 @@ public class VendorGstProfileResponse {
         private String pincode;
     }
 
+    /**
+     * Error block returned by IRIS API on failed taxpayer lookup.
+     */
     @Getter
     @Setter
     @AllArgsConstructor

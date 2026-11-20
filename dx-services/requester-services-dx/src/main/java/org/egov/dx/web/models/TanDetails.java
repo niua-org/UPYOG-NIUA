@@ -1,6 +1,7 @@
 package org.egov.dx.web.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,8 +23,12 @@ import lombok.ToString;
 @Builder
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TanDetails {
 
+    /**
+     * Unmasked TAN (omitted in responses for PII protection).
+     */
     @JsonProperty("tan")
     private String tan;
 
@@ -42,12 +47,21 @@ public class TanDetails {
     @JsonProperty("emailId")
     private String emailId;
 
+    /**
+     * Boolean indicator whether applicant supplied deductor name matched the TAN record.
+     */
+    @JsonProperty("nameMatch")
+    private Boolean nameMatch;
+
     @JsonProperty("address")
     private TanAddress address;
 
     @JsonProperty("jurisdictionDetails")
     private TanJurisdiction jurisdictionDetails;
 
+    /**
+     * Postal address details for the deductor entity.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -55,6 +69,7 @@ public class TanDetails {
     @Builder
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class TanAddress {
         @JsonProperty("line1")
         private String line1;
@@ -72,6 +87,9 @@ public class TanDetails {
         private String pinCode;
     }
 
+    /**
+     * Assessing Officer (AO) jurisdiction details for the TAN deductor.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -79,6 +97,7 @@ public class TanDetails {
     @Builder
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class TanJurisdiction {
         @JsonProperty("aoCode")
         private String aoCode;

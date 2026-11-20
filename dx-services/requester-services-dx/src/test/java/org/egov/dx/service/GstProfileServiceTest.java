@@ -32,6 +32,11 @@ class GstProfileServiceTest {
         service = new GstProfileServiceImpl(gatewayAdapter, validator, tenantConfigService);
     }
 
+    /**
+     * Tests Search Gstin under the tenant disabled in mdms_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when tenant disabled in mdms_throws custom exception.
+     */
     @Test
     void testSearchGstin_TenantDisabledInMdms_ThrowsCustomException() {
         GstProfileRequest request = GstProfileRequest.builder()
@@ -47,18 +52,23 @@ class GstProfileServiceTest {
         assertTrue(ce.getMessage().contains("GST profile search is not enabled for tenant"));
     }
 
+    /**
+     * Tests Search Gstin under the active success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testSearchGstin_ActiveSuccess() {
         GstProfileRequest request = GstProfileRequest.builder()
                 .requestInfo(new RequestInfo())
-                .gstin("03PTLAM0012A1Z5")
+                .gstin("03PTLAM0012A1Z3")
                 .tenantId("pg.citya")
                 .build();
 
         VendorGstProfileResponse.TaxpayerData vData = VendorGstProfileResponse.TaxpayerData.builder()
-                .gstin("03PTLAM0012A1Z5")
-                .legalName("MUNICIPAL CORPORATION AMRITSAR")
-                .tradeName("MUNICIPAL CORPORATION AMRITSAR")
+                .gstin("03PTLAM0012A1Z3")
+                .legalName("MOCK MUNICIPAL CORPORATION AMRITSAR")
+                .tradeName("MOCK MUNICIPAL CORPORATION AMRITSAR")
                 .constitutionOfBusiness("Local Authority")
                 .taxpayerType("Tax Deductor")
                 .status(GstConstants.STATUS_ACTIVE)
@@ -85,28 +95,33 @@ class GstProfileServiceTest {
         GstProfileResponse response = service.searchGstin(request);
         assertNotNull(response);
         assertTrue(response.getIsVerified());
-        assertEquals("03PTLA****1Z5", response.getMaskedGstin());
+        assertEquals("03PTLA****1Z3", response.getMaskedGstin());
         assertNotNull(response.getTaxpayerDetails());
-        assertEquals("03PTLAM0012A1Z5", response.getTaxpayerDetails().getGstin());
+        assertEquals("03PTLAM0012A1Z3", response.getTaxpayerDetails().getGstin());
         assertEquals("PTLAM0012A", response.getTaxpayerDetails().getPan());
         assertEquals("03", response.getTaxpayerDetails().getStateCode());
         assertEquals("Punjab", response.getTaxpayerDetails().getState());
-        assertEquals("MUNICIPAL CORPORATION AMRITSAR", response.getTaxpayerDetails().getLegalName());
+        assertEquals("MOCK MUNICIPAL CORPORATION AMRITSAR", response.getTaxpayerDetails().getLegalName());
         assertEquals("Active", response.getTaxpayerDetails().getStatus());
 
         verify(validator, times(1)).validateGstRequest(request);
     }
 
+    /**
+     * Tests Search Gstin under the cancelled taxpayer scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testSearchGstin_CancelledTaxpayer() {
         GstProfileRequest request = GstProfileRequest.builder()
                 .requestInfo(new RequestInfo())
-                .gstin("03CANCEL0001Z9")
+                .gstin("03CANCE0001L1Z1")
                 .tenantId("pg.citya")
                 .build();
 
         VendorGstProfileResponse.TaxpayerData vData = VendorGstProfileResponse.TaxpayerData.builder()
-                .gstin("03CANCEL0001Z9")
+                .gstin("03CANCE0001L1Z1")
                 .legalName("VINTAGE TRADERS")
                 .status(GstConstants.STATUS_CANCELLED)
                 .build();
@@ -125,6 +140,11 @@ class GstProfileServiceTest {
         assertEquals("Cancelled", response.getTaxpayerDetails().getStatus());
     }
 
+    /**
+     * Tests Search Gstin under the gateway error response scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when gateway error response.
+     */
     @Test
     void testSearchGstin_GatewayErrorResponse() {
         GstProfileRequest request = GstProfileRequest.builder()
@@ -151,6 +171,11 @@ class GstProfileServiceTest {
         assertEquals(GstConstants.ERR_CODE_RECORD_NOT_FOUND, response.getErrorDetails().getErrorCode());
     }
 
+    /**
+     * Tests Search Gstin under the null gateway response_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when null gateway response_throws custom exception.
+     */
     @Test
     void testSearchGstin_NullGatewayResponse_ThrowsCustomException() {
         GstProfileRequest request = GstProfileRequest.builder()

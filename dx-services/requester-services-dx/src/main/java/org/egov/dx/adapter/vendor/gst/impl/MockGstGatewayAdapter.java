@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(name = "gst.verification.mock.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "gst.verification.mock.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class MockGstGatewayAdapter implements GstGatewayAdapter {
 
@@ -48,13 +48,23 @@ public class MockGstGatewayAdapter implements GstGatewayAdapter {
     private final Configurations configurations;
     private final Map<String, VendorGstProfileResponse.TaxpayerData> mockRecordMap = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs {@link MockGstGatewayAdapter} with injected application configurations.
+     *
+     * @param configurations centralized application configurations
+     */
     @Autowired
     public MockGstGatewayAdapter(Configurations configurations) {
         this.configurations = configurations;
     }
 
+    /**
+     * Initializes the mock adapter and eagerly loads curated mock GST records.
+     * Emits a visible security warning alerting that simulated mock verification is active.
+     */
     @PostConstruct
     public void init() {
+        log.warn("[SECURITY-WARNING] MockGstGatewayAdapter is ACTIVE. Mock GST verification must NOT be enabled in production environments!");
         loadMockRecords();
     }
 
@@ -104,6 +114,12 @@ public class MockGstGatewayAdapter implements GstGatewayAdapter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Searches taxpayer details against curated mock records. For unlisted valid GSTINs,
+     * returns NOT_FOUND unless {@code gst.verification.mock.synthesize-unknown} is enabled.</p>
+     */
     @Override
     public VendorGstProfileResponse searchGstin(String gstin) {
         String normalizedGstin = GstNumberUtils.normalizeGstin(gstin);
@@ -111,21 +127,9 @@ public class MockGstGatewayAdapter implements GstGatewayAdapter {
 
         log.info("[MOCK-GST-ADAPTER] Executing simulated GST taxpayer search for masked GSTIN: {}", maskedGstin);
 
-        // 0. Check for explicit negative test triggers (simulated not found)
-        if (normalizedGstin != null && (normalizedGstin.contains("NOTFOUND") || "000000000000000".equals(normalizedGstin))) {
-            log.warn("[MOCK-GST-ADAPTER] Triggered simulated NOT_FOUND for masked GSTIN: {}", maskedGstin);
-            return VendorGstProfileResponse.builder()
-                    .statusCode("0")
-                    .statusDesc(GstConstants.STATUS_FAILURE)
-                    .error(VendorGstProfileResponse.VendorError.builder()
-                            .errorCode(GstConstants.ERR_CODE_RECORD_NOT_FOUND)
-                            .message(GstConstants.MSG_RECORD_NOT_FOUND)
-                            .build())
-                    .build();
-        }
-
-        // 1. Check if record exists in curated static mock records
+        // Step 1: Check if record exists in curated static mock records
         VendorGstProfileResponse.TaxpayerData existing = mockRecordMap.get(normalizedGstin);
+        // If matched in mock records, return pre-configured active/cancelled taxpayer profile
         if (existing != null) {
             log.info("[MOCK-GST-ADAPTER] Found matching mock record for masked GSTIN: {}, legalName: {}, status: {}",
                     maskedGstin, existing.getLegalName(), existing.getStatus());
@@ -137,48 +141,62 @@ public class MockGstGatewayAdapter implements GstGatewayAdapter {
                     .build();
         }
 
-        // 2. Deterministic fallback for valid GSTINs not explicitly in curated dataset
-        if (GstNumberUtils.isValidGstin(normalizedGstin)) {
-            String stateCode = GstNumberUtils.extractStateCode(normalizedGstin);
-            String stateName = GstNumberUtils.resolveStateName(stateCode);
-            String embeddedPan = GstNumberUtils.extractPanFromGstin(normalizedGstin);
+        // Step 2: Handle valid GSTIN syntax not found in curated static records
+        if (GstNumberUtils.isValidGstin(normalizedGstin, false)) {
+            // Safe fallback check (Review comment High #3): Only synthesize unknown records if explicitly enabled in config
+            if (configurations != null && configurations.isGstVerificationMockSynthesizeUnknownEnabled()) {
+                String stateCode = GstNumberUtils.extractStateCode(normalizedGstin);
+                String stateName = GstNumberUtils.resolveStateName(stateCode);
+                String embeddedPan = GstNumberUtils.extractPanFromGstin(normalizedGstin);
 
-            log.info("[MOCK-GST-ADAPTER] Synthesizing deterministic mock taxpayer for valid masked GSTIN: {}, state: {}",
-                    maskedGstin, stateName);
+                log.info("[MOCK-GST-ADAPTER] Synthesizing deterministic mock taxpayer for valid masked GSTIN: {}, state: {}",
+                        maskedGstin, stateName);
 
-            VendorGstProfileResponse.TaxpayerData generatedData = VendorGstProfileResponse.TaxpayerData.builder()
-                    .gstin(normalizedGstin)
-                    .legalName("ENTERPRISE " + (embeddedPan != null ? embeddedPan : "CORP"))
-                    .tradeName("COMMERCIAL TRADING CO")
-                    .constitutionOfBusiness("Private Limited Company")
-                    .taxpayerType("Regular")
-                    .status(GstConstants.STATUS_ACTIVE)
-                    .registrationDate("01/07/2017")
-                    .cancellationDate("")
-                    .principalPlaceOfBusiness(VendorGstProfileResponse.PlaceOfBusiness.builder()
-                            .address(VendorGstProfileResponse.Address.builder()
-                                    .doorNumber("Plot 101")
-                                    .buildingName("Commercial Complex")
-                                    .street("Main Commercial Road")
-                                    .location("Industrial Area")
-                                    .city("State Capital")
-                                    .district("Central District")
-                                    .state(stateName)
-                                    .pincode("143001")
-                                    .build())
-                            .natureOfBusiness("Retail and Commercial Services")
-                            .build())
-                    .additionalPlacesOfBusiness(Collections.emptyList())
-                    .build();
+                VendorGstProfileResponse.TaxpayerData generatedData = VendorGstProfileResponse.TaxpayerData.builder()
+                        .gstin(normalizedGstin)
+                        .legalName("ENTERPRISE " + (embeddedPan != null ? embeddedPan : "CORP"))
+                        .tradeName("COMMERCIAL TRADING CO")
+                        .constitutionOfBusiness("Private Limited Company")
+                        .taxpayerType("Regular")
+                        .status(GstConstants.STATUS_ACTIVE)
+                        .registrationDate("01/07/2017")
+                        .cancellationDate("")
+                        .principalPlaceOfBusiness(VendorGstProfileResponse.PlaceOfBusiness.builder()
+                                .address(VendorGstProfileResponse.Address.builder()
+                                        .doorNumber("Plot 101")
+                                        .buildingName("Commercial Complex")
+                                        .street("Main Commercial Road")
+                                        .location("Industrial Area")
+                                        .city("State Capital")
+                                        .district("Central District")
+                                        .state(stateName)
+                                        .pincode("143001")
+                                        .build())
+                                .natureOfBusiness("Retail and Commercial Services")
+                                .build())
+                        .additionalPlacesOfBusiness(Collections.emptyList())
+                        .build();
 
-            return VendorGstProfileResponse.builder()
-                    .statusCode("1")
-                    .statusDesc(GstConstants.STATUS_SUCCESS)
-                    .data(generatedData)
-                    .build();
+                return VendorGstProfileResponse.builder()
+                        .statusCode("1")
+                        .statusDesc(GstConstants.STATUS_SUCCESS)
+                        .data(generatedData)
+                        .build();
+            } else {
+                // Production-safe default: unlisted GSTINs return 404 NOT_FOUND instead of synthetic approvals
+                log.info("[MOCK-GST-ADAPTER] Unlisted GSTIN returning RECORD_NOT_FOUND for masked GSTIN: {}", maskedGstin);
+                return VendorGstProfileResponse.builder()
+                        .statusCode("0")
+                        .statusDesc(GstConstants.STATUS_FAILURE)
+                        .error(VendorGstProfileResponse.VendorError.builder()
+                                .errorCode(GstConstants.ERR_CODE_RECORD_NOT_FOUND)
+                                .message(GstConstants.MSG_RECORD_NOT_FOUND)
+                                .build())
+                        .build();
+            }
         }
 
-        // 3. If invalid format
+        // Step 3: Handle malformed or invalid GSTIN format
         return VendorGstProfileResponse.builder()
                 .statusCode("0")
                 .statusDesc(GstConstants.STATUS_FAILURE)

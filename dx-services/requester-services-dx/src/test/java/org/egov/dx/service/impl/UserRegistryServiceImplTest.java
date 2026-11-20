@@ -3,6 +3,7 @@ package org.egov.dx.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.util.Configurations;
+import org.egov.dx.web.models.UserDemographics;
 import org.egov.dx.web.models.UserRegistryRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,10 @@ import java.util.Map;
 import org.egov.tracer.model.CustomException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -45,6 +48,11 @@ class UserRegistryServiceImplTest {
         ReflectionTestUtils.setField(userRegistryService, "markVerifiedPath", "/user/profile/aadhaar/_markVerifiedAfterEkyc");
     }
 
+    /**
+     * Tests Search User Uuid By Aadhaar under the blank aadhaar_returns null scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testSearchUserUuidByAadhaar_BlankAadhaar_ReturnsNull() {
         String uuid = userRegistryService.searchUserUuidByAadhaar("", "pg.citya", new RequestInfo());
@@ -52,6 +60,11 @@ class UserRegistryServiceImplTest {
         verifyNoInteractions(restTemplate);
     }
 
+    /**
+     * Tests Search User Uuid By Aadhaar under the matches full aadhaar_returns uuid scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testSearchUserUuidByAadhaar_MatchesFullAadhaar_ReturnsUuid() {
         String mockResponse = """
@@ -81,6 +94,11 @@ class UserRegistryServiceImplTest {
         assertEquals("548796521458", body.get("aadhaarNumber"));
     }
 
+    /**
+     * Tests Search User Uuid By Aadhaar under the last four only masked record_does not match scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testSearchUserUuidByAadhaar_LastFourOnlyMaskedRecord_DoesNotMatch() {
         String mockResponse = """
@@ -102,6 +120,11 @@ class UserRegistryServiceImplTest {
         assertNull(uuid);
     }
 
+    /**
+     * Tests Resolve Or Create User Uuid under the citizen does not exist_auto provisions without identity verified flag scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testResolveOrCreateUserUuid_CitizenDoesNotExist_AutoProvisionsWithoutIdentityVerifiedFlag() {
         String emptySearchResponse = "{\"responseInfo\":{\"status\":\"SUCCESS\"},\"user\":[]}";
@@ -121,7 +144,7 @@ class UserRegistryServiceImplTest {
         when(restTemplate.postForObject(contains("_createnovalidate"), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(createResponse);
 
-        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+        UserDemographics demographics = UserDemographics.builder()
                 .name("New Citizen")
                 .build();
 
@@ -138,9 +161,14 @@ class UserRegistryServiceImplTest {
         assertNull(user.get("isIdentityVerified"));
     }
 
+    /**
+     * Tests Resolve Or Create User Uuid under the invalid aadhaar_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when invalid aadhaar_throws custom exception.
+     */
     @Test
     void testResolveOrCreateUserUuid_InvalidAadhaar_ThrowsCustomException() {
-        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+        UserDemographics demographics = UserDemographics.builder()
                 .name("Citizen")
                 .build();
 
@@ -150,6 +178,11 @@ class UserRegistryServiceImplTest {
         verifyNoInteractions(restTemplate);
     }
 
+    /**
+     * Tests Search User Uuid By Aadhaar under the http exception_returns null safely scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when http exception_returns null safely.
+     */
     @Test
     void testSearchUserUuidByAadhaar_HttpException_ReturnsNullSafely() {
         when(restTemplate.postForObject(anyString(), any(HttpEntity.class), eq(String.class)))
@@ -159,6 +192,11 @@ class UserRegistryServiceImplTest {
         assertNull(uuid);
     }
 
+    /**
+     * Tests Search User Uuid By Aadhaar under the missing user host_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing user host_throws custom exception.
+     */
     @Test
     void testSearchUserUuidByAadhaar_MissingUserHost_ThrowsCustomException() {
         when(configurations.getUserHost()).thenReturn(null);
@@ -167,6 +205,11 @@ class UserRegistryServiceImplTest {
                 userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", requestInfo));
     }
 
+    /**
+     * Tests Search User Uuid By Aadhaar under the missing search path_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing search path_throws custom exception.
+     */
     @Test
     void testSearchUserUuidByAadhaar_MissingSearchPath_ThrowsCustomException() {
         ReflectionTestUtils.setField(userRegistryService, "aadhaarSearchPath", "");
@@ -175,10 +218,15 @@ class UserRegistryServiceImplTest {
                 userRegistryService.searchUserUuidByAadhaar("548796521458", "pg.citya", requestInfo));
     }
 
+    /**
+     * Tests Resolve Or Create User Uuid under the missing create path_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing create path_throws custom exception.
+     */
     @Test
     void testResolveOrCreateUserUuid_MissingCreatePath_ThrowsCustomException() {
         ReflectionTestUtils.setField(userRegistryService, "userCreatePath", " ");
-        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+        UserDemographics demographics = UserDemographics.builder()
                 .name("Citizen")
                 .build();
         RequestInfo requestInfo = new RequestInfo();
@@ -186,6 +234,11 @@ class UserRegistryServiceImplTest {
                 userRegistryService.resolveOrCreateUserUuid("548796521458", demographics, "pg.citya", requestInfo));
     }
 
+    /**
+     * Tests Mark Citizen Aadhaar Verified After Ekyc under the missing mark verified path_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing mark verified path_throws custom exception.
+     */
     @Test
     void testMarkCitizenAadhaarVerifiedAfterEkyc_MissingMarkVerifiedPath_ThrowsCustomException() {
         ReflectionTestUtils.setField(userRegistryService, "markVerifiedPath", null);
@@ -194,6 +247,11 @@ class UserRegistryServiceImplTest {
                 userRegistryService.markCitizenAadhaarVerifiedAfterEkyc("uuid-1", "548796521458", "pg.citya", requestInfo));
     }
 
+    /**
+     * Tests Search Citizen By Aadhaar under the matches full aadhaar_returns record with uuid and family id scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testSearchCitizenByAadhaar_MatchesFullAadhaar_ReturnsRecordWithUuidAndFamilyId() {
         String mockResponse = """
@@ -220,6 +278,11 @@ class UserRegistryServiceImplTest {
         assertEquals("FAM-2026-F638A3E1", userRegistryService.searchFamilyIdByAadhaar("548796521458", "pg.citya", new RequestInfo()));
     }
 
+    /**
+     * Tests Search Family Id By User Uuid under the with family service host_queries family service directly scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testSearchFamilyIdByUserUuid_WithFamilyServiceHost_QueriesFamilyServiceDirectly() {
         when(configurations.getFamilyServiceHost()).thenReturn("http://localhost:8092/");
@@ -242,6 +305,11 @@ class UserRegistryServiceImplTest {
         assertEquals("FAM-DIRECT-123", familyId);
     }
 
+    /**
+     * Tests Search Family Id By User Uuid under the without family service host_queries profile search scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testSearchFamilyIdByUserUuid_WithoutFamilyServiceHost_QueriesProfileSearch() {
         when(configurations.getFamilyServiceHost()).thenReturn(null);
@@ -263,6 +331,11 @@ class UserRegistryServiceImplTest {
         assertEquals("FAM-FROM-PROFILE-456", familyId);
     }
 
+    /**
+     * Tests Resolve Or Create User Uuid under the citizen created without mobile_assigns random mobile scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testResolveOrCreateUserUuid_CitizenCreatedWithoutMobile_AssignsRandomMobile() {
         // Aadhaar search returns no existing user
@@ -278,7 +351,7 @@ class UserRegistryServiceImplTest {
         when(restTemplate.postForObject(contains("/user/users/_createnovalidate"), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(createResponse);
 
-        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+        UserDemographics demographics = UserDemographics.builder()
                 .name("Test Citizen")
                 .build();
 
@@ -294,13 +367,18 @@ class UserRegistryServiceImplTest {
         Map<String, Object> userMap = (Map<String, Object>) reqBody.get("user");
 
         String assignedMobile = (String) userMap.get("mobileNumber");
-        org.junit.jupiter.api.Assertions.assertNotNull(assignedMobile, "Mobile number must not be null");
-        org.junit.jupiter.api.Assertions.assertTrue(assignedMobile.matches("^[6-9]\\d{9}$"),
+        assertNotNull(assignedMobile, "Mobile number must not be null");
+        assertTrue(assignedMobile.matches("^[6-9]\\d{9}$"),
                 "Generated mobile must be a valid 10-digit Indian mobile number");
         assertEquals(assignedMobile, userMap.get("userName"));
         assertEquals(assignedMobile, demographics.getMobileNumber());
     }
 
+    /**
+     * Tests Resolve Or Create User Uuid under the citizen created with mobile_assigns provided mobile scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testResolveOrCreateUserUuid_CitizenCreatedWithMobile_AssignsProvidedMobile() {
         when(restTemplate.postForObject(contains("/user/profile/aadhaar/_search"), any(HttpEntity.class), eq(String.class)))
@@ -310,7 +388,7 @@ class UserRegistryServiceImplTest {
         when(restTemplate.postForObject(contains("/user/users/_createnovalidate"), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(createResponse);
 
-        org.egov.dx.web.models.UserDemographics demographics = org.egov.dx.web.models.UserDemographics.builder()
+        UserDemographics demographics = UserDemographics.builder()
                 .name("Test Citizen")
                 .mobileNumber("9876543210")
                 .build();

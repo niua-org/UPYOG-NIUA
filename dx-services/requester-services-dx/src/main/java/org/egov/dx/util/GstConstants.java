@@ -23,18 +23,26 @@ public final class GstConstants {
     public static final String STATUS_CANCELLED = "Cancelled";
     public static final String STATUS_SUSPENDED = "Suspended";
 
+    // Verification source identifiers
+    public static final String SOURCE_MOCK = "MOCK";
+    public static final String SOURCE_LIVE_IRIS = "LIVE_IRIS";
+
     // Error codes
     public static final String ERR_CODE_INVALID_REQUEST = "INVALID_GST_REQUEST";
     public static final String ERR_CODE_INVALID_FORMAT = "INVALID_GSTIN_FORMAT";
+    public static final String ERR_CODE_INVALID_CHECKSUM = "INVALID_GSTIN_CHECKSUM";
     public static final String ERR_CODE_RECORD_NOT_FOUND = "IRIS-GST-4001";
     public static final String ERR_CODE_GATEWAY_ERROR = "GST_GATEWAY_ERROR";
     public static final String ERR_CODE_TENANT_DISABLED = "VERIFICATION_DISABLED_FOR_TENANT";
+    public static final String ERR_CODE_UNAUTHORIZED_USER = "UNAUTHORIZED_USER";
 
     // Error messages
     public static final String MSG_INVALID_REQUEST = "GST profile search request or RequestInfo cannot be null";
     public static final String MSG_BLANK_GSTIN = "GSTIN is mandatory";
-    public static final String MSG_INVALID_FORMAT = "Invalid GSTIN format. GSTIN must be a 15-character alphanumeric string (e.g., 03AAAPS0001B1Z5).";
+    public static final String MSG_INVALID_FORMAT = "Invalid GSTIN format. GSTIN must be a 15-character alphanumeric string (e.g., 03AAAPS0001B1ZW).";
+    public static final String MSG_INVALID_CHECKSUM = "Invalid GSTIN checksum check digit.";
     public static final String MSG_RECORD_NOT_FOUND = "GSTIN does not exist or is inactive in GST records.";
     public static final String MSG_GATEWAY_ERROR = "Unable to process GST search with GST gateway.";
     public static final String MSG_TENANT_DISABLED = "GST profile search service is not enabled for tenant in MDMS configuration.";
+    public static final String MSG_UNAUTHORIZED_USER = "Authenticated user information (userInfo with uuid) is required to access verification services.";
 }

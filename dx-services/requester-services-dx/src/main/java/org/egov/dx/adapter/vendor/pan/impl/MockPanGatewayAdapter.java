@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(name = "pan.verification.mock.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "pan.verification.mock.enabled", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class MockPanGatewayAdapter implements PanGatewayAdapter {
 
@@ -50,13 +50,23 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
     private final Configurations configurations;
     private final Map<String, VendorPanVerificationResponse.ResponseParams> mockRecordMap = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs {@link MockPanGatewayAdapter} with injected application configurations.
+     *
+     * @param configurations centralized application configurations
+     */
     @Autowired
     public MockPanGatewayAdapter(Configurations configurations) {
         this.configurations = configurations;
     }
 
+    /**
+     * Initializes the mock adapter and eagerly loads curated mock PAN records.
+     * Emits a visible security warning alerting that simulated mock verification is active.
+     */
     @PostConstruct
     public void init() {
+        log.warn("[SECURITY-WARNING] MockPanGatewayAdapter is ACTIVE. Mock PAN verification must NOT be enabled in production environments!");
         loadMockRecords();
     }
 
@@ -106,6 +116,12 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Evaluates PAN verification against curated mock records. For unlisted valid PANs,
+     * returns NOT_FOUND unless {@code pan.verification.mock.synthesize-unknown} is enabled.</p>
+     */
     @Override
     public VendorPanVerificationResponse verifyPan(VendorPanVerificationRequest request) {
         String pan = request != null && request.getSearchParams() != null
@@ -126,7 +142,7 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
 
         log.debug("[MOCK-PAN-ADAPTER] Processing PAN verification for masked PAN: {}, reqId: {}", maskedPan, reqId);
 
-        // Explicit Negative Testing trigger: e.g. PAN containing "NOTF" or ending with "0000X"
+        // Simulated negative test trigger: PANs containing "NOTF" or ending in "0000X" simulate vendor 404 response
         if (normalizedPan != null && (normalizedPan.contains("NOTF") || normalizedPan.endsWith("0000X"))) {
             log.info("[MOCK-PAN-ADAPTER] Simulating PAN NOT FOUND for masked PAN: {}", maskedPan);
             return VendorPanVerificationResponse.builder()
@@ -144,8 +160,9 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
                     .build();
         }
 
-        // 1. Check if record exists in curated static mock records
+        // Step 1: Lookup exact normalized PAN in pre-loaded mock dataset
         VendorPanVerificationResponse.ResponseParams existing = mockRecordMap.get(normalizedPan);
+        // If found in curated mock records, perform strict identity comparison against requested name and DOB
         if (existing != null) {
             String nameMatch = evaluateNameMatch(inputFullName, existing.getFullName());
             String dobMatch = evaluateDobMatch(inputDob, existing.getDob());
@@ -175,34 +192,53 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
                     .build();
         }
 
-        // 2. Deterministic Algorithmic Generation for arbitrary valid PAN
+        // Step 2: Handle valid PANs not present in curated static records
         if (PanNumberUtils.isValidPan(normalizedPan)) {
-            String category = PanNumberUtils.resolvePanCategory(normalizedPan);
-            String syntheticName = StringUtils.isNotBlank(inputFullName) ? inputFullName.trim().toUpperCase() : "SIMULATED TAXPAYER";
+            // Safe fallback check (Review comment High #3): Only synthesize unknown records if explicitly enabled in config
+            if (configurations != null && configurations.isPanVerificationMockSynthesizeUnknownEnabled()) {
+                String category = PanNumberUtils.resolvePanCategory(normalizedPan);
+                String syntheticName = StringUtils.isNotBlank(inputFullName) ? inputFullName.trim().toUpperCase() : "SIMULATED TAXPAYER";
 
-            VendorPanVerificationResponse.ResponseParams generatedParams = VendorPanVerificationResponse.ResponseParams.builder()
-                    .pan(normalizedPan)
-                    .panStatus(PanConstants.STATUS_EXISTING_AND_VALID)
-                    .fullName(syntheticName)
-                    .category(category)
-                    .nameMatch(PanConstants.MATCH_YES)
-                    .dobMatch(PanConstants.MATCH_YES)
-                    .seedingStatus(PanConstants.MATCH_YES)
-                    .build();
+                VendorPanVerificationResponse.ResponseParams generatedParams = VendorPanVerificationResponse.ResponseParams.builder()
+                        .pan(normalizedPan)
+                        .panStatus(PanConstants.STATUS_EXISTING_AND_VALID)
+                        .fullName(syntheticName)
+                        .category(category)
+                        .nameMatch(PanConstants.MATCH_YES)
+                        .dobMatch(PanConstants.MATCH_YES)
+                        .seedingStatus(PanConstants.MATCH_YES)
+                        .build();
 
-            log.info("[MOCK-PAN-ADAPTER] Generating deterministic mock response for masked PAN: {}, category: {}",
-                    maskedPan, category);
+                log.info("[MOCK-PAN-ADAPTER] Generating deterministic mock response for masked PAN: {}, category: {}",
+                        maskedPan, category);
 
-            return VendorPanVerificationResponse.builder()
-                    .header(VendorPanVerificationResponse.ResponseHeader.builder()
-                            .requestId(reqId)
-                            .serviceId(PanConstants.DEFAULT_SERVICE_ID)
-                            .responseId(RES_PAN_PREFIX + UUID.randomUUID())
-                            .status(PanConstants.STATUS_SUCCESS)
-                            .statusCode("200")
-                            .build())
-                    .responseParams(generatedParams)
-                    .build();
+                return VendorPanVerificationResponse.builder()
+                        .header(VendorPanVerificationResponse.ResponseHeader.builder()
+                                .requestId(reqId)
+                                .serviceId(PanConstants.DEFAULT_SERVICE_ID)
+                                .responseId(RES_PAN_PREFIX + UUID.randomUUID())
+                                .status(PanConstants.STATUS_SUCCESS)
+                                .statusCode("200")
+                                .build())
+                        .responseParams(generatedParams)
+                        .build();
+            } else {
+                // Production-safe default: unlisted PANs return 404 NOT_FOUND instead of fake approvals
+                log.info("[MOCK-PAN-ADAPTER] Unlisted PAN returning RECORD_NOT_FOUND for masked PAN: {}", maskedPan);
+                return VendorPanVerificationResponse.builder()
+                        .header(VendorPanVerificationResponse.ResponseHeader.builder()
+                                .requestId(reqId)
+                                .serviceId(PanConstants.DEFAULT_SERVICE_ID)
+                                .responseId(RES_PAN_PREFIX + UUID.randomUUID())
+                                .status(PanConstants.STATUS_FAILURE)
+                                .statusCode("404")
+                                .build())
+                        .errorDetails(VendorPanVerificationResponse.VendorErrorDetails.builder()
+                                .errorCode(PanConstants.ERR_CODE_RECORD_NOT_FOUND)
+                                .errorMessage(PanConstants.MSG_RECORD_NOT_FOUND)
+                                .build())
+                        .build();
+            }
         }
 
         // If not valid format
@@ -222,20 +258,25 @@ public class MockPanGatewayAdapter implements PanGatewayAdapter {
     }
 
     private String evaluateNameMatch(String inputName, String recordName) {
+        // Missing name guard: if either the requested name or record name is missing, cannot match
         if (StringUtils.isBlank(inputName) || StringUtils.isBlank(recordName)) {
             return PanConstants.MATCH_NO;
         }
-        String cleanInput = inputName.trim().replaceAll("\\s+", " ").toUpperCase();
-        String cleanRecord = recordName.trim().replaceAll("\\s+", " ").toUpperCase();
-        return (cleanInput.equalsIgnoreCase(cleanRecord) || cleanInput.contains(cleanRecord) || cleanRecord.contains(cleanInput))
+        // Strict name matching (Review comment High #5): Clean punctuation, collapse multiple whitespaces,
+        // and enforce exact equality to eliminate false positives caused by loose substring `contains()`
+        String cleanInput = inputName.trim().replaceAll("[^a-zA-Z0-9\\s]", "").replaceAll("\\s+", " ").toUpperCase();
+        String cleanRecord = recordName.trim().replaceAll("[^a-zA-Z0-9\\s]", "").replaceAll("\\s+", " ").toUpperCase();
+        return cleanInput.equalsIgnoreCase(cleanRecord)
                 ? PanConstants.MATCH_YES
                 : PanConstants.MATCH_NO;
     }
 
     private String evaluateDobMatch(String inputDob, String recordDob) {
+        // Missing date guard: if either date is missing, match is rejected
         if (StringUtils.isBlank(inputDob) || StringUtils.isBlank(recordDob)) {
             return PanConstants.MATCH_NO;
         }
+        // Normalize diverse input formats (e.g. YYYY-MM-DD vs DD/MM/YYYY) to standard DD/MM/YYYY before equality test
         String normInput = PanNumberUtils.normalizeDobToDdMmYyyy(inputDob);
         String normRecord = PanNumberUtils.normalizeDobToDdMmYyyy(recordDob);
         return StringUtils.equalsIgnoreCase(normInput, normRecord)

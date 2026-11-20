@@ -18,6 +18,11 @@ class AadhaarVerificationValidatorTest {
         validator = new AadhaarVerificationValidator();
     }
 
+    /**
+     * Tests Validate Send Otp Request under the success scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when success.
+     */
     @Test
     void testValidateSendOtpRequest_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -28,6 +33,11 @@ class AadhaarVerificationValidatorTest {
         assertDoesNotThrow(() -> validator.validateSendOtpRequest(request));
     }
 
+    /**
+     * Tests Validate Send Otp Request under the null request scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when null request.
+     */
     @Test
     void testValidateSendOtpRequest_NullRequest() {
         CustomException ex = assertThrows(CustomException.class,
@@ -36,6 +46,11 @@ class AadhaarVerificationValidatorTest {
         assertEquals(AadhaarConstants.ERR_CODE_INVALID_REQUEST, ex.getCode());
     }
 
+    /**
+     * Tests Validate Send Otp Request under the null request info scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when null request info.
+     */
     @Test
     void testValidateSendOtpRequest_NullRequestInfo() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -48,6 +63,11 @@ class AadhaarVerificationValidatorTest {
         assertEquals(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, ex.getCode());
     }
 
+    /**
+     * Tests Validate Send Otp Request under the invalid aadhaar number scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when invalid aadhaar number.
+     */
     @Test
     void testValidateSendOtpRequest_InvalidAadhaarNumber() {
         // Starts with 0 (invalid per UIDAI)
@@ -62,6 +82,11 @@ class AadhaarVerificationValidatorTest {
         assertEquals(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, ex.getCode());
     }
 
+    /**
+     * Tests Validate Verify Otp Request under the success scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when success.
+     */
     @Test
     void testValidateVerifyOtpRequest_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -73,6 +98,11 @@ class AadhaarVerificationValidatorTest {
         assertDoesNotThrow(() -> validator.validateVerifyOtpRequest(request));
     }
 
+    /**
+     * Tests Validate Verify Otp Request under the missing reference id scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing reference id.
+     */
     @Test
     void testValidateVerifyOtpRequest_MissingReferenceId() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -86,6 +116,11 @@ class AadhaarVerificationValidatorTest {
         assertEquals(AadhaarConstants.ERR_CODE_MISSING_REFERENCE_ID, ex.getCode());
     }
 
+    /**
+     * Tests Validate Verify Otp Request under the invalid otp length scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when invalid otp length.
+     */
     @Test
     void testValidateVerifyOtpRequest_InvalidOtpLength() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()

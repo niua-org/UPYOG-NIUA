@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 public final class GstNumberUtils {
 
     private static final Pattern GSTIN_PATTERN = Pattern.compile(GstConstants.GSTIN_REGEX);
+    private static final String BASE36_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static final Map<String, String> STATE_CODE_MAP;
 
@@ -78,17 +79,95 @@ public final class GstNumberUtils {
     }
 
     /**
-     * Validates whether a normalized GSTIN matches the standard 15-character GSTIN format.
+     * Validates whether a normalized GSTIN matches the standard 15-character GSTIN format
+     * and passes the Mod-36 checksum validation.
      *
      * @param gstin raw or normalized GSTIN
-     * @return true if valid format, false otherwise
+     * @return true if valid format and valid check digit, false otherwise
      */
     public static boolean isValidGstin(String gstin) {
+        return isValidGstin(gstin, true);
+    }
+
+    /**
+     * Validates whether a normalized GSTIN matches the standard 15-character GSTIN format,
+     * with optional check digit validation.
+     *
+     * @param gstin raw or normalized GSTIN
+     * @param validateChecksum whether to enforce Mod-36 check digit validation
+     * @return true if valid format (and valid check digit if enabled), false otherwise
+     */
+    public static boolean isValidGstin(String gstin, boolean validateChecksum) {
         String normalized = normalizeGstin(gstin);
+        // Length guard: GSTIN must be exactly 15 alphanumeric characters
         if (normalized == null || normalized.length() != 15) {
             return false;
         }
-        return GSTIN_PATTERN.matcher(normalized).matches();
+        // Pattern guard: verify 2-digit state code, 10-char PAN, 1-char entity number, 'Z' default character
+        if (!GSTIN_PATTERN.matcher(normalized).matches()) {
+            return false;
+        }
+        // Checksum verification (Review comment High #6): Enforce Mod-36 Luhn-like check digit validation if requested
+        return !validateChecksum || validateCheckDigit(normalized);
+    }
+
+    /**
+     * Calculates the 15th check digit for a 14-character GSTIN prefix using the Mod-36 algorithm.
+     *
+     * @param gstin14 the first 14 characters of the GSTIN
+     * @return the calculated check digit character
+     * @throws IllegalArgumentException if input is null, not 14 characters, or contains invalid characters
+     */
+    public static char calculateCheckDigit(String gstin14) {
+        // Input validation: algorithm requires exactly the 14 leading characters of the GSTIN
+        if (gstin14 == null || gstin14.length() != 14) {
+            throw new IllegalArgumentException("GSTIN prefix must be exactly 14 characters to calculate check digit");
+        }
+        String normalized = gstin14.trim().toUpperCase();
+        int factor = 1;
+        int totalSum = 0;
+        int mod = 36;
+
+        for (int i = 0; i < 14; i++) {
+            char c = normalized.charAt(i);
+            int code = BASE36_CHARS.indexOf(c);
+            // Character set check: characters must belong to Base36 set [0-9A-Z]
+            if (code == -1) {
+                throw new IllegalArgumentException("Invalid character in GSTIN prefix: " + c);
+            }
+            int product = code * factor;
+            // Alternating factor: toggles between 1 and 2 per character position
+            factor = (factor == 1) ? 2 : 1;
+            int quotient = product / mod;
+            int remainder = product % mod;
+            totalSum += (quotient + remainder);
+        }
+
+        int remainderTotal = totalSum % mod;
+        int checkCode = (mod - remainderTotal) % mod;
+        return BASE36_CHARS.charAt(checkCode);
+    }
+
+    /**
+     * Validates the 15th check digit of a 15-character GSTIN using the Mod-36 algorithm.
+     *
+     * @param gstin raw or normalized 15-character GSTIN
+     * @return true if the 15th character matches the calculated check digit, false otherwise
+     */
+    public static boolean validateCheckDigit(String gstin) {
+        String normalized = normalizeGstin(gstin);
+        // Precondition check: must have full 15 characters to compare calculated vs actual 15th character
+        if (normalized == null || normalized.length() != 15) {
+            return false;
+        }
+        try {
+            char expected = calculateCheckDigit(normalized.substring(0, 14));
+            // Checksum comparison: ensure 15th char matches the calculated Mod-36 check digit
+            return normalized.charAt(14) == expected;
+        } catch (IllegalArgumentException e) {
+            // Catches any unexpected illegal characters in the 14-char prefix
+            return false;
+        }
     }
 
     /**
@@ -98,16 +177,20 @@ public final class GstNumberUtils {
      * @return safely masked GSTIN or "XX****XX" if blank/invalid
      */
     public static String maskGstin(String gstin) {
+        // Fallback for empty/blank values to prevent logging null or throwing NPE
         if (StringUtils.isBlank(gstin)) {
             return "XX****XX";
         }
         String normalized = gstin.trim().toUpperCase();
+        // If string is truncated or malformed (<6 chars), mask entirely to protect partial identifier
         if (normalized.length() < 6) {
             return "******";
         }
+        // Standard 15-character GSTIN masking: preserve 2-digit state and 4 PAN prefix chars, mask center, retain last 3 chars
         if (normalized.length() == 15) {
             return normalized.substring(0, 6) + "****" + normalized.substring(12);
         }
+        // Non-standard length fallback: keep leading 2 and trailing 2 characters
         return normalized.substring(0, 2) + "****" + normalized.substring(normalized.length() - 2);
     }
 
@@ -119,6 +202,7 @@ public final class GstNumberUtils {
      */
     public static String extractPanFromGstin(String gstin) {
         String normalized = normalizeGstin(gstin);
+        // Bounds check: GSTIN must be at least 12 characters to extract characters 2 through 12
         if (normalized == null || normalized.length() < 12) {
             return null;
         }
@@ -133,6 +217,7 @@ public final class GstNumberUtils {
      */
     public static String extractStateCode(String gstin) {
         String normalized = normalizeGstin(gstin);
+        // Bounds check: must have at least 2 characters for state code prefix
         if (normalized == null || normalized.length() < 2) {
             return null;
         }
@@ -146,6 +231,7 @@ public final class GstNumberUtils {
      * @return state name or "Unknown State" if not found
      */
     public static String resolveStateName(String stateCode) {
+        // Null/blank guard: return graceful placeholder instead of NPE
         if (StringUtils.isBlank(stateCode)) {
             return "Unknown State";
         }

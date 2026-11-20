@@ -6,6 +6,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TanNumberUtilsTest {
 
+    /**
+     * Tests Normalize Tan behavior.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testNormalizeTan() {
         assertEquals("BLRM12345C", TanNumberUtils.normalizeTan("  blrm12345c "));
@@ -13,6 +18,11 @@ class TanNumberUtilsTest {
         assertNull(TanNumberUtils.normalizeTan(null));
     }
 
+    /**
+     * Tests Is Valid Tan under the valid formats scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsValidTan_ValidFormats() {
         assertTrue(TanNumberUtils.isValidTan("BLRM12345C"));
@@ -21,6 +31,11 @@ class TanNumberUtilsTest {
         assertTrue(TanNumberUtils.isValidTan("CHDG54321B"));
     }
 
+    /**
+     * Tests Is Valid Tan under the invalid formats scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsValidTan_InvalidFormats() {
         assertFalse(TanNumberUtils.isValidTan(null));
@@ -32,6 +47,11 @@ class TanNumberUtilsTest {
         assertFalse(TanNumberUtils.isValidTan("BLRMA2345C")); // letter in digits section
     }
 
+    /**
+     * Tests Mask Tan behavior.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testMaskTan() {
         assertEquals("BLRM****5C", TanNumberUtils.maskTan("BLRM12345C"));
@@ -42,6 +62,11 @@ class TanNumberUtilsTest {
         assertEquals("AB****YZ", TanNumberUtils.maskTan("ABCXYZ"));
     }
 
+    /**
+     * Tests Resolve Deductor Category behavior.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testResolveDeductorCategory() {
         assertEquals("Company", TanNumberUtils.resolveDeductorCategory("BLRC12345A"));

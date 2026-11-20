@@ -33,6 +33,9 @@ public class VendorTanVerificationRequest {
     @JsonProperty("searchCriteria")
     private SearchCriteria searchCriteria;
 
+    /**
+     * Request header required by ITD TAN external agency gateway.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -54,6 +57,9 @@ public class VendorTanVerificationRequest {
         private String version;
     }
 
+    /**
+     * Search criteria containing the 10-character TAN to verify.
+     */
     @Getter
     @Setter
     @AllArgsConstructor

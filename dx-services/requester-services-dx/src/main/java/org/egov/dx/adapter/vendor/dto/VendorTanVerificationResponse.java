@@ -34,6 +34,9 @@ public class VendorTanVerificationResponse {
     @JsonProperty("errorDetails")
     private VendorErrorDetails errorDetails;
 
+    /**
+     * Response header returned by ITD TAN gateway.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -58,6 +61,9 @@ public class VendorTanVerificationResponse {
         private String timestamp;
     }
 
+    /**
+     * Entity details returned by ITD for the queried TAN.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -88,6 +94,9 @@ public class VendorTanVerificationResponse {
         private VendorJurisdiction jurisdictionDetails;
     }
 
+    /**
+     * Address information for the deductor entity.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -112,6 +121,9 @@ public class VendorTanVerificationResponse {
         private String pinCode;
     }
 
+    /**
+     * Jurisdictional AO details for the deductor entity.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -136,6 +148,9 @@ public class VendorTanVerificationResponse {
         private String description;
     }
 
+    /**
+     * Error payload returned by ITD when TAN lookup fails.
+     */
     @Getter
     @Setter
     @AllArgsConstructor

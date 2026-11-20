@@ -34,6 +34,9 @@ public class VendorPanVerificationResponse {
     @JsonProperty("errorDetails")
     private VendorErrorDetails errorDetails;
 
+    /**
+     * Response header returned by ITD PAN gateway.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -58,6 +61,9 @@ public class VendorPanVerificationResponse {
         private String statusCode;
     }
 
+    /**
+     * Payload parameters returned by ITD on successful PAN search/verification.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -94,6 +100,9 @@ public class VendorPanVerificationResponse {
         private String seedingStatus;
     }
 
+    /**
+     * Error payload returned by ITD when PAN lookup fails.
+     */
     @Getter
     @Setter
     @AllArgsConstructor

@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -30,6 +32,9 @@ class MdmsTenantVerificationConfigServiceImplTest {
         when(configurations.getMdmsSearchEndpoint()).thenReturn("egov-mdms-service/v1/_search");
         when(configurations.getMdmsVerificationModule()).thenReturn("common-masters");
         when(configurations.getMdmsVerificationMaster()).thenReturn("VerificationConfiguration");
+        when(configurations.getMdmsVerificationCacheTtlSeconds()).thenReturn(300L);
+        when(configurations.getMdmsGenderModule()).thenReturn("common-masters");
+        when(configurations.getMdmsGenderMaster()).thenReturn("GenderType");
 
         service = new MdmsTenantVerificationConfigServiceImpl(restTemplate, configurations);
     }
@@ -51,6 +56,11 @@ class MdmsTenantVerificationConfigServiceImplTest {
         return objectMapper.readTree(json);
     }
 
+    /**
+     * Tests Is Verification Enabled under the success_enabled in tenant scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsVerificationEnabled_Success_EnabledInTenant() throws Exception {
         JsonNode mockRes = createMockMdmsResponse("TAN", true);
@@ -60,6 +70,11 @@ class MdmsTenantVerificationConfigServiceImplTest {
         assertTrue(enabled);
     }
 
+    /**
+     * Tests Is Verification Enabled under the success_state tenant scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsVerificationEnabled_Success_StateTenant() throws Exception {
         JsonNode mockRes = createMockMdmsResponse("PAN", true);
@@ -69,6 +84,11 @@ class MdmsTenantVerificationConfigServiceImplTest {
         assertTrue(enabled);
     }
 
+    /**
+     * Tests Is Verification Enabled under the disabled in config_returns false scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsVerificationEnabled_DisabledInConfig_ReturnsFalse() throws Exception {
         JsonNode mockRes = createMockMdmsResponse("GST", false);
@@ -78,6 +98,11 @@ class MdmsTenantVerificationConfigServiceImplTest {
         assertFalse(enabled);
     }
 
+    /**
+     * Tests Is Verification Enabled under the service not found_returns false scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsVerificationEnabled_ServiceNotFound_ReturnsFalse() throws Exception {
         JsonNode mockRes = createMockMdmsResponse("TAN", true);
@@ -87,6 +112,11 @@ class MdmsTenantVerificationConfigServiceImplTest {
         assertFalse(enabled);
     }
 
+    /**
+     * Tests Is Verification Enabled under the blank tenant or service_returns false scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsVerificationEnabled_BlankTenantOrService_ReturnsFalse() {
         assertFalse(service.isVerificationEnabled(new RequestInfo(), "", "TAN"));
@@ -94,6 +124,11 @@ class MdmsTenantVerificationConfigServiceImplTest {
         assertFalse(service.isVerificationEnabled(new RequestInfo(), null, "TAN"));
     }
 
+    /**
+     * Tests Is Verification Enabled under the rest template exception_returns false scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsVerificationEnabled_RestTemplateException_ReturnsFalse() {
         when(restTemplate.postForObject(anyString(), any(), eq(JsonNode.class)))
@@ -103,10 +138,71 @@ class MdmsTenantVerificationConfigServiceImplTest {
         assertFalse(enabled);
     }
 
+    /**
+     * Tests Is Verification Enabled under the missing config_returns false scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testIsVerificationEnabled_MissingConfig_ReturnsFalse() {
         when(configurations.getMdmsHost()).thenReturn(null);
         boolean enabled = service.isVerificationEnabled(new RequestInfo(), "pg.citya", "TAN");
         assertFalse(enabled);
+    }
+
+    /**
+     * Tests Get Valid Genders under the success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
+    @Test
+    void testGetValidGenders_Success() throws Exception {
+        String json = "{\n" +
+                "  \"MdmsRes\": {\n" +
+                "    \"common-masters\": {\n" +
+                "      \"GenderType\": [\n" +
+                "        {\"code\": \"MALE\", \"active\": true},\n" +
+                "        {\"code\": \"FEMALE\", \"active\": true},\n" +
+                "        {\"code\": \"TRANSGENDER\", \"active\": true}\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        JsonNode mockRes = objectMapper.readTree(json);
+        when(restTemplate.postForObject(anyString(), any(), eq(JsonNode.class))).thenReturn(mockRes);
+
+        Set<String> genders = service.getValidGenders(new RequestInfo(), "pg.citya");
+        assertNotNull(genders);
+        assertTrue(genders.contains("MALE"));
+        assertTrue(genders.contains("M"));
+        assertTrue(genders.contains("FEMALE"));
+        assertTrue(genders.contains("F"));
+        assertTrue(genders.contains("TRANSGENDER"));
+        assertTrue(genders.contains("T"));
+    }
+
+    /**
+     * Tests Get Valid Genders under the blank tenant_returns empty scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
+    @Test
+    void testGetValidGenders_BlankTenant_ReturnsEmpty() {
+        Set<String> genders = service.getValidGenders(new RequestInfo(), "");
+        assertTrue(genders.isEmpty());
+    }
+
+    /**
+     * Tests Get Valid Genders under the rest template exception_returns empty scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
+    @Test
+    void testGetValidGenders_RestTemplateException_ReturnsEmpty() {
+        when(restTemplate.postForObject(anyString(), any(), eq(JsonNode.class)))
+                .thenThrow(new RuntimeException("Connection refused to MDMS"));
+
+        Set<String> genders = service.getValidGenders(new RequestInfo(), "pg.citya");
+        assertTrue(genders.isEmpty());
     }
 }

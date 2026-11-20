@@ -2,7 +2,10 @@ package org.egov.dx.web.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -39,12 +42,23 @@ public class TanVerificationRequest {
     /**
      * The 10-character alphanumeric Tax Deduction and Collection Account Number (e.g. BLRM12345C).
      */
+    @NotBlank(message = TanConstants.MSG_BLANK_TAN)
+    @Pattern(regexp = TanConstants.TAN_REGEX, message = TanConstants.MSG_INVALID_FORMAT)
     @JsonProperty("tan")
     private String tan;
 
     /**
+     * Optional deductor name to match against the TAN registry.
+     */
+    @Size(max = 200, message = "Deductor name must not exceed 200 characters")
+    @JsonProperty("deductorName")
+    private String deductorName;
+
+    /**
      * Mandatory tenant identifier for municipal context and MDMS verification governance check (e.g. "pg.citya").
      */
+    @NotBlank(message = "Tenant ID is mandatory for TAN verification.")
+    @Size(min = 2, max = 64, message = "Tenant ID must be between 2 and 64 characters")
     @JsonProperty("tenantId")
     private String tenantId;
 }

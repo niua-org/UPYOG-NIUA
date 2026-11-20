@@ -25,6 +25,11 @@ class MockPanGatewayAdapterTest {
         adapter.init();
     }
 
+    /**
+     * Tests Init under the missing configured mock path_throws exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing configured mock path_throws exception.
+     */
     @Test
     void testInit_MissingConfiguredMockPath_ThrowsException() {
         Configurations badConfig = mock(Configurations.class);
@@ -35,6 +40,11 @@ class MockPanGatewayAdapterTest {
         assertEquals(PanConstants.ERR_CODE_INVALID_REQUEST, ce.getCode());
     }
 
+    /**
+     * Tests Verify Pan under the existing citizen record_exact match scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testVerifyPan_ExistingCitizenRecord_ExactMatch() {
         VendorPanVerificationRequest request = VendorPanVerificationRequest.builder()
@@ -63,6 +73,11 @@ class MockPanGatewayAdapterTest {
         assertEquals(PanConstants.MATCH_YES, response.getResponseParams().getDobMatch());
     }
 
+    /**
+     * Tests Verify Pan under the existing record_mismatched name scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testVerifyPan_ExistingRecord_MismatchedName() {
         VendorPanVerificationRequest request = VendorPanVerificationRequest.builder()
@@ -81,6 +96,11 @@ class MockPanGatewayAdapterTest {
         assertEquals(PanConstants.MATCH_YES, response.getResponseParams().getDobMatch());
     }
 
+    /**
+     * Tests Verify Pan under the simulated not found scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testVerifyPan_SimulatedNotFound() {
         VendorPanVerificationRequest request = VendorPanVerificationRequest.builder()
@@ -99,9 +119,39 @@ class MockPanGatewayAdapterTest {
         assertEquals(PanConstants.ERR_CODE_RECORD_NOT_FOUND, response.getErrorDetails().getErrorCode());
     }
 
+    /**
+     * Tests Verify Pan under the unlisted pan returns not found by default scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
-    void testVerifyPan_DeterministicFallback() {
-        // Arbitrary valid PAN not in mock records: DELCA9988A (4th char 'C' -> Company)
+    void testVerifyPan_UnlistedPanReturnsNotFoundByDefault() {
+        // Arbitrary valid PAN not in mock records: DELCA9988A
+        VendorPanVerificationRequest request = VendorPanVerificationRequest.builder()
+                .searchParams(VendorPanVerificationRequest.SearchParams.builder()
+                        .pan("DELCA9988A")
+                        .fullName("Dynamic User")
+                        .dob("1992-05-20")
+                        .build())
+                .build();
+
+        VendorPanVerificationResponse response = adapter.verifyPan(request);
+        assertNotNull(response);
+        assertEquals("404", response.getHeader().getStatusCode());
+        assertEquals(PanConstants.STATUS_FAILURE, response.getHeader().getStatus());
+        assertNotNull(response.getErrorDetails());
+        assertEquals(PanConstants.ERR_CODE_RECORD_NOT_FOUND, response.getErrorDetails().getErrorCode());
+    }
+
+    /**
+     * Tests Verify Pan under the deterministic fallback_when synthesize unknown enabled scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
+    @Test
+    void testVerifyPan_DeterministicFallback_WhenSynthesizeUnknownEnabled() {
+        when(configurations.isPanVerificationMockSynthesizeUnknownEnabled()).thenReturn(true);
+
         VendorPanVerificationRequest request = VendorPanVerificationRequest.builder()
                 .searchParams(VendorPanVerificationRequest.SearchParams.builder()
                         .pan("DELCA9988A")
@@ -122,6 +172,35 @@ class MockPanGatewayAdapterTest {
         assertEquals(PanConstants.MATCH_YES, response.getResponseParams().getDobMatch());
     }
 
+    /**
+     * Tests Verify Pan under the partial name false positive prevention scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
+    @Test
+    void testVerifyPan_PartialNameFalsePositivePrevention() {
+        // Mock record AAAPS0001B has fullName: "AARAV SHARMA"
+        // Caller inputs "SHARMA" or "KUMAR" or "AARAV" (partial matches)
+        VendorPanVerificationRequest request = VendorPanVerificationRequest.builder()
+                .searchParams(VendorPanVerificationRequest.SearchParams.builder()
+                        .pan("AAAPS0001B")
+                        .fullName("SHARMA") // partial name
+                        .dob("15/08/1985")
+                        .build())
+                .build();
+
+        VendorPanVerificationResponse response = adapter.verifyPan(request);
+        assertNotNull(response);
+        assertEquals("200", response.getHeader().getStatusCode());
+        assertNotNull(response.getResponseParams());
+        assertEquals(PanConstants.MATCH_NO, response.getResponseParams().getNameMatch());
+    }
+
+    /**
+     * Tests Verify Pan under the invalid format scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testVerifyPan_InvalidFormat() {
         VendorPanVerificationRequest request = VendorPanVerificationRequest.builder()

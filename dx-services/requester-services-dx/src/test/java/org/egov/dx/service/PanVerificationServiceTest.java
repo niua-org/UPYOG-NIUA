@@ -33,6 +33,11 @@ class PanVerificationServiceTest {
         service = new PanVerificationServiceImpl(gatewayAdapter, validator, tenantConfigService);
     }
 
+    /**
+     * Tests Verify Pan under the tenant disabled in mdms_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when tenant disabled in mdms_throws custom exception.
+     */
     @Test
     void testVerifyPan_TenantDisabledInMdms_ThrowsCustomException() {
         PanVerificationRequest request = PanVerificationRequest.builder()
@@ -50,6 +55,11 @@ class PanVerificationServiceTest {
         assertTrue(ce.getMessage().contains("PAN verification is not enabled for tenant"));
     }
 
+    /**
+     * Tests Verify Pan under the active success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyPan_ActiveSuccess() {
         PanVerificationRequest request = PanVerificationRequest.builder()
@@ -85,7 +95,9 @@ class PanVerificationServiceTest {
         assertTrue(response.getIsVerified());
         assertEquals("BLRPA****A", response.getMaskedPan());
         assertNotNull(response.getPanDetails());
-        assertEquals("BLRPA0001A", response.getPanDetails().getPan());
+        assertNull(response.getPanDetails().getPan()); // unmasked PAN protected/omitted
+        assertEquals("BLRPA****A", response.getPanDetails().getMaskedPan());
+        assertNull(response.getPanDetails().getFullName()); // registered full name omitted to prevent harvesting
         assertEquals("Individual", response.getPanDetails().getCategory());
         assertEquals(PanConstants.STATUS_EXISTING_AND_VALID, response.getPanDetails().getPanStatus());
         assertTrue(response.getPanDetails().getNameMatch());
@@ -94,6 +106,11 @@ class PanVerificationServiceTest {
         verify(validator, times(1)).validatePanRequest(request);
     }
 
+    /**
+     * Tests Verify Pan under the mismatched name_not verified scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testVerifyPan_MismatchedName_NotVerified() {
         PanVerificationRequest request = PanVerificationRequest.builder()
@@ -130,6 +147,11 @@ class PanVerificationServiceTest {
         assertTrue(response.getPanDetails().getDobMatch());
     }
 
+    /**
+     * Tests Verify Pan under the gateway error details scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testVerifyPan_GatewayErrorDetails() {
         PanVerificationRequest request = PanVerificationRequest.builder()
@@ -160,6 +182,11 @@ class PanVerificationServiceTest {
         assertEquals(PanConstants.ERR_CODE_RECORD_NOT_FOUND, response.getErrorDetails().getErrorCode());
     }
 
+    /**
+     * Tests Verify Pan under the null gateway response_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when null gateway response_throws custom exception.
+     */
     @Test
     void testVerifyPan_NullGatewayResponse_ThrowsCustomException() {
         PanVerificationRequest request = PanVerificationRequest.builder()

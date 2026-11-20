@@ -12,6 +12,11 @@ import static org.mockito.Mockito.*;
 
 class ItdPanGatewayAdapterTest {
 
+    /**
+     * Tests Constructor under the missing connect timeout_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing connect timeout_throws custom exception.
+     */
     @Test
     void testConstructor_MissingConnectTimeout_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -22,6 +27,11 @@ class ItdPanGatewayAdapterTest {
         assertTrue(ce.getMessage().contains("pan.verification.connect.timeout is not configured"));
     }
 
+    /**
+     * Tests Constructor under the missing read timeout_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing read timeout_throws custom exception.
+     */
     @Test
     void testConstructor_MissingReadTimeout_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -33,6 +43,11 @@ class ItdPanGatewayAdapterTest {
         assertTrue(ce.getMessage().contains("pan.verification.read.timeout is not configured"));
     }
 
+    /**
+     * Tests Constructor under the missing base url_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing base url_throws custom exception.
+     */
     @Test
     void testConstructor_MissingBaseUrl_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -45,6 +60,11 @@ class ItdPanGatewayAdapterTest {
         assertTrue(ce.getMessage().contains("pan.verification.base.url is not configured"));
     }
 
+    /**
+     * Tests Verify Pan under the missing path_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing path_throws custom exception.
+     */
     @Test
     void testVerifyPan_MissingPath_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);
@@ -61,6 +81,11 @@ class ItdPanGatewayAdapterTest {
         assertTrue(ce.getMessage().contains("pan.verification.path is not configured"));
     }
 
+    /**
+     * Tests Verify Pan under the missing credentials_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when missing credentials_throws custom exception.
+     */
     @Test
     void testVerifyPan_MissingCredentials_ThrowsCustomException() {
         Configurations config = mock(Configurations.class);

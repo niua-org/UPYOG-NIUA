@@ -60,12 +60,19 @@ public class PanVerificationServiceImpl implements PanVerificationService {
         this.tenantConfigService = tenantConfigService;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Validates request, enforces MDMS tenant configuration, delegates to PAN adapter,
+     * sanitizes PII, and returns verification response.</p>
+     */
     @Override
     public PanVerificationResponse verifyPan(PanVerificationRequest request) {
         // 1. Validate incoming request (SRP)
         validator.validatePanRequest(request);
 
-        // 2. Validate tenant-level MDMS configuration
+        // Multi-tenant authorization guard (Review comment Medium #3): Verify that the tenant/ULB
+        // has enabled the PAN verification module in MDMS configuration before invoking external APIs
         if (!tenantConfigService.isVerificationEnabled(request.getRequestInfo(), request.getTenantId(), "PAN")) {
             log.warn("PAN verification is not enabled in MDMS for tenant: {}", request.getTenantId());
             throw new CustomException(PanConstants.ERR_CODE_TENANT_DISABLED,
@@ -104,12 +111,16 @@ public class PanVerificationServiceImpl implements PanVerificationService {
         // 3. Delegate to gateway adapter abstraction (DIP)
         VendorPanVerificationResponse vendorRes = gatewayAdapter.verifyPan(vendorReq);
 
+        // Resilience guard: handle null return from adapter (e.g., unexpected network failure or unhandled exception)
         if (vendorRes == null) {
             log.error("PAN Gateway returned null response for masked PAN: {}", maskedPan);
             throw new CustomException(PanConstants.ERR_CODE_GATEWAY_ERROR, PanConstants.MSG_GATEWAY_ERROR);
         }
 
-        // 4. Handle vendor-level error payload
+        boolean isMock = gatewayAdapter.getClass().getSimpleName().startsWith("Mock");
+        String source = isMock ? PanConstants.SOURCE_MOCK : PanConstants.SOURCE_LIVE_ITD;
+
+        // 4. Handle vendor-level error payload (e.g. record not found or invalid credentials)
         if (vendorRes.getErrorDetails() != null) {
             log.warn("ITD PAN gateway returned error for masked PAN {}: {} - {}",
                     maskedPan, vendorRes.getErrorDetails().getErrorCode(), vendorRes.getErrorDetails().getErrorMessage());
@@ -119,6 +130,8 @@ public class PanVerificationServiceImpl implements PanVerificationService {
                     .responseInfo(responseInfo)
                     .isVerified(false)
                     .maskedPan(maskedPan)
+                    .source(source)
+                    .isMock(isMock)
                     .errorDetails(PanVerificationResponse.PanErrorDetails.builder()
                             .errorCode(vendorRes.getErrorDetails().getErrorCode())
                             .errorMessage(vendorRes.getErrorDetails().getErrorMessage())
@@ -139,6 +152,8 @@ public class PanVerificationServiceImpl implements PanVerificationService {
                 .responseInfo(responseInfo)
                 .isVerified(isVerified)
                 .maskedPan(maskedPan)
+                .source(source)
+                .isMock(isMock)
                 .panDetails(uDetails)
                 .build();
 
@@ -148,12 +163,14 @@ public class PanVerificationServiceImpl implements PanVerificationService {
 
     /**
      * Maps vendor-specific PAN response parameters into clean domain {@link PanDetails}.
+     * Omits unmasked PAN, registered full name, and Aadhaar seeding status to protect citizen PII.
      *
      * @param vParams vendor response parameters
      * @param maskedPan masked PAN for telemetry
      * @return enriched domain {@link PanDetails}
      */
     private PanDetails mapToPanDetails(VendorPanVerificationResponse.ResponseParams vParams, String maskedPan) {
+        // Guard check: return null if vendor returned no parameter details
         if (vParams == null) {
             return null;
         }
@@ -162,12 +179,9 @@ public class PanVerificationServiceImpl implements PanVerificationService {
         boolean dobMatched = PanConstants.MATCH_YES.equalsIgnoreCase(vParams.getDobMatch());
 
         return PanDetails.builder()
-                .pan(vParams.getPan())
                 .maskedPan(maskedPan)
-                .fullName(vParams.getFullName())
                 .category(vParams.getCategory())
                 .panStatus(vParams.getPanStatus())
-                .aadhaarSeedingStatus(vParams.getSeedingStatus())
                 .nameMatch(nameMatched)
                 .dobMatch(dobMatched)
                 .build();

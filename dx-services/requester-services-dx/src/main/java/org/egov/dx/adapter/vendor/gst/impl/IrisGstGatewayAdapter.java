@@ -52,12 +52,15 @@ public class IrisGstGatewayAdapter implements GstGatewayAdapter {
     public IrisGstGatewayAdapter(Configurations configurations) {
         this.configurations = configurations;
 
+        // Startup sanity check: verify mandatory HTTP connect timeout configuration
         if (configurations.getGstVerificationConnectTimeout() == null) {
             throw new CustomException(GstConstants.ERR_CODE_INVALID_REQUEST, "gst.verification.connect.timeout is not configured");
         }
+        // Startup sanity check: verify mandatory HTTP socket read timeout configuration
         if (configurations.getGstVerificationReadTimeout() == null) {
             throw new CustomException(GstConstants.ERR_CODE_INVALID_REQUEST, "gst.verification.read.timeout is not configured");
         }
+        // Startup sanity check: verify mandatory IRIS vendor endpoint base URL
         if (StringUtils.isBlank(configurations.getGstVerificationBaseUrl())) {
             throw new CustomException(GstConstants.ERR_CODE_INVALID_REQUEST, "gst.verification.base.url is not configured");
         }
@@ -73,12 +76,20 @@ public class IrisGstGatewayAdapter implements GstGatewayAdapter {
                 .build();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Submits outbound GST taxpayer search query to the IRIS Taxpayer search endpoint
+     * ({@code api/search?gstin={gstin}}) authenticated with API key credentials.</p>
+     */
     @Override
     public VendorGstProfileResponse searchGstin(String gstin) {
         String path = configurations.getGstVerificationPath();
+        // Endpoint path verification: ensure target URI path is configured
         if (StringUtils.isBlank(path)) {
             throw new CustomException(GstConstants.ERR_CODE_INVALID_REQUEST, "gst.verification.path is not configured");
         }
+        // Credential validation: ensure vendor API key is present
         if (StringUtils.isBlank(configurations.getGstVerificationApiKey())) {
             throw new CustomException(GstConstants.ERR_CODE_INVALID_REQUEST, "gst.verification.api.key is not configured");
         }
@@ -99,14 +110,19 @@ public class IrisGstGatewayAdapter implements GstGatewayAdapter {
                     .header("x-api-key", configurations.getGstVerificationApiKey().trim())
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (clientRequest, clientResponse) -> {
-                        String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
-                        log.error("[LIVE-GST] IRIS Gateway returned HTTP error {} for masked GSTIN {}: {}",
-                                clientResponse.getStatusCode(), maskedGstin, responseBody);
+                        log.error("[LIVE-GST] IRIS Gateway returned HTTP error {} for masked GSTIN {}",
+                                clientResponse.getStatusCode(), maskedGstin);
+                        // Security & PII hygiene (Review comment Medium #2): Only capture full error payload at DEBUG level
+                        if (log.isDebugEnabled()) {
+                            String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                            log.debug("[LIVE-GST] IRIS Gateway error payload for masked GSTIN {}: {}", maskedGstin, responseBody);
+                        }
                         throw new CustomException(GstConstants.ERR_CODE_GATEWAY_ERROR,
                                 "IRIS GST gateway failed with status " + clientResponse.getStatusCode());
                     })
                     .body(VendorGstProfileResponse.class);
 
+            // Null response guard: fail safely if gateway returns 200 OK with empty body
             if (response == null) {
                 log.error("[LIVE-GST] Empty response body from IRIS Gateway for masked GSTIN: {}", maskedGstin);
                 throw new CustomException(GstConstants.ERR_CODE_GATEWAY_ERROR, GstConstants.MSG_GATEWAY_ERROR);

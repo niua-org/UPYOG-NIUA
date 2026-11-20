@@ -1,6 +1,7 @@
 package org.egov.dx.web.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,7 @@ import lombok.ToString;
 @Builder
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GstTaxpayerDetails {
 
     @JsonProperty("gstin")
@@ -63,6 +65,9 @@ public class GstTaxpayerDetails {
     @JsonProperty("principalPlaceOfBusiness")
     private GstAddress principalPlaceOfBusiness;
 
+    /**
+     * Physical address representation for taxpayer's principal place of business.
+     */
     @Getter
     @Setter
     @AllArgsConstructor
@@ -70,6 +75,7 @@ public class GstTaxpayerDetails {
     @Builder
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class GstAddress {
         @JsonProperty("doorNumber")
         private String doorNumber;

@@ -24,12 +24,21 @@ public final class TanConstants {
     public static final String STATUS_ACTIVE = "Active";
     public static final String STATUS_INACTIVE = "Inactive";
 
+    // Verification source identifiers
+    public static final String SOURCE_MOCK = "MOCK";
+    public static final String SOURCE_LIVE_ITD = "LIVE_ITD";
+
+    // Matching flags
+    public static final String MATCH_YES = "Y";
+    public static final String MATCH_NO = "N";
+
     // Error codes
     public static final String ERR_CODE_INVALID_REQUEST = "INVALID_TAN_REQUEST";
     public static final String ERR_CODE_INVALID_FORMAT = "INVALID_TAN_FORMAT";
     public static final String ERR_CODE_RECORD_NOT_FOUND = "ITD-TAN-4001";
     public static final String ERR_CODE_GATEWAY_ERROR = "TAN_GATEWAY_ERROR";
     public static final String ERR_CODE_TENANT_DISABLED = "VERIFICATION_DISABLED_FOR_TENANT";
+    public static final String ERR_CODE_UNAUTHORIZED_USER = "UNAUTHORIZED_USER";
 
     // Error messages
     public static final String MSG_INVALID_REQUEST = "TAN verification request or RequestInfo cannot be null";
@@ -38,4 +47,5 @@ public final class TanConstants {
     public static final String MSG_RECORD_NOT_FOUND = "TAN does not exist or is inactive in Income Tax records.";
     public static final String MSG_GATEWAY_ERROR = "Unable to process TAN verification with Income Tax gateway.";
     public static final String MSG_TENANT_DISABLED = "TAN verification service is not enabled for tenant in MDMS configuration.";
+    public static final String MSG_UNAUTHORIZED_USER = "Authenticated user information (userInfo with uuid) is required to access verification services.";
 }

@@ -53,12 +53,15 @@ public class ItdPanGatewayAdapter implements PanGatewayAdapter {
     public ItdPanGatewayAdapter(Configurations configurations) {
         this.configurations = configurations;
 
+        // Startup sanity check: verify mandatory HTTP connect timeout configuration
         if (configurations.getPanVerificationConnectTimeout() == null) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "pan.verification.connect.timeout is not configured");
         }
+        // Startup sanity check: verify mandatory HTTP socket read timeout configuration
         if (configurations.getPanVerificationReadTimeout() == null) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "pan.verification.read.timeout is not configured");
         }
+        // Startup sanity check: verify mandatory ITD vendor endpoint base URL
         if (StringUtils.isBlank(configurations.getPanVerificationBaseUrl())) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "pan.verification.base.url is not configured");
         }
@@ -75,15 +78,23 @@ public class ItdPanGatewayAdapter implements PanGatewayAdapter {
                 .build();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Submits outbound PAN verification request to ITD web service and maps vendor response.</p>
+     */
     @Override
     public VendorPanVerificationResponse verifyPan(VendorPanVerificationRequest request) {
         String path = configurations.getPanVerificationPath();
+        // Endpoint path verification: ensure target URI path is configured
         if (StringUtils.isBlank(path)) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "pan.verification.path is not configured");
         }
+        // Credential validation: ensure client ID is present
         if (StringUtils.isBlank(configurations.getPanVerificationClientId())) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "pan.verification.client.id is not configured");
         }
+        // Credential validation: ensure client secret is present
         if (StringUtils.isBlank(configurations.getPanVerificationClientSecret())) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "pan.verification.client.secret is not configured");
         }
@@ -104,14 +115,19 @@ public class ItdPanGatewayAdapter implements PanGatewayAdapter {
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (clientRequest, clientResponse) -> {
-                        String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
-                        log.error("[LIVE-PAN] ITD Gateway returned HTTP error {} for masked PAN {}: {}",
-                                clientResponse.getStatusCode(), maskedPan, responseBody);
+                        log.error("[LIVE-PAN] ITD Gateway returned HTTP error {} for masked PAN {}",
+                                clientResponse.getStatusCode(), maskedPan);
+                        // Security & PII hygiene (Review comment Medium #2): Only capture full error payload at DEBUG level
+                        if (log.isDebugEnabled()) {
+                            String responseBody = new String(clientResponse.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                            log.debug("[LIVE-PAN] ITD Gateway error payload for masked PAN {}: {}", maskedPan, responseBody);
+                        }
                         throw new CustomException(PanConstants.ERR_CODE_GATEWAY_ERROR,
                                 "ITD PAN gateway failed with status " + clientResponse.getStatusCode());
                     })
                     .body(VendorPanVerificationResponse.class);
 
+            // Null response guard: fail safely if gateway returns 200 OK with empty body
             if (response == null) {
                 log.error("[LIVE-PAN] Empty response body from ITD Gateway for masked PAN: {}", maskedPan);
                 throw new CustomException(PanConstants.ERR_CODE_GATEWAY_ERROR, PanConstants.MSG_GATEWAY_ERROR);

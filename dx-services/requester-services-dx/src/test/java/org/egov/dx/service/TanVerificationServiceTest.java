@@ -33,6 +33,11 @@ class TanVerificationServiceTest {
         service = new TanVerificationServiceImpl(gatewayAdapter, validator, tenantConfigService);
     }
 
+    /**
+     * Tests Verify Tan under the tenant disabled in mdms_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when tenant disabled in mdms_throws custom exception.
+     */
     @Test
     void testVerifyTan_TenantDisabledInMdms_ThrowsCustomException() {
         TanVerificationRequest request = TanVerificationRequest.builder()
@@ -48,6 +53,11 @@ class TanVerificationServiceTest {
         assertTrue(ce.getMessage().contains("TAN verification is not enabled for tenant"));
     }
 
+    /**
+     * Tests Verify Tan under the active success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyTan_ActiveSuccess() {
         TanVerificationRequest request = TanVerificationRequest.builder()
@@ -88,7 +98,8 @@ class TanVerificationServiceTest {
         assertTrue(response.getIsVerified());
         assertEquals("BLRM****5C", response.getMaskedTan());
         assertNotNull(response.getTanDetails());
-        assertEquals("BLRM12345C", response.getTanDetails().getTan());
+        assertNull(response.getTanDetails().getTan()); // unmasked TAN omitted for PII protection
+        assertEquals("BLRM****5C", response.getTanDetails().getMaskedTan());
         assertEquals("Company", response.getTanDetails().getCategoryOfDeductor());
         assertEquals("Active", response.getTanDetails().getStatus());
         assertEquals("Bengaluru", response.getTanDetails().getAddress().getCity());
@@ -96,6 +107,83 @@ class TanVerificationServiceTest {
         verify(validator, times(1)).validateTanRequest(request);
     }
 
+    /**
+     * Tests Verify Tan under the with deductor name_matching scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
+    @Test
+    void testVerifyTan_WithDeductorName_Matching() {
+        TanVerificationRequest request = TanVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .tan("BLRM12345C")
+                .deductorName("INFRASTRUCTURE DEVELOPMENT CORP")
+                .tenantId("pg.citya")
+                .build();
+
+        VendorTanVerificationResponse.VendorTanDetails vDetails = VendorTanVerificationResponse.VendorTanDetails.builder()
+                .tan("BLRM12345C")
+                .nameOfDeductor("INFRASTRUCTURE DEVELOPMENT CORP")
+                .categoryOfDeductor("Company")
+                .status("Active")
+                .build();
+
+        VendorTanVerificationResponse vRes = VendorTanVerificationResponse.builder()
+                .header(VendorTanVerificationResponse.ResponseHeader.builder()
+                        .status(TanConstants.STATUS_SUCCESS)
+                        .statusCode("200")
+                        .build())
+                .tanDetails(vDetails)
+                .build();
+
+        when(gatewayAdapter.verifyTan(any())).thenReturn(vRes);
+
+        TanVerificationResponse response = service.verifyTan(request);
+        assertTrue(response.getIsVerified());
+        assertTrue(response.getTanDetails().getNameMatch());
+    }
+
+    /**
+     * Tests Verify Tan under the with deductor name_mismatched scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
+    @Test
+    void testVerifyTan_WithDeductorName_Mismatched() {
+        TanVerificationRequest request = TanVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .tan("BLRM12345C")
+                .deductorName("WRONG CORP")
+                .tenantId("pg.citya")
+                .build();
+
+        VendorTanVerificationResponse.VendorTanDetails vDetails = VendorTanVerificationResponse.VendorTanDetails.builder()
+                .tan("BLRM12345C")
+                .nameOfDeductor("INFRASTRUCTURE DEVELOPMENT CORP")
+                .categoryOfDeductor("Company")
+                .status("Active")
+                .build();
+
+        VendorTanVerificationResponse vRes = VendorTanVerificationResponse.builder()
+                .header(VendorTanVerificationResponse.ResponseHeader.builder()
+                        .status(TanConstants.STATUS_SUCCESS)
+                        .statusCode("200")
+                        .build())
+                .tanDetails(vDetails)
+                .build();
+
+        when(gatewayAdapter.verifyTan(any())).thenReturn(vRes);
+
+        TanVerificationResponse response = service.verifyTan(request);
+        assertFalse(response.getIsVerified());
+        assertFalse(response.getTanDetails().getNameMatch());
+    }
+
+    /**
+     * Tests Verify Tan under the inactive record scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testVerifyTan_InactiveRecord() {
         TanVerificationRequest request = TanVerificationRequest.builder()
@@ -127,6 +215,11 @@ class TanVerificationServiceTest {
         assertEquals("Inactive", response.getTanDetails().getStatus());
     }
 
+    /**
+     * Tests Verify Tan under the gateway error details scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when gateway error details.
+     */
     @Test
     void testVerifyTan_GatewayErrorDetails() {
         TanVerificationRequest request = TanVerificationRequest.builder()
@@ -155,6 +248,11 @@ class TanVerificationServiceTest {
         assertEquals(TanConstants.ERR_CODE_RECORD_NOT_FOUND, response.getErrorDetails().getErrorCode());
     }
 
+    /**
+     * Tests Verify Tan under the null gateway response_throws custom exception scenario.
+     *
+     * Verifies that {@code CustomException} is thrown when null gateway response_throws custom exception.
+     */
     @Test
     void testVerifyTan_NullGatewayResponse_ThrowsCustomException() {
         TanVerificationRequest request = TanVerificationRequest.builder()

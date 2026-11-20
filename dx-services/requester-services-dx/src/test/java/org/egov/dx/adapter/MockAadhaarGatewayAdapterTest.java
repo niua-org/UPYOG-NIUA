@@ -24,6 +24,11 @@ class MockAadhaarGatewayAdapterTest {
         mockAdapter = new MockAadhaarGatewayAdapter();
     }
 
+    /**
+     * Tests Send Otp under the generates valid simulation scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testSendOtp_GeneratesValidSimulation() {
         VendorSendOtpRequest request = VendorSendOtpRequest.builder()
@@ -41,6 +46,11 @@ class MockAadhaarGatewayAdapterTest {
         assertEquals(AadhaarConstants.MSG_OTP_SENT_SUCCESS, response.getData().getMessage());
     }
 
+    /**
+     * Tests Verify Otp under the generates valid demographics scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testVerifyOtp_GeneratesValidDemographics() {
         VendorVerifyOtpRequest request = VendorVerifyOtpRequest.builder()
@@ -61,6 +71,11 @@ class MockAadhaarGatewayAdapterTest {
         assertNotNull(response.getData().getAddress().getVtc());
     }
 
+    /**
+     * Tests Verify Otp under the dispenses all records sequentially until all used scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     @DisplayName("Should dispense distinct new records sequentially until all 520 records are used")
     void testVerifyOtp_DispensesAllRecordsSequentiallyUntilAllUsed() {
