@@ -129,6 +129,7 @@ const jsPdfGenerator = async ({ breakPageLimit = null, tenantId, logo, name, ema
         color: "#6f777c",
         margin: [10, 10],
       },
+      ...(isTOCRequired ? [
       {
         text: t("TERMS_AND_CONDITIONS_OF_LICENSE"),
         fontSize: 16,
@@ -212,6 +213,7 @@ const jsPdfGenerator = async ({ breakPageLimit = null, tenantId, logo, name, ema
         fontSize: 8.5,
         margin: [15, 2, 10, 0]
       },
+      ] : []),
 
     ],
     defaultStyle: {
@@ -223,6 +225,7 @@ const jsPdfGenerator = async ({ breakPageLimit = null, tenantId, logo, name, ema
   let locale = Digit.SessionStorage.get("locale") || "en_IN";
   let Hind = pdfFonts[locale] || pdfFonts["Hind"];
   let ack;
+  const isPppAcknowledgement = details?.some((detail) => detail?.isPppAcknowledgement === true);
   if (applicationNumber !== undefined && applicationNumber.split("-")[0] === "FSM") {
     ack = "FSM-AckForm"
   }
@@ -270,12 +273,17 @@ const jsPdfGenerator = async ({ breakPageLimit = null, tenantId, logo, name, ema
     ack = "Advertisement-AckForm"
   }
   else if (applicationNumber === undefined) {
-    module = details[0]?.values[0]?.value
-    if (module.split("-")[1] === "MT") {
-      ack = "PT-AckForm"
+    if (isPppAcknowledgement) {
+      ack = "acknowledgement";
     }
     else {
-      ack = "acknowledgement"
+      module = details[0]?.values[0]?.value
+      if (module.split("-")[1] === "MT") {
+        ack = "PT-AckForm"
+      }
+      else {
+        ack = "acknowledgement"
+      }
     }
 
   }
@@ -1611,6 +1619,7 @@ function createContentDetails(details) {
 }
 function createHeaderDetails(details, name, phoneNumber, email, logo, tenantId, heading, applicationNumber) {
   let headerData = [];
+  const isPppAcknowledgement = details?.some((detail) => detail?.isPppAcknowledgement === true);
   headerData.push({
     style: 'tableExample',
     layout: "noBorders",
@@ -1686,7 +1695,7 @@ function createHeaderDetails(details, name, phoneNumber, email, logo, tenantId, 
       ]
     }
   })
-  headerData.push({
+  if (!isPppAcknowledgement) headerData.push({
     style: 'tableExample',
     layout: "noBorders",
     margin: [0, -45, 7, 0],
@@ -1820,18 +1829,23 @@ function createContent(details, logo, tenantId, phoneNumber, breakPageLimit = nu
   const detailsHeaders = [];
   let counter = 1;
   details.forEach((detail, index) => {
+    const isPppAcknowledgement = detail?.isPppAcknowledgement === true;
+    let sectionHeading;
     if (detail?.values?.length > 0 || (detail?.isTable && detail?.tableRows?.length > 0)) {
       console.log("lennn", detail?.title.length)
-      detailsHeaders.push({
+      sectionHeading = {
         style: 'tableExample',
         margin: [10, 20, 10, 0],
         layout: "noBorders",
         table: {
-          widths: ['101.8%', '*'],
+          widths: isPppAcknowledgement && detail?.hideSectionNumber ? ["*"] : ['101.8%', '*'],
           body: [
             [
               {
-                text: `${counter}. ${detail?.title}`,
+                text:
+                  isPppAcknowledgement && detail?.hideSectionNumber
+                    ? detail?.title
+                    : `${counter}. ${detail?.title}`,
                 border: [true, true, true, false],
                 color: "#454545",
                 style: "header",
@@ -1842,7 +1856,8 @@ function createContent(details, logo, tenantId, phoneNumber, breakPageLimit = nu
             ]
           ]
         }
-      })
+      };
+      if (!(isPppAcknowledgement && detail?.keepTogether)) detailsHeaders.push(sectionHeading);
       counter++;
     }
     /**
@@ -1884,7 +1899,7 @@ function createContent(details, logo, tenantId, phoneNumber, breakPageLimit = nu
           margin: [2, 4, 2, 4],
         }))
       );
-      detailsHeaders.push({
+      const memberTable = {
         style: "tableExample",
         margin: [10, 5, 10, 5],
         table: {
@@ -1898,7 +1913,15 @@ function createContent(details, logo, tenantId, phoneNumber, breakPageLimit = nu
           hLineColor: () => "#d6d5d4",
           vLineColor: () => "#d6d5d4",
         },
-      });
+      };
+      if (isPppAcknowledgement && detail?.keepTogether && sectionHeading) {
+        detailsHeaders.push({
+          unbreakable: true,
+          stack: [sectionHeading, memberTable],
+        });
+      } else {
+        detailsHeaders.push(memberTable);
+      }
     }
     else if (detail?.isAttachments && detail.values) {
       detailsHeaders.push({

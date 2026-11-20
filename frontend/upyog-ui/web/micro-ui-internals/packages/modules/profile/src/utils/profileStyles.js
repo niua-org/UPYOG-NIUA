@@ -118,7 +118,6 @@ export const profileStyles = {
     background: "#FCFCFD",
     marginBottom: 12,
   },
-  
   cardLabel: {
     width: "100%",
     fontWeight: 700,

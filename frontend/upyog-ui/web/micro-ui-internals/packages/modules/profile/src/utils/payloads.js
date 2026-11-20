@@ -7,6 +7,12 @@ const toEpoch = (dob) => {
   return new Date(dob).getTime();
 };
 
+const getPropertyOwnershipType = (ownershipType) => {
+  const value = ownershipType?.code || ownershipType;
+  if (value === "INSTITUTION") return "ORGANISATION";
+  return value || "INDIVIDUAL";
+};
+
 // Body for Digit.UserService.updateUser
 export const buildUpdateUserPayload = ({ userInfo, form, photoId, locale }) => ({
   ...userInfo,
@@ -76,6 +82,7 @@ export const buildCreateDocumentPayload = ({ userUuid, tenantId, documentType, f
 
 /**
  * Builds the Family Create API payload from familyDetails session data + staged members list
+ * Property fields are read only from portfolio entries; noProperty suppresses the array.
  * TODO - Need to Enhance this payload as lots of info is un-necessary
  * */
 export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
@@ -84,10 +91,12 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
   const headMember = members.find((m) => m.userUuid === finalHeadUuid);
   const headMemberData = familyDetails[finalHeadUuid] || {};
   const headProfile = headMemberData.profileDetails || {};
-  const headProperty = headMemberData.property || {};
+  const headPropertyPortfolio = headMemberData.property?.propertiesPortfolio || [];
 
   // Derive family-level fields from head's session data
-  const familyAddressPropertyId = headProperty.primaryPropertyId || undefined;
+  const familyAddressPropertyId =
+    headPropertyPortfolio.find((property) => property.localityType === "URBAN" && property.isPrimaryAddress)?.propertyId ||
+    undefined;
   const category = headProfile.caste?.code || undefined;
 
   const finalMembers = members.map((member) => {
@@ -236,7 +245,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
         if (entry.localityType === "RURAL") {
           return {
             localityType: "RURAL",
-            ownershipType: entry.ownershipType || "INDIVIDUAL",
+            ownershipType: getPropertyOwnershipType(entry.ownershipType),
             declarationConfirmed: true,
             ruralPropertyDetail: {
               gramPanchayat: entry.gramPanchayat?.name || entry.gramPanchayat,

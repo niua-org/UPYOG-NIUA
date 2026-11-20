@@ -307,6 +307,7 @@ const FamilyMemberAdded = () => {
         familyId: createdFamilyId,
         tenantId,
         applicationDate: Date.now(),
+        applicantUserUuid: selectedHeadUuid,
         members: members.map((member) => {
           const memberDetails = familyDetails[member.userUuid] || {};
           const profileDetails = memberDetails.profileDetails || {};
