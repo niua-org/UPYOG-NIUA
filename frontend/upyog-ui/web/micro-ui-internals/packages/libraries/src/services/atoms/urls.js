@@ -399,6 +399,7 @@ const Urls = {
     verifyFamilyOtp: "/family/v1/family/_verifyOtp",
     verifyProfile: "/user/profile/aadhaar/_verifyProfile",
     createFamily: "/family/v1/family/_create",
+    updateFamily: "/family/v1/family/_update",
     familySearch: "/family/v1/family/_search",
     familyDashboard: "/family/v1/dashboard/_search",
     isHof: "/family/v1/head/_isHof",
