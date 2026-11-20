@@ -18,18 +18,14 @@ import org.springframework.stereotype.Service;
 public class IdGenService {
 
 
-    private IdGenRepository idGenRepository;
-    
-
-    private TransactionRepository transactionRepository;
-    
-    @Autowired
-    private Configurations config;
+    private final IdGenRepository idGenRepository;
+    private final TransactionRepository transactionRepository;
+    private final Configurations config;
 
     @Autowired
-    public IdGenService(IdGenRepository idGenRepository, TransactionRepository transactionRepository, Configurations
-            config) {
+    public IdGenService(IdGenRepository idGenRepository, TransactionRepository transactionRepository, Configurations config) {
         this.idGenRepository = idGenRepository;
+        this.transactionRepository = transactionRepository;
         this.config = config;
     }
 

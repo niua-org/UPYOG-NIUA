@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.service.TenantVerificationConfigService;
+import org.egov.dx.util.Configurations;
 import org.egov.dx.util.PanConstants;
 import org.egov.dx.util.PanNumberUtils;
 import org.egov.dx.web.models.PanVerificationRequest;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -32,15 +34,19 @@ public class PanVerificationValidator {
     private static final Pattern DOB_PATTERN = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}|\\d{2}/\\d{2}/\\d{4}|\\d{2}-\\d{2}-\\d{4})$");
 
     private final TenantVerificationConfigService tenantConfigService;
+    private final Configurations configurations;
 
     /**
-     * Constructs {@link PanVerificationValidator} with injected {@link TenantVerificationConfigService}.
+     * Constructs {@link PanVerificationValidator} with injected {@link TenantVerificationConfigService}
+     * and {@link Configurations}.
      *
      * @param tenantConfigService service providing MDMS configuration and master data lookup
+     * @param configurations application configuration properties
      */
     @Autowired
-    public PanVerificationValidator(TenantVerificationConfigService tenantConfigService) {
+    public PanVerificationValidator(TenantVerificationConfigService tenantConfigService, Configurations configurations) {
         this.tenantConfigService = tenantConfigService;
+        this.configurations = configurations;
     }
 
     /**
@@ -138,12 +144,15 @@ public class PanVerificationValidator {
             // Calendar sanity: catches non-existent dates like 31-02-2020 or invalid leap day combinations
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "Invalid calendar date provided for DOB: " + dob);
         }
+        ZoneId zoneId = (configurations != null && StringUtils.isNotBlank(configurations.getAppTimezone()))
+                ? ZoneId.of(configurations.getAppTimezone().trim())
+                : ZoneId.systemDefault();
         // Logical bounds: citizen cannot have a birth date in the future
-        if (date.isAfter(LocalDate.now())) {
+        if (date.isAfter(LocalDate.now(zoneId))) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "DOB cannot be in the future.");
         }
         // Realistic age bound: reject dates older than 125 years to catch typo years (e.g., year 0024 instead of 2024)
-        if (date.isBefore(LocalDate.now().minusYears(125))) {
+        if (date.isBefore(LocalDate.now(zoneId).minusYears(125))) {
             throw new CustomException(PanConstants.ERR_CODE_INVALID_REQUEST, "DOB indicates invalid age (> 125 years).");
         }
     }

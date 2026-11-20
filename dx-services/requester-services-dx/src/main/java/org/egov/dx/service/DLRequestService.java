@@ -56,11 +56,14 @@ public class DLRequestService {
       
     private static final User User = null;
 
-	@Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+    private final Configurations configurations;
 
     @Autowired
-	private Configurations configurations;
+    public DLRequestService(RestTemplate restTemplate, Configurations configurations) {
+        this.restTemplate = restTemplate;
+        this.configurations = configurations;
+    }
     
 
    
@@ -197,8 +200,12 @@ public class DLRequestService {
          
          HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
                  headers);
-         IssuedDocumentList issuedDocumentList= restTemplate.postForEntity(configurations.getApiHost() + configurations.getIssuedFilesURI(), request, IssuedDocumentList.class).getBody();
-         return issuedDocumentList.getItems();
+         ResponseEntity<IssuedDocumentList> responseEntity = restTemplate.postForEntity(
+                 configurations.getApiHost() + configurations.getIssuedFilesURI(), request, IssuedDocumentList.class);
+         IssuedDocumentList issuedDocumentList = responseEntity != null ? responseEntity.getBody() : null;
+         return (issuedDocumentList != null && issuedDocumentList.getItems() != null)
+                 ? issuedDocumentList.getItems()
+                 : Collections.emptyList();
     }
     public byte[] getDoc(TokenReq tokenReq,String uri)
     {

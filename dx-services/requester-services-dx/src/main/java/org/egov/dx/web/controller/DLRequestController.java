@@ -79,11 +79,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/digilocker")
 public class DLRequestController {
 	
+	private final DLRequestService dlRequestService;
+	private final ResponseInfoFactory responseInfoFactory;
+
 	@Autowired
-	private DLRequestService dlRequestService;
-	
-	@Autowired
-	ResponseInfoFactory responseInfoFactory;
+	public DLRequestController(DLRequestService dlRequestService, ResponseInfoFactory responseInfoFactory) {
+		this.dlRequestService = dlRequestService;
+		this.responseInfoFactory = responseInfoFactory;
+	}
 		
 	@RequestMapping(value = {"/authorization/url"}, method = RequestMethod.POST )
     public ResponseEntity<AuthResponse> search(@Valid @RequestBody RequestInfo requestInfo,@RequestParam("module") String module) throws NoSuchAlgorithmException

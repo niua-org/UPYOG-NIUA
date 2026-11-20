@@ -3,6 +3,7 @@ package org.egov.dx.validator;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.dx.service.TenantVerificationConfigService;
+import org.egov.dx.util.Configurations;
 import org.egov.dx.util.PanConstants;
 import org.egov.dx.web.models.PanVerificationRequest;
 import org.egov.tracer.model.CustomException;
@@ -24,9 +25,11 @@ class PanVerificationValidatorTest {
     @BeforeEach
     void setUp() {
         tenantConfigService = mock(TenantVerificationConfigService.class);
+        Configurations configurations = mock(Configurations.class);
+        when(configurations.getAppTimezone()).thenReturn("Asia/Kolkata");
         when(tenantConfigService.getValidGenders(any(), any()))
                 .thenReturn(Set.of("M", "F", "O", "T", "MALE", "FEMALE", "TRANSGENDER", "OTHER"));
-        validator = new PanVerificationValidator(tenantConfigService);
+        validator = new PanVerificationValidator(tenantConfigService, configurations);
     }
 
     private RequestInfo createAuthenticatedRequestInfo() {

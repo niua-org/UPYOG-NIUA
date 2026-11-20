@@ -16,6 +16,12 @@ import lombok.Getter;
 @Getter
 public class Configurations {
 
+	/**
+	 * Configured application timezone identifier (property: {@code app.timezone}, e.g., {@code Asia/Kolkata}).
+	 */
+	@Value("${app.timezone}")
+	private String appTimezone;
+
 	@Value("${egov.payer.validation.enable}")
 	private String validationFlag;
 
