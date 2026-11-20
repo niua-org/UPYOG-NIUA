@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import "../../css/ndc.css";
 
 export const PropertyDetailsForm = ({ config, onSelect, userType, formData, formState, clearErrors }) => {
-  const { control } = useForm({
+  const { control, setValue } = useForm({
     mode: "onChange",
   });
 
@@ -55,6 +55,17 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
     },
     bussinessService: "SW",
     t,
+  });
+
+  const { isLoading: tradeLicenseLoading, data: tradeLicenseData } = Digit.Hooks.tl.useSearch({
+    tenantId,
+    filters: {
+      propertyId: propertyId,
+      propertyIds: propertyId,
+    },
+    config: {
+      enabled: !!propertyId,
+    },
   });
 
   /*
@@ -138,37 +149,35 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
     const emailApi = apiDataCheck?.[0]?.owners?.[0]?.emailId;
 
     const firstName = ownerObj?.name || owner?.name || "";
-    const email = ownerObj?.emailId || emailApi || owner?.emailId || "";
+    const emailFromOwner = ownerObj?.emailId || emailApi || owner?.emailId || "";
     const mobileNumber = ownerObj?.mobileNumber || owner?.mobileNumber || "";
     const address = ownerObj?.permanentAddress || owner?.permanentAddress || "";
 
-    const updated = {
-      propertyBillData: {
-        isLoading: false,
-        billData: formData?.PropertyDetails?.propertyBillData?.billData || {},
-      },
-    };
+    if (firstName) setValue("firstName", firstName);
+    if (mobileNumber) setValue("mobileNumber", mobileNumber);
+    if (address) setValue("address", address);
+    if (emailFromOwner) setValue("email", emailFromOwner);
 
-    if (email) {
-      updated.email = email;
-    }
+    setPropertyDetails((prev) => {
+      const updated = { ...prev };
+      if (firstName) updated.firstName = firstName;
+      if (mobileNumber) updated.mobileNumber = mobileNumber;
+      if (address) updated.address = address;
 
-    if (firstName) {
-      updated.firstName = firstName;
-    }
+      // Only set email from owner/api if user hasn't already entered an email
+      if (emailFromOwner && !prev?.email) {
+        updated.email = emailFromOwner;
+      }
 
-    if (mobileNumber) {
-      updated.mobileNumber = mobileNumber;
-    }
+      if (!updated.propertyBillData) {
+        updated.propertyBillData = {
+          isLoading: false,
+          billData: prev?.propertyBillData?.billData || {},
+        };
+      }
 
-    if (address) {
-      updated.address = address;
-    }
-
-    setPropertyDetails((prev) => ({
-      ...prev,
-      ...updated,
-    }));
+      return updated;
+    });
   }, [cpt?.details, apiDataCheck, selectedRow]);
 
   useEffect(() => {
@@ -230,6 +239,72 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
   }, [sewerageConnectionData, apiDataCheck]);
 
   useEffect(() => {
+    let tradeLicense = [];
+
+    if (apiDataCheck?.[0]?.NdcDetails) {
+      tradeLicense =
+        apiDataCheck?.[0]?.NdcDetails?.filter((item) => item.businessService === "TL")?.map((item) => ({
+          connectionNo: item?.consumerCode,
+          isEdit: false,
+          billData: {
+            totalAmount: item?.dueAmount !== undefined ? item?.dueAmount : 0,
+            status: item?.status,
+          },
+          isLoading: false,
+        })) || [];
+    } else {
+      const rawLicenses = Array.isArray(tradeLicenseData?.Licenses)
+        ? tradeLicenseData.Licenses
+        : Array.isArray(tradeLicenseData)
+        ? tradeLicenseData
+        : [];
+
+      const filteredLicenses = rawLicenses.filter((lic) => {
+        if (!propertyId) return false;
+        let addDetail = lic?.tradeLicenseDetail?.additionalDetail || lic?.additionalDetail;
+        if (typeof addDetail === "string") {
+          try {
+            addDetail = JSON.parse(addDetail);
+          } catch (e) {
+            addDetail = null;
+          }
+        }
+        const licPropId =
+          addDetail?.propertyId ||
+          addDetail?.cptId?.id ||
+          lic?.tradeLicenseDetail?.cptId ||
+          lic?.propertyId;
+
+        return (
+          typeof licPropId === "string" &&
+          licPropId.trim().toLowerCase() === propertyId.trim().toLowerCase()
+        );
+      });
+
+      tradeLicense =
+        filteredLicenses
+          ?.map((item) => ({
+            connectionNo: item?.licenseNumber || item?.applicationNumber || "",
+            isEdit: false,
+            billData: {},
+            isLoading: false,
+          }))
+          ?.filter((item) => !!item.connectionNo) || [];
+    }
+
+    setPropertyDetails((prev) => {
+      const manualRows = (prev?.tradeLicense || []).filter((item) => item?.isEdit);
+      const combined = [...tradeLicense, ...manualRows];
+
+      return {
+        ...prev,
+        tradeLicense: combined,
+        tlNumber: combined?.[0]?.connectionNo || prev?.tlNumber || "",
+      };
+    });
+  }, [tradeLicenseData, apiDataCheck, propertyId]);
+
+  useEffect(() => {
     if (typeof onSelect === "function") {
       onSelect("PropertyDetails", propertyDetails, config);
     }
@@ -255,6 +330,21 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
       ...prev,
       sewerageConnection: [
         ...(prev.sewerageConnection || []),
+        {
+          connectionNo: "",
+          isEdit: true,
+          billData: {},
+          isLoading: false,
+        },
+      ],
+    }));
+  }
+
+  function addTradeLicense() {
+    setPropertyDetails((prev) => ({
+      ...prev,
+      tradeLicense: [
+        ...(prev.tradeLicense || []),
         {
           connectionNo: "",
           isEdit: true,
@@ -300,6 +390,24 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
         setPropertyDetails((prev) => ({
           ...prev,
           sewerageConnection: updated,
+        }));
+      }
+
+      if (bussinessService === "TL") {
+        const updated = [...(propertyDetails?.tradeLicense || [])];
+
+        if (!updated[index]) {
+          return;
+        }
+
+        updated[index] = {
+          ...updated[index],
+          isLoading: true,
+        };
+
+        setPropertyDetails((prev) => ({
+          ...prev,
+          tradeLicense: updated,
         }));
       }
 
@@ -371,6 +479,37 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
             setShowToast({
               error: false,
               label: t("NDC_NO_BILLS_FOUND_SW"),
+            });
+          }
+
+          return;
+        }
+
+        if (bussinessService === "TL") {
+          const updated = [...(propertyDetails?.tradeLicense || [])];
+
+          if (updated[index]) {
+            updated[index] = {
+              ...updated[index],
+              billData: bill,
+              isLoading: false,
+            };
+          }
+
+          setPropertyDetails((prev) => ({
+            ...prev,
+            tradeLicense: updated,
+          }));
+
+          if (Number(bill?.totalAmount) > 0) {
+            setShowToast({
+              error: true,
+              label: t("NDC_MESSAGE_DUES_FOUND_PLEASE_PAY"),
+            });
+          } else {
+            setShowToast({
+              error: false,
+              label: t("NDC_NO_BILLS_FOUND_TL") !== "NDC_NO_BILLS_FOUND_TL" ? t("NDC_NO_BILLS_FOUND_TL") : "No dues found for Trade License",
             });
           }
 
@@ -462,6 +601,34 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
           return;
         }
 
+        if (bussinessService === "TL") {
+          const updated = [...(propertyDetails?.tradeLicense || [])];
+
+          if (!updated[index]) {
+            return;
+          }
+
+          updated[index] = {
+            ...updated[index],
+            billData: {
+              totalAmount: 0,
+            },
+            isLoading: false,
+          };
+
+          setPropertyDetails((prev) => ({
+            ...prev,
+            tradeLicense: updated,
+          }));
+
+          setShowToast({
+            error: false,
+            label: t("NDC_NO_BILLS_FOUND_TL") !== "NDC_NO_BILLS_FOUND_TL" ? t("NDC_NO_BILLS_FOUND_TL") : "No dues found for Trade License",
+          });
+
+          return;
+        }
+
         if (bussinessService === "PT") {
           setPropertyDetails((prev) => ({
             ...prev,
@@ -537,6 +704,32 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
         });
       }
 
+      if (bussinessService === "TL") {
+        const updated = [...(propertyDetails?.tradeLicense || [])];
+
+        if (!updated[index]) {
+          return;
+        }
+
+        updated[index] = {
+          ...updated[index],
+          isLoading: false,
+          billData: {
+            totalAmount: 0,
+          },
+        };
+
+        setPropertyDetails((prev) => ({
+          ...prev,
+          tradeLicense: updated,
+        }));
+
+        setShowToast({
+          error: false,
+          label: t("NDC_NO_BILLS_FOUND_TL") !== "NDC_NO_BILLS_FOUND_TL" ? t("NDC_NO_BILLS_FOUND_TL") : "No dues found for Trade License",
+        });
+      }
+
       if (bussinessService === "PT") {
         setPropertyDetails((prev) => ({
           ...prev,
@@ -593,6 +786,22 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
         }));
       }
 
+      if (bussinessService === "TL") {
+        const updated = [...(propertyDetails?.tradeLicense || [])];
+
+        if (updated[index]) {
+          updated[index] = {
+            ...updated[index],
+            isLoading: false,
+          };
+        }
+
+        setPropertyDetails((prev) => ({
+          ...prev,
+          tradeLicense: updated,
+        }));
+      }
+
       setShowToast({
         error: true,
         label: t("NDC_MESSAGE_FETCH_FAILED"),
@@ -627,108 +836,142 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
   }, [checkApiDataCheck, selectedRow]);
 
   const renderConnectionRows = (connectionType, connections, loading, labelKey, checkStatusKey, addHandler) => {
+    const serviceCode = connectionType === "waterConnection" ? "WS" : connectionType === "tradeLicense" ? "TL" : "SW";
+    const sectionClass =
+      connectionType === "waterConnection"
+        ? "ndc-waterConnection-section"
+        : connectionType === "tradeLicense"
+        ? "ndc-tradeLicense-section"
+        : "ndc-sewerage-section";
+    const addClass =
+      connectionType === "waterConnection"
+        ? "ndc-add-connection"
+        : connectionType === "tradeLicense"
+        ? "ndc-add-tradeLicense"
+        : "ndc-add-sewerage";
+    const addButtonLabel =
+      connectionType === "waterConnection"
+        ? t("ADD_WATER")
+        : connectionType === "tradeLicense"
+        ? (t("ADD_TRADE_LICENSE") && t("ADD_TRADE_LICENSE") !== "ADD_TRADE_LICENSE" ? t("ADD_TRADE_LICENSE") : "Add Trade License")
+        : t("ADD_SEWERAGE");
+    const displayLabel =
+      labelKey === "NDC_TRADE_LICENSE"
+        ? (t("NDC_TRADE_LICENSE") && t("NDC_TRADE_LICENSE") !== "NDC_TRADE_LICENSE"
+            ? t("NDC_TRADE_LICENSE")
+            : (t("TL_TRADE_LICENSE") && t("TL_TRADE_LICENSE") !== "TL_TRADE_LICENSE"
+                ? t("TL_TRADE_LICENSE")
+                : "Trade License"))
+        : t(labelKey);
+    const displayCheckStatus =
+      checkStatusKey === "CHECK_STATUS_TRADE_LICENSE"
+        ? (t("CHECK_STATUS_TRADE_LICENSE") && t("CHECK_STATUS_TRADE_LICENSE") !== "CHECK_STATUS_TRADE_LICENSE"
+            ? t("CHECK_STATUS_TRADE_LICENSE")
+            : (t("CHECK_STATUS") && t("CHECK_STATUS") !== "CHECK_STATUS" ? t("CHECK_STATUS") : "Check Status"))
+        : t(checkStatusKey);
+
     return (
-      <>
-        <div className="ndc-connection-section">
-          <div className="ndc-field-label-wrapper">
-            <CardLabel className="card-label-smaller ndc_card_labels">{t(labelKey)}</CardLabel>
-          </div>
+      <div className={`ndc-connection-section ${sectionClass}`}>
+        <div className="ndc-field-label-wrapper">
+          <CardLabel className="card-label-smaller ndc_card_labels">{displayLabel}</CardLabel>
+        </div>
 
-          {loading ? (
-            <Loader />
-          ) : (
-            <div className="ndc-connection-list">
-              {connections?.map((item, index) => (
-                <div key={index} className="ndc-connection-row">
-                  <Controller
-                    control={control}
-                    name={`${connectionType}[${index}]`}
-                    defaultValue={item?.connectionNo || ""}
-                    render={({ field }) => (
-                      <TextInput
-                        value={item?.connectionNo || ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
+        {loading ? (
+          <Loader />
+        ) : (
+          <div className="ndc-connection-list">
+            {connections?.map((item, index) => (
+              <div key={index} className="ndc-connection-row">
+                <Controller
+                  control={control}
+                  name={`${connectionType}[${index}]`}
+                  defaultValue={item?.connectionNo || ""}
+                  render={({ field }) => (
+                    <TextInput
+                      value={item?.connectionNo || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
 
+                        const updated = [...(connections || [])];
+
+                        updated[index] = {
+                          ...updated[index],
+                          connectionNo: value,
+                        };
+
+                        setPropertyDetails((prev) => ({
+                          ...prev,
+                          [connectionType]: updated,
+                          ...(connectionType === "tradeLicense" ? { tlNumber: updated?.[0]?.connectionNo || "" } : {}),
+                        }));
+
+                        field.onChange(value);
+                      }}
+                      onBlur={field.onBlur}
+                      disabled={!item?.isEdit}
+                      className="ndc-input"
+                    />
+                  )}
+                />
+
+                {item?.isLoading ? (
+                  <Loader />
+                ) : (
+                  <div className="ndc-action-column">
+                    {!apiDataCheck?.[0]?.NdcDetails && item?.connectionNo && !item?.billData?.id && item?.billData?.totalAmount !== 0 && (
+                      <button
+                        className="submit-bar ndc-action-button"
+                        onClick={() => fetchBill(serviceCode, item.connectionNo, index)}
+                      >
+                        {displayCheckStatus}
+                      </button>
+                    )}
+
+                    {item?.connectionNo && item?.billData?.totalAmount > 0 && (
+                      <button
+                        className="submit-bar ndc-action-button"
+                        onClick={() => {
+                          setSelectedBillData(item?.billData);
+                          setShowPayModal(true);
+                        }}
+                      >
+                        {t("PAY_DUES")}
+                      </button>
+                    )}
+
+                    {item?.connectionNo && item?.billData?.totalAmount === 0 && <div className="ndc-no-dues-box">{t("NO_DUES")}</div>}
+
+                    {item?.isEdit && (
+                      <button
+                        className="ndc-delete-button"
+                        onClick={() => {
                           const updated = [...(connections || [])];
 
-                          updated[index] = {
-                            ...updated[index],
-                            connectionNo: value,
-                          };
+                          updated.splice(index, 1);
 
                           setPropertyDetails((prev) => ({
                             ...prev,
                             [connectionType]: updated,
+                            ...(connectionType === "tradeLicense" ? { tlNumber: updated?.[0]?.connectionNo || "" } : {}),
                           }));
-
-                          field.onChange(value);
                         }}
-                        onBlur={field.onBlur}
-                        disabled={!item?.isEdit}
-                        className="ndc-input"
-                      />
+                      >
+                        <DeleteIcon className="delete" fill="#a82227" />
+                      </button>
                     )}
-                  />
-
-                  {item?.isLoading ? (
-                    <Loader />
-                  ) : (
-                    <div className="ndc-action-column">
-                      {!apiDataCheck?.[0]?.NdcDetails && item?.connectionNo && !item?.billData?.id && item?.billData?.totalAmount !== 0 && (
-                        <button
-                          className="submit-bar ndc-action-button"
-                          onClick={() => fetchBill(connectionType === "waterConnection" ? "WS" : "SW", item.connectionNo, index)}
-                        >
-                          {t(checkStatusKey)}
-                        </button>
-                      )}
-
-                      {item?.connectionNo && item?.billData?.totalAmount > 0 && (
-                        <button
-                          className="submit-bar ndc-action-button"
-                          onClick={() => {
-                            setSelectedBillData(item?.billData);
-                            setShowPayModal(true);
-                          }}
-                        >
-                          {t("PAY_DUES")}
-                        </button>
-                      )}
-
-                      {item?.connectionNo && item?.billData?.totalAmount === 0 && <div className="ndc-no-dues-box">{t("NO_DUES")}</div>}
-
-                      {item?.isEdit && (
-                        <button
-                          className="ndc-delete-button"
-                          onClick={() => {
-                            const updated = [...(connections || [])];
-
-                            updated.splice(index, 1);
-
-                            setPropertyDetails((prev) => ({
-                              ...prev,
-                              [connectionType]: updated,
-                            }));
-                          }}
-                        >
-                          <DeleteIcon className="delete" fill="#a82227" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="ndc-add-connection">
-            <button className="submit-bar ndc-action-button" onClick={addHandler}>
-              {t(connectionType === "waterConnection" ? "ADD_WATER" : "ADD_SEWERAGE")}
-            </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
+        )}
+
+        <div className={`ndc-add-connection ${addClass}`}>
+          <button className="submit-bar ndc-action-button" onClick={addHandler}>
+            {addButtonLabel}
+          </button>
         </div>
-      </>
+      </div>
     );
   };
 
@@ -746,102 +989,23 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
               addWaterConnection,
             )}
 
-            <div className="ndc-sewerage-section">
-              <div className="ndc-field-label-wrapper">
-                <CardLabel className="card-label-smaller ndc_card_labels">{t("NDC_SEWERAGE_CONNECTION")}</CardLabel>
-              </div>
+            {renderConnectionRows(
+              "sewerageConnection",
+              propertyDetails?.sewerageConnection,
+              sewerageConnectionLoading,
+              "NDC_SEWERAGE_CONNECTION",
+              "CHECK_STATUS_SEWERAGE",
+              addSewerageConnection,
+            )}
 
-              {sewerageConnectionLoading ? (
-                <Loader />
-              ) : (
-                <div className="ndc-connection-list">
-                  {propertyDetails?.sewerageConnection?.map((item, index) => (
-                    <div key={index} className="ndc-connection-row">
-                      <Controller
-                        control={control}
-                        name={`sewerageConnection[${index}]`}
-                        defaultValue={item?.connectionNo || ""}
-                        render={({ field }) => (
-                          <TextInput
-                            value={item?.connectionNo || ""}
-                            onChange={(e) => {
-                              const value = e.target.value;
-
-                              const updated = [...(propertyDetails?.sewerageConnection || [])];
-
-                              updated[index] = {
-                                ...updated[index],
-                                connectionNo: value,
-                              };
-
-                              setPropertyDetails((prev) => ({
-                                ...prev,
-                                sewerageConnection: updated,
-                              }));
-
-                              field.onChange(value);
-                            }}
-                            onBlur={field.onBlur}
-                            disabled={!item?.isEdit}
-                            className="ndc-input"
-                          />
-                        )}
-                      />
-
-                      {item?.isLoading ? (
-                        <Loader />
-                      ) : (
-                        <div className="ndc-action-column">
-                          {!apiDataCheck?.[0]?.NdcDetails && item?.connectionNo && !item?.billData?.id && item?.billData?.totalAmount !== 0 && (
-                            <button className="submit-bar ndc-action-button" onClick={() => fetchBill("SW", item.connectionNo, index)}>
-                              {t("CHECK_STATUS_SEWERAGE")}
-                            </button>
-                          )}
-
-                          {item?.connectionNo && item?.billData?.totalAmount > 0 && (
-                            <button
-                              className="submit-bar ndc-action-button"
-                              onClick={() => {
-                                setSelectedBillData(item?.billData);
-                                setShowPayModal(true);
-                              }}
-                            >
-                              {t("PAY_DUES")}
-                            </button>
-                          )}
-
-                          {item?.connectionNo && item?.billData?.totalAmount === 0 && <div className="ndc-no-dues-box">{t("NO_DUES")}</div>}
-
-                          {item?.isEdit && (
-                            <button
-                              className="ndc-delete-button"
-                              onClick={() => {
-                                const updated = [...(propertyDetails?.sewerageConnection || [])];
-
-                                updated.splice(index, 1);
-
-                                setPropertyDetails((prev) => ({
-                                  ...prev,
-                                  sewerageConnection: updated,
-                                }));
-                              }}
-                            >
-                              <DeleteIcon className="delete" fill="#a82227" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="ndc-add-sewerage">
-              <button className="submit-bar ndc-action-button" onClick={addSewerageConnection}>
-                {t("ADD_SEWERAGE")}
-              </button>
-            </div>
+            {renderConnectionRows(
+              "tradeLicense",
+              propertyDetails?.tradeLicense,
+              tradeLicenseLoading,
+              "NDC_TRADE_LICENSE",
+              "CHECK_STATUS_TRADE_LICENSE",
+              addTradeLicense,
+            )}
 
             <div className="ndc-owner-selection">
               <p className="ndc-owner-help">{t("NDC_OWNER_ACCESS_MESSAGE")}</p>
@@ -863,7 +1027,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
             {selectedRow && (
               <div>
                 {/* FULL NAME */}
-                <LabelFieldPair className="ndc-owner-field ndc-owner-field-first" style={ownerFieldStyle}>
+                <div className="ndc-owner-field ndc-owner-field-first" style={ownerFieldStyle}>
                   <CardLabel className="card-label-smaller ndc_card_labels" style={ownerLabelStyle}>
                     {t("NDC_FULL_NAME")}
                     <span className="ndc-required-star"> *</span>
@@ -907,10 +1071,10 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                       )}
                     />
                   </div>
-                </LabelFieldPair>
+                </div>
 
                 {/* EMAIL */}
-                <LabelFieldPair className="ndc-owner-field" style={ownerFieldStyle}>
+                <div className="ndc-owner-field" style={ownerFieldStyle}>
                   <CardLabel className="card-label-smaller ndc_card_labels" style={ownerLabelStyle}>
                     {t("NDC_EMAIL")}
                     <span className="ndc-required-star"> *</span>
@@ -935,6 +1099,8 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                       }}
                       render={({ field }) => (
                         <TextInput
+                          name="email"
+                          type="email"
                           value={propertyDetails?.email || ""}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -947,17 +1113,16 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                             field.onChange(value);
                           }}
                           onBlur={field.onBlur}
-                          disabled={!!cpt?.details?.owners?.[0]?.emailId}
                           className="ndc-input"
                           style={ownerInputStyle}
                         />
                       )}
                     />
                   </div>
-                </LabelFieldPair>
+                </div>
 
                 {/* MOBILE NUMBER */}
-                <LabelFieldPair className="ndc-owner-field" style={ownerFieldStyle}>
+                <div className="ndc-owner-field" style={ownerFieldStyle}>
                   <CardLabel className="card-label-smaller ndc_card_labels" style={ownerLabelStyle}>
                     {t("NDC_MOBILE_NUMBER")}
                     <span className="ndc-required-star"> *</span>
@@ -1003,10 +1168,10 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                       )}
                     />
                   </div>
-                </LabelFieldPair>
+                </div>
 
                 {/* ADDRESS */}
-                <LabelFieldPair className="ndc-owner-field" style={ownerFieldStyle}>
+                <div className="ndc-owner-field" style={ownerFieldStyle}>
                   <CardLabel className="card-label-smaller ndc_card_labels" style={ownerLabelStyle}>
                     {t("NDC_ADDRESS")}
                     <span className="ndc-required-star"> *</span>
@@ -1044,14 +1209,14 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
                       )}
                     />
                   </div>
-                </LabelFieldPair>
+                </div>
               </div>
             )}
           </div>
         )}
 
         {/* REMARKS */}
-        <LabelFieldPair className="ndc-owner-field ndc-owner-field-remarks" style={ownerFieldStyle}>
+        <div className="ndc-owner-field ndc-owner-field-remarks" style={ownerFieldStyle}>
           <CardLabel className="card-label-smaller ndc_card_labels" style={ownerLabelStyle}>
             {t("Remarks")}
           </CardLabel>
@@ -1084,40 +1249,7 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
               )}
             />
           </div>
-        </LabelFieldPair>
-
-        {/* TRADE LICENSE NUMBER */}
-        <LabelFieldPair className="ndc-owner-field" style={ownerFieldStyle}>
-          <CardLabel className="card-label-smaller ndc_card_labels" style={ownerLabelStyle}>
-            {t("NDC_TL_NUMBER")}
-          </CardLabel>
-
-          <div className="form-field ndc-field-container" style={ownerFieldContainerStyle}>
-            <Controller
-              control={control}
-              name="tlNumber"
-              defaultValue={propertyDetails?.tlNumber || ""}
-              render={({ field }) => (
-                <TextInput
-                  value={propertyDetails?.tlNumber || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    setPropertyDetails((prev) => ({
-                      ...prev,
-                      tlNumber: value,
-                    }));
-
-                    field.onChange(value);
-                  }}
-                  onBlur={field.onBlur}
-                  className="ndc-input"
-                  style={ownerInputStyle}
-                />
-              )}
-            />
-          </div>
-        </LabelFieldPair>
+        </div>
 
         {showToast && (
           <div className="ndc-details-form-message" role="alert">
@@ -1131,7 +1263,10 @@ export const PropertyDetailsForm = ({ config, onSelect, userType, formData, form
               setShowPayModal(false);
               setSelectedBillData({});
             }}
-            billData={selectedBillData}
+            billData={{
+              ...selectedBillData,
+              propertyId: propertyId || cpt?.details?.propertyId || formData?.cpt?.details?.propertyId || "",
+            }}
           />
         )}
 

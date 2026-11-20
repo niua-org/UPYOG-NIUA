@@ -47,6 +47,8 @@ const NDCSummary = ({ formData, goNext, onGoBack }) => {
 
   const sewerageConnection = propertyDetails?.sewerageConnection || [];
 
+  const tradeLicense = propertyDetails?.tradeLicense || [];
+
   /*
    * =========================================================
    * NDC REASON
@@ -76,6 +78,14 @@ const NDCSummary = ({ formData, goNext, onGoBack }) => {
           .filter(Boolean)
           .join(", ") || "NA"
       : "NA";
+
+  const tradeLicenseValue =
+    tradeLicense?.length > 0
+      ? tradeLicense
+          .map((item) => item?.connectionNo)
+          .filter(Boolean)
+          .join(", ") || "NA"
+      : propertyDetails?.tlNumber || "NA";
 
   /*
    * =========================================================
@@ -233,6 +243,8 @@ const NDCSummary = ({ formData, goNext, onGoBack }) => {
           {renderLabel(t("Water Connection"), waterConnectionValue)}
 
           {renderLabel(t("Sewerage Connection"), sewerageConnectionValue)}
+
+          {renderLabel(t("Trade License"), tradeLicenseValue)}
 
           {renderLabel(t("Property ID"), propertyId)}
         </div>

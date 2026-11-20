@@ -14,7 +14,7 @@ export const NewNDCStepFormOne = ({ config, onGoNext, onBackClick, t }) => {
   const [error, setError] = useState("");
   const [getLoader, setLoader] = useState(false);
 
-  const id = window.location.pathname.split("/").pop();
+  const id = window.location.pathname.match(/(NDC-[A-Za-z0-9\-_]+)/)?.[1] || window.location.pathname.split("/").pop();
 
   /*
    * =========================================================
@@ -178,6 +178,52 @@ export const NewNDCStepFormOne = ({ config, onGoNext, onBackClick, t }) => {
         status: sc?.billData?.status,
       });
     });
+
+    /*
+     * =======================================================
+     * TRADE LICENSE
+     * =======================================================
+     */
+
+    (data?.PropertyDetails?.tradeLicense || []).forEach((tl) => {
+      if (tl?.connectionNo) {
+        ndcDetails.push({
+          uuid: tl?.billData?.id,
+
+          applicantId: applicantId,
+
+          businessService: "TL",
+
+          consumerCode: tl?.connectionNo,
+
+          additionalDetails: {
+            propertyAddress: data?.PropertyDetails?.address,
+
+            propertyType: data?.cpt?.details?.usageCategory,
+          },
+
+          dueAmount: tl?.billData?.totalAmount || 0,
+
+          status: tl?.billData?.status,
+        });
+      }
+    });
+
+    if (
+      data?.PropertyDetails?.tlNumber &&
+      !ndcDetails.some((d) => d.businessService === "TL" && d.consumerCode === data?.PropertyDetails?.tlNumber)
+    ) {
+      ndcDetails.push({
+        applicantId: applicantId,
+        businessService: "TL",
+        consumerCode: data?.PropertyDetails?.tlNumber,
+        additionalDetails: {
+          propertyAddress: data?.PropertyDetails?.address,
+          propertyType: data?.cpt?.details?.usageCategory,
+        },
+        dueAmount: 0,
+      });
+    }
 
     /*
      * =======================================================
@@ -366,6 +412,52 @@ export const NewNDCStepFormOne = ({ config, onGoNext, onBackClick, t }) => {
           status: sc?.billData?.status,
         });
       });
+
+      /*
+       * =====================================================
+       * TRADE LICENSE
+       * =====================================================
+       */
+
+      (data?.PropertyDetails?.tradeLicense || []).forEach((tl) => {
+        if (tl?.connectionNo) {
+          ndcDetails.push({
+            uuid: tl?.billData?.id,
+
+            applicantId: applicantId,
+
+            businessService: "TL",
+
+            consumerCode: tl?.connectionNo,
+
+            additionalDetails: {
+              propertyAddress: data?.PropertyDetails?.address,
+
+              propertyType: data?.cpt?.details?.usageCategory,
+            },
+
+            dueAmount: tl?.billData?.totalAmount || 0,
+
+            status: tl?.billData?.status,
+          });
+        }
+      });
+
+      if (
+        data?.PropertyDetails?.tlNumber &&
+        !ndcDetails.some((d) => d.businessService === "TL" && d.consumerCode === data?.PropertyDetails?.tlNumber)
+      ) {
+        ndcDetails.push({
+          applicantId: applicantId,
+          businessService: "TL",
+          consumerCode: data?.PropertyDetails?.tlNumber,
+          additionalDetails: {
+            propertyAddress: data?.PropertyDetails?.address,
+            propertyType: data?.cpt?.details?.usageCategory,
+          },
+          dueAmount: 0,
+        });
+      }
 
       /*
        * =====================================================
@@ -558,6 +650,34 @@ export const NewNDCStepFormOne = ({ config, onGoNext, onBackClick, t }) => {
 
         if (value?.billData?.id && value?.billData?.totalAmount > 0) {
           missingFields.push(`${t("NDC_MESSAGE_PLEASE_PAY_DUES_OF_SEWERAGE_CONNECTION")} ${value?.connectionNo || ""}`);
+        }
+      });
+    }
+
+    /*
+     * =======================================================
+     * TRADE LICENSE STATUS
+     * =======================================================
+     */
+
+    if (propertyDetails?.tradeLicense?.length > 0) {
+      propertyDetails.tradeLicense.forEach((value) => {
+        if (value?.connectionNo) {
+          if (value?.billData?.totalAmount != 0 && !value?.billData?.id) {
+            const checkMsg =
+              t("NDC_MESSAGE_PLEASE_CHECK_STATUS_OF_TRADE_LICENSE") !== "NDC_MESSAGE_PLEASE_CHECK_STATUS_OF_TRADE_LICENSE"
+                ? t("NDC_MESSAGE_PLEASE_CHECK_STATUS_OF_TRADE_LICENSE")
+                : "Please check status of Trade License";
+            missingFields.push(`${checkMsg} ${value?.connectionNo || ""}`);
+          }
+
+          if (value?.billData?.id && value?.billData?.totalAmount > 0) {
+            const payMsg =
+              t("NDC_MESSAGE_PLEASE_PAY_DUES_OF_TRADE_LICENSE") !== "NDC_MESSAGE_PLEASE_PAY_DUES_OF_TRADE_LICENSE"
+                ? t("NDC_MESSAGE_PLEASE_PAY_DUES_OF_TRADE_LICENSE")
+                : "Please pay dues of Trade License";
+            missingFields.push(`${payMsg} ${value?.connectionNo || ""}`);
+          }
         }
       });
     }

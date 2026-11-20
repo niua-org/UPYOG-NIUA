@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import NDCDocument from "../../../pageComponents/NDCDocument";
 import getAcknowledgementData from "../../../getAcknowlegment";
-import NewApplicationTimeline from "../../../../../templates/ApplicationDetails/components/NewApplicationTimeline";
+import NDCWFTimeline from "../../../components/NDCWFTimeline";
 import { EmployeeData, downloadNDCAcknowledgement } from "../../../utils";
 import { Loader } from "../../../components/Loader";
 
@@ -373,7 +373,7 @@ const CitizenApplicationOverview = () => {
           )}
         </div>
       </Card>
-      <NewApplicationTimeline workflowDetails={workflowDetails} t={t} />
+      <NDCWFTimeline workflowDetails={workflowDetails} application={applicationDetails?.Applications?.[0]} t={t} />
       {(isLoading || isDetailsLoading || checkLoading || getLoader) && <Loader page={true} />}
     </div>
   );

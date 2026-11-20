@@ -1,803 +1,700 @@
 import "../../css/ndc.css";
-import React, { useState, useEffect, useRef } from "react";
-
-import { TextInput, Toast } from "@nudmcdgnpm/digit-ui-react-components";
-
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Dropdown, RadioButtons, Localities, TextInput, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-
 import { useDispatch, useSelector } from "react-redux";
-
 import { updateNDCForm } from "../redux/actions/NDCFormActions";
-
 import { useLocation, Link } from "react-router-dom";
-
 import { Loader } from "../components/Loader";
 
 /*
  * =========================================================
- * ADDRESS
+ * ADDRESS HELPER
  * =========================================================
  */
-
 const getAddress = (address, t) => {
-  return `${address?.doorNo ? `${address?.doorNo}, ` : ""} ${address?.street ? `${address?.street}, ` : ""}${
-    address?.landmark ? `${address?.landmark}, ` : ""
-  }${t(Digit.Utils.pt.getMohallaLocale(address?.locality?.code, address?.tenantId))}, ${t(Digit.Utils.pt.getCityLocale(address?.tenantId))}${
-    address?.pincode && t(address?.pincode) ? `, ${address.pincode}` : " "
-  }`;
+  if (!address) return "";
+  const parts = [];
+  if (address.doorNo) parts.push(address.doorNo);
+  if (address.street) parts.push(address.street);
+  if (address.landmark) parts.push(address.landmark);
+  if (address.locality?.name) {
+    parts.push(address.locality.name);
+  } else if (address.locality?.code && address.tenantId) {
+    parts.push(t(Digit.Utils.pt.getMohallaLocale(address.locality.code, address.tenantId)));
+  }
+  if (address.city) {
+    parts.push(address.city);
+  } else if (address.tenantId) {
+    parts.push(t(Digit.Utils.pt.getCityLocale(address.tenantId)));
+  }
+  if (address.pincode) parts.push(address.pincode);
+  return parts.join(", ");
 };
 
 /*
  * =========================================================
- * PROPERTY SEARCH / FETCH DETAILS
- * COMPONENT USED IN NDC
+ * GENERIC PROPERTY SEARCH & SELECTION COMPONENT (NDC)
  * =========================================================
  */
-
 export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
   const { t } = useTranslation();
-
-  const myElementRef = useRef(null);
-
   const dispatch = useDispatch();
+  const { pathname } = useLocation();
 
-  let { pathname, state } = useLocation();
-
-  state = state && (typeof state === "string" || state instanceof String) ? JSON.parse(state) : state;
-
-  /*
-   * =========================================================
-   * REDUX DATA
-   * =========================================================
-   */
-
-  const apiDataCheck = useSelector((state) => state.ndc.NDCForm?.formData?.responseData);
-
-  /*
-   * =========================================================
-   * EDIT SCREEN
-   * =========================================================
-   */
+  // Helper for safe translation with fallback
+  const tr = (key, fallback) => {
+    const res = t(key);
+    return res && res !== key ? res : fallback;
+  };
 
   const isEditScreen = pathname.includes("/modify-application/");
 
-  /*
-   * =========================================================
-   * TENANT
-   * =========================================================
-   */
+  // Tenants & Cities
+  const defaultTenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
+  const { data: globalTenants } = Digit.Hooks.useTenants();
 
-  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const allCities = useMemo(() => {
+    let raw =
+      Digit.SessionStorage.get("NDC_TENANTS") ||
+      globalTenants ||
+      Digit.SessionStorage.get("initData")?.tenants ||
+      Digit.SessionStorage.get("PT_TENANTS") ||
+      Digit.SessionStorage.get("TL_TENANTS") ||
+      [];
 
-  /*
-   * =========================================================
-   * URL PROPERTY ID
-   * =========================================================
-   */
+    if (!Array.isArray(raw) || raw.length === 0) {
+      if (defaultTenantId) {
+        const cleanCode = defaultTenantId.toUpperCase().replace(/\./g, "_");
+        const i18nKey = `TENANT_TENANTS_${cleanCode}`;
+        const trans = t(i18nKey);
+        const name = trans && trans !== i18nKey ? trans : defaultTenantId;
+        return [{ code: defaultTenantId, i18nKey, name }];
+      }
+      return [];
+    }
 
+    return raw
+      .map((item) => {
+        const code = item.code || item.city?.code || defaultTenantId;
+        const cleanCode = (code || "").toUpperCase().replace(/\./g, "_");
+        const i18nKey = item.i18nKey || `TENANT_TENANTS_${cleanCode}`;
+        const trans = t(i18nKey);
+        const name = item.name || item.city?.name || (trans && trans !== i18nKey ? trans : code);
+        return {
+          ...item,
+          code,
+          i18nKey: trans && trans !== i18nKey ? i18nKey : name,
+          name,
+        };
+      })
+      .sort((a, b) => (a?.name || a?.code)?.localeCompare?.(b?.name || b?.code));
+  }, [globalTenants, defaultTenantId, t]);
+
+  // URL / API data for pre-fill
   const search = useLocation().search;
-
-  const urlPropertyId = new URLSearchParams(search).get("propertyId");
-
-  const isfirstRender = useRef(true);
-
-  /*
-   * =========================================================
-   * LOADER
-   * =========================================================
-   */
-
-  const [getLoader, setLoader] = useState(false);
-
-  /*
-   * =========================================================
-   * PROPERTY FROM API
-   * =========================================================
-   */
-
+  const urlPropertyId =
+    new URLSearchParams(search).get("propertyId") ||
+    (typeof sessionStorage !== "undefined" && sessionStorage.getItem("NDC_LAST_PROPERTY_ID")) ||
+    (typeof localStorage !== "undefined" && localStorage.getItem("NDC_LAST_PROPERTY_ID"));
+  const apiDataCheck = useSelector((state) => state.ndc.NDCForm?.formData?.responseData);
   const ptFromApi = apiDataCheck?.[0]?.NdcDetails?.find((item) => item.businessService === "PT");
 
-  /*
-   * =========================================================
-   * PROPERTY ID
-   * =========================================================
-   */
-
-  const [propertyId, setPropertyId] = useState(formData?.cpt?.id || (urlPropertyId !== "null" ? urlPropertyId : "") || ptFromApi?.consumerCode || "");
-
-  const [searchPropertyId, setSearchPropertyId] = useState(
-    formData?.cpt?.id || (urlPropertyId !== "null" ? urlPropertyId : "") || ptFromApi?.consumerCode || "",
+  // Radio Options: "I know my Property ID" vs "I want to search using Door Number"
+  const radioOptions = useMemo(
+    () => [
+      { code: "0", name: tr("PT_KNOW_PTID", "I know my Property ID") },
+      { code: "1", name: tr("PT_SEARCH_DOOR_NO", "I want to search using Door Number") },
+    ],
+    [t]
   );
 
-  /*
-   * =========================================================
-   * TOAST
-   * =========================================================
-   */
+  const [selectedMode, setSelectedMode] = useState(radioOptions[0]);
+  const [selectedCity, setSelectedCity] = useState(null);
 
-  const [showToast, setShowToast] = useState(null);
+  // Search parameters for Mode 0 (Property ID / Mobile / Old ID)
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [propertyIdSearch, setPropertyIdSearch] = useState(urlPropertyId || "");
+  const [oldPropertyId, setOldPropertyId] = useState("");
 
-  /*
-   * =========================================================
-   * PROPERTY DETAILS
-   * =========================================================
-   */
+  // Search parameters for Mode 1 (Door Number / Locality / Name)
+  const [selectedLocality, setSelectedLocality] = useState(null);
+  const [doorNumber, setDoorNumber] = useState("");
+  const [ownerName, setOwnerName] = useState("");
 
-  const [propertyDetails, setPropertyDetails] = useState(() => {
+  // Search execution states
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Selected property
+  const [selectedProperty, setSelectedProperty] = useState(() => {
     if (formData?.cpt?.details && Object.keys(formData?.cpt?.details).length > 0) {
-      return {
-        Properties: [
-          {
-            ...formData?.cpt?.details,
-          },
-        ],
-      };
+      return formData.cpt.details;
     }
-
-    return {
-      Properties: [],
-    };
+    return null;
   });
 
-  /*
-   * =========================================================
-   * PROPERTY DUES
-   * =========================================================
-   */
-
+  // Property dues & Bill states
   const [propertyDues, setPropertyDues] = useState(() => {
     if (formData?.cpt?.dues && Object.keys(formData?.cpt?.dues).length > 0) {
-      return {
-        dues: {
-          ...formData?.cpt?.dues,
-        },
-      };
+      return { dues: formData.cpt.dues };
     }
-
-    return {
-      dues: {},
-    };
+    return { dues: null };
   });
 
-  /*
-   * =========================================================
-   * UI STATES
-   * =========================================================
-   */
+  const [getLoader, setLoader] = useState(false);
+  const [getNoDue, setNoDue] = useState(() => {
+    if (formData?.cpt?.dues && typeof formData.cpt.dues.totalAmount !== "undefined") {
+      return Number(formData.cpt.dues.totalAmount) === 0;
+    }
+    return false;
+  });
+  const [getPayDuesButton, setPayDuesButton] = useState(() => {
+    if (formData?.cpt?.dues && typeof formData.cpt.dues.totalAmount !== "undefined") {
+      return Number(formData.cpt.dues.totalAmount) > 0;
+    }
+    return false;
+  });
+  const [showToast, setShowToast] = useState(null);
+  const hasFetchedInitialRef = useRef(false);
 
-  const [isSearchClicked, setIsSearchClicked] = useState(false);
-
-  const [getNoDue, setNoDue] = useState(false);
-
-  const [getCheckStatus, setCheckStats] = useState(false);
-
-  const [getPayDuesButton, setPayDuesButton] = useState(false);
-
-  /*
-   * =========================================================
-   * PROPERTY SEARCH API
-   * =========================================================
-   */
-
-  const {
-    isLoading,
-    isError,
-    error,
-    data: propertyDetailsFetch,
-  } = Digit.Hooks.pt.usePropertySearch(
-    {
-      filters: {
-        propertyIds: searchPropertyId,
-      },
-
-      tenantId: tenantId,
-    },
-
-    {
-      filters: {
-        propertyIds: searchPropertyId,
-      },
-
-      tenantId: tenantId,
-
-      enabled: searchPropertyId ? true : false,
-
-      privacy: Digit.Utils.getPrivacyObject(),
-    },
-  );
-
-  /*
-   * =========================================================
-   * PROPERTY DATA FROM API
-   * =========================================================
-   */
-
+  // Auto-select city matching current tenant
   useEffect(() => {
-    if (ptFromApi?.consumerCode) {
-      setIsSearchClicked(true);
+    if (allCities && allCities.length > 0 && !selectedCity) {
+      const match = allCities.find((c) => c.code === defaultTenantId);
+      setSelectedCity(match || allCities[0]);
+    }
+  }, [allCities, defaultTenantId, selectedCity]);
 
-      setPropertyId(ptFromApi.consumerCode);
+  // Auto-close toast
+  useEffect(() => {
+    if (!showToast) return;
+    const timer = setTimeout(() => setShowToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [showToast]);
 
-      setSearchPropertyId(ptFromApi.consumerCode);
-
-      setNoDue(true);
-
-      setPropertyDues({
-        dues: {
-          totalAmount: 0,
-        },
-      });
-
+  // Sync dues into Redux
+  useEffect(() => {
+    if (propertyDues?.dues) {
       const updated = {
-        ...formData[config.key],
-
-        id: ptFromApi.consumerCode,
+        ...formData?.[config.key],
+        dues: propertyDues.dues,
       };
-
       onSelect(config.key, updated);
-
       dispatch(updateNDCForm(config.key, updated));
     }
-  }, [ptFromApi]);
+  }, [propertyDues]);
+
+  // Initial fetch if coming from edit or URL
+  useEffect(() => {
+    const existing = formData?.cpt?.details;
+    if (existing && Object.keys(existing).length > 0) {
+      setSelectedProperty(existing);
+    } else if (ptFromApi?.consumerCode) {
+      fetchInitialProperty(ptFromApi.consumerCode);
+    } else if (urlPropertyId && urlPropertyId !== "null" && urlPropertyId !== "undefined" && !hasFetchedInitialRef.current) {
+      hasFetchedInitialRef.current = true;
+      setPropertyIdSearch(urlPropertyId);
+      fetchInitialProperty(urlPropertyId);
+    }
+  }, [urlPropertyId, selectedCity?.code]);
+
+  const fetchInitialProperty = async (pId) => {
+    if (!pId) return;
+    setLoader(true);
+    try {
+      const res = await Digit.PTService.search({
+        tenantId: selectedCity?.code || defaultTenantId,
+        filters: { propertyIds: pId },
+        auth: true,
+      });
+      if (res?.Properties?.[0]) {
+        selectProperty(res.Properties[0]);
+      }
+      setLoader(false);
+    } catch (err) {
+      console.error("Error fetching initial property:", err);
+      setLoader(false);
+    }
+  };
 
   /*
    * =========================================================
-   * PROPERTY DETAILS FETCH
+   * FETCH BILL / DUES
    * =========================================================
    */
+  const fetchBill = async (pId, pTenantId) => {
+    if (!pId) return;
+    setLoader(true);
+    try {
+      const result = await Digit.PaymentService.fetchBill(pTenantId || defaultTenantId, {
+        businessService: "PT",
+        consumerCode: pId,
+      });
 
-  useEffect(() => {
-    if (propertyDetailsFetch && propertyDetailsFetch?.Properties && propertyDetailsFetch?.Properties?.length > 0) {
-      setPropertyDetails(propertyDetailsFetch);
-
-      setShowToast(null);
-
-      setCheckStats(true);
-    } else {
-      if (isfirstRender.current) {
-        isfirstRender.current = false;
-
-        return;
-      }
-
-      if (!formData?.cpt?.details && isSearchClicked) {
-        setPropertyDetails({
-          Properties: [],
+      if (result?.Bill?.length > 0) {
+        const totalAmount = result.Bill[0]?.totalAmount || 0;
+        if (totalAmount > 0) {
+          setShowToast({
+            error: true,
+            label: t("NDC_MESSAGE_DUES_FOUND_PLEASE_PAY") || "Dues found, please pay",
+          });
+          setPayDuesButton(true);
+          setNoDue(false);
+        } else {
+          setShowToast({
+            error: false,
+            label: t("NDC_NO_BILLS_FOUND_PROPERTY") || "No dues found for property",
+          });
+          setNoDue(true);
+          setPayDuesButton(false);
+        }
+        setPropertyDues({ dues: result.Bill[0] });
+        onSelect("PropertyDetails", {
+          ...(formData?.PropertyDetails || {}),
+          propertyBillData: {
+            isLoading: false,
+            billData: result.Bill[0],
+          },
         });
-
+      } else {
         setShowToast({
-          error: true,
-
-          label: "CS_PT_NO_PROPERTIES_FOUND",
+          error: false,
+          label: t("NDC_NO_BILLS_FOUND_PROPERTY") || "No dues found for property",
+        });
+        const zeroBill = { totalAmount: 0 };
+        setPropertyDues({ dues: zeroBill });
+        setNoDue(true);
+        setPayDuesButton(false);
+        onSelect("PropertyDetails", {
+          ...(formData?.PropertyDetails || {}),
+          propertyBillData: {
+            isLoading: false,
+            billData: zeroBill,
+          },
         });
       }
-    }
-  }, [propertyDetailsFetch]);
-
-  /*
-   * =========================================================
-   * UPDATE SEARCH PROPERTY ID
-   * =========================================================
-   */
-
-  useEffect(() => {
-    if (propertyId && (window.location.href.includes("/renew-application-details/") || window.location.href.includes("/edit-application-details/"))) {
-      setSearchPropertyId(propertyId);
-    }
-  }, [propertyId]);
-
-  /*
-   * =========================================================
-   * PROPERTY SEARCH ERROR
-   * =========================================================
-   */
-
-  useEffect(() => {
-    if (isLoading === false && error && error === true && propertyDetails?.Properties?.length === 0) {
+      setLoader(false);
+    } catch (err) {
+      console.error("Error fetching PT bill:", err);
+      setLoader(false);
       setShowToast({
         error: true,
-
-        label: "CS_PT_NO_PROPERTIES_FOUND",
+        label: t("NDC_MESSAGE_FETCH_FAILED") || "Failed to fetch bill status",
       });
     }
-  }, [error, propertyDetails, isLoading]);
+  };
 
   /*
    * =========================================================
-   * UPDATE PROPERTY DETAILS
+   * HANDLE SEARCH EXECUTION
    * =========================================================
    */
-
-  useEffect(() => {
-    const updated = {
-      ...formData[config.key],
-
-      details: propertyDetails?.Properties?.[0],
-    };
-
-    onSelect(config.key, updated);
-
-    dispatch(updateNDCForm(config.key, updated));
-  }, [propertyDetails, pathname]);
-
-  /*
-   * =========================================================
-   * UPDATE PROPERTY DUES
-   * =========================================================
-   */
-
-  useEffect(() => {
-    const updated = {
-      ...formData[config.key],
-
-      dues: propertyDues?.dues,
-    };
-
-    onSelect(config.key, updated);
-
-    dispatch(updateNDCForm(config.key, updated));
-  }, [propertyDues, pathname]);
-
-  /*
-   * =========================================================
-   * SEARCH PROPERTY
-   * =========================================================
-   */
-
-  const searchProperty = () => {
-    if (!propertyId) {
-      setShowToast({
-        error: true,
-
-        label: "PT_ENTER_PROPERTY_ID_AND_SEARCH",
-      });
-
+  const handleSearch = async () => {
+    const currentCityCode = selectedCity?.code || defaultTenantId;
+    if (!currentCityCode) {
+      setShowToast({ error: true, label: t("PT_SELECT_CITY") || "Please select city" });
       return;
     }
 
-    if (propertyId !== searchPropertyId) {
-      setPropertyDetails({
-        Properties: [],
+    const filters = {};
+    if (selectedMode?.code === "0") {
+      if (!mobileNumber?.trim() && !propertyIdSearch?.trim() && !oldPropertyId?.trim()) {
+        setShowToast({ error: true, label: t("PT_PROVIDE_ONE_MORE_PARAM") || "Provide atleast one search parameter" });
+        return;
+      }
+      if (mobileNumber?.trim()) filters.mobileNumber = mobileNumber.trim();
+      if (propertyIdSearch?.trim()) filters.propertyIds = propertyIdSearch.trim();
+      if (oldPropertyId?.trim()) filters.oldPropertyId = oldPropertyId.trim();
+    } else {
+      if (!selectedLocality && !doorNumber?.trim() && !ownerName?.trim()) {
+        setShowToast({ error: true, label: t("PT_PROVIDE_ONE_MORE_PARAM") || "Provide atleast one search parameter" });
+        return;
+      }
+      if (selectedLocality?.code) filters.locality = selectedLocality.code;
+      if (doorNumber?.trim()) filters.doorNo = doorNumber.trim();
+      if (ownerName?.trim()) filters.name = ownerName.trim();
+    }
+
+    setIsSearching(true);
+    setHasSearched(true);
+    setSearchResults([]);
+
+    try {
+      const response = await Digit.PTService.search({
+        tenantId: currentCityCode,
+        filters,
+        auth: true,
       });
 
-      setSearchPropertyId(propertyId);
-
-      setIsSearchClicked(true);
-
-      setPropertyDues({
-        dues: null,
-      });
-
-      onSelect("PropertyDetails", {
-        email: "",
-
-        propertyBillData: {
-          isLoading: false,
-          billData: {},
-        },
-
-        waterConnection: [],
-
-        sewerageConnection: [],
-
-        firstName: "",
-
-        mobileNumber: "",
-
-        address: "",
+      const properties = response?.Properties || [];
+      setSearchResults(properties);
+      if (properties.length === 0) {
+        setShowToast({
+          error: true,
+          label: t("CS_PT_NO_PROPERTIES_FOUND") || "No properties found for the given criteria",
+        });
+      }
+      setIsSearching(false);
+    } catch (err) {
+      console.error("Error searching properties:", err);
+      setIsSearching(false);
+      setShowToast({
+        error: true,
+        label: err?.response?.data?.Errors?.[0]?.message || t("PT_SEARCH_ERROR") || "Failed to search property",
       });
     }
   };
 
   /*
    * =========================================================
-   * PROPERTY ID CHANGE
+   * SELECT PROPERTY
    * =========================================================
    */
+  const selectProperty = (prop) => {
+    if (!prop) return;
+    setSelectedProperty(prop);
+    setSearchResults([]);
+    setHasSearched(false);
 
-  const handlePropertyChange = (e) => {
-    const value = e.target.value;
+    const updatedCpt = {
+      ...formData?.[config.key],
+      id: prop.propertyId,
+      details: prop,
+    };
+    onSelect(config.key, updatedCpt);
+    dispatch(updateNDCForm(config.key, updatedCpt));
 
-    setPropertyId(value);
-
-    setValue(value, propertyIdInput.name);
-
-    setIsSearchClicked(false);
-
-    setNoDue(false);
-
-    setCheckStats(false);
-
-    setPayDuesButton(false);
+    const primaryOwner = prop.owners?.find((o) => o.status !== "INACTIVE") || prop.owners?.[0];
+    onSelect("PropertyDetails", {
+      email: primaryOwner?.emailId || "",
+      propertyBillData: {
+        isLoading: false,
+        billData: {},
+      },
+      waterConnection: [],
+      sewerageConnection: [],
+      tradeLicense: [],
+      firstName: primaryOwner?.name || "",
+      mobileNumber: primaryOwner?.mobileNumber || "",
+      address: getAddress(prop.address, t) || "",
+    });
   };
 
   /*
    * =========================================================
-   * EDIT SCREEN
+   * CHANGE PROPERTY (RESET)
    * =========================================================
    */
+  const handleChangeProperty = () => {
+    setSelectedProperty(null);
+    setNoDue(false);
+    setPayDuesButton(false);
+    setPropertyDues({ dues: null });
+    setSearchResults([]);
+    setHasSearched(false);
+
+    const updatedCpt = {
+      ...formData?.[config.key],
+      id: "",
+      details: null,
+      dues: null,
+    };
+    onSelect(config.key, updatedCpt);
+    dispatch(updateNDCForm(config.key, updatedCpt));
+
+    onSelect("PropertyDetails", {
+      email: "",
+      propertyBillData: {
+        isLoading: false,
+        billData: {},
+      },
+      waterConnection: [],
+      sewerageConnection: [],
+      tradeLicense: [],
+      firstName: "",
+      mobileNumber: "",
+      address: "",
+    });
+  };
 
   if (isEditScreen) {
     return <React.Fragment />;
   }
 
-  /*
-   * =========================================================
-   * PROPERTY ADDRESS
-   * =========================================================
-   */
-
-  let propertyAddress = "";
-
-  if (propertyDetails && propertyDetails?.Properties?.length) {
-    propertyAddress = getAddress(propertyDetails?.Properties?.[0]?.address, t);
-  }
-
-  /*
-   * =========================================================
-   * PROPERTY INPUT CONFIG
-   * =========================================================
-   */
-
-  const propertyIdInput = {
-    label: "PROPERTY_ID",
-
-    type: "text",
-
-    name: "id",
-  };
-
-  /*
-   * =========================================================
-   * SET VALUE
-   * =========================================================
-   */
-
-  function setValue(value, input) {
-    const updated = {
-      ...formData[config.key],
-
-      [input]: value,
-    };
-
-    onSelect(config.key, updated);
-
-    dispatch(updateNDCForm(config.key, updated));
-  }
-
-  /*
-   * =========================================================
-   * GET VALUE
-   * =========================================================
-   */
-
-  function getValue(input) {
-    return formData && formData[config.key] ? formData[config.key][input] : undefined;
-  }
-
-  /*
-   * =========================================================
-   * FETCH PROPERTY BILL
-   * =========================================================
-   */
-
-  async function fetchBill() {
-    setLoader(true);
-
-    try {
-      const result = await Digit.PaymentService.fetchBill(tenantId, {
-        businessService: "PT",
-
-        consumerCode: propertyId,
-      });
-
-      if (result?.Bill?.length > 0) {
-        if (result?.Bill?.[0]?.totalAmount > 0) {
-          setShowToast({
-            error: true,
-
-            label: t("NDC_MESSAGE_DUES_FOUND_PLEASE_PAY"),
-          });
-
-          setPayDuesButton(true);
-
-          setNoDue(false);
-        } else {
-          setShowToast({
-            error: false,
-
-            label: t("NDC_NO_BILLS_FOUND_PROPERTY"),
-          });
-
-          setNoDue(true);
-
-          setCheckStats(false);
-
-          setPayDuesButton(false);
-        }
-
-        setPropertyDues({
-          dues: result?.Bill?.[0],
-        });
-      } else if (result?.Bill) {
-        setShowToast({
-          error: false,
-
-          label: t("NDC_NO_BILLS_FOUND_PROPERTY"),
-        });
-
-        setPropertyDues({
-          dues: {
-            totalAmount: 0,
-          },
-        });
-
-        setNoDue(true);
-
-        setCheckStats(false);
-
-        setPayDuesButton(false);
-      } else {
-        setShowToast({
-          error: false,
-
-          label: t("NDC_NO_BILLS_FOUND_PROPERTY"),
-        });
-
-        setPropertyDues({
-          dues: {
-            totalAmount: 0,
-          },
-        });
-
-        setNoDue(true);
-
-        setCheckStats(false);
-
-        setPayDuesButton(false);
-      }
-
-      setLoader(false);
-    } catch (error) {
-      console.error("Error while fetching property bill:", error);
-
-      setLoader(false);
-
-      setShowToast({
-        error: true,
-
-        label: t("NDC_MESSAGE_FETCH_FAILED"),
-      });
-    }
-  }
-
-  /*
-   * =========================================================
-   * AUTO CLOSE TOAST
-   * =========================================================
-   */
-
-  useEffect(() => {
-    if (!showToast) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setShowToast(null);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [showToast]);
-
-  /*
-   * =========================================================
-   * NDC LAYOUT
-   * =========================================================
-   */
-
-  const FIELD_WIDTH = "340px";
-
-  const FIELD_HEIGHT = "40px";
-
-  /*
-   * ---------------------------------------------------------
-   * FIELD WRAPPER
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * LABEL
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * INPUT ONLY WRAPPER
-   *
-   * IMPORTANT:
-   * ONLY THE INPUT + SEARCH ICON LIVE HERE.
-   *
-   * Buttons are intentionally OUTSIDE this wrapper.
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * INPUT
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * SEARCH ICON
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * ACTION AREA
-   *
-   * THIS IS THE IMPORTANT FIX.
-   *
-   * It has its own height/spacing and is outside the
-   * 40px input wrapper.
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * BUTTON
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * ---------------------------------------------------------
-   * NO DUES
-   * ---------------------------------------------------------
-   */
-
-  /*
-   * =========================================================
-   * RENDER
-   * =========================================================
-   */
-
   return (
     <React.Fragment>
-<div
-        className="ndc-property-search-container ndc-margin-bottom-16 ndc-property-search"
-        
-      >
-        {/* ===================================================
-            PROPERTY ID
-        ==================================================== */}
-
-        <div className="ndc-property-field" >
-          <label className="ndc-property-label" >
-            {t(propertyIdInput.label)}
-
-            <span className="ndc-property-required"
-              
-            >
-              *
-            </span>
-          </label>
-
-          {/* =================================================
-              INPUT + SEARCH ICON ONLY
-              
-              IMPORTANT:
-              DO NOT PUT BUTTONS INSIDE THIS DIV.
-          ================================================= */}
-
-          <div ref={myElementRef} id="search-property-field" className="ndc-property-input ndc-property-input-wrapper" >
-            <TextInput className="ndc-property-input"
-              key={propertyIdInput.name}
-              value={propertyId || ""}
-              onChange={handlePropertyChange}
-              disable={false}
-              defaultValue={undefined}
-              {...propertyIdInput.validation}
-              
-            />
-
-            {/* ===============================================
-                SEARCH ICON
-            ================================================ */}
-
-            <button
-              type="button"
-              className="ndc-property-search-icon ndc-property-search-icon"
-              
-              onClick={searchProperty}
-              aria-label={t("PT_SEARCH")}
-              title={t("PT_SEARCH")}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10.8" cy="10.8" r="6.6" stroke="#555555" strokeWidth="2" />
-
-                <path d="M16 16L21 21" stroke="#555555" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </button>
-          </div>
-
-          {/* =================================================
-              ACTIONS ARE OUTSIDE INPUT WRAPPER
-              
-              THIS FIXES THE OVERLAP.
-          ================================================= */}
-
-          <div className="ndc-property-actions ndc-property-actions" >
-            {/* ===============================================
-                CHECK STATUS
-            ================================================ */}
-
-            {!apiDataCheck?.[0]?.NdcDetails && getCheckStatus && !getPayDuesButton && (
-              <button
-                type="button"
-                className="ndc-property-action-button ndc-primary-button"
-                
-                onClick={() => {
-                  fetchBill();
-                }}
-              >
-                {t("CHECK_STATUS_PROPERTY")}
-              </button>
-            )}
-
-            {/* ===============================================
-                PAY DUES AMOUNT
-            ================================================ */}
-
-            {getPayDuesButton && (
-              <div className="ndc-primary-button"
-                
-              >
-                <span className="ndc-button-text"
-                  
-                >
-                  Rs. {propertyDues?.dues?.totalAmount}
-                </span>
+      <div className="ndc-generic-search-container">
+        {/* =====================================================
+            VIEW 1: SELECTED PROPERTY CARD
+        ====================================================== */}
+        {selectedProperty ? (
+          <div className="ndc-selected-prop-card">
+            <div className="ndc-selected-prop-header">
+              <div className="ndc-selected-prop-title">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM8 15L3 10L4.41 8.59L8 12.17L15.59 4.58L17 6L8 15Z"
+                    fill="#00703C"
+                  />
+                </svg>
+                <span>{t("PT_SELECTED_PROPERTY") || "Selected Property"}</span>
               </div>
-            )}
+              <button type="button" className="ndc-change-prop-btn" onClick={handleChangeProperty}>
+                {t("PT_CHANGE_PROPERTY") || "Change Property"}
+              </button>
+            </div>
 
-            {/* ===============================================
-                PAY DUES
-            ================================================ */}
+            <div className="ndc-selected-prop-grid">
+              <div>
+                <strong>{t("PT_PROPERTY_ID") || "Property ID"}:</strong> {selectedProperty.propertyId}
+              </div>
+              <div>
+                <strong>{t("PT_OWNER_NAME") || "Owner Name"}:</strong>{" "}
+                {selectedProperty.owners?.map((o) => o.name).filter(Boolean).join(", ") || t("NA")}
+              </div>
+              <div className="ndc-selected-prop-full">
+                <strong>{t("PT_ADDRESS") || "Address"}:</strong> {getAddress(selectedProperty.address, t)}
+              </div>
+            </div>
 
-            {getPayDuesButton && (
-              <Link className="ndc-property-pay-link" to={`/upyog-ui/citizen/payment/my-bills/PT/${propertyId}`}>
+            {/* DUES STATUS BADGE / CHECK STATUS BUTTON */}
+            <div className="ndc-dues-status-wrapper" style={{ marginTop: "14px" }}>
+              {getLoader && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Loader />
+                  <span>{t("CS_INBOX_SEARCH_LOADING") || "Checking property dues..."}</span>
+                </div>
+              )}
+
+              {!getLoader && !getNoDue && !getPayDuesButton && (
                 <button
                   type="button"
-                  className="ndc-property-action-button ndc-secondary-button"
-                  
+                  className="submit-bar ndc-action-button"
+                  style={{ width: "auto", minWidth: "160px", padding: "0 16px" }}
+                  onClick={() => fetchBill(selectedProperty.propertyId, selectedProperty.tenantId || selectedCity?.code || defaultTenantId)}
                 >
-                  {t("PAY_DUES")}
+                  {t("CHECK_STATUS_PROPERTY") && t("CHECK_STATUS_PROPERTY") !== "CHECK_STATUS_PROPERTY"
+                    ? t("CHECK_STATUS_PROPERTY")
+                    : "Check Status for Property"}
                 </button>
-              </Link>
+              )}
+
+              {!getLoader && getNoDue && (
+                <div className="ndc-badge-no-dues">
+                  ✓ {t("NO_DUES_FOUND_FOR_PROPERTY") || "No dues found for property"}
+                </div>
+              )}
+
+              {!getLoader && getPayDuesButton && (
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <div className="ndc-badge-dues-pending">
+                    {t("PT_DUES_PENDING") || "Dues Pending"}: Rs. {propertyDues?.dues?.totalAmount}
+                  </div>
+                  <Link
+                    to={`/upyog-ui/citizen/payment/my-bills/PT/${selectedProperty.propertyId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <button type="button" className="submit-bar ndc-action-button">
+                      {t("PAY_DUES") || "Pay Dues"}
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* =====================================================
+              VIEW 2: GENERIC SEARCH PROPERTY FORM
+          ====================================================== */
+          <div>
+            <div className="ndc-generic-search-title">
+              {tr("SEARCH_PROPERTY", "Search Property")}
+            </div>
+
+            {/* Radio Mode Selection */}
+            <div className="ndc-generic-radio-group">
+              <RadioButtons
+                selectedOption={selectedMode}
+                onSelect={(d) => {
+                  setSelectedMode(d);
+                  setSearchResults([]);
+                  setHasSearched(false);
+                }}
+                optionsKey="name"
+                options={radioOptions}
+              />
+            </div>
+
+            {/* City Dropdown */}
+            <div className="ndc-search-city-container">
+              <label>
+                {tr("PT_SELECT_CITY", "City")} <span style={{ color: "#a82227" }}>*</span>
+              </label>
+              <Dropdown
+                selected={selectedCity}
+                select={(d) => {
+                  setSelectedCity(d);
+                  setSelectedLocality(null);
+                }}
+                option={allCities || []}
+                optionKey="i18nKey"
+                t={t}
+              />
+            </div>
+
+            {/* Search Parameters Box */}
+            <div className="ndc-generic-search-box">
+              <div className="ndc-generic-search-box-title">
+                {tr("PT_PROVIDE_ONE_MORE_PARAM", "Provide atleast one search parameter")}
+              </div>
+
+              {selectedMode?.code === "0" ? (
+                /* Mode 0: Mobile / Property ID / Old ID */
+                <div>
+                  <div className="ndc-search-input-group">
+                    <label>{tr("PT_OWNER_MOB_NO_LABEL", "Owner's mobile number")}</label>
+                    <TextInput
+                      type="mobileNumber"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value)}
+                      placeholder={tr("CORE_COMMON_MOBILE_NUMBER_PLACEHOLDER", "Enter 10 digit mobile number")}
+                    />
+                  </div>
+
+                  <div className="ndc-search-or-text">(or)</div>
+
+                  <div className="ndc-search-input-group">
+                    <label>{tr("PT_PROPERTY_ID", "Property ID")}</label>
+                    <TextInput
+                      type="text"
+                      value={propertyIdSearch}
+                      onChange={(e) => setPropertyIdSearch(e.target.value)}
+                      placeholder={tr("PT_PROPERTY_ID_PLACEHOLDER", "Enter Property ID")}
+                    />
+                  </div>
+
+                  <div className="ndc-search-or-text">(or)</div>
+
+                  <div className="ndc-search-input-group">
+                    <label>{tr("PT_PROPERTY_ADDRESS_OLDPID", "Old property ID")}</label>
+                    <TextInput
+                      type="text"
+                      value={oldPropertyId}
+                      onChange={(e) => setOldPropertyId(e.target.value)}
+                      placeholder={tr("PT_OLD_PROPERTY_ID_PLACEHOLDER", "Enter Old Property ID")}
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Mode 1: Locality / Door Number / Owner Name */
+                <div>
+                  <div className="ndc-search-input-group">
+                    <label>
+                      {tr("PT_SELECT_LOCALITY", "Select Locality")} <span style={{ color: "#a82227" }}>*</span>
+                    </label>
+                    <Localities
+                      selectLocality={(d) => setSelectedLocality(d)}
+                      tenantId={selectedCity?.code || defaultTenantId}
+                      boundaryType="revenue"
+                      keepNull={false}
+                      optionCardStyles={{ height: "250px", overflow: "auto", zIndex: "100", maxHeight: "250px" }}
+                      selected={selectedLocality}
+                      disable={!(selectedCity?.code || defaultTenantId)}
+                      disableLoader={true}
+                    />
+                  </div>
+
+                  <div className="ndc-search-input-group" style={{ marginTop: "14px" }}>
+                    <label>{tr("PT_DOOR_NUM_LABEL", "Door Number")}</label>
+                    <TextInput
+                      type="text"
+                      value={doorNumber}
+                      onChange={(e) => setDoorNumber(e.target.value)}
+                      placeholder={tr("PT_DOOR_NUMBER_PLACEHOLDER", "Enter Door Number")}
+                    />
+                  </div>
+
+                  <div className="ndc-search-input-group">
+                    <label>{tr("PT_COMMON_PAYEE_NAME", "Owner's Name")}</label>
+                    <TextInput
+                      type="text"
+                      value={ownerName}
+                      onChange={(e) => setOwnerName(e.target.value)}
+                      placeholder={tr("PT_OWNER_NAME_PLACEHOLDER", "Enter Owner Name")}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Search Button */}
+              <div style={{ marginTop: "16px" }}>
+                <button
+                  type="button"
+                  className="ndc-search-btn"
+                  onClick={handleSearch}
+                  disabled={isSearching}
+                >
+                  {isSearching ? tr("CS_INBOX_SEARCH_LOADING", "Searching...") : tr("PT_HOME_SEARCH_RESULTS_BUTTON_SEARCH", "Search")}
+                </button>
+              </div>
+            </div>
+
+            {/* Loader */}
+            {isSearching && (
+              <div style={{ padding: "16px 0", textAlign: "center" }}>
+                <Loader />
+              </div>
             )}
 
-            {/* ===============================================
-                NO DUES
-            ================================================ */}
+            {/* Search Results Display */}
+            {!isSearching && searchResults.length > 0 && (
+              <div className="ndc-search-results-wrapper">
+                <div className="ndc-search-results-header">
+                  {t("CS_SEARCH_RESULTS") || "Search Results"} ({searchResults.length})
+                </div>
 
-            {getNoDue && (
-              <div className="ndc-property-no-dues ndc-no-dues-button" >
-                <span className="ndc-button-text"
-                  
-                >
-                  {t("NO_DUES_FOUND_FOR_PROPERTY")}
-                </span>
+                {searchResults.map((prop, idx) => (
+                  <div key={prop.propertyId || idx} className="ndc-prop-result-card">
+                    <div style={{ flex: 1 }}>
+                      <div className="ndc-prop-info-title">{prop.propertyId}</div>
+                      <div className="ndc-prop-info-detail">
+                        <strong>{t("PT_OWNER_NAME") || "Owner"}:</strong>{" "}
+                        {prop.owners?.map((o) => o.name).filter(Boolean).join(", ") || t("NA")}
+                      </div>
+                      <div className="ndc-prop-info-detail">
+                        <strong>{t("CORE_COMMON_MOBILE_NUMBER") || "Mobile"}:</strong>{" "}
+                        {prop.owners?.[0]?.mobileNumber || t("NA")}
+                      </div>
+                      <div className="ndc-prop-info-detail">
+                        <strong>{t("PT_ADDRESS") || "Address"}:</strong> {getAddress(prop.address, t)}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="ndc-prop-select-btn"
+                      onClick={() => selectProperty(prop)}
+                    >
+                      {t("CS_COMMON_SELECT") || "Select"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Zero Results Feedback */}
+            {!isSearching && hasSearched && searchResults.length === 0 && (
+              <div style={{ padding: "12px", background: "#fff3cd", border: "1px solid #ffeeba", borderRadius: "4px", color: "#856404", fontSize: "13px", marginTop: "10px" }}>
+                {t("CS_PT_NO_PROPERTIES_FOUND") || "No properties found for the given search criteria."}
               </div>
             )}
           </div>
-        </div>
+        )}
 
-        {/* ===================================================
-            TOAST
-        ==================================================== */}
-
+        {/* Global Toast */}
         {showToast && (
           <Toast
             isDleteBtn={true}
@@ -805,18 +702,12 @@ export const PropertySearchNSummary = ({ config, onSelect, formData }) => {
             error={showToast.error}
             warning={showToast.warning}
             label={t(showToast.label)}
-            onClose={() => {
-              setShowToast(null);
-            }}
+            onClose={() => setShowToast(null)}
           />
         )}
       </div>
 
-      {/* =====================================================
-          LOADER
-      ===================================================== */}
-
-      {(isLoading || getLoader) && <Loader page={true} />}
+      {(getLoader) && <Loader page={true} />}
     </React.Fragment>
   );
 };

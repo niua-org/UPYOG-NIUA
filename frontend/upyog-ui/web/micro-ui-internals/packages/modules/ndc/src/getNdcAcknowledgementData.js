@@ -51,6 +51,9 @@ const getNdcAcknowledgementData = async (application = {}, tenantInfo, t) => {
   const swObjs = (appData?.NdcDetails || []).filter(
     (item) => item?.businessService === "SW" || item?.businessService === "NDC_SEWERAGE_SERVICE_CONNECTION"
   );
+  const tlObjs = (appData?.NdcDetails || []).filter(
+    (item) => item?.businessService === "TL" || item?.businessService === "NDC_TRADE_LICENSE"
+  );
 
   const propertyId =
     ptObj?.consumerCode ||
@@ -96,6 +99,14 @@ const getNdcAcknowledgementData = async (application = {}, tenantInfo, t) => {
       ? swObjs.map((s) => s?.consumerCode).filter(Boolean).join(", ")
       : (application?.NDCDetails?.PropertyDetails?.sewerageConnection || []).map((s) => s?.connectionNo).filter(Boolean).join(", ");
 
+  const tradeLicenseNos =
+    tlObjs?.length > 0
+      ? tlObjs.map((tl) => tl?.consumerCode).filter(Boolean).join(", ")
+      : (application?.NDCDetails?.PropertyDetails?.tradeLicense || [])
+          .map((tl) => tl?.connectionNo)
+          .filter(Boolean)
+          .join(", ") || application?.NDCDetails?.PropertyDetails?.tlNumber || "";
+
   const applicationNo =
     appData?.applicationNo ||
     appData?.applicationNumber ||
@@ -140,6 +151,7 @@ const getNdcAcknowledgementData = async (application = {}, tenantInfo, t) => {
           { title: t("NDC_REASON"), value: getValue(ndcReason, t) },
           { title: t("NDC_WATER_CONNECTION_NO"), value: getValue(waterConnectionNos, t) },
           { title: t("NDC_SEWERAGE_CONNECTION_NO"), value: getValue(sewerageConnectionNos, t) },
+          { title: t("NDC_TRADE_LICENSE_NO") !== "NDC_TRADE_LICENSE_NO" ? t("NDC_TRADE_LICENSE_NO") : "Trade License No.", value: getValue(tradeLicenseNos, t) },
           { title: t("NDC_REMARKS"), value: getValue(remarks, t) },
           { title: t("CS_APPLICATION_DETAILS_APPLICATION_DATE"), value: getValue(applicationDate, t) },
           { title: t("CS_APPLICATION_DETAILS_APPLICATION_STATUS"), value: getValue(appData?.applicationStatus, t) },
