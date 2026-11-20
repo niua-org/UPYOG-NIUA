@@ -49,45 +49,92 @@ public class IdGenRepositoryImpl implements IdGenRepository {
     }
 
     /**
-     * {@inheritDoc}
+     * Calls UPYOG IdGen microservice to generate a formatted, unique sequential Family ID.
+     *
+     * @param requestInfo UPYOG request context envelope containing user session and auth token
+     * @param tenantId    target tenant identifier scoping the sequence
+     * @return generated formatted unique Family ID (e.g. {@code FAM-2026-000001})
+     * @throws CustomException if {@code egov.idgen.family.id.name} is missing or generation fails
      */
     @Override
     public String generateFamilyId(RequestInfo requestInfo, String tenantId) {
         if (StringUtils.isBlank(configuration.getIdGenFamilyIdName())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.family.id.name is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_IDGEN_FAMILY_ID_NOT_CONFIGURED);
         }
         List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenFamilyIdName(), null, 1);
         if (CollectionUtils.isEmpty(ids)) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Failed to generate family ID from idgen");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_IDGEN_FAMILY_ID_FAILED);
         }
         return ids.get(0);
     }
 
     /**
-     * {@inheritDoc}
+     * Calls UPYOG IdGen microservice to generate a formatted, unique sequential Application Number.
+     *
+     * <p>Constructs and dispatches an ID generation request targeting the configured
+     * {@code family.application.num} IdGen format template within the specified tenant.</p>
+     *
+     * @param requestInfo UPYOG request context envelope containing user session and auth token
+     * @param tenantId    target tenant identifier scoping the sequence (e.g. {@code pg.citya})
+     * @return generated formatted unique Application Number (e.g. {@code FAM-APP-2026-000001})
+     * @throws CustomException if {@code egov.idgen.family.application.num} is missing or generation fails
+     */
+    @Override
+    public String generateApplicationNo(RequestInfo requestInfo, String tenantId) {
+        if (StringUtils.isBlank(configuration.getIdGenApplicationNum())) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_IDGEN_APPLICATION_NUM_NOT_CONFIGURED);
+        }
+        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenApplicationNum(), null, 1);
+        if (CollectionUtils.isEmpty(ids)) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_IDGEN_APPLICATION_NUM_FAILED);
+        }
+        return ids.get(0);
+    }
+
+    /**
+     * Calls UPYOG IdGen microservice to generate a formatted, unique sequential Family Member ID.
+     *
+     * @param requestInfo UPYOG request context envelope
+     * @param tenantId    target tenant identifier
+     * @return generated unique Family Member ID string
+     * @throws CustomException if generation produces no IDs
      */
     @Override
     public String generateMemberId(RequestInfo requestInfo, String tenantId) {
         List<String> ids = generateMemberIds(requestInfo, tenantId, 1);
         if (CollectionUtils.isEmpty(ids)) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "Failed to generate member ID from idgen");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_IDGEN_MEMBER_ID_FAILED);
         }
         return ids.get(0);
     }
 
     /**
-     * {@inheritDoc}
+     * Calls UPYOG IdGen microservice in bulk to generate formatted, unique sequential Family Member IDs.
+     *
+     * @param requestInfo UPYOG request context envelope
+     * @param tenantId    target tenant identifier
+     * @param count       number of member IDs to generate
+     * @return list of generated unique Family Member ID strings
+     * @throws CustomException if {@code egov.idgen.member.id.name} is missing or generation fails
      */
     @Override
     public List<String> generateMemberIds(RequestInfo requestInfo, String tenantId, int count) {
         if (StringUtils.isBlank(configuration.getIdGenMemberIdName())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.member.id.name is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_IDGEN_MEMBER_ID_NOT_CONFIGURED);
         }
         return getIdList(requestInfo, tenantId, configuration.getIdGenMemberIdName(), null, count);
     }
 
     /**
-     * {@inheritDoc}
+     * Generic bulk ID generation method querying UPYOG IdGen microservice.
+     *
+     * @param requestInfo UPYOG request context envelope
+     * @param tenantId    target tenant identifier
+     * @param idName      configured MDMS idName
+     * @param format      optional format template override
+     * @param count       number of IDs to generate
+     * @return list of generated ID strings
+     * @throws CustomException if idgen host is missing or response is invalid
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -96,7 +143,7 @@ public class IdGenRepositoryImpl implements IdGenRepository {
             return Collections.emptyList();
         }
         if (configuration == null || StringUtils.isBlank(configuration.getIdGenHost())) {
-            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.host is not configured");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_IDGEN_HOST_NOT_CONFIGURED);
         }
         if (StringUtils.isBlank(configuration.getIdGenPath())) {
             throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, "egov.idgen.path is not configured");

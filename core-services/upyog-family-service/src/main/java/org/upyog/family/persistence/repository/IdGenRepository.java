@@ -23,6 +23,18 @@ public interface IdGenRepository {
     String generateFamilyId(RequestInfo requestInfo, String tenantId);
 
     /**
+     * Calls UPYOG IdGen microservice to generate a formatted, unique sequential Application Number.
+     *
+     * <p>Constructs and dispatches an ID generation request targeting the configured
+     * {@code family.application.num} IdGen format template within the tenant scope.</p>
+     *
+     * @param requestInfo UPYOG request context envelope containing caller identity and authorization token
+     * @param tenantId target tenant identifier scoping the application sequence (e.g. {@code pg.citya})
+     * @return generated unique formatted Application Number string (e.g. {@code FAM-APP-2026-000001})
+     */
+    String generateApplicationNo(RequestInfo requestInfo, String tenantId);
+
+    /**
      * Calls UPYOG IdGen microservice to generate a formatted, unique sequential Family Member ID.
      *
      * @param requestInfo UPYOG request context envelope

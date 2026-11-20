@@ -1,0 +1,107 @@
+{
+    "RequestInfo": {
+      "apiId": "Rainmaker",
+      "action": "",
+      "did": 1,
+      "key": "",
+      "msgId": "20170310130900|en_IN",
+      "requesterId": "",
+      "ts": 1513579888683,
+      "ver": ".01",
+      "authToken": "{{devAuth}}",
+      "userInfo": {
+        "id": 73,
+        "userName": null,
+        "name": null,
+        "type": "EMPLOYEE",
+        "mobileNumber": null,
+        "emailId": null,
+        "roles": [
+          {
+            "id": 2,
+            "name": "Customer Support Representative",
+            "code": null,
+            "tenantId": null
+          }
+        ],
+        "tenantId": null,
+        "uuid": "uuid"
+      }
+    },
+    "BusinessServices": [
+      {
+        "tenantId": "pg",
+        "businessService": "family-service",
+        "business": "family-service",
+        "businessServiceSla": null,
+        "states": [
+          {
+            "sla": null,
+            "state": null,
+            "applicationStatus": null,
+            "docUploadRequired": false,
+            "isStartState": true,
+            "isTerminateState": false,
+            "isStateUpdatable": true,
+            "actions": [
+              {
+                "action": "APPLY",
+                "nextState": "PENDING_FOR_APPROVAL",
+                "roles": [
+                  "CITIZEN"
+                ],
+                "active": true
+              }
+            ]
+          },
+          {
+            "sla": null,
+            "state": "PENDING_FOR_APPROVAL",
+            "applicationStatus": "PENDING_FOR_APPROVAL",
+            "docUploadRequired": false,
+            "isStartState": false,
+            "isTerminateState": false,
+            "isStateUpdatable": true,
+            "actions": [
+              {
+                "action": "APPROVE",
+                "nextState": "APPROVED",
+                "roles": [
+                  "FAMILY_APPROVER"
+                ],
+                "active": true
+              },
+              {
+                "action": "REJECT",
+                "nextState": "REJECTED",
+                "roles": [
+                  "FAMILY_APPROVER"
+                ],
+                "active": true
+              }
+            ]
+          },
+          {
+            "sla": null,
+            "state": "APPROVED",
+            "applicationStatus": "APPROVED",
+            "docUploadRequired": false,
+            "isStartState": false,
+            "isTerminateState": true,
+            "isStateUpdatable": false,
+            "actions": null
+          },
+          {
+            "sla": null,
+            "state": "REJECTED",
+            "applicationStatus": "REJECTED",
+            "docUploadRequired": false,
+            "isStartState": false,
+            "isTerminateState": true,
+            "isStateUpdatable": false,
+            "actions": null
+          }
+        ]
+      }
+    ]
+  }  

@@ -4,39 +4,30 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang3.StringUtils;
 
-import org.upyog.family.util.FamilyConstants;
-
 /**
- * Enumeration representing the lifecycle state of a Family Unit in UPYOG.
+ * Enumeration representing the lifecycle and workflow application states of a Family Unit in UPYOG
+ * (ACTIVE, INACTIVE, SPLIT, MERGED, PENDING_FOR_APPROVAL, APPROVED, REJECTED).
  *
  * @author UPYOG Team
  * @since 1.0.0
  */
 public enum FamilyStatus {
-    ACTIVE(FamilyConstants.STATUS_ACTIVE),
-    INACTIVE(FamilyConstants.STATUS_INACTIVE),
-    SPLIT(FamilyConstants.STATUS_SPLIT),
-    MERGED(FamilyConstants.STATUS_MERGED);
-
-    private final String value;
-
-    /**
-     * Constructs a {@code FamilyStatus} enum constant with its backing string value.
-     *
-     * @param value serialized string code
-     */
-    FamilyStatus(String value) {
-        this.value = value;
-    }
+    ACTIVE,
+    INACTIVE,
+    SPLIT,
+    MERGED,
+    PENDING_FOR_APPROVAL,
+    APPROVED,
+    REJECTED;
 
     /**
      * Returns the serialized string representation of the FamilyStatus enum in UPYOG.
      *
-     * @return enum string representation
+     * @return enum constant name as string representation
      */
     @JsonValue
     public String getValue() {
-        return value;
+        return this.name();
     }
 
     /**
@@ -48,7 +39,7 @@ public enum FamilyStatus {
     @JsonCreator
     public static FamilyStatus fromValue(String text) {
         for (FamilyStatus b : FamilyStatus.values()) {
-            if (StringUtils.equalsIgnoreCase(b.value, text)) {
+            if (StringUtils.equalsIgnoreCase(b.name(), text)) {
                 return b;
             }
         }

@@ -106,6 +106,37 @@ class IdGenRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("generateApplicationNo: Successfully generates single application number via IDGen")
+    void testGenerateApplicationNo_Success() {
+        when(configuration.getIdGenHost()).thenReturn("http://localhost:8086");
+        when(configuration.getIdGenPath()).thenReturn("/egov-idgen/id/_generate");
+        when(configuration.getIdGenApplicationNum()).thenReturn("family.application.num");
+
+        Map<String, Object> mockResponse = new HashMap<>();
+        Map<String, Object> idRes = new HashMap<>();
+        idRes.put("id", "APP-2026-000001");
+        mockResponse.put("idResponses", Collections.singletonList(idRes));
+
+        when(restTemplate.postForObject(eq("http://localhost:8086/egov-idgen/id/_generate"), any(HttpEntity.class), eq(Map.class)))
+                .thenReturn(mockResponse);
+
+        String appNo = idGenRepository.generateApplicationNo(new RequestInfo(), "pg.citya");
+
+        assertEquals("APP-2026-000001", appNo);
+    }
+
+    @Test
+    @DisplayName("generateApplicationNo: Throws CustomException when application num name is missing")
+    void testGenerateApplicationNo_MissingApplicationNum_ThrowsCustomException() {
+        when(configuration.getIdGenApplicationNum()).thenReturn(null);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                idGenRepository.generateApplicationNo(new RequestInfo(), "pg.citya"));
+        assertEquals(org.upyog.family.util.FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+        assertEquals(org.upyog.family.util.FamilyConstants.MSG_IDGEN_APPLICATION_NUM_NOT_CONFIGURED, ex.getMessage());
+    }
+
+    @Test
     @DisplayName("getIdList: Throws CustomException when IDGen service returns empty response")
     void testGetIdList_EmptyResponse_ThrowsCustomException() {
         when(configuration.getIdGenHost()).thenReturn("http://localhost:8086");

@@ -72,10 +72,43 @@ public class Family {
     private String category;
 
     /**
-     * Operational lifecycle state of the family unit (e.g. {@link FamilyStatus#ACTIVE}, {@link FamilyStatus#MERGED}, {@link FamilyStatus#SPLIT}).
+     * Operational lifecycle state of the family unit (e.g. {@link FamilyStatus#ACTIVE}, {@link FamilyStatus#INACTIVE}, {@link FamilyStatus#MERGED}, {@link FamilyStatus#SPLIT}).
      */
     @JsonProperty("status")
     private FamilyStatus status;
+
+    /**
+     * Workflow application status tracking the statutory approval lifecycle of the family registration application
+     * (e.g. {@code PENDING_FOR_APPROVAL}, {@code APPROVED}, {@code REJECTED}).
+     */
+    @JsonProperty("applicationStatus")
+    private String applicationStatus;
+
+    /**
+     * Unique, formatted application tracking identifier assigned at household creation time via the UPYOG IdGen service
+     * using the {@code family.application.num} naming format (e.g. {@code FAM-APP-2026-000001}).
+     */
+    @JsonProperty("applicationNo")
+    private String applicationNo;
+
+    /**
+     * Unique identifier (UUID or username) of the municipal officer or system actor who approved the family registration
+     * during the workflow {@code APPROVE} transition.
+     */
+    @JsonProperty("approvedBy")
+    private String approvedBy;
+
+    /**
+     * Epoch timestamp in milliseconds recording the exact point in time when the family application transitioned to {@code APPROVED} state.
+     */
+    @JsonProperty("approvalDate")
+    private Long approvalDate;
+
+    /**
+     * Unique identifier representing the digitally issued or external statutory Family Certificate associated with this verified household.
+     */
+    @JsonProperty("familyCertificateId")
+    private String familyCertificateId;
 
     /**
      * Property ID representing the residential address property linked to this household unit.
@@ -124,6 +157,13 @@ public class Family {
      */
     @JsonProperty("auditDetails")
     private AuditDetails auditDetails;
+
+    /**
+     * Workflow transition details associated with this family unit.
+     */
+    @Valid
+    @JsonProperty("workflow")
+    private Workflow workflow;
 
     /**
      * Enriches the headName attribute based on the designated Head of Family's resolved member name.

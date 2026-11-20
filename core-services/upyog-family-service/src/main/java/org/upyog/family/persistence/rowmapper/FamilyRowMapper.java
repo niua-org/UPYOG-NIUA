@@ -47,8 +47,11 @@ public class FamilyRowMapper implements ResultSetExtractor<List<Family>> {
     }
 
     /**
-     * Maps and aggregates relational result set rows from ug_family joined with ug_family_member
-     * and ug_family_document into rich Family aggregate domain objects in UPYOG.
+     * Maps and aggregates relational result set rows from {@code ug_family} joined with {@code ug_family_member}
+     * and {@code ug_family_document} into rich Family aggregate domain objects in UPYOG.
+     *
+     * <p>Populates core family attributes, application status, application number, approver UUID, approval date,
+     * family certificate ID, JSONB additional details, and child member and document collections.</p>
      *
      * @param rs SQL ResultSet containing joined family rows
      * @return list of distinct Family domain aggregates
@@ -88,9 +91,22 @@ public class FamilyRowMapper implements ResultSetExtractor<List<Family>> {
 
                 String familyAddressPropertyId = null;
                 String familySource = null;
+                String applicationStatus = null;
+                String applicationNo = null;
+                String approvedBy = null;
+                Long approvalDate = null;
+                String familyCertificateId = null;
                 try {
                     familyAddressPropertyId = rs.getString("f_family_address_property_id");
                     familySource = rs.getString("f_family_source");
+                    applicationStatus = rs.getString("f_application_status");
+                    applicationNo = rs.getString("f_application_no");
+                    approvedBy = rs.getString("f_approved_by");
+                    long appDateVal = rs.getLong("f_approval_date");
+                    if (!rs.wasNull()) {
+                        approvalDate = appDateVal;
+                    }
+                    familyCertificateId = rs.getString("f_family_certificate_id");
                 } catch (Exception ignored) {
                 }
 
@@ -101,6 +117,11 @@ public class FamilyRowMapper implements ResultSetExtractor<List<Family>> {
                         .headUserUuid(rs.getString("f_head_user_uuid"))
                         .category(rs.getString("f_category"))
                         .status(FamilyStatus.fromValue(rs.getString("f_status")))
+                        .applicationStatus(applicationStatus)
+                        .applicationNo(applicationNo)
+                        .approvedBy(approvedBy)
+                        .approvalDate(approvalDate)
+                        .familyCertificateId(familyCertificateId)
                         .familyType(rs.getString("f_family_type"))
                         .familyAddressPropertyId(familyAddressPropertyId)
                         .familySource(familySource)

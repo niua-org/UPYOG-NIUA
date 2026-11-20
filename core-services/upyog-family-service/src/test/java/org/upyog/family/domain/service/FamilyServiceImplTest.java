@@ -23,6 +23,8 @@ import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.upyog.family.web.contract.FamilySplitRequest;
 import org.upyog.family.web.contract.UserVehicleDetail;
+import org.upyog.family.web.contract.Workflow;
+import org.upyog.family.web.contract.workflow.State;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,6 +73,9 @@ class FamilyServiceImplTest {
     @Mock
     private FamilyConfiguration configuration;
 
+    @Mock
+    private WorkflowService workflowService;
+
     @InjectMocks
     private FamilyServiceImpl familyService;
 
@@ -115,6 +120,7 @@ class FamilyServiceImplTest {
     @DisplayName("createFamily should generate family ID, persist, and publish to Kafka")
     void createFamily_Success() {
         when(idGenRepository.generateFamilyId(any(), eq("pg.citya"))).thenReturn("FAM-2026-0001");
+        when(idGenRepository.generateApplicationNo(any(), eq("pg.citya"))).thenReturn("APP-2026-0001");
         when(configuration.getCreateFamilyTopic()).thenReturn("save-ug-family");
 
         Map<String, CitizenProfile> profileMap = new HashMap<>();
@@ -125,6 +131,7 @@ class FamilyServiceImplTest {
 
         assertNotNull(result);
         assertEquals("FAM-2026-0001", result.getFamilyId());
+        assertEquals("APP-2026-0001", result.getApplicationNo());
         assertEquals(FamilyStatus.ACTIVE, result.getStatus());
         verify(kafkaProducer).push(eq("save-ug-family"), eq(request));
         verify(userClient).syncMemberAssets(eq(family.getMembers()), eq("pg.citya"), eq(requestInfo));
@@ -139,6 +146,7 @@ class FamilyServiceImplTest {
     @DisplayName("createFamily should throw CustomException and abort Kafka push when asset sync fails and failOnAssetSyncError is true")
     void createFamily_MemberAssetSyncFailure_ThrowsException() {
         when(idGenRepository.generateFamilyId(any(), eq("pg.citya"))).thenReturn("FAM-2026-0001");
+        when(idGenRepository.generateApplicationNo(any(), eq("pg.citya"))).thenReturn("APP-2026-0001");
         when(configuration.getFailOnAssetSyncError()).thenReturn(true);
 
         // Member declares a vehicle
@@ -164,6 +172,7 @@ class FamilyServiceImplTest {
     @DisplayName("createFamily should record SUCCESS status and push to Kafka when asset sync succeeds")
     void createFamily_MemberAssetSyncSuccess_UpdatesStatus() {
         when(idGenRepository.generateFamilyId(any(), eq("pg.citya"))).thenReturn("FAM-2026-0001");
+        when(idGenRepository.generateApplicationNo(any(), eq("pg.citya"))).thenReturn("APP-2026-0001");
         when(configuration.getCreateFamilyTopic()).thenReturn("save-ug-family");
 
         Map<String, CitizenProfile> profileMap = new HashMap<>();
@@ -446,5 +455,104 @@ class FamilyServiceImplTest {
         assertEquals(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, ex.getCode());
 
         verify(kafkaProducer, never()).push(any(), any());
+    }
+
+    @Test
+    @DisplayName("createFamily with workflow should call workflowService and set applicationStatus without changing status")
+    void createFamily_WithWorkflow_TransitionsToPendingForApproval() {
+        when(idGenRepository.generateFamilyId(any(), any())).thenReturn("FAM-2026-0001");
+        when(idGenRepository.generateApplicationNo(any(), any())).thenReturn("APP-2026-0001");
+        when(configuration.getCreateFamilyTopic()).thenReturn("save-ug-family");
+
+        family.setWorkflow(Workflow.builder().action(FamilyConstants.ACTION_APPLY).build());
+
+        State wfState = State.builder()
+                .state(FamilyStatus.PENDING_FOR_APPROVAL.name())
+                .applicationStatus(FamilyStatus.PENDING_FOR_APPROVAL.name())
+                .build();
+        when(workflowService.updateWorkflowStatus(any(FamilyRequest.class))).thenReturn(wfState);
+
+        Family result = familyService.createFamily(request);
+
+        assertNotNull(result);
+        assertEquals(FamilyStatus.ACTIVE, result.getStatus());
+        assertEquals("APP-2026-0001", result.getApplicationNo());
+        assertEquals(FamilyStatus.PENDING_FOR_APPROVAL.name(), result.getApplicationStatus());
+        verify(workflowService).updateWorkflowStatus(any(FamilyRequest.class));
+        verify(kafkaProducer).push(eq("save-ug-family"), any(FamilyRequest.class));
+    }
+
+    @Test
+    @DisplayName("updateFamily with workflow APPROVE action should update applicationStatus, approvedBy, and approvalDate without modifying status")
+    void updateFamily_WithWorkflow_Approve_TransitionsToApproved() {
+        family.setFamilyId("FAM-2026-0001");
+        family.setWorkflow(Workflow.builder().action(FamilyConstants.ACTION_APPROVE).comments("Approved by officer").build());
+
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.INACTIVE)
+                .applicationStatus(FamilyStatus.PENDING_FOR_APPROVAL.name())
+                .members(new ArrayList<>(Collections.singletonList(
+                        FamilyMember.builder().userUuid("user-uuid-head").relationshipWithHead("HEAD").isHead(true).active(true).build()
+                )))
+                .auditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).lastModifiedTime(100L).build())
+                .build();
+
+        when(familyRepository.search(any())).thenReturn(Collections.singletonList(existingFamily));
+        when(configuration.getUpdateFamilyTopic()).thenReturn("update-ug-family");
+
+        State wfState = State.builder()
+                .state(FamilyStatus.APPROVED.name())
+                .applicationStatus(FamilyStatus.APPROVED.name())
+                .build();
+        when(workflowService.updateWorkflowStatus(any(FamilyRequest.class))).thenReturn(wfState);
+
+        Family result = familyService.updateFamily(request);
+
+        assertNotNull(result);
+        assertEquals(FamilyStatus.INACTIVE, result.getStatus());
+        assertEquals(FamilyStatus.APPROVED.name(), result.getApplicationStatus());
+        assertEquals("test-user-uuid", result.getApprovedBy());
+        assertNotNull(result.getApprovalDate());
+        verify(workflowService).updateWorkflowStatus(any(FamilyRequest.class));
+        verify(kafkaProducer).push(eq("update-ug-family"), any(FamilyRequest.class));
+    }
+
+    @Test
+    @DisplayName("updateFamily with workflow REJECT action should update applicationStatus to REJECTED without modifying status")
+    void updateFamily_WithWorkflow_Reject_TransitionsToRejected() {
+        family.setFamilyId("FAM-2026-0001");
+        family.setWorkflow(Workflow.builder().action(FamilyConstants.ACTION_REJECT).comments("Rejected due to document mismatch").build());
+
+        Family existingFamily = Family.builder()
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .headUserUuid("user-uuid-head")
+                .status(FamilyStatus.ACTIVE)
+                .applicationStatus(FamilyStatus.PENDING_FOR_APPROVAL.name())
+                .members(new ArrayList<>(Collections.singletonList(
+                        FamilyMember.builder().userUuid("user-uuid-head").relationshipWithHead("HEAD").isHead(true).active(true).build()
+                )))
+                .auditDetails(AuditDetails.builder().createdBy("sys").createdTime(100L).lastModifiedTime(100L).build())
+                .build();
+
+        when(familyRepository.search(any())).thenReturn(Collections.singletonList(existingFamily));
+        when(configuration.getUpdateFamilyTopic()).thenReturn("update-ug-family");
+
+        State wfState = State.builder()
+                .state(FamilyStatus.REJECTED.name())
+                .applicationStatus(FamilyStatus.REJECTED.name())
+                .build();
+        when(workflowService.updateWorkflowStatus(any(FamilyRequest.class))).thenReturn(wfState);
+
+        Family result = familyService.updateFamily(request);
+
+        assertNotNull(result);
+        assertEquals(FamilyStatus.ACTIVE, result.getStatus());
+        assertEquals(FamilyStatus.REJECTED.name(), result.getApplicationStatus());
+        verify(workflowService).updateWorkflowStatus(any(FamilyRequest.class));
+        verify(kafkaProducer).push(eq("update-ug-family"), any(FamilyRequest.class));
     }
 }
