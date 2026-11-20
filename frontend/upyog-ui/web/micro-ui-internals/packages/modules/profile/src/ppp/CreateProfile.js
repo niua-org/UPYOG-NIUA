@@ -61,8 +61,7 @@ const relationWithHof = [
   { i18nKey: "HOF", code: "HOF", name: "Hof" },
   { i18nKey: "RELATION_SPOUSE", code: "SPOUSE", name: "Spouse" },
   { i18nKey: "RELATION_SON", code: "SON", name: "Son" },
-  { i18nKey: "RELATION_DAUGHTER", code: "DAUGHTER", name: "Daughter" },
-  { i18nKey: "RELATION_CHILD", code: "CHILD", name: "Child" },
+  { i18nKey: "RELATION_DAUGHTER", code: "DAUGHTER", name: "Daughter"},
   { i18nKey: "RELATION_FATHER", code: "FATHER", name: "Father" },
   { i18nKey: "RELATION_MOTHER", code: "MOTHER", name: "Mother" },
   { i18nKey: "RELATION_BROTHER", code: "BROTHER", name: "Brother" },
@@ -144,7 +143,7 @@ const normalizeGender = (gender) => {
 
 const CreateProfile = ({ config, onSelect, formData }) => {
   const { t } = useTranslation();
-  const stateId = Digit.ULBService.getStateId();
+  const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
   const { user: loggedInUser, loading } = useProfileUser();
   const saved = formData?.[config?.key] || {};
 
@@ -157,12 +156,15 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   const user = useMemo(() => {
     if (isSelf) return loggedInUser;
     const verified = getVerifiedMember();
-    if (verified?.userUuid !== memberParam) return {};
-    const gender = verified.gender || verified.demographics?.gender;
+    const verifiedUuid = verified?.userUuid || verified?.uuid;
+    if (memberParam && verifiedUuid && verifiedUuid !== memberParam) return {};
+    const gender = verified?.gender || verified?.demographics?.gender;
+    const mob = verified?.mobileNumber || verified?.demographics?.mobileNumber;
     return {
-      name: verified.demographics?.name || verified.name,
-      dob: verified.demographics?.dob || verified.dob,
-      mobileNumber: /^\d{10}$/.test(String(verified.mobileNumber)) ? String(verified.mobileNumber) : "",
+      ...verified,
+      name: verified?.demographics?.name || verified?.name || "",
+      dob: verified?.demographics?.dob || verified?.dob || "",
+      mobileNumber: mob && /^\d{10}$/.test(String(mob)) ? String(mob) : mob || "",
       gender: String(gender || "").length === 1 ? { M: "MALE", F: "FEMALE", T: "TRANSGENDER" }[String(gender).toUpperCase()] : gender,
     };
   }, [isSelf, memberParam, loggedInUser]);
@@ -226,12 +228,19 @@ const CreateProfile = ({ config, onSelect, formData }) => {
 
   // Sync loaded user info
   useEffect(() => {
-    if (user && !form.name) {
+    if (user && (user.name || user.dob || user.gender || user.mobileNumber)) {
       setForm((prev) => ({
-        name: prev.name || user.name || "",
-        gender: prev.gender || normalizeGender(user.gender) || toGenderOption(user.gender),
-        dob: prev.dob || formatDateForInput(user.dob) || "",
-        mobileNumber: prev.mobileNumber || user.mobileNumber || "",
+        ...prev,
+        name: !isSelf ? (user.name || prev.name || "") : (prev.name || user.name || ""),
+        gender: !isSelf
+          ? (normalizeGender(user.gender) || toGenderOption(user.gender) || prev.gender)
+          : (prev.gender || normalizeGender(user.gender) || toGenderOption(user.gender)),
+        dob: !isSelf
+          ? (formatDateForInput(user.dob) || prev.dob || "")
+          : (prev.dob || formatDateForInput(user.dob) || ""),
+        mobileNumber: !isSelf
+          ? (user.mobileNumber || prev.mobileNumber || "")
+          : (prev.mobileNumber || user.mobileNumber || ""),
         altContactNumber: prev.altContactNumber || user.altContactNumber || "",
         emailId: prev.emailId || user.emailId || "",
         fatherName: prev.fatherName || user.fatherName || "",
@@ -240,7 +249,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
         guardianName: prev.guardianName || user.guardianName || "",
       }));
     }
-  }, [user]);
+  }, [user, isSelf]);
 
   // Gender options hook
   const { data: genderData } = Digit.Hooks.pt.useGenderMDMS(stateId, "common-masters", "GenderType");
@@ -544,7 +553,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               type="text"
               name="name"
               value={form.name}
-              placeholder={t("TESTING_INSTANCE", "Testing Instance")}
+              placeholder={t("CORE_COMMON_PROFILE_NAME", "Name")}
               onChange={(e) => setFieldValue("name", e.target.value)}
               disable={true}
             />

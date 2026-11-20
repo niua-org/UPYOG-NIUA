@@ -339,21 +339,28 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
 };
 
 // Maps and standardizes the Aadhaar OTP verification response into a verified member object
-export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) => ({
-  ...response,
-  userUuid: response?.userUuid || response?.uuid,
-  uuid: response?.userUuid || response?.uuid,
-  message: response?.message || "Aadhaar verified successfully",
-  maskedAadhaar: response?.maskedAadhaar || (cleanAadhaar ? `XXXXXXXX${cleanAadhaar.slice(-4)}` : "NA"),
-  name: response?.demographics?.name || response?.name,
-  dob: response?.demographics?.dob || response?.dob,
-  gender: response?.demographics?.gender || response?.gender,
-  demographics: response?.demographics || {
-    name: response?.name,
-    dob: response?.dob,
-    gender: response?.gender,
-  },
-});
+export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) => {
+  const demographics = response?.demographics || {};
+  const mobile = demographics?.mobileNumber || response?.mobileNumber;
+  return {
+    ...response,
+    userUuid: response?.userUuid || response?.uuid,
+    uuid: response?.userUuid || response?.uuid,
+    message: response?.message || "Aadhaar verified successfully",
+    maskedAadhaar: response?.maskedAadhaar || (cleanAadhaar ? `XXXXXXXX${cleanAadhaar.slice(-4)}` : "NA"),
+    name: demographics?.name || response?.name,
+    dob: demographics?.dob || response?.dob,
+    gender: demographics?.gender || response?.gender,
+    mobileNumber: mobile,
+    demographics: {
+      ...demographics,
+      name: demographics?.name || response?.name,
+      dob: demographics?.dob || response?.dob,
+      gender: demographics?.gender || response?.gender,
+      mobileNumber: mobile,
+    },
+  };
+};
 
 
 

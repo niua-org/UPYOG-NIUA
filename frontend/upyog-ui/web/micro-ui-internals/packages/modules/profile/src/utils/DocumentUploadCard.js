@@ -31,6 +31,24 @@ import { profileStyles } from "./profileStyles";
 
 
 
+const uploadWithRetry = async (module, file, tenant, maxRetries = 2) => {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await Digit.UploadServices.Filestorage(module, file, tenant);
+      const fileStoreId = res?.data?.files?.[0]?.fileStoreId;
+      if (fileStoreId) return { name: file.name, fileStoreId };
+      throw new Error("NO_FILESTORE_ID");
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+  }
+  throw lastError;
+};
+
 const DocumentUploadCard = ({ label, required, options, selectedType, onSelectType, typePlaceholder, file, onFileChange, error, t, stateId, disabled = false }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
@@ -39,24 +57,32 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
 
   const handleFileSelect = async (e) => {
     const selectedFile = e.target.files?.[0];
+    // Reset file input value so choosing the same file again triggers onChange
+    if (e.target) e.target.value = "";
     if (!selectedFile) return;
-    if (!["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(selectedFile.type)) {
-      setUploadError(t("PROFILE_DOC_INVALID_TYPE"));
+
+    const isAllowedType =
+      ["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(selectedFile.type) ||
+      /\.(jpe?g|png|pdf)$/i.test(selectedFile.name);
+
+    if (!isAllowedType) {
+      setUploadError(t("PROFILE_DOC_INVALID_TYPE", "Only .jpg, .jpeg, .png and .pdf files are allowed"));
       return;
     }
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      setUploadError(t("PROFILE_DOC_SIZE_EXCEEDED"));
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setUploadError(t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED", "File size should be less than 5MB"));
       return;
     }
     setUploadError(null);
     setUploading(true);
     try {
-      const res = await Digit.UploadServices.Filestorage("profile", selectedFile, stateId);
-      const fileStoreId = res?.data?.files?.[0]?.fileStoreId;
-      if (!fileStoreId) throw new Error("NO_FILESTORE_ID");
-      onFileChange({ name: selectedFile.name, fileStoreId });
-    } catch {
-      setUploadError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR"));
+      const uploadTenant = stateId || Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
+      const uploadedFile = await uploadWithRetry("profile", selectedFile, uploadTenant);
+      onFileChange(uploadedFile);
+    } catch (err) {
+      console.error("Document upload error in DocumentUploadCard:", err);
+      setUploadError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR", "An error occurred while uploading the file"));
     } finally {
       setUploading(false);
     }
@@ -102,9 +128,9 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
         )}
       </div>
        <div style={styles.fileRestrictionText}>
-        {t("CS_FILE_SIZE_RESTRICTIONS")}
+        {t("CS_FILE_SIZE_RESTRICTIONS", "Only .jpg, .jpeg, .png and .pdf files up to 5MB are allowed")}
       </div>
-      {hasError && <CardLabelError style={styles.errorMargin}>{t(uploadError || error)}</CardLabelError>}
+      {hasError && <CardLabelError style={styles.errorMargin}>{uploadError || t(error)}</CardLabelError>}
     </div>
   );
 };
