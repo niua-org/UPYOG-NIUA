@@ -25,6 +25,46 @@ const ApplicationDetails = ({ parentRoute }) => {
   const [showToast, setShowToast] = useState(null);
 
   /**
+   * Formats a DOB value into DD/MM/YYYY for presentation.
+   *
+   * @param {number|string} dob - Timestamp epoch or formatted date string.
+   * @returns {string} Formatted date string or NA fallback.
+   */
+  const formatDob = (dob) => {
+    if (!dob) return t("CS_NA");
+    if (typeof dob === "number") {
+      return Digit.DateUtils?.ConvertEpochToDate?.(dob) || t("CS_NA");
+    }
+    return dob;
+  };
+
+  /**
+   * Builds the formatted key-value attribute array for a family member or head of family.
+   * Shows data directly when present, otherwise falls back to NA.
+   *
+   * @param {Object} member - Family member object from backend response.
+   * @returns {Array<Object>} Array of title and value pairs.
+   */
+  const buildMemberValues = (member) => {
+    const citizen = member?.citizenDetails;
+    return [
+      { title: "CORE_COMMON_NAME", value: member?.name || t("CS_NA") },
+      { title: "CORE_COMMON_MOBILE_NUMBER", value: member?.mobileNumber || t("CS_NA") },
+      { title: "CORE_COMMON_PROFILE_ALT_MOBILE_NUMBER", value: citizen?.alternateMobileNumber || t("CS_NA") },
+      { title: "CORE_COMMON_PROFILE_EMAIL", value: citizen?.emailId || t("CS_NA") },
+      { title: "CORE_COMMON_GENDER", value: member?.gender ? t(member.gender) : t("CS_NA") },
+      { title: "CORE_COMMON_PROFILE_DOB", value: formatDob(member?.dob || citizen?.dob) },
+      { title: "CORE_COMMON_FATHER_NAME", value: citizen?.fatherName || t("CS_NA") },
+      { title: "CORE_COMMON_MOTHER_NAME", value: citizen?.motherName || t("CS_NA") },
+      { title: "CORE_COMMON_SPOUSENAME", value: citizen?.spouseName || t("CS_NA") },
+      { title: "RELATIONSHIP_WITH_HEAD", value: member?.relationshipWithHead ? t(member.relationshipWithHead) : t("CS_NA") },
+      { title: "PROFILE_CASTE", value: citizen?.caste || t("CS_NA") },
+      { title: "PROFILE_SPECIALLY_ABLED", value: citizen?.isSpeciallyAbled ? t("YES") : t("NO") },
+      { title: "CORE_COMMON_STATUS", value: member?.active ? t("ACTIVE") : t("INACTIVE") },
+    ];
+  };
+
+  /**
    * Fetches the family details using Digit.UserService.familySearch and formats
    * them into sections expected by ApplicationDetailsTemplate.
    */
@@ -43,17 +83,15 @@ const ApplicationDetails = ({ parentRoute }) => {
         const memberSections = (found?.members || []).map((m, idx) => ({
           title: `${t("MEMBER")} ${idx + 1}`,
           asSectionHeader: true,
-          values: [
-            { title: "CORE_COMMON_NAME", value: m.name },
-            { title: "CORE_COMMON_MOBILE_NUMBER", value: m.mobileNumber },
-            { title: "RELATIONSHIP_WITH_HEAD", value: t(m.relationshipWithHead) },
-            { title: "CORE_COMMON_GENDER", value: t(m.gender) },
-            { title: "CORE_COMMON_STATUS", value: m.active ? t("ACTIVE") : t("INACTIVE") },
-          ],
+          values: buildMemberValues(m),
         }));
 
         const formatted = {
-          applicationData: found,
+          applicationNo: found.applicationNo,
+          applicationData: {
+            ...found,
+            applicationNumber: found.applicationNo,
+          },
           applicationDetails: [
             {
               title: "ES_FAMILY_DETAILS",
@@ -70,20 +108,7 @@ const ApplicationDetails = ({ parentRoute }) => {
             {
               title: "ES_HEAD_OF_FAMILY_DETAILS",
               asSectionHeader: true,
-              values: [
-                {
-                  title: "CORE_COMMON_NAME",
-                  value: found.headName,
-                },
-                {
-                  title: "CORE_COMMON_MOBILE_NUMBER",
-                  value: headMember?.mobileNumber,
-                },
-                {
-                  title: "RELATIONSHIP_WITH_HEAD",
-                  value: t(headMember?.relationshipWithHead),
-                },
-              ],
+              values: buildMemberValues(headMember),
             },
             ...memberSections,
           ],

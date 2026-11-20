@@ -21,20 +21,18 @@ const useInbox = ({ tenantId, filters = {}, config = {} }) => {
       businessService: ["family-service"],
       moduleName: "family-service",
     };
-    if (applicationStatus && applicationStatus.length > 0) {
-      criteria.status = Array.isArray(applicationStatus)
-        ? applicationStatus.map((s) => (typeof s === "object" ? s.uuid || s.code : s))
-        : [applicationStatus];
-    }
     return criteria;
-  }, [applicationStatus]);
+  }, []);
 
   const moduleSearchCriteria = useMemo(() => {
     const criteria = { sortBy, sortOrder };
     if (familyId && familyId.trim()) criteria.familyId = familyId.trim();
     if (mobileNumber && mobileNumber.trim()) criteria.mobileNumber = mobileNumber.trim();
+    if (applicationStatus && applicationStatus.length > 0) {
+      criteria.applicationStatus = applicationStatus;
+    }
     return criteria;
-  }, [familyId, mobileNumber, sortBy, sortOrder]);
+  }, [familyId, mobileNumber, applicationStatus, sortBy, sortOrder]);
 
   const inboxFilters = useMemo(
     () => ({

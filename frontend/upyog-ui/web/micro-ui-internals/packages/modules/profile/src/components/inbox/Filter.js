@@ -17,8 +17,8 @@ const Filter = ({ searchParams, onFilterChange, statusMap = [] }) => {
   const { t } = useTranslation();
 
   const statuses = [
-    { code: "PENDING_FOR_APPROVAL", name: t("ES_APPLICATION_PENDING") },
-    { code: "APPROVED", name: t("ES_APPLICATION_APPROVED") },
+    { code: "PENDING_FOR_APPROVAL", name: t("PENDING_FOR_APPROVAL") },
+    { code: "APPROVED", name: t("APPROVED") },
     { code: "REJECTED", name: t("REJECTED") },
   ];
 

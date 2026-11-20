@@ -28,6 +28,7 @@ const SearchApplication = ({ onSearch, searchParams, clearSearch }) => {
     const data = {};
     if (familyId.trim()) data.familyId = familyId.trim();
     if (mobileNumber.trim()) data.mobileNumber = mobileNumber.trim();
+    if (searchParams?.applicationStatus) data.applicationStatus = searchParams.applicationStatus;
     onSearch(data);
   };
 

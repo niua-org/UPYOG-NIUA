@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
@@ -55,27 +55,33 @@ const GetStatusBadge = (status, t) => {
 const SearchApp = ({ parentRoute }) => {
   const { t } = useTranslation();
   const tenantId = Digit.ULBService.getCurrentTenantId();
+  const isMobile = window.Digit.Utils.browser.isMobile();
 
-  const { control, handleSubmit, reset } = useForm({
+  const { register, control, handleSubmit, setValue, getValues, reset } = useForm({
     defaultValues: {
       familyId: "",
       mobileNumber: "",
       status: undefined,
+      offset: 0,
+      limit: !isMobile && 10,
     },
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState(null);
   const [showToast, setShowToast] = useState(null);
-  const [pageOffset, setPageOffset] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+  const [count, setCount] = useState(undefined);
+
+  useEffect(() => {
+    register("offset");
+    register("limit");
+  }, [register]);
 
   /**
    * Available application status dropdown filter options.
    */
   const statusOptions = useMemo(
     () => [
-      { code: "ALL", name: t("ALL") },
       { code: "PENDING_FOR_APPROVAL", name: t("PENDING_FOR_APPROVAL") },
       { code: "APPROVED", name: t("APPROVED") },
       { code: "REJECTED", name: t("REJECTED") },
@@ -84,22 +90,47 @@ const SearchApp = ({ parentRoute }) => {
   );
 
   /**
-   * Handles submission of the application search form.
+   * Updates page size and triggers search with reset offset (WT pattern).
    *
-   * @param {Object} formData - Form input values.
+   * @param {Event} e - Change event from rows per page dropdown.
    */
-  const onSubmit = async (formData) => {
-    const familyId = formData?.familyId?.trim();
-    const mobileNumber = formData?.mobileNumber?.trim();
+  function onPageSizeChange(e) {
+    setValue("limit", Number(e.target.value));
+    setValue("offset", 0);
+    handleSubmit(onSubmit)();
+  }
+
+  /**
+   * Advances to next page and triggers search (WT pattern).
+   */
+  function nextPage() {
+    setValue("offset", getValues("offset") + getValues("limit"));
+    handleSubmit(onSubmit)();
+  }
+
+  /**
+   * Navigates to previous page and triggers search (WT pattern).
+   */
+  function previousPage() {
+    setValue("offset", getValues("offset") - getValues("limit"));
+    handleSubmit(onSubmit)();
+  }
+
+  /**
+   * Submits search request to backend with current filters and pagination values.
+   *
+   * @param {Object} _data - Form data containing filters, offset, and limit.
+   */
+  const onSubmit = async (_data) => {
+    const familyId = _data?.familyId?.trim();
+    const mobileNumber = _data?.mobileNumber?.trim();
     const statusCode =
-      formData?.status?.code && formData.status.code !== "ALL"
-        ? formData.status.code
+      _data?.status?.code && _data.status.code !== "ALL"
+        ? _data.status.code
         : undefined;
 
-    if (!familyId && !mobileNumber && !statusCode) {
-      setShowToast({ warning: true, label: t("PROVIDE_ATLEAST_ONE_PARAMETERS") });
-      return;
-    }
+    const offset = _data?.offset !== undefined ? _data.offset : getValues("offset") || 0;
+    const limit = _data?.limit !== undefined ? _data.limit : getValues("limit") || 10;
 
     try {
       setIsLoading(true);
@@ -107,8 +138,8 @@ const SearchApp = ({ parentRoute }) => {
 
       const params = {
         tenantId,
-        limit: 50,
-        offset: 0,
+        limit,
+        offset,
       };
       if (familyId) params.familyId = familyId;
       if (mobileNumber) params.mobileNumber = mobileNumber;
@@ -123,27 +154,60 @@ const SearchApp = ({ parentRoute }) => {
       }
 
       setData(filtered);
-      setPageOffset(0);
+
+      const respTotal = response?.totalCount;
+      if (typeof respTotal === "number" && respTotal > offset + filtered.length) {
+        setCount(respTotal);
+      } else if (filtered.length < limit) {
+        setCount(offset + filtered.length);
+      } else {
+        setCount(undefined);
+      }
     } catch (err) {
       setShowToast({ error: true, label: t("ES_FAMILY_FETCH_FAILED") });
       setData([]);
+      setCount(0);
     } finally {
       setIsLoading(false);
     }
   };
 
   /**
-   * Resets all search form fields and clears result table.
+   * Automatically fetch initial page of applications (limit: 10, offset: 0) on load.
+   */
+  useEffect(() => {
+    handleSubmit(onSubmit)();
+  }, [tenantId]);
+
+  /**
+   * Handles user submission from search form (resets offset to 0).
+   *
+   * @param {Object} formData - Form input values.
+   */
+  const handleSearch = (formData) => {
+    setValue("offset", 0);
+    onSubmit({ ...formData, offset: 0 });
+  };
+
+  /**
+   * Resets all search form fields and reloads applications from first page (WT pattern).
    */
   const handleClear = () => {
     reset({
       familyId: "",
       mobileNumber: "",
       status: undefined,
+      offset: 0,
+      limit: 10,
     });
-    setData(null);
     setShowToast(null);
-    setPageOffset(0);
+    onSubmit({
+      familyId: "",
+      mobileNumber: "",
+      status: undefined,
+      offset: 0,
+      limit: 10,
+    });
   };
 
   /**
@@ -203,24 +267,11 @@ const SearchApp = ({ parentRoute }) => {
     [parentRoute, t]
   );
 
-  /**
-   * Client-side paginated slice of current search result records.
-   */
-  const paginatedData = useMemo(() => {
-    if (!Array.isArray(data)) return [];
-    return data.slice(pageOffset, pageOffset + pageSize);
-  }, [data, pageOffset, pageSize]);
-
   return (
     <React.Fragment>
       <Header>{t("ES_COMMON_APPLICATION_SEARCH")}</Header>
-      <Card className={"card-search-heading"}>
-        <span className="family-search-helper-text">
-          {t("PROVIDE_ATLEAST_ONE_PARAMETERS")}
-        </span>
-      </Card>
 
-      <SearchForm onSubmit={onSubmit} handleSubmit={handleSubmit}>
+      <SearchForm onSubmit={handleSearch} handleSubmit={handleSubmit}>
         <SearchField>
           <label>{t("CORE_COMMON_FAMILY_ID")}</label>
           <Controller
@@ -297,8 +348,8 @@ const SearchApp = ({ parentRoute }) => {
           ) : (
             <Table
               t={t}
-              data={paginatedData}
-              totalRecords={data.length}
+              data={data}
+              totalRecords={count}
               columns={columns}
               getCellProps={(cellInfo) => ({
                 className: `family-table-cell ${
@@ -308,14 +359,11 @@ const SearchApp = ({ parentRoute }) => {
                     : ""
                 }`,
               })}
-              onPageSizeChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPageOffset(0);
-              }}
-              currentPage={Math.floor(pageOffset / pageSize)}
-              onNextPage={() => setPageOffset((prev) => prev + pageSize)}
-              onPrevPage={() => setPageOffset((prev) => Math.max(0, prev - pageSize))}
-              pageSizeLimit={pageSize}
+              onPageSizeChange={onPageSizeChange}
+              currentPage={getValues("offset") / getValues("limit")}
+              onNextPage={nextPage}
+              onPrevPage={previousPage}
+              pageSizeLimit={getValues("limit")}
               disableSort={true}
             />
           )}
