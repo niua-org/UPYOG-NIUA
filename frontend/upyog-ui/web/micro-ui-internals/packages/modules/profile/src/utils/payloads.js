@@ -192,29 +192,35 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       : undefined;
 
     // --- Vehicle Details ---
-    const vehicles =
-      vehicleDetails?.hasVehicle === "Yes" && vehicleDetails?.vehicleNo
-        ? [
-            {
-              vehicleNumber: vehicleDetails.vehicleNo,
-              purchaseDate: vehicleDetails.purchaseYear,
-              vehicleType: vehicleDetails.vehicleType?.code,
-              makerModel: vehicleDetails?.makerModel,
-              category: vehicleDetails.vehicleCategory?.code,
-              fuelType: vehicleDetails.fuelType?.code,
-              isVerified: vehicleDetails.vehicleNoValidated || false,
-              validationSource: vehicleDetails.validationSource || undefined,
-              ...(vehicleDetails.uploadedRCFile && {
-                rcDocument: {
-                  documentType: "VEHICLE_RC",
-                  filestoreId: vehicleDetails.uploadedRCFile,
-                  referenceType: "VEHICLE",
-                  active: true,
-                },
-              }),
-            },
-          ]
-        : undefined;
+    let vehicles;
+    if (vehicleDetails?.hasVehicle === "Yes") {
+      const list =
+        Array.isArray(vehicleDetails.vehicleList) && vehicleDetails.vehicleList.length > 0
+          ? vehicleDetails.vehicleList
+          : vehicleDetails.vehicleNo
+            ? [vehicleDetails]
+            : [];
+
+      vehicles = list.map((veh) => ({
+        vehicleNumber: veh.vehicleNo,
+        purchaseDate: veh.purchaseYear || undefined,
+        vehicleType: (veh.vehicleType?.code || veh.vehicleType?.name || veh.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
+        makerModel: veh.makerModel || undefined,
+        category: veh.vehicleCategory?.code || veh.vehicleCategory || undefined,
+        fuelType: veh.fuelType?.code || veh.fuelType || undefined,
+        isVerified: veh.vehicleNoValidated || true,
+        validationSource: veh.validationSource || "VAHAN",
+        ...(veh.uploadedRCFile && {
+          rcDocument: {
+            documentType: "RC_CERTIFICATE",
+            filestoreId: veh.uploadedRCFile,
+            fileName: "RC_CERTIFICATE",
+            referenceType: "VEHICLE",
+            active: true,
+          },
+        }),
+      }));
+    }
 
     // --- Property Details ---
     let properties;
@@ -602,29 +608,35 @@ export const buildJoinFamilyPayload = ({
     : undefined;
 
   // 5. Vehicles Array
-  const vehicles = (vehicleDetails?.hasVehicle === "Yes" || vehicleDetails?.vehicleNo) && vehicleDetails?.vehicleNo ? 
-        [
-          {
-            vehicleNumber: vehicleDetails.vehicleNo,
-            purchaseDate: vehicleDetails.purchaseYear || undefined,
-            isVerified: vehicleDetails.vehicleNoValidated || true,
-            validationSource: vehicleDetails?.validationSource,
-            vehicleType: (vehicleDetails.vehicleType?.code || vehicleDetails.vehicleType?.name || vehicleDetails.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
-            makerModel: vehicleDetails?.makerModel || undefined,
-            fuelType: vehicleDetails.fuelType?.code || undefined,
-            category: vehicleDetails.vehicleCategory?.code || undefined,
-            ...(vehicleDetails.uploadedRCFile && {
-              rcDocument: {
-                documentType: "RC_CERTIFICATE",
-                filestoreId: vehicleDetails.uploadedRCFile,
-                fileName: "RC_CERTIFICATE",
-                referenceType: "VEHICLE",
-                active: true,
-              },
-            }),
+    let vehicles = [];
+    if (vehicleDetails?.hasVehicle === "Yes" || vehicleDetails?.vehicleNo) {
+      const list =
+        Array.isArray(vehicleDetails.vehicleList) && vehicleDetails.vehicleList.length > 0
+          ? vehicleDetails.vehicleList
+          : vehicleDetails.vehicleNo
+            ? [vehicleDetails]
+            : [];
+
+      vehicles = list.map((veh) => ({
+        vehicleNumber: veh.vehicleNo,
+        purchaseDate: veh.purchaseYear || undefined,
+        isVerified: veh.vehicleNoValidated || true,
+        validationSource: veh.validationSource || "VAHAN",
+        vehicleType: (veh.vehicleType?.code || veh.vehicleType?.name || veh.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
+        makerModel: veh.makerModel || undefined,
+        fuelType: veh.fuelType?.code || veh.fuelType || undefined,
+        category: veh.vehicleCategory?.code || veh.vehicleCategory || undefined,
+        ...(veh.uploadedRCFile && {
+          rcDocument: {
+            documentType: "RC_CERTIFICATE",
+            filestoreId: veh.uploadedRCFile,
+            fileName: "RC_CERTIFICATE",
+            referenceType: "VEHICLE",
+            active: true,
           },
-        ]
-      : [];
+        }),
+      }));
+    }
 
   return {
     familyId,
