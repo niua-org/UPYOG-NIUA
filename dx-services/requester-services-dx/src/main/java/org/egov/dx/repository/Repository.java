@@ -20,12 +20,14 @@ import org.slf4j.MDC;
 @Slf4j
 public class Repository {
 
+	private final RestTemplate restTemplate;
+	private final ObjectMapper mapper;
+
 	@Autowired
-	private RestTemplate restTemplate;
-	
-	@Autowired
-	//@Qualifier("secondaryMapper")
-	private ObjectMapper mapper;
+	public Repository(RestTemplate restTemplate, ObjectMapper mapper) {
+		this.restTemplate = restTemplate;
+		this.mapper = mapper;
+	}
 		
 	/**
 	 * Fetches results from external services through rest call.

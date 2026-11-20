@@ -41,18 +41,19 @@ public class SandboxAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
 
     private final Configurations configurations;
     private final RestClient restClient;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructs the adapter and configures the underlying synchronous {@link RestClient}
      * with resilient connection and read timeouts.
      *
      * @param configurations application configurations
+     * @param objectMapper object mapper for JSON deserialization
      */
-    public SandboxAadhaarGatewayAdapter(Configurations configurations) {
+    @Autowired
+    public SandboxAadhaarGatewayAdapter(Configurations configurations, ObjectMapper objectMapper) {
         this.configurations = configurations;
+        this.objectMapper = objectMapper;
 
         if (configurations.getAadhaarGatewayConnectTimeout() == null) {
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.connect.timeout is not configured");

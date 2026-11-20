@@ -39,9 +39,6 @@ public class PTServiceDXConstants {
 
 
 
-	//public static final String DIGILOCKER_ISSUER_ID = "upyog.niua.org";
-	
-	//public static final String ORIGIN="https://apisetu.gov.in";
 	public static final String ORIGIN="https://partners.digitallocker.gov.in";
 	
 	public static final String DIGILOCKER_ISSUER_ID = "in.niua";
