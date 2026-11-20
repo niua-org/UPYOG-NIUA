@@ -225,8 +225,11 @@ public class DLRequestService {
          ResponseEntity<String> entity = restTemplate.exchange(configurations.getApiHost() + configurations.getGetFileURI()+"/"+uri, HttpMethod.GET, 
                  request, String.class);
                
-         String body = entity != null ? entity.getBody() : null;
-         return body != null ? body.getBytes(StandardCharsets.UTF_8) : new byte[0];
+         String body = entity.getBody();
+         if (body == null) {
+             return new byte[0];
+         }
+         return body.getBytes(StandardCharsets.UTF_8);
     }
 
     public Object getOauthToken(RequestInfo requestinfo , TokenRes tokenRes)
