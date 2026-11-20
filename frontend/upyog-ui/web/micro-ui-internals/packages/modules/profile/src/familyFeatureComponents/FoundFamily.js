@@ -144,20 +144,32 @@ const FoundFamily = () => {
   }, [incomeDetails, t]);
 
   // Minimal Vehicle details summary
-  const vehicleFields = useMemo(() => {
-    if (!vehicleDetails || Object.keys(vehicleDetails).length === 0) return [];
-    const pairs = [
-      [
-        "PROFILE_VEHICLE_TYPE",
-        vehicleDetails.vehicleType
-          ? t(vehicleDetails.vehicleType?.i18nKey || vehicleDetails.vehicleType?.code || vehicleDetails.vehicleType?.name || vehicleDetails.vehicleType)
-          : null,
-      ],
-      ["PROFILE_VEHICLE_NO", vehicleDetails.vehicleNo],
-      ["PROFILE_VEHICLE_PURCHASE_YEAR", vehicleDetails.purchaseYear],
-    ].filter(Boolean);
+  const vehicleItems = useMemo(() => {
+    if (!vehicleDetails || vehicleDetails.hasVehicle === "No") return [];
+    const list =
+      Array.isArray(vehicleDetails.vehicleList) && vehicleDetails.vehicleList.length > 0
+        ? vehicleDetails.vehicleList
+        : vehicleDetails.vehicleNo
+          ? [vehicleDetails]
+          : [];
 
-    return withValues(pairs);
+    return list.map((veh, index) => {
+      const pairs = [
+        [
+          "PROFILE_VEHICLE_TYPE",
+          veh.vehicleType
+            ? t(veh.vehicleType?.i18nKey || veh.vehicleType?.code || veh.vehicleType?.name || veh.vehicleType)
+            : null,
+        ],
+        ["PROFILE_VEHICLE_NO", veh.vehicleNo],
+        ["PROFILE_VEHICLE_PURCHASE_YEAR", veh.purchaseYear],
+      ].filter(Boolean);
+
+      return {
+        title: `${t("PROFILE_VEHICLE")} ${index + 1}`,
+        fields: withValues(pairs),
+      };
+    });
   }, [vehicleDetails, t]);
 
   if (!verifiedData) {
@@ -190,12 +202,89 @@ const FoundFamily = () => {
 
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");
 
+      const joinedFamilyId = verifiedData?.familyId || familyId;
+      const submittedMember = {
+        userUuid,
+        name: profileDetails.name || user?.name,
+        relationshipWithHead: relationshipCode,
+        isHead: false,
+        profileDetails,
+        property: propertyDetails,
+        income: incomeDetails,
+        vehicles: vehicleDetails,
+      };
+      let familyMembers = verifiedData?.family?.members || [];
+
+      try {
+        const familyResponse = await Digit.UserService.familyDashboard(tenantId, joinedFamilyId);
+        const dashboardMembers = familyResponse?.dashboard?.activeMembers;
+        if (Array.isArray(dashboardMembers) && dashboardMembers.length) {
+          const verifiedMembers = familyMembers;
+          familyMembers = dashboardMembers.map((dashboardMember) => {
+            const existingMember = verifiedMembers.find(
+              (member) =>
+                (member.userUuid || member.uuid) === (dashboardMember.userUuid || dashboardMember.uuid)
+            );
+            return {
+              ...existingMember,
+              ...dashboardMember,
+              citizenDetails: {
+                ...existingMember?.citizenDetails,
+                ...dashboardMember?.citizenDetails,
+              },
+              profileDetails: {
+                ...existingMember?.profileDetails,
+                ...dashboardMember?.profileDetails,
+              },
+              income: dashboardMember.income || existingMember?.income,
+              vehicles: dashboardMember.vehicles || existingMember?.vehicles,
+              properties:
+                dashboardMember.properties?.length
+                  ? dashboardMember.properties
+                  : existingMember?.properties,
+              property: dashboardMember.property || existingMember?.property,
+            };
+          });
+          verifiedMembers.forEach((member) => {
+            if (
+              !familyMembers.some(
+                (dashboardMember) =>
+                  (dashboardMember.userUuid || dashboardMember.uuid) === (member.userUuid || member.uuid)
+              )
+            ) {
+              familyMembers.push(member);
+            }
+          });
+        }
+      } catch (familyError) {
+        console.error("Unable to load joined family details for acknowledgement:", familyError);
+      }
+
+      const submittedMemberExists = familyMembers.some(
+        (member) => member.userUuid === userUuid || member.uuid === userUuid
+      );
+      const acknowledgementMembers = submittedMemberExists
+        ? familyMembers.map((member) =>
+            member.userUuid === userUuid || member.uuid === userUuid
+              ? { ...member, ...submittedMember }
+              : member
+          )
+        : [...familyMembers, submittedMember];
+      const acknowledgement = {
+        ...res.JoinRequest,
+        familyId: joinedFamilyId,
+        tenantId,
+        applicationDate: Date.now(),
+        applicantUserUuid: userUuid,
+        members: acknowledgementMembers,
+      };
+
       // Clean up join session state on successful submission
       sessionStorage.removeItem("Digit.family.joinData");
 
       navigate(PROFILE_ROUTES.FAMILY_JOINED, {
         replace: true,
-        state: { joinData: res.JoinRequest },
+        state: { joinData: acknowledgement },
       });
     } catch (err) {
       console.log("error on join family page", err);
@@ -294,16 +383,25 @@ const FoundFamily = () => {
         )}
 
         {/* Section D: Vehicle Details */}
-        {vehicleFields.length > 0 && (
+        {vehicleItems.length > 0 && (
           <div style={styles.sectionBoxStyle}>
             <div style={styles.sectionTitleStyle}>
               <span>{t("ES_TITLE_VEHICLE_DETAILS")}</span>
             </div>
-            <StatusTable>
-              {vehicleFields.map(([key, val], idx) => (
-                <Row key={idx} label={t(key)} text={val || "NA"} />
-              ))}
-            </StatusTable>
+            {vehicleItems.map((veh, index) => (
+              <div key={index} style={{ marginBottom: index < vehicleItems.length - 1 ? "16px" : 0 }}>
+                {vehicleItems.length > 1 && (
+                  <div style={{ fontSize: "15px", fontWeight: "600", marginBottom: "8px", color: "#505A5F" }}>
+                    {veh.title}
+                  </div>
+                )}
+                <StatusTable>
+                  {veh.fields.map(([key, val], idx) => (
+                    <Row key={idx} label={t(key)} text={val || "NA"} />
+                  ))}
+                </StatusTable>
+              </div>
+            ))}
           </div>
         )}
 

@@ -190,7 +190,7 @@ const LoginLayout = ({ children, heroContent, footer, layout }) => {
 			)}
 			<div className={`login-shell ${isEmployeeNew ? "login-shell-employeeV2" : ""} ${isSplitBg ? "login-shell--split-bg" : ""} ${isFormOnLeft ? "login-shell--form-left" : ""} `} style={shellStyle}>
 				<aside className="login-hero" style={heroStyle}>
-					<div className="login-hero__content">
+					{/* <div className="login-hero__content">
 						{!isEmployeeNew && (
 							<a
 								className={`login-brand ${mainlogo.verticalView ? "login-brand--vertical" : ""} ${mainlogo.dualLogo && !mainlogo.verticalView ? "login-brand--reverse" : ""}`}
@@ -258,7 +258,7 @@ const LoginLayout = ({ children, heroContent, footer, layout }) => {
 								))}
 							</div>
 						)}
-					</div>
+					</div> */}
 				</aside>
 				<div className={`login-app-container ${isFormCentered ? "login-app-containerv2" : ""} `}>
 					{isTopIconReq && (

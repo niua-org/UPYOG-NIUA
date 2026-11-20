@@ -7,32 +7,40 @@ function UploadDrawer({ setProfilePic, closeDrawer, userType, removeProfilePic ,
   const [file, setFile] = useState("");
   const [error, setError] = useState(null);
   const { t } = useTranslation();
-  const selectfile = (e) => setFile(e.target.files[0]);
+  const selectfile = (e) => {
+    const selected = e.target.files?.[0];
+    if (e.target) e.target.value = "";
+    if (selected) setFile(selected);
+  };
   const removeimg = () => {removeProfilePic(); closeDrawer()};
   const onOverlayBodyClick = () => closeDrawer();
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
   useEffect(() => {
     (async () => {
       setError(null);
       if (file) {
-        if (file.size >= 1000000) {
-          showToast("error", t("CORE_COMMON_PROFILE_MAXIMUM_UPLOAD_SIZE_EXCEEDED"))
-          setError(t("CORE_COMMON_PROFILE_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
-        } else {
-          try {
-            const response = await Digit.UploadServices.Filestorage(`${userType}-profile`, file, Digit.ULBService.getStateId());
-            if (response?.data?.files?.length > 0) {
-              const fileStoreId = response?.data?.files[0]?.fileStoreId;
-              setUploadedFile(fileStoreId);
-              setProfilePic(fileStoreId);
-            } else {
-              showToast("error", t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR"))
-              setError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR"));
-            }
-          } catch (err) {
-            showToast("error",t("CORE_COMMON_PROFILE_INVALID_FILE_INPUT"))
-            // setError(t("PT_FILE_UPLOAD_ERROR"));
+        if (file.size > MAX_FILE_SIZE) {
+          const maxErrMsg = t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED", "File size should be less than 5MB");
+          showToast("error", maxErrMsg);
+          setError(maxErrMsg);
+          setFile("");
+          return;
+        }
+        try {
+          const tenant = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
+          const response = await Digit.UploadServices.Filestorage(`${userType}-profile`, file, tenant);
+          if (response?.data?.files?.length > 0) {
+            const fileStoreId = response?.data?.files[0]?.fileStoreId;
+            setUploadedFile(fileStoreId);
+            setProfilePic(fileStoreId);
+          } else {
+            showToast("error", t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR", "An error occurred while uploading the file"));
+            setError(t("CORE_COMMON_PROFILE_FILE_UPLOAD_ERROR", "An error occurred while uploading the file"));
           }
+        } catch (err) {
+          showToast("error", t("CORE_COMMON_PROFILE_INVALID_FILE_INPUT", "Invalid file or upload failed"));
         }
       }
     })();
