@@ -132,6 +132,16 @@ const SearchApp = ({ parentRoute }) => {
     const offset = _data?.offset !== undefined ? _data.offset : getValues("offset") || 0;
     const limit = _data?.limit !== undefined ? _data.limit : getValues("limit") || 10;
 
+    if (!familyId && !mobileNumber && !statusCode) {
+      setShowToast({ error: true, label: t("ES_SEARCH_APPLICATION_CRITERIA_MANDATORY")});
+      return;
+    }
+
+    if (mobileNumber && !/^[6-9]\d{9}$/.test(mobileNumber)) {
+      setShowToast({ error: true, label: t("CORE_COMMON_APPLICANT_MOBILE_NUMBER_INVALID")});
+      return;
+    }
+
     try {
       setIsLoading(true);
       setShowToast(null);
@@ -148,18 +158,13 @@ const SearchApp = ({ parentRoute }) => {
       const response = await Digit.UserService.familySearch(tenantId, params);
       const families = response?.Families || [];
 
-      let filtered = families;
-      if (statusCode) {
-        filtered = families.filter((f) => f?.applicationStatus === statusCode);
-      }
-
-      setData(filtered);
+      setData(families);
 
       const respTotal = response?.totalCount;
-      if (typeof respTotal === "number" && respTotal > offset + filtered.length) {
+      if (typeof respTotal === "number" && respTotal > offset + families.length) {
         setCount(respTotal);
-      } else if (filtered.length < limit) {
-        setCount(offset + filtered.length);
+      } else if (families.length < limit) {
+        setCount(offset + families.length);
       } else {
         setCount(undefined);
       }
@@ -173,13 +178,6 @@ const SearchApp = ({ parentRoute }) => {
   };
 
   /**
-   * Automatically fetch initial page of applications (limit: 10, offset: 0) on load.
-   */
-  useEffect(() => {
-    handleSubmit(onSubmit)();
-  }, [tenantId]);
-
-  /**
    * Handles user submission from search form (resets offset to 0).
    *
    * @param {Object} formData - Form input values.
@@ -190,7 +188,7 @@ const SearchApp = ({ parentRoute }) => {
   };
 
   /**
-   * Resets all search form fields and reloads applications from first page (WT pattern).
+   * Resets all search form fields and clears result table.
    */
   const handleClear = () => {
     reset({
@@ -201,13 +199,8 @@ const SearchApp = ({ parentRoute }) => {
       limit: 10,
     });
     setShowToast(null);
-    onSubmit({
-      familyId: "",
-      mobileNumber: "",
-      status: undefined,
-      offset: 0,
-      limit: 10,
-    });
+    setData([]);
+    setCount(0);
   };
 
   /**

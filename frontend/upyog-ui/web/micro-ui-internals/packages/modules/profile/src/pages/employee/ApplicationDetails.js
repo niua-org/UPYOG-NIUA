@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@nudmcdgnpm/digit-ui-react-components";
@@ -23,6 +23,15 @@ const ApplicationDetails = ({ parentRoute }) => {
   const [familyData, setFamilyData] = useState(null);
   const [appDetailsToShow, setAppDetailsToShow] = useState({});
   const [showToast, setShowToast] = useState(null);
+  const navTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (navTimerRef.current) {
+        clearTimeout(navTimerRef.current);
+      }
+    };
+  }, []);
 
   /**
    * Formats a DOB value into DD/MM/YYYY for presentation.
@@ -149,7 +158,10 @@ const ApplicationDetails = ({ parentRoute }) => {
    */
   const mutate = async (formData, callbacks) => {
     try {
-      const actionSelected = formData?.Family?.workflow?.action || "APPROVE";
+      const actionSelected = formData?.Family?.workflow?.action;
+      if (!actionSelected) {
+        throw new Error(t("ES_FAMILY_INVALID_ACTION"));
+      }
 
       await Digit.UserService.updateFamily(formData, {});
 
@@ -169,16 +181,20 @@ const ApplicationDetails = ({ parentRoute }) => {
         workflowDetails.revalidate();
       }
 
-      setTimeout(() => {
+      navTimerRef.current = setTimeout(() => {
         navigate(`${parentRoute}/inbox`);
       }, 1500);
     } catch (e) {
       if (callbacks?.onError) {
         callbacks.onError(e);
       }
+      const backendError =
+        e?.response?.data?.Errors?.[0]?.message ||
+        e?.message ||
+        t("ES_FAMILY_ACTION_FAILED");
       setShowToast({
         key: "error",
-        error: { message: e?.message || t("ES_FAMILY_ACTION_FAILED") },
+        error: { message: backendError },
       });
     }
   };

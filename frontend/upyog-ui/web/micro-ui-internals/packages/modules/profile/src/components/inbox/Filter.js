@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckBox, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 
@@ -25,6 +25,12 @@ const Filter = ({ searchParams, onFilterChange, statusMap = [] }) => {
   const [selectedStatuses, setSelectedStatuses] = useState(
     Array.isArray(searchParams?.applicationStatus) ? searchParams.applicationStatus : []
   );
+
+  useEffect(() => {
+    setSelectedStatuses(
+      Array.isArray(searchParams?.applicationStatus) ? searchParams.applicationStatus : []
+    );
+  }, [searchParams?.applicationStatus]);
 
   /**
    * Toggles status selection in local component state.

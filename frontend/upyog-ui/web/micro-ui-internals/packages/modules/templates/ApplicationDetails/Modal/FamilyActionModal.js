@@ -74,8 +74,13 @@ const FamilyActionModal = ({
    * @param {React.ChangeEvent<HTMLInputElement>} e - File change event.
    */
   function selectFile(e) {
+    const selected = e.target.files?.[0];
+    if (!selected) {
+      setIsUploading(false);
+      return;
+    }
     setIsUploading(true);
-    setFile(e.target.files[0]);
+    setFile(selected);
   }
 
   useEffect(() => {
@@ -84,6 +89,7 @@ const FamilyActionModal = ({
       if (file) {
         if (file.size >= 5242880) {
           setError(t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
+          setIsUploading(false);
         } else {
           try {
             const response = await Digit.UploadServices.Filestorage("family-service", file, tenantId);
@@ -105,10 +111,10 @@ const FamilyActionModal = ({
   useEffect(() => {
     if (action) {
       setConfig(
-        configFamilyApproverApplication({ t, action, selectFile, uploadedFile, setUploadedFile, isUploading })
+        configFamilyApproverApplication({ t, action, selectFile, uploadedFile, setUploadedFile, isUploading, error })
       );
     }
-  }, [action, uploadedFile, isUploading]);
+  }, [action, uploadedFile, isUploading, error]);
 
   /**
    * Compiles the Family workflow payload and invokes submitAction.
@@ -116,6 +122,11 @@ const FamilyActionModal = ({
    * @param {Object} data - Form data containing user comments.
    */
   function submit(data) {
+    if (isUploading) return;
+    if (action?.docUploadRequired && !uploadedFile) {
+      setError(t("CS_DOCUMENT_UPLOAD_REQUIRED"));
+      return;
+    }
     const workflow = {
       action: action?.action,
       comment: data?.comments,

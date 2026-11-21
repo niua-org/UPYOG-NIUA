@@ -17,6 +17,11 @@ import "../../css/family.scss";
  */
 const EmployeeApp = ({ path, userType }) => {
   const location = useLocation();
+  const isFamilyApprover = Digit?.UserService?.hasAccess(["FAMILY_APPROVER"]);
+
+  if (!isFamilyApprover) {
+    return <Navigate to="/upyog-ui/employee" replace />;
+  }
 
   return (
     <AppContainer>

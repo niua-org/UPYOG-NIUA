@@ -4,6 +4,25 @@ import { useMemo } from "react";
  * Custom inbox hook for Family / Profile module.
  * Wraps Digit.Hooks.useInbox to query Municipal Services Inbox (/inbox/v1/_search)
  * with family-service businessService, filter handling, and response transformation.
+ *
+ * @param {Object} params - Hook parameters.
+ * @param {string} params.tenantId - Tenant identifier.
+ * @param {Object} [params.filters={}] - Filter criteria.
+ * @param {string} [params.filters.familyId] - Family ID filter.
+ * @param {string} [params.filters.mobileNumber] - Mobile number filter.
+ * @param {Array<string>} [params.filters.applicationStatus] - Application status array.
+ * @param {number} [params.filters.limit=10] - Number of records per page.
+ * @param {number} [params.filters.offset=0] - Pagination offset.
+ * @param {string} [params.filters.sortBy="createdTime"] - Sort field.
+ * @param {string} [params.filters.sortOrder="DESC"] - Sort direction.
+ * @param {Object} [params.config={}] - React Query configuration options.
+ * @returns {Object} React Query result containing transformed inbox data:
+ *   - data.searchData: Array of family application records.
+ *   - data.workflowData: Workflow process instance mapping.
+ *   - data.statusMap: Status distribution array with record counts.
+ *   - data.totalCount: Total count of matching applications.
+ *   - data.nearingSlaCount: Applications nearing SLA limit.
+ *   - data.dataEmpty: Boolean flag indicating if result is empty.
  */
 const useInbox = ({ tenantId, filters = {}, config = {} }) => {
   const {
