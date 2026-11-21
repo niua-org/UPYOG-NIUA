@@ -225,7 +225,7 @@ export const UserService = {
       params: { tenantId },
       auth: true,
       method: "POST",
-      userService: false,
+      userService: true,
     }),
 
   /**
