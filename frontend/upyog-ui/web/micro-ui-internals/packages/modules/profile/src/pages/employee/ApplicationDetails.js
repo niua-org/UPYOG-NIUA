@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Header } from "@nudmcdgnpm/digit-ui-react-components";
 import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails";
 
@@ -16,22 +16,12 @@ import ApplicationDetailsTemplate from "../../../../templates/ApplicationDetails
 const ApplicationDetails = ({ parentRoute }) => {
   const { t } = useTranslation();
   const { id: familyId } = useParams();
-  const navigate = useNavigate();
   const tenantId = Digit.ULBService.getCurrentTenantId();
 
   const [isLoading, setIsLoading] = useState(true);
   const [familyData, setFamilyData] = useState(null);
   const [appDetailsToShow, setAppDetailsToShow] = useState({});
   const [showToast, setShowToast] = useState(null);
-  const navTimerRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (navTimerRef.current) {
-        clearTimeout(navTimerRef.current);
-      }
-    };
-  }, []);
 
   /**
    * Formats a DOB value into DD/MM/YYYY for presentation.
@@ -181,9 +171,7 @@ const ApplicationDetails = ({ parentRoute }) => {
         workflowDetails.revalidate();
       }
 
-      navTimerRef.current = setTimeout(() => {
-        navigate(`${parentRoute}/inbox`);
-      }, 1500);
+      fetchFamilyDetails();
     } catch (e) {
       if (callbacks?.onError) {
         callbacks.onError(e);
