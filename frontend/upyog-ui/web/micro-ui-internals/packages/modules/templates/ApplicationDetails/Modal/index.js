@@ -14,6 +14,7 @@ import SVActionModal from "./SVActionModal";
 import WTActionModal from "./WTActionModal";
 import GCActionModal from "./GCActionModal";
 import FireNocActionModal from "./FireNocActionModal";
+import FamilyActionModal from "./FamilyActionModal";
 
 
 
@@ -70,6 +71,9 @@ const ActionModal = (props) => {
   }
   if (props?.businessService.includes("garbage-service")) {
     return <GCActionModal {...props} />;
+  }
+  if (props?.businessService.includes("family-service")) {
+    return <FamilyActionModal {...props} />;
   }
   if (props?.businessService.includes("FIRENOC")) {
     return <FireNocActionModal {...props} />;
