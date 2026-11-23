@@ -281,7 +281,7 @@ const FamilyMemberAdded = () => {
     setSubmitting(true);
 
     try {
-      const tenantId = Digit.ULBService.getCurrentTenantId();
+      const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
       const familyDetails = Digit.SessionStorage.get("Family_Details") || {};
 
       // 3. Use validated `members` React state (avoids state vs. storage divergence)

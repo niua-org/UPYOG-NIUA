@@ -39,7 +39,7 @@ import { buildJoinFamilyPayload } from "../utils/payloads";
 const FoundFamily = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const locationState = useLocation().state || {};
 
   const styles = profileStyles.foundFamilyDetailSection;
@@ -202,89 +202,20 @@ const FoundFamily = () => {
 
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");
 
-      const joinedFamilyId = verifiedData?.familyId || familyId;
-      const submittedMember = {
-        userUuid,
-        name: profileDetails.name || user?.name,
-        relationshipWithHead: relationshipCode,
-        isHead: false,
-        profileDetails,
-        property: propertyDetails,
-        income: incomeDetails,
-        vehicles: vehicleDetails,
-      };
-      let familyMembers = verifiedData?.family?.members || [];
-
-      try {
-        const familyResponse = await Digit.UserService.familyDashboard(tenantId, joinedFamilyId);
-        const dashboardMembers = familyResponse?.dashboard?.activeMembers;
-        if (Array.isArray(dashboardMembers) && dashboardMembers.length) {
-          const verifiedMembers = familyMembers;
-          familyMembers = dashboardMembers.map((dashboardMember) => {
-            const existingMember = verifiedMembers.find(
-              (member) =>
-                (member.userUuid || member.uuid) === (dashboardMember.userUuid || dashboardMember.uuid)
-            );
-            return {
-              ...existingMember,
-              ...dashboardMember,
-              citizenDetails: {
-                ...existingMember?.citizenDetails,
-                ...dashboardMember?.citizenDetails,
-              },
-              profileDetails: {
-                ...existingMember?.profileDetails,
-                ...dashboardMember?.profileDetails,
-              },
-              income: dashboardMember.income || existingMember?.income,
-              vehicles: dashboardMember.vehicles || existingMember?.vehicles,
-              properties:
-                dashboardMember.properties?.length
-                  ? dashboardMember.properties
-                  : existingMember?.properties,
-              property: dashboardMember.property || existingMember?.property,
-            };
-          });
-          verifiedMembers.forEach((member) => {
-            if (
-              !familyMembers.some(
-                (dashboardMember) =>
-                  (dashboardMember.userUuid || dashboardMember.uuid) === (member.userUuid || member.uuid)
-              )
-            ) {
-              familyMembers.push(member);
-            }
-          });
-        }
-      } catch (familyError) {
-        console.error("Unable to load joined family details for acknowledgement:", familyError);
-      }
-
-      const submittedMemberExists = familyMembers.some(
-        (member) => member.userUuid === userUuid || member.uuid === userUuid
-      );
-      const acknowledgementMembers = submittedMemberExists
-        ? familyMembers.map((member) =>
-            member.userUuid === userUuid || member.uuid === userUuid
-              ? { ...member, ...submittedMember }
-              : member
-          )
-        : [...familyMembers, submittedMember];
-      const acknowledgement = {
-        ...res.JoinRequest,
-        familyId: joinedFamilyId,
-        tenantId,
-        applicationDate: Date.now(),
-        applicantUserUuid: userUuid,
-        members: acknowledgementMembers,
-      };
-
-      // Clean up join session state on successful submission
       sessionStorage.removeItem("Digit.family.joinData");
 
       navigate(PROFILE_ROUTES.FAMILY_JOINED, {
         replace: true,
-        state: { joinData: acknowledgement },
+        state: {
+          familyId: verifiedData?.familyId || familyId,
+          joinData: {
+            familyId: verifiedData?.familyId || familyId,
+            tenantId,
+            applicationDate: Date.now(),
+            applicantUserUuid: userUuid,
+            status: res.JoinRequest.status,
+          },
+        },
       });
     } catch (err) {
       console.log("error on join family page", err);
