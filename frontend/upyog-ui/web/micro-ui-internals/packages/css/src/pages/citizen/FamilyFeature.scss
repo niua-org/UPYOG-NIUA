@@ -150,6 +150,9 @@
 
   .profile-section {
     margin-bottom: 24px;
+    align-items: flex-start;
+    display: block;
+    
   }
 
   .profile-section-title {
@@ -180,7 +183,7 @@
   }
 
   .profile-grid {
-    flex: 1;
+    flex: 1 1 0%;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px 24px;
@@ -247,9 +250,9 @@
     margin: 0;
     background: #d6d6d6;
     padding: 0 28px;
-    height: 44px;
+    height: 40px;
     color: #0b0c0c;
-    border-radius: 22px;
+    border-radius: 16px;
     border: none;
     font-size: 14px;
     font-weight: 600;
@@ -423,11 +426,26 @@
     gap: 8px;
   }
 
+
   .profile-details-card-header {
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+
+    .check-page-link-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+      min-height: unset;
+
+      .profile-edit-icon {
+        display: block;
+        margin: 0;
+      }
+    }
   }
 
   .profile-details-document-grid {
