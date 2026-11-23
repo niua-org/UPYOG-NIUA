@@ -1,7 +1,6 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { createfamilyconfig } from "./createfamilyconfig";
-import { profileStyles } from "../utils/profileStyles";
 
 const TABS = createfamilyconfig.map((section) => ({
   head: section.head || section.body[0].texts?.header,
@@ -23,7 +22,6 @@ const TABS = createfamilyconfig.map((section) => ({
  * - Active tab is detected from the current URL route segment.
  * - Clicking a tab navigates to that step's first route.
  * - Future (not-yet-reached) tabs are visually disabled and non-clickable.
- * - Uses the same `profileStyles.tab / tabActive` as `EditProfile` tabs
  *   so the design stays consistent across the profile module.
  *
  *
@@ -44,17 +42,14 @@ const FamilyCreateTabs = ({ t }) => {
   };
 
   return (
-    <div style={profileStyles.tabs}>
+    <div className="profile-tabs">
       {TABS.map((tab, index) => {
         const isActive = index === activeTabIndex;
         return (
           <button
             key={tab.route}
             type="button"
-            style={{
-              ...profileStyles.tab,
-              ...(isActive ? profileStyles.tabActive : {}),
-            }}
+            className={`profile-tab ${isActive ? "profile-tab-active" : ""}`}
             onClick={() => handleTabClick(tab, index)}
           >
             {t(tab.head)}

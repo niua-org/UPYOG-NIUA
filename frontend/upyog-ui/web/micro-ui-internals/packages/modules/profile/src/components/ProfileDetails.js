@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, Loader, EditIcon, TickMark, CloseSvg, Toast, AddIcon, PersonIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { ADDRESS_TYPE_LABEL, getPersonalFields, getAddressBlocks, ProfilePhoto, FieldGrid, Section, PDFSvg, getDocumentBlocks, openDocument, clearFamilyMembers } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
 import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
@@ -169,7 +168,7 @@ const ProfileDetails = () => {
 
 
   if (loading) return <Loader />;
-  if (error || !user) return <div style={profileStyles.message}>{t("CORE_COMMON_PROFILE_LOAD_ERROR")}</div>;
+  if (error || !user) return <div className="profile-message">{t("CORE_COMMON_PROFILE_LOAD_ERROR")}</div>;
 
 
   // Personal & address data, filtered to only show fields with values
@@ -205,10 +204,10 @@ const ProfileDetails = () => {
   const getFamilyOptionIcon = (code) => {
     switch (code) {
       case "PROFILE_CREATE_FAMILY":
-        return <AddIcon fill="#a82227" styles={profileStyles.actionIconAdd} />;
+        return <AddIcon fill="#a82227" className="profile-action-icon-add" />;
       case "PROFILE_JOIN_EXISTING_FAMILY":
       case "PROFILE_FAMILY_DASHBOARD":
-        return <PersonIcon styles={profileStyles.actionIconPerson} />;
+        return <PersonIcon className="profile-action-icon-person" />;
       default:
         return null;
     }
@@ -218,16 +217,16 @@ const ProfileDetails = () => {
     <React.Fragment>
       <Card>
       {/* Header: icon + title, edit button */}
-      <div style={profileStyles.header}>
-        <div style={profileStyles.headerLeft}>
-          <div style={profileStyles.headerIcon}>👤</div>
-          <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
+      <div className="profile-header">
+        <div className="profile-header-left">
+          <div className="profile-header-icon">👤</div>
+          <h2 className="profile-header-title">{t("CORE_COMMON_PROFILE_DETAILS")}</h2>
           {user?.isIdentityVerified ? (
             <span
               title={t("AADHAAR_VERIFIED")}
-              style={profileStyles.verifiedBadge}
+              className="profile-verified-badge"
             >
-              <span style={profileStyles.verifiedIconWrap}>
+              <span className="profile-verified-icon-wrap">
                 <TickMark fillColor="white" />
               </span>
               <span>{t("PROFILE_AADHAAR_VERIFIED")}</span>
@@ -238,30 +237,30 @@ const ProfileDetails = () => {
               tabIndex={0}
               onClick={() => setShowVerifyModal(true)}
               title={t("CLICK_TO_VERIFY_AADHAAR")}
-              style={profileStyles.unverifiedBadge}
+              className="profile-unverified-badge"
             >
-              <span style={profileStyles.unverifiedIconWrap}>
-                <span style={profileStyles.closeSvgWrap}>
+              <span className="profile-unverified-icon-wrap">
+                <span className="profile-close-svg-wrap">
                   <CloseSvg />
                 </span>
               </span>
-              <span style={profileStyles.unverifiedText}>
+              <span className="profile-unverified-text">
                 {t("PROFILE_AADHAAR_NOT_VERIFIED")}
               </span>
             </span>
           )}
         </div>
-        <div style={profileStyles.headerActions} >
+        <div className="profile-details-header-actions">
           {user?.familyId && (
-            <div style={profileStyles.familyIdBadge}>
-              <span style={profileStyles.familyIdLabel}>
+            <div className="profile-family-id-badge">
+              <span className="profile-family-id-label">
                 {t("CORE_COMMON_FAMILY_ID", "Family ID")}:
               </span>
-              <span style={profileStyles.familyIdValue}>
+              <span className="profile-family-id-value">
                 {user.familyId}
               </span>
               {isHof && (
-                <span style={profileStyles.hofBadge}>
+                <span className="profile-hof-badge">
                   {t("CORE_COMMON_HOF", "HOF")}
                 </span>
               )}
@@ -273,13 +272,13 @@ const ProfileDetails = () => {
               key={option.code}
               type="button"
               onClick={() => handleFamilySelection(option)}
-              style={profileStyles.actionButton}
+              className="profile-action-btn"
             >
               {getFamilyOptionIcon(option.code)}
               <span>{t(option.i18nKey, option.name)}</span>
             </button>
           ))}
-          <button type="button" onClick={() => navigate(PROFILE_ROUTES.EDIT_PROFILE_URL, { state: { user } })} style={profileStyles.editButton}>
+          <button type="button" onClick={() => navigate(PROFILE_ROUTES.EDIT_PROFILE_URL, { state: { user } })} className="profile-edit-btn">
             <EditIcon /> {t("CORE_COMMON_EDIT")}
           </button>
         </div>
@@ -287,7 +286,7 @@ const ProfileDetails = () => {
 
       {/* Photo + personal fields */}
       <Section title={t("CORE_COMMON_PROFILE_PERSONAL_DETAILS")}>
-        <div style={profileStyles.card}>
+        <div className="profile-card">
           <ProfilePhoto photo={profilePhoto} name={user.name} />
           <FieldGrid fields={personalFields} t={t} tenantId={tenantId} />
         </div>
@@ -297,8 +296,8 @@ const ProfileDetails = () => {
       {addressBlocks.length > 0 && (
         <Section title={t("CORE_COMMON_PROFILE_ADDRESS_DETAILS")}>
           {addressBlocks.map((block, index) => (
-            <div key={`${block.type}-${index}`} style={profileStyles.card}>
-              <div style={profileStyles.cardLabel}>
+            <div key={`${block.type}-${index}`} className="profile-card">
+              <div className="profile-card-label">
                 {t(ADDRESS_TYPE_LABEL[block.type] || "CORE_COMMON_ADDRESS")}
               </div>
               <FieldGrid fields={block.fields} t={t} tenantId={tenantId} />
@@ -309,21 +308,21 @@ const ProfileDetails = () => {
       {/* Document Details Section */}
       {documentBlocks.length > 0 && (
         <Section title={t("CORE_COMMON_PROFILE_DOCUMENTS")}>
-          <div style={profileStyles.card}>
-            <div style={profileStyles.documentGrid}>
+          <div className="profile-card">
+            <div className="profile-details-document-grid">
               {documentBlocks.map((doc, index) => (
                 <div
                   key={doc.id || index}
-                  style={profileStyles.documentCard}
+                  className="profile-details-document-card"
                   onClick={() => openDocument(doc.filestoreId, stateId)}
                   title="Click to view document"
                 >
                   <PDFSvg width={40} height={40} />
-                  <div style={profileStyles.documentContent}>
-                    <div style={profileStyles.documentTitle}>
+                  <div className="profile-details-document-content">
+                    <div className="profile-details-document-title">
                       {t(doc.documentType)}
                     </div>
-                    <span style={profileStyles.documentLink}>
+                    <span className="profile-details-document-link">
                       {t("PROFILE_VIEW_DOC")}
                     </span>
                   </div>

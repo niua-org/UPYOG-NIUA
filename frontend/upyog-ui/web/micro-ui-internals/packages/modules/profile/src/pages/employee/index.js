@@ -4,7 +4,6 @@ import { AppContainer, BackButton, PrivateRoute } from "@nudmcdgnpm/digit-ui-rea
 import Inbox from "./Inbox";
 import ApplicationDetails from "./ApplicationDetails";
 import SearchApp from "./SearchApp";
-import "../../css/family.scss";
 
 /**
  * EmployeeApp container routing component for the Family Service module.

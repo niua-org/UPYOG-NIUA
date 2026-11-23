@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import { FormStep, Card, CardHeader, CardLabel, Dropdown, EditIcon, DeleteIcon, RadioButtons, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
-import { profileStyles, propertyDetailsResponsiveCss } from "../../utils/profileStyles";
 import FamilyCreateTabs from "../../config/FamilyCreateTabs";
 import RuralPropertyForm from "./RuralForm";
 import UrbanPropertyForm from "./UrbanForm";
@@ -36,7 +35,6 @@ const LOCALITY_TYPE_OPTIONS = [
  * @returns {JSX.Element} Property portfolio form with add, edit, and primary-property controls.
  */
 const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
-  const styles = profileStyles.propertyDetails;
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
@@ -282,13 +280,12 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
 
   return (
     <React.Fragment>
-      <style>{propertyDetailsResponsiveCss}</style>
       <div><FamilyCreateTabs t={t} /></div>
-      <Card style={styles.container}>
+      <Card className="property-details-container">
         <CardHeader>{t(("ES_TITILE_PROPERTY_DETAILS"))}</CardHeader>
         <p>{t(("PROFILE_PROPERTY_PORTFOLIO_SUBTITLE"))}</p>
 
-        <div style={styles.propertyOwnershipQuestion}>
+        <div className="property-details-ownership-question">
           <CardLabel>{t(("PROFILE_DO_YOU_OWN_PROPERTY"))}</CardLabel>
           <RadioButtons  name="ppp-property-ownership" options={propertyOwnershipOptions} optionsKey="name"
             selectedOption={propertyOwnershipOptions.find((option) => option.code === (noProperty ? "NO" : "YES"))}
@@ -297,54 +294,54 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
         </div>
 
         {!isViewMode && !noProperty && (
-          <div style={styles.addPropertySticky}>
-            <button type="button" style={styles.addPropertyButton} onClick={openAddProperty}> + Add Property</button>
+          <div className="property-details-add-sticky">
+            <button type="button" className="property-details-add-btn" onClick={openAddProperty}> + Add Property</button>
           </div>
         )}
 
         {noProperty ? (
-          <div style={styles.emptyState}>{t(("PROFILE_NO_PROPERTY_DECLARED"))} </div>
+          <div className="property-details-empty-state">{t(("PROFILE_NO_PROPERTY_DECLARED"))} </div>
         ) : properties.length === 0 ? (
-          <div style={styles.emptyState}>
+          <div className="property-details-empty-state">
             {t(("PROFILE_NO_PROPERTIES_ADDED"))}
           </div>
         ) : (
-          <div className="profile-property-summary-list" style={styles.list}>
+          <div className="profile-property-summary-list property-details-list">
             {properties.map((property, index) => (
-              <div className="profile-property-summary-card" key={property.portfolioId || index} style={styles.summaryCard}>
+              <div className="profile-property-summary-card property-details-summary-card" key={property.portfolioId || index}>
                 <div>
-                  <div style={styles.summaryTitle}>
+                  <div className="property-details-summary-title">
                     {getPropertyTitle(property)}
                     {property.localityType === "URBAN" && property.isPrimaryAddress && (
-                      <span style={styles.primaryBadge}>{t(("PROFILE_PRIMARY_ADDRESS"))}</span>
+                      <span className="property-details-primary-badge">{t(("PROFILE_PRIMARY_ADDRESS"))}</span>
                     )}
                   </div>
-                  <div style={styles.summaryLocation}>Location: {getPropertyLocation(property)}</div>
-                  <div style={styles.summaryType}>
+                  <div className="property-details-summary-location">Location: {getPropertyLocation(property)}</div>
+                  <div className="property-details-summary-type">
                     <span>Type:</span>{" "}
-                    <span style={property.localityType === "RURAL" ? styles.ruralBadge : styles.urbanBadge}>
+                    <span className={property.localityType === "RURAL" ? "property-details-rural-badge" : "property-details-urban-badge"}>
                       {property.localityType === "RURAL" ? "🌾 Rural" : "🏢 Urban"}
                     </span>
                   </div>
                   {property.localityType === "RURAL" && property.ownershipType && (
-                    <div style={styles.summaryMeta}>Ownership: {property.ownershipType === "JOINT" ? "Joint" : property.ownershipType}</div>
+                    <div className="property-details-summary-meta">Ownership: {property.ownershipType === "JOINT" ? "Joint" : property.ownershipType}</div>
                   )}
                 </div>
                 {!isViewMode && (
-                  <div className="profile-property-summary-actions" style={styles.cardActions}>
+                  <div className="profile-property-summary-actions property-details-card-actions">
                     {property.localityType === "URBAN" && !property.isPrimaryAddress && (
                       <button
                         type="button"
-                        style={styles.primaryActionButton}
+                        className="property-details-primary-action-btn"
                         onClick={() => setPrimaryProperty(index)}
                       >
                         {t(("PROFILE_MARK_AS_PRIMARY"))}
                       </button>
                     )}
-                    <button type="button" style={styles.iconButton} onClick={() => openEditProperty(index)} aria-label="Edit property">
+                    <button type="button" className="property-details-icon-btn" onClick={() => openEditProperty(index)} aria-label="Edit property">
                       <EditIcon />
                     </button>
-                    <button type="button" style={styles.iconButton} onClick={() => deleteProperty(index)} aria-label="Delete property">
+                    <button type="button" className="property-details-icon-btn" onClick={() => deleteProperty(index)} aria-label="Delete property">
                       <DeleteIcon fill="#D4353A" />
                     </button>
                   </div>
@@ -354,7 +351,7 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
           </div>
         )}
 
-        <div style={styles.saveNextWrapper}>
+        <div className="property-details-save-next-wrap">
           <SubmitBar label={t(isViewMode ? "COMMON_NEXT" : (config?.texts?.submitBarLabel || "COMMON_SAVE_NEXT"))}
             onSubmit={goNext} disabled={!isViewMode && !canProceed} />
         </div>
@@ -362,14 +359,14 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
 
       {toast && (<Toast error={toast.error} label={toast.label}  onClose={() => setToast(null)}/> )}
       {drawerOpen && createPortal(
-        <div style={styles.drawerOverlay} role="dialog" aria-modal="true" aria-label="Add Property">
-          <div className="profile-property-drawer" style={styles.drawer}>
-            <div style={styles.drawerHeader}>
+        <div className="property-details-drawer-overlay" role="dialog" aria-modal="true" aria-label="Add Property">
+          <div className="profile-property-drawer property-details-drawer">
+            <div className="property-details-drawer-header">
               <h2 style={{ margin: 0 }}>{editingIndex !== null ? "Edit Property" : "Add Property"}</h2>
-              <button type="button" style={styles.closeButton} onClick={closeDrawer} aria-label="Close">×</button>
+              <button type="button" className="property-details-drawer-close-btn" onClick={closeDrawer} aria-label="Close">×</button>
             </div>
 
-            <div className="profile-property-drawer-body" style={styles.drawerBody}>
+            <div className="profile-property-drawer-body property-details-drawer-body">
               <CardLabel>Locality Type <span className="astericColor">*</span></CardLabel>
               <Dropdown selected={localityType} select={handleLocalityTypeChange} option={LOCALITY_TYPE_OPTIONS}
                 optionKey="name" placeholder="Urban/Rural" />
@@ -381,8 +378,8 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
               {localityType?.code === "RURAL" && (<RuralPropertyForm t={t} data={draft} onChange={updateDraft} />)}
             </div>
 
-            <div className="profile-property-drawer-footer" style={styles.drawerFooter}>
-              <button type="button" style={styles.drawerCancelButton} onClick={closeDrawer}>
+            <div className="profile-property-drawer-footer property-details-drawer-footer">
+              <button type="button" className="property-details-drawer-cancel-btn" onClick={closeDrawer}>
                 {t(("CORE_COMMON_CANCEL"))}
               </button>
               <SubmitBar label={t(("PROFILE_SAVE_PROPERTY"))} onSubmit={saveProperty} disabled={!canSaveProperty} />

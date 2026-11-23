@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { EditIcon, LinkButton, SubmitBar, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 import AddressTranformer from "./AddressTranformer";
 import { ADDRESS_FIELDS, Field } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 
 /**
  * EditAddress
@@ -50,7 +49,7 @@ const EditAddress = ({ initialAddresses = [], onAddressUpdate }) => {
 
   return (
     <>
-      <div style={profileStyles.addressActions}>
+      <div className="edit-address-actions">
         <SubmitBar
           label={t("ADD_NEW_ADDRESS")}
           onSubmit={() => setAddressModal({ open: true, address: null })}
@@ -58,16 +57,16 @@ const EditAddress = ({ initialAddresses = [], onAddressUpdate }) => {
       </div>
       {addresses.length === 0 && <p>{t("CS_NO_ADDRESS_AVAILABLE")}</p>}
       {addresses.map((address, index) => (
-        <div key={address.id ?? index} style={profileStyles.card}>
-          <div style={profileStyles.cardHeader}>
-            <div style={profileStyles.cardLabel}>{t(address.addressType)}</div>
+        <div key={address.id ?? index} className="profile-card">
+          <div className="profile-details-card-header">
+            <div className="profile-card-label">{t(address.addressType)}</div>
             <LinkButton
               label={<EditIcon className="profile-edit-icon" />}
               className="check-page-link-button"
               onClick={() => setAddressModal({ open: true, address })}
             />
           </div>
-          <div style={profileStyles.grid}>
+          <div className="profile-grid">
             {ADDRESS_FIELDS.map(([key, prop]) => {
               if (prop === "addressProof" && !address.filestoreId) {
                 return null;

@@ -1,0 +1,2262 @@
+/* ==========================================================================
+   FAMILY FEATURE & PROFILE MODULE STYLES (UPYOG CITIZEN)
+   File: pages/citizen/FamilyFeature.scss
+   Converted from: profileStyles.js
+   Architecture:
+     1. Common / Shared Profile Styles
+     2. Profile Details Component (.profile-details-*)
+     3. Edit Profile & Avatar (.edit-profile-*)
+     4. Create Profile & Photo Upload (.create-profile-*)
+     5. Edit Address & Modal (.edit-address-*, .address-modal-grid)
+     6. Edit Documents (.edit-documents-*)
+     7. Document Upload Card (.document-upload-*)
+     8. Aadhaar Verification (.aadhaar-verification-*)
+     9. Property Details (.property-details-*, rural/urban forms & drawer)
+     10. Income Details (.income-details-*)
+     11. Vehicle Details (.vehicle-details-*)
+     12. Family Member Added (.family-member-*)
+     13. Found Family Review (.found-family-*)
+     14. My Family Dashboard (.family-dashboard-*)
+   ========================================================================== */
+
+.profile-citizen {
+
+  /* ==========================================================================
+     1. COMMON / SHARED PROFILE STYLES
+     ========================================================================== */
+  .profile-message {
+    padding: 16px;
+  }
+
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .profile-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .profile-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: #f4f5f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .profile-header-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .profile-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    background-color: #e6f4ea;
+    border: 1px solid #ceead6;
+    color: #137333;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+
+  .profile-verified-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: #00703c;
+    flex-shrink: 0;
+  }
+
+  .profile-unverified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    background-color: #fce8e6;
+    border: 1px solid #fad2cf;
+    color: #c5221f;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .profile-unverified-icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: #d4351c;
+    fill: #ffffff;
+    color: #ffffff;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .profile-close-svg-wrap {
+    display: inline-flex;
+    transform: scale(0.55);
+  }
+
+  .profile-unverified-text {
+    text-decoration: underline;
+  }
+
+  .profile-edit-btn,
+  .profile-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f4f5f7;
+    color: #0b0c0c;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .profile-action-icon-add {
+    width: 14px;
+    height: 14px;
+  }
+
+  .profile-action-icon-person {
+    fill: #a82227;
+    width: 20px;
+    height: 20px;
+  }
+
+  .profile-section {
+    margin-bottom: 24px;
+  }
+
+  .profile-section-title {
+    margin: 0 0 12px;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .profile-card {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 20px;
+    border: 1px solid #e8eaed;
+    border-radius: 12px;
+    background: #fcfcfd;
+    margin-bottom: 12px;
+  }
+
+  .profile-card-label {
+    width: 100%;
+    font-weight: 700;
+    color: #0b0c0c;
+    font-size: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8eaed;
+    margin-bottom: 4px;
+  }
+
+  .profile-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px 24px;
+    align-content: start;
+  }
+
+  .profile-field-label {
+    font-size: 14px;
+    color: #505a5f;
+    margin-bottom: 4px;
+  }
+
+  .profile-field-value {
+    font-size: 18px;
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  .profile-form-label {
+    display: block;
+    font-size: 14px;
+    color: #505a5f;
+    margin-bottom: 6px;
+  }
+
+  .profile-form-required {
+    color: #d4351c;
+  }
+
+  .profile-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .profile-btn-primary {
+    margin: 0;
+    background: var(--app-btn-primary-gradient, linear-gradient(90deg, #6a4a91 0%, #3e285f 100%));
+    padding: 0 28px;
+    height: 44px;
+    color: #ffffff;
+    border-radius: 22px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    &.profile-btn-primary-disabled,
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .profile-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .profile-tab {
+    margin: 0;
+    background: #d6d6d6;
+    padding: 0 28px;
+    height: 44px;
+    color: #0b0c0c;
+    border-radius: 22px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    &.profile-tab-active {
+      background: var(--app-btn-primary-gradient, linear-gradient(90deg, #6a4a91 0%, #3e285f 100%));
+      color: #ffffff;
+    }
+  }
+
+  .profile-family-id-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f4f5f7;
+    color: #0b0c0c;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 500;
+    border: 1px solid #e8eaed;
+  }
+
+  .profile-family-id-label {
+    font-size: 14px;
+    color: #505a5f;
+    font-weight: 500;
+  }
+
+  .profile-family-id-value {
+    font-size: 15px;
+    color: #0b0c0c;
+    font-weight: 700;
+  }
+
+  .profile-hof-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background-color: #fdf2f2;
+    border: 1px solid #f8b4b4;
+    color: #882636;
+    font-size: 12px;
+    font-weight: 700;
+    margin-left: 8px;
+    letter-spacing: 0.5px;
+    line-height: 1.4;
+  }
+
+  .profile-dropdown-wrap {
+    margin: 0;
+    position: relative;
+  }
+
+  .profile-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f4f5f7;
+    color: #0b0c0c;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .profile-dropdown-menu {
+    overflow: revert;
+    min-width: 220px;
+    right: 0;
+    left: auto;
+    z-index: 1000;
+    margin-top: 8px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border: 1px solid #e8eaed;
+  }
+
+  .profile-bottom-margin {
+    margin-bottom: 20px;
+  }
+
+  .profile-grid-3col {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px 24px;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: start;
+    margin-bottom: 20px;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .profile-dropdown-scroll {
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  /* Multi-step Family Create Wizard Tabs */
+  .family-create-tabs-wrapper {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #e8eaed;
+    padding-bottom: 0;
+  }
+
+  .family-create-tab-btn {
+    padding: 10px 20px;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 500;
+    color: #505a5f;
+    cursor: pointer;
+    margin-bottom: -2px;
+    transition: all 0.2s ease;
+
+    &.family-create-tab-btn-active {
+      color: #a82227;
+      border-bottom: 3px solid #a82227;
+      font-weight: 700;
+    }
+
+    &.family-create-tab-btn-completed {
+      color: #00703c;
+      border-bottom: 3px solid #00703c;
+    }
+  }
+
+
+  /* ==========================================================================
+     2. PROFILE DETAILS (ProfileDetails.js)
+     ========================================================================== */
+  .profile-details-photo {
+    width: 160px;
+    height: 176px;
+    border-radius: 12px;
+    object-fit: cover;
+    background: #f4f5f7;
+  }
+
+  .profile-details-photo-placeholder {
+    width: 160px;
+    height: 176px;
+    border-radius: 12px;
+    background: #e8eaed;
+    color: #505a5f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 600;
+  }
+
+  .profile-details-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .profile-details-card-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .profile-details-document-grid {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .profile-details-document-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid #e8eaed;
+    border-radius: 8px;
+    background: #ffffff;
+    min-width: 240px;
+    cursor: pointer;
+  }
+
+  .profile-details-document-content {
+    flex: 1;
+  }
+
+  .profile-details-document-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #0b0c0c;
+  }
+
+  .profile-details-document-link {
+    font-size: 13px;
+    color: #1d70b8;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+
+  /* ==========================================================================
+     3. EDIT PROFILE (EditProfile.js)
+     ========================================================================== */
+  .edit-profile-avatar-wrap {
+    position: relative;
+    width: 160px;
+    height: 176px;
+  }
+
+  .edit-profile-camera-btn {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #f47738;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+
+  /* ==========================================================================
+     4. CREATE PROFILE & PHOTO UPLOAD (CreateProfile.js)
+     ========================================================================== */
+  .create-profile-photo-card {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e8eaed;
+    width: 100%;
+    box-sizing: border-box;
+
+    &.create-profile-photo-card-error {
+      border-color: #d4351c;
+    }
+  }
+
+  .create-profile-photo-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .create-profile-photo-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #0b0c0c;
+  }
+
+  .create-profile-photo-help {
+    font-size: 14px;
+    color: #505a5f;
+  }
+
+  .create-profile-required-asterisk {
+    color: #d4351c;
+    font-weight: 600;
+    margin-left: 4px;
+  }
+
+  .create-profile-photo-error {
+    color: #d4351c;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .create-profile-photo-button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .create-profile-photo-upload-btn {
+    background: #ffffff;
+    border: 1px solid #d6d5d5;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #0b0c0c;
+    cursor: pointer;
+
+    &.create-profile-photo-upload-btn-error {
+      border-color: #d4351c;
+      color: #d4351c;
+    }
+  }
+
+  .create-profile-photo-remove-btn {
+    background: #ffffff;
+    border: 1px solid #fad2cf;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #d4351c;
+    cursor: pointer;
+  }
+
+
+  /* ==========================================================================
+     5. EDIT ADDRESS & ADDRESS MODAL (EditAddress.js)
+     ========================================================================== */
+  .edit-address-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
+
+  .edit-address-modal-popup {
+    background-color: #ffffff;
+    position: relative;
+    width: min(900px, 95vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid #e8eaed;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  }
+
+  /* Two-column layout for the library's AddressDetails form inside modal */
+  .address-modal-grid {
+    border-top: 1px solid #e8eaed;
+    padding-top: 8px;
+
+    div:has(> .card-label) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-flow: row dense;
+      column-gap: 32px;
+      align-content: start;
+    }
+
+    div:has(> .card-label)>*:nth-child(4n + 1),
+    div:has(> .card-label)>*:nth-child(4n + 2) {
+      grid-column: 1;
+    }
+
+    div:has(> .card-label)>*:nth-child(4n + 3),
+    div:has(> .card-label)>*:nth-child(4n + 4) {
+      grid-column: 2;
+    }
+
+    .card-label {
+      font-size: 16px;
+      margin: 0;
+      padding: 12px 0 6px;
+      align-self: end;
+    }
+
+    .card-label+* {
+      align-self: start;
+      min-width: 0;
+    }
+
+    .employee-card-input,
+    .select,
+    .select-wrap {
+      border-radius: 8px;
+    }
+
+    .card {
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    @media (max-width: 640px) {
+      div:has(> .card-label) {
+        grid-template-columns: 1fr;
+      }
+
+      div:has(> .card-label)>* {
+        grid-column: 1 !important;
+      }
+    }
+  }
+
+
+  /* ==========================================================================
+     6. EDIT DOCUMENTS (EditDocuments.js)
+     ========================================================================== */
+  .edit-documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    width: 100%;
+  }
+
+  .edit-documents-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    border: 1px solid #e8eaed;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+
+  .edit-documents-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .edit-documents-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #0b0c0c;
+  }
+
+  .edit-documents-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+
+    &.edit-documents-badge-verified {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    &.edit-documents-badge-pending {
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+    }
+  }
+
+  .edit-documents-file-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 20px 16px;
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+    background: #fafafb;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .edit-documents-file-emoji {
+    font-size: 40px;
+    line-height: 1;
+  }
+
+  .edit-documents-file-name {
+    display: block;
+    max-width: 100%;
+    font-size: 14px;
+    font-weight: 600;
+    color: #0b0c0c;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .edit-documents-file-meta {
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .edit-documents-view-link {
+    font-size: 13px;
+    color: #1d70b8;
+    text-decoration: underline;
+  }
+
+  .edit-documents-empty-tile {
+    padding: 28px 16px;
+    border: 1px dashed #c9cdd2;
+    border-radius: 10px;
+    background: #fafafb;
+    color: #6b7280;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .edit-documents-upload-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #505a5f;
+    margin-bottom: 6px;
+  }
+
+  .edit-documents-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 6px;
+  }
+
+
+  /* ==========================================================================
+     7. DOCUMENT UPLOAD CARD (Shared Document Upload Component)
+     ========================================================================== */
+  .document-upload-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .document-upload-dropdown-margin {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .document-upload-file-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #d6d5d5;
+    border-radius: 6px;
+    padding: 6px 10px;
+    background: #ffffff;
+    min-height: 44px;
+    box-sizing: border-box;
+
+    &.document-upload-file-box-error {
+      border-color: #d4351c;
+    }
+
+    &.document-upload-file-box-disabled {
+      background: #f4f5f7;
+    }
+  }
+
+  .document-upload-file-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .document-upload-choose-btn {
+    background: #d1d1d6;
+    color: #0b0c0c;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &.document-upload-choose-btn-disabled {
+      background: #e0e0e0;
+      cursor: not-allowed;
+    }
+  }
+
+  .document-upload-file-name {
+    font-size: 13px;
+    color: #7c7e80;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.document-upload-file-name-uploaded {
+      color: #0b0c0c;
+    }
+  }
+
+  .document-upload-delete-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: #505a5f;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+  }
+
+  .document-upload-error-margin {
+    margin-top: 4px;
+  }
+
+  .document-upload-file-restriction {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.3;
+  }
+
+
+  /* ==========================================================================
+     8. AADHAAR VERIFICATION (AadhaarVerification.js & JoinExistingFamily.js)
+     ========================================================================== */
+  .aadhaar-verification-consent-box {
+    background: #f8f9fa;
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .aadhaar-verification-consent-icon {
+    font-size: 16px;
+  }
+
+  .aadhaar-verification-consent-text {
+    font-size: 14px;
+    color: #505a5f;
+    line-height: 1.4;
+  }
+
+  .aadhaar-verification-otp-section {
+    margin-top: 24px;
+  }
+
+  .aadhaar-verification-otp-timer-wrap {
+    margin-top: 16px;
+    margin-bottom: 12px;
+  }
+
+  .aadhaar-verification-otp-timer-text {
+    font-size: 14px;
+    color: #505a5f;
+  }
+
+  .aadhaar-verification-otp-resend-btn {
+    color: #f47738;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .aadhaar-verification-otp-action-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .aadhaar-verification-edit-aadhaar-btn {
+    background: transparent;
+    border: 1px solid #c84c0e;
+    color: #c84c0e;
+    border-radius: 4px;
+    padding: 0 18px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    box-sizing: border-box;
+  }
+
+  .aadhaar-verification-edit-aadhaar-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .aadhaar-verification-verified-banner {
+    margin: 16px 0;
+    padding: 14px 16px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    color: #166534;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+
+  /* ==========================================================================
+     9. PROPERTY DETAILS (PropertyDetails.js, Urban & Rural Forms)
+     ========================================================================== */
+  .property-details-container {
+    width: 100%;
+    background-color: #ffffff;
+    padding: 16px;
+    border-radius: 8px;
+    box-sizing: border-box;
+  }
+
+  .property-details-empty-state {
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1px solid #d6d5d5;
+    border-radius: 8px;
+    color: #505a5f;
+  }
+
+  .property-details-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 60%;
+    max-width: 720px;
+  }
+
+  .property-details-summary-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 14px;
+    background-color: #ffffff;
+    border: 1px solid #d6d6d6;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+  }
+
+  .property-details-summary-title {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .property-details-summary-location {
+    margin-top: 6px;
+  }
+
+  .property-details-summary-type {
+    margin-top: 8px;
+  }
+
+  .property-details-summary-meta {
+    margin-top: 6px;
+  }
+
+  .property-details-ownership-question {
+    margin-bottom: 12px;
+  }
+
+  .property-details-rural-badge {
+    background: #e7f5ec;
+    border-radius: 12px;
+    padding: 3px 8px;
+  }
+
+  .property-details-urban-badge {
+    background: #e8f1f8;
+    border-radius: 12px;
+    padding: 3px 8px;
+  }
+
+  .property-details-card-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .property-details-icon-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .property-details-add-btn {
+    margin-top: 16px;
+    min-height: 40px;
+    border: 1px solid #0b4f9c;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #0b4f9c;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .property-details-add-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    width: fit-content;
+    padding: 8px 0;
+    background-color: #ffffff;
+  }
+
+  .property-details-primary-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background-color: #e7f5ec;
+    color: #216e39;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  .property-details-primary-action-btn {
+    padding: 6px 10px;
+    border: 1px solid #0b4f9c;
+    border-radius: 4px;
+    background-color: #ffffff;
+    color: #0b4f9c;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .property-details-save-next-wrap {
+    margin-top: 24px;
+  }
+
+  .property-details-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(11, 12, 12, 0.35);
+  }
+
+  .property-details-drawer {
+    position: absolute;
+    right: 0;
+    top: 16px;
+    bottom: 0;
+    width: min(460px, 92vw);
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    border-top-left-radius: 8px;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.12);
+  }
+
+  .property-details-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #d6d5d5;
+  }
+
+  .property-details-drawer-close-btn {
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    cursor: pointer;
+  }
+
+  .property-details-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .property-details-drawer-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid #d6d5d5;
+  }
+
+  .property-details-drawer-cancel-btn {
+    width: 100%;
+    height: 33px;
+    box-sizing: border-box;
+    border: 1px solid #505a5f;
+    background: #ffffff;
+    color: #505a5f;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .property-details-cancel-btn {
+    min-width: 100px;
+    height: 40px;
+    border: 1px solid #505a5f;
+    border-radius: 4px;
+    background: #ffffff;
+  }
+
+  .property-details-page-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  .property-details-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  /* Urban Property Form */
+  .urban-property-form-container {
+    width: 100%;
+  }
+
+  .urban-property-form-field {
+    margin-bottom: 24px;
+  }
+
+  .urban-property-form-search-input {
+    width: 100%;
+  }
+
+  .urban-property-form-search-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .urban-property-form-search-btn {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 0;
+  }
+
+  .urban-property-results {
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .urban-property-primary-label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .urban-property-card {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 12px 44px 12px 16px;
+    margin-bottom: 12px;
+    background-color: #f7f7f7;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    box-shadow: none;
+
+    &.urban-property-card-with-actions {
+      padding-top: 48px;
+    }
+  }
+
+  .urban-property-card-details {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .urban-property-card-field {
+    font-size: 12px;
+  }
+
+  .urban-property-card-label {
+    color: #505a5f;
+    font-weight: 600;
+  }
+
+  .urban-property-card-value {
+    color: #0b0c0c;
+    margin-top: 2px;
+    overflow-wrap: anywhere;
+  }
+
+  .urban-property-card-actions {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .urban-property-action-btn {
+    padding: 6px 10px;
+    border: 1px solid #b1afb4;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #000000;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .urban-property-default-btn {
+    padding: 6px 12px;
+    border: 1px solid #2e7d32;
+    border-radius: 16px;
+    background: #e8f5e9;
+    color: #1b5e20;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: default;
+  }
+
+  .urban-property-remove-btn {
+    border-color: #d4353a;
+    color: #d4353a;
+  }
+
+  .urban-property-no-property {
+    margin-top: 16px;
+    font-size: 14px;
+  }
+
+  .urban-property-duplicate-error {
+    margin-top: 16px;
+    color: #d4351c;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .urban-property-create-wrap {
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+
+  .urban-property-register-link {
+    color: #d4353a;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 5px;
+    text-decoration: underline;
+  }
+
+  .urban-property-create-btn {
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Rural Property Form */
+  .rural-property-form-container {
+    width: 100%;
+  }
+
+  .rural-property-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 24px;
+    align-items: start;
+  }
+
+  .rural-property-field {
+    margin-bottom: 20px;
+  }
+
+  .rural-property-header {
+    margin-bottom: 24px;
+  }
+
+  .rural-property-quick-reg {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .rural-property-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .rural-property-description {
+    font-size: 14px;
+    line-height: 20px;
+    margin-bottom: 24px;
+  }
+
+  .rural-property-section {
+    margin-bottom: 32px;
+  }
+
+  .rural-property-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .rural-property-radio-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .rural-property-joint-owner-section {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+  }
+
+  .rural-property-joint-owner-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .rural-property-hint {
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  /* Property Details Mobile Responsive */
+  @media (max-width: 600px) {
+    .profile-property-drawer {
+      top: 12px !important;
+      right: 12px !important;
+      bottom: 12px !important;
+      left: 12px !important;
+      width: auto !important;
+      max-height: calc(100dvh - 24px);
+      border-radius: 8px !important;
+    }
+
+    .profile-property-drawer-body {
+      padding: 16px !important;
+    }
+
+    .profile-property-drawer-footer {
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+
+      .submit-bar,
+      .submit-bar-disabled {
+        width: 100% !important;
+      }
+
+      >button {
+        min-height: 40px;
+      }
+    }
+
+    .profile-property-rural-row {
+      grid-template-columns: minmax(0, 1fr) !important;
+      column-gap: 0 !important;
+    }
+
+    .profile-property-urban-search-row {
+      flex-direction: column !important;
+      gap: 8px !important;
+
+      >* {
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+    }
+
+    .profile-property-urban-card {
+      padding: 12px !important;
+    }
+
+    .profile-property-urban-actions {
+      position: static !important;
+      justify-content: flex-start !important;
+      width: 100%;
+      margin-top: 12px;
+
+      button {
+        min-height: 40px;
+      }
+    }
+
+    .profile-property-summary-card {
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+
+    .profile-property-summary-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    .profile-property-summary-list {
+      width: 100% !important;
+    }
+  }
+
+
+  /* ==========================================================================
+     10. INCOME DETAILS (IncomeDetails.js)
+     ========================================================================== */
+  .income-details-tax-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .income-details-tax-wrap {
+    flex: 1;
+  }
+
+  .income-details-validate-btn {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 4px;
+    border: none;
+    background: var(--app-btn-primary-gradient, linear-gradient(90deg, #6a4a91 0%, #3e285f 100%));
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    &.income-details-validate-btn-success {
+      background: linear-gradient(90deg, #00703c 0%, #005a30 100%);
+    }
+
+    &.income-details-validate-btn-disabled,
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .income-details-validate-success-msg {
+    color: #00703c;
+    font-size: 12px;
+    margin: 4px 0 0;
+    font-weight: 500;
+  }
+
+
+  /* ==========================================================================
+     11. VEHICLE DETAILS (VehicleDetails.js)
+     ========================================================================== */
+  .vehicle-details-list-wrapper {
+    margin-top: 24px;
+  }
+
+  .vehicle-details-card {
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #e8e8e8;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .vehicle-details-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .vehicle-details-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0b0c0c;
+  }
+
+  .vehicle-details-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+
+  .vehicle-details-add-wrapper {
+    margin-top: 16px;
+    margin-bottom: 24px;
+  }
+
+  .vehicle-details-max-number {
+    font-size: 14px;
+    font-weight: normal;
+    color: #fefefe;
+    margin-left: 5%;
+  }
+
+
+  /* ==========================================================================
+     12. FAMILY MEMBER ADDED (FamilyMemberAdded.js)
+     ========================================================================== */
+  .family-member-head-label {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .family-member-table-wrapper {
+    margin-bottom: 24px;
+    overflow: visible;
+  }
+
+  .family-member-table-cell {
+    padding: 16px 20px;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  .family-member-name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .family-member-name-text {
+    font-weight: 600;
+    color: #111827;
+    font-size: 14px;
+  }
+
+  .family-member-you-badge {
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .family-member-dropdown-wrap {
+    min-width: 160px;
+    max-width: 220px;
+  }
+
+  .family-member-dropdown {
+    margin-bottom: 0;
+  }
+
+  .family-member-dropdown-card {
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 9999;
+  }
+
+  .family-member-relationship-text {
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .family-member-radio-wrap {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .family-member-radio-input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #a82227;
+    margin: 0;
+  }
+
+  .family-member-action-disabled {
+    color: #9ca3af;
+  }
+
+  .family-member-actions-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .family-member-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+  }
+
+  .family-member-delete-icon {
+    width: 20px;
+    height: 20px;
+    fill: #a82227;
+  }
+
+  .family-member-add-another-section {
+    margin-top: 8px;
+    margin-bottom: 28px;
+  }
+
+  .family-member-add-btn {
+    background: #882636;
+    border: 1px solid #882636;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 0 20px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #731f2d;
+    }
+  }
+
+  .family-member-add-btn-icon {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+
+  /* ==========================================================================
+     13. FOUND FAMILY REVIEW (FoundFamily.js)
+     ========================================================================== */
+  .found-family-section-box {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #e8e8e8;
+  }
+
+  .found-family-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0b0c0c;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #d6d5d4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .found-family-header-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .found-family-actions-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .found-family-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f4f5f7;
+    color: #0b0c0c;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+
+  /* ==========================================================================
+     14. MY FAMILY DASHBOARD (FamilyDashboard.js)
+     ========================================================================== */
+  .family-dashboard-page-card {
+    max-width: 355px;
+    min-height: 710px;
+    margin: 0 auto;
+    padding: 24px 20px 20px;
+    box-sizing: border-box;
+  }
+
+  .family-dashboard-step-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.4px;
+    margin-bottom: 14px;
+  }
+
+  .family-dashboard-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .family-dashboard-page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #172033;
+    line-height: 1.2;
+  }
+
+  .family-dashboard-family-id-badge {
+    background: #d9f7e1;
+    color: #087a36;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .family-dashboard-summary {
+    margin-bottom: 28px;
+  }
+
+  .family-dashboard-summary-line {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex-wrap: wrap;
+    line-height: 1.45;
+  }
+
+  .family-dashboard-summary-label {
+    font-size: 15px;
+    color: #65758b;
+    font-weight: 400;
+  }
+
+  .family-dashboard-summary-value {
+    font-size: 15px;
+    color: #65758b;
+    font-weight: 400;
+  }
+
+  .family-dashboard-members-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .family-dashboard-members-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #65758b;
+    letter-spacing: 0.2px;
+  }
+
+  .family-dashboard-add-member-link {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: #1769e0;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .family-dashboard-add-member-plus {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  .family-dashboard-members-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 20px;
+    margin-bottom: 28px;
+  }
+
+  .family-dashboard-member-card {
+    min-height: 166px;
+    border: 1px solid #dce3ec;
+    border-radius: 12px;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px 10px 14px;
+    box-sizing: border-box;
+  }
+
+  .family-dashboard-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #292929;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 400;
+    margin-bottom: 12px;
+  }
+
+  .family-dashboard-member-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #172033;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  .family-dashboard-member-relationship {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #65758b;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.3;
+    min-height: 18px;
+  }
+
+  .family-dashboard-bullet {
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .family-dashboard-you-text {
+    color: #65758b;
+  }
+
+  .family-dashboard-verified-badge {
+    margin-top: 10px;
+    background: #d9f7e1;
+    color: #087a36;
+    border-radius: 4px;
+    padding: 4px 9px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1px;
+  }
+
+  .family-dashboard-button {
+    width: 30%;
+    height: 46px;
+    border: none;
+    border-radius: 7px;
+    background: #292929;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0 18px;
+    box-sizing: border-box;
+  }
+}
+
+/* Family Registry - Employee & Inbox Styles */
+
+.family-inbox-wrapper {
+  padding: 0 16px;
+}
+
+.family-back-button-wrap {
+  margin-left: -4px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.family-header-title {
+  margin-left: 0px !important;
+  padding-top: 10px !important;
+  font-size: 32px !important;
+}
+
+.family-details-header {
+  margin-bottom: 16px;
+}
+
+/* Desktop Inbox Layout */
+.family-desktop-inbox {
+  display: flex;
+  gap: 24px;
+  padding: 16px 0;
+
+  .family-inbox-content {
+    flex: 1;
+    min-width: 0;
+
+    .family-inbox-result {
+      margin-top: 16px;
+    }
+  }
+
+  .filters-container {
+    width: 270px;
+    min-width: 270px;
+    max-width: 270px;
+
+    .inboxLinks {
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #ffffff !important;
+      border-radius: 4px !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+
+      .complaint-links-container {
+        background-color: #ffffff !important;
+        padding: 16px !important;
+        border-radius: 4px !important;
+
+        .header {
+          display: flex !important;
+          align-items: center !important;
+          border: none !important;
+
+          .logo {
+            background-color: transparent !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            svg {
+              width: 32px !important;
+              height: 32px !important;
+
+              path {
+                fill: #a82227 !important;
+              }
+            }
+          }
+
+          .text {
+            padding-left: 14px !important;
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: #0b0c0c !important;
+            line-height: 24px !important;
+          }
+        }
+      }
+    }
+
+    .filter {
+      margin-top: 16px !important;
+    }
+  }
+}
+
+/* Filter Sidebar */
+.family-filter-card {
+  min-width: 240px;
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 4px;
+
+  .filter-card {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .family-filter-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-bottom: 20px !important;
+    height: 24px !important;
+    line-height: 24px !important;
+
+    .family-filter-title-wrap {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      height: 24px !important;
+      line-height: 24px !important;
+
+      svg {
+        display: block !important;
+        flex-shrink: 0 !important;
+      }
+
+      .family-filter-title-text {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: #0b0c0c !important;
+        line-height: 24px !important;
+        margin: 0 !important;
+      }
+    }
+
+    .family-filter-refresh-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: 1px solid #e0e0e0 !important;
+      border-radius: 2px !important;
+      padding: 6px !important;
+      background-color: #ffffff !important;
+      cursor: pointer !important;
+      width: 32px !important;
+      height: 32px !important;
+      box-sizing: border-box !important;
+
+      &:hover {
+        background-color: #f3f4f6 !important;
+        border-color: #cbd5e1 !important;
+      }
+
+      svg {
+        display: block !important;
+      }
+    }
+  }
+
+  .family-filter-section {
+    margin-bottom: 20px;
+
+    .family-filter-label {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 12px;
+      color: #0b0c0c;
+    }
+
+    .family-filter-checkbox-item {
+      margin-bottom: 8px;
+
+      .checkbox-label {
+        height: unset !important;
+      }
+    }
+  }
+
+  .family-filter-action {
+    margin-top: 20px;
+  }
+}
+
+/* Search Bar & Card */
+.family-search-card {
+  padding: 16px 20px 24px 20px !important;
+  background-color: #ffffff !important;
+  border-radius: 4px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.family-search-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  margin-top: 53px !important;
+  padding: 0 !important;
+  width: 100% !important;
+
+  .family-search-submit-bar,
+  .submit-bar {
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #a82227 !important;
+  }
+
+  .family-clear-search-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    text-align: center !important;
+    color: #a82227 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    line-height: 20px !important;
+    text-decoration: underline !important;
+    margin-top: 8px !important;
+
+    &:hover {
+      color: #7a191d !important;
+    }
+  }
+}
+
+/* Table Cells & Status Badges */
+.family-table-cell {
+  padding: 20px 18px !important;
+  font-size: 16px !important;
+  vertical-align: middle !important;
+
+  &.family-id-cell {
+    min-width: 240px !important;
+  }
+}
+
+.family-search-clear-btn {
+  cursor: pointer !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  color: #a82227 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  display: block !important;
+  text-decoration: underline !important;
+
+  &:hover {
+    color: #7a191d !important;
+  }
+}
+
+.family-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.status-pending {
+    background-color: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #ffedd5;
+  }
+
+  &.status-approved,
+  &.status-active {
+    background-color: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+
+  &.status-rejected {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+
+  &.status-default {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+  }
+}
+
+/* Empty Card */
+.family-empty-card {
+  text-align: center !important;
+  margin-top: 20px !important;
+  padding: 40px 16px;
+
+  .family-empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center !important;
+  }
+
+  .family-empty-desc {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666666;
+    text-align: center !important;
+  }
+}
+
+

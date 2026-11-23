@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import {Dropdown, TextInput, RadioButtons, UploadFile} from "@nudmcdgnpm/digit-ui-react-components";
 
-import { profileStyles } from "../../utils/profileStyles";
-
 /**
  * Rural Property Form
  * Page Developed to get the Rural Property details of the family Members
@@ -11,7 +9,6 @@ import { profileStyles } from "../../utils/profileStyles";
  */
 
 const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
-  const styles = profileStyles.ruralPropertyForm;
   const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
   const maxUploadSize = 5 * 1024 * 1024;
   const allowedFileExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
@@ -217,24 +214,24 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
   };
 
   return (
-    <div style={{ ...styles.container, ...(disabled ? { opacity: 0.9, pointerEvents: "none" } : {}) }}>
-      <div style={styles.header}>
-        <div style={styles.title}>
+    <div className="rural-property-form-container" style={disabled ? { opacity: 0.9, pointerEvents: "none" } : undefined}>
+      <div className="rural-property-header">
+        <div className="rural-property-title">
           {t("PROFILE_REGISTER_PROPERTY_RURAL")}
         </div>
       </div>
 
-      <div style={styles.section}>
-        <div style={styles.sectionTitle}>
+      <div className="rural-property-section">
+        <div className="rural-property-section-title">
           {t("PROFILE_PROPERTY_LOCATION")}
         </div>
 
         {/* Row 1 */}
-        <div className="profile-property-rural-row" style={styles.fieldRow}>
+        <div className="rural-property-field-row profile-property-rural-row">
           {/* Gram Panchayat */}
-          <div style={styles.field}>
-            <label style={profileStyles.label}>{t("PROFILE_GRAM_PANCHAYAT")}{" "}
-              <span style={profileStyles.required}>*</span>
+          <div className="rural-property-field">
+            <label className="profile-form-label">{t("PROFILE_GRAM_PANCHAYAT")}{" "}
+              <span className="profile-form-required">*</span>
             </label>
 
             <Dropdown
@@ -247,10 +244,10 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           </div>
 
           {/* Village */}
-          <div style={styles.field}>
-            <label style={profileStyles.label}>
+          <div className="rural-property-field">
+            <label className="profile-form-label">
               {t("PROFILE_VILLAGE_NAME")}{" "}
-              <span style={profileStyles.required}>*</span>
+              <span className="profile-form-required">*</span>
             </label>
 
             <Dropdown
@@ -265,13 +262,13 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
 
         {/* Row 2 */}
-        <div className="profile-property-rural-row" style={styles.fieldRow}>
+        <div className="rural-property-field-row profile-property-rural-row">
 
           {/* Ward */}
-          <div style={styles.field}>
-            <label style={profileStyles.label}>
+          <div className="rural-property-field">
+            <label className="profile-form-label">
               {t("PROFILE_WARD_NUMBER")}{" "}
-              <span style={profileStyles.required}>*</span>
+              <span className="profile-form-required">*</span>
             </label>
 
             <Dropdown
@@ -284,10 +281,10 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           </div>
 
           {/* Property Address */}
-          <div style={styles.field}>
-            <label style={profileStyles.label}>
+          <div className="rural-property-field">
+            <label className="profile-form-label">
               {t("PROFILE_PROPERTY_ADDRESS_LOCALITY")}{" "}
-              <span style={profileStyles.required}>*</span>
+              <span className="profile-form-required">*</span>
             </label>
 
             <TextInput
@@ -302,17 +299,17 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
       </div>
 
-      <div style={styles.section}>
-        <div style={styles.sectionTitle}>
+      <div className="rural-property-section">
+        <div className="rural-property-section-title">
           {t("PROFILE_PROPERTY_DETAILS_SECTION")}
         </div>
 
         {/* Row 1 */}
-        <div className="profile-property-rural-row" style={styles.fieldRow}>
-          <div style={styles.field}>
-            <label style={profileStyles.label}>
+        <div className="rural-property-field-row profile-property-rural-row">
+          <div className="rural-property-field">
+            <label className="profile-form-label">
               {t("PROFILE_PROPERTY_TYPE")}{" "}
-              <span style={profileStyles.required}>*</span>
+              <span className="profile-form-required">*</span>
             </label>
             <Dropdown
               option={propertyTypeOptions}
@@ -323,10 +320,10 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
             />
           </div>
           {/* Property Usage */}
-          <div style={styles.field}>
-            <label style={profileStyles.label}>
+          <div className="rural-property-field">
+            <label className="profile-form-label">
               {t("PROFILE_PROPERTY_USAGE")}{" "}
-              <span style={profileStyles.required}>*</span>
+              <span className="profile-form-required">*</span>
             </label>
             <Dropdown
               option={propertyUsageOptions}
@@ -341,14 +338,14 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
 
         {/* Row 2 */}
-        <div className="profile-property-rural-row" style={styles.fieldRow}>
+        <div className="rural-property-field-row profile-property-rural-row">
 
           {/* Survey Number */}
-          <div style={styles.field}>
+          <div className="rural-property-field">
 
-            <label style={profileStyles.label}>
+            <label className="profile-form-label">
               {t("PROFILE_SURVEY_NUMBER")}{" "}
-              <span style={profileStyles.required}>*</span>
+              <span className="profile-form-required">*</span>
             </label>
 
             <TextInput
@@ -367,18 +364,18 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
         </div>
 
       </div>
-      <div style={styles.section}>
-        <div style={styles.sectionTitle}>
+      <div className="rural-property-section">
+        <div className="rural-property-section-title">
           {t("PROFILE_OWNERSHIP_DETAILS")}
         </div>
-        <div className="profile-property-rural-row" style={styles.fieldRow}>
-          <div style={styles.field}>
-            <label style={profileStyles.label}>
+        <div className="rural-property-field-row profile-property-rural-row">
+          <div className="rural-property-field">
+            <label className="profile-form-label">
               {t("PROFILE_OWNERSHIP_TYPE")}{" "}
-              <span style={profileStyles.required}>*</span>
+              <span className="profile-form-required">*</span>
             </label>
             <RadioButtons
-              style={styles.radioGroup}
+              className="rural-property-radio-group"
               innerStyles={{ display: "flex", alignItems: "center", marginBottom: 0 }}
               options={ownershipOptions}
               optionsKey="name"
@@ -389,20 +386,20 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           <div />
         </div>
         {ownershipType?.code === "JOINT" && (
-          <div style={styles.jointOwnerSection}>
+          <div className="rural-property-joint-owner-section">
 
-            <div style={styles.jointOwnerTitle}>
+            <div className="rural-property-joint-owner-title">
               {t("PROFILE_JOINT_OWNER_DETAILS")}
             </div>
 
-            <div className="profile-property-rural-row" style={styles.fieldRow}>
+            <div className="rural-property-field-row profile-property-rural-row">
 
               {/* Joint Owner Name */}
-              <div style={styles.field}>
+              <div className="rural-property-field">
 
-                <label style={profileStyles.label}>
+                <label className="profile-form-label">
                   {t("PROFILE_JOINT_OWNER_NAME")}{" "}
-                  <span style={profileStyles.required}>
+                  <span className="profile-form-required">
                     *
                   </span>
                 </label>
@@ -418,11 +415,11 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
               </div>
 
               {/* Joint Owner Mobile */}
-              <div style={styles.field}>
+              <div className="rural-property-field">
 
-                <label style={profileStyles.label}>
+                <label className="profile-form-label">
                   {t("PROFILE_JOINT_OWNER_MOBILE")}{" "}
-                  <span style={profileStyles.required}>
+                  <span className="profile-form-required">
                     *
                   </span>
                 </label>
@@ -439,20 +436,20 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
 
             </div>
 
-            <div style={styles.hint}>
+            <div className="rural-property-hint">
               {t("PROFILE_JOINT_OWNER_HINT")}
             </div>
 
           </div>
         )}
       </div>
-      <div style={styles.field}>
-        <div style={styles.sectionTitle}>
+      <div className="rural-property-field">
+        <div className="rural-property-section-title">
           {t("PROFILE_DOCUMENT_UPLOAD")}
         </div>
-        <label style={profileStyles.label}>
+        <label className="profile-form-label">
           {t("PROFILE_ADDRESS_PROOF")}{" "}
-          <span style={profileStyles.required}>*</span>
+          <span className="profile-form-required">*</span>
         </label>
         <Dropdown
           option={documentTypeOptions}
@@ -474,7 +471,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           disabled={isUploading}
           accept=".pdf,.jpg,.jpeg,.png"
         />
-        <div style={profileStyles.documentUploadCard.fileRestrictionText}>
+        <div className="document-upload-file-restriction">
         {t("CS_FILE_SIZE_RESTRICTIONS")}
       </div>
 

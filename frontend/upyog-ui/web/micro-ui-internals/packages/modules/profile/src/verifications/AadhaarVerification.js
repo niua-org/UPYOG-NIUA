@@ -9,7 +9,6 @@ import {
   Loader,
   EditIcon,
 } from "@nudmcdgnpm/digit-ui-react-components";
-import { profileStyles } from "../utils/profileStyles";
 import { buildVerifiedMemberInfo } from "../utils/payloads";
 
 /**
@@ -22,7 +21,6 @@ const AadhaarVerification = ({
   onError,
 }) => {
   const { t } = useTranslation();
-  const styles = profileStyles.aadhaarVerification;
   const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId() || stateId;
 
@@ -191,9 +189,9 @@ const AadhaarVerification = ({
 
       {/* Aadhaar Consent Banner */}
       {showConsentBox && (
-        <div style={styles.consentBox}>
-          <span style={styles.consentIcon}>💡</span>
-          <span style={styles.consentText}>
+        <div className="aadhaar-verification-consent-box">
+          <span className="aadhaar-verification-consent-icon">💡</span>
+          <span className="aadhaar-verification-consent-text">
             {t("AADHAAR_OTP_INFO_CALLOUT")}
           </span>
         </div>
@@ -210,7 +208,7 @@ const AadhaarVerification = ({
 
       {/* OTP Verification Section (appears inline below upon OTP dispatch) */}
       {isOtpSent && (
-        <div style={styles.otpSection}>
+        <div className="aadhaar-verification-otp-section">
           <CardLabel>{t("CORE_COMMON_ENTER_OTP")}</CardLabel>
           <OTPInput
             length={6}
@@ -222,15 +220,14 @@ const AadhaarVerification = ({
           />
 
           {/* 30s Countdown Timer / Resend OTP Action */}
-          <div style={styles.otpTimerWrap}>
+          <div className="aadhaar-verification-otp-timer-wrap">
             {timeLeft > 0 ? (
-              <p style={styles.otpTimerText}>
+              <p className="aadhaar-verification-otp-timer-text">
                 {`${t("CS_RESEND_ANOTHER_OTP")} ${timeLeft} ${t("CS_RESEND_SECONDS")}`}
               </p>
             ) : (
               <p
-                className="card-text-button cp"
-                style={styles.otpResendBtn}
+                className="card-text-button cp aadhaar-verification-otp-resend-btn"
                 onClick={handleResendOtp}
               >
                 {t("CS_RESEND_OTP")}
@@ -239,7 +236,7 @@ const AadhaarVerification = ({
           </div>
 
           {/* OTP Action Row: Verify OTP and Edit Aadhaar Button */}
-          <div style={styles.otpActionRow}>
+          <div className="aadhaar-verification-otp-action-row">
             <SubmitBar
               label={loading ? t("COMMON_VERIFYING") : t("CS_VERIFY_OTP", "Verify OTP")}
               onSubmit={handleVerifyOtp}
@@ -248,9 +245,9 @@ const AadhaarVerification = ({
             <button
               type="button"
               onClick={handleEditAadhaar}
-              style={styles.editAadhaarBtn}
+              className="aadhaar-verification-edit-aadhaar-btn"
             >
-              <EditIcon style={styles.editAadhaarIcon} />
+              <EditIcon className="aadhaar-verification-edit-aadhaar-icon" />
               {t("CORE_COMMON_EDIT_AADHAAR_NUMBER")}
             </button>
           </div>

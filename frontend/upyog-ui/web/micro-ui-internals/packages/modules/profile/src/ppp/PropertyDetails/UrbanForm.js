@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Card, Loader, SearchIconSvg, TextInput } from "@nudmcdgnpm/digit-ui-react-components";
 import { useTranslation } from "react-i18next";
-import { profileStyles } from "../../utils/profileStyles";
 
 /**
  * Gets the display name for a property's active owners.
@@ -49,7 +48,6 @@ const getPropertyAddress = (property) => {
  */
 const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingPropertyIds = [] }) => {
   const { t } = useTranslation();
-  const styles = profileStyles.urbanPropertyForm;
   const [propertyId, setPropertyId] = useState("");
   const [searched, setSearched] = useState(false);
   const [searchError, setSearchError] = useState(false);
@@ -195,13 +193,13 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingProp
   };
 
   return (
-    <div style={styles.container}>
+    <div className="urban-property-form-container">
       {!disabled && (
-        <div style={styles.field}>
-          <label style={profileStyles.label}>{t("PROFILE_SEARCH_LINK_PROPERTY_ID")}</label>
-          <div className="profile-property-urban-search-row" style={styles.searchRow}>
+        <div className="urban-property-form-field">
+          <label className="profile-form-label">{t("PROFILE_SEARCH_LINK_PROPERTY_ID")}</label>
+          <div className="urban-property-form-search-row profile-property-urban-search-row">
             <TextInput
-              style={styles.searchInput}
+              className="urban-property-form-search-input"
               value={propertyId}
               onChange={handleSearchInputChange}
               onKeyDown={handleSearchKeyDown}
@@ -216,34 +214,34 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingProp
             />
             <button
               type="button"
-              style={{ ...profileStyles.primaryButton, ...styles.searchSubmitButton }}
+              className="profile-btn-primary urban-property-form-search-btn"
               onClick={handleSearch}
               disabled={isLoading || !propertyId.trim()}
             >
               {t("CS_COMMON_SUBMIT")}
             </button>
           </div>
-          <div style={styles.createProperty}>
+          <div className="urban-property-create-wrap">
             <span>Not able to find the property?</span>{" "}
             <a
               href="#"
               onClick={(event) => event.preventDefault()}
-              style={styles.registerPropertyLink}
+              className="urban-property-register-link"
             >
               Click here to Register New Property
             </a>
           </div>
           {isLoading && <Loader />}
           {searchError && (
-            <div style={styles.noProperty} role="alert">
+            <div className="urban-property-no-property" role="alert">
               {t("PROFILE_PROPERTY_SEARCH_FAILED")}
             </div>
           )}
           {searched && !isLoading && !searchError && resultsCount === 0 && (
-            <div style={styles.noProperty}>{t("PROFILE_NO_PROPERTY_FOUND")}</div>
+            <div className="urban-property-no-property">{t("PROFILE_NO_PROPERTY_FOUND")}</div>
           )}
           {duplicateProperty && (
-            <div style={styles.duplicatePropertyError} role="alert">
+            <div className="urban-property-duplicate-error" role="alert">
               {t("PROFILE_PROPERTY_ALREADY_ADDED", "This property has already been added.")}
             </div>
           )}
@@ -251,7 +249,7 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingProp
       )}
 
       {propertyCards.length > 0 && (
-        <div style={styles.results}>
+        <div className="urban-property-results">
           {propertyCards.map((property) => {
             const propertyIdValue = property.propertyId || "";
             const status = property.status
@@ -261,13 +259,9 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingProp
             return (
               <Card
                 key={propertyIdValue}
-                className="profile-property-urban-card"
-                style={{
-                  ...styles.propertyCard,
-                  ...styles.propertyCardWithActions,
-                }}
+                className="profile-property-urban-card urban-property-card urban-property-card-with-actions"
               >
-                <div style={styles.propertyDetails}>
+                <div className="urban-property-card-details">
                   {[
                     [t("PROFILE_PROPERTY_TAX_AMOUNT"), `₹ ${property.propertyTaxAmount ?? 0}`],
                     [t("PROFILE_PROPERTY_ID"), propertyIdValue || "NA"],
@@ -275,22 +269,22 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingProp
                     [t("PROFILE_PROPERTY_ADDRESS"), property.propertyAddress || "NA"],
                     [t("PROFILE_STATUS"), status],
                   ].map(([label, value]) => (
-                    <div key={label} style={styles.propertyField}>
-                      <div style={styles.propertyLabel}>{label}</div>
-                      <div style={styles.propertyValue}>{value}</div>
+                    <div key={label} className="urban-property-card-field">
+                      <div className="urban-property-card-label">{label}</div>
+                      <div className="urban-property-card-value">{value}</div>
                     </div>
                   ))}
                 </div>
-                <div className="profile-property-urban-actions" style={styles.propertyActions}>
+                <div className="profile-property-urban-actions urban-property-card-actions">
                   {primaryPropertyId === propertyIdValue ? (
-                    <span style={styles.defaultPropertyButton}>{t("PROFILE_PRIMARY_ADDRESS", "Primary address")}</span>
+                    <span className="urban-property-default-btn">{t("PROFILE_PRIMARY_ADDRESS", "Primary address")}</span>
                   ) : (
                     <button
                       type="button"
                       aria-label={`Set ${propertyIdValue} as primary address`}
                       onClick={() => handleSelectPrimary(propertyIdValue)}
                       disabled={disabled}
-                      style={styles.propertyActionButton}
+                      className="urban-property-action-btn"
                     >
                       {t("PROFILE_MARK_AS_PRIMARY", "Mark as primary")}
                     </button>
@@ -301,7 +295,7 @@ const UrbanPropertyForm = ({ data = {}, onChange, disabled = false, existingProp
                       aria-label={`Remove ${propertyIdValue} as primary address`}
                       onClick={handleRemovePrimary}
                       disabled={disabled}
-                      style={{ ...styles.propertyActionButton, ...styles.removePropertyButton }}
+                      className="urban-property-action-btn urban-property-remove-btn"
                     >
                       {t("PROFILE_REMOVE_AS_PRIMARY", "Remove as primary")}
                     </button>

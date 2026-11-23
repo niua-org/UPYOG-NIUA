@@ -14,7 +14,6 @@ import {
 import UploadDrawer from "../components/UploadDrawer";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 import { FormField, AvatarUpload, toGenderOption, fetchThumbnail, useProfileUser, getVerifiedMember, getFamilyMembers, setFamilyMembers } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import { DEFAULT_CASTE, SPECIALLY_ABLED_YES } from "../utils/constants";
 import { buildUpdateUserPayload, buildSessionUser } from "../utils/payloads";
 import { validators } from "../utils/profileValidators";
@@ -501,32 +500,32 @@ const CreateProfile = ({ config, onSelect, formData }) => {
       >
         {/* Profile Avatar / Photo Upload Card */}
         <div
-          style={errors.photo ? profileStyles.photoUploadCardError : profileStyles.photoUploadCard}
+          className={`create-profile-photo-card ${errors.photo ? "create-profile-photo-card-error" : ""}`}
         >
           <AvatarUpload
             imageUrl={photoThumb}
             name={form.name}
             onCameraClick={isViewMode ? undefined : () => setShowUploadDrawer(true)}
           />
-          <div style={profileStyles.photoDetailsWrap}>
-            <h3 style={profileStyles.photoTitle}>
+          <div className="create-profile-photo-details">
+            <h3 className="create-profile-photo-title">
               {form.name || t("CORE_COMMON_PROFILE_DETAILS", "Profile Details")}
             </h3>
-            <span style={profileStyles.photoHelpText}>
+            <span className="create-profile-photo-help">
               {t("PROFILE_PHOTO_UPLOAD_HELP", "Click on the camera icon to upload or update your profile photo.")}
-              <span style={profileStyles.requiredAsterisk}>*</span>
+              <span className="create-profile-required-asterisk">*</span>
             </span>
             {errors.photo && (
-              <span style={profileStyles.photoErrorMessage}>
+              <span className="create-profile-photo-error">
                 {t(errors.photo, "Profile photo is mandatory.")}
               </span>
             )}
-            <div style={profileStyles.photoButtonRow}>
+            <div className="create-profile-photo-button-row">
               {!isViewMode && (
                 <button
                   type="button"
                   onClick={() => setShowUploadDrawer(true)}
-                  style={errors.photo ? profileStyles.photoUploadBtnError : profileStyles.photoUploadBtn}
+                  className={`create-profile-photo-upload-btn ${errors.photo ? "create-profile-photo-upload-btn-error" : ""}`}
                 >
                   📷 {t("UPDATE_PHOTO", "Upload Photo")}
                 </button>
@@ -535,7 +534,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
                 <button
                   type="button"
                   onClick={removeProfilePic}
-                  style={profileStyles.photoRemoveBtn}
+                  className="create-profile-photo-remove-btn"
                 >
                   🗑️ {t("REMOVE_PHOTO", "Remove")}
                 </button>
@@ -545,7 +544,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
         </div>
 
         {/* Form Fields: Dynamic 3-Column Per Row Grid */}
-        <div style={profileStyles.gridStyle}>
+        <div className="profile-grid-3col">
           {/* Row 1 */}
           <FormField label={t("CORE_COMMON_PROFILE_NAME", "Name")} required error={errors.name} t={t}>
             <TextInput
@@ -674,7 +673,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               t={t}
               placeholder={t("SELECT", "Select")}
               disable={isViewMode}
-              optionCardStyles={profileStyles.dropDownHeight}
+              optionCardStyles={{ maxHeight: "220px", overflowY: "auto" }}
             />
           </FormField>
 

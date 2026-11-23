@@ -15,7 +15,6 @@ import {
   CloseSvg,
   Toast,
 } from "@nudmcdgnpm/digit-ui-react-components";
-import { profileStyles } from "../utils/profileStyles";
 import { buildVerifiedMemberInfo } from "../utils/payloads";
 import { getFamilyMembers } from "../utils";
 import { OTP_LENGTH } from "../utils/constants";
@@ -57,7 +56,6 @@ const AadhaarVerificationModal = ({
   showConsentBox = true,
 }) => {
   const { t } = useTranslation();
-  const styles = profileStyles.aadhaarVerification || {};
   const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId() || stateId;
 
@@ -385,23 +383,9 @@ const AadhaarVerificationModal = ({
 
       {/* Consent Callout Banner */}
       {showConsentBox && (
-        <div
-          style={
-            styles.consentBox || {
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 14px",
-              backgroundColor: "#F4F5F7",
-              borderRadius: "8px",
-              fontSize: "13px",
-              color: "#505A5F",
-              marginBottom: "16px",
-            }
-          }
-        >
-          <span style={styles.consentIcon || { fontSize: "16px" }}>💡</span>
-          <span style={styles.consentText || { lineHeight: 1.4 }}>
+        <div className="aadhaar-verification-consent-box">
+          <span className="aadhaar-verification-consent-icon">💡</span>
+          <span className="aadhaar-verification-consent-text">
             {t("AADHAAR_OTP_INFO_CALLOUT", "An OTP will be sent to the mobile number registered with this Aadhaar number.")}
           </span>
         </div>

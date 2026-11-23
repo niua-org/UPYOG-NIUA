@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FormStep, Dropdown, TextInput, UploadFile } from "@nudmcdgnpm/digit-ui-react-components";
 import { TAX_VALIDATORS, FormField } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 import DocumentUploadCard from "../utils/DocumentUploadCard";
 
@@ -178,7 +177,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
         t={t}
         isDisabled={isViewMode ? false : isDisabled}
       >
-        <div style={profileStyles.gridStyle}>
+        <div className="profile-grid-3col">
           <FormField label={t("PROFILE_OCCUPATION")} required t={t}>
             <Dropdown
               selected={occupation}
@@ -220,8 +219,8 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
 
           {taxIdType && (
             <FormField label={t(taxIdType.i18nKey)} required error={taxIdError} t={t}>
-              <div style={profileStyles.taxIdInputRow}>
-                <div style={profileStyles.taxIdInputWrap}>
+              <div className="income-details-tax-row">
+                <div className="income-details-tax-wrap">
                   <TextInput
                     t={t}
                     type="text"
@@ -238,17 +237,15 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                   type="button"
                   onClick={handleValidateTaxId}
                   disabled={isViewMode || isValidateBtnDisabled}
-                  style={{
-                    ...profileStyles.validateBtn,
-                    ...(taxIdValidated ? profileStyles.validateBtnSuccess : {}),
-                    ...(isViewMode || isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
-                  }}
+                  className={`income-details-validate-btn ${taxIdValidated ? "income-details-validate-btn-success" : ""} ${
+                    isViewMode || isValidateBtnDisabled ? "income-details-validate-btn-disabled" : ""
+                  }`}
                 >
                   {taxIdValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
                 </button>
               </div>
               {validateStatus === "success" && (
-                <p style={profileStyles.validateSuccessMsg}>{t("PROFILE_TAX_ID_VALID")}</p>
+                <p className="income-details-validate-success-msg">{t("PROFILE_TAX_ID_VALID")}</p>
               )}
             </FormField>
           )}
@@ -267,7 +264,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                 iserror={taxProofError}
                 disabled={isViewMode}
               />
-              <p style={profileStyles.documentUploadCard.fileRestrictionText}>
+              <p className="document-upload-file-restriction">
                 {t("CS_FILE_SIZE_RESTRICTIONS")}
               </p>
             </FormField>

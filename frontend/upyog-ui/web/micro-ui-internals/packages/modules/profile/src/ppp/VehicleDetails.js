@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FormStep, Dropdown, TextInput, UploadFile, DatePicker, RadioButtons, DeleteIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { FormField } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 
 /**
@@ -242,20 +241,20 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
 
         {/* Vehicle Cards — rendered only when hasVehicle === "Yes" */}
         {hasVehicle === "Yes" && (
-          <div style={profileStyles.vehicleDetails.listWrapper}>
+          <div className="vehicle-details-list-wrapper">
             {vehicleList.map((veh, index) => {
               const isValidateBtnDisabled = !veh.vehicleNo || !!veh.vehicleNoError;
               return (
-                <div key={veh.id} style={profileStyles.vehicleDetails.card}>
-                  <div style={profileStyles.vehicleDetails.cardHeader}>
-                    <div style={profileStyles.vehicleDetails.cardTitle}>
+                <div key={veh.id} className="vehicle-details-card">
+                  <div className="vehicle-details-card-header">
+                    <div className="vehicle-details-card-title">
                      {t("PROFILE_VEHICLE")} {index + 1}
                     </div>
                     {vehicleList.length > 1 && !isViewMode && (
                       <button
                         type="button"
                         onClick={() => handleRemoveVehicle(veh.id)}
-                        style={profileStyles.vehicleDetails.deleteBtn}
+                        className="vehicle-details-delete-btn"
                         title={t("REMOVE")}
                       >
                         <DeleteIcon fill="#a82227" style={{ width: "20px", height: "20px" }} />
@@ -264,7 +263,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
                   </div>
 
                   {/* 6 Vehicle Fields Grid */}
-                  <div style={profileStyles.gridStyle}>
+                  <div className="profile-grid-3col">
                     <FormField label={t("PROFILE_VEHICLE_TYPE")} required t={t}>
                       <Dropdown
                         selected={veh.vehicleType}
@@ -305,8 +304,8 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
                     </FormField>
 
                     <FormField label={t("PROFILE_VEHICLE_NO")} required t={t} error={veh.vehicleNoError}>
-                      <div style={profileStyles.taxIdInputRow}>
-                        <div style={profileStyles.taxIdInputWrap}>
+                      <div className="income-details-tax-row">
+                        <div className="income-details-tax-wrap">
                           <TextInput
                             t={t}
                             type="text"
@@ -323,17 +322,15 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
                           type="button"
                           onClick={() => handleValidateVehicleNo(veh)}
                           disabled={isViewMode || isValidateBtnDisabled}
-                          style={{
-                            ...profileStyles.validateBtn,
-                            ...(veh.vehicleNoValidated ? profileStyles.validateBtnSuccess : {}),
-                            ...(isViewMode || isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
-                          }}
+                          className={`income-details-validate-btn ${veh.vehicleNoValidated ? "income-details-validate-btn-success" : ""} ${
+                            isViewMode || isValidateBtnDisabled ? "income-details-validate-btn-disabled" : ""
+                          }`}
                         >
                           {veh.vehicleNoValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
                         </button>
                       </div>
                       {veh.vehicleNoValidateStatus === "success" && (
-                        <p style={profileStyles.validateSuccessMsg}>{t("PROFILE_VEHICLE_NO_VALID")}</p>
+                        <p className="income-details-validate-success-msg">{t("PROFILE_VEHICLE_NO_VALID")}</p>
                       )}
                     </FormField>
 
@@ -355,7 +352,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
                         iserror={veh.fileError}
                         disabled={isViewMode}
                       />
-                      <p style={profileStyles.documentUploadCard.fileRestrictionText}>{t("CS_FILE_SIZE_RESTRICTIONS")}</p>
+                      <p className="document-upload-file-restriction">{t("CS_FILE_SIZE_RESTRICTIONS")}</p>
                     </FormField>
                   </div>
                 </div>
@@ -364,14 +361,14 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
 
             {/* Add Another Vehicle Button (Visible only when vehicleList < 3) */}
             {vehicleList.length < 3 && !isViewMode && (
-              <div style={profileStyles.vehicleDetails.addVehicleWrapper}>
+              <div className="vehicle-details-add-wrapper">
                 <button
                   type="button"
                   onClick={handleAddVehicle}
-                  style={{...profileStyles.validateBtn}}
+                  className="income-details-validate-btn"
                 >
                   <span>{t("PROFILE_ADD_ANOTHER_VEHICLE")}</span>
-                  <span style={profileStyles.vehicleDetails.vehcileMaxNumber}>({vehicleList.length}/3)</span>
+                  <span className="vehicle-details-max-number">({vehicleList.length}/3)</span>
                 </button>
               </div>
             )}
