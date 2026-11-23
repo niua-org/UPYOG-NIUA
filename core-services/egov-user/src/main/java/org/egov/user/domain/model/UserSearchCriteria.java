@@ -81,7 +81,8 @@ public class UserSearchCriteria {
                     CollectionUtils.isEmpty(uuid) && CollectionUtils.isEmpty(id) && CollectionUtils.isEmpty(roleCodes) && isEmpty(aadhaarNumber);
         else
             return isEmpty(userName) && isEmpty(name) && isEmpty(mobileNumber) && isEmpty(emailId) &&
-                    CollectionUtils.isEmpty(uuid);
+            		CollectionUtils.isEmpty(uuid) &&
+                    CollectionUtils.isEmpty(userNames) && CollectionUtils.isEmpty(mobileNumbers);
     }
 
     private boolean validateIfTenantIdExists(boolean isInterServiceCall) {
@@ -93,10 +94,12 @@ public class UserSearchCriteria {
          */
         if (isInterServiceCall)
             return (!isEmpty(userName) || !isEmpty(name) || !isEmpty(mobileNumber) ||
-                    !CollectionUtils.isEmpty(roleCodes))
+            		!CollectionUtils.isEmpty(roleCodes) ||
+                    !CollectionUtils.isEmpty(userNames) || !CollectionUtils.isEmpty(mobileNumbers))
                     && isEmpty(tenantId);
         else
-            return (!isEmpty(userName) || !isEmpty(name) || !isEmpty(mobileNumber))
+        	return (!isEmpty(userName) || !isEmpty(name) || !isEmpty(mobileNumber) ||
+                    !CollectionUtils.isEmpty(userNames) || !CollectionUtils.isEmpty(mobileNumbers))
                     && isEmpty(tenantId);
 
     }

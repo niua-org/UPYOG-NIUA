@@ -48,8 +48,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -63,7 +66,7 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 public class UserTypeQueryBuilder {
 
     private static final String SELECT_USER_QUERY = "SELECT userdata.title, userdata.salutation, userdata.dob, userdata.locale, userdata.username, userdata" +
-            ".password, userdata.pwdexpirydate,  userdata.mobilenumber, userdata.altcontactnumber, userdata.emailid, userdata.createddate, userdata" +
+    		".password, userdata.pwdexpirydate,  userdata.mobilenumber, userdata.altcontactnumber, userdata.emailid, userdata.createddate, userdata" +
             ".lastmodifieddate,  userdata.createdby,userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber, " +
@@ -218,6 +221,13 @@ public class UserTypeQueryBuilder {
             selectQuery.append(" userdata.username = ?");
             preparedStatementValues.add(userSearchCriteria.getUserName().trim());
         }
+        
+        if (!isEmpty(userSearchCriteria.getUserNames())) {
+            isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, selectQuery);
+            selectQuery.append(" userdata.username IN (")
+                    .append(getQueryForCollection(userSearchCriteria.getUserNames(), preparedStatementValues))
+                    .append(" )");
+        }
 
         if (!userSearchCriteria.isFuzzyLogic() && userSearchCriteria.getName() != null) {
             isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, selectQuery);
@@ -271,7 +281,8 @@ public class UserTypeQueryBuilder {
 
         if (userSearchCriteria.isFuzzyLogic() && userSearchCriteria.getName() != null) {
             isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, selectQuery);
-            selectQuery.append(" userdata.name like " + "'%").append(userSearchCriteria.getName().trim()).append("%'");
+            selectQuery.append(" userdata.name like ?");
+            preparedStatementValues.add("%" + userSearchCriteria.getName().trim() + "%");
         }
 
         if (!isEmpty(userSearchCriteria.getUuid())) {
@@ -293,8 +304,17 @@ public class UserTypeQueryBuilder {
      * @param userSearchCriteria search criteria containing sort parameters
      */
     private void addOrderByClause(final StringBuilder selectQuery, final UserSearchCriteria userSearchCriteria) {
-        final String sortBy = userSearchCriteria.getSort() != null && !userSearchCriteria.getSort().isEmpty()
-                ? " userdata." + userSearchCriteria.getSort().get(0) : "userdata.name";
+    	 String sortBy = "userdata.name";
+         if (userSearchCriteria.getSort() != null && !userSearchCriteria.getSort().isEmpty()) {
+             final String[] parts = userSearchCriteria.getSort().get(0).trim().toLowerCase().split("\\s+");
+             final boolean validColumn = ALLOWED_SORT_COLUMNS.contains(parts[0]);
+             final boolean validDirection = parts.length == 1
+                     || (parts.length == 2 && (parts[1].equals("asc") || parts[1].equals("desc")));
+             if (validColumn && validDirection)
+                 sortBy = "userdata." + parts[0] + (parts.length == 2 ? " " + parts[1] : "");
+             else
+                 log.warn("Ignoring invalid sort value in user search; defaulting to name");
+         }
         selectQuery.append(" ORDER BY ").append(sortBy);
     }
 

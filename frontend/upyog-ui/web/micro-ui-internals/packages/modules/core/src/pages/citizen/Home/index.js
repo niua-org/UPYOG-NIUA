@@ -23,6 +23,7 @@ import StaticCitizenSideBar from "../../../components/TopBarSideBar/SideBar/Stat
 import UpyogBot from "./UpyogBot";
 import HeaderBoxSection from "../../../components/HeaderBoxSection";
 import UserActionLayout from "../../../components/UserActionLayout";
+import DueRenewalsModal from "../../../components/DueRenewalsModal";
 
 const Home = ({ layout }) => {
   const { t } = useTranslation();
@@ -32,6 +33,7 @@ const Home = ({ layout }) => {
   const [user, setUser] = useState(Digit.UserService.getUser() || null);
   const [UIType, setUIType] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDueRenewalsModalOpen, setIsDueRenewalsModalOpen] = useState(false);
   const DEFAULT_REDIRECT_URL = "/upyog-ui/citizen";
   const { data: { stateInfo, uiHomePage } = {}, isLoading } = Digit.Hooks.useStore.getInitData();
   let isMobile = window.Digit.Utils.browser.isMobile();
@@ -52,7 +54,7 @@ const Home = ({ layout }) => {
 
   const { data: EventsData, isLoading: EventsDataLoading } = Digit.Hooks.useEvents({
     tenantId,
-    variant: "whats-new",
+    variant: "notifications",
     config: {
       enabled: conditionsToDisableNotificationCountTrigger(),
     },
@@ -66,9 +68,7 @@ const Home = ({ layout }) => {
   useEffect(() => {
     if (
       location.pathname.includes("/citizen/login") ||
-      location.pathname.includes("/citizen/register") ||
-      location.pathname.includes("/citizen/select-language") ||
-      location.pathname.includes("/citizen/select-location")
+      location.pathname.includes("/citizen/register")
     ) {
       return;
     }
@@ -76,13 +76,9 @@ const Home = ({ layout }) => {
     const currentUser = Digit.UserService.getUser();
     const currentLanguage = Digit.StoreData.getCurrentLanguage();
 
-    if (!tenantId || !currentUser?.access_token) {
+    if (!tenantId || !currentUser?.access_token || !currentLanguage) {
       navigate("/upyog-ui/citizen/login", { replace: true, state: { from: location.pathname + location.search } });
       return;
-    }
-
-    if (!currentLanguage) {
-      navigate("/upyog-ui/citizen/select-language", { replace: true, state: { from: location.pathname + location.search } });
     }
   }, [tenantId, location.pathname, location.search, navigate]);
 
@@ -187,8 +183,16 @@ const Home = ({ layout }) => {
     setUIType(DashboardLayout.case2);
   }, []);
 
-  const userActionCards = buildUserActionCards(aggregateData, t, navigate, tenantId);
-  const taskSummaryCards = buildTaskSummaryCards(aggregateData, t, navigate);
+  const responses = aggregateData?.responses || {};
+  const dueRenewalsRaw = responses?.["due-renewals"]?.data?.bills || responses?.["due-renewals"]?.data || [];
+  const dueRenewals = Array.isArray(dueRenewalsRaw) ? dueRenewalsRaw : [];
+
+  const actionHandlers = {
+    onOpenDueRenewals: () => setIsDueRenewalsModalOpen(true),
+  };
+
+  const userActionCards = buildUserActionCards(aggregateData, t, navigate, tenantId, actionHandlers, EventsData);
+  const taskSummaryCards = buildTaskSummaryCards(aggregateData, t, navigate, actionHandlers, EventsData);
   const hasAnyData = userActionCards.length > 0;
   const userName = user?.info?.name || user?.name || "Citizen";
 
@@ -335,6 +339,14 @@ const Home = ({ layout }) => {
         ) : null}
         {/* <ChatBot /> text bot commented as we are using new speech bot*/}
         <UpyogBot />
+
+        <DueRenewalsModal
+          isOpen={isDueRenewalsModalOpen}
+          onClose={() => setIsDueRenewalsModalOpen(false)}
+          bills={dueRenewals}
+          tenantId={tenantId}
+          navigate={navigate}
+        />
       </div>
     </div>
   );
@@ -367,7 +379,275 @@ const getModuleIcon = (service = "") => {
   return "📋";
 };
 
-const buildUserActionCards = (aggregateData, t, navigate, tenantId) => {
+const formatNotifOneLiner = (text = "", fallback = "") => {
+  const cleaned = String(text || fallback || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return "";
+  return cleaned.length > 78 ? `${cleaned.slice(0, 75)}...` : cleaned;
+};
+
+const getNotificationTypeMeta = (notif = {}, t) => {
+  const rawType = (
+    notif?.type ||
+    notif?.category ||
+    notif?.eventType ||
+    notif?.businessService ||
+    notif?.source ||
+    ""
+  )
+    .toString()
+    .toUpperCase();
+
+  if (rawType.includes("EVENT")) {
+    return {
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_EVENT", "Event"),
+      statusVariant: "primary",
+      icon: "📅",
+      defaultLine: getLabel(t, "CITIZEN_NOTIF_EVENT_LINE", "Upcoming municipal event • Tap to view schedule & details"),
+    };
+  }
+  if (rawType.includes("BILL") || rawType.includes("PAY") || rawType.includes("DUE") || rawType.includes("REMINDER")) {
+    return {
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_REMINDER", "Reminder"),
+      statusVariant: "warning",
+      icon: "💳",
+      defaultLine: getLabel(t, "CITIZEN_NOTIF_REMINDER_LINE", "Payment due reminder • Complete payment before due date"),
+    };
+  }
+  if (rawType.includes("BROADCAST") || rawType.includes("NOTICE") || rawType.includes("ANNOUNCEMENT")) {
+    return {
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_NOTICE", "Notice"),
+      statusVariant: "neutral",
+      icon: "📢",
+      defaultLine: getLabel(t, "CITIZEN_NOTIF_NOTICE_LINE", "Public municipal advisory and citizen notice"),
+    };
+  }
+  if (rawType.includes("APPROV") || rawType.includes("SUCCESS") || rawType.includes("PAID")) {
+    return {
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_APPROVED", "Approved"),
+      statusVariant: "success",
+      icon: "✅",
+      defaultLine: getLabel(t, "CITIZEN_NOTIF_APPROVED_LINE", "Your application request has been processed"),
+    };
+  }
+  if (rawType.includes("SYSTEM") || rawType.includes("UPDATE") || rawType.includes("STATUS")) {
+    return {
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_UPDATE", "Update"),
+      statusVariant: "info",
+      icon: "🔔",
+      defaultLine: getLabel(t, "CITIZEN_NOTIF_UPDATE_LINE", "Application status & service update available"),
+    };
+  }
+  return {
+    status: getLabel(t, "CITIZEN_NOTIF_TYPE_ALERT", "Alert"),
+    statusVariant: "info",
+    icon: "🔔",
+    defaultLine: getLabel(t, "CITIZEN_NOTIF_DEFAULT_LINE", "Recent update on your citizen services account"),
+  };
+};
+
+const getTransformedLocale = (label) => {
+  if (typeof label === "number") return label;
+  label = label?.trim();
+  return label && label.toUpperCase().replace(/[.:-\s/]/g, "_");
+};
+
+const inferNotificationHeading = (notif = {}, matchedEvent = {}, t) => {
+  const src = { ...matchedEvent, ...notif };
+  const rawHeader =
+    src?.header ||
+    (src?.eventType === "SYSTEMGENERATED" && src?.name ? getTransformedLocale(src.name) : src?.name) ||
+    src?.title ||
+    src?.eventCategory ||
+    src?.businessService ||
+    "";
+
+  if (rawHeader) {
+    const transformed = getTransformedLocale(rawHeader);
+    const directTranslation = t(rawHeader);
+    if (directTranslation && directTranslation !== rawHeader) return directTranslation;
+    if (transformed) {
+      const transformedTranslation = t(transformed);
+      if (transformedTranslation && transformedTranslation !== transformed) return transformedTranslation;
+    }
+    return rawHeader;
+  }
+
+  const desc = (src?.description || src?.eventNotificationText || src?.message || src?.text || "").toLowerCase();
+  if (desc.includes("property") || desc.includes("pt-") || desc.includes("assessment")) return t("ACTION_TEST_PROPERTY_TAX", "Property Tax");
+  if (desc.includes("trade") || desc.includes("tl-") || desc.includes("license")) return t("ACTION_TEST_TRADE_LICENSE", "Trade License");
+  if (desc.includes("water") || desc.includes("ws/") || desc.includes("sewerage") || desc.includes("sw/")) return t("ACTION_TEST_WATER_AND_SEWERAGE", "Water & Sewerage");
+  if (desc.includes("challan") || desc.includes("pg-ch")) return t("UC_COMMON_HEADER_SEARCH", "mCollect Challan");
+  if (desc.includes("hall") || desc.includes("chb")) return t("CHB_COMMUNITY_HALL_BOOKING", "Community Hall Booking");
+  if (desc.includes("pet") || desc.includes("ptr")) return t("PTR_PET_REGISTRATION", "Pet Registration");
+  if (desc.includes("complaint") || desc.includes("grievance") || desc.includes("pgr")) return t("ES_PGR_HEADER_COMPLAINT", "Public Grievance");
+  if (desc.includes("bpa") || desc.includes("building") || desc.includes("permit")) return t("ACTION_TEST_OBPS", "Building Plan Approval");
+
+  return t("Notice");
+};
+
+const buildNotificationItems = (aggregateData, eventsData = [], t, navigate, tenantId, handlers = {}) => {
+  const responses = aggregateData?.responses || {};
+  const notifsRaw = responses?.["notifications"]?.data?.notifications || responses?.["notifications"]?.data || [];
+  const apiNotifs = Array.isArray(notifsRaw) ? notifsRaw : [];
+  const liveEvents = Array.isArray(eventsData) ? eventsData : [];
+
+  const dueRenewalsRaw = responses?.["due-renewals"]?.data?.bills || responses?.["due-renewals"]?.data || [];
+  const dueRenewals = Array.isArray(dueRenewalsRaw) ? dueRenewalsRaw : [];
+
+  const recentAppsRaw = responses?.["recent-applications"]?.data?.applications || responses?.["recent-applications"]?.data || [];
+  const recentApps = Array.isArray(recentAppsRaw) ? recentAppsRaw : [];
+
+  // Prefer liveEvents (from useEvents({ variant: "notifications" })) so headings match /citizen/engagement/notifications
+  const sourceList = liveEvents.length > 0 ? liveEvents : apiNotifs;
+
+  if (sourceList.length > 0) {
+    return sourceList.slice(0, 4).map((notif) => {
+      const matchedEvent =
+        liveEvents.find(
+          (ev) =>
+            (ev?.id && notif?.id && ev.id === notif.id) ||
+            (ev?.uuid && notif?.uuid && ev.uuid === notif.uuid) ||
+            (ev?.description && (notif?.description || notif?.message) && ev.description === (notif.description || notif.message))
+        ) || {};
+      const mergedNotif = { ...matchedEvent, ...notif };
+      const typeMeta = getNotificationTypeMeta(mergedNotif, t);
+      const title = inferNotificationHeading(notif, matchedEvent, t);
+
+      const rawDesc =
+        mergedNotif?.description ||
+        mergedNotif?.eventNotificationText ||
+        mergedNotif?.subTitle ||
+        mergedNotif?.message ||
+        mergedNotif?.summary ||
+        mergedNotif?.text ||
+        mergedNotif?.eventDetails?.address ||
+        "";
+      const translatedDesc = rawDesc ? getLabel(t, rawDesc, rawDesc) : "";
+      const ts =
+        mergedNotif?.auditDetails?.lastModifiedTime ||
+        mergedNotif?.auditDetails?.createdTime ||
+        mergedNotif?.createdTime ||
+        mergedNotif?.date;
+      const dateStr = ts ? new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) : "";
+
+      const baseOneLiner = formatNotifOneLiner(translatedDesc, typeMeta.defaultLine);
+      const subTitle = dateStr && !baseOneLiner.includes(dateStr) ? `${baseOneLiner} • ${dateStr}` : baseOneLiner;
+
+      return {
+        title,
+        subTitle,
+        status: typeMeta.status,
+        statusVariant: typeMeta.statusVariant,
+        icon: mergedNotif?.businessService ? getModuleIcon(mergedNotif.businessService) : getModuleIcon(title) !== "📋" ? getModuleIcon(title) : typeMeta.icon,
+        onClick: () => {
+          if (mergedNotif?.eventType === "EVENTSONGROUND" && mergedNotif?.id) {
+            navigate(`/upyog-ui/citizen/engagement/events/details/${mergedNotif.id}`);
+          } else if (mergedNotif?.redirectUrl) {
+            navigate(mergedNotif.redirectUrl.replace("/digit-ui/", "/upyog-ui/"));
+          } else if (mergedNotif?.actions?.[0]?.actionUrl) {
+            navigate(mergedNotif.actions[0].actionUrl.replace("/digit-ui/", "/upyog-ui/"));
+          } else {
+            navigate("/upyog-ui/citizen/engagement/notifications");
+          }
+        },
+      };
+    });
+  }
+
+  const fallbackItems = [];
+
+  if (dueRenewals.length > 0) {
+    const topBill = dueRenewals[0];
+    const svcLabel = topBill?.businessService
+      ? getLabel(t, topBill.businessService.toUpperCase(), topBill.businessService)
+      : getLabel(t, "BILL_PAYMENT", "Bill Payment");
+    const amt = topBill?.totalAmount !== undefined ? `₹${topBill.totalAmount}` : "";
+    fallbackItems.push({
+      title: `${svcLabel} ${getLabel(t, "PAYMENT_REMINDER", "Payment Reminder")}`,
+      subTitle: formatNotifOneLiner(
+        `${amt ? `Pending bill of ${amt}` : "Pending utility bill"} for ${topBill?.consumerCode || svcLabel} • Tap to pay online`
+      ),
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_REMINDER", "Reminder"),
+      statusVariant: "warning",
+      icon: getModuleIcon(topBill?.businessService || "pt"),
+      onClick: () => {
+        if (handlers?.onOpenDueRenewals) handlers.onOpenDueRenewals();
+        else navigate("/upyog-ui/citizen/engagement/notifications");
+      },
+    });
+  }
+
+  if (recentApps.length > 0) {
+    const topApp = recentApps[0];
+    const appSvc = topApp?.serviceName
+      ? getLabel(t, topApp.serviceName, topApp.serviceName)
+      : topApp?.businessService
+      ? getLabel(t, topApp.businessService, topApp.businessService)
+      : getLabel(t, "APPLICATION", "Application");
+    const appNo = topApp?.applicationNumber || topApp?.consumerCode || topApp?.id || "";
+    const appStatus = topApp?.status ? getLabel(t, topApp.status, topApp.status) : getLabel(t, "SUBMITTED", "Submitted");
+    fallbackItems.push({
+      title: `${appSvc} ${getLabel(t, "STATUS_UPDATE", "Status Update")}`,
+      subTitle: formatNotifOneLiner(`Application ${appNo} is currently ${appStatus} • Track progress`),
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_UPDATE", "Update"),
+      statusVariant: "info",
+      icon: getModuleIcon(topApp?.businessService || topApp?.serviceName || "pt"),
+      onClick: () => {
+        if (topApp?.redirectUrl) navigate(topApp.redirectUrl.replace("/digit-ui/", "/upyog-ui/"));
+        else navigate("/upyog-ui/citizen/engagement/notifications");
+      },
+    });
+  }
+
+  fallbackItems.push(
+    {
+      title: getLabel(t, "CITIZEN_NOTIF_PT_REBATE_TITLE", "Property Tax Rebate Window"),
+      subTitle: getLabel(
+        t,
+        "CITIZEN_NOTIF_PT_REBATE_DESC",
+        "Pay your annual property tax early online to avail rebate benefits"
+      ),
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_NOTICE", "Notice"),
+      statusVariant: "primary",
+      icon: "🏠",
+      onClick: () => navigate("/upyog-ui/citizen/engagement/notifications"),
+    },
+    {
+      title: getLabel(t, "CITIZEN_NOTIF_SERVICE_PORTAL_TITLE", "Citizen Digital Services Update"),
+      subTitle: getLabel(
+        t,
+        "CITIZEN_NOTIF_SERVICE_PORTAL_DESC",
+        "Track applications, download receipts & receive instant SMS alerts"
+      ),
+      status: getLabel(t, "CITIZEN_NOTIF_TYPE_ALERT", "Alert"),
+      statusVariant: "neutral",
+      icon: "🔔",
+      onClick: () => navigate("/upyog-ui/citizen/engagement/notifications"),
+    }
+  );
+
+  return fallbackItems.slice(0, 3);
+};
+
+const buildBillRedirectUrl = (bill, fallbackTenantId) => {
+  const resolvedTenant = bill?.tenantId || fallbackTenantId || Digit?.ULBService?.getCitizenCurrentTenant(true);
+  if (bill?.redirectUrl) {
+    const baseUrl = bill.redirectUrl.replace("/digit-ui/", "/upyog-ui/");
+    if (!resolvedTenant || /[?&]tenantId=/.test(baseUrl)) {
+      return baseUrl;
+    }
+    const separator = baseUrl.includes("?") ? "&" : "?";
+    return `${baseUrl}${separator}tenantId=${encodeURIComponent(resolvedTenant)}`;
+  }
+  if (bill?.consumerCode && bill?.businessService) {
+    return `/upyog-ui/citizen/payment/pay?consumerCode=${bill.consumerCode}&tenantId=${resolvedTenant}&businessService=${bill.businessService}`;
+  }
+  return "/upyog-ui/citizen";
+};
+
+const buildUserActionCards = (aggregateData, t, navigate, tenantId, handlers = {}, eventsData = []) => {
   const responses = aggregateData?.responses || {};
 
   const dueRenewalsRaw = responses?.["due-renewals"]?.data?.bills || responses?.["due-renewals"]?.data || [];
@@ -376,8 +656,7 @@ const buildUserActionCards = (aggregateData, t, navigate, tenantId) => {
   const recentAppsRaw = responses?.["recent-applications"]?.data?.applications || responses?.["recent-applications"]?.data || [];
   const recentApps = Array.isArray(recentAppsRaw) ? recentAppsRaw : [];
 
-  const notifsRaw = responses?.["notifications"]?.data?.notifications || responses?.["notifications"]?.data || [];
-  const notifs = Array.isArray(notifsRaw) ? notifsRaw : [];
+  const notifs = buildNotificationItems(aggregateData, eventsData, t, navigate, tenantId, handlers);
 
   const draftsRaw = responses?.["draft-applications"]?.data?.drafts || responses?.["draft-applications"]?.data || [];
   const drafts = Array.isArray(draftsRaw) ? draftsRaw : [];
@@ -390,15 +669,25 @@ const buildUserActionCards = (aggregateData, t, navigate, tenantId) => {
   if (dueRenewals.length > 0) {
     cards.push({
       title: getLabel(t, "CITIZEN_DUE_RENEWALS", "Due Renewals"),
-      viewAllLabel: dueRenewals.length > 3 ? getLabel(t, "COMMON_VIEW_ALL", "View All") : undefined,
+      viewAllLabel: getLabel(t, "COMMON_VIEW_ALL", "View All"),
       onViewAll: () => {
-        if (dueRenewals[0]?.redirectUrl) navigate(dueRenewals[0].redirectUrl.replace("/digit-ui/", "/upyog-ui/"));
-        else navigate("/upyog-ui/citizen");
+        if (handlers?.onOpenDueRenewals) {
+          handlers.onOpenDueRenewals();
+        } else if (dueRenewals[0]) {
+          navigate(buildBillRedirectUrl(dueRenewals[0], tenantId));
+        } else {
+          navigate("/upyog-ui/citizen");
+        }
       },
       footerLabel: getLabel(t, "CITIZEN_VIEW_ALL_BILLS", "View All Due Bills"),
       onFooterClick: () => {
-        if (dueRenewals[0]?.redirectUrl) navigate(dueRenewals[0].redirectUrl.replace("/digit-ui/", "/upyog-ui/"));
-        else navigate("/upyog-ui/citizen");
+        if (handlers?.onOpenDueRenewals) {
+          handlers.onOpenDueRenewals();
+        } else if (dueRenewals[0]) {
+          navigate(buildBillRedirectUrl(dueRenewals[0], tenantId));
+        } else {
+          navigate("/upyog-ui/citizen");
+        }
       },
       items: dueRenewals.slice(0, 4).map((bill) => {
         const dateStr = bill?.dueDate ? new Date(bill.dueDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "";
@@ -410,11 +699,7 @@ const buildUserActionCards = (aggregateData, t, navigate, tenantId) => {
           statusVariant: (bill?.totalAmount || 0) > 0 ? "warning" : "success",
           icon: getModuleIcon(bill?.businessService),
           onClick: () => {
-            if (bill?.redirectUrl) {
-              navigate(bill.redirectUrl.replace("/digit-ui/", "/upyog-ui/"));
-            } else if (bill?.consumerCode && bill?.businessService) {
-              navigate(`/upyog-ui/citizen/payment/pay?consumerCode=${bill.consumerCode}&tenantId=${bill.tenantId || tenantId}&businessService=${bill.businessService}`);
-            }
+            navigate(buildBillRedirectUrl(bill, tenantId));
           },
         };
       }),
@@ -444,19 +729,11 @@ const buildUserActionCards = (aggregateData, t, navigate, tenantId) => {
   if (notifs.length > 0) {
     cards.push({
       title: getLabel(t, "CITIZEN_NOTIFICATIONS", "Notifications"),
-      viewAllLabel: notifs.length > 3 ? getLabel(t, "COMMON_VIEW_ALL", "View All") : undefined,
+      viewAllLabel: getLabel(t, "COMMON_VIEW_ALL", "View All"),
       onViewAll: () => navigate("/upyog-ui/citizen/engagement/notifications"),
       footerLabel: getLabel(t, "CITIZEN_ALL_NOTIFICATIONS", "View All Notifications"),
       onFooterClick: () => navigate("/upyog-ui/citizen/engagement/notifications"),
-      items: notifs.slice(0, 4).map((notif) => ({
-        title: notif?.title ? getLabel(t, notif.title, notif.title) : notif?.name ? getLabel(t, notif.name, notif.name) : getLabel(t, "NOTIFICATION", "Notification"),
-        subTitle: notif?.description || notif?.subTitle || "",
-        icon: "🔔",
-        onClick: () => {
-          if (notif?.redirectUrl) navigate(notif.redirectUrl.replace("/digit-ui/", "/upyog-ui/"));
-          else navigate("/upyog-ui/citizen/engagement/notifications");
-        },
-      })),
+      items: notifs.slice(0, 4),
     });
   }
 
@@ -506,7 +783,7 @@ const buildUserActionCards = (aggregateData, t, navigate, tenantId) => {
   return cards;
 };
 
-const buildTaskSummaryCards = (aggregateData, t, navigate) => {
+const buildTaskSummaryCards = (aggregateData, t, navigate, handlers = {}, eventsData = []) => {
   const responses = aggregateData?.responses || {};
   const quickSummary = responses?.["quick-summary"]?.data || {};
 
@@ -520,7 +797,10 @@ const buildTaskSummaryCards = (aggregateData, t, navigate) => {
   const drafts = Array.isArray(draftsRaw) ? draftsRaw : [];
 
   const notifsRaw = responses?.["notifications"]?.data?.notifications || responses?.["notifications"]?.data || [];
-  const notifs = Array.isArray(notifsRaw) ? notifsRaw : [];
+  const apiNotifs = Array.isArray(notifsRaw) ? notifsRaw : [];
+  const liveEvents = Array.isArray(eventsData) ? eventsData : [];
+  const resolvedNotifs = buildNotificationItems(aggregateData, eventsData, t, navigate, undefined, handlers);
+  const notifsCount = apiNotifs.length || liveEvents.length || quickSummary?.notifications || resolvedNotifs.length || 0;
 
   const pendingBillsCount = dueRenewals.filter((b) => (b?.totalAmount || 0) > 0).length;
 
@@ -536,8 +816,13 @@ const buildTaskSummaryCards = (aggregateData, t, navigate) => {
       value: pendingBillsCount || quickSummary?.pendingPayment || 0,
       actionLabel: getLabel(t, "PAY_NOW", "Pay now"),
       onClick: () => {
-        if (dueRenewals[0]?.redirectUrl) navigate(dueRenewals[0].redirectUrl.replace("/digit-ui/", "/upyog-ui/"));
-        else navigate("/upyog-ui/citizen");
+        if (handlers?.onOpenDueRenewals) {
+          handlers.onOpenDueRenewals();
+        } else if (dueRenewals[0]) {
+          navigate(buildBillRedirectUrl(dueRenewals[0]));
+        } else {
+          navigate("/upyog-ui/citizen");
+        }
       },
     },
     {
@@ -548,7 +833,7 @@ const buildTaskSummaryCards = (aggregateData, t, navigate) => {
     },
     {
       title: getLabel(t, "CITIZEN_NOTIFICATIONS", "Notifications"),
-      value: notifs.length || quickSummary?.notifications || 0,
+      value: notifsCount,
       actionLabel: getLabel(t, "VIEW_NOTIFICATIONS", "View notifications"),
       onClick: () => navigate("/upyog-ui/citizen/engagement/notifications"),
     },

@@ -550,9 +550,4 @@ public class UserController {
         return new UserSearchResponse(responseInfo, userContracts);
     }
 
-    private UserDetailResponseV2 createResponseV2(User newUser) {
-        UserRequestV2 userRequestV2 = new UserRequestV2(newUser);
-        ResponseInfo responseInfo = ResponseInfo.builder().status(String.valueOf(HttpStatus.OK.value())).build();
-        return new UserDetailResponseV2(responseInfo, Collections.singletonList(userRequestV2));
-    }
 }

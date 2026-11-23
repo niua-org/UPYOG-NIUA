@@ -4,7 +4,7 @@
   position: fixed;
   top: 0;
   left: 240px;
-  z-index: 9999;
+  z-index: 999;
   background-color: #ffffff;
   transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
 
@@ -421,6 +421,21 @@
       .hamburger-span {
         display: none;
       }
+    }
+  }
+
+  .topbar-right-end-logo {
+    display: flex;
+    align-items: center;
+    margin-left: 12px;
+    margin-right: 8px;
+    flex-shrink: 0;
+
+    .topbar-right-logo-img {
+      height: 38px;
+      width: auto;
+      object-fit: contain;
+      display: block;
     }
   }
 
@@ -876,18 +891,28 @@
         }
       }
     }
+
+    .topbar-right-end-logo {
+      margin-left: 4px !important;
+      margin-right: 2px !important;
+
+      .topbar-right-logo-img {
+        height: 28px !important;
+      }
+    }
   }
 }
 
-.SideBarStatic--collapsed ~ div .navbar,
-.SideBarStatic--collapsed ~ .citizen-main-content-area .navbar,
-.SideBarStatic--collapsed ~ .main .navbar,
-.SideBarStatic--collapsed ~ .dashboard-main .navbar {
+.SideBarStatic--collapsed~div .navbar,
+.SideBarStatic--collapsed~.citizen-main-content-area .navbar,
+.SideBarStatic--collapsed~.main .navbar,
+.SideBarStatic--collapsed~.dashboard-main .navbar {
   left: 80px !important;
   width: calc(100% - 80px) !important;
 }
 
 @media (max-width: 780px) {
+
   .navbar,
   .navbar-expanded {
     left: 0 !important;
