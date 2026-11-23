@@ -7,6 +7,12 @@ const toEpoch = (dob) => {
   return new Date(dob).getTime();
 };
 
+const getPropertyOwnershipType = (ownershipType) => {
+  const value = ownershipType?.code || ownershipType;
+  if (value === "INSTITUTION") return "ORGANISATION";
+  return value || "INDIVIDUAL";
+};
+
 // Body for Digit.UserService.updateUser
 export const buildUpdateUserPayload = ({ userInfo, form, photoId, locale }) => ({
   ...userInfo,
@@ -76,6 +82,7 @@ export const buildCreateDocumentPayload = ({ userUuid, tenantId, documentType, f
 
 /**
  * Builds the Family Create API payload from familyDetails session data + staged members list
+ * Property fields are read only from portfolio entries; noProperty suppresses the array.
  * TODO - Need to Enhance this payload as lots of info is un-necessary
  * */
 export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
@@ -84,10 +91,12 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
   const headMember = members.find((m) => m.userUuid === finalHeadUuid);
   const headMemberData = familyDetails[finalHeadUuid] || {};
   const headProfile = headMemberData.profileDetails || {};
-  const headProperty = headMemberData.property || {};
+  const headPropertyPortfolio = headMemberData.property?.propertiesPortfolio || [];
 
   // Derive family-level fields from head's session data
-  const familyAddressPropertyId = headProperty.primaryPropertyId || undefined;
+  const familyAddressPropertyId =
+    headPropertyPortfolio.find((property) => property.localityType === "URBAN" && property.isPrimaryAddress)?.propertyId ||
+    undefined;
   const category = headProfile.caste?.code || undefined;
 
   const finalMembers = members.map((member) => {
@@ -192,29 +201,35 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
       : undefined;
 
     // --- Vehicle Details ---
-    const vehicles =
-      vehicleDetails?.hasVehicle === "Yes" && vehicleDetails?.vehicleNo
-        ? [
-            {
-              vehicleNumber: vehicleDetails.vehicleNo,
-              purchaseDate: vehicleDetails.purchaseYear,
-              vehicleType: vehicleDetails.vehicleType?.code,
-              makerModel: vehicleDetails?.makerModel,
-              category: vehicleDetails.vehicleCategory?.code,
-              fuelType: vehicleDetails.fuelType?.code,
-              isVerified: vehicleDetails.vehicleNoValidated || false,
-              validationSource: vehicleDetails.validationSource || undefined,
-              ...(vehicleDetails.uploadedRCFile && {
-                rcDocument: {
-                  documentType: "VEHICLE_RC",
-                  filestoreId: vehicleDetails.uploadedRCFile,
-                  referenceType: "VEHICLE",
-                  active: true,
-                },
-              }),
-            },
-          ]
-        : undefined;
+    let vehicles;
+    if (vehicleDetails?.hasVehicle === "Yes") {
+      const list =
+        Array.isArray(vehicleDetails.vehicleList) && vehicleDetails.vehicleList.length > 0
+          ? vehicleDetails.vehicleList
+          : vehicleDetails.vehicleNo
+            ? [vehicleDetails]
+            : [];
+
+      vehicles = list.map((veh) => ({
+        vehicleNumber: veh.vehicleNo,
+        purchaseDate: veh.purchaseYear || undefined,
+        vehicleType: (veh.vehicleType?.code || veh.vehicleType?.name || veh.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
+        makerModel: veh.makerModel || undefined,
+        category: veh.vehicleCategory?.code || veh.vehicleCategory || undefined,
+        fuelType: veh.fuelType?.code || veh.fuelType || undefined,
+        isVerified: veh.vehicleNoValidated || true,
+        validationSource: veh.validationSource || "VAHAN",
+        ...(veh.uploadedRCFile && {
+          rcDocument: {
+            documentType: "RC_CERTIFICATE",
+            filestoreId: veh.uploadedRCFile,
+            fileName: "RC_CERTIFICATE",
+            referenceType: "VEHICLE",
+            active: true,
+          },
+        }),
+      }));
+    }
 
     // --- Property Details ---
     let properties;
@@ -230,7 +245,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
         if (entry.localityType === "RURAL") {
           return {
             localityType: "RURAL",
-            ownershipType: entry.ownershipType || "INDIVIDUAL",
+            ownershipType: getPropertyOwnershipType(entry.ownershipType),
             declarationConfirmed: true,
             ruralPropertyDetail: {
               gramPanchayat: entry.gramPanchayat?.name || entry.gramPanchayat,
@@ -324,21 +339,28 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
 };
 
 // Maps and standardizes the Aadhaar OTP verification response into a verified member object
-export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) => ({
-  ...response,
-  userUuid: response?.userUuid || response?.uuid,
-  uuid: response?.userUuid || response?.uuid,
-  message: response?.message || "Aadhaar verified successfully",
-  maskedAadhaar: response?.maskedAadhaar || (cleanAadhaar ? `XXXXXXXX${cleanAadhaar.slice(-4)}` : "NA"),
-  name: response?.demographics?.name || response?.name,
-  dob: response?.demographics?.dob || response?.dob,
-  gender: response?.demographics?.gender || response?.gender,
-  demographics: response?.demographics || {
-    name: response?.name,
-    dob: response?.dob,
-    gender: response?.gender,
-  },
-});
+export const buildVerifiedMemberInfo = ({ response = {}, cleanAadhaar = "" }) => {
+  const demographics = response?.demographics || {};
+  const mobile = demographics?.mobileNumber || response?.mobileNumber;
+  return {
+    ...response,
+    userUuid: response?.userUuid || response?.uuid,
+    uuid: response?.userUuid || response?.uuid,
+    message: response?.message || "Aadhaar verified successfully",
+    maskedAadhaar: response?.maskedAadhaar || (cleanAadhaar ? `XXXXXXXX${cleanAadhaar.slice(-4)}` : "NA"),
+    name: demographics?.name || response?.name,
+    dob: demographics?.dob || response?.dob,
+    gender: demographics?.gender || response?.gender,
+    mobileNumber: mobile,
+    demographics: {
+      ...demographics,
+      name: demographics?.name || response?.name,
+      dob: demographics?.dob || response?.dob,
+      gender: demographics?.gender || response?.gender,
+      mobileNumber: mobile,
+    },
+  };
+};
 
 
 
@@ -602,29 +624,35 @@ export const buildJoinFamilyPayload = ({
     : undefined;
 
   // 5. Vehicles Array
-  const vehicles = (vehicleDetails?.hasVehicle === "Yes" || vehicleDetails?.vehicleNo) && vehicleDetails?.vehicleNo ? 
-        [
-          {
-            vehicleNumber: vehicleDetails.vehicleNo,
-            purchaseDate: vehicleDetails.purchaseYear || undefined,
-            isVerified: vehicleDetails.vehicleNoValidated || true,
-            validationSource: vehicleDetails?.validationSource,
-            vehicleType: (vehicleDetails.vehicleType?.code || vehicleDetails.vehicleType?.name || vehicleDetails.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
-            makerModel: vehicleDetails?.makerModel || undefined,
-            fuelType: vehicleDetails.fuelType?.code || undefined,
-            category: vehicleDetails.vehicleCategory?.code || undefined,
-            ...(vehicleDetails.uploadedRCFile && {
-              rcDocument: {
-                documentType: "RC_CERTIFICATE",
-                filestoreId: vehicleDetails.uploadedRCFile,
-                fileName: "RC_CERTIFICATE",
-                referenceType: "VEHICLE",
-                active: true,
-              },
-            }),
+    let vehicles = [];
+    if (vehicleDetails?.hasVehicle === "Yes" || vehicleDetails?.vehicleNo) {
+      const list =
+        Array.isArray(vehicleDetails.vehicleList) && vehicleDetails.vehicleList.length > 0
+          ? vehicleDetails.vehicleList
+          : vehicleDetails.vehicleNo
+            ? [vehicleDetails]
+            : [];
+
+      vehicles = list.map((veh) => ({
+        vehicleNumber: veh.vehicleNo,
+        purchaseDate: veh.purchaseYear || undefined,
+        isVerified: veh.vehicleNoValidated || true,
+        validationSource: veh.validationSource || "VAHAN",
+        vehicleType: (veh.vehicleType?.code || veh.vehicleType?.name || veh.vehicleType || "").toUpperCase().replace(/\s+/g, "_"),
+        makerModel: veh.makerModel || undefined,
+        fuelType: veh.fuelType?.code || veh.fuelType || undefined,
+        category: veh.vehicleCategory?.code || veh.vehicleCategory || undefined,
+        ...(veh.uploadedRCFile && {
+          rcDocument: {
+            documentType: "RC_CERTIFICATE",
+            filestoreId: veh.uploadedRCFile,
+            fileName: "RC_CERTIFICATE",
+            referenceType: "VEHICLE",
+            active: true,
           },
-        ]
-      : [];
+        }),
+      }));
+    }
 
   return {
     familyId,

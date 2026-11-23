@@ -1,28 +1,62 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Card, CardText, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { PROFILE_ROUTES } from "../utils/constants";
 import getPPPAcknowledgementData from "../getPPPAcknowledgementData";
 
+/**
+ * PPP Acknowledgement Component
+ *
+ * Handles acknowledgement display for success and failure cases.
+ */
 const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error, isPending = false, onGoToProfile }) => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
   const { data: storeData } = Digit.Hooks.useStore.getInitData();
   const isCreate = mode === "create";
   const isSuccess = Boolean(familyId) && !isPending;
+  const [downloadError, setDownloadError] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
-    const tenantId =
-      acknowledgement?.tenantId ||
-      Digit.ULBService.getCitizenCurrentTenant(true) ||
-      Digit.ULBService.getCurrentTenantId();
-    const tenantInfo = storeData?.tenants?.find((tenant) => tenant.code === tenantId);
-    const data = getPPPAcknowledgementData(
-      { ...(acknowledgement || {}), familyId },
-      tenantInfo,
-      t
-    );
-    Digit.Utils.pdf.generate(data);
+    setDownloadError("");
+    setIsDownloading(true);
+    try {
+      const tenantId =
+        acknowledgement?.tenantId ||
+        Digit.ULBService.getCitizenCurrentTenant(true) ||
+        Digit.ULBService.getCurrentTenantId();
+      const familyResponse = await Digit.UserService.familySearch(tenantId, { familyId });
+      const family =
+        familyResponse?.Families?.find((item) => item.familyId === familyId) ||
+        familyResponse?.Families?.[0];
+      if (!family) {
+        throw new Error(t("PROFILE_FAMILY_NOT_FOUND"));
+      }
+
+      const tenantInfo = storeData?.tenants?.find((tenant) => tenant.code === tenantId);
+      const acknowledgementData = getPPPAcknowledgementData(
+        {
+          ...family,
+          familyId,
+          tenantId,
+          applicationDate: acknowledgement?.applicationDate || acknowledgement?.createdTime,
+          applicantUserUuid: acknowledgement?.applicantUserUuid,
+        },
+        tenantInfo,
+        t
+      );
+      await Digit.Utils.pdf.generate(acknowledgementData);
+    } catch (error) {
+      console.error("Unable to download family acknowledgement:", error);
+      setDownloadError(
+        error?.response?.data?.Errors?.[0]?.message ||
+          error?.message ||
+          t("PROFILE_PPP_ACKNOWLEDGEMENT_RETRY")
+      );
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const goToProfile = () => {
@@ -58,6 +92,7 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
               t("PROFILE_PPP_ACKNOWLEDGEMENT_RETRY")}
           </CardText>
         )}
+        {downloadError && <CardText>{downloadError}</CardText>}
 
         <div
           className="profile-ppp-acknowledgement-actions"
@@ -72,6 +107,7 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
             <SubmitBar
               label={t("PPP_DOWNLOAD_ACK_FORM")}
               onSubmit={handleDownload}
+              disabled={isDownloading}
               style={{ maxWidth: "100%" }}
             />
           )}

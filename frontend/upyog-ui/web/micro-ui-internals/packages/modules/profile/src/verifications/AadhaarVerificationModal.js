@@ -132,11 +132,6 @@ const AadhaarVerificationModal = ({
 
   const handleClose = () => {
     resetForm();
-    if (mode === "family") {
-      sessionStorage.removeItem("Digit.family.verifiedMember");
-      sessionStorage.removeItem("Digit.family.aadhaarLast4");
-      sessionStorage.removeItem("Digit.family.maskedMobile");
-    }
     onClose?.();
   };
 
@@ -313,7 +308,10 @@ const AadhaarVerificationModal = ({
         }
 
         try {
-          const memberToStore = { ...verifiedMember, mobileNumber: undefined };
+          const memberToStore = {
+            ...verifiedMember,
+            mobileNumber: verifiedMember?.mobileNumber || response?.demographics?.mobileNumber || linkedMobile,
+          };
           sessionStorage.setItem("Digit.family.verifiedMember", JSON.stringify(memberToStore));
           sessionStorage.setItem("Digit.family.aadhaarLast4", aadhaarLast4);
           sessionStorage.setItem("Digit.family.maskedMobile", maskedMobile);
@@ -328,7 +326,10 @@ const AadhaarVerificationModal = ({
 
         navigationTimerRef.current = setTimeout(() => {
           onSuccess?.({ verifiedMember, aadhaarLast4, maskedMobile });
-          if (isModal) handleClose();
+          if (isModal) {
+            resetForm();
+            onClose?.();
+          }
         }, 1200);
       }
     } catch (err) {

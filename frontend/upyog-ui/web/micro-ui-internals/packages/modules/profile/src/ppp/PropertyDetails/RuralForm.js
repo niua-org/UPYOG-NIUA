@@ -12,8 +12,42 @@ import { profileStyles } from "../../utils/profileStyles";
 
 const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
   const styles = profileStyles.ruralPropertyForm;
+  const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
   const maxUploadSize = 5 * 1024 * 1024;
   const allowedFileExtensions = [".jpg", ".jpeg", ".png", ".pdf"];
+  const { data: ownershipOptions = [] } = Digit.Hooks.useEnabledMDMS(
+    stateId,
+    "common-masters",
+    [{ name: "PropertyOwnershipType" }],
+    {
+      select: (mdmsData) => {
+        const options = mdmsData?.["common-masters"]?.PropertyOwnershipType;
+        return options
+          ?.filter((option) => option.active !== false)
+          .map((option) => ({
+            code: option.code,
+            name: option.name || option.code,
+          })) || [];
+      },
+    }
+  );
+
+  const { data: propertyUsageOptions = [] } = Digit.Hooks.useEnabledMDMS(
+    stateId,
+    "PropertyTax",
+    [{ name: "UsageCategory" }],
+    {
+      select: (mdmsData) => {
+        const options = mdmsData?.["PropertyTax"]?.UsageCategory;
+        return options
+          ?.filter((option) => option.active !== false)
+          .map((option) => ({
+            code: option.code,
+            name: option.name || option.code,
+          })) || [];
+      },
+    }
+  );
 
   const [gramPanchayat, setGramPanchayat] = useState(data.gramPanchayat || null);
   const [village, setVillage] = useState(data.village || null);
@@ -27,23 +61,8 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
   const [propertyUsage, setPropertyUsage] = useState(data.propertyUsage || null);
   const [surveyNumber, setSurveyNumber] = useState(data.surveyNumber || "");
 
-  const ownershipOptions = [
-  {
-    code: "INDIVIDUAL",
-    name: "Individual",
-  },
-  {
-    code: "JOINT",
-    name: "Joint Ownership",
-  },
-  {
-    code: "INSTITUTION",
-    name: "Institution / Organisation",
-  },
-];
-
-  const [ownershipType, setOwnershipType] = useState(data.ownershipType ? ownershipOptions.find(
-    (option) => option.code === data.ownershipType) : null);
+  const savedOwnershipCode = data.ownershipType === "INSTITUTION" ? "ORGANISATION" : data.ownershipType;
+  const ownershipType = ownershipOptions.find((option) => option.code === savedOwnershipCode) || null;
   const [ownerName, setOwnerName] = useState(data.ownerName || "");
   const [ownerMobile, setOwnerMobile] = useState(data.ownerMobile || "");
 
@@ -93,13 +112,6 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
     },
   ];
 
-  const propertyUsageOptions = [
-    {
-      name: "Select property usage",
-      code: "SELECT",
-    },
-  ];
-
   const updateField = (key, value) => {
     onChange({
       [key]: value,
@@ -142,7 +154,6 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
   };
 
   const handleOwnershipTypeChange = (value) => {
-    setOwnershipType(value);
     updateField("ownershipType", value?.code);
   };
 
@@ -463,9 +474,9 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           disabled={isUploading}
           accept=".pdf,.jpg,.jpeg,.png"
         />
-        <div style={styles.hint}>
-          Only .jpg, .jpeg, .png and .pdf files up to 5MB are allowed
-        </div>
+        <div style={profileStyles.documentUploadCard.fileRestrictionText}>
+        {t("CS_FILE_SIZE_RESTRICTIONS")}
+      </div>
 
       </div>
     </div>

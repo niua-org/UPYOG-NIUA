@@ -668,6 +668,7 @@
       "loginUI": {
         "backgroundUrl": "/upyog-ui/images/citizen-metro-bg.jpg",
         "isEmployeeV2": true,
+        "isSplitBg": true,
         "mainlogo": {
           "dualLogo": false,
           "url": "/upyog-ui/images/Logo.png"

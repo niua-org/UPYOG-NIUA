@@ -118,7 +118,6 @@ export const profileStyles = {
     background: "#FCFCFD",
     marginBottom: 12,
   },
-  
   cardLabel: {
     width: "100%",
     fontWeight: 700,
@@ -1510,6 +1509,49 @@ propertyDetails: {
       fontWeight: "500",
       cursor: "pointer",
     },
+  },
+  vehicleDetails: {
+    listWrapper: {
+      marginTop: "24px",
+    },
+    card: {
+      background: "#FAFAFA",
+      borderRadius: "6px",
+      border: "1px solid #E8E8E8",
+      padding: "20px",
+      marginBottom: "24px",
+    },
+    cardHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "16px",
+      paddingBottom: "8px",
+      borderBottom: "1px solid #E0E0E0",
+    },
+    cardTitle: {
+      fontSize: "18px",
+      fontWeight: "700",
+      color: "#0B0C0C",
+    },
+    deleteBtn: {
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      padding: "4px",
+      display: "flex",
+      alignItems: "center",
+    },
+    addVehicleWrapper: {
+      marginTop: "16px",
+      marginBottom: "24px",
+    },
+    vehcileMaxNumber:{
+      fontSize: "14px", 
+      fontWeight: "normal", 
+      color: "#fefefe", 
+      marginLeft:"5%"
+    }
   },
 };
 
