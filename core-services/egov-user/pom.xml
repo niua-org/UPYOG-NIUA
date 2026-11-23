@@ -293,6 +293,10 @@
                         <exclude>**/domain/service/profile/**</exclude>
                         <exclude>**/web/controller/profile/**</exclude>
                         <exclude>**/domain/service/profile/validator/**</exclude>
+                        <!-- Bulk User API: merged from upstream without tests -->
+                        <exclude>**/domain/service/BulkUserService*</exclude>
+                        <exclude>**/web/controller/BulkUserController*</exclude>
+                        <exclude>**/persistence/repository/BulkUserRepository*</exclude>
                     </excludes>
                 </configuration>
                 <executions>
