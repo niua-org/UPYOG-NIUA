@@ -130,6 +130,13 @@ const AadhaarVerificationModal = ({
 
   const handleClose = () => {
     resetForm();
+    // Purge temporary session storage keys if modal is cancelled/closed without completing the flow
+    // to prevent abandoned verification data from persisting and pre-filling subsequent member forms.
+    if (mode === "family") {
+      sessionStorage.removeItem("Digit.family.verifiedMember");
+      sessionStorage.removeItem("Digit.family.aadhaarLast4");
+      sessionStorage.removeItem("Digit.family.maskedMobile");
+    }
     onClose?.();
   };
 
@@ -306,9 +313,14 @@ const AadhaarVerificationModal = ({
         }
 
         try {
+          // For PII privacy compliance, never persist unmasked Aadhaar-linked mobile in browser sessionStorage.
+          // The unmasked mobile is passed in-memory via onSuccess -> router navigation state instead.
           const memberToStore = {
             ...verifiedMember,
-            mobileNumber: verifiedMember?.mobileNumber || response?.demographics?.mobileNumber || linkedMobile,
+            mobileNumber: undefined,
+            demographics: verifiedMember?.demographics
+              ? { ...verifiedMember.demographics, mobileNumber: undefined }
+              : undefined,
           };
           sessionStorage.setItem("Digit.family.verifiedMember", JSON.stringify(memberToStore));
           sessionStorage.setItem("Digit.family.aadhaarLast4", aadhaarLast4);

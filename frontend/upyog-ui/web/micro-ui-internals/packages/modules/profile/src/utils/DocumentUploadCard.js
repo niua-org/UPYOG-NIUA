@@ -3,6 +3,45 @@ import { Dropdown, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components"
 import { profileStyles } from "./profileStyles";
 
 /**
+ * Uploads a file to Digit Filestorage with retry logic for transient errors.
+ *
+ * RATIONALE:
+ * The backend filestore service (`/filestore/v1/files`) intermittently encounters transient
+ * 5xx errors or socket disconnects to the underlying storage (e.g. MinIO/S3). Because document
+ * uploads are mandatory completion gates in the profile wizard, this helper retries only
+ * transient 5xx/network errors (with a 500ms backoff) to prevent blocking the user unnecessarily.
+ * Deterministic errors (4xx client validation errors or missing fileStoreId on a 200 response)
+ * fail fast immediately on the first attempt without retrying.
+ *
+ * @param {string} module - Filestorage module name (e.g. "profile").
+ * @param {File} file - File object to upload.
+ * @param {string} tenant - Tenant ID for upload scoping.
+ * @param {number} [maxRetries=2] - Maximum number of retries on transient errors.
+ * @returns {Promise<{ name: string, fileStoreId: string }>} Uploaded file details containing file name and fileStoreId.
+ * @throws {Error} Throws the last encountered error when all retries are exhausted or on non-transient errors.
+ */
+const uploadWithRetry = async (module, file, tenant, maxRetries = 2) => {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await Digit.UploadServices.Filestorage(module, file, tenant);
+      const fileStoreId = res?.data?.files?.[0]?.fileStoreId;
+      if (fileStoreId) return { name: file.name, fileStoreId };
+      throw new Error("NO_FILESTORE_ID");
+    } catch (err) {
+      lastError = err;
+      // Fail fast on deterministic/non-transient errors (4xx client errors, or 200 with missing fileStoreId)
+      const isTransient = err?.response?.status ? err.response.status >= 500 : err?.message !== "NO_FILESTORE_ID";
+      if (!isTransient || attempt >= maxRetries) {
+        throw lastError;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+  throw lastError;
+};
+
+/**
  * DocumentUploadCard
  *
  * Reusable document upload field used across the Profile module.
@@ -14,12 +53,12 @@ import { profileStyles } from "./profileStyles";
  *
  * @param {object}   props
  * @param {string}   props.label             - Field label text.
- * @param {boolean}  [props.required]        - Appends a required asterisk to the label.
- * @param {Array}    props.options            - Dropdown options array (each item must have a `name` key).
+ * @param {boolean}  [props.required]        - Appends a required asterisk to the label when true.
+ * @param {Array<object>} props.options      - Dropdown options array (each item must have a `name` key).
  * @param {object}   props.selectedType      - Currently selected dropdown option.
  * @param {Function} props.onSelectType      - Callback fired when dropdown selection changes.
  * @param {string}   [props.typePlaceholder] - Placeholder text for the dropdown.
- * @param {object}   props.file              - Currently uploaded file `{ name, fileStoreId }`, or null.
+ * @param {{ name: string, fileStoreId: string } | null} props.file - Currently uploaded file `{ name, fileStoreId }`, or null.
  * @param {Function} props.onFileChange      - Callback fired with `{ name, fileStoreId }` on upload, or `null` on delete.
  * @param {string}   [props.error]           - External error message to display below the file box.
  * @param {Function} props.t                 - i18n translation function.
@@ -28,27 +67,6 @@ import { profileStyles } from "./profileStyles";
  *
  * @returns {JSX.Element}
  */
-
-
-
-const uploadWithRetry = async (module, file, tenant, maxRetries = 2) => {
-  let lastError;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const res = await Digit.UploadServices.Filestorage(module, file, tenant);
-      const fileStoreId = res?.data?.files?.[0]?.fileStoreId;
-      if (fileStoreId) return { name: file.name, fileStoreId };
-      throw new Error("NO_FILESTORE_ID");
-    } catch (err) {
-      lastError = err;
-      if (attempt < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    }
-  }
-  throw lastError;
-};
-
 const DocumentUploadCard = ({ label, required, options, selectedType, onSelectType, typePlaceholder, file, onFileChange, error, t, stateId, disabled = false }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
@@ -61,9 +79,9 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
     if (e.target) e.target.value = "";
     if (!selectedFile) return;
 
-    const isAllowedType =
-      ["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(selectedFile.type) ||
-      /\.(jpe?g|png|pdf)$/i.test(selectedFile.name);
+    const allowedMime = ["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(selectedFile.type);
+    const hasAllowedExtension = /\.(jpe?g|png|pdf)$/i.test(selectedFile.name || "");
+    const isAllowedType = selectedFile.type ? allowedMime : hasAllowedExtension;
 
     if (!isAllowedType) {
       setUploadError(t("PROFILE_DOC_INVALID_TYPE", "Only .jpg, .jpeg, .png and .pdf files are allowed"));

@@ -152,18 +152,22 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   const memberParam = searchParams.get("member");
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const isSelf = !memberParam || memberParam === Digit.UserService.getUser()?.info?.uuid;
+
   const user = useMemo(() => {
     if (isSelf) return loggedInUser;
+    // Strictly require matching memberParam with the stored verified member uuid
     const verified = getVerifiedMember();
-    const verifiedUuid = verified?.userUuid || verified?.uuid;
-    if (memberParam && verifiedUuid && verifiedUuid !== memberParam) return {};
-    const gender = verified?.gender || verified?.demographics?.gender;
-    const mob = verified?.mobileNumber || verified?.demographics?.mobileNumber;
+    if (!verified || verified.userUuid !== memberParam) {
+      return {};
+    }
+    const gender = verified.gender || verified.demographics?.gender;
+    const mob = verified.mobileNumber || verified.demographics?.mobileNumber;
     return {
-      ...verified,
-      name: verified?.demographics?.name || verified?.name || "",
-      dob: verified?.demographics?.dob || verified?.dob || "",
-      mobileNumber: mob && /^\d{10}$/.test(String(mob)) ? String(mob) : mob || "",
+      userUuid: verified.userUuid,
+      name: verified.demographics?.name || verified.name || "",
+      dob: verified.demographics?.dob || verified.dob || "",
+      // Strictly accept only valid 10-digit mobile numbers; masked strings (e.g. XXXXXX1234) fallback to ""
+      mobileNumber: /^\d{10}$/.test(String(mob || "")) ? String(mob) : "",
       gender: String(gender || "").length === 1 ? { M: "MALE", F: "FEMALE", T: "TRANSGENDER" }[String(gender).toUpperCase()] : gender,
     };
   }, [isSelf, memberParam, loggedInUser]);

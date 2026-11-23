@@ -249,7 +249,7 @@ const FamilyMemberAdded = () => {
         );
       },
     },
-  ], [members, selectedHeadUuid, loggedInUuid, t, styles]);
+  ], [members, selectedHeadUuid, loggedInUuid, t]);
 
   // Open Aadhaar verification modal to add another family member
   const handleAddAnother = () => {
