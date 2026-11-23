@@ -15,6 +15,11 @@ import { profileStyles } from "./profileStyles";
  * TODO: Move some of the component to React-Component-Library, as many are upgraded and many are not developed yet.
  */
 
+/**
+  * Root application path prefix for routing links.
+  */
+export const APPLICATION_PATH = window?.contextPath || "/upyog-ui";
+
 export const ADDRESS_TYPE_LABEL = {
   PERMANENT: "CORE_PERMANENT",
   CORRESPONDENCE: "CORE_CORRESPONDENCE",
