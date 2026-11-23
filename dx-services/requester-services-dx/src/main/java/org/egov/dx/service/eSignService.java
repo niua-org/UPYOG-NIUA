@@ -1,10 +1,5 @@
 package org.egov.dx.service;
 
-/*
- * TODO: Sync this complete class with the latest PwC integration file later on.
- * eSign functionality is temporarily commented out as requested.
-
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -296,4 +291,3 @@ public class eSignService {
 
 	}
 }
-*/

@@ -215,7 +215,7 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
     _key = "est"
   }
   if (window.location.href.includes("noc") || window.location.href.includes("firenoc")) {
-    _key = "noc";
+    _key = "firenoc";
   }
   if (window.location.href.includes("garbage-service")) {
     _key = "gc"
@@ -225,7 +225,8 @@ export const useApplicationsForBusinessServiceSearch = ({ tenantId, businessServ
   }
   
   /* key from application ie being used as consumer code in bill */
-  const { searchFn, key, label } = refObj(tenantId, filters)[_key];
+  const refs = refObj(tenantId, filters);
+  const { searchFn, key, label } = refs[_key] || refs["mcollect"];
   const applications = queryTemplate({ queryKey: ["applicationsForBillDetails", { tenantId, businessService, filters, searchFn }], queryFn: searchFn, config });
 
   return { ...applications, key, label };
