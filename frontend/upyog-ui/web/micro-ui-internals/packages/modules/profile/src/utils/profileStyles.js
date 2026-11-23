@@ -1,5 +1,6 @@
 // All inline styles for the ProfileDetails page
 export const profileStyles = {
+
   documentUpload: {
     grid: {
       display: "grid",
@@ -68,9 +69,19 @@ export const profileStyles = {
     display: "block", 
     fontSize: 14, 
     color: "#505A5F", 
-    marginBottom: 6 },
-  required: { color: "#D4351C" },
-  actions: { display: "flex", justifyContent: "flex-end", marginTop: 8 },
+    marginBottom: 6
+  },
+
+  required: { 
+    color: "#D4351C" 
+  },
+
+  actions: { 
+    display: "flex", 
+    justifyContent: "flex-end", 
+    marginTop: 8 
+  },
+
   documentUploadCard: {
     wrapper: {
       display: "flex",
@@ -150,5 +161,17 @@ export const profileStyles = {
       marginTop: "4px",
       lineHeight: "1.3",
     }
+  },
+
+  addressPopUp: { width: "min(900px, 95vw)",
+    maxWidth: "900px",
+    maxHeight: "90vh",
+    overflowY: "auto",
+    padding: "24px",
+    borderRadius: "12px",
+    border: "1px solid #e8eaed",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.16)",
+    boxSizing: "border-box",
+    backgroundColor: "#ffffff"
   }
 };
