@@ -126,6 +126,18 @@ public class UserTypeQueryBuilder {
 
     private static final String SELECT_USER_ROLE_QUERY = "SELECT distinct(user_id) from eg_userrole_v1 ur";
 
+    /**
+     * Sortable eg_user columns: every column in SELECT_USER_QUERY except password, pan,
+     * aadhaarnumber, signature and photo. Those are deliberately excluded — ordering by a
+     * sensitive column leaks the relative order of stored values (an extraction oracle in
+     * deployments without field-level encryption), bypassing response masking.
+     */
+    private static final Set<String> ALLOWED_SORT_COLUMNS = new HashSet<>(Arrays.asList(
+            "id", "uuid", "tenantid", "username", "name", "gender", "type", "active", "title", "salutation",
+            "mobilenumber", "countrycode", "alternatemobilenumber", "altcontactnumber", "emailid", "locale", "dob",
+            "pwdexpirydate", "version", "guardian", "guardianrelation", "accountlocked", "accountlockeddate",
+            "bloodgroup", "identificationmark", "createddate", "lastmodifieddate", "createdby", "lastmodifiedby"));
+
     // Below is the query to bring the user details along with the addresses and roles part of V2 api endpoints
     private static final String SELECT_USER_QUERY_V2 = "SELECT userdata.title, userdata.salutation, userdata.dob, userdata.locale, userdata.username, userdata" +
             ".password, userdata.pwdexpirydate,  userdata.mobilenumber, userdata.altcontactnumber, userdata.emailid, userdata.createddate, userdata" +
