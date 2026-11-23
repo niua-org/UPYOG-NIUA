@@ -1,4 +1,4 @@
-import { BreadCrumb, PrivateRoute } from "@nudmcdgnpm/digit-ui-react-components";
+import { BreadCrumb, PrivateRoute, BackButton } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import SearchApplication from "./SearchApplication";
@@ -55,7 +55,12 @@ const EmployeeApp = ({ path }) => {
   return (
     <Fragment>
       <div className="ground-container">
-        {!isResponse ? <NDCBreadCrumbs location={location} /> : null}
+        {!isResponse ? (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <BackButton location={location} />
+            <NDCBreadCrumbs location={location} />
+          </div>
+        ) : null}
         <Routes>
           <Route path="inbox/application-overview/:id" element={<PrivateRoute><ApplicationOverview /></PrivateRoute>} />
           {/* <Route path="search/application-overview/:id" element={<PrivateRoute><ApplicationOverview /></PrivateRoute>} /> */}
