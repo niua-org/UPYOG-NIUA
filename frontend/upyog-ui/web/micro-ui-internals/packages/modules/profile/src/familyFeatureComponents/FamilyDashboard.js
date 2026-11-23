@@ -16,7 +16,7 @@ import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal"
 const FamilyDashboard = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
