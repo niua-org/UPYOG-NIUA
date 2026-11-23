@@ -26,8 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/digipin")
 public class DiginpinController {
 
+    private final DiginpinService diginpinService;
+
     @Autowired
-    private DiginpinService diginpinService;
+    public DiginpinController(DiginpinService diginpinService) {
+        this.diginpinService = diginpinService;
+    }
 
     /**
      * Endpoint to generate a DIGIPIN code.

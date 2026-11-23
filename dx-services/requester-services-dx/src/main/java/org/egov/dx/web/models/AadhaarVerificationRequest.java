@@ -85,7 +85,7 @@ public class AadhaarVerificationRequest {
     /**
      * Optional 10-digit Indian mobile number of citizen (e.g. "9876543210").
      */
-    @Pattern(regexp = "^$|^[6-9][0-9]{9}$", message = "Invalid mobile number. Must be a valid 10-digit Indian mobile number")
+    @Pattern(regexp = "^$|^[6-9]\\d{9}$", message = "Invalid mobile number. Must be a valid 10-digit Indian mobile number")
     @JsonProperty("mobileNumber")
     private String mobileNumber;
 
