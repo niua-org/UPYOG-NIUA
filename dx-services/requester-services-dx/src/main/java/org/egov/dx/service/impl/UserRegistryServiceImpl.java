@@ -57,6 +57,12 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     @Value("${egov.user.aadhaar.mark.verified.path}")
     private String markVerifiedPath;
 
+    private static final String REQUEST_INFO = "RequestInfo";
+    private static final String TENANT_ID = "tenantId";
+    private static final String AADHAAR_NUMBER = "aadhaarNumber";
+    private static final String ACTIVE = "active";
+    private static final String FAMILY_ID = "familyId";
+
     @Autowired
     public UserRegistryServiceImpl(RestTemplate restTemplate,
                                   Configurations configurations,
@@ -71,8 +77,8 @@ public class UserRegistryServiceImpl implements UserRegistryService {
      */
     @Override
     public String searchUserUuidByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo) {
-        UserRegistryRecord record = searchCitizenByAadhaar(aadhaarNumber, tenantId, requestInfo);
-        return record != null ? record.getUserUuid() : null;
+        UserRegistryRecord userRecord = searchCitizenByAadhaar(aadhaarNumber, tenantId, requestInfo);
+        return userRecord != null ? userRecord.getUserUuid() : null;
     }
 
     /**
@@ -101,8 +107,8 @@ public class UserRegistryServiceImpl implements UserRegistryService {
      */
     @Override
     public String searchFamilyIdByAadhaar(String aadhaarNumber, String tenantId, RequestInfo requestInfo) {
-        UserRegistryRecord record = searchCitizenByAadhaar(aadhaarNumber, tenantId, requestInfo);
-        return record != null ? record.getFamilyId() : null;
+        UserRegistryRecord userRecord = searchCitizenByAadhaar(aadhaarNumber, tenantId, requestInfo);
+        return userRecord != null ? userRecord.getFamilyId() : null;
     }
 
     /**
@@ -121,33 +127,38 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         }
 
         // 2. Fallback to querying egov-user profile search endpoint
-        if (StringUtils.isNotBlank(profileSearchPath)) {
-            try {
-                String url = buildUrl(resolveUserHost(), profileSearchPath);
-                Map<String, Object> reqBody = new HashMap<>();
-                reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
-                reqBody.put("tenantId", resolveTenantId(tenantId));
-                reqBody.put("uuid", userUuid);
+        return queryProfileSearchForFamilyId(userUuid, tenantId, requestInfo);
+    }
 
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.APPLICATION_JSON);
-                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(reqBody, headers);
+    private String queryProfileSearchForFamilyId(String userUuid, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(profileSearchPath)) {
+            return null;
+        }
+        try {
+            String url = buildUrl(resolveUserHost(), profileSearchPath);
+            Map<String, Object> reqBody = new HashMap<>();
+            reqBody.put(REQUEST_INFO, requestInfo != null ? requestInfo : new RequestInfo());
+            reqBody.put(TENANT_ID, resolveTenantId(tenantId));
+            reqBody.put("uuid", userUuid);
 
-                String responseStr = restTemplate.postForObject(url, entity, String.class);
-                if (StringUtils.isNotBlank(responseStr)) {
-                    JsonNode root = objectMapper.readTree(responseStr);
-                    JsonNode userArray = root.path("user");
-                    if (!userArray.isArray() || userArray.isEmpty()) {
-                        userArray = root.path("User");
-                    }
-                    if (userArray.isArray() && !userArray.isEmpty()) {
-                        return extractFamilyIdNode(userArray.get(0));
-                    }
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(reqBody, headers);
+
+            String responseStr = restTemplate.postForObject(url, entity, String.class);
+            if (StringUtils.isNotBlank(responseStr)) {
+                JsonNode root = objectMapper.readTree(responseStr);
+                JsonNode userArray = root.path("user");
+                if (!userArray.isArray() || userArray.isEmpty()) {
+                    userArray = root.path("User");
                 }
-            } catch (Exception e) {
-                log.warn("[USER-REGISTRY] Non-blocking: Failed to query familyId from profile search for user {}: {}",
-                        userUuid, e.getMessage());
+                if (userArray.isArray() && !userArray.isEmpty()) {
+                    return extractFamilyIdNode(userArray.get(0));
+                }
             }
+        } catch (Exception e) {
+            log.warn("[USER-REGISTRY] Non-blocking: Failed to query familyId from profile search for user {}: {}",
+                    userUuid, e.getMessage());
         }
         return null;
     }
@@ -191,10 +202,10 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         try {
             String url = buildUrl(resolveUserHost(), markVerifiedPath);
             Map<String, Object> reqBody = new HashMap<>();
-            reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
+            reqBody.put(REQUEST_INFO, requestInfo != null ? requestInfo : new RequestInfo());
             reqBody.put("userUuid", userUuid);
-            reqBody.put("aadhaarNumber", fullAadhaar);
-            reqBody.put("tenantId", resolveTenantId(tenantId));
+            reqBody.put(AADHAAR_NUMBER, fullAadhaar);
+            reqBody.put(TENANT_ID, resolveTenantId(tenantId));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -212,10 +223,10 @@ public class UserRegistryServiceImpl implements UserRegistryService {
     private UserRegistryRecord searchCitizenRecordByFullAadhaar(String url, String fullAadhaar, String tenantId, RequestInfo requestInfo) {
         try {
             Map<String, Object> reqBody = new HashMap<>();
-            reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
-            reqBody.put("tenantId", tenantId);
+            reqBody.put(REQUEST_INFO, requestInfo != null ? requestInfo : new RequestInfo());
+            reqBody.put(TENANT_ID, tenantId);
             // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
-            reqBody.put("aadhaarNumber", fullAadhaar);
+            reqBody.put(AADHAAR_NUMBER, fullAadhaar);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -232,33 +243,37 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                 userArray = root.path("User");
             }
 
-            // Intentionally no fallback to first/unverified user: UUID is returned only on full 12-digit Aadhaar match
             if (userArray.isArray() && !userArray.isEmpty()) {
-                for (JsonNode userData : userArray) {
-                    boolean active = !userData.has("active") || userData.path("active").asBoolean(true);
-                    if (!active) {
-                        continue;
-                    }
-                    String storedAadhaar = userData.path("aadhaarNumber").asText(null);
-                    String normalizedStored = AadhaarNumberUtils.normalizeToTwelveDigits(storedAadhaar);
-                    if (normalizedStored != null && fullAadhaar.equals(normalizedStored)) {
-                        String candidateUuid = userData.path("uuid").asText(null);
-                        if (StringUtils.isNotBlank(candidateUuid)) {
-                            String candidateFamilyId = extractFamilyIdNode(userData);
-                            log.debug("[USER-REGISTRY] Resolved citizen UUID: {} with familyId: {} from full Aadhaar match",
-                                    candidateUuid, candidateFamilyId);
-                            log.info("[USER-REGISTRY] Resolved citizen from full Aadhaar match; familyId present={}",
-                                    StringUtils.isNotBlank(candidateFamilyId));
-                            return UserRegistryRecord.builder()
-                                    .userUuid(candidateUuid)
-                                    .familyId(candidateFamilyId)
-                                    .build();
-                        }
-                    }
-                }
+                return findMatchingUserRecord(userArray, fullAadhaar);
             }
         } catch (Exception e) {
             log.warn("[USER-REGISTRY] Failed to query citizen by Aadhaar from URL [{}]: {}", url, e.getMessage());
+        }
+        return null;
+    }
+
+    private UserRegistryRecord findMatchingUserRecord(JsonNode userArray, String fullAadhaar) {
+        for (JsonNode userData : userArray) {
+            boolean active = !userData.has(ACTIVE) || userData.path(ACTIVE).asBoolean(true);
+            if (!active) {
+                continue;
+            }
+            String storedAadhaar = userData.path(AADHAAR_NUMBER).asText(null);
+            String normalizedStored = AadhaarNumberUtils.normalizeToTwelveDigits(storedAadhaar);
+            if (normalizedStored != null && fullAadhaar.equals(normalizedStored)) {
+                String candidateUuid = userData.path("uuid").asText(null);
+                if (StringUtils.isNotBlank(candidateUuid)) {
+                    String candidateFamilyId = extractFamilyIdNode(userData);
+                    log.debug("[USER-REGISTRY] Resolved citizen UUID: {} with familyId: {} from full Aadhaar match",
+                            candidateUuid, candidateFamilyId);
+                    log.info("[USER-REGISTRY] Resolved citizen from full Aadhaar match; familyId present={}",
+                            StringUtils.isNotBlank(candidateFamilyId));
+                    return UserRegistryRecord.builder()
+                            .userUuid(candidateUuid)
+                            .familyId(candidateFamilyId)
+                            .build();
+                }
+            }
         }
         return null;
     }
@@ -271,10 +286,10 @@ public class UserRegistryServiceImpl implements UserRegistryService {
      * @return trimmed family identifier, or {@code null} if absent or blank
      */
     private String extractFamilyIdNode(JsonNode userData) {
-        if (userData == null || !userData.hasNonNull("familyId")) {
+        if (userData == null || !userData.hasNonNull(FAMILY_ID)) {
             return null;
         }
-        String familyId = userData.path("familyId").asText(null);
+        String familyId = userData.path(FAMILY_ID).asText(null);
         if (StringUtils.isNotBlank(familyId) && !"null".equalsIgnoreCase(familyId.trim())) {
             return familyId.trim();
         }
@@ -310,7 +325,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                     .queryParam("memberUserUuid", userUuid)
                     .queryParam("status", "ACTIVE");
             if (StringUtils.isNotBlank(tenantId)) {
-                uriBuilder.queryParam("tenantId", resolveTenantId(tenantId));
+                uriBuilder.queryParam(TENANT_ID, resolveTenantId(tenantId));
             }
 
             HttpHeaders headers = new HttpHeaders();
@@ -325,16 +340,21 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                     families = root.path("Families");
                 }
                 if (families.isArray() && !families.isEmpty()) {
-                    for (JsonNode family : families) {
-                        String fid = family.path("familyId").asText(null);
-                        if (StringUtils.isNotBlank(fid) && !"null".equalsIgnoreCase(fid.trim())) {
-                            return fid.trim();
-                        }
-                    }
+                    return extractFamilyIdFromFamilies(families);
                 }
             }
         } catch (Exception e) {
             log.warn("[USER-REGISTRY] Non-blocking: Could not resolve familyId from family service: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    private String extractFamilyIdFromFamilies(JsonNode families) {
+        for (JsonNode family : families) {
+            String fid = family.path(FAMILY_ID).asText(null);
+            if (StringUtils.isNotBlank(fid) && !"null".equalsIgnoreCase(fid.trim())) {
+                return fid.trim();
+            }
         }
         return null;
     }
@@ -356,58 +376,9 @@ public class UserRegistryServiceImpl implements UserRegistryService {
             String createUrl = buildUrl(resolveUserHost(), userCreatePath);
 
             Map<String, Object> reqBody = new HashMap<>();
-            reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
+            reqBody.put(REQUEST_INFO, requestInfo != null ? requestInfo : new RequestInfo());
 
-            Map<String, Object> userMap = new HashMap<>();
-            String name = (demographics != null && StringUtils.isNotBlank(demographics.getName()))
-                    ? demographics.getName().trim()
-                    : "Citizen";
-            userMap.put("name", name);
-
-            if (demographics != null && StringUtils.isNotBlank(demographics.getGender())) {
-                userMap.put("gender", normalizeGender(demographics.getGender()));
-            }
-            if (demographics != null && StringUtils.isNotBlank(demographics.getDob())) {
-                userMap.put("dob", demographics.getDob());
-            }
-            if (demographics != null && StringUtils.isNotBlank(demographics.getPhoto())) {
-                userMap.put("photo", demographics.getPhoto());
-            }
-            if (demographics != null && StringUtils.isNotBlank(demographics.getFullAddress())) {
-                userMap.put("permanentAddress", demographics.getFullAddress());
-                userMap.put("correspondenceAddress", demographics.getFullAddress());
-            }
-            if (demographics != null && StringUtils.isNotBlank(demographics.getCity()) && !"N/A".equalsIgnoreCase(demographics.getCity())) {
-                userMap.put("permanentCity", demographics.getCity());
-                userMap.put("correspondenceCity", demographics.getCity());
-            }
-            if (demographics != null && StringUtils.isNotBlank(demographics.getPincode()) && !"N/A".equalsIgnoreCase(demographics.getPincode())) {
-                userMap.put("permanentPinCode", demographics.getPincode());
-                userMap.put("correspondencePinCode", demographics.getPincode());
-            }
-
-            String mobileNumber = (demographics != null && StringUtils.isNotBlank(demographics.getMobileNumber()))
-                    ? demographics.getMobileNumber().trim()
-                    : generateUniqueRandomMobile(effectiveTenantId, requestInfo);
-
-            if (demographics != null) {
-                demographics.setMobileNumber(mobileNumber);
-            }
-
-            // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
-            userMap.put("aadhaarNumber", fullAadhaar);
-            userMap.put("mobileNumber", mobileNumber);
-            userMap.put("userName", mobileNumber);
-            userMap.put("active", true);
-            userMap.put("type", AadhaarConstants.USER_TYPE_CITIZEN);
-            userMap.put("tenantId", effectiveTenantId);
-
-            Map<String, Object> role = new HashMap<>();
-            role.put("code", AadhaarConstants.ROLE_CITIZEN);
-            role.put("name", AadhaarConstants.ROLE_CITIZEN_NAME);
-            role.put("tenantId", effectiveTenantId);
-            userMap.put("roles", Collections.singletonList(role));
-
+            Map<String, Object> userMap = buildCitizenUserMap(fullAadhaar, demographics, effectiveTenantId, requestInfo);
             reqBody.put("user", userMap);
 
             HttpHeaders headers = new HttpHeaders();
@@ -439,6 +410,67 @@ public class UserRegistryServiceImpl implements UserRegistryService {
             log.error("[USER-REGISTRY] Failed to auto-provision citizen in egov-user: {}", e.getMessage(), e);
         }
         return null;
+    }
+
+    private Map<String, Object> buildCitizenUserMap(
+            String fullAadhaar, UserDemographics demographics, String effectiveTenantId, RequestInfo requestInfo) {
+        Map<String, Object> userMap = new HashMap<>();
+        String name = (demographics != null && StringUtils.isNotBlank(demographics.getName()))
+                ? demographics.getName().trim()
+                : "Citizen";
+        userMap.put("name", name);
+
+        populateDemographicFields(userMap, demographics);
+
+        String mobileNumber = (demographics != null && StringUtils.isNotBlank(demographics.getMobileNumber()))
+                ? demographics.getMobileNumber().trim()
+                : generateUniqueRandomMobile(effectiveTenantId, requestInfo);
+
+        if (demographics != null) {
+            demographics.setMobileNumber(mobileNumber);
+        }
+
+        // TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI
+        userMap.put(AADHAAR_NUMBER, fullAadhaar);
+        userMap.put("mobileNumber", mobileNumber);
+        userMap.put("userName", mobileNumber);
+        userMap.put(ACTIVE, true);
+        userMap.put("type", AadhaarConstants.USER_TYPE_CITIZEN);
+        userMap.put(TENANT_ID, effectiveTenantId);
+
+        Map<String, Object> role = new HashMap<>();
+        role.put("code", AadhaarConstants.ROLE_CITIZEN);
+        role.put("name", AadhaarConstants.ROLE_CITIZEN_NAME);
+        role.put(TENANT_ID, effectiveTenantId);
+        userMap.put("roles", Collections.singletonList(role));
+        return userMap;
+    }
+
+    private void populateDemographicFields(Map<String, Object> userMap, UserDemographics demographics) {
+        if (demographics == null) {
+            return;
+        }
+        if (StringUtils.isNotBlank(demographics.getGender())) {
+            userMap.put("gender", normalizeGender(demographics.getGender()));
+        }
+        if (StringUtils.isNotBlank(demographics.getDob())) {
+            userMap.put("dob", demographics.getDob());
+        }
+        if (StringUtils.isNotBlank(demographics.getPhoto())) {
+            userMap.put("photo", demographics.getPhoto());
+        }
+        if (StringUtils.isNotBlank(demographics.getFullAddress())) {
+            userMap.put("permanentAddress", demographics.getFullAddress());
+            userMap.put("correspondenceAddress", demographics.getFullAddress());
+        }
+        if (StringUtils.isNotBlank(demographics.getCity()) && !"N/A".equalsIgnoreCase(demographics.getCity())) {
+            userMap.put("permanentCity", demographics.getCity());
+            userMap.put("correspondenceCity", demographics.getCity());
+        }
+        if (StringUtils.isNotBlank(demographics.getPincode()) && !"N/A".equalsIgnoreCase(demographics.getPincode())) {
+            userMap.put("permanentPinCode", demographics.getPincode());
+            userMap.put("correspondencePinCode", demographics.getPincode());
+        }
     }
 
     /**
@@ -536,8 +568,8 @@ public class UserRegistryServiceImpl implements UserRegistryService {
         try {
             String searchUrl = buildUrl(resolveUserHost(), userSearchPath);
             Map<String, Object> reqBody = new HashMap<>();
-            reqBody.put("RequestInfo", requestInfo != null ? requestInfo : new RequestInfo());
-            reqBody.put("tenantId", tenantId);
+            reqBody.put(REQUEST_INFO, requestInfo != null ? requestInfo : new RequestInfo());
+            reqBody.put(TENANT_ID, tenantId);
             reqBody.put("mobileNumber", mobileNumber);
 
             HttpHeaders headers = new HttpHeaders();

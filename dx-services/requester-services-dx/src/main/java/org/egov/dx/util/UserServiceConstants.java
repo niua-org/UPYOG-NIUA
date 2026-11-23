@@ -39,10 +39,10 @@
  */
 package org.egov.dx.util;
 
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
 public class UserServiceConstants {
+
+    private UserServiceConstants() {
+    }
 
     public static final String EMAIL_UPDATION_CODE = "EMAIL_UPDATED";
 

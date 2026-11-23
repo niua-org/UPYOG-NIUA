@@ -180,16 +180,9 @@ public class AadhaarVerificationController {
                 ? request.getReferenceId()
                 : request.getTxnId();
 
-        // 1. Replay Prevention: Verify if this OTP reference ID was already verified and consumed
-        if (StringUtils.isNotBlank(referenceId) && sessionManager.isReferenceIdConsumed(referenceId)) {
-            log.error("Replay attack prevented: referenceId {} has already been verified and consumed", referenceId);
-            return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_OTP_ALREADY_VERIFIED, AadhaarConstants.MSG_OTP_ALREADY_VERIFIED), HttpStatus.BAD_REQUEST);
-        }
-
-        // 2. Rate Limiting Check
-        if (StringUtils.isNotBlank(referenceId) && sessionManager.isAttemptLimitExceeded(referenceId)) {
-            log.error("Locked transaction: referenceId {} exceeded maximum allowed OTP attempts ({})", referenceId, sessionManager.getMaxOtpAttempts());
-            return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_MAX_OTP_ATTEMPTS_EXCEEDED, AadhaarConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED), HttpStatus.BAD_REQUEST);
+        ResponseEntity<AadhaarVerificationResponse> sessionCheck = validateSession(request, referenceId);
+        if (sessionCheck != null) {
+            return sessionCheck;
         }
 
         log.debug("Processing Aadhaar Verify OTP for referenceId: {}, apiId: {}, isResync: {}, userUuid: {}",
@@ -198,15 +191,8 @@ public class AadhaarVerificationController {
                 referenceId, request.getRequestInfo().getApiId(), request.getIsResync(), StringUtils.isNotBlank(request.getUserUuid()));
 
         // 3. Map to Vendor DTO
-        Long vendorRefId = null;
-        try {
-            vendorRefId = Long.valueOf(referenceId);
-        } catch (NumberFormatException e) {
-            log.debug("Reference ID is non-numeric string: {}", referenceId);
-        }
-
         VendorVerifyOtpRequest vendorReq = VendorVerifyOtpRequest.builder()
-                .referenceId(vendorRefId)
+                .referenceId(parseVendorRefId(referenceId))
                 .otp(request.getOtp())
                 .build();
 
@@ -220,7 +206,84 @@ public class AadhaarVerificationController {
             return new ResponseEntity<>(createErrorResponse(request, ce.getCode(), ce.getMessage()), HttpStatus.BAD_REQUEST);
         }
 
-        // 5. Validate Gateway Response
+        ResponseEntity<AadhaarVerificationResponse> invalidVendorRes = handleInvalidVendorResponse(request, referenceId, vendorRes);
+        if (invalidVendorRes != null) {
+            return invalidVendorRes;
+        }
+
+        // 6. Invalidate session reference ID upon successful verification (Replay Prevention)
+        if (StringUtils.isNotBlank(referenceId)) {
+            sessionManager.markReferenceIdConsumed(referenceId);
+            sessionManager.clearFailedOtpAttempts(referenceId);
+        }
+
+        // 7. Map Verified e-KYC Demographic & Address Details to UPYOG Model
+        VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails details = vendorRes.getData();
+        String effectiveAadhaar = resolveEffectiveAadhaar(request, referenceId);
+        String effectiveMobile = resolveEffectiveMobile(request, referenceId);
+
+        if (StringUtils.isNotBlank(effectiveAadhaar)
+                && (StringUtils.isBlank(details.getAadhaarNumber()) || "XXXXXXXX1234".equals(details.getAadhaarNumber()))) {
+            details.setAadhaarNumber(maskAadhaar(effectiveAadhaar));
+        }
+
+        UserDemographics demographics = buildDemographics(details, effectiveMobile);
+
+        String searchAadhaar = StringUtils.isNotBlank(effectiveAadhaar)
+                ? effectiveAadhaar
+                : details.getAadhaarNumber();
+        String tenantId = resolveTenantId(request);
+
+        String[] citizenRecord = resolveCitizenRecord(searchAadhaar, demographics, tenantId, request);
+        String existingUserUuid = citizenRecord[0];
+        String resolvedFamilyId = citizenRecord[1];
+
+        ResponseInfo successResponseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
+        AadhaarVerificationResponse response = AadhaarVerificationResponse.builder()
+                .responseInfo(successResponseInfo)
+                .txnId(vendorRes.getTransactionId() != null ? vendorRes.getTransactionId() : referenceId)
+                .referenceId(referenceId)
+                .status(AadhaarConstants.STATUS_VERIFIED)
+                .isVerified(true)
+                .maskedAadhaar(details.getAadhaarNumber())
+                .userUuid(existingUserUuid)
+                .familyId(resolvedFamilyId)
+                .demographics(demographics)
+                .mobileNumber(demographics != null ? demographics.getMobileNumber() : effectiveMobile)
+                .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
+                .build();
+
+        log.debug("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}, familyId: {}",
+                referenceId, details.getAadhaarNumber(), existingUserUuid, resolvedFamilyId);
+        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userResolved: {}, familyIdPresent: {}",
+                referenceId, details.getAadhaarNumber(), StringUtils.isNotBlank(existingUserUuid), StringUtils.isNotBlank(resolvedFamilyId));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private ResponseEntity<AadhaarVerificationResponse> validateSession(AadhaarVerificationRequest request, String referenceId) {
+        if (StringUtils.isNotBlank(referenceId) && sessionManager.isReferenceIdConsumed(referenceId)) {
+            log.error("Replay attack prevented: referenceId {} has already been verified and consumed", referenceId);
+            return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_OTP_ALREADY_VERIFIED, AadhaarConstants.MSG_OTP_ALREADY_VERIFIED), HttpStatus.BAD_REQUEST);
+        }
+        if (StringUtils.isNotBlank(referenceId) && sessionManager.isAttemptLimitExceeded(referenceId)) {
+            log.error("Locked transaction: referenceId {} exceeded maximum allowed OTP attempts ({})", referenceId, sessionManager.getMaxOtpAttempts());
+            return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_MAX_OTP_ATTEMPTS_EXCEEDED, AadhaarConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED), HttpStatus.BAD_REQUEST);
+        }
+        return null;
+    }
+
+    private Long parseVendorRefId(String referenceId) {
+        try {
+            return Long.valueOf(referenceId);
+        } catch (NumberFormatException e) {
+            log.debug("Reference ID is non-numeric string: {}", referenceId);
+            return null;
+        }
+    }
+
+    private ResponseEntity<AadhaarVerificationResponse> handleInvalidVendorResponse(
+            AadhaarVerificationRequest request, String referenceId, VendorVerifyOtpSuccessResponse vendorRes) {
         if (vendorRes == null || vendorRes.getData() == null) {
             log.error("Gateway returned empty response during OTP verification for referenceId: {}", referenceId);
             return new ResponseEntity<>(createErrorResponse(request, AadhaarConstants.ERR_CODE_GATEWAY_ERROR, AadhaarConstants.MSG_GATEWAY_NO_RESPONSE), HttpStatus.BAD_GATEWAY);
@@ -248,42 +311,34 @@ public class AadhaarVerificationController {
 
             return new ResponseEntity<>(errorRes, HttpStatus.BAD_REQUEST);
         }
+        return null;
+    }
 
-        // 6. Invalidate session reference ID upon successful verification (Replay Prevention)
-        if (StringUtils.isNotBlank(referenceId)) {
-            sessionManager.markReferenceIdConsumed(referenceId);
-            sessionManager.clearFailedOtpAttempts(referenceId);
-        }
+    private String resolveEffectiveAadhaar(AadhaarVerificationRequest request, String referenceId) {
+        String storedAadhaar = StringUtils.isNotBlank(referenceId)
+                ? sessionManager.getAadhaarForReferenceId(referenceId)
+                : null;
+        return StringUtils.isNotBlank(request.getAadhaarNumber())
+                ? request.getAadhaarNumber()
+                : storedAadhaar;
+    }
 
-        // 7. Map Verified e-KYC Demographic & Address Details to UPYOG Model
-        VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails details = vendorRes.getData();
+    private String resolveEffectiveMobile(AadhaarVerificationRequest request, String referenceId) {
+        String storedMobile = StringUtils.isNotBlank(referenceId)
+                ? sessionManager.getMobileForReferenceId(referenceId)
+                : null;
+        return StringUtils.isNotBlank(request.getMobileNumber())
+                ? request.getMobileNumber().trim()
+                : storedMobile;
+    }
+
+    private UserDemographics buildDemographics(
+            VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails details, String effectiveMobile) {
         VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.AddressDetails addr = details.getAddress();
-
         String rawDob = StringUtils.isNotBlank(details.getDob()) ? details.getDob() : details.getDateOfBirth();
         String normalizedDob = normalizeDob(rawDob);
 
-        // Retrieve stored Aadhaar from session if not provided directly in verify request
-        String storedAadhaar = (StringUtils.isNotBlank(referenceId))
-                ? sessionManager.getAadhaarForReferenceId(referenceId)
-                : null;
-        String effectiveAadhaar = StringUtils.isNotBlank(request.getAadhaarNumber())
-                ? request.getAadhaarNumber()
-                : storedAadhaar;
-
-        String storedMobile = (StringUtils.isNotBlank(referenceId))
-                ? sessionManager.getMobileForReferenceId(referenceId)
-                : null;
-        String effectiveMobile = StringUtils.isNotBlank(request.getMobileNumber())
-                ? request.getMobileNumber().trim()
-                : storedMobile;
-
-        if (StringUtils.isNotBlank(effectiveAadhaar)) {
-            if (StringUtils.isBlank(details.getAadhaarNumber()) || "XXXXXXXX1234".equals(details.getAadhaarNumber())) {
-                details.setAadhaarNumber(maskAadhaar(effectiveAadhaar));
-            }
-        }
-
-        UserDemographics demographics = UserDemographics.builder()
+        return UserDemographics.builder()
                 .name(details.getName())
                 .dob(normalizedDob)
                 .gender(details.getGender())
@@ -294,27 +349,47 @@ public class AadhaarVerificationController {
                 .doorNo(addr != null && StringUtils.isNotBlank(addr.getHouse()) ? addr.getHouse() : "N/A")
                 .street(addr != null && StringUtils.isNotBlank(addr.getStreet()) ? addr.getStreet() : "N/A")
                 .landmark(addr != null && StringUtils.isNotBlank(addr.getLandmark()) ? addr.getLandmark() : "N/A")
-                .locality(addr != null && StringUtils.isNotBlank(addr.getSubdistrict()) ? addr.getSubdistrict() : (addr != null ? addr.getVtc() : "N/A"))
-                .city(addr != null && StringUtils.isNotBlank(addr.getVtc()) ? addr.getVtc() : (addr != null ? addr.getDistrict() : "N/A"))
+                .locality(resolveLocality(addr))
+                .city(resolveCity(addr))
                 .district(addr != null ? addr.getDistrict() : null)
                 .state(addr != null ? addr.getState() : null)
                 .pincode(addr != null ? addr.getPincode() : null)
                 .country(addr != null ? addr.getCountry() : null)
                 .build();
+    }
 
-        // 8. Resolve existing citizen userUuid from egov-user (full Aadhaar match) or auto-provision if not found.
-        // UserRegistryService is a required Spring bean; verified flag is set via markCitizenAadhaarVerifiedAfterEkyc
-        // because public user create no longer accepts isIdentityVerified from callers.
-        String searchAadhaar = StringUtils.isNotBlank(effectiveAadhaar)
-                ? effectiveAadhaar
-                : details.getAadhaarNumber();
+    private String resolveLocality(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.AddressDetails addr) {
+        if (addr == null) {
+            return "N/A";
+        }
+        if (StringUtils.isNotBlank(addr.getSubdistrict())) {
+            return addr.getSubdistrict();
+        }
+        return addr.getVtc() != null ? addr.getVtc() : "N/A";
+    }
 
-        String tenantId = StringUtils.isNotBlank(request.getTenantId())
-                ? request.getTenantId()
-                : (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null
-                   ? request.getRequestInfo().getUserInfo().getTenantId()
-                   : null);
+    private String resolveCity(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.AddressDetails addr) {
+        if (addr == null) {
+            return "N/A";
+        }
+        if (StringUtils.isNotBlank(addr.getVtc())) {
+            return addr.getVtc();
+        }
+        return addr.getDistrict() != null ? addr.getDistrict() : "N/A";
+    }
 
+    private String resolveTenantId(AadhaarVerificationRequest request) {
+        if (StringUtils.isNotBlank(request.getTenantId())) {
+            return request.getTenantId();
+        }
+        if (request.getRequestInfo() != null && request.getRequestInfo().getUserInfo() != null) {
+            return request.getRequestInfo().getUserInfo().getTenantId();
+        }
+        return null;
+    }
+
+    private String[] resolveCitizenRecord(
+            String searchAadhaar, UserDemographics demographics, String tenantId, AadhaarVerificationRequest request) {
         String existingUserUuid = null;
         String resolvedFamilyId = null;
 
@@ -325,45 +400,20 @@ public class AadhaarVerificationController {
                 existingUserUuid = userRecord.getUserUuid();
                 resolvedFamilyId = userRecord.getFamilyId();
             }
+            if (StringUtils.isBlank(existingUserUuid)) {
+                existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
+                        searchAadhaar, demographics, tenantId, request.getRequestInfo());
+            }
+            if (StringUtils.isBlank(resolvedFamilyId) && StringUtils.isNotBlank(existingUserUuid)) {
+                resolvedFamilyId = userRegistryService.searchFamilyIdByUserUuid(
+                        existingUserUuid, tenantId, request.getRequestInfo());
+            }
+            if (StringUtils.isNotBlank(existingUserUuid)) {
+                userRegistryService.markCitizenAadhaarVerifiedAfterEkyc(
+                        existingUserUuid, searchAadhaar, tenantId, request.getRequestInfo());
+            }
         }
-        if (userRegistryService != null && StringUtils.isBlank(existingUserUuid) && StringUtils.isNotBlank(searchAadhaar)) {
-            existingUserUuid = userRegistryService.resolveOrCreateUserUuid(
-                    searchAadhaar, demographics, tenantId, request.getRequestInfo());
-        }
-
-        if (userRegistryService != null && StringUtils.isBlank(resolvedFamilyId) && StringUtils.isNotBlank(existingUserUuid)) {
-            resolvedFamilyId = userRegistryService.searchFamilyIdByUserUuid(
-                    existingUserUuid, tenantId, request.getRequestInfo());
-        }
-
-        // Persist verified identity in egov-user after successful OTP (not via public create payload)
-        if (userRegistryService != null && StringUtils.isNotBlank(existingUserUuid)) {
-            userRegistryService.markCitizenAadhaarVerifiedAfterEkyc(
-                    existingUserUuid, searchAadhaar, tenantId, request.getRequestInfo());
-        }
-
-        ResponseInfo successResponseInfo = ResponseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
-
-        AadhaarVerificationResponse response = AadhaarVerificationResponse.builder()
-                .responseInfo(successResponseInfo)
-                .txnId(vendorRes.getTransactionId() != null ? vendorRes.getTransactionId() : referenceId)
-                .referenceId(referenceId)
-                .status(AadhaarConstants.STATUS_VERIFIED)
-                .isVerified(true)
-                .maskedAadhaar(details.getAadhaarNumber())
-                .userUuid(existingUserUuid)
-                .familyId(resolvedFamilyId)
-                .demographics(demographics)
-                .mobileNumber(demographics != null ? demographics.getMobileNumber() : effectiveMobile)
-                .message(AadhaarConstants.MSG_VERIFY_SUCCESS)
-                .build();
-
-        log.debug("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userUuid: {}, familyId: {}",
-                referenceId, details.getAadhaarNumber(), existingUserUuid, resolvedFamilyId);
-        log.info("Aadhaar OTP verified successfully for referenceId: {}, maskedAadhaar: {}, userResolved: {}, familyIdPresent: {}",
-                referenceId, details.getAadhaarNumber(), StringUtils.isNotBlank(existingUserUuid), StringUtils.isNotBlank(resolvedFamilyId));
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new String[]{existingUserUuid, resolvedFamilyId};
     }
 
     /**
@@ -454,11 +504,11 @@ public class AadhaarVerificationController {
         }
         String trimmed = rawDob.trim();
         // Check for 4-digit Year-Only DOB (e.g. "1965")
-        if (trimmed.matches("^[0-9]{4}$")) {
+        if (trimmed.matches("^\\d{4}$")) {
             return trimmed + "-01-01";
         }
         // Check for "00/00/YYYY" or "00-00-YYYY"
-        if (trimmed.matches("^00[/-]00[/-]([0-9]{4})$")) {
+        if (trimmed.matches("^00[/-]00[/-](\\d{4})$")) {
             return trimmed.substring(6) + "-01-01";
         }
         return trimmed;
