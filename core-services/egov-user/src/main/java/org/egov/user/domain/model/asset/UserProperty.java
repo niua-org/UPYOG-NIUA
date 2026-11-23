@@ -94,6 +94,12 @@ public class UserProperty {
     private Object additionalDetails;
 
     /**
+     * OTP-verified property consent token validating ownership authorization.
+     */
+    @JsonProperty("consentToken")
+    private String consentToken;
+
+    /**
      * Specialization details for urban properties (1:1 with ug_user_property).
      */
     @Valid

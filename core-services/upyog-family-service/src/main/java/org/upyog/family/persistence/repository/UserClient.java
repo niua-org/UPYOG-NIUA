@@ -75,4 +75,14 @@ public interface UserClient {
      * @return true if synchronization succeeded, false otherwise
      */
     boolean syncMemberAssets(List<FamilyMember> members, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Validates an urban property consent token against the user service.
+     *
+     * @param propertyId municipal property identifier
+     * @param consentToken OTP-verified consent token
+     * @param requestInfo platform request context
+     * @return true if valid and unexpired
+     */
+    boolean validatePropertyConsentToken(String propertyId, String consentToken, RequestInfo requestInfo);
 }

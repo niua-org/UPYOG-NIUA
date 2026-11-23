@@ -482,4 +482,104 @@ public final class UserConstants {
     public static final String MSG_CITIZEN_NOT_HEAD_OF_FAMILY = "Citizen is not the designated Head of Family (HoF) for their household";
     public static final String MSG_CITIZEN_HOF_VERIFIED_SUCCESS = "Citizen is verified as Head of Family";
     public static final String MSG_FAMILY_SERVICE_COMMUNICATION_ERROR = "Failed to communicate with Family service. Please try again later.";
+
+    // =========================================================================
+    // 17. Urban Property OTP & Consent Constants
+    // =========================================================================
+    public static final String MSG_PROPERTY_SEARCH_MANDATORY_FIELDS = "tenantId and propertyId are mandatory.";
+    public static final String MSG_URBAN_PROPERTY_NOT_FOUND_PREFIX = "No property found for property ID: ";
+
+    public static final String ERROR_INVALID_PROPERTY_OTP_REQUEST = "INVALID_PROPERTY_OTP_REQUEST";
+    public static final String ERROR_PROPERTY_ALREADY_LINKED_TO_CALLER = "PROPERTY_ALREADY_LINKED_TO_CALLER";
+    public static final String MSG_PROPERTY_ALREADY_LINKED_TO_CALLER = "You have already linked this property to your citizen profile.";
+
+    public static final String ERROR_PROPERTY_ALREADY_LINKED = "PROPERTY_ALREADY_LINKED";
+    public static final String MSG_PROPERTY_ALREADY_LINKED = "This property is individually owned and has already been linked to a citizen profile.";
+
+    public static final String ERROR_OWNER_NOT_FOUND = "OWNER_NOT_FOUND";
+    public static final String MSG_OWNER_NOT_FOUND_PREFIX = "No registered owner details found for property ";
+
+    public static final String ERROR_OWNER_MOBILE_NOT_FOUND = "OWNER_MOBILE_NOT_FOUND";
+    public static final String MSG_OWNER_MOBILE_NOT_FOUND = "No registered mobile number found for the property owner in Property Tax records.";
+
+    public static final String ERROR_PROPERTY_MAX_OWNERS_EXCEEDED = "PROPERTY_MAX_OWNERS_EXCEEDED";
+    public static final String MSG_PROPERTY_MAX_OWNERS_EXCEEDED = "All registered owners for this joint property have already linked it with their profiles.";
+
+    public static final String ERROR_INVALID_OWNER_MOBILE = "INVALID_OWNER_MOBILE";
+    public static final String MSG_INVALID_OWNER_MOBILE_PREFIX = "The specified mobile number does not match any registered owner for property ";
+
+    public static final String ERROR_PROPERTY_OWNER_ALREADY_LINKED = "PROPERTY_OWNER_ALREADY_LINKED";
+    public static final String MSG_PROPERTY_OWNER_ALREADY_LINKED = "The owner corresponding to this mobile number has already linked their profile to this property.";
+
+    public static final String ERROR_OWNER_SELECTION_REQUIRED = "OWNER_SELECTION_REQUIRED";
+    public static final String MSG_OWNER_SELECTION_REQUIRED = "Multiple unlinked owners exist for this property. Please specify the owner mobile number to receive the OTP.";
+
+    public static final String ERROR_INVALID_OTP_VERIFY_REQUEST = "INVALID_OTP_VERIFY_REQUEST";
+    public static final String MSG_OTP_VERIFY_MANDATORY_FIELDS = "propertyId, referenceId, and otp are mandatory.";
+
+    public static final String ERROR_INVALID_OTP_SESSION = "INVALID_OTP_SESSION";
+    public static final String MSG_INVALID_OTP_SESSION = "No active OTP session found or session has expired. Please request a new OTP.";
+
+    public static final String MSG_INVALID_OTP_ENTERED = "Invalid OTP entered. Please try again.";
+
+    public static final String ERROR_INVALID_CONSENT_VALIDATE_REQUEST = "INVALID_CONSENT_VALIDATE_REQUEST";
+    public static final String MSG_PROPERTY_ID_MANDATORY = "propertyId is mandatory.";
+
+    public static final String ERROR_INVALID_PROPERTY_CONSENT_TOKEN = "INVALID_PROPERTY_CONSENT_TOKEN";
+    public static final String MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX = "Invalid or expired OTP consent token for urban property: ";
+
+    public static final String ERROR_OTP_SERVICE_CONFIG_MISSING = "OTP_SERVICE_CONFIG_MISSING";
+    public static final String MSG_OTP_SERVICE_CONFIG_MISSING = "OTP service configuration is missing.";
+
+    public static final String ERROR_PROPERTY_SERVICE_CONFIG_MISSING = "PROPERTY_SERVICE_CONFIG_MISSING";
+    public static final String MSG_PROPERTY_SERVICE_CONFIG_MISSING = "Property service configuration is missing.";
+
+    public static final String ERROR_PROPERTY_SERVICE_ERROR = "PROPERTY_SERVICE_ERROR";
+    public static final String MSG_PROPERTY_SERVICE_ERROR_PREFIX = "Failed to retrieve property details: ";
+
+    public static final String ERROR_INVALID_PROPERTY_SEARCH_CRITERIA = "INVALID_PROPERTY_SEARCH_CRITERIA";
+
+    public static final String PREFIX_PROP_REF = "PROP-REF-";
+    public static final String PREFIX_PROP_CONSENT = "PROP-CONSENT-";
+
+    public static final String MSG_STATUS_SUCCESSFUL = "SUCCESSFUL";
+    public static final String MSG_OTP_SENT_SUCCESS = "OTP sent successfully to property owner's registered mobile number.";
+    public static final String MSG_PROPERTY_OWNERSHIP_VERIFIED_SUCCESS = "Property ownership verified successfully.";
+    public static final String MSG_CONSENT_TOKEN_VALID = "Property consent token or session is valid.";
+    public static final String MSG_CONSENT_TOKEN_INVALID = "Invalid or expired property consent token.";
+
+    public static final String CATEGORY_INDIVIDUAL = "INDIVIDUAL";
+    public static final String CATEGORY_MULTIPLE = "MULTIPLE";
+    public static final String CATEGORY_JOINT = "JOINT";
+
+    public static final String PT_JSON_PROPERTIES = "Properties";
+    public static final String PT_JSON_PROPERTY_ID = "propertyId";
+    public static final String PT_JSON_PROPERTY_IDS = "propertyIds";
+    public static final String PT_JSON_TENANT_ID = "tenantId";
+    public static final String PT_JSON_STATUS = "status";
+    public static final String PT_JSON_PROPERTY_TYPE = "propertyType";
+    public static final String PT_JSON_OWNERSHIP_CATEGORY = "ownershipCategory";
+    public static final String PT_JSON_ADDRESS = "address";
+    public static final String PT_JSON_DOOR_NO = "doorNo";
+    public static final String PT_JSON_BUILDING_NAME = "buildingName";
+    public static final String PT_JSON_STREET = "street";
+    public static final String PT_JSON_LANDMARK = "landmark";
+    public static final String PT_JSON_CITY = "city";
+    public static final String PT_JSON_PINCODE = "pincode";
+    public static final String PT_JSON_OWNERS = "owners";
+    public static final String PT_JSON_UUID = "uuid";
+    public static final String PT_JSON_NAME = "name";
+    public static final String PT_JSON_MOBILE_NUMBER = "mobileNumber";
+    public static final String PT_JSON_IS_PRIMARY_OWNER = "isPrimaryOwner";
+    public static final String PT_JSON_OWNERSHIP_PERCENTAGE = "ownerShipPercentage";
+    public static final String PT_JSON_OWNER_TYPE = "ownerType";
+
+    public static final String OTP_JSON_OTP = "otp";
+    public static final String OTP_JSON_IDENTITY = "identity";
+    public static final String OTP_JSON_TENANT_ID = "tenantId";
+    public static final String OTP_JSON_REQUEST_INFO = "RequestInfo";
+    public static final String OTP_JSON_IS_VALIDATION_SUCCESSFUL = "isValidationSuccessful";
+    public static final String OTP_JSON_VALIDATION_SUCCESSFUL = "validationSuccessful";
+    public static final String OTP_SMS_TEMPLATE_PREFIX = "Your OTP for linking property is ";
+    public static final String OTP_SMS_TEMPLATE_SUFFIX = ". Valid for 15 minutes. - UPYOG";
 }

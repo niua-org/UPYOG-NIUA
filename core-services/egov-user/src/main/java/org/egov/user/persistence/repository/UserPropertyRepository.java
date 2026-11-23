@@ -309,6 +309,43 @@ public class UserPropertyRepository {
     }
 
     /**
+     * Finds all active citizen profiles linked to an urban property by upyogPropertyId and tenantId.
+     *
+     * @param tenantId tenant identifier
+     * @param upyogPropertyId municipal property assessment ID
+     * @return list of maps containing userUuid, mobileNumber, propertyRecordId, and ownershipType
+     */
+    public List<Map<String, Object>> findActiveLinkedUsersForUrbanProperty(String tenantId, String upyogPropertyId) {
+        // Fast-fail if query parameters are missing or blank
+        if (StringUtils.isBlank(tenantId) || StringUtils.isBlank(upyogPropertyId)) {
+            return Collections.emptyList();
+        }
+        try {
+            // Bind query parameters to avoid SQL injection
+            Map<String, Object> params = new HashMap<>();
+            params.put("tenant_id", tenantId.trim());
+            params.put("upyog_property_id", upyogPropertyId.trim());
+
+            // Query active linkages joining ug_user_property, ug_user_urban_property, and eg_user
+            return namedParameterJdbcTemplate.query(
+                    UserPropertyQueryBuilder.SELECT_LINKED_USERS_BY_UPYOG_PROPERTY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> {
+                        Map<String, Object> row = new HashMap<>();
+                        row.put(UserConstants.JSON_KEY_USER_UUID, rs.getString("user_uuid"));
+                        row.put(UserConstants.PT_JSON_MOBILE_NUMBER, rs.getString("mobilenumber"));
+                        row.put("propertyRecordId", rs.getString("property_record_id"));
+                        row.put("ownershipType", rs.getString("ownership_type"));
+                        return row;
+                    }
+            );
+        } catch (Exception e) {
+            log.error("[USER-PROP-REPO] Error querying active linked users for urban property {}: {}", upyogPropertyId, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
      * Finds existing active rural property ID for a citizen by survey/khasra number (natural key deduplication).
      *
      * @param userUuid citizen user UUID

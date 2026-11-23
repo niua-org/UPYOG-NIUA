@@ -55,6 +55,7 @@ public class MemberAssetProcessor {
     private final UserVehicleRepository vehicleRepository;
     private final UserDocumentRepository documentRepository;
     private final IdGenRepository idGenRepository;
+    private final UrbanPropertyService urbanPropertyService;
 
     /**
      * Primary constructor injecting persistence repositories and optional IdGen repository.
@@ -65,6 +66,7 @@ public class MemberAssetProcessor {
      * @param vehicleRepository  repository for persisting declared vehicle assets
      * @param documentRepository repository for persisting user documents and verification statuses
      * @param idGenRepository    repository for generating business identifiers
+     * @param urbanPropertyService urban property service validating OTP consent tokens
      */
     @Autowired
     public MemberAssetProcessor(UserRepository userRepository,
@@ -72,13 +74,27 @@ public class MemberAssetProcessor {
                                 UserIncomeRepository incomeRepository,
                                 UserVehicleRepository vehicleRepository,
                                 UserDocumentRepository documentRepository,
-                                @Autowired(required = false) IdGenRepository idGenRepository) {
+                                @Autowired(required = false) IdGenRepository idGenRepository,
+                                @Autowired(required = false) UrbanPropertyService urbanPropertyService) {
         this.userRepository = userRepository;
         this.propertyRepository = propertyRepository;
         this.incomeRepository = incomeRepository;
         this.vehicleRepository = vehicleRepository;
         this.documentRepository = documentRepository;
         this.idGenRepository = idGenRepository;
+        this.urbanPropertyService = urbanPropertyService;
+    }
+
+    /**
+     * Backward-compatible constructor for testing without {@link UrbanPropertyService}.
+     */
+    public MemberAssetProcessor(UserRepository userRepository,
+                                UserPropertyRepository propertyRepository,
+                                UserIncomeRepository incomeRepository,
+                                UserVehicleRepository vehicleRepository,
+                                UserDocumentRepository documentRepository,
+                                IdGenRepository idGenRepository) {
+        this(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository, idGenRepository, null);
     }
 
     /**
@@ -379,6 +395,16 @@ public class MemberAssetProcessor {
             // Urban property specialization
             if (UserConstants.LOCALITY_TYPE_URBAN.equalsIgnoreCase(prop.getLocalityType()) && prop.getUrbanPropertyDetail() != null) {
                 UrbanPropertyDetail urban = prop.getUrbanPropertyDetail();
+                // Validate property ownership authorization consent token if supplied by caller
+                String token = StringUtils.isNotBlank(urban.getConsentToken()) ? urban.getConsentToken() : prop.getConsentToken();
+                if (urbanPropertyService != null && StringUtils.isNotBlank(token)) {
+                    boolean valid = urbanPropertyService.validatePropertyConsentToken(urban.getUpyogPropertyId(), token);
+                    if (!valid) {
+                        log.warn("[MEMBER-ASSET-PROCESSOR] Invalid or expired property consent token for property ID {}", urban.getUpyogPropertyId());
+                        throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,
+                                UserConstants.MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX + urban.getUpyogPropertyId());
+                    }
+                }
                 urban.setPropertyRecordId(prop.getId());
                 urban.setUserUuid(existingUser.getUuid());
                 urban.setTenantId(prop.getTenantId());

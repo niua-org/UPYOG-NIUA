@@ -133,6 +133,19 @@ public class UserPropertyQueryBuilder {
             "SELECT p.id FROM ug_user_property p JOIN ug_user_urban_property u ON p.id = u.property_record_id " +
             "WHERE p.user_uuid = :user_uuid AND u.upyog_property_id = :upyog_property_id AND p.status = 'ACTIVE' LIMIT 1";
 
+    /**
+     * SQL query looking up active citizen profile linkages across {@code ug_user_property} and {@code ug_user_urban_property}
+     * for a specific municipal assessment identifier and tenant.
+     */
+    public static final String SELECT_LINKED_USERS_BY_UPYOG_PROPERTY_ID_SQL =
+            "SELECT p.user_uuid, u.mobilenumber, p.id AS property_record_id, p.ownership_type " +
+            "FROM ug_user_property p " +
+            "JOIN ug_user_urban_property up ON p.id = up.property_record_id " +
+            "LEFT JOIN eg_user u ON p.user_uuid = u.uuid " +
+            "WHERE up.tenant_id = :tenant_id " +
+            "  AND up.upyog_property_id = :upyog_property_id " +
+            "  AND UPPER(p.status) = 'ACTIVE'";
+
     public static final String SELECT_RURAL_PROPERTY_RECORD_ID_SQL =
             "SELECT p.id FROM ug_user_property p JOIN ug_user_rural_property r ON p.id = r.property_record_id " +
             "WHERE p.user_uuid = :user_uuid AND r.survey_number = :survey_number AND p.status = 'ACTIVE' LIMIT 1";

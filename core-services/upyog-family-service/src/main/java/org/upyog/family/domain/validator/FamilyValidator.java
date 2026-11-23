@@ -342,6 +342,15 @@ public class FamilyValidator {
                 if (StringUtils.isBlank(urban.getUpyogPropertyId())) {
                     throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_UPYOG_PROPERTY_ID_MANDATORY);
                 }
+                // Validate OTP ownership authorization consent token for declared urban property
+                String consentToken = StringUtils.isNotBlank(urban.getConsentToken()) ? urban.getConsentToken() : prop.getConsentToken();
+                if (StringUtils.isNotBlank(consentToken) && userClient != null) {
+                    boolean valid = userClient.validatePropertyConsentToken(urban.getUpyogPropertyId(), consentToken, request.getRequestInfo());
+                    if (!valid) {
+                        throw new CustomException(FamilyConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,
+                                FamilyConstants.MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX + urban.getUpyogPropertyId());
+                    }
+                }
                 declaredPropertyIds.add(urban.getUpyogPropertyId());
             } else {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_INVALID_LOCALITY_TYPE_PREFIX + prop.getLocalityType() + FamilyConstants.MSG_INVALID_LOCALITY_TYPE_SUFFIX);

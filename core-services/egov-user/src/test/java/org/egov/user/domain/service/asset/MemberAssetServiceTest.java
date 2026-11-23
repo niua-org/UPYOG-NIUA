@@ -24,6 +24,7 @@ import org.egov.user.web.contract.asset.MemberAssetSyncRequest;
 import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
 import org.egov.user.web.contract.asset.MemberAssetSyncResult;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -590,5 +591,125 @@ class MemberAssetServiceTest {
                 memberAssetService.syncMemberAssets(request)
         );
         assertEquals("CALLER_INFO_REQUIRED", exception.getCode());
+    }
+
+    /**
+     * Verifies that synchronizing declared urban property fails when the provided consent token is invalid or expired.
+     */
+    @Test
+    @DisplayName("syncMemberAssets with invalid urban property consent token should fail")
+    void syncMemberAssets_urbanProperty_withInvalidConsentToken_fails() {
+        UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
+        when(mockUrbanService.validatePropertyConsentToken(eq("UPYOG-PROP-INVALID"), eq("TOKEN-BAD")))
+                .thenReturn(false);
+
+        MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
+                userRepository,
+                propertyRepository,
+                incomeRepository,
+                vehicleRepository,
+                documentRepository,
+                null,
+                mockUrbanService
+        );
+
+        String citizenUuid = "citizen-uuid-token-test";
+        User existingUser = User.builder()
+                .id(101L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .username("citizen1")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        UserProperty prop = UserProperty.builder()
+                .localityType("URBAN")
+                .consentToken("TOKEN-BAD")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("UPYOG-PROP-INVALID")
+                        .build())
+                .build();
+
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(prop))
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(createTestRequestInfo())
+                .members(Collections.singletonList(detail))
+                .build();
+
+        MemberAssetServiceImpl service = new MemberAssetServiceImpl(processorWithUrban);
+        MemberAssetSyncResponse response = service.syncMemberAssets(request);
+
+        assertNotNull(response);
+        assertEquals("FAILED", response.getStatus());
+        assertEquals(1, response.getResults().size());
+        assertEquals("FAILED", response.getResults().get(0).getStatus());
+        assertTrue(response.getResults().get(0).getMessage().contains("Invalid or expired OTP consent token"));
+    }
+
+    /**
+     * Verifies that synchronizing declared urban property succeeds when a valid consent token is provided.
+     */
+    @Test
+    @DisplayName("syncMemberAssets with valid urban property consent token should succeed")
+    void syncMemberAssets_urbanProperty_withValidConsentToken_succeeds() {
+        UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
+        when(mockUrbanService.validatePropertyConsentToken(eq("UPYOG-PROP-VALID"), eq("TOKEN-GOOD")))
+                .thenReturn(true);
+
+        MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
+                userRepository,
+                propertyRepository,
+                incomeRepository,
+                vehicleRepository,
+                documentRepository,
+                null,
+                mockUrbanService
+        );
+
+        String citizenUuid = "citizen-uuid-token-test-2";
+        User existingUser = User.builder()
+                .id(102L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .username("citizen2")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        UserProperty prop = UserProperty.builder()
+                .localityType("URBAN")
+                .consentToken("TOKEN-GOOD")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("UPYOG-PROP-VALID")
+                        .build())
+                .build();
+
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(prop))
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(createTestRequestInfo())
+                .members(Collections.singletonList(detail))
+                .build();
+
+        MemberAssetServiceImpl service = new MemberAssetServiceImpl(processorWithUrban);
+        MemberAssetSyncResponse response = service.syncMemberAssets(request);
+
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+        assertEquals(1, response.getResults().size());
+        assertEquals("SUCCESS", response.getResults().get(0).getStatus());
+        assertEquals(1, response.getResults().get(0).getPropertiesSynced());
     }
 }

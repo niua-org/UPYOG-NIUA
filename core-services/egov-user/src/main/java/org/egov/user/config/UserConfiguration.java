@@ -254,6 +254,66 @@ public class UserConfiguration {
     private Integer assetSearchDefaultOffset;
 
     /**
+     * Base HTTP host URL of the UPYOG Property Tax service (property-services).
+     */
+    @Value("${property.service.host}")
+    private String propertyServiceHost;
+
+    /**
+     * Relative context endpoint for querying properties in property-services.
+     */
+    @Value("${property.service.search.endpoint}")
+    private String propertyServiceSearchEndpoint;
+
+    /**
+     * Flag enabling fixed/mock OTP verification for urban property ownership in test environments.
+     */
+    @Value("${property.otp.fixed.enabled}")
+    private Boolean propertyOtpFixedEnabled;
+
+    /**
+     * Static mock OTP value accepted when fixed OTP verification is enabled.
+     */
+    @Value("${property.otp.fixed.value}")
+    private String propertyOtpFixedValue;
+
+    /**
+     * Time-to-live duration in milliseconds for an active urban property OTP reference challenge session.
+     */
+    @Value("${property.otp.reference.ttl.ms}")
+    private Long propertyOtpReferenceTtlMs;
+
+    /**
+     * Maximum number of invalid OTP verification attempts permitted before session lockout.
+     */
+    @Value("${property.otp.verify.max.attempts}")
+    private Integer propertyOtpVerifyMaxAttempts;
+
+    /**
+     * Time-to-live duration in milliseconds for an issued property authorization consent token.
+     */
+    @Value("${property.consent.token.ttl.ms}")
+    private Long propertyConsentTokenTtlMs;
+
+    /**
+     * Base HTTP host URL of the egov-otp service.
+     */
+    @Value("${egov.otp.host}")
+    private String otpServiceHost;
+
+    /**
+     * Relative context endpoint for creating OTP challenges via egov-otp.
+     */
+    @Value("${egov.services.otp.create_otp}")
+    private String otpCreateEndpoint;
+
+    /**
+     * Relative context endpoint for validating OTPs via egov-otp.
+     */
+    @Value("${egov.services.otp.validate_otp}")
+    private String otpValidateEndpoint;
+
+    /**
      * Resolves the configured set of privileged role codes permitted to access citizen assets.
      *
      * @return set of uppercase role codes
