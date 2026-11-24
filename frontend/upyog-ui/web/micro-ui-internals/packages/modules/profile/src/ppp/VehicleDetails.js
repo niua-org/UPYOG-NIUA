@@ -168,7 +168,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
 
   const isVehicleComplete = (veh) => veh.vehicleType && veh.vehicleCategory && veh.fuelType && veh.vehicleNo && veh.vehicleNoValidated && veh.purchaseYear && veh.uploadedRCFile;
 
-  // To check if user dows not enter duplicate number
+  // To check if user does not enter duplicate number, while adding multiple vehicle
   const hasDuplicateVehicleNo = () => {
     const filled = vehicleList.map((v) => v.vehicleNo).filter(Boolean);
     return filled.length !== new Set(filled).size;
