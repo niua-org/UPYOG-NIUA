@@ -27,7 +27,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           ?.filter((option) => option.active !== false)
           .map((option) => ({
             code: option.code,
-            name: option.name || option.code,
+            name: option.code === "ORGANISATION" ? "Organisation/Institution" : option.name || option.code,
           })) || [];
       },
     }
@@ -109,12 +109,12 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
 
   const documentTypeOptions = [
     {
-      code: "Pdf",
-      name: "Pdf",
+      code: "Aadhaar",
+      name: "Aadhaar",
     },
     {
-      code: "Notary",
-      name: "Notary",
+      code: "VoterID",
+      name: "Voter ID",
     },
   ];
 
@@ -384,7 +384,7 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
               <span className="profile-form-required">*</span>
             </label>
             <RadioButtons
-              className="rural-property-radio-group"
+              additionalWrapperClass="rural-property-radio-group"
               innerStyles={{ display: "flex", alignItems: "center", marginBottom: 0 }}
               options={ownershipOptions}
               optionsKey="name"
