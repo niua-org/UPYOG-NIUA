@@ -20,7 +20,7 @@ import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-mo
 
 
 const componentsToRegister = {
-  MyApplications,
+  ESTMyApplications: MyApplications,
   ESTPaymentHistory,
   NewRegistration,
   ESTRegCreate,
