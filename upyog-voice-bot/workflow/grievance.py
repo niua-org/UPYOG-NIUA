@@ -19,6 +19,7 @@ from workflow.base_state import BaseAgentState
 from services.nlu_lexicon import (
     is_bare_negation,
     is_start_new_workflow,
+    is_generic_service_initiation,
     is_explicit_cancel,
     is_affirmative,
     EXCLUDED_FIELD_WORDS
@@ -369,7 +370,7 @@ def extraction_node(state: GrievanceState):
     is_meta_cmd = any(ui_clean == w or ui_clean.startswith(w + " ") for w in meta_commands)  
 
     # Navigation / resume commands should NEVER be extracted as form values or trigger validation errors
-    if is_meta_cmd:
+    if is_meta_cmd or is_generic_service_initiation(user_msg):
         logger.info(f"[grievance extract_node] User message '{user_msg}' is a navigation/resume command; skipping extraction.")
         draft.pop("_field_errors", None)
         draft.pop("_failed_fields", None)

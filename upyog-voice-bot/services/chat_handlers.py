@@ -1119,10 +1119,6 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
                 draft_key = "draft_booking" if wf == "adv_booking" else "draft_grievance"
                 empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if wf == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
                 workflows[wf].update_state(config_update, {draft_key: empty_draft, "missing_fields": []})
-                try:
-                    process_user_message("[CANCEL_DRAFT]", phone, session_id, target_workflow=wf)
-                except Exception as e:
-                    logger.warning(f"[DraftDelete] Failed running [CANCEL_DRAFT] on {wf}: {e}")
             msg = (
                 "Aapke sabhi saved drafts safaltapoorvak delete kar diye gaye hain."
                 if user_language == 'hi' else
@@ -1136,10 +1132,6 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
                     draft_key = "draft_booking" if wf == "adv_booking" else "draft_grievance"
                     empty_draft = {f: None for f in (["category", "sub_category", "description", "locality"] if wf == "grievance" else ["addType", "location", "faceArea", "start_date", "end_date", "nightLight"])}
                     workflows[wf].update_state(config_update, {draft_key: empty_draft, "missing_fields": []})
-                    try:
-                        process_user_message("[CANCEL_DRAFT]", phone, session_id, target_workflow=wf)
-                    except Exception as e:
-                        logger.warning(f"[DraftDelete] Failed running [CANCEL_DRAFT] on {wf}: {e}")
 
             remaining = MemoryManager.get_all_draft_states(phone)
             plugin_display = _SERVICES_MAP.get(target_plugins[0], {}).get("name", target_plugins[0].replace('_', ' ').title()) if target_plugins else "Draft"
