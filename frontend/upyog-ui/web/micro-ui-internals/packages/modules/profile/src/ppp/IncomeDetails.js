@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FormStep, Dropdown, TextInput, UploadFile } from "@nudmcdgnpm/digit-ui-react-components";
+import { FormStep, Dropdown, TextInput, UploadFile, RadioButtons } from "@nudmcdgnpm/digit-ui-react-components";
 import { TAX_VALIDATORS, FormField } from "../utils";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 import DocumentUploadCard from "../utils/DocumentUploadCard";
@@ -35,6 +35,8 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
+
+  const [hasIncomeSource, setHasIncomeSource] = useState(saved.hasIncomeSource || null);
   const [taxIdType, setTaxIdType] = useState(saved.taxIdType || null);
   const [taxIdNumber, setTaxIdNumber] = useState(saved.taxIdNumber || "");
   const [annualIncome, setAnnualIncome] = useState(saved.annualIncome || "");
@@ -65,18 +67,21 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
 
   const goNext = () => {
     if (isViewMode) {
-      onSelect(config.key, saved, false);
+      onSelect(config.key, saved, false); return; }
+    if (hasIncomeSource === "No") {
+      onSelect(config.key, { hasIncomeSource: "No" }, false);
       return;
     }
    onSelect(config.key, {
+        hasIncomeSource: "Yes",
         occupation,
         annualIncome,
         taxIdType,
         taxIdNumber,
         taxIdValidated,
         uploadedTaxProof,
-        incomeProofType,                                    
-        incomeProofFile,                                   
+        incomeProofType,
+        incomeProofFile,
         uploadedIncomeFile: incomeProofFile?.fileStoreId || null,
     }, false);
   };
@@ -85,7 +90,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
 
   useEffect(() => {
     if (userType === "citizen" && !isViewMode) goNext();
-  }, [taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, incomeProofFile, uploadedTaxProof]);
+  }, [hasIncomeSource, taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, incomeProofFile, uploadedTaxProof]);
 
   const handleTaxIdNumberChange = (e) => {
     const val = e.target.value.toUpperCase();
@@ -164,7 +169,10 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const isValidateBtnDisabled = !taxIdNumber || !!taxIdError;
   const showTaxProof = validateStatus === "error";
   const taxIdSatisfied = !taxIdType || taxIdValidated || !!uploadedTaxProof;
-  const isDisabled = !annualIncome || !occupation || !incomeProofType || !incomeProofFile?.fileStoreId || !!taxIdError || (taxIdType && !taxIdNumber) || !taxIdSatisfied;
+
+  const isDisabled = hasIncomeSource === null ? true
+    : hasIncomeSource === "No" ? false
+    : !annualIncome || !occupation || !incomeProofType || !incomeProofFile?.fileStoreId || !!taxIdError || (taxIdType && !taxIdNumber) || !taxIdSatisfied;
 
   return (
     <React.Fragment>
@@ -183,6 +191,21 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
         t={t}
         isDisabled={isViewMode ? false : isDisabled}
       >
+        <FormField label={t("PROFILE_HAS_INCOME_SOURCE")} required t={t} />
+        <RadioButtons
+          options={[
+            { code: "Yes", i18nKey: "COMMON_YES" },
+            { code: "No", i18nKey: "COMMON_NO" },
+          ]}
+          optionsKey="i18nKey"
+          isDependent={true}
+          selectedOption={hasIncomeSource ? { code: hasIncomeSource } : null}
+          onSelect={(val) => !isViewMode && setHasIncomeSource(val.code)}
+          disabled={isViewMode}
+          name="hasIncomeSource"
+        />
+
+      {hasIncomeSource === "Yes" && (
         <div className="profile-grid-3col">
           <FormField label={t("PROFILE_OCCUPATION")} required t={t}>
             <Dropdown
@@ -290,6 +313,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
             disabled={isViewMode}
           />
         </div>
+      )}
       </FormStep>
     </React.Fragment>
   );

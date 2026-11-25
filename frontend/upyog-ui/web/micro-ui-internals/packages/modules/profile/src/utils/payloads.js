@@ -175,8 +175,9 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
     };
 
     // --- Income Details ---
-    const income = incomeDetails.annualIncome
-      ? {
+    const income = incomeDetails.hasIncomeSource === "No" || !incomeDetails.annualIncome
+    ? undefined
+      : {
           occupation: incomeDetails.occupation?.code || incomeDetails.occupation,
           annualIncome: Number(incomeDetails.annualIncome),
           identifierType: incomeDetails.taxIdType?.code,
@@ -207,8 +208,7 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
               designation: incomeDetails.designation,
             },
           }),
-        }
-      : undefined;
+        };
 
     // --- Vehicle Details ---
     let vehicles;
@@ -597,8 +597,10 @@ export const buildJoinFamilyPayload = ({
   }
 
   // 4. Income Object
-  const income = incomeDetails.annualIncome
-    ? {
+  const income = incomeDetails.hasIncomeSource === "No" || !incomeDetails.annualIncome
+    ? 
+    undefined
+    : {
         occupation: (incomeDetails.occupation?.code || incomeDetails.occupation?.name || incomeDetails.occupation || "").toUpperCase(),
         annualIncome: Number(incomeDetails.annualIncome),
         identifierType: (incomeDetails.taxIdType?.code || incomeDetails.taxIdType?.name || incomeDetails.taxIdType || "").toUpperCase(),
@@ -630,8 +632,7 @@ export const buildJoinFamilyPayload = ({
             designation: incomeDetails.designation,
           },
         }),
-      }
-    : undefined;
+      };
 
   // 5. Vehicles Array
     let vehicles = [];
