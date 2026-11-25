@@ -12,12 +12,15 @@ import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.service.asset.MemberAssetService;
+import org.egov.user.domain.service.family.FamilyProfileService;
 import org.egov.user.domain.service.profile.ProfileService;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.asset.MemberAssetSyncRequest;
 import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
+import org.egov.user.web.contract.family.FamilyProfileResponse;
+import org.egov.user.web.contract.family.FamilyProfileSearchRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
 import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
 import org.egov.user.web.contract.profile.AadhaarEkycMarkVerifiedRequest;
@@ -68,6 +71,7 @@ import java.util.stream.Collectors;
  *   <li>{@code POST /profile/_update} - Profile demographic updates with Section 8 non-editable field locking</li>
  *   <li>{@code POST /profile/_search} - Profile search with decrypted PII</li>
  *   <li>{@code POST /profile/_resync} - Explicit Aadhaar re-sync trigger for UI</li>
+ *   <li>{@code POST /profile/family/_details} - Retrieve complete family unit details and member assets</li>
  * </ul>
  *
  * @author UPYOG Team
@@ -81,18 +85,33 @@ public class ProfileController {
 
     private final ProfileService profileService;
     private final MemberAssetService memberAssetService;
+    private final FamilyProfileService familyProfileService;
 
     /**
-     * Constructs the profile controller with citizen profile and member asset services.
+     * Constructs the profile controller with citizen profile, member asset, and family profile services.
+     *
+     * @param profileService citizen profile domain service
+     * @param memberAssetService citizen member asset domain service
+     * @param familyProfileService family profile and asset aggregation domain service
+     */
+    @Autowired
+    public ProfileController(ProfileService profileService,
+                             @Autowired(required = false) MemberAssetService memberAssetService,
+                             @Autowired(required = false) FamilyProfileService familyProfileService) {
+        this.profileService = profileService;
+        this.memberAssetService = memberAssetService;
+        this.familyProfileService = familyProfileService;
+    }
+
+    /**
+     * Backward-compatible constructor for ProfileController without {@link FamilyProfileService}.
      *
      * @param profileService citizen profile domain service
      * @param memberAssetService citizen member asset domain service
      */
-    @Autowired
     public ProfileController(ProfileService profileService,
-                             @Autowired(required = false) MemberAssetService memberAssetService) {
-        this.profileService = profileService;
-        this.memberAssetService = memberAssetService;
+                             MemberAssetService memberAssetService) {
+        this(profileService, memberAssetService, null);
     }
 
     /**
@@ -101,7 +120,7 @@ public class ProfileController {
      * @param profileService service handling citizen profile lifecycle operations
      */
     public ProfileController(ProfileService profileService) {
-        this(profileService, null);
+        this(profileService, null, null);
     }
 
     /**
@@ -467,6 +486,40 @@ public class ProfileController {
             throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE, UserConstants.MSG_SERVICE_UNAVAILABLE_MEMBER_ASSET);
         }
         MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Searches complete family household details by familyId, resolving active members
+     * from upyog-family-service and enriching each member with demographics, addresses, documents,
+     * vehicles, income, and properties from egov-user core registry.
+     *
+     * @param request family profile search request payload containing familyId, optional tenantId, and RequestInfo
+     * @return HTTP 200 response enclosing the complete family aggregate and member asset details
+     */
+    @Operation(
+            summary = "Search Family Full Profile and Assets",
+            description = "Searches complete household information by familyId, retrieving demographics, addresses, documents, vehicles, income declarations, and properties for all members of the family."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Family profile and member assets retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = FamilyProfileResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Missing mandatory familyId or validation failure"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized caller context"),
+            @ApiResponse(responseCode = "404", description = "Family not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/family/_details")
+    public ResponseEntity<FamilyProfileResponse> getFamilyProfileDetails(@RequestBody @Valid FamilyProfileSearchRequest request) {
+        log.info("[PROFILE-CONTROLLER] Received family profile search request for familyId: {}, tenantId: {}",
+                request != null ? request.getFamilyId() : null,
+                request != null ? request.getTenantId() : null);
+
+        if (familyProfileService == null) {
+            throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE, "Family profile service is unavailable");
+        }
+
+        FamilyProfileResponse response = familyProfileService.searchFamilyProfile(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

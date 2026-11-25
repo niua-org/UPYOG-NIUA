@@ -10,6 +10,8 @@ import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.service.config.FamilyConfigurationService;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.config.FamilyConfig;
+import org.egov.user.web.contract.family.FamilyDetail;
+import org.egov.user.web.contract.family.FamilyMemberDetail;
 import org.egov.user.web.contract.profile.FamilyHofStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -458,5 +461,114 @@ public class FamilyRestRepository {
         }
 
         return FamilyHofStatus.builder().familyFound(false).isHof(false).build();
+    }
+
+    /**
+     * Retrieves family aggregate details from upyog-family-service by familyId.
+     *
+     * @param familyId    the unique family business identifier
+     * @param tenantId    optional tenant identifier scoping the lookup
+     * @param requestInfo standard UPYOG RequestInfo context
+     * @return populated {@link FamilyDetail} or null if not found
+     */
+    public FamilyDetail getFamilyByFamilyId(String familyId, String tenantId, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(familyId) || restTemplate == null) {
+            return null;
+        }
+
+        String host = resolveHost();
+        String endpoint = resolveEndpoint();
+
+        try {
+            UriComponentsBuilder uriBuilder = buildBaseUri(host, endpoint)
+                    .queryParam(UserConstants.FIELD_FAMILY_ID, familyId);
+
+            if (StringUtils.isNotBlank(tenantId)) {
+                uriBuilder.queryParam(UserConstants.PARAM_TENANT_ID, tenantId);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<RequestInfo> entity = new HttpEntity<>(requestInfo != null ? requestInfo : new RequestInfo(), headers);
+
+            String url = uriBuilder.toUriString();
+            log.info("[FAMILY-REST-REPO] Querying upyog-family-service for familyId: {} at: {}", familyId, url);
+            String responseStr = restTemplate.postForObject(url, entity, String.class);
+
+            JsonNode families = parseFamiliesNode(responseStr);
+            if (families == null || !families.isArray() || families.isEmpty()) {
+                log.warn("[FAMILY-REST-REPO] No family found for familyId: {}", familyId);
+                return null;
+            }
+
+            JsonNode familyNode = families.get(0);
+            return parseFamilyDetail(familyNode);
+        } catch (CustomException ce) {
+            throw ce;
+        } catch (Exception e) {
+            log.error("[FAMILY-REST-REPO] Error querying family service for familyId {}: {}", familyId, e.getMessage(), e);
+            throw new CustomException(UserConstants.ERROR_SERVICE_UNAVAILABLE,
+                    UserConstants.MSG_FAMILY_SERVICE_COMMUNICATION_ERROR);
+        }
+    }
+
+    private FamilyDetail parseFamilyDetail(JsonNode familyNode) {
+        if (familyNode == null) {
+            return null;
+        }
+        String id = familyNode.path("id").asText(null);
+        String familyId = familyNode.path(UserConstants.FIELD_FAMILY_ID).asText(null);
+        String tenantId = familyNode.path("tenantId").asText(null);
+        String headUserUuid = familyNode.path(UserConstants.FAMILY_PARAM_HEAD_USER_UUID).asText(null);
+        String headName = familyNode.path("headName").asText(null);
+        String category = familyNode.path("category").asText(null);
+        String status = familyNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(null);
+        String applicationStatus = familyNode.path("applicationStatus").asText(null);
+        String applicationNo = familyNode.path("applicationNo").asText(null);
+        String familyAddressPropertyId = familyNode.path("familyAddressPropertyId").asText(null);
+        String familySource = familyNode.path("familySource").asText(null);
+
+        List<FamilyMemberDetail> memberDetails = new ArrayList<>();
+        JsonNode membersNode = familyNode.path(UserConstants.JSON_KEY_MEMBERS);
+        if (membersNode.isArray()) {
+            for (JsonNode memberNode : membersNode) {
+                String mId = memberNode.path("id").asText(null);
+                String mFamilyId = memberNode.path(UserConstants.FIELD_FAMILY_ID).asText(familyId);
+                String mTenantId = memberNode.path("tenantId").asText(tenantId);
+                String mUserUuid = memberNode.path(UserConstants.JSON_KEY_USER_UUID).asText(null);
+                String relationshipWithHead = memberNode.path("relationshipWithHead").asText(null);
+                boolean isHead = memberNode.path(UserConstants.FAMILY_PARAM_IS_HEAD).asBoolean(false);
+                boolean isVerified = memberNode.path("isVerified").asBoolean(false);
+                boolean active = memberNode.path(UserConstants.JSON_KEY_ACTIVE).asBoolean(true);
+                String mStatus = memberNode.path(UserConstants.FIELD_FAMILY_STATUS).asText(UserConstants.FAMILY_STATUS_ACTIVE);
+
+                memberDetails.add(FamilyMemberDetail.builder()
+                        .id(mId)
+                        .familyId(mFamilyId)
+                        .tenantId(mTenantId)
+                        .userUuid(mUserUuid)
+                        .relationshipWithHead(relationshipWithHead)
+                        .isHead(isHead)
+                        .isVerified(isVerified)
+                        .active(active)
+                        .status(mStatus)
+                        .build());
+            }
+        }
+
+        return FamilyDetail.builder()
+                .id(id)
+                .familyId(familyId)
+                .tenantId(tenantId)
+                .headUserUuid(headUserUuid)
+                .headName(headName)
+                .category(category)
+                .status(status)
+                .applicationStatus(applicationStatus)
+                .applicationNo(applicationNo)
+                .familyAddressPropertyId(familyAddressPropertyId)
+                .familySource(familySource)
+                .members(memberDetails)
+                .build();
     }
 }

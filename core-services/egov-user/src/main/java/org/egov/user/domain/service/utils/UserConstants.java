@@ -75,6 +75,7 @@ public final class UserConstants {
     public static final String ERROR_INVALID_AADHAAR_FORMAT = "INVALID_AADHAAR_FORMAT";
     public static final String ERROR_CITIZEN_NOT_FOUND = "CITIZEN_NOT_FOUND";
     public static final String ERROR_FAMILY_NOT_MAPPED = "FAMILY_NOT_MAPPED";
+    public static final String ERROR_FAMILY_NOT_FOUND = "FAMILY_NOT_FOUND";
     public static final String ERROR_NOT_HEAD_OF_FAMILY = "NOT_HEAD_OF_FAMILY";
     public static final String ERROR_AADHAAR_CANNOT_BE_CHANGED = "AADHAAR_CANNOT_BE_CHANGED";
     public static final String ERROR_FAMILY_ID_REQUIRED = "FAMILY_ID_REQUIRED";
@@ -243,6 +244,7 @@ public final class UserConstants {
     public static final String MSG_MOBILE_AUTH_MOBILE_REQUIRED = "mobileNumber is required for MOBILE channel authentication";
     public static final String MSG_AADHAAR_IDENTIFIER_REQUIRED = "At least one of aadhaarNumber, txnId, or referenceId is required for AADHAAR channel authentication";
     public static final String MSG_FAMILY_ID_REQUIRED = "familyId is required for FAMILY_ID channel authentication";
+    public static final String MSG_FAMILY_NOT_FOUND = "No active family found with the provided familyId";
     public static final String MSG_FAMILY_MEMBER_MOBILE_REQUIRED = "Member mobileNumber is required for FAMILY_ID channel authentication";
     public static final String MSG_SELECTED_USER_NOT_FOUND = "Selected citizen account not found";
     public static final String MSG_AUTH_FAILED_NULL_USER = "Failed to resolve authenticated user";

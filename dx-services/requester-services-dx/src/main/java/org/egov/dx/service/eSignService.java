@@ -53,15 +53,21 @@ import okhttp3.RequestBody;
 @Slf4j
 public class eSignService {
 
-	@Autowired
-	Configurations configurations;
+	private final Configurations configurations;
+	private final IdGenService idGenService;
+	private final Producer producer;
+	private final TransactionRepository transactionRepository;
 
 	@Autowired
-	private IdGenService idGenService;
-	@Autowired
-	private Producer producer;
-	@Autowired
-	private TransactionRepository transactionRepository;
+	public eSignService(Configurations configurations,
+						IdGenService idGenService,
+						Producer producer,
+						TransactionRepository transactionRepository) {
+		this.configurations = configurations;
+		this.idGenService = idGenService;
+		this.producer = producer;
+		this.transactionRepository = transactionRepository;
+	}
 	
 
 	private byte[] readInputStreamToByteArray(InputStream inputStream) throws IOException {

@@ -263,4 +263,72 @@ class FamilyRestRepositoryTest {
         assertFalse(status.isFamilyFound());
         assertFalse(status.isHof());
     }
+
+    @Test
+    @DisplayName("getFamilyByFamilyId: Successfully resolves family with members by familyId")
+    void testGetFamilyByFamilyId_Success() {
+        when(userConfiguration.getFamilyServiceHost()).thenReturn("http://upyog-family-service:8080");
+        when(userConfiguration.getFamilyServiceSearchEndpoint()).thenReturn("/family/v1/family/_search");
+
+        String jsonResponse = "{\"Families\":[{" +
+                "\"id\":\"fam-uuid-1\"," +
+                "\"familyId\":\"FAM-2026-001\"," +
+                "\"tenantId\":\"pg.citya\"," +
+                "\"headUserUuid\":\"user-head-1\"," +
+                "\"headName\":\"Rajesh Kumar\"," +
+                "\"status\":\"ACTIVE\"," +
+                "\"category\":\"GENERAL\"," +
+                "\"members\":[" +
+                "  {\"id\":\"mem-1\",\"userUuid\":\"user-head-1\",\"relationshipWithHead\":\"SELF\",\"isHead\":true,\"active\":true}," +
+                "  {\"id\":\"mem-2\",\"userUuid\":\"user-member-2\",\"relationshipWithHead\":\"SPOUSE\",\"isHead\":false,\"active\":true}" +
+                "]" +
+                "}]}";
+
+        when(restTemplate.postForObject(contains("familyId=FAM-2026-001"), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(jsonResponse);
+
+        org.egov.user.web.contract.family.FamilyDetail family = familyRestRepository.getFamilyByFamilyId("FAM-2026-001", "pg.citya", requestInfo);
+
+        assertNotNull(family);
+        assertEquals("FAM-2026-001", family.getFamilyId());
+        assertEquals("user-head-1", family.getHeadUserUuid());
+        assertEquals(2, family.getMembers().size());
+        assertEquals("user-head-1", family.getMembers().get(0).getUserUuid());
+        assertTrue(family.getMembers().get(0).getIsHead());
+        assertEquals("user-member-2", family.getMembers().get(1).getUserUuid());
+    }
+
+    @Test
+    @DisplayName("getFamilyByFamilyId: Returns null when family not found")
+    void testGetFamilyByFamilyId_NotFound() {
+        when(userConfiguration.getFamilyServiceHost()).thenReturn("http://upyog-family-service:8080");
+        when(userConfiguration.getFamilyServiceSearchEndpoint()).thenReturn("/family/v1/family/_search");
+
+        when(restTemplate.postForObject(any(String.class), any(HttpEntity.class), eq(String.class)))
+                .thenReturn("{\"Families\":[]}");
+
+        org.egov.user.web.contract.family.FamilyDetail family = familyRestRepository.getFamilyByFamilyId("FAM-NON-EXISTENT", "pg.citya", requestInfo);
+
+        assertNull(family);
+    }
+
+    @Test
+    @DisplayName("getFamilyByFamilyId: Returns null when familyId is blank")
+    void testGetFamilyByFamilyId_BlankId() {
+        org.egov.user.web.contract.family.FamilyDetail family = familyRestRepository.getFamilyByFamilyId("   ", "pg.citya", requestInfo);
+        assertNull(family);
+    }
+
+    @Test
+    @DisplayName("getFamilyByFamilyId: Throws CustomException when RestTemplate fails")
+    void testGetFamilyByFamilyId_Exception() {
+        when(userConfiguration.getFamilyServiceHost()).thenReturn("http://upyog-family-service:8080");
+        when(userConfiguration.getFamilyServiceSearchEndpoint()).thenReturn("/family/v1/family/_search");
+
+        when(restTemplate.postForObject(any(String.class), any(HttpEntity.class), eq(String.class)))
+                .thenThrow(new RuntimeException("Connection refused"));
+
+        assertThrows(CustomException.class, () ->
+                familyRestRepository.getFamilyByFamilyId("FAM-2026-001", "pg.citya", requestInfo));
+    }
 }

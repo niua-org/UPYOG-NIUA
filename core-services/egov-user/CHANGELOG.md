@@ -8,6 +8,7 @@ All notable changes to this module will be documented in this file.
 - Architectural separation of concerns: Extracted all SQL query strings and dynamic builders into dedicated `@Component` QueryBuilder classes (`UserDocumentQueryBuilder`, `UserPropertyQueryBuilder`, `UserIncomeQueryBuilder`, `UserVehicleQueryBuilder`), strictly separating queries from JDBC repositories.
 - Completely eliminated all inline imports / fully qualified class names across production and test codebases, moving all declarations to top-level imports.
 - Added `@PostMapping("/_sync-member-assets")` in `ProfileController` to synchronize family member asset state directly into citizen profile registry.
+- Added `@PostMapping("/family/_details")` endpoint in `ProfileController` to retrieve complete household information by `familyId`, consolidating each member's decrypted demographic profile, active addresses, KYC documents, and declared 3NF assets (vehicles, income, properties) with citizen security isolation and zero N+1 database queries.
 - Implemented 520 realistic Indian mock citizen personas in `MockAadhaarRecordService` with non-repeating atomic round-robin sequential dispensing for mock Aadhaar OTP authentications.
 - Complete Javadoc coverage added across all classes, interfaces, enums, constructors, and methods (both public and private) across the profile, asset, multi-auth, and document modules.
 - Refactored hardcoded strings, error messages, and payload keys into centralized constant classes (`UserConstants` and `FamilyConstants`).
