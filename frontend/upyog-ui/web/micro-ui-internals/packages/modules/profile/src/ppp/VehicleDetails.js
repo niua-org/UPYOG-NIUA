@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FormStep, Dropdown, TextInput, UploadFile, DatePicker, RadioButtons, DeleteIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { FormField } from "../utils";
@@ -107,7 +107,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
 
   // Add more vehicle (Max 3)
   const handleAddVehicle = () => {
-    if (isViewMode || vehicleList.length >= 3) return;
+    if (isViewMode /*|| vehicleList.length >= 3*/) return;
     setVehicleList((prev) => [...prev, createBlankVehicle()]);
   };
 
@@ -117,19 +117,21 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
     setVehicleList((prev) => prev.filter((v) => v.id !== id));
   };
 
+  // derive at render time — never stale
+  const dupNos = useMemo(() => {
+    const seen = new Set(), dups = new Set();
+    vehicleList.forEach(({ vehicleNo }) => vehicleNo && (seen.has(vehicleNo) ? dups.add(vehicleNo) : seen.add(vehicleNo)));
+    return dups;
+  }, [vehicleList]);
+
   const handleVehicleNoChange = (id, e) => {
     const val = e.target.value.toUpperCase();
     if (val.length > 13) return;
-    const isDuplicate = vehicleList.some((v) => v.id !== id && v.vehicleNo === val && val !== "");
     updateVehicleById(id, {
       vehicleNo: val,
       vehicleNoValidated: false,
       vehicleNoValidateStatus: null,
-      vehicleNoError: isDuplicate
-        ? t("PROFILE_DUPLICATE_VEHICLE_NO", "This vehicle number is already added")
-        : val && !VEHICLE_NO_REGEX.test(val)
-        ? t("PROFILE_INVALID_VEHICLE_NO")
-        : null,
+      vehicleNoError: val && !VEHICLE_NO_REGEX.test(val) ? t("PROFILE_INVALID_VEHICLE_NO") : null,
     });
   };
 
@@ -175,7 +177,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
   };
 
 
-  const isDisabled = hasVehicle === null ? true : hasVehicle === "No" ? false : vehicleList.length === 0 || !vehicleList.every(isVehicleComplete) || hasDuplicateVehicleNo();;
+  const isDisabled = hasVehicle === null ? true : hasVehicle === "No" ? false : vehicleList.length === 0 || !vehicleList.every(isVehicleComplete) || hasDuplicateVehicleNo();
 
   const goNext = () => {
     if (isViewMode) {
@@ -244,7 +246,8 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
         {hasVehicle === "Yes" && (
           <div className="vehicle-details-list-wrapper">
             {vehicleList.map((veh, index) => {
-              const isValidateBtnDisabled = !veh.vehicleNo || !!veh.vehicleNoError;
+              const isDuplicate = dupNos.has(veh.vehicleNo);
+              const isValidateBtnDisabled = !veh.vehicleNo || !!veh.vehicleNoError || isDuplicate;
               return (
                 <div key={veh.id} className="vehicle-details-card">
                   <div className="vehicle-details-card-header">
@@ -304,7 +307,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
                       />
                     </FormField>
 
-                    <FormField label={t("PROFILE_VEHICLE_NO")} required t={t} error={veh.vehicleNoError}>
+                    <FormField label={t("PROFILE_VEHICLE_NO")} required t={t} error={veh.vehicleNoError || (isDuplicate ? t("PROFILE_DUPLICATE_VEHICLE_NO") : null)}>
                       <div className="income-details-tax-row">
                         <div className="income-details-tax-wrap">
                           <TextInput
@@ -360,8 +363,8 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
               );
             })}
 
-            {/* Add Another Vehicle Button (Visible only when vehicleList < 3) */}
-            {vehicleList.length < 3 && !isViewMode && (
+            {/* Add Another Vehicle Button */}
+            {!isViewMode && (
               <div className="vehicle-details-add-wrapper">
                 <button
                   type="button"
@@ -369,7 +372,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
                   className="income-details-validate-btn"
                 >
                   <span>{t("PROFILE_ADD_ANOTHER_VEHICLE")}</span>
-                  <span className="vehicle-details-max-number">({vehicleList.length}/3)</span>
+                  {/* <span className="vehicle-details-max-number">({vehicleList.length}/3)</span> */}
                 </button>
               </div>
             )}
