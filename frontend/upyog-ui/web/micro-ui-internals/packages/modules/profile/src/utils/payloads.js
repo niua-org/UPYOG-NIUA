@@ -13,6 +13,9 @@ const getPropertyOwnershipType = (ownershipType) => {
   return value || "INDIVIDUAL";
 };
 
+const getPropertyAddressId = (property) =>
+  property?.propertyId || property?.primaryPropertyId || property?.surveyNumber || property?.khasraNumber;
+
 // Body for Digit.UserService.updateUser
 export const buildUpdateUserPayload = ({ userInfo, form, photoId, locale }) => ({
   ...userInfo,
@@ -83,6 +86,7 @@ export const buildCreateDocumentPayload = ({ userUuid, tenantId, documentType, f
 /**
  * Builds the Family Create API payload from familyDetails session data + staged members list
  * Property fields are read only from portfolio entries; noProperty suppresses the array.
+ * The selected primary address may be urban or rural; rural addresses use their survey/khasra number when no property ID exists.
  * TODO - Need to Enhance this payload as lots of info is un-necessary
  * */
 export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUuid, familyDetails = {} }) => {
@@ -94,8 +98,14 @@ export const buildCreateFamilyPayload = ({ membersList, tenantId, selectedHeadUu
   const headPropertyPortfolio = headMemberData.property?.propertiesPortfolio || [];
 
   // Derive family-level fields from head's session data
+  const primaryAddress =
+    headPropertyPortfolio.find((property) => property.isPrimaryAddress) ||
+    (headPropertyPortfolio.length === 1 ? headPropertyPortfolio[0] : undefined);
   const familyAddressPropertyId =
-    headPropertyPortfolio.find((property) => property.localityType === "URBAN" && property.isPrimaryAddress)?.propertyId ||
+    getPropertyAddressId(primaryAddress) ||
+    (!headPropertyPortfolio.length && !headMemberData.property?.noProperty
+      ? headMemberData.property?.primaryPropertyId
+      : undefined) ||
     undefined;
   const category = headProfile.caste?.code || undefined;
 

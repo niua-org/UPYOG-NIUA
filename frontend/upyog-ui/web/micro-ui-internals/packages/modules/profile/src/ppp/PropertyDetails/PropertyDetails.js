@@ -17,6 +17,9 @@ const LOCALITY_TYPE_OPTIONS = [
   },
 ];
 
+const getPropertyAddressId = (property) =>
+  property?.propertyId || property?.primaryPropertyId || property?.surveyNumber || property?.khasraNumber || "";
+
 /**
  * Collects and manages a family's urban and rural property portfolio.
  *
@@ -42,13 +45,30 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
   
 
   const initialPortfolio = useMemo(() => {
+    let portfolio = [];
     if (Array.isArray(saved.propertiesPortfolio) && saved.propertiesPortfolio.length) {
-      return [...saved.propertiesPortfolio].sort((first, second) =>
-        Number(Boolean(second.isPrimaryAddress)) - Number(Boolean(first.isPrimaryAddress))
-      );
+      portfolio = saved.propertiesPortfolio;
+    } else if (saved.localityType) {
+      portfolio = [{ ...saved, portfolioId: `property-${Date.now()}` }];
     }
-    if (saved.localityType) return [{ ...saved, portfolioId: `property-${Date.now()}` }];
-    return [];
+
+    if (!portfolio.some((property) => property.isPrimaryAddress)) {
+      const savedPrimaryIndex = saved.primaryPropertyId
+        ? portfolio.findIndex((property) => getPropertyAddressId(property) === saved.primaryPropertyId)
+        : -1;
+      const primaryIndex = portfolio.length === 1 ? 0 : savedPrimaryIndex;
+      if (primaryIndex >= 0) {
+        portfolio = portfolio.map((property, index) => ({
+          ...property,
+          isPrimaryAddress: index === primaryIndex,
+          primaryPropertyId: index === primaryIndex ? getPropertyAddressId(property) : "",
+        }));
+      }
+    }
+
+    return [...portfolio].sort((first, second) =>
+      Number(Boolean(second.isPrimaryAddress)) - Number(Boolean(first.isPrimaryAddress))
+    );
   }, []);
 
   const [properties, setProperties] = useState(initialPortfolio);
@@ -68,8 +88,7 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
       propertiesPortfolio: primaryFirst,
       localityType: primaryFirst[0]?.localityType || "",
       noProperty: false,
-      primaryPropertyId:
-        primaryFirst.find((property) => property.localityType === "URBAN" && property.isPrimaryAddress)?.propertyId || "",
+      primaryPropertyId: getPropertyAddressId(primaryFirst.find((property) => property.isPrimaryAddress)),
     });
   };
 
@@ -171,17 +190,25 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
       nextProperties.push(...savedProperties);
     }
 
-    if (savedProperties.some((property) => property.localityType === "URBAN" && property.isPrimaryAddress)) {
+    if (savedProperties.some((property) => property.isPrimaryAddress)) {
       nextProperties.forEach((property, index) => {
-        if (property.localityType === "URBAN") {
-          nextProperties[index] = { ...property, isPrimaryAddress: false, primaryPropertyId: "" };
-        }
+        nextProperties[index] = { ...property, isPrimaryAddress: false, primaryPropertyId: "" };
       });
       const newPrimary = nextProperties.find((property) => property.portfolioId === savedProperties[0].portfolioId);
       if (newPrimary) {
         const primaryIndex = nextProperties.indexOf(newPrimary);
-        nextProperties[primaryIndex] = { ...newPrimary, isPrimaryAddress: true };
+        nextProperties[primaryIndex] = {
+          ...newPrimary,
+          isPrimaryAddress: true,
+          primaryPropertyId: getPropertyAddressId(newPrimary),
+        };
       }
+    } else if (nextProperties.length === 1) {
+      nextProperties[0] = {
+        ...nextProperties[0],
+        isPrimaryAddress: true,
+        primaryPropertyId: getPropertyAddressId(nextProperties[0]),
+      };
     }
 
     persistProperties(nextProperties);
@@ -189,15 +216,22 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
   };
 
   const deleteProperty = (index) => {
-    persistProperties(properties.filter((_, propertyIndex) => propertyIndex !== index));
+    const remainingProperties = properties.filter((_, propertyIndex) => propertyIndex !== index);
+    if (remainingProperties.length === 1 && !remainingProperties[0].isPrimaryAddress) {
+      remainingProperties[0] = {
+        ...remainingProperties[0],
+        isPrimaryAddress: true,
+        primaryPropertyId: getPropertyAddressId(remainingProperties[0]),
+      };
+    }
+    persistProperties(remainingProperties);
   };
 
   const setPrimaryProperty = (index) => {
     const nextProperties = properties.map((property, propertyIndex) => ({
       ...property,
-      isPrimaryAddress: property.localityType === "URBAN" && propertyIndex === index,
-      primaryPropertyId:
-        property.localityType === "URBAN" && propertyIndex === index ? property.propertyId : "",
+      isPrimaryAddress: propertyIndex === index,
+      primaryPropertyId: propertyIndex === index ? getPropertyAddressId(property) : "",
     }));
     persistProperties(nextProperties);
   };
@@ -247,32 +281,29 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
       return;
     }
     if (!properties.length) return;
-    const hasUrbanProperty = properties.some((property) => property.localityType === "URBAN");
-    const hasPrimaryUrbanProperty = properties.some(
-      (property) => property.localityType === "URBAN" && property.isPrimaryAddress
-    );
+    const hasPrimaryProperty = properties.some((property) => property.isPrimaryAddress);
 
-    if (hasUrbanProperty && !hasPrimaryUrbanProperty) {
+    if (properties.length > 1 && !hasPrimaryProperty) {
       setToast({
         error: true,
-        label: t(("PROFILE_SELECT_PRIMARY_URBAN_PROPERTY")),
+        label: t(("PROFILE_MARK_AS_PRIMARY")),
       });
       return;
     }
 
+    const selectedProperties =
+      properties.length === 1 && !hasPrimaryProperty
+        ? [{ ...properties[0], isPrimaryAddress: true, primaryPropertyId: getPropertyAddressId(properties[0]) }]
+        : properties;
     onSelect(config.key, {
-      propertiesPortfolio: properties,
-      localityType: properties[0].localityType,
+      propertiesPortfolio: selectedProperties,
+      localityType: selectedProperties[0].localityType,
       noProperty: false,
-      primaryPropertyId:
-        properties.find((property) => property.localityType === "URBAN" && property.isPrimaryAddress)?.propertyId || "",
+      primaryPropertyId: getPropertyAddressId(selectedProperties.find((property) => property.isPrimaryAddress)),
     }, false);
   };
-  const hasUrbanProperty = properties.some((property) => property.localityType === "URBAN");
-  const hasPrimaryUrbanProperty = properties.some(
-    (property) => property.localityType === "URBAN" && property.isPrimaryAddress
-  );
-  const canProceed = noProperty || (properties.length > 0 && (!hasUrbanProperty || hasPrimaryUrbanProperty));
+  const hasPrimaryProperty = properties.some((property) => property.isPrimaryAddress);
+  const canProceed = noProperty || (properties.length > 0 && (properties.length === 1 || hasPrimaryProperty));
   const propertyOwnershipOptions = [
     { code: "YES", name: t(("PROFILE_PROPERTY_OWNED_YES"))},
     { code: "NO", name: t(("PROFILE_PROPERTY_OWNED_NO"))},
@@ -312,7 +343,7 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
                 <div>
                   <div className="property-details-summary-title">
                     {getPropertyTitle(property)}
-                    {property.localityType === "URBAN" && property.isPrimaryAddress && (
+                    {property.isPrimaryAddress && (
                       <span className="property-details-primary-badge">{t(("PROFILE_PRIMARY_ADDRESS"))}</span>
                     )}
                   </div>
@@ -329,7 +360,7 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
                 </div>
                 {!isViewMode && (
                   <div className="profile-property-summary-actions property-details-card-actions">
-                    {property.localityType === "URBAN" && !property.isPrimaryAddress && (
+                    {!property.isPrimaryAddress && (
                       <button
                         type="button"
                         className="property-details-primary-action-btn"

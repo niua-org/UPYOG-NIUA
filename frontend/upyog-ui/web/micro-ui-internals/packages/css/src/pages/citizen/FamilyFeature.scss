@@ -980,6 +980,7 @@
   /* ==========================================================================
      9. PROPERTY DETAILS (PropertyDetails.js, Urban & Rural Forms)
      ========================================================================== */
+  @at-root {
   .property-details-container {
     width: 100%;
     background-color: #ffffff;
@@ -1116,13 +1117,13 @@
 
   .property-details-drawer {
     position: absolute;
-    right: 0;
     top: 16px;
+    right: 0;
     bottom: 0;
-    width: min(460px, 92vw);
-    background: #ffffff;
     display: flex;
     flex-direction: column;
+    width: min(460px, 92vw);
+    background: #ffffff;
     border-top-left-radius: 8px;
     box-shadow: -4px 0 16px rgba(0, 0, 0, 0.12);
   }
@@ -1487,6 +1488,7 @@
     .profile-property-summary-list {
       width: 100% !important;
     }
+  }
   }
 
 
@@ -2276,5 +2278,3 @@
     text-align: center !important;
   }
 }
-
-

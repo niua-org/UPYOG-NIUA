@@ -30,7 +30,7 @@ const JoinExistingFamily = () => {
   const [referenceId, setReferenceId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [otpType, setOtpType] = useState(null);
 
   // Auto-dismiss toast
@@ -179,6 +179,7 @@ const JoinExistingFamily = () => {
             familyId={familyId}
             onVerified={handleVerified}
             onError={showError}
+            tenantId={tenantId}
           />
         )}
       </Card>

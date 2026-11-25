@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import {Dropdown, TextInput, RadioButtons, UploadFile} from "@nudmcdgnpm/digit-ui-react-components";
 
 /**
- * Rural Property Form
- * Page Developed to get the Rural Property details of the family Members
- * These Details Will be filled by the Family Head
- * 
+ * Collects and updates rural property details for a family member.
+ *
+ * @param {object} props Component props.
+ * @param {object} [props.data={}] Existing rural property details.
+ * @param {Function} props.onChange Callback invoked when a property field changes.
+ * @param {Function} props.t Translation function.
+ * @param {boolean} [props.disabled=false] Whether editing is disabled.
+ * @returns {JSX.Element} The rural property form.
  */
 
 const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
@@ -42,6 +46,25 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
             code: option.code,
             name: option.name || option.code,
           })) || [];
+      },
+    }
+  );
+
+  const { data: propertyTypeOptions = [] } = Digit.Hooks.useEnabledMDMS(
+    stateId,
+    "PropertyTax",
+    [{ name: "PropertyType" }],
+    {
+      select: (mdmsData) => {
+        const options = mdmsData?.["PropertyTax"]?.PropertyType;
+        return (
+          options
+            ?.filter((option) => option.active !== false)
+            .map((option) => ({
+              code: option.code,
+              name: option.name || option.code,
+            })) || []
+        );
       },
     }
   );
@@ -84,20 +107,6 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
     },
   ];
 
-  const propertyTypeOptions = [
-    {
-      code: "VACANT_LAND",
-      name: "Vacant Land",
-    },
-    {
-      code: "BUILDING",
-      name: "Building / House",
-    },
-    {
-      code: "LAND_WITH_BUILDING",
-      name: "Land with Building",
-    },
-  ];
   const documentTypeOptions = [
     {
       code: "Pdf",
