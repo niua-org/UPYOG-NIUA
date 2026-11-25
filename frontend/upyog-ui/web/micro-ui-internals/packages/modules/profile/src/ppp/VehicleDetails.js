@@ -237,6 +237,7 @@ const VehicleDetails = ({ t, config, onSelect, formData }) => {
           onSelect={(val) => !isViewMode && setHasVehicle(val.code)}
           disabled={isViewMode}
           name="hasVehicle"
+          innerStyles={{ display: "flex", alignItems: "center", marginRight: "24px" }}
         />
 
         {/* Vehicle Cards — rendered only when hasVehicle === "Yes" */}

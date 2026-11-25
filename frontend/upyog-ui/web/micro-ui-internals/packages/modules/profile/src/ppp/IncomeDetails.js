@@ -203,6 +203,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
           onSelect={(val) => !isViewMode && setHasIncomeSource(val.code)}
           disabled={isViewMode}
           name="hasIncomeSource"
+          innerStyles={{ display: "flex", alignItems: "center", marginRight: "24px" }}
         />
 
       {hasIncomeSource === "Yes" && (
