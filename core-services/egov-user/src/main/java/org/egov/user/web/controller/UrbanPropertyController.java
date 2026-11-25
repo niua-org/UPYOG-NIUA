@@ -74,11 +74,15 @@ public class UrbanPropertyController {
 
     /**
      * Validates whether a propertyConsentToken is valid and unexpired for a given propertyId.
+     * <p><b>NOTE:</b> This endpoint is strictly an internal inter-service RPC designed exclusively
+     * for verification by trusted internal microservices (such as {@code upyog-family-service}).
+     * It must NEVER be exposed publicly or registered in MDMS {@code ACCESSCONTROL-ACTIONS-TEST.json} /
+     * {@code roleactions.json} with external or citizen-facing roles.</p>
      *
      * @param request consent token validation request envelope
      * @return response entity indicating token validity
      */
-    @Operation(summary = "Validate Consent Token", description = "Verifies that a propertyConsentToken is valid, active, and matches the target propertyId.")
+    @Operation(summary = "Validate Consent Token (Internal RPC)", description = "Verifies that a propertyConsentToken is valid, active, and matches the target propertyId. Internal RPC only.")
     @PostMapping("/consent/_validate")
     public ResponseEntity<UrbanPropertyConsentValidateResponse> validateConsentToken(@Valid @RequestBody UrbanPropertyConsentValidateRequest request) {
         log.info("[URBAN-PROPERTY-CONTROLLER] Received /consent/_validate request for property: {}", request.getPropertyId());

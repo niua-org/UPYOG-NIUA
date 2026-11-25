@@ -9,7 +9,10 @@ import org.egov.user.web.contract.property.UrbanPropertyOtpVerifyResponse;
 
 /**
  * Service interface governing urban property ownership validation,
- * OTP dispatch, OTP verification, and consent validation.
+ * OTP dispatch, OTP verification, and consent validation and single-use consumption.
+ *
+ * @author UPYOG Team
+ * @since 1.0.0
  */
 public interface UrbanPropertyService {
 
@@ -46,4 +49,16 @@ public interface UrbanPropertyService {
      * @return true if valid and unexpired
      */
     boolean validatePropertyConsentToken(String propertyId, String consentToken);
+
+    /**
+     * Programmatic consumption of single-use property consent token bound to citizen UUID and tenant.
+     * Re-checks linking limit at consumption time.
+     *
+     * @param propertyId municipal property identifier
+     * @param consentToken single-use consent token string
+     * @param callerUuid UUID of citizen linking the property
+     * @param tenantId tenant identifier
+     * @return true if successfully verified, within linking limit, and consumed
+     */
+    boolean consumeConsentToken(String propertyId, String consentToken, String callerUuid, String tenantId);
 }

@@ -361,6 +361,49 @@ class FamilyValidatorTest {
         assertEquals(FamilyConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN, ex.getCode());
     }
 
+    @Test
+    @DisplayName("validateCreate should fail with urban property when consent token is missing")
+    void validateCreate_UrbanProperty_MissingConsentToken_ThrowsException() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+
+        UserProperty urbanProp = UserProperty.builder()
+                .localityType("URBAN")
+                .ownershipType("INDIVIDUAL")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("PB-PT-2026-001")
+                        .urbanAddress("House 123, Amritsar")
+                        .build())
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(urbanProp));
+        family.setFamilyAddressPropertyId("PB-PT-2026-001");
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateCreate should fail with urban property when userClient is null")
+    void validateCreate_UrbanProperty_NullUserClient_ThrowsException() {
+        FamilyValidator validatorWithoutClient = new FamilyValidator(familyRepository, fileStoreClient, familyMasterDataService, null);
+
+        UserProperty urbanProp = UserProperty.builder()
+                .localityType("URBAN")
+                .ownershipType("INDIVIDUAL")
+                .consentToken("PROP-CONSENT-123")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("PB-PT-2026-001")
+                        .urbanAddress("House 123, Amritsar")
+                        .build())
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(urbanProp));
+        family.setFamilyAddressPropertyId("PB-PT-2026-001");
+
+        CustomException ex = assertThrows(CustomException.class, () -> validatorWithoutClient.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
+    }
+
     /**
      * Fix for PR Comment #15 (FamilyValidator.java:210):
      * Verifies that validateCreate throws an exception when familyAddressPropertyId does not match

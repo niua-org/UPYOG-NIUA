@@ -64,8 +64,7 @@ public class PropertyOtpClientImpl implements PropertyOtpClient {
     @Override
     @SuppressWarnings("unchecked")
     public void sendOtp(String mobileNumber, String tenantId, RequestInfo requestInfo) {
-        boolean isFixedOtp = Boolean.TRUE.equals(userConfiguration.getPropertyOtpFixedEnabled())
-                || Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpFixedEnabled());
+        boolean isFixedOtp = Boolean.TRUE.equals(userConfiguration.getPropertyOtpFixedEnabled());
 
         if (isFixedOtp) {
             log.info("[PROPERTY-OTP-CLIENT] Fixed/mock OTP mode active for mobile: {}", MaskUtils.maskMobile(mobileNumber));
@@ -100,23 +99,27 @@ public class PropertyOtpClientImpl implements PropertyOtpClient {
 
         try {
             Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
-            if (response != null && response.containsKey(UserConstants.OTP_JSON_OTP)) {
-                Object otpObj = response.get(UserConstants.OTP_JSON_OTP);
-                if (otpObj instanceof Map) {
-                    Map<String, Object> otpMap = (Map<String, Object>) otpObj;
-                    String otpVal = otpMap.get(UserConstants.OTP_JSON_OTP) != null ? String.valueOf(otpMap.get(UserConstants.OTP_JSON_OTP)) : null;
+            if (response == null || !response.containsKey(UserConstants.OTP_JSON_OTP)) {
+                log.error("[PROPERTY-OTP-CLIENT] OTP service returned null or missing OTP response object at {}", url);
+                throw new CustomException(UserConstants.ERROR_OTP_DISPATCH_FAILED, UserConstants.MSG_OTP_DISPATCH_FAILED);
+            }
+            Object otpObj = response.get(UserConstants.OTP_JSON_OTP);
+            if (otpObj instanceof Map) {
+                Map<String, Object> otpMap = (Map<String, Object>) otpObj;
+                String otpVal = otpMap.get(UserConstants.OTP_JSON_OTP) != null ? String.valueOf(otpMap.get(UserConstants.OTP_JSON_OTP)) : null;
 
-                    if (notificationUtil != null && StringUtils.isNotBlank(notificationUtil.smsNotificationTopic) && kafkaTemplate != null && otpVal != null) {
-                        SMSRequest smsRequest = new SMSRequest();
-                        smsRequest.setMobileNumber(mobileNumber);
-                        smsRequest.setMessage(UserConstants.OTP_SMS_TEMPLATE_PREFIX + otpVal + UserConstants.OTP_SMS_TEMPLATE_SUFFIX);
-                        kafkaTemplate.send(notificationUtil.smsNotificationTopic, smsRequest);
-                    }
+                if (notificationUtil != null && StringUtils.isNotBlank(notificationUtil.smsNotificationTopic) && kafkaTemplate != null && otpVal != null) {
+                    SMSRequest smsRequest = new SMSRequest();
+                    smsRequest.setMobileNumber(mobileNumber);
+                    smsRequest.setMessage(UserConstants.OTP_SMS_TEMPLATE_PREFIX + otpVal + UserConstants.OTP_SMS_TEMPLATE_SUFFIX);
+                    kafkaTemplate.send(notificationUtil.smsNotificationTopic, smsRequest);
                 }
             }
+        } catch (CustomException ce) {
+            throw ce;
         } catch (Exception e) {
             log.error("[PROPERTY-OTP-CLIENT] Failed to dispatch OTP via egov-otp at {}: {}", url, e.getMessage());
-            // Fall back non-blocking in development/testing environments
+            throw new CustomException(UserConstants.ERROR_OTP_DISPATCH_FAILED, UserConstants.MSG_OTP_DISPATCH_FAILED);
         }
     }
 
@@ -126,13 +129,10 @@ public class PropertyOtpClientImpl implements PropertyOtpClient {
     @Override
     @SuppressWarnings("unchecked")
     public boolean validateOtp(String mobileNumber, String otp, String tenantId, RequestInfo requestInfo) {
-        boolean isFixedOtp = Boolean.TRUE.equals(userConfiguration.getPropertyOtpFixedEnabled())
-                || Boolean.TRUE.equals(userConfiguration.getCitizenLoginPasswordOtpFixedEnabled());
+        boolean isFixedOtp = Boolean.TRUE.equals(userConfiguration.getPropertyOtpFixedEnabled());
 
         if (isFixedOtp) {
-            String fixedVal = userConfiguration.getPropertyOtpFixedValue() != null
-                    ? userConfiguration.getPropertyOtpFixedValue()
-                    : userConfiguration.getCitizenLoginPasswordOtpFixedValue();
+            String fixedVal = userConfiguration.getPropertyOtpFixedValue();
             return StringUtils.isNotBlank(fixedVal) && fixedVal.trim().equals(otp.trim());
         }
 

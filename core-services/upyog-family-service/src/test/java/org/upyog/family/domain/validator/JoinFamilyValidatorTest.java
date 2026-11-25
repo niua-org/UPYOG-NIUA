@@ -136,8 +136,10 @@ class JoinFamilyValidatorTest {
         UserProperty urbanProp = UserProperty.builder()
                 .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
                 .ownershipType("INDIVIDUAL")
+                .consentToken("CONSENT-VERIFIED-12345")
                 .urbanPropertyDetail(UrbanPropertyDetail.builder()
                         .upyogPropertyId("PG-PT-2026-0012")
+                        .consentToken("CONSENT-VERIFIED-12345")
                         .build())
                 .build();
 
@@ -168,6 +170,7 @@ class JoinFamilyValidatorTest {
                 .build();
 
         when(familyRepository.findActiveFamilyIdsByMemberUuid("applicant-uuid-5")).thenReturn(Collections.emptyList());
+        when(userClient.validatePropertyConsentToken(eq("PG-PT-2026-0012"), eq("CONSENT-VERIFIED-12345"), any())).thenReturn(true);
 
         assertDoesNotThrow(() -> validator.validate(request, activeFamily));
         verify(masterDataService).validateCategory(any(), eq("pg.citya"), eq("GENERAL"));

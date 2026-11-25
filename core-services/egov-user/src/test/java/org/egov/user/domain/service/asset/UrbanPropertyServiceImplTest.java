@@ -356,4 +356,62 @@ public class UrbanPropertyServiceImplTest {
         assertNotNull(response);
         assertFalse(response.getValid());
     }
+
+    @Test
+    @DisplayName("consumeConsentToken validates, consumes single-use token, and prevents replay")
+    void testConsumeConsentToken_SingleUse() {
+        sessionRegistry.registerConsentToken("TOKEN-ONCE", PROPERTY_ID, TENANT_ID, "9876543210", null, "caller-uuid-1", 60000L);
+
+        // First consumption succeeds
+        boolean first = service.consumeConsentToken(PROPERTY_ID, "TOKEN-ONCE", "caller-uuid-1", TENANT_ID);
+        assertTrue(first);
+
+        // Second consumption fails (single-use replay prevention)
+        boolean second = service.consumeConsentToken(PROPERTY_ID, "TOKEN-ONCE", "caller-uuid-1", TENANT_ID);
+        assertFalse(second);
+    }
+
+    @Test
+    @DisplayName("consumeConsentToken fails when caller UUID does not match token binding")
+    void testConsumeConsentToken_CallerMismatch() {
+        sessionRegistry.registerConsentToken("TOKEN-BOUND", PROPERTY_ID, TENANT_ID, "9876543210", null, "legit-caller", 60000L);
+
+        boolean result = service.consumeConsentToken(PROPERTY_ID, "TOKEN-BOUND", "attacker-caller", TENANT_ID);
+        assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("sendUrbanPropertyOtp throws OTP_RATE_LIMIT_EXCEEDED when dispatch count exceeds 3 in window")
+    void testSendUrbanPropertyOtp_RateLimitExceeded() {
+        UrbanPropertyOwnerInfo owner = UrbanPropertyOwnerInfo.builder()
+                .name("Ramesh Kumar")
+                .rawMobileNumber("9876543210")
+                .build();
+        UrbanPropertyInfo info = UrbanPropertyInfo.builder()
+                .propertyId("PB-PT-RATE")
+                .tenantId(TENANT_ID)
+                .ownershipCategory("INDIVIDUAL.SINGLEOWNER")
+                .owners(Collections.singletonList(owner))
+                .build();
+
+        when(propertyServiceClient.fetchPropertyById(eq(TENANT_ID), eq("PB-PT-RATE"), any()))
+                .thenReturn(info);
+        when(userPropertyRepository.findActiveLinkedUsersForUrbanProperty(eq(TENANT_ID), eq("PB-PT-RATE")))
+                .thenReturn(Collections.emptyList());
+
+        UrbanPropertyOtpRequest req = UrbanPropertyOtpRequest.builder()
+                .tenantId(TENANT_ID)
+                .propertyId("PB-PT-RATE")
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("spammer-uuid").build()).build())
+                .build();
+
+        // 3 allowed sends
+        service.sendUrbanPropertyOtp(req);
+        service.sendUrbanPropertyOtp(req);
+        service.sendUrbanPropertyOtp(req);
+
+        // 4th send blocked by rate limiter
+        CustomException ex = assertThrows(CustomException.class, () -> service.sendUrbanPropertyOtp(req));
+        assertEquals("OTP_RATE_LIMIT_EXCEEDED", ex.getCode());
+    }
 }

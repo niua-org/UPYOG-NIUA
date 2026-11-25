@@ -29,6 +29,8 @@ public final class UserConstants {
     public static final String USER_TYPE_CITIZEN = "CITIZEN";
     public static final String USER_TYPE_EMPLOYEE = "EMPLOYEE";
     public static final String USER_TYPE_SYSTEM = "SYSTEM";
+    public static final String SYSTEM_USER_UUID = "SYSTEM";
+    public static final String ROLE_INTERNAL_SYSTEM = "INTERNAL_SYSTEM";
     public static final String USER_ENCRYPTION_KEY = "User";
     public static final String USER_ADDRESS_ENCRYPTION_KEY = "Address";
     public static final String USER_DOCUMENT_ENCRYPTION_KEY = "UserDocument";
@@ -529,6 +531,14 @@ public final class UserConstants {
 
     public static final String ERROR_INVALID_PROPERTY_CONSENT_TOKEN = "INVALID_PROPERTY_CONSENT_TOKEN";
     public static final String MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX = "Invalid or expired OTP consent token for urban property: ";
+    public static final String ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED = "PROPERTY_CONSENT_TOKEN_REQUIRED";
+    public static final String MSG_PROPERTY_CONSENT_TOKEN_REQUIRED = "Consent token is mandatory for linking urban property: ";
+    public static final String ERROR_OTP_DISPATCH_FAILED = "OTP_DISPATCH_FAILED";
+    public static final String MSG_OTP_DISPATCH_FAILED = "Failed to dispatch OTP to property owner mobile number. Please try again later.";
+    public static final String ERROR_PROPERTY_LINKING_LIMIT_EXCEEDED = "PROPERTY_LINKING_LIMIT_EXCEEDED";
+    public static final String MSG_PROPERTY_LINKING_LIMIT_EXCEEDED = "Property linking limit exceeded for property: ";
+    public static final String ERROR_OTP_RATE_LIMIT_EXCEEDED = "OTP_RATE_LIMIT_EXCEEDED";
+    public static final String MSG_OTP_RATE_LIMIT_EXCEEDED = "Too many OTP requests for this property. Please wait before trying again.";
 
     public static final String ERROR_OTP_SERVICE_CONFIG_MISSING = "OTP_SERVICE_CONFIG_MISSING";
     public static final String MSG_OTP_SERVICE_CONFIG_MISSING = "OTP service configuration is missing.";
@@ -584,4 +594,34 @@ public final class UserConstants {
     public static final String OTP_JSON_VALIDATION_SUCCESSFUL = "validationSuccessful";
     public static final String OTP_SMS_TEMPLATE_PREFIX = "Your OTP for linking property is ";
     public static final String OTP_SMS_TEMPLATE_SUFFIX = ". Valid for 15 minutes. - UPYOG";
+
+    public static final String REDIS_PROP_OTP_CHALLENGE_PREFIX = "UPYOG_PROP_OTP_CHALLENGE:";
+    public static final String REDIS_PROP_CONSENT_PREFIX = "UPYOG_PROP_CONSENT:";
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_WINDOW = 3;
+    public static final long PROPERTY_OTP_SEND_WINDOW_MS = 15 * 60 * 1000L; // 15 minutes sliding window
+
+    public static final String MSG_UPYOG_PROPERTY_ID_MANDATORY = "upyogPropertyId is mandatory for urban property.";
+    public static final String MSG_URBAN_PROPERTY_SERVICE_UNAVAILABLE = "UrbanPropertyService is unavailable for validating property consent.";
+    public static final String MSG_PROPERTY_LINKAGE_QUERY_FAILED_PREFIX = "Failed to query existing property linkages for property: ";
+    public static final String DEFAULT_API_ID = "org.egov.user";
+    public static final String DEFAULT_VER = "1.0";
+    public static final String ACTION_SEARCH = "search";
+    public static final String DEFAULT_DID = "1";
+    public static final String EMPTY_STRING = "";
+    public static final String MASK_CHAR = "*";
+    public static final String ENCRYPTION_DELIMITER = "|";
+    public static final String JSON_KEY_PROPERTY_RECORD_ID = "propertyRecordId";
+    public static final String JSON_KEY_OWNERSHIP_TYPE = "ownershipType";
+    public static final String COL_USER_UUID = "user_uuid";
+    public static final String COL_MOBILENUMBER = "mobilenumber";
+    public static final String COL_PROPERTY_RECORD_ID = "property_record_id";
+    public static final String COL_OWNERSHIP_TYPE = "ownership_type";
+    public static final String SQL_PARAM_TENANT_ID = "tenant_id";
+    public static final String SQL_PARAM_UPYOG_PROPERTY_ID = "upyog_property_id";
+    public static final String MSG_PROPERTY_SERVICE_CLIENT_REQUIRED = "propertyServiceClient must not be null";
+    public static final String MSG_USER_PROPERTY_REPOSITORY_REQUIRED = "userPropertyRepository must not be null";
+    public static final String MSG_SESSION_REGISTRY_REQUIRED = "sessionRegistry must not be null";
+    public static final String MSG_OWNERSHIP_VALIDATOR_REQUIRED = "ownershipValidator must not be null";
+    public static final String MSG_PROPERTY_OTP_CLIENT_REQUIRED = "propertyOtpClient must not be null";
+    public static final String MSG_USER_CONFIGURATION_REQUIRED = "userConfiguration must not be null";
 }

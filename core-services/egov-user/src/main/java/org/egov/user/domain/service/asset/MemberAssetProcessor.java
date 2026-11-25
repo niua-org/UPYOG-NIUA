@@ -338,12 +338,15 @@ public class MemberAssetProcessor {
         for (UserProperty prop : properties) {
             if (prop == null) continue;
 
+            boolean isNewUrbanLink = false;
             // Natural key deduplication: if id is blank, attempt to reuse existing property record ID
             if (StringUtils.isBlank(prop.getId())) {
                 if (prop.getUrbanPropertyDetail() != null && StringUtils.isNotBlank(prop.getUrbanPropertyDetail().getUpyogPropertyId())) {
                     String existingId = propertyRepository.findUrbanPropertyId(existingUser.getUuid(), prop.getUrbanPropertyDetail().getUpyogPropertyId());
                     if (existingId != null) {
                         prop.setId(existingId);
+                    } else {
+                        isNewUrbanLink = true;
                     }
                 } else if (prop.getRuralPropertyDetail() != null && StringUtils.isNotBlank(prop.getRuralPropertyDetail().getPropertyId())) {
                     String existingId = propertyRepository.findRuralPropertyIdByPropertyId(existingUser.getUuid(), prop.getRuralPropertyDetail().getPropertyId());
@@ -366,6 +369,7 @@ public class MemberAssetProcessor {
                     log.warn("[MEMBER-ASSET-PROCESSOR] Cross-user property access blocked. Property {} belongs to {}, caller supplied citizen {}",
                             prop.getId(), existingOwner, existingUser.getUuid());
                     prop.setId(UUID.randomUUID().toString());
+                    isNewUrbanLink = true;
                 }
             }
             prop.setUserUuid(existingUser.getUuid());
@@ -395,11 +399,25 @@ public class MemberAssetProcessor {
             // Urban property specialization
             if (UserConstants.LOCALITY_TYPE_URBAN.equalsIgnoreCase(prop.getLocalityType()) && prop.getUrbanPropertyDetail() != null) {
                 UrbanPropertyDetail urban = prop.getUrbanPropertyDetail();
-                // Validate property ownership authorization consent token if supplied by caller
+                if (StringUtils.isBlank(urban.getUpyogPropertyId())) {
+                    throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_UPYOG_PROPERTY_ID_MANDATORY);
+                }
+                // Validate property ownership authorization consent token (mandatory for newly declared urban properties)
                 String token = StringUtils.isNotBlank(urban.getConsentToken()) ? urban.getConsentToken() : prop.getConsentToken();
-                if (urbanPropertyService != null && StringUtils.isNotBlank(token)) {
-                    boolean valid = urbanPropertyService.validatePropertyConsentToken(urban.getUpyogPropertyId(), token);
-                    if (!valid) {
+                if (isNewUrbanLink && StringUtils.isBlank(token)) {
+                    log.warn("[MEMBER-ASSET-PROCESSOR] Missing mandatory property consent token for newly declared urban property ID {}", urban.getUpyogPropertyId());
+                    throw new CustomException(UserConstants.ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED,
+                            UserConstants.MSG_PROPERTY_CONSENT_TOKEN_REQUIRED + urban.getUpyogPropertyId());
+                }
+                if (StringUtils.isNotBlank(token)) {
+                    if (urbanPropertyService == null) {
+                        log.error("[MEMBER-ASSET-PROCESSOR] UrbanPropertyService is unavailable for validating property consent");
+                        throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                                UserConstants.MSG_URBAN_PROPERTY_SERVICE_UNAVAILABLE);
+                    }
+                    boolean consumed = urbanPropertyService.consumeConsentToken(
+                            urban.getUpyogPropertyId(), token, existingUser.getUuid(), prop.getTenantId());
+                    if (!consumed) {
                         log.warn("[MEMBER-ASSET-PROCESSOR] Invalid or expired property consent token for property ID {}", urban.getUpyogPropertyId());
                         throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,
                                 UserConstants.MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX + urban.getUpyogPropertyId());

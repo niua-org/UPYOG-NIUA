@@ -341,14 +341,20 @@ public class AddMemberValidator {
                 if (StringUtils.isBlank(urban.getUpyogPropertyId())) {
                     throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_UPYOG_PROPERTY_ID_MANDATORY);
                 }
-                // Validate OTP ownership authorization consent token for declared urban property
+                // Validate OTP ownership authorization consent token for declared urban property (mandatory for URBAN)
                 String consentToken = StringUtils.isNotBlank(urban.getConsentToken()) ? urban.getConsentToken() : prop.getConsentToken();
-                if (StringUtils.isNotBlank(consentToken) && userClient != null) {
-                    boolean valid = userClient.validatePropertyConsentToken(urban.getUpyogPropertyId(), consentToken, requestInfo);
-                    if (!valid) {
-                        throw new CustomException(FamilyConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,
-                                FamilyConstants.MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX + urban.getUpyogPropertyId());
-                    }
+                if (StringUtils.isBlank(consentToken)) {
+                    throw new CustomException(FamilyConstants.ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED,
+                            FamilyConstants.MSG_PROPERTY_CONSENT_TOKEN_REQUIRED + urban.getUpyogPropertyId());
+                }
+                if (userClient == null) {
+                    throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                            FamilyConstants.MSG_USER_CLIENT_UNAVAILABLE_FOR_CONSENT);
+                }
+                boolean valid = userClient.validatePropertyConsentToken(urban.getUpyogPropertyId(), consentToken, requestInfo);
+                if (!valid) {
+                    throw new CustomException(FamilyConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,
+                            FamilyConstants.MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX + urban.getUpyogPropertyId());
                 }
             } else {
                 throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,

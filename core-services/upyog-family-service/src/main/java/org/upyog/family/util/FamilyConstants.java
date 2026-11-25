@@ -316,10 +316,14 @@ public final class FamilyConstants {
     // ==========================================
     // Urban Property Verification Constants
     // ==========================================
+    public static final String ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED = "PROPERTY_CONSENT_TOKEN_REQUIRED";
+    public static final String MSG_PROPERTY_CONSENT_TOKEN_REQUIRED = "Consent token is mandatory for urban property declaration: ";
     public static final String ERROR_INVALID_PROPERTY_CONSENT_TOKEN = "INVALID_PROPERTY_CONSENT_TOKEN";
     public static final String MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX = "Invalid or expired OTP consent token for urban property: ";
     public static final String PROP_JSON_REQUEST_INFO = "RequestInfo";
     public static final String PROP_JSON_PROPERTY_ID = "propertyId";
     public static final String PROP_JSON_CONSENT_TOKEN = "consentToken";
     public static final String PROP_JSON_VALID = "valid";
+    public static final String MSG_USER_CLIENT_UNAVAILABLE = "User verification client is unavailable";
+    public static final String MSG_USER_CLIENT_UNAVAILABLE_FOR_CONSENT = "User verification client is unavailable for validating property consent";
 }

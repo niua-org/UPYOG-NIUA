@@ -162,8 +162,10 @@ class AddMemberValidatorTest {
         UserProperty urbanProp = UserProperty.builder()
                 .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
                 .ownershipType("INDIVIDUAL")
+                .consentToken("CONSENT-VERIFIED-12345")
                 .urbanPropertyDetail(UrbanPropertyDetail.builder()
                         .upyogPropertyId("PG-PT-2026-0099")
+                        .consentToken("CONSENT-VERIFIED-12345")
                         .build())
                 .build();
 
@@ -187,6 +189,7 @@ class AddMemberValidatorTest {
 
         when(familyRepository.findActiveFamilyIdsByMemberUuid("member-uuid-2")).thenReturn(Collections.emptyList());
         when(requesterDxClient.verifyConsentToken(eq("CONSENT-VERIFIED-12345"), eq("member-uuid-2"), eq("FAM-2026-0001"), eq("pg.citya"), any())).thenReturn(true);
+        when(userClient.validatePropertyConsentToken(eq("PG-PT-2026-0099"), eq("CONSENT-VERIFIED-12345"), any())).thenReturn(true);
 
         assertDoesNotThrow(() -> validator.validate(validRequest, activeFamily));
         verify(masterDataService).validateCategory(any(), eq("pg.citya"), eq("OBC"));
@@ -291,8 +294,10 @@ class AddMemberValidatorTest {
         UserProperty rootProp = UserProperty.builder()
                 .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
                 .ownershipType("INDIVIDUAL")
+                .consentToken("CONSENT-VERIFIED-12345")
                 .urbanPropertyDetail(UrbanPropertyDetail.builder()
                         .upyogPropertyId("UPYOG-PROP-12345")
+                        .consentToken("CONSENT-VERIFIED-12345")
                         .build())
                 .build();
 
@@ -324,6 +329,7 @@ class AddMemberValidatorTest {
 
         when(familyRepository.findActiveFamilyIdsByMemberUuid("member-uuid-2")).thenReturn(Collections.emptyList());
         when(requesterDxClient.verifyConsentToken(eq("CONSENT-VERIFIED-12345"), eq("member-uuid-2"), eq("FAM-2026-0001"), eq("pg.citya"), any())).thenReturn(true);
+        when(userClient.validatePropertyConsentToken(eq("UPYOG-PROP-12345"), eq("CONSENT-VERIFIED-12345"), any())).thenReturn(true);
 
         assertDoesNotThrow(() -> validator.validate(rootPayloadRequest, activeFamily));
         assertNotNull(rootPayloadRequest.getMember());

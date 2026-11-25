@@ -453,10 +453,10 @@ public class UserClientImpl implements UserClient {
         if (StringUtils.isBlank(propertyId) || StringUtils.isBlank(consentToken)) {
             return false;
         }
-        // Guard check for unconfigured host in isolated unit testing
+        // Fail closed if userHost is unconfigured
         if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
-            log.warn("[USER-CLIENT] User host is not configured; bypassing property consent validation in test mode.");
-            return true;
+            log.error("[USER-CLIENT] User service host is not configured; failing closed for property consent validation.");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_HOST_NOT_CONFIGURED);
         }
 
         // Resolve validation endpoint path from configuration

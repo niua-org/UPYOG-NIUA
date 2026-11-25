@@ -3,6 +3,7 @@ package org.egov.user.persistence.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.asset.PropertyOwner;
 import org.egov.user.domain.model.asset.RuralPropertyDetail;
@@ -323,8 +324,8 @@ public class UserPropertyRepository {
         try {
             // Bind query parameters to avoid SQL injection
             Map<String, Object> params = new HashMap<>();
-            params.put("tenant_id", tenantId.trim());
-            params.put("upyog_property_id", upyogPropertyId.trim());
+            params.put(UserConstants.SQL_PARAM_TENANT_ID, tenantId.trim());
+            params.put(UserConstants.SQL_PARAM_UPYOG_PROPERTY_ID, upyogPropertyId.trim());
 
             // Query active linkages joining ug_user_property, ug_user_urban_property, and eg_user
             return namedParameterJdbcTemplate.query(
@@ -332,16 +333,17 @@ public class UserPropertyRepository {
                     params,
                     (rs, rowNum) -> {
                         Map<String, Object> row = new HashMap<>();
-                        row.put(UserConstants.JSON_KEY_USER_UUID, rs.getString("user_uuid"));
-                        row.put(UserConstants.PT_JSON_MOBILE_NUMBER, rs.getString("mobilenumber"));
-                        row.put("propertyRecordId", rs.getString("property_record_id"));
-                        row.put("ownershipType", rs.getString("ownership_type"));
+                        row.put(UserConstants.JSON_KEY_USER_UUID, rs.getString(UserConstants.COL_USER_UUID));
+                        row.put(UserConstants.PT_JSON_MOBILE_NUMBER, rs.getString(UserConstants.COL_MOBILENUMBER));
+                        row.put(UserConstants.JSON_KEY_PROPERTY_RECORD_ID, rs.getString(UserConstants.COL_PROPERTY_RECORD_ID));
+                        row.put(UserConstants.JSON_KEY_OWNERSHIP_TYPE, rs.getString(UserConstants.COL_OWNERSHIP_TYPE));
                         return row;
                     }
             );
         } catch (Exception e) {
             log.error("[USER-PROP-REPO] Error querying active linked users for urban property {}: {}", upyogPropertyId, e.getMessage());
-            return Collections.emptyList();
+            throw new CustomException(UserConstants.ERROR_PROPERTY_SERVICE_ERROR,
+                    UserConstants.MSG_PROPERTY_LINKAGE_QUERY_FAILED_PREFIX + upyogPropertyId);
         }
     }
 

@@ -2,13 +2,17 @@ package org.egov.user.domain.service.asset;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.property.UrbanPropertyInfo;
 import org.egov.user.web.contract.property.UrbanPropertyOwnerInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +31,26 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class UrbanPropertyOwnershipValidator {
+
+    private final EncryptionDecryptionUtil encryptionDecryptionUtil;
+
+    /**
+     * Constructs {@link UrbanPropertyOwnershipValidator} with optional {@link EncryptionDecryptionUtil}
+     * for decrypting stored user mobile numbers before comparing with PT owner contacts.
+     *
+     * @param encryptionDecryptionUtil PII decryption utility (optional)
+     */
+    @Autowired
+    public UrbanPropertyOwnershipValidator(@Autowired(required = false) EncryptionDecryptionUtil encryptionDecryptionUtil) {
+        this.encryptionDecryptionUtil = encryptionDecryptionUtil;
+    }
+
+    /**
+     * Default constructor for test harnesses without encryption infrastructure.
+     */
+    public UrbanPropertyOwnershipValidator() {
+        this(null);
+    }
 
     /**
      * Determines whether a property is eligible for linking based on its ownership category and active links.
@@ -61,6 +85,25 @@ public class UrbanPropertyOwnershipValidator {
                                                       List<Map<String, Object>> linkedUsers,
                                                       String callerUuid,
                                                       String requestedMobileNumber) {
+        return validateAndResolveTargetOwnerMobile(property, linkedUsers, callerUuid, requestedMobileNumber, null);
+    }
+
+    /**
+     * Overloaded method accepting {@link RequestInfo} for ABAC PII decryption support.
+     *
+     * @param property property details fetched from Property Tax service
+     * @param linkedUsers active citizen linkages found in the database
+     * @param callerUuid UUID of the calling citizen initiating the linking request
+     * @param requestedMobileNumber optional explicit owner mobile number specified in request
+     * @param requestInfo request context envelope for ABAC decryption
+     * @return resolved destination owner mobile number
+     * @throws CustomException if validation rules are violated
+     */
+    public String validateAndResolveTargetOwnerMobile(UrbanPropertyInfo property,
+                                                      List<Map<String, Object>> linkedUsers,
+                                                      String callerUuid,
+                                                      String requestedMobileNumber,
+                                                      RequestInfo requestInfo) {
         if (property == null) {
             throw new CustomException(UserConstants.ERROR_PROPERTY_NOT_FOUND, UserConstants.MSG_URBAN_PROPERTY_NOT_FOUND_PREFIX);
         }
@@ -83,7 +126,8 @@ public class UrbanPropertyOwnershipValidator {
         Set<String> linkedMobiles = linkedUsers.stream()
                 .map(m -> (String) m.get(UserConstants.PT_JSON_MOBILE_NUMBER))
                 .filter(StringUtils::isNotBlank)
-                .map(String::trim)
+                .map(m -> decryptMobileIfEncrypted(m, requestInfo))
+                .filter(StringUtils::isNotBlank)
                 .collect(Collectors.toSet());
 
         String category = property.getOwnershipCategory() != null ? property.getOwnershipCategory().toUpperCase() : UserConstants.CATEGORY_INDIVIDUAL;
@@ -101,7 +145,7 @@ public class UrbanPropertyOwnershipValidator {
             }
             UrbanPropertyOwnerInfo owner = property.getOwners().get(0);
             String targetOwnerMobile = owner.getRawMobileNumber();
-            if (StringUtils.isBlank(targetOwnerMobile)) {
+            if (StringUtils.isBlank(targetOwnerMobile) || targetOwnerMobile.contains(UserConstants.MASK_CHAR)) {
                 throw new CustomException(UserConstants.ERROR_OWNER_MOBILE_NOT_FOUND,
                         UserConstants.MSG_OWNER_MOBILE_NOT_FOUND);
             }
@@ -132,13 +176,11 @@ public class UrbanPropertyOwnershipValidator {
                 String requestedMobile = requestedMobileNumber.trim();
                 boolean matchesOwner = property.getOwners().stream()
                         .anyMatch(o -> requestedMobile.equalsIgnoreCase(o.getRawMobileNumber()));
-                if (!matchesOwner) {
+                boolean alreadyLinked = linkedMobiles.contains(requestedMobile);
+                // Mitigate Phone Oracle vulnerability: return uniform error whether mobile is non-owner or already linked
+                if (!matchesOwner || alreadyLinked) {
                     throw new CustomException(UserConstants.ERROR_INVALID_OWNER_MOBILE,
                             UserConstants.MSG_INVALID_OWNER_MOBILE_PREFIX + propertyId);
-                }
-                if (linkedMobiles.contains(requestedMobile)) {
-                    throw new CustomException(UserConstants.ERROR_PROPERTY_OWNER_ALREADY_LINKED,
-                            UserConstants.MSG_PROPERTY_OWNER_ALREADY_LINKED);
                 }
                 return requestedMobile;
             } else {
@@ -150,5 +192,24 @@ public class UrbanPropertyOwnershipValidator {
                 }
             }
         }
+    }
+
+    private String decryptMobileIfEncrypted(String rawMobile, RequestInfo requestInfo) {
+        if (StringUtils.isBlank(rawMobile)) {
+            return rawMobile;
+        }
+        if (encryptionDecryptionUtil != null && rawMobile.contains(UserConstants.ENCRYPTION_DELIMITER)) {
+            try {
+                Map<String, String> dummyUser = new HashMap<>();
+                dummyUser.put(UserConstants.JSON_KEY_MOBILE_NUMBER, rawMobile.trim());
+                Map<String, Object> decrypted = encryptionDecryptionUtil.decryptObject(dummyUser, UserConstants.USER_ENCRYPTION_KEY, Map.class, requestInfo);
+                if (decrypted != null && decrypted.get(UserConstants.JSON_KEY_MOBILE_NUMBER) != null) {
+                    return String.valueOf(decrypted.get(UserConstants.JSON_KEY_MOBILE_NUMBER)).trim();
+                }
+            } catch (Exception e) {
+                log.debug("[URBAN-PROPERTY-VALIDATOR] Failed to decrypt user mobile: {}", e.getMessage());
+            }
+        }
+        return rawMobile.trim();
     }
 }

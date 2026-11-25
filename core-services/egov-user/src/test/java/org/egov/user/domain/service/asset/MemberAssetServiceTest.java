@@ -60,16 +60,22 @@ class MemberAssetServiceTest {
     @Mock
     private UserDocumentRepository documentRepository;
 
+    @Mock
+    private UrbanPropertyService urbanPropertyService;
+
     private MemberAssetServiceImpl memberAssetService;
 
     @BeforeEach
     void setUp() {
+        lenient().when(urbanPropertyService.consumeConsentToken(any(), any(), any(), any())).thenReturn(true);
         MemberAssetProcessor processor = new MemberAssetProcessor(
                 userRepository,
                 propertyRepository,
                 incomeRepository,
                 vehicleRepository,
-                documentRepository
+                documentRepository,
+                null,
+                urbanPropertyService
         );
         memberAssetService = new MemberAssetServiceImpl(processor);
     }
@@ -199,8 +205,10 @@ class MemberAssetServiceTest {
         UserProperty urbanProp = UserProperty.builder()
                 .localityType("URBAN")
                 .ownershipType("INDIVIDUAL")
+                .consentToken("TOKEN-VALID-1")
                 .urbanPropertyDetail(UrbanPropertyDetail.builder()
                         .upyogPropertyId("UPYOG-PROP-001")
+                        .consentToken("TOKEN-VALID-1")
                         .propertyTaxAmount(new BigDecimal("1200.00"))
                         .urbanAddress("House 12, Sector 4")
                         .build())
@@ -397,8 +405,10 @@ class MemberAssetServiceTest {
         UserProperty maliciousProp = UserProperty.builder()
                 .id("foreign-prop-id-999") // Client maliciously supplies foreign property ID
                 .localityType("URBAN")
+                .consentToken("TOKEN-ATTACK")
                 .urbanPropertyDetail(UrbanPropertyDetail.builder()
                         .upyogPropertyId("UPYOG-PROP-ATTACK")
+                        .consentToken("TOKEN-ATTACK")
                         .build())
                 .build();
 
@@ -600,7 +610,7 @@ class MemberAssetServiceTest {
     @DisplayName("syncMemberAssets with invalid urban property consent token should fail")
     void syncMemberAssets_urbanProperty_withInvalidConsentToken_fails() {
         UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
-        when(mockUrbanService.validatePropertyConsentToken(eq("UPYOG-PROP-INVALID"), eq("TOKEN-BAD")))
+        when(mockUrbanService.consumeConsentToken(eq("UPYOG-PROP-INVALID"), eq("TOKEN-BAD"), any(), any()))
                 .thenReturn(false);
 
         MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
@@ -660,7 +670,7 @@ class MemberAssetServiceTest {
     @DisplayName("syncMemberAssets with valid urban property consent token should succeed")
     void syncMemberAssets_urbanProperty_withValidConsentToken_succeeds() {
         UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
-        when(mockUrbanService.validatePropertyConsentToken(eq("UPYOG-PROP-VALID"), eq("TOKEN-GOOD")))
+        when(mockUrbanService.consumeConsentToken(eq("UPYOG-PROP-VALID"), eq("TOKEN-GOOD"), any(), any()))
                 .thenReturn(true);
 
         MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
@@ -711,5 +721,45 @@ class MemberAssetServiceTest {
         assertEquals(1, response.getResults().size());
         assertEquals("SUCCESS", response.getResults().get(0).getStatus());
         assertEquals(1, response.getResults().get(0).getPropertiesSynced());
+    }
+
+    @Test
+    @DisplayName("syncMemberAssets with newly declared urban property lacking consent token should fail")
+    void syncMemberAssets_urbanProperty_missingConsentToken_fails() {
+        String citizenUuid = "citizen-uuid-token-missing";
+        User existingUser = User.builder()
+                .id(103L)
+                .uuid(citizenUuid)
+                .tenantId("pg.citya")
+                .username("citizen3")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(existingUser));
+
+        UserProperty prop = UserProperty.builder()
+                .localityType("URBAN")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("UPYOG-PROP-NEW")
+                        .build())
+                .build();
+
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(citizenUuid)
+                .tenantId("pg.citya")
+                .properties(Collections.singletonList(prop))
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(createTestRequestInfo())
+                .members(Collections.singletonList(detail))
+                .build();
+
+        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
+
+        assertNotNull(response);
+        assertEquals("FAILED", response.getStatus());
+        assertEquals("FAILED", response.getResults().get(0).getStatus());
+        assertTrue(response.getResults().get(0).getMessage().contains("Consent token is mandatory for linking urban property"));
     }
 }
