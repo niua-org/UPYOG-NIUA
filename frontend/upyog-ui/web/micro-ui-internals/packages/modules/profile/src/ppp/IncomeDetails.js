@@ -12,15 +12,6 @@ const TAX_ID_OPTIONS = [
   { i18nKey: "PROFILE_GST_NUMBER", code: "GST" },
 ];
 
-const OCCUPATION_OPTIONS = [
-  { i18nKey: "PROFILE_OCCUPATION_SALARIED", code: "SALARIED" },
-  { i18nKey: "PROFILE_OCCUPATION_SELF_EMPLOYED", code: "SELF_EMPLOYED" },
-  { i18nKey: "PROFILE_OCCUPATION_BUSINESS", code: "BUSINESS" },
-  { i18nKey: "PROFILE_OCCUPATION_FARMER", code: "FARMER" },
-  { i18nKey: "PROFILE_OCCUPATION_UNEMPLOYED", code: "UNEMPLOYED" },
-  { i18nKey: "PROFILE_OCCUPATION_OTHER", code: "OTHER" },
-];
-
 const INCOME_PROOF_OPTIONS = [
   { i18nKey: "PROFILE_INCOME_PROOF_SALARY_SLIP", code: "SALARY_SLIP", name: "Salary Slip" },
   { i18nKey: "PROFILE_INCOME_PROOF_ITR", code: "ITR", name: "ITR" },
@@ -56,6 +47,21 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [validateStatus, setValidateStatus] = useState(null);
   const [incomeProofType, setIncomeProofType] = useState(saved.incomeProofType || null);
   const [incomeProofFile, setIncomeProofFile] = useState(saved.incomeProofFile || null);
+
+  // Hook Call to get the Occupation from MDMS
+  const { data: Occupations } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "common-masters", [{ name: "Occupation" }],
+    {
+      select: (data) => {
+        const formattedData = data?.["common-masters"]?.["Occupation"]
+        return formattedData;
+      },
+    });
+  let OCCUPATION_OPTIONS = []; // Empty array which will store the options of Occupations
+
+  Occupations &&
+      Occupations.map((occupations) => {
+        OCCUPATION_OPTIONS.push({ i18nKey: `PROFILE_OCCUPATION_${occupations.code}`, code: `${occupations.code}`, value: `${occupations.name}` });
+      });
 
   const goNext = () => {
     if (isViewMode) {
