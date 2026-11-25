@@ -71,7 +71,7 @@ public class PaymentUpdateService {
             BigDecimal paidAmount = paymentRequest.getPayment().getPaymentDetails().get(0).getTotalAmountPaid();
             String tenantId = paymentRequest.getPayment().getTenantId();
             String userUuid = paymentRequest.getRequestInfo() != null && paymentRequest.getRequestInfo().getUserInfo() != null
-                    ? paymentRequest.getRequestInfo().getUserInfo().getUuid() : "SYSTEM";
+                    ? paymentRequest.getRequestInfo().getUserInfo().getUuid() : GrbgConstants.USER_TYPE_SYSTEM;
             long now = Instant.now().toEpochMilli();
             LocalDate today = LocalDate.now();
 
@@ -110,7 +110,7 @@ public class PaymentUpdateService {
                     .periodFrom(today.withDayOfMonth(1))
                     .periodTo(today.plusMonths(1).withDayOfMonth(1).minusDays(1))
                     .billAmount(paidAmount)
-                    .paymentStatus("PAID")
+                    .paymentStatus(GrbgConstants.STATUS_PAID)
                     .tenant(tenantId)
                     .auditDetails(AuditDetails.builder().createdBy(userUuid).createdTime(now).build())
                     .build();
@@ -121,7 +121,7 @@ public class PaymentUpdateService {
             // Update application status to PAID
             if (!applications.isEmpty()) {
                 GarbageApplication app = applications.get(0);
-                app.setPaymentStatus("PAID");
+                app.setPaymentStatus(GrbgConstants.STATUS_PAID);
                 app.setPaymentAmount(BigDecimal.ZERO);
 
                 AuditDetails auditDetails = app.getAuditDetails() != null ? app.getAuditDetails() : AuditDetails.builder().build();

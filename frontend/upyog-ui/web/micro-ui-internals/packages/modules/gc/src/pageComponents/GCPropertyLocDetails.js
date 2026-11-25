@@ -126,7 +126,10 @@ const GCPropertyLocDetails = ({ t, config, onSelect, formData, renewApplication 
         fatherOrHusbandName: owner?.fatherOrHusbandName || "",
         relationship: owner?.relationship || "",
       },
-      detectedFloorCount: property?.noOfFloors || 1,
+      detectedFloorCount: Number(property?.noOfFloors) ||
+        (Array.isArray(property?.units) && property.units.length > 0
+          ? Math.max(...property.units.map((u) => Number(u.floorNo) || 0)) + 1
+          : 1),
       houseNo: address.doorNo || "",
       doorNo: address.doorNo || "",
       streetName: address.street || "",

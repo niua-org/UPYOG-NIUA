@@ -63,7 +63,7 @@ public class WorkflowService {
         ProcessInstanceResponse processInstanceResponse = objectMapper.convertValue(response, ProcessInstanceResponse.class);
 
         if (null == response || null == processInstanceResponse) {
-            throw new CustomException("WORKFLOW_RESPONSE_NULL", "Error ocurred while running workflow.");
+            throw new CustomException(GrbgConstants.ERROR_WORKFLOW_RESPONSE_NULL, "Error ocurred while running workflow.");
         }
 
         return processInstanceResponse;
@@ -128,7 +128,7 @@ public class WorkflowService {
 
         } catch (Exception e) {
             log.error("Exception while calling wf action: ", e);
-            throw new CustomException("ERR_TECHNICAL", "Invalid response format from external API");
+            throw new CustomException(GrbgConstants.ERROR_TECHNICAL, "Invalid response format from external API");
         }
         return ValidActionResponce.builder().build();
     }
@@ -159,8 +159,8 @@ public class WorkflowService {
 
         ProcessInstance processInstance = ProcessInstance.builder()
                 .tenantId(application.getTenantId())
-                .businessService(org.apache.commons.lang3.StringUtils.isNotBlank(application.getBusinessService()) ? application.getBusinessService() : "garbage-service")
-                .moduleName("GC")
+                .businessService(org.apache.commons.lang3.StringUtils.isNotBlank(application.getBusinessService()) ? application.getBusinessService() : garbageServiceConfig.getBusinessService())
+                .moduleName(garbageServiceConfig.getModuleName())
                 .businessId(application.getApplicationNo())
                 .action(wf.getAction())
                 .comment(wf.getComments())

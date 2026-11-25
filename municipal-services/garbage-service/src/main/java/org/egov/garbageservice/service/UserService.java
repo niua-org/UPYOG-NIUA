@@ -7,6 +7,7 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.Role;
 import org.egov.garbageservice.config.GarbageServiceConfig;
 import org.egov.garbageservice.repository.ServiceRequestRepository;
+import org.egov.garbageservice.util.GrbgConstants;
 import org.egov.garbageservice.util.UserUtil;
 import org.egov.garbageservice.web.models.garbage.ApplicantDetail;
 import org.egov.garbageservice.web.models.garbage.AuditDetails;
@@ -75,7 +76,7 @@ public class UserService {
 
         UserSearchRequest userSearchRequest = getBaseUserSearchRequest(UserUtil.getStateLevelTenant(tenantId), requestInfo);
         userSearchRequest.setMobileNumber(mobileNumber);
-        userSearchRequest.setUserType("CITIZEN");
+        userSearchRequest.setUserType(GrbgConstants.USER_TYPE_CITIZEN);
 
         StringBuilder uri = new StringBuilder(config.getUserServiceHostUrl())
                 .append(config.getUserSearchEndpoint());
@@ -111,7 +112,7 @@ public class UserService {
         UserDetailResponse userDetailResponse = userUtil.userCall(userRequest, uri);
 
         if (ObjectUtils.isEmpty(userDetailResponse) || CollectionUtils.isEmpty(userDetailResponse.getUser())) {
-            throw new CustomException("INVALID_USER_RESPONSE",
+            throw new CustomException(GrbgConstants.ERROR_INVALID_USER_RESPONSE,
                     "User creation failed for mobile number: " + applicantDetail.getMobileNumber());
         }
         User createdUser = userDetailResponse.getUser().get(0);
@@ -132,7 +133,7 @@ public class UserService {
         user.setActive(true);
         user.setTenantId(tenantId);
         user.setRoles(Collections.singletonList(role));
-        user.setType("CITIZEN");
+        user.setType(GrbgConstants.USER_TYPE_CITIZEN);
         return user;
     }
 
@@ -166,7 +167,7 @@ public class UserService {
         }
         UserSearchRequest userSearchRequest = getBaseUserSearchRequest(UserUtil.getStateLevelTenant(tenantId), requestInfo);
         userSearchRequest.setMobileNumber(mobileNumber);
-        userSearchRequest.setUserType("CITIZEN");
+        userSearchRequest.setUserType(GrbgConstants.USER_TYPE_CITIZEN);
 
         UserDetailResponse response = searchUser(userSearchRequest);
         if (response != null && !CollectionUtils.isEmpty(response.getUser())) {
@@ -269,7 +270,7 @@ public class UserService {
     public UserSearchRequest getBaseUserSearchRequest(String tenantId, RequestInfo requestInfo) {
         return UserSearchRequest.builder()
                 .requestInfo(requestInfo)
-                .userType("CITIZEN")
+                .userType(GrbgConstants.USER_TYPE_CITIZEN)
                 .tenantId(tenantId)
                 .active(true)
                 .build();

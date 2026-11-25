@@ -61,7 +61,7 @@ public class UserUtil {
             return new UserDetailResponse();
         } catch (IllegalArgumentException e) {
             log.error("Failed to parse user service response: {}", e.getMessage(), e);
-            throw new CustomException("ILLEGAL_ARGUMENT_EXCEPTION", "ObjectMapper unable to convertValue in userCall: " + e.getMessage());
+            throw new CustomException(GrbgConstants.ERROR_ILLEGAL_ARGUMENT, "ObjectMapper unable to convertValue in userCall: " + e.getMessage());
         }
     }
 
@@ -113,12 +113,12 @@ public class UserUtil {
     public void addUserDefaultFields(String mobileNumber, User userInfo) {
         Role role = getCitizenRole();
         userInfo.setRoles(Collections.singletonList(role));
-        userInfo.setType("CITIZEN");
+        userInfo.setType(GrbgConstants.USER_TYPE_CITIZEN);
         userInfo.setUserName(mobileNumber);
     }
 
     public Role getCitizenRole() {
-        return Role.builder().code("CITIZEN").name("Citizen").build();
+        return Role.builder().code(GrbgConstants.ROLE_CITIZEN_CODE).name(GrbgConstants.ROLE_CITIZEN_NAME).build();
     }
 
     /**

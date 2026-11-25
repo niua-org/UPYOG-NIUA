@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * Spring configuration properties bean holding application settings, external endpoints, Kafka topics, and MDMS configs.
  */
@@ -93,4 +95,31 @@ public class GarbageServiceConfig {
 
     @Value("${egov.pt.search.endpoint}")
     private String ptSearchEndpoint;
+
+    // ==============================================================================
+    // GROUPED WORKFLOW LIFECYCLE STATUSES & ACTIONS
+    // ==============================================================================
+    @Value("${gc.status.create}")
+    private List<String> createStatuses;
+
+    @Value("${gc.action.create}")
+    private List<String> createActions;
+
+    @Value("${gc.status.disconnection}")
+    private List<String> disconnectionStatuses;
+
+    @Value("${gc.action.disconnection}")
+    private List<String> disconnectionActions;
+
+    @Value("${gc.status.permanent.disconnection}")
+    private List<String> permanentDisconnectionStatuses;
+
+    @Value("${gc.action.permanent.disconnection}")
+    private List<String> permanentDisconnectionActions;
+
+    @Value("${gc.status.reconnection}")
+    private List<String> reconnectionStatuses;
+
+    @Value("${gc.action.reconnection}")
+    private List<String> reconnectionActions;
 }

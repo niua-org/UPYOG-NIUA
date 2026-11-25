@@ -44,7 +44,7 @@ public class IdgenUtil {
         List<String> ids = getIdList(requestInfo, tenantId, applicationNumName, applicationNumFormat, 1);
         if (CollectionUtils.isEmpty(ids)) {
             log.error("IDGen service returned no ID for application number with name: {}", applicationNumName);
-            throw new CustomException("IDGEN_ERROR", "No ids returned from idgen Service for application number");
+            throw new CustomException(GrbgConstants.ERROR_IDGEN, "No ids returned from idgen Service for application number");
         }
         return ids.get(0);
     }
@@ -53,17 +53,17 @@ public class IdgenUtil {
         List<String> ids = getIdList(requestInfo, tenantId, garbageNumName, garbageNumFormat, 1);
         if (CollectionUtils.isEmpty(ids)) {
             log.error("IDGen service returned no ID for garbage number with name: {}", garbageNumName);
-            throw new CustomException("IDGEN_ERROR", "No ids returned from idgen Service for garbage number");
+            throw new CustomException(GrbgConstants.ERROR_IDGEN, "No ids returned from idgen Service for garbage number");
         }
         return ids.get(0);
     }
 
     public String generateRequestNumber(RequestInfo requestInfo, String tenantId, String type) {
-        String idName = "garbage.disconnection.num";
-        if ("RECONNECTION".equalsIgnoreCase(type)) {
-            idName = "garbage.reconnection.num";
-        } else if ("PERMANENT_DISCONNECTION".equalsIgnoreCase(type)) {
-            idName = "garbage.permanent.disconnection.num";
+        String idName = GrbgConstants.IDGEN_DISCONNECTION_NAME;
+        if (GrbgConstants.REQUEST_TYPE_RECONNECTION.equalsIgnoreCase(type)) {
+            idName = GrbgConstants.IDGEN_RECONNECTION_NAME;
+        } else if (GrbgConstants.REQUEST_TYPE_PERMANENT_DISCONNECTION.equalsIgnoreCase(type)) {
+            idName = GrbgConstants.IDGEN_PERMANENT_DISCONNECTION_NAME;
         }
         try {
             List<String> ids = getIdList(requestInfo, tenantId, idName, null, 1);
@@ -73,11 +73,11 @@ public class IdgenUtil {
         } catch (Exception e) {
             log.warn("IDGen service unavailable for request number {}, generating timestamp sequence: {}", type, e.getMessage());
         }
-        String prefix = "GC-DISC-";
-        if ("RECONNECTION".equalsIgnoreCase(type)) {
-            prefix = "GC-REC-";
-        } else if ("PERMANENT_DISCONNECTION".equalsIgnoreCase(type)) {
-            prefix = "GC-PDISC-";
+        String prefix = GrbgConstants.PREFIX_DISCONNECTION;
+        if (GrbgConstants.REQUEST_TYPE_RECONNECTION.equalsIgnoreCase(type)) {
+            prefix = GrbgConstants.PREFIX_RECONNECTION;
+        } else if (GrbgConstants.REQUEST_TYPE_PERMANENT_DISCONNECTION.equalsIgnoreCase(type)) {
+            prefix = GrbgConstants.PREFIX_PERMANENT_DISCONNECTION;
         }
         return prefix + System.currentTimeMillis();
     }

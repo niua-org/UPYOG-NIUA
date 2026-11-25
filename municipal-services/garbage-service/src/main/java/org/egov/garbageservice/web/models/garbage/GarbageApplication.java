@@ -62,6 +62,10 @@ public class GarbageApplication {
     @JsonProperty("propertyId")
     private String propertyId;
 
+    @CustomSafeHtml
+    @JsonProperty("floorNo")
+    private String floorNo;
+
     public String getPropertyId() {
         if (StringUtils.isNotBlank(propertyId)) {
             return propertyId;
@@ -193,10 +197,14 @@ public class GarbageApplication {
     }
 
     public String getFloorNo() {
+        if (StringUtils.isNotBlank(floorNo)) {
+            return floorNo;
+        }
         return garbageSpecification != null ? garbageSpecification.getFloorNo() : null;
     }
 
     public void setFloorNo(String floorNo) {
+        this.floorNo = floorNo;
         if (garbageSpecification == null) {
             garbageSpecification = new GarbageSpecification();
         }

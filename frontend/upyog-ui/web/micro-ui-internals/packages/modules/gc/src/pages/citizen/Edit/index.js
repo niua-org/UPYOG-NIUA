@@ -46,11 +46,12 @@ const GCEdIt = () => {
   const { data: gcData, isLoading: isSearchLoading } = Digit.Hooks.gc.useGCSearch({
     tenantId,
     data: {
-      searchCriteriaGarbageAccount: {
+      searchCriteria: {
         applicationNumber: [applicationNo],
+        applicationNo: applicationNo,
       },
     },
-    filters: { applicationNumber: [applicationNo] },
+    filters: { applicationNumber: applicationNo, applicationNo: applicationNo },
   }, { enabled: !!applicationNo, cacheTime: 0, staleTime: 0 });
 
   const applicationList = gcData?.garbageApplications || [];

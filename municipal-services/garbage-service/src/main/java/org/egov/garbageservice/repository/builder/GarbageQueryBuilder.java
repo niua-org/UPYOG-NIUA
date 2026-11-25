@@ -2,6 +2,7 @@ package org.egov.garbageservice.repository.builder;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.garbageservice.util.GrbgConstants;
 import org.egov.garbageservice.web.models.garbage.GarbageSearchCriteria;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -79,8 +80,13 @@ public class GarbageQueryBuilder {
         query.append(" WHERE 1=1 ");
 
         if (StringUtils.isNotBlank(criteria.getTenantId())) {
-            query.append(" AND app.tenant = ? ");
-            params.add(criteria.getTenantId());
+            if (criteria.getTenantId().split("\\.").length == 1) {
+                query.append(" AND app.tenant LIKE ? ");
+                params.add(criteria.getTenantId() + "%");
+            } else {
+                query.append(" AND app.tenant = ? ");
+                params.add(criteria.getTenantId());
+            }
         }
 
         List<String> appNos = criteria.getResolvedApplicationNumbers();
@@ -117,14 +123,14 @@ public class GarbageQueryBuilder {
         List<String> tenantUuids = criteria.getResolvedTenantUuids();
 
         String resolvedOwnerType = criteria.getResolvedOwnerType();
-        if ("OWNER".equalsIgnoreCase(resolvedOwnerType)) {
+        if (GrbgConstants.PROPERTY_TYPE_OWNER.equalsIgnoreCase(resolvedOwnerType)) {
             if (!CollectionUtils.isEmpty(ownerUuids)) {
                 query.append(" AND app.owner_uuid IN (")
                         .append(createQueryPlaceholders(ownerUuids.size()))
                         .append(") ");
                 params.addAll(ownerUuids);
             }
-        } else if ("TENANT".equalsIgnoreCase(resolvedOwnerType)) {
+        } else if (GrbgConstants.PROPERTY_TYPE_TENANT.equalsIgnoreCase(resolvedOwnerType)) {
             if (!CollectionUtils.isEmpty(tenantUuids)) {
                 query.append(" AND (app.tenant_uuid IN (")
                         .append(createQueryPlaceholders(tenantUuids.size()))
@@ -139,7 +145,7 @@ public class GarbageQueryBuilder {
                 query.append(" AND (app.additional_detail::text LIKE ?) ");
                 params.add("%" + criteria.getMobileNumber() + "%");
             }
-            query.append(" AND (spec.property_type = 'TENANT' OR app.tenant_uuid IS NOT NULL OR app.parent_application_no IS NOT NULL) ");
+            query.append(" AND (spec.property_type = '").append(GrbgConstants.PROPERTY_TYPE_TENANT).append("' OR app.tenant_uuid IS NOT NULL OR app.parent_application_no IS NOT NULL) ");
         } else {
             if (!CollectionUtils.isEmpty(ownerUuids) && !CollectionUtils.isEmpty(tenantUuids)) {
                 query.append(" AND (app.owner_uuid IN (")

@@ -45,7 +45,7 @@
           "isStateUpdatable": true,
           "actions": [
             {
-              "action": "DISCONNECT_INITIATE",
+              "action": "DISCONNECT",
               "nextState": "PENDING_FOR_DISCONNECTION_VERIFICATION",
               "roles": [
                 "CITIZEN",
@@ -54,8 +54,8 @@
               "active": true
             },
             {
-              "action": "DISCONNECT",
-              "nextState": "PENDING_FOR_DISCONNECTION_VERIFICATION",
+              "action": "PERMANENT_DISCONNECT",
+              "nextState": "PENDING_FOR_PERMANENT_DISCONNECTION_VERIFICATION",
               "roles": [
                 "CITIZEN",
                 "GC_CEMP"
@@ -82,22 +82,6 @@
               "active": true
             },
             {
-              "action": "SEND_BACK_TO_CITIZEN",
-              "nextState": "PENDING_FOR_CITIZEN_ACTION",
-              "roles": [
-                "GC_VERIFIER"
-              ],
-              "active": true
-            },
-            {
-              "action": "APPROVE",
-              "nextState": "DISCONNECTED",
-              "roles": [
-                "GC_APPROVER"
-              ],
-              "active": true
-            },
-            {
               "action": "REJECT",
               "nextState": "REJECTED",
               "roles": [
@@ -116,14 +100,6 @@
           "isTerminateState": false,
           "isStateUpdatable": false,
           "actions": [
-            {
-              "action": "APPROVE_FOR_DISCONNECTION",
-              "nextState": "DISCONNECTED",
-              "roles": [
-                "GC_APPROVER"
-              ],
-              "active": true
-            },
             {
               "action": "APPROVE",
               "nextState": "DISCONNECTED",
@@ -152,25 +128,78 @@
         },
         {
           "sla": null,
-          "state": "PENDING_FOR_CITIZEN_ACTION",
-          "applicationStatus": "PENDING_FOR_CITIZEN_ACTION",
+          "state": "PENDING_FOR_PERMANENT_DISCONNECTION_VERIFICATION",
+          "applicationStatus": "PENDING_FOR_PERMANENT_DISCONNECTION_VERIFICATION",
           "docUploadRequired": false,
           "isStartState": false,
           "isTerminateState": false,
           "isStateUpdatable": true,
           "actions": [
             {
-              "action": "RESUBMIT_APPLICATION",
-              "nextState": "PENDING_FOR_DISCONNECTION_VERIFICATION",
+              "action": "VERIFY",
+              "nextState": "PENDING_FOR_PERMANENT_DISCONNECTION_APPROVAL",
               "roles": [
-                "CITIZEN",
-                "GC_CEMP"
+                "GC_VERIFIER"
               ],
               "active": true
             },
             {
-              "action": "EDIT",
-              "nextState": "PENDING_FOR_DISCONNECTION_VERIFICATION",
+              "action": "REJECT",
+              "nextState": "REJECTED",
+              "roles": [
+                "GC_VERIFIER"
+              ],
+              "active": true
+            }
+          ]
+        },
+        {
+          "sla": null,
+          "state": "PENDING_FOR_PERMANENT_DISCONNECTION_APPROVAL",
+          "applicationStatus": "PENDING_FOR_PERMANENT_DISCONNECTION_APPROVAL",
+          "docUploadRequired": false,
+          "isStartState": false,
+          "isTerminateState": false,
+          "isStateUpdatable": false,
+          "actions": [
+            {
+              "action": "APPROVE",
+              "nextState": "PERMANENTLY_DISCONNECTED",
+              "roles": [
+                "GC_APPROVER"
+              ],
+              "active": true
+            },
+            {
+              "action": "SEND_BACK_TO_VERIFIER",
+              "nextState": "PENDING_FOR_PERMANENT_DISCONNECTION_VERIFICATION",
+              "roles": [
+                "GC_APPROVER"
+              ],
+              "active": true
+            },
+            {
+              "action": "REJECT",
+              "nextState": "REJECTED",
+              "roles": [
+                "GC_APPROVER"
+              ],
+              "active": true
+            }
+          ]
+        },
+        {
+          "sla": null,
+          "state": "DISCONNECTED",
+          "applicationStatus": "DISCONNECTED",
+          "docUploadRequired": false,
+          "isStartState": false,
+          "isTerminateState": true,
+          "isStateUpdatable": false,
+          "actions": [
+            {
+              "action": "PERMANENT_DISCONNECT",
+              "nextState": "PENDING_FOR_PERMANENT_DISCONNECTION_VERIFICATION",
               "roles": [
                 "CITIZEN",
                 "GC_CEMP"
@@ -181,8 +210,8 @@
         },
         {
           "sla": null,
-          "state": "DISCONNECTED",
-          "applicationStatus": "DISCONNECTED",
+          "state": "PERMANENTLY_DISCONNECTED",
+          "applicationStatus": "PERMANENTLY_DISCONNECTED",
           "docUploadRequired": false,
           "isStartState": false,
           "isTerminateState": true,

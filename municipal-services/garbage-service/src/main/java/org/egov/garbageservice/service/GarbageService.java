@@ -20,13 +20,5 @@ public interface GarbageService {
 
     Integer getApplicationsCount(GarbageSearchCriteria criteria, RequestInfo requestInfo);
 
-    GarbageConnectionResponse disconnect(GarbageConnectionRequest connectionRequest);
-
-    GarbageConnectionResponse reconnect(GarbageConnectionRequest connectionRequest);
-
-    GarbageConnectionResponse permanentDisconnect(GarbageConnectionRequest connectionRequest);
-
-    GarbageConnectionResponse updateConnection(GarbageConnectionRequest connectionRequest);
-
     List<GarbageConnectionLog> searchConnectionHistory(String propertyId, String applicationNo, RequestInfo requestInfo);
 }

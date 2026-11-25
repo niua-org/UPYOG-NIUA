@@ -165,7 +165,31 @@ const GCCheckPage = ({ onSubmit, value = {}, renewApplication }) => {
         )}
         <Row label={t("GC_IS_INHERITANCE")} text={specifications?.isInheritance ? t("YES") : t("NO")} />
         {multiUnits.includes(specifications?.typeOfCollection?.code) && (
-          <Row label={t("GC_NO_OF_UNITS")} text={String(specifications?.no_of_units || 1)} />
+          <>
+            <Row
+              label={t("GC_BUILDING_OCCUPANCY") || "Building Occupancy"}
+              text={
+                specifications?.occupancyType === "FULL_OWNER"
+                  ? (t("GC_OCCUPANCY_FULL_OWNER") || "Owner occupies entire building (All Floors)")
+                  : specifications?.occupancyType === "FULLY_RENTED" || specifications?.ownerFloor === "NONE"
+                  ? (t("GC_OCCUPANCY_FULLY_RENTED") || "Entire building rented to tenants (Owner does not reside)")
+                  : (t("GC_OCCUPANCY_OWNER_AND_TENANTS") || "Owner occupies one floor, rest rented to tenants")
+              }
+            />
+            {specifications?.occupancyType !== "FULLY_RENTED" && specifications?.ownerFloor !== "NONE" && (
+              <Row
+                label={t("GC_OWNER_OCCUPIED_FLOOR") || "Floor Occupied by Owner"}
+                text={
+                  specifications?.ownerFloor === "0"
+                    ? (t("GC_FLOOR_GROUND") || "Ground Floor (0)")
+                    : specifications?.ownerFloor
+                    ? `${specifications.ownerFloor} Floor (${specifications.ownerFloor})`
+                    : (t("GC_FLOOR_GROUND") || "Ground Floor (0)")
+                }
+              />
+            )}
+            <Row label={t("GC_NO_OF_UNITS")} text={String(specifications?.no_of_units || 1)} />
+          </>
         )}
       </StatusTable>
 

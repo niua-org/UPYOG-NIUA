@@ -90,16 +90,16 @@ const CreateApplication = () => {
   const handleSubmit = async () => {
     try {
       const formdata = GCDataConvert(params);
-      const targetApp = formdata?.garbageApplications?.[0];
+      const apps = formdata?.garbageApplications || [];
 
-      if (targetApp) {
+      apps.forEach((targetApp) => {
         targetApp.tenantId = tenantId;
         if (targetApp.propertyLocation) {
           targetApp.propertyLocation.tenantId = tenantId;
           targetApp.propertyLocation.city = tenantId;
         }
         targetApp.workflow = { action: "APPLY" };
-      }
+      });
       
       mutation.mutate(formdata, {
         onSuccess: (response) => {
