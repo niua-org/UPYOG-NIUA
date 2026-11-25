@@ -16,6 +16,13 @@ from prompts.workflow_prompts import (
     build_adv_question_prompt,
     build_adv_past_booking_filter_prompt,
 )
+from services.nlu_lexicon import (
+    is_bare_negation,
+    is_start_new_workflow,
+    is_explicit_cancel,
+    is_affirmative,
+    EXCLUDED_FIELD_WORDS
+)
 
 from services.validator import validate_field
 
@@ -214,6 +221,10 @@ def intent_and_ui_node(state: AdvBookingState):
     
     # 2. Get the current draft booking data (if any), ensuring it's a valid dictionary
     draft_booking = state.get("draft_booking") or {}
+    draft_booking.pop("_cancelled", None)
+    draft_booking.pop("_confirmed", None)
+    if not all(draft_booking.get(f) for f in ALL_FIELDS):
+        draft_booking.pop("_awaiting_confirm", None)
     if not isinstance(draft_booking, dict):
         draft_booking = {}
         
@@ -271,22 +282,43 @@ def intent_and_ui_node(state: AdvBookingState):
             # 17. Replace the user's message with "continue" to auto-trigger the next question
             user_msg = "continue"
 
-    # 18. Check if the user wants to clear their current booking progress and cancel
-    is_cancel_command = False
     clean_um = user_msg.strip().lower()
-    if user_msg.strip() == "[CANCEL_DRAFT]":
-        is_cancel_command = True
-    elif len(clean_um.split()) <= 4:
-        cancel_pattern = r'\b(?:start over|new booking|cancel booking|start new|restart|cancel|clear draft|delete draft|don\'t submit|dont submit|do not submit|rehne do|abort)\b'
-        if re.search(cancel_pattern, clean_um) or (re.search(r'\bstop\b', clean_um) and "bus" not in clean_um):
-            is_cancel_command = True
 
-    if is_cancel_command:
-        draft_booking = {f: None for f in ALL_FIELDS}
-        draft_booking["selected_slots"] = None
-        draft_booking["applicant_details"] = None
-        draft_booking["_awaiting_confirm"] = None
-        draft_booking["_cancelled"] = True
+    # 18. Machine cancel command from UI button: [CANCEL_DRAFT]
+    if user_msg.strip() == "[CANCEL_DRAFT]":
+        logger.info(f"[adv_booking.intent_and_ui] Received UI [CANCEL_DRAFT] for phone={phone_number}")
+        reset_draft = {f: None for f in ALL_FIELDS}
+        reset_draft["selected_slots"] = None
+        reset_draft["applicant_details"] = None
+        reset_draft.pop("_awaiting_confirm", None)
+        try:
+            MemoryManager.delete_draft_state(phone_number, "adv_booking")
+        except Exception as e:
+            logger.warning(f"[adv_booking] Qdrant delete draft failed: {e}")
+        return {"draft_booking": reset_draft, "missing_fields": ALL_FIELDS}
+
+    # 19. Start fresh / new booking: "new booking", "start over", "start new"
+    # Wipes draft and routes straight to ask_next_node to ask for Advertisement Type
+    if is_start_new_workflow(clean_um):
+        logger.info(f"[adv_booking.intent_and_ui] Citizen requested fresh booking: '{user_msg}'. Discarding old draft.")
+        reset_draft = {f: None for f in ALL_FIELDS}
+        reset_draft["selected_slots"] = None
+        reset_draft["applicant_details"] = None
+        reset_draft.pop("_awaiting_confirm", None)
+        try:
+            MemoryManager.delete_draft_state(phone_number, "adv_booking")
+        except Exception as e:
+            logger.warning(f"[adv_booking] Qdrant delete draft failed: {e}")
+        return {"draft_booking": reset_draft, "missing_fields": ALL_FIELDS}
+
+    # 20. Natural language cancellation: "cancel", "abort", "leave it", "rehne do"
+    # Wipes draft, deletes Qdrant state, and returns conversational cancellation message
+    if is_explicit_cancel(clean_um) and not draft_booking.get("_awaiting_confirm"):
+        logger.info(f"[adv_booking.intent_and_ui] Explicit cancel command '{user_msg}' for phone={phone_number}")
+        reset_draft = {f: None for f in ALL_FIELDS}
+        reset_draft["selected_slots"] = None
+        reset_draft["applicant_details"] = None
+        reset_draft.pop("_awaiting_confirm", None)
         try:
             MemoryManager.delete_draft_state(phone_number, "adv_booking")
         except Exception as e:
@@ -294,7 +326,8 @@ def intent_and_ui_node(state: AdvBookingState):
 
         user_lang = state.get("user_language") or ("hi" if any('ऀ' <= c <= 'ॿ' for c in user_msg) else "en")
         msg = get_adv_cancellation_message(user_lang)
-        return {"messages": [AIMessage(content=msg)], "draft_booking": draft_booking, "missing_fields": []}
+        MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=msg)
+        return {"messages": [AIMessage(content=msg)], "draft_booking": reset_draft, "missing_fields": []}    
 
     # 3. Resume logic — 'continue' alone (sent by draft switcher) always resumes
     resume_keywords = ["resume", "proceed", "continue", "previous left", "start with previous"]
@@ -441,6 +474,12 @@ def extraction_node(state: AdvBookingState):
     generic_confirmations = ["yes", "yeah", "sure", "ok", "okay", "yep", "start", "begin", "y"]
     if not draft_booking and user_msg.strip().lower() in generic_confirmations:
         user_msg = ""
+        
+    # Navigation / resume commands should NEVER be extracted as form field values
+    meta_commands = ["continue", "proceed", "next", "resume", "aage", "aage badho", "jaari", "start", "begin"]
+    if user_msg.strip().lower() in meta_commands:
+        logger.info(f"[adv_booking extract_node] User message '{user_msg}' is a navigation command; skipping extraction.")
+        return {"draft_booking": draft_booking}
 
     # Detect if user's message is a question/FAQ query rather than a form answer
     question_triggers = ["?", "what is", "what does", "explain", "meaning", "kya hai", "kaise", "kyun", "tell me about"]
@@ -472,35 +511,28 @@ def extraction_node(state: AdvBookingState):
     cleaned_input = re.sub(r'^\d+[\.\)]\s*', '', user_msg).strip()
 
     did_fast_extract = False
-    if curr_field and curr_field in llm_extractable_fields:
-        field_def = next((item for item in FORM_FIELDS if item["id"] == curr_field), None)
-        if field_def and field_def.get("mdms"):
-            opts = _mdms_get(*field_def["mdms"])
-            matched = match_option(cleaned_input, opts)
-            if matched:
-                draft_booking[curr_field] = matched
-                did_fast_extract = True
-                logger.info(f"[extract_node] Fast-path exact option match for {curr_field}: {matched}")
-        elif curr_field == "nightLight":
-            if ui_clean in NIGHTLIGHT_YES_VALUES:
-                draft_booking["nightLight"] = "Yes"
-                did_fast_extract = True
-                logger.info("[extract_node] Fast-path match for nightLight: Yes")
-            elif ui_clean in NIGHTLIGHT_NO_VALUES:
-                draft_booking["nightLight"] = "No"
-                did_fast_extract = True
-                logger.info("[extract_node] Fast-path match for nightLight: No")
-        elif curr_field in ["start_date", "end_date"]:
-            date_candidate = user_msg.strip()
-            if re.match(r'^\d{4}-\d{2}-\d{2}$', date_candidate):
-                try:
-                    from datetime import datetime
-                    datetime.strptime(date_candidate, '%Y-%m-%d')
-                    draft_booking[curr_field] = date_candidate
-                    did_fast_extract = True
-                    logger.info(f"[extract_node] Fast-path valid date match for {curr_field}: {date_candidate}")
-                except ValueError:
-                    logger.warning(f"[extract_node] Invalid calendar date format ignored: {date_candidate}")
+
+    # Guard: If citizen entered a refusal / bare negation ("no", "nahi")
+    # For nightLight: "no" is a VALID choice ("No"), NOT a refusal!
+    # For all other fields (addType, location, faceArea): "no" is a refusal and must raise a required error.
+    if curr_field and (is_bare_negation(ui_clean) or ui_clean in EXCLUDED_FIELD_WORDS):
+        if curr_field == "nightLight":
+            draft_booking["nightLight"] = "No"
+            did_fast_extract = True
+            logger.info("[extract_node] Citizen selected 'No' for nightLight facility.")
+        else:
+            field_def = next((item for item in FORM_FIELDS if item["id"] == curr_field), {})
+            field_name = field_def.get("label", curr_field)
+            draft_booking.setdefault("_failed_fields", [])
+            if curr_field not in draft_booking["_failed_fields"]:
+                draft_booking["_failed_fields"].append(curr_field)
+            draft_booking.setdefault("_field_errors", {})[curr_field] = (
+                f"**{field_name} is required** to search and book advertisement slots. "
+                "Please select an option from the list below, or type **'cancel'** to exit."
+            )
+            logger.info(f"[extract_node] Refusal detected for mandatory field '{curr_field}'. Prompting with required warning.")
+            return {"draft_booking": draft_booking}
+
 
     # Recalculate remaining missing fields
     if not is_edit_query and not draft_booking.get("_awaiting_confirm"):
@@ -618,6 +650,17 @@ def extraction_node(state: AdvBookingState):
         if e_date <= today_str:
             draft_booking["end_date"] = tomorrow_str
             logger.info(f"[extract_node] end_date was today/past ({e_date}), updated to tomorrow ({tomorrow_str})")
+
+    # Auto-Save to Qdrant Disk Store on every turn if fields are present
+    # Why this is required: Ensures that typing "show my drafts" at any point
+    # immediately finds this active advertisement booking draft in Qdrant!
+    phone_number = state.get("phone_number", "default")
+    if draft_booking and any(v for k, v in draft_booking.items() if not k.startswith("_") and v is not None) and phone_number and phone_number != "default":
+        try:
+            MemoryManager.save_draft_state(phone_number, "adv_booking", draft_booking)
+            logger.info(f"[adv_booking.extract_node] Auto-saved active draft to Qdrant for {phone_number}")
+        except Exception as e:
+            logger.warning(f"[adv_booking.extract_node] Qdrant auto-save draft failed: {e}")
 
     return {"draft_booking": draft_booking}
 
@@ -783,6 +826,7 @@ def create_booking_node(state: AdvBookingState):
     reset_draft["selected_slots"] = None
     reset_draft["applicant_details"] = None
     reset_draft["_awaiting_confirm"] = None
+    reset_draft["_cancelled"] = False  # Must NOT be left True for future sessions!
     
     # Delete from Qdrant since it's now a completed booking, no longer a draft
     MemoryManager.delete_draft_state(phone_number, "adv_booking")

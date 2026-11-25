@@ -23,6 +23,8 @@ import yaml
 from typing import Dict, Any, Optional, Tuple, List
 from dotenv import load_dotenv
 
+from services.nlu_lexicon import is_start_new_workflow, is_generic_service_initiation
+
 load_dotenv()
 logger = logging.getLogger(__name__)
 
@@ -147,7 +149,11 @@ def is_draft_actively_in_progress(wf_name: str, state_values: dict) -> bool:
     has_fields = any(v for k, v in draft.items() if not k.startswith("_") and v is not None and str(v).strip() != "")
     has_options = bool(draft.get("_category_options") or draft.get("_sub_options") or draft.get("_locality_options") or draft.get("_slot_options"))
     messages = state_values.get("messages", [])
-    return bool((has_fields or has_options) and messages)
+    
+    # FIX: Even on Step 1 (when has_fields is empty), if the bot has asked a question (messages exists) 
+    # and the workflow is waiting for form input (missing_fields exists), it IS actively in progress!
+    has_active_flow = bool(messages and state_values.get("missing_fields"))
+    return bool((has_fields or has_options or has_active_flow) and messages)
 
 
 def detect_active_workflow(phone: str, workflows: dict) -> Optional[str]:
@@ -460,6 +466,40 @@ def handle_pending_multi_draft(user_input: str, user_language: str, phone: str, 
         clear_multi_draft_pending(phone)
         return False, None
 
+    # Handle Option 3: "Start a New Service Request"
+    new_request_keywords = ["start new", "new service", "new request", "naya", "nayi", "restart", "start over"]
+    is_new_request_choice = selected_idx == len(drafts) or any(w in ui_check for w in new_request_keywords)
+    if is_new_request_choice:
+        clear_multi_draft_pending(phone)
+        clear_pending_interruption(phone)
+        # Clear previous workflow thread state so it does not linger in the old form
+        for wf_name, wf_graph in workflows.items():
+            d_key = get_workflow_draft_key(wf_name)
+            if d_key:
+                cfg = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+                empty_d = get_workflow_reset_draft(wf_name)
+                wf_graph.update_state(cfg, {d_key: empty_d, "missing_fields": [], "messages": []})
+        msg = (
+            "अवश्य! आप कौन सी सेवा शुरू करना चाहते हैं? आप शिकायत दर्ज कर सकते हैं या विज्ञापन बुक कर सकते हैं।"
+            if user_language == "hi" else
+            "Sure! Which service would you like to start? You can file a grievance or book an advertisement space."
+        )
+        audio = text_to_speech(msg, user_language)
+        options = (
+            ["शिकायत दर्ज करें", "विज्ञापन बुक करें"]
+            if user_language == "hi" else
+            ["File a Grievance", "Book an Advertisement"]
+        )
+        return True, {
+            "response": msg,
+            "lang": user_language,
+            "mode": "faq",
+            "audio": audio,
+            "input_type": "choice",
+            "options": options,
+            "show_button": True
+        }  
+
     selected_draft = MultiDraftSwitcher.resolve_citizen_selection(user_input, drafts)
     clear_multi_draft_pending(phone)
 
@@ -468,6 +508,11 @@ def handle_pending_multi_draft(user_input: str, user_language: str, phone: str, 
         draft_data = selected_draft.get("draft_data", {})
 
         if target_wf in workflows and draft_data:
+            
+            # Clean any internal error banners before restoring state
+            draft_data.pop("_field_errors", None)
+            draft_data.pop("_failed_fields", None)
+
             draft_key = "draft_booking" if target_wf == "adv_booking" else "draft_grievance"
             config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
             workflows[target_wf].update_state(config_update, {draft_key: draft_data})
@@ -483,6 +528,137 @@ def handle_pending_multi_draft(user_input: str, user_language: str, phone: str, 
             "input_type": agent_res.get("input_type", "text"),
             "options": agent_res.get("options", []),
             "show_button": agent_res.get("show_button")
+        }
+
+    return False, None
+
+def handle_pending_initiation_draft_choice(
+    user_input: str,
+    user_language: str,
+    phone: str,
+    session_id: str,
+    workflows: dict,
+    is_authenticated: bool = True
+) -> Tuple[bool, Optional[dict]]:
+    """Resolves pending draft review choice presented at workflow initiation:
+    Options: [Continue Application], [Start New Application], [Cancel Draft]
+    """
+    pending = get_pending_interruption(phone)
+    if not (pending and pending.get("status") == "awaiting_initiation_draft_choice"):
+        return False, None
+
+    from services.voice_service import text_to_speech
+    from services.intent_service import process_user_message
+    from storage.qdrant_manager import MemoryManager
+
+    target_wf = pending.get("plugin", "grievance")
+    draft_data = pending.get("draft_data", {})
+    ui_clean = user_input.strip().lower()
+    digits = re.findall(r'\d+', ui_clean)
+    num = int(digits[0]) if digits else None
+
+    # Choice 1: Continue Application
+    continue_keywords = [
+        "continue", "resume", "continue application", "resume application",
+        "jaari", "aage", "aage badho", "wahi se", "1", "option 1"
+    ]
+    is_continue = num == 1 or ui_clean in continue_keywords or any(ui_clean.startswith(k) for k in ["continue", "resume", "jaari"])
+
+    # Choice 2: Start New Application
+    new_keywords = [
+        "start new", "start new application", "new application", "new",
+        "fresh", "naya", "nayi", "shuru se", "restart", "start over",
+        "naya application", "nayi shikayat", "2", "option 2"
+    ]
+    is_new = num == 2 or ui_clean in new_keywords or any(ui_clean.startswith(k) for k in ["start new", "new", "naya", "nayi"])
+
+    # Choice 3: Cancel / Delete Draft
+    cancel_keywords = [
+        "cancel", "cancel draft", "delete draft", "delete", "discard",
+        "clear", "remove", "hatao", "hata do", "radd", "3", "option 3"
+    ]
+    is_cancel = num == 3 or ui_clean in cancel_keywords or any(ui_clean.startswith(k) for k in ["cancel", "delete", "discard", "hata"])
+
+    if is_continue:
+        clear_pending_interruption(phone)
+        config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+        if target_wf in workflows and draft_data:
+            # Clean any internal error banners before resuming the draft
+            draft_data.pop("_field_errors", None)
+            draft_data.pop("_failed_fields", None)
+            draft_key = get_workflow_draft_key(target_wf)
+            if draft_key:
+                workflows[target_wf].update_state(config_update, {draft_key: draft_data})
+
+        agent_res = process_user_message("continue", phone, session_id, target_workflow=target_wf, user_language=user_language)
+        audio = text_to_speech(agent_res.get("response", ""), user_language)
+        return True, {
+            "response": agent_res.get("response", ""),
+            "messages": agent_res.get("messages_list", []),
+            "lang": user_language,
+            "mode": "agent_active",
+            "audio": audio,
+            "input_type": agent_res.get("input_type", "text"),
+            "options": agent_res.get("options", []),
+            "min_date": agent_res.get("min_date"),
+            "field": agent_res.get("field"),
+            "show_button": agent_res.get("show_button")
+        }
+
+    if is_new:
+        clear_pending_interruption(phone)
+        try:
+            MemoryManager.delete_draft_state(phone, target_wf)
+        except Exception as e:
+            logger.warning(f"[InitiationDraft] Qdrant delete draft failed: {e}")
+
+        config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+        if target_wf in workflows:
+            draft_key = get_workflow_draft_key(target_wf)
+            empty_draft = get_workflow_reset_draft(target_wf)
+            workflows[target_wf].update_state(config_update, {draft_key: empty_draft, "missing_fields": [], "messages": []})
+
+        return True, execute_workflow_plugin(
+            target_wf, "start", user_language, phone, session_id, is_authenticated
+        )
+
+    if is_cancel:
+        clear_pending_interruption(phone)
+        try:
+            MemoryManager.delete_draft_state(phone, target_wf)
+        except Exception as e:
+            logger.warning(f"[InitiationDraft] Qdrant delete draft failed: {e}")
+
+        config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+        if target_wf in workflows:
+            draft_key = get_workflow_draft_key(target_wf)
+            empty_draft = get_workflow_reset_draft(target_wf, cancelled=True)
+            workflows[target_wf].update_state(config_update, {draft_key: empty_draft, "missing_fields": [], "messages": []})
+
+        if user_language == "hi":
+            service_display = (
+                "शिकायत" if target_wf == "grievance"
+                else "विज्ञापन बुकिंग"
+            )
+        else:
+            service_display = (
+                "Grievance" if target_wf == "grievance"
+                else "Advertisement Booking"
+            )
+
+        msg = (
+            f"आपका {service_display} ड्राफ्ट रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
+            if user_language == "hi"
+            else f"Your {service_display} draft has been cancelled. How else can I assist you today?"
+        )
+
+        audio = text_to_speech(msg, user_language)
+
+        return True, {
+            "response": msg,
+            "lang": user_language,
+            "mode": "faq",
+            "audio": audio
         }
 
     return False, None
@@ -762,15 +938,13 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
         )
 
         # If a workflow is already active and the user is entering form values (e.g. address, name, locality),
-        # do not hijack their input as a draft-resume operation. Let it flow to the active workflow!
-        if active_plugin and not is_explicit_continue:
-            logger.info(
-                f"[handle_draft_management] Active workflow '{active_plugin}' in progress. "
-                f"Treating '{user_input}' as field input rather than draft resume."
-            )
+        # do not pop up the multi-draft switcher on 'continue' — let the active workflow handle it!
+        all_drafts = MemoryManager.get_all_draft_states(phone)
+        if active_plugin and len(all_drafts)>1:
+            logger.info(f"[handle_draft_management] Active workflow '{active_plugin}' in progress; delegating 'continue' to active workflow.")
             return False, None
 
-        all_drafts = MemoryManager.get_all_draft_states(phone)
+        
         if len(all_drafts) == 1:
             target_wf = all_drafts[0].get("plugin_name", "adv_booking")
             draft_data = all_drafts[0].get("draft_data", {})
@@ -915,16 +1089,27 @@ def handle_draft_management(intent: str, user_input: str, user_language: str, ph
         else:
             digits = re.findall(r'\d+', ui_lower)
             all_current = MemoryManager.get_all_draft_states(phone)
+            is_explicit_delete_all_option = False
+            
             if digits and all_current:
-                num = int(digits[0]) - 1
-                if 0 <= num < len(all_current):
-                    target_plugins = [all_current[num].get("plugin_name")]
+                chosen_num = int(digits[0])
+                # Option len(all_current) + 2 is always "Delete All Drafts" in MultiDraftSwitcher
+                delete_all_idx = len(all_current) + 2
+                if chosen_num == delete_all_idx:
+                    is_explicit_delete_all_option = True
+                    target_plugins = list(workflows.keys())
+                elif 0 <= (chosen_num - 1) < len(all_current):
+                    target_plugins = [all_current[chosen_num - 1].get("plugin_name")]
+                else:
+                    target_plugins = list(workflows.keys())
             elif pending and pending.get("plugin"):
                 target_plugins = [pending["plugin"]]
             elif active_plugin and ("my drafts" not in ui_lower and "all" not in ui_lower and "drafts" not in ui_lower):
                 target_plugins = [active_plugin]
             else:
                 target_plugins = list(workflows.keys())
+
+        is_delete_all = is_explicit_delete_all_option or set(target_plugins) == set(workflows.keys()) or any(w in ui_lower for w in ["all", "drafts", "saare", "sab"])            
 
         is_delete_all = set(target_plugins) == set(workflows.keys()) or any(w in ui_lower for w in ["all", "drafts", "saare", "sab"])
         if is_delete_all:
@@ -1234,6 +1419,13 @@ def dispatch_chat_request(
     is_multi_handled, multi_resp = handle_pending_multi_draft(user_input, user_language, phone, session_id, workflows)
     if is_multi_handled:
         return multi_resp
+    
+    # 1b. Draft Review Card at Initiation Interception (Continue / Start New / Cancel)
+    is_init_handled, init_resp = handle_pending_initiation_draft_choice(
+        user_input, user_language, phone, session_id, workflows, is_authenticated=is_authenticated
+    )
+    if is_init_handled:
+        return init_resp
 
     # 2. Fast-Path Keyword Matching (bypass expensive LLM call for exact greetings & login queries)
     clean_in = re.sub(r'[\s_]+', ' ', user_input.strip().lower())
@@ -1428,6 +1620,64 @@ def dispatch_chat_request(
         should_execute_wf = False
 
     if should_execute_wf:
+
+        # Explicit restart (e.g. "file another complaint", "file a new complaint", "start over")
+        # Citizen explicitly requests a fresh start: delete previous draft and start fresh immediately.
+        if is_start_new_workflow(clean_in):
+            logger.info(f"[WorkflowInitiation] Explicit restart requested: '{user_input}'. Resetting previous draft for {target_wf}.")
+            try:
+                MemoryManager.delete_draft_state(phone, target_wf)
+            except Exception as e:
+                logger.warning(f"[WorkflowInitiation] Qdrant delete draft failed: {e}")
+            config_update = {"configurable": {"thread_id": phone if (phone and phone != "default") else session_id}}
+            draft_key = get_workflow_draft_key(target_wf)
+            if draft_key and target_wf in workflows:
+                empty_draft = get_workflow_reset_draft(target_wf)
+                workflows[target_wf].update_state(config_update, {draft_key: empty_draft, "missing_fields": [], "messages": []})
+            clear_pending_interruption(phone)
+            return execute_workflow_plugin(target_wf, "start", user_language, phone, session_id, is_authenticated)
+
+        # Generic service initiation (e.g. "file a complaint", "register complaint", "book an ad")
+        # If an active saved draft exists with real filled fields, present the Draft Review Card.
+        if is_generic_service_initiation(clean_in):
+            saved_draft_payload = MemoryManager.get_draft_state(phone, target_wf)
+            existing_draft = saved_draft_payload.get("draft_data", {}) if isinstance(saved_draft_payload, dict) else {}
+            if not existing_draft and target_wf in workflows:
+                st = workflows[target_wf].get_state(config)
+                d_key = get_workflow_draft_key(target_wf)
+                existing_draft = (st.values.get(d_key) if st and st.values else {}) or {}
+
+            has_real_draft = any(
+                v for k, v in existing_draft.items()
+                if not k.startswith("_") and not k.endswith("_code") and v is not None and str(v).strip() != ""
+            )
+
+            if has_real_draft:
+                logger.info(f"[WorkflowInitiation] Intercepting generic initiation for {target_wf} - presenting draft review card.")
+                summary = format_draft_summary(existing_draft, target_wf)
+                if user_language == 'hi':
+                    service_display = "शिकायत" if target_wf == "grievance" else "विज्ञापन बुकिंग"
+                    prompt_msg = f"{summary}\nआपके पास {service_display} के लिए पहले से एक ड्राफ्ट मौजूद है। क्या आप इसे जारी रखना चाहते हैं या नया आवेदन शुरू करना चाहते हैं?"
+                else:
+                    service_display = "Grievance" if target_wf == "grievance" else "Advertisement Booking"
+                    prompt_msg = f"{summary}\nYou have an existing draft for {service_display}. Would you like to continue with your saved draft or start a new application?"
+
+                set_pending_interruption(phone, {
+                    "plugin": target_wf,
+                    "status": "awaiting_initiation_draft_choice",
+                    "draft_data": existing_draft
+                })
+                audio = text_to_speech(prompt_msg, user_language)
+                return {
+                    "response": prompt_msg,
+                    "lang": user_language,
+                    "mode": "agent_active",
+                    "audio": audio,
+                    "input_type": "choice",
+                    "options": ["Continue Application", "Start New Application", "Cancel Draft"],
+                    "show_button": True
+                }
+
         logger.info(f"Routing to dynamic plugin: {target_wf}")
         return execute_workflow_plugin(
             target_wf, user_input, user_language, phone, session_id, is_authenticated

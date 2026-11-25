@@ -23,9 +23,11 @@ BARE_NEGATIONS: Set[str] = {
 # 2. START NEW WORKFLOW / RESTART TRIGGERS
 # ====================================================================
 # Matches explicit requests to start fresh, discard an unconfirmed draft, or file a new application
+# Note: Requires explicit quantifiers ('new', 'another', 'fresh', 'start over') so generic phrases
+# like 'register complaint' do NOT accidentally wipe an existing draft from memory.
 START_NEW_WORKFLOW_REGEX = re.compile(
-    r'\b(?:new|another|fresh|start\s+over|restart|start\s+new|re-?file)\s+(?:complaint|grievance|application|booking|ad)\b|'
-    r'\b(?:file|register|lodge|start|create|make)\s+(?:another|a\s+new|new|fresh)\s+(?:complaint|grievance|application|booking|ad)\b|'
+    r'\b(?:new|another|fresh|start\s+over|restart|start\s+new|re-?file)\s+(?:complaints?|grievances?|applications?|bookings?|ads?)\b|'
+    r'\b(?:file|register|lodge|start|create|make)\s+(?:another|a\s+new|new|fresh)\s+(?:complaints?|grievances?|applications?|bookings?|ads?)\b|'
     r'\b(?:start\s+over|restart|start\s+new|start\s+fresh|naya\s+complaint|nayi\s+shikayat|shuruaat\s+karo|shuru\s+se)\b',
     re.IGNORECASE
 )
@@ -55,6 +57,17 @@ CONFIRM_ACTION_REGEX = re.compile(
     r'confirm\s+booking|submit\s+it|file\s+it|book\s+it|please\s+submit|please\s+confirm)\b',
     re.IGNORECASE
 )
+# ====================================================================
+# 2. CONVERSATIONAL FILLER & GREETINGS (NOISE)
+# ====================================================================
+# Words that should NEVER be extracted as form field values (category, location, etc.)
+CONVERSATIONAL_NOISE: Set[str] = {
+    "yes", "yeah", "yup", "ya", "ok", "okay", "sure", "fine", "haan", "theek", "bilkul",
+    "hi", "hello", "hey", "help", "kya", "what", "why", "kyun", "please",
+    "continue", "proceed", "next", "resume", "aage", "badho"
+}
+
+EXCLUDED_FIELD_WORDS: Set[str] = BARE_NEGATIONS | CONVERSATIONAL_NOISE
 
 # ====================================================================
 # 5. CONVENIENCE MATCHER FUNCTIONS
@@ -80,3 +93,24 @@ def is_affirmative(text: str) -> bool:
     """Returns True if user confirms/submits."""
     clean = re.sub(r'[\s_]+', ' ', (text or "").strip().lower())
     return clean in AFFIRMATIVE_WORDS or bool(CONFIRM_ACTION_REGEX.search(clean))
+
+# ====================================================================
+# 6. GENERIC SERVICE INITIATION
+# ====================================================================
+# Matches generic capability / service initiation requests (e.g. 'file a complaint', 'book an ad')
+# without specific form data. If a draft exists, triggers the draft review card.
+GENERIC_INITIATION_REGEX = re.compile(
+    r'^(?:can\s+i\s+|help\s+me\s+|please\s+|i\s+(?:want|need|wish)\s+to\s+)?'
+    r'(?:file|register|lodge|start|create|make|submit|book)\s+'
+    r'(?:a\s+|an\s+|the\s+)?'
+    r'(?:complaints?|grievances?|applications?|bookings?|ads?|advertisements?|hoardings?)$|'
+    r'^(?:complaint|grievance|shikayat|booking|advertisement|adv\s+booking|ad\s+booking|advertisement\s+booking|pgr)(?:\s+(?:filing|registration|booking))?$|'
+    r'^(?:file|register|lodge|book)\s+(?:complaint|grievance|shikayat|booking|advertisement|ad)$|'
+    r'^(?:mujhe\s+)?(?:complaint|shikayat|booking|advertisement)\s+(?:karni|karna|darj\s+karni|darj\s+karna|karein|karo)(?:\s+hai)?$',
+    re.IGNORECASE
+)
+
+def is_generic_service_initiation(text: str) -> bool:
+    """Returns True if user input is a generic service initiation phrase without detailed form values."""
+    clean = (text or "").strip().lower()
+    return bool(GENERIC_INITIATION_REGEX.search(clean))

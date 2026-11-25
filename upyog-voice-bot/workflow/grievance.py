@@ -21,7 +21,7 @@ from services.nlu_lexicon import (
     is_start_new_workflow,
     is_explicit_cancel,
     is_affirmative,
-    BARE_NEGATIONS
+    EXCLUDED_FIELD_WORDS
 )
 
 logger = logging.getLogger(__name__)
@@ -365,8 +365,14 @@ def extraction_node(state: GrievanceState):
         "start over", "cancel draft", "delete draft", "clear draft",
         "aage badho", "chalu karo", "continue please", "proceed", "next", "skip"
     ]
-    if any(ui_lower == w or ui_lower.startswith(w + " ") for w in meta_commands):
-        logger.info(f"[grievance extract_node] User message '{user_msg}' is a meta/resume command; skipping field extraction.")
+    ui_clean = re.sub(r'[^\w\s]', '', user_msg).strip().lower()
+    is_meta_cmd = any(ui_clean == w or ui_clean.startswith(w + " ") for w in meta_commands)  
+
+    # Navigation / resume commands should NEVER be extracted as form values or trigger validation errors
+    if is_meta_cmd:
+        logger.info(f"[grievance extract_node] User message '{user_msg}' is a navigation/resume command; skipping extraction.")
+        draft.pop("_field_errors", None)
+        draft.pop("_failed_fields", None)
         return {"draft_grievance": draft}
 
     # Detect if user's message is a question/FAQ query rather than a form answer
@@ -428,10 +434,9 @@ def extraction_node(state: GrievanceState):
 
     # Deterministic extraction based on the active step being answered
     cleaned_input = re.sub(r'^\d+[\.\)]\s*', '', user_msg).strip() # Strip leading numbering e.g. "1. PropertyTax" -> "PropertyTax"
-    EXCLUDED_WORDS = {"no", "nope", "nahi", "nahin", "na", "none", "never", "cancel", "leave it", "rehne do", "stop", "abort",
-    "yes", "yeah", "yup", "ya", "ok", "okay", "sure", "haan", "theek", "bilkul",
-    "hi", "hello", "hey", "help", "kya", "what", "why", "kyun", "please"}
-
+    # Use centralized lexicon to ensure consistent exclusion across all fields
+    EXCLUDED_WORDS = EXCLUDED_FIELD_WORDS
+    
     if curr_field == "category":
         cats = draft.get("_category_options") or _pgr_categories()
         draft["_category_options"] = cats
@@ -629,13 +634,27 @@ def extraction_node(state: GrievanceState):
                                     draft["locality_code"] = matched["code"]
         except Exception as e:
             logger.error(f"[grievance] LLM extraction error: {e}")
-    # Guard: Only warn if the bot previously asked a question (last_ai exists),
-    # the user is not initiating/restarting, and the input failed to match curr_field.
+    # CONTEXT-AWARE FIELD WARNING GUARD:
+    # Why this is required:
+    # In multi-turn chat, 'last_ai' might contain an out-of-domain reply, greeting, or FAQ answer
+    # (e.g. "I can only help with UPYOG services"). If the citizen then says "register complaint",
+    # that is a workflow trigger — NOT an invalid category name.
+    # Therefore, we ONLY warn the citizen if the bot ACTUALLY asked for that specific field
+    # in the previous turn and the citizen's response failed to match.
+    field_prompt_signatures = {
+        "category": ["category"],
+        "sub_category": ["complaint type", "sub category", "subcategory"],
+        "locality": ["locality", "area", "mohalla"]
+    }
+    
+    bot_actually_asked = any(
+        kw in last_ai.lower() for kw in field_prompt_signatures.get(curr_field, [])
+    )
 
-    if last_ai and curr_field and not draft.get(curr_field) and curr_field not in draft.get("_field_errors", {}):
-        if not is_start_new_workflow(user_msg) and ui_lower not in meta_commands:
+    if bot_actually_asked and curr_field and not draft.get(curr_field) and curr_field not in draft.get("_field_errors", {}):
+        if not is_start_new_workflow(user_msg) and not is_meta_cmd and norm_input not in EXCLUDED_WORDS:
             if curr_field == "sub_category":
-                # Wipe mismatched description so it doesn't linger and contradict the chosen complaint type!
+                # Wipe mismatched description so it doesn't linger and contradict the chosen complaint type
                 draft["description"] = None
                 draft.setdefault("_field_errors", {})["sub_category"] = (
                     f"**'{user_msg}' does not match any complaint type for {draft.get('category')}.** "
