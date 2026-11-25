@@ -75,13 +75,18 @@ const GCApplicationDetails = () => {
   }, [showToast]);
 
   const searchCriteria = {
-    searchCriteriaGarbageAccount: {
-      applicationNumber: [applicationNo],
-    },
+    applicationNumber: [applicationNo],
+    applicationNo: applicationNo,
   };
 
   const { isLoading, data: gcData } = Digit.Hooks.gc.useGCSearch(
-    { tenantId, data: searchCriteria, filters: { applicationNumber: [applicationNo] } },
+    {
+      tenantId,
+      data: {
+        searchCriteria: searchCriteria,
+      },
+      filters: { applicationNumber: applicationNo, applicationNo: applicationNo },
+    },
     { enabled: !!applicationNo, cacheTime: 0, staleTime: 0 }
   );
 

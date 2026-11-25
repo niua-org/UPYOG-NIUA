@@ -70,27 +70,6 @@ public class GarbageController {
                 ? searchRequest.getSearchCriteria()
                 : (criteria != null ? criteria : new GarbageSearchCriteria());
 
-        if (criteria != null && searchRequest != null && searchRequest.getSearchCriteria() != null) {
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getOwnerType()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getOwnerType())) {
-                resolvedCriteria.setOwnerType(criteria.getOwnerType());
-            }
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getPropertyType()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getPropertyType())) {
-                resolvedCriteria.setPropertyType(criteria.getPropertyType());
-            }
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getMobileNumber()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getMobileNumber())) {
-                resolvedCriteria.setMobileNumber(criteria.getMobileNumber());
-            }
-            if (org.apache.commons.lang3.StringUtils.isNotBlank(criteria.getGarbageNo()) && org.apache.commons.lang3.StringUtils.isBlank(resolvedCriteria.getGarbageNo())) {
-                resolvedCriteria.setGarbageNo(criteria.getGarbageNo());
-            }
-            if (criteria.getGarbageNumber() != null && resolvedCriteria.getGarbageNumber() == null) {
-                resolvedCriteria.setGarbageNumber(criteria.getGarbageNumber());
-            }
-            if (criteria.getStatus() != null && resolvedCriteria.getStatus() == null) {
-                resolvedCriteria.setStatus(criteria.getStatus());
-            }
-        }
-
         org.egov.common.contract.request.RequestInfo requestInfo = (searchRequest != null)
                 ? searchRequest.getRequestInfo()
                 : null;
@@ -100,47 +79,17 @@ public class GarbageController {
     }
 
     /**
-     * Direct temporary disconnection of connections (no workflow required).
+     * Counts garbage applications matching search criteria.
      */
-    @Operation(summary = "Direct temporary disconnection")
-    @PostMapping("/garbage/connection/_disconnect")
-    public ResponseEntity<GarbageConnectionResponse> disconnect(@RequestBody @Valid GarbageConnectionRequest request) {
-        log.info("REST request for direct connection disconnect: {}", request);
-        GarbageConnectionResponse response = garbageService.disconnect(request);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Initiates connection reconnection request.
-     */
-    @Operation(summary = "Initiate connection reconnection")
-    @PostMapping("/garbage/connection/_reconnect")
-    public ResponseEntity<GarbageConnectionResponse> reconnect(@RequestBody @Valid GarbageConnectionRequest request) {
-        log.info("REST request for connection reconnect: {}", request);
-        GarbageConnectionResponse response = garbageService.reconnect(request);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Initiates permanent connection disconnection request.
-     */
-    @Operation(summary = "Initiate permanent disconnection")
-    @PostMapping("/garbage/connection/_permanent")
-    public ResponseEntity<GarbageConnectionResponse> permanentDisconnect(@RequestBody @Valid GarbageConnectionRequest request) {
-        log.info("REST request for permanent connection disconnect: {}", request);
-        GarbageConnectionResponse response = garbageService.permanentDisconnect(request);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * Reconnection or permanent disconnection workflow actions (verification / approval).
-     */
-    @Operation(summary = "Update connection lifecycle workflow")
-    @PostMapping("/garbage/connection/_update")
-    public ResponseEntity<GarbageConnectionResponse> updateConnectionWorkflow(@RequestBody @Valid GarbageConnectionRequest request) {
-        log.info("REST request to update connection workflow: {}", request);
-        GarbageConnectionResponse response = garbageService.updateConnection(request);
-        return ResponseEntity.ok(response);
+    @Operation(summary = "Count garbage applications")
+    @PostMapping("/garbage/v1/_count")
+    public ResponseEntity<Integer> count(
+            @RequestBody(required = false) RequestInfoWrapper requestInfoWrapper,
+            @ModelAttribute GarbageSearchCriteria criteria) {
+        log.info("REST request to count garbage applications: {}", criteria);
+        org.egov.common.contract.request.RequestInfo requestInfo = requestInfoWrapper != null ? requestInfoWrapper.getRequestInfo() : null;
+        Integer count = garbageService.getApplicationsCount(criteria, requestInfo);
+        return ResponseEntity.ok(count);
     }
 
     /**

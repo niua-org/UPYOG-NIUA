@@ -27,19 +27,19 @@ const getValue = (value, t) => {
  * Supports both single & multi-application payloads as per UPYOG Garbage Service HLD.
  */
 const getGcAcknowledgementData = async (application = {}, tenantInfo, t) => {
-  const account = application?.garbageApplications?.[0] || application || {};
-  const applicant = account?.applicantDetails?.[0] || {};
-  const propertyLocation = account?.propertyLocation || {};
-  const garbageSpec = account?.garbageSpecification || {};
-  const oldGarbageId = account?.oldGarbageNo || garbageSpec?.oldGarbageNo;
+  const appObj = application?.garbageApplications?.[0] || application || {};
+  const applicant = appObj?.applicantDetails?.[0] || {};
+  const propertyLocation = appObj?.propertyLocation || {};
+  const garbageSpec = appObj?.garbageSpecification || {};
+  const oldGarbageId = appObj?.oldGarbageNo || garbageSpec?.oldGarbageNo;
   const floorNo = garbageSpec?.floorNo;
 
   return {
     t,
-    tenantId: tenantInfo?.code || account?.tenantId,
+    tenantId: tenantInfo?.code || appObj?.tenantId,
     name: getTenantName(tenantInfo, t),
     email: getValue(tenantInfo?.emailId, t),
-    applicationNumber: getValue(account?.applicationNo, t),
+    applicationNumber: getValue(appObj?.applicationNo, t),
     phoneNumber: getValue(tenantInfo?.contactNumber, t),
     heading: t("GC_APPLICATION_DETAILS"),
     details: [

@@ -88,7 +88,7 @@ public class DemandService {
         String userUuid =
                 requestInfo.getUserInfo() != null
                         ? requestInfo.getUserInfo().getUuid()
-                        : ServiceConstants.STATUS_SYSTEM;
+                        : GrbgConstants.USER_TYPE_SYSTEM;
 
         long now = System.currentTimeMillis();
 
@@ -113,7 +113,7 @@ public class DemandService {
                     periodFrom,
                     periodTo);
             updateDisconnectionHistory(garbageApplication, userUuid, requestInfo);
-            garbageApplication.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+            garbageApplication.setStatus(GrbgConstants.STATUS_ACTIVE);
             return;
         }
 
@@ -251,8 +251,8 @@ public class DemandService {
                         .billingPeriodTo(convertToTimestamp(periodTo))
                         .amount(finalAmount)
                         .penaltyAmount(penaltyAmount != null ? penaltyAmount : BigDecimal.ZERO)
-                        .paymentType(ServiceConstants.PAYMENT_TYPE_FULL)
-                        .status(ServiceConstants.STATUS_PENDING)
+                        .paymentType(GrbgConstants.PAYMENT_TYPE_FULL)
+                        .status(GrbgConstants.BILL_STATUS_PENDING)
                         .auditDetails(AuditDetails.builder().createdBy(userUuid).createdTime(now).lastModifiedBy(userUuid).lastModifiedTime(now).build())
                         .build();
 
@@ -268,9 +268,9 @@ public class DemandService {
         try {
             // 1. Set billing attributes
             garbageApplication.setDueDate(periodTo);
-            garbageApplication.setPaymentStatus(ServiceConstants.STATUS_PENDING_FOR_PAYMENT);
+            garbageApplication.setPaymentStatus(GrbgConstants.STATUS_PENDING_FOR_PAYMENT);
             garbageApplication.setPaymentAmount(finalAmount);
-            garbageApplication.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+            garbageApplication.setStatus(GrbgConstants.STATUS_ACTIVE);
 
             // 2. If resuming from disconnection, update disconnection history and reactivate service status
             updateDisconnectionHistory(garbageApplication, userUuid, requestInfo);
@@ -328,7 +328,7 @@ public class DemandService {
 
                     addDetail.remove(GrbgConstants.DISCONNECTION_DATE);
                     addDetail.remove(GrbgConstants.DISCONNECTION_REASON);
-                    garbageApplication.setStatus(GrbgConstants.SERVICE_STATUS_ACTIVE);
+                    garbageApplication.setStatus(GrbgConstants.STATUS_ACTIVE);
 
                     if (garbageApplication.getAuditDetails() != null) {
                         garbageApplication.getAuditDetails().setLastModifiedBy(userUuid);

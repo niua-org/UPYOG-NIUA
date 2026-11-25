@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.garbageservice.repository.GarbageRepository;
+import org.egov.garbageservice.util.GrbgConstants;
 import org.egov.garbageservice.web.models.garbage.*;
 import org.egov.garbageservice.web.models.user.*;
 import org.egov.garbageservice.web.models.workflow.*;
@@ -51,8 +52,8 @@ public class Scheduler {
 
     private String process(LocalDate billingDate, RequestInfo requestInfo) {
         GarbageSearchCriteria criteria = GarbageSearchCriteria.builder()
-                .status(List.of("APPROVED"))
-                .connectionStatus("ACTIVE")
+                .status(List.of(GrbgConstants.STATUS_APPROVED))
+                .connectionStatus(GrbgConstants.STATUS_ACTIVE)
                 .isSchedulerCall(true)
                 .build();
 
@@ -60,14 +61,14 @@ public class Scheduler {
 
         if (applications.isEmpty()) {
             log.info("No active or approved garbage applications found for billing.");
-            return "No garbage applications found with status APPROVED and connection_status ACTIVE";
+            return "No garbage applications found with status " + GrbgConstants.STATUS_APPROVED + " and connection_status " + GrbgConstants.STATUS_ACTIVE;
         }
 
         // Section 2 & 8: Fetch status APPROVED and connection_status ACTIVE
         List<GarbageApplication> activeApps = applications.stream()
-                .filter(a -> "ACTIVE".equalsIgnoreCase(a.getConnectionStatus()) || org.apache.commons.lang3.StringUtils.isBlank(a.getConnectionStatus()))
-                .filter(a -> !"DISCONNECTED".equalsIgnoreCase(a.getConnectionStatus()))
-                .filter(a -> !"PERMANENTLY_DISCONNECTED".equalsIgnoreCase(a.getConnectionStatus()))
+                .filter(a -> GrbgConstants.STATUS_ACTIVE.equalsIgnoreCase(a.getConnectionStatus()) || org.apache.commons.lang3.StringUtils.isBlank(a.getConnectionStatus()))
+                .filter(a -> !GrbgConstants.STATUS_DISCONNECTED.equalsIgnoreCase(a.getConnectionStatus()))
+                .filter(a -> !GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED.equalsIgnoreCase(a.getConnectionStatus()))
                 .filter(a -> isBillingDue(a, billingDate))
                 .collect(Collectors.toList());
 
@@ -96,9 +97,9 @@ public class Scheduler {
                         .billingPeriodTo(periodTo)
                         .amount(app.getPaymentAmount() != null ? app.getPaymentAmount() : BigDecimal.ZERO)
                         .penaltyAmount(BigDecimal.ZERO)
-                        .paymentType("MONTHLY")
-                        .status("GENERATED")
-                        .auditDetails(AuditDetails.builder().createdBy("SCHEDULER").createdTime(now).build())
+                        .paymentType(GrbgConstants.PAYMENT_TYPE_MONTHLY)
+                        .status(GrbgConstants.BILL_STATUS_GENERATED)
+                        .auditDetails(AuditDetails.builder().createdBy(GrbgConstants.SYSTEM_USER_SCHEDULER).createdTime(now).build())
                         .build();
 
                 garbageRepository.saveBillGenerate(billLog);

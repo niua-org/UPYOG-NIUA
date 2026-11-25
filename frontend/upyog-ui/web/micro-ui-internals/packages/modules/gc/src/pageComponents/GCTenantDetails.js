@@ -21,12 +21,15 @@ const GCTenantDetails = ({
   setTenants,
   detectedFloorCount = 1,
   floorOptions = [],
+  ownerFloor = "0",
   setToast,
 }) => {
   const isEmployee = user?.type === "EMPLOYEE";
 
+  const maxAllowedTenants = Math.max(detectedFloorCount || 1, 10);
+
   const handleAddTenant = () => {
-    if (tenants.length >= detectedFloorCount) {
+    if (tenants.length >= maxAllowedTenants) {
       if (setToast) {
         setToast({
           warning: true,
@@ -36,8 +39,12 @@ const GCTenantDetails = ({
       return;
     }
 
-    const usedFloors = tenants.map((tn) => String(tn.floorNo));
-    const nextAvailableFloor = floorOptions.find((f) => !usedFloors.includes(String(f.code)))?.code;
+    const usedFloors = [
+      ...(ownerFloor && ownerFloor !== "NONE" ? [String(ownerFloor)] : []),
+      ...tenants.map((tn) => String(tn.floorNo)).filter(Boolean),
+    ];
+    const nextAvailableFloor =
+      floorOptions.find((f) => !usedFloors.includes(String(f.code)))?.code || String(tenants.length);
 
     setTenants([
       ...tenants,
@@ -49,6 +56,28 @@ const GCTenantDetails = ({
         email: "",
       },
     ]);
+  };
+
+  const handleAddAllFloors = () => {
+    const usedFloors = [
+      ...(ownerFloor && ownerFloor !== "NONE" ? [String(ownerFloor)] : []),
+      ...tenants.map((tn) => String(tn.floorNo)).filter(Boolean),
+    ];
+    const availableFloorOptions = floorOptions.filter((f) => !usedFloors.includes(String(f.code)));
+    const remainingSlots = maxAllowedTenants - tenants.length;
+    const floorsToAdd = availableFloorOptions.slice(0, remainingSlots);
+
+    if (floorsToAdd.length === 0) return;
+
+    const newTenants = floorsToAdd.map((f, i) => ({
+      id: `${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+      floorNo: String(f.code),
+      name: "",
+      mobileNumber: "",
+      email: "",
+    }));
+
+    setTenants([...tenants, ...newTenants]);
   };
 
   const handleRemoveTenant = (index) => {
@@ -74,14 +103,26 @@ const GCTenantDetails = ({
           </p>
         </div>
 
-        <button
-          type="button"
-          className="gc-tenant-add-btn"
-          onClick={handleAddTenant}
-          disabled={tenants.length >= detectedFloorCount}
-        >
-          + {t("GC_ADD_TENANT_BTN")}
-        </button>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {tenants.length === 0 && maxAllowedTenants > 1 && (
+            <button
+              type="button"
+              className="gc-tenant-add-btn"
+              style={{ background: "#00703c", borderColor: "#00703c" }}
+              onClick={handleAddAllFloors}
+            >
+              + {t("GC_ADD_ALL_FLOORS_BTN") || `Add All Floors (${maxAllowedTenants})`}
+            </button>
+          )}
+          <button
+            type="button"
+            className="gc-tenant-add-btn"
+            onClick={handleAddTenant}
+            disabled={tenants.length >= maxAllowedTenants}
+          >
+            + {t("GC_ADD_TENANT_BTN")}
+          </button>
+        </div>
       </div>
 
       {tenants.length === 0 && (

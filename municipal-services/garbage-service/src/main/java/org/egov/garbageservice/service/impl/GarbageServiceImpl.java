@@ -73,18 +73,22 @@ public class GarbageServiceImpl implements GarbageService {
         if (garbageRequest != null && !CollectionUtils.isEmpty(garbageRequest.getGarbageApplications())) {
             garbageRequest.setGarbageApplications(flattenApplications(garbageRequest.getGarbageApplications()));
         }
+
+        normalizeAndAllocateFloors(garbageRequest);
+
         log.info("Processing create GarbageRequest for applications count: {}",
                 garbageRequest != null && garbageRequest.getGarbageApplications() != null ? garbageRequest.getGarbageApplications().size() : 0);
 
         validateCreateRequest(garbageRequest);
         RequestInfo requestInfo = garbageRequest.getRequestInfo();
-        String userUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : "SYSTEM";
+        String userUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : GrbgConstants.USER_TYPE_SYSTEM;
         long now = Instant.now().toEpochMilli();
 
         String commonOwnerUuid = null;
         String commonPropertyId = null;
         String commonTenantId = null;
         PropertyLocation commonPropertyLocation = null;
+        String commonParentApplicationNo = null;
 
         for (GarbageApplication app : garbageRequest.getGarbageApplications()) {
             if (app.getId() == null) {
@@ -116,6 +120,11 @@ public class GarbageServiceImpl implements GarbageService {
                     : null;
 
             boolean isOwnerApp = Boolean.TRUE.equals(app.getIsOwner());
+            if (isOwnerApp && commonParentApplicationNo == null) {
+                commonParentApplicationNo = app.getApplicationNo();
+            } else if (!isOwnerApp && StringUtils.isBlank(app.getParentApplicationNo()) && commonParentApplicationNo != null) {
+                app.setParentApplicationNo(commonParentApplicationNo);
+            }
 
             if (isOwnerApp) {
                 commonPropertyId = app.getPropertyId();
@@ -153,7 +162,7 @@ public class GarbageServiceImpl implements GarbageService {
                     app.setPropertyLocation(commonPropertyLocation);
                 }
                 if (app.getGarbageSpecification() != null && StringUtils.isBlank(app.getGarbageSpecification().getPropertyType())) {
-                    app.getGarbageSpecification().setPropertyType("TENANT");
+                    app.getGarbageSpecification().setPropertyType(GrbgConstants.PROPERTY_TYPE_TENANT);
                 }
 
                 if (primaryApplicant != null && StringUtils.isNotBlank(primaryApplicant.getMobileNumber())) {
@@ -214,10 +223,10 @@ public class GarbageServiceImpl implements GarbageService {
 
             // Default status & workflow transition
             if (StringUtils.isBlank(app.getStatus())) {
-                app.setStatus("APPLICATION_CREATED");
+                app.setStatus(GrbgConstants.STATUS_APPLICATION_CREATED);
             }
             if (app.getWorkflow() == null) {
-                app.setWorkflow(WorkflowRequest.builder().action("APPLY").build());
+                app.setWorkflow(WorkflowRequest.builder().action(GrbgConstants.ACTION_APPLY).build());
             }
             workflowService.updateWorkflowStatus(requestInfo, app);
         }
@@ -239,7 +248,7 @@ public class GarbageServiceImpl implements GarbageService {
 
         validateUpdateRequest(garbageRequest);
         RequestInfo requestInfo = garbageRequest.getRequestInfo();
-        String userUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : "SYSTEM";
+        String userUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : GrbgConstants.USER_TYPE_SYSTEM;
         long now = Instant.now().toEpochMilli();
 
         for (GarbageApplication app : garbageRequest.getGarbageApplications()) {
@@ -250,14 +259,14 @@ public class GarbageServiceImpl implements GarbageService {
 
             List<GarbageApplication> existingApps = garbageRepository.getGarbageApplications(searchCriteria);
             if (CollectionUtils.isEmpty(existingApps)) {
-                throw new CustomException("APPLICATION_NOT_FOUND", "No application found with applicationNo: " + app.getApplicationNo());
+                throw new CustomException(GrbgConstants.ERROR_APPLICATION_NOT_FOUND, "No application found with applicationNo: " + app.getApplicationNo());
             }
 
             GarbageApplication existingApp = existingApps.get(0);
 
             // Guard against modifying permanently disconnected applications
-            if ("PERMANENTLY_DISCONNECTED".equalsIgnoreCase(existingApp.getStatus())) {
-                throw new CustomException("APPLICATION_TERMINATED", "Cannot modify permanently disconnected garbage application: " + app.getApplicationNo());
+            if (GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED.equalsIgnoreCase(existingApp.getStatus())) {
+                throw new CustomException(GrbgConstants.ERROR_APPLICATION_TERMINATED, "Cannot modify permanently disconnected garbage application: " + app.getApplicationNo());
             }
 
             app.setId(existingApp.getId());
@@ -271,30 +280,36 @@ public class GarbageServiceImpl implements GarbageService {
 
             String action = app.getWorkflow() != null ? app.getWorkflow().getAction() : null;
 
-            if ("DISCONNECT".equalsIgnoreCase(action)) {
+            if (GrbgConstants.ACTION_DISCONNECT.equalsIgnoreCase(action)) {
                 validateOwnerAuthorization(existingApp, requestInfo);
+                app.setBusinessService(GrbgConstants.BUSINESS_SERVICE_DISCONNECTION);
+                workflowService.updateWorkflowStatus(requestInfo, app);
+                if (StringUtils.isBlank(app.getStatus()) || GrbgConstants.STATUS_ACTIVE.equalsIgnoreCase(app.getStatus())) {
+                    app.setStatus(GrbgConstants.STATUS_DISCONNECTED);
+                    app.setConnectionStatus(GrbgConstants.STATUS_DISCONNECTED);
+                } else if (GrbgConstants.STATUS_DISCONNECTED.equalsIgnoreCase(app.getStatus())) {
+                    app.setConnectionStatus(GrbgConstants.STATUS_DISCONNECTED);
+                }
 
                 GarbageConnectionLog connLog = GarbageConnectionLog.builder()
                         .id(UUID.randomUUID().toString())
                         .garbageId(existingApp.getId())
                         .applicationNo(existingApp.getApplicationNo())
-                        .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), "DISCONNECTION"))
-                        .status("APPROVED")
-                        .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : "TEMPORARY_DISCONNECTION")
-                        .requestType("DISCONNECTION")
+                        .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), GrbgConstants.REQUEST_TYPE_DISCONNECTION))
+                        .status(GrbgConstants.STATUS_APPROVED)
+                        .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : GrbgConstants.REASON_TEMPORARY_DISCONNECTION)
+                        .requestType(GrbgConstants.REQUEST_TYPE_DISCONNECTION)
                         .reasonDetails(app.getWorkflow().getComments())
                         .effectiveFrom(LocalDate.now())
                         .feeCharged(BigDecimal.ZERO)
                         .auditDetails(AuditDetails.builder().createdBy(userUuid).createdTime(now).build())
                         .build();
 
-                app.setStatus("DISCONNECTED");
-                app.setConnectionStatus("DISCONNECTED");
                 garbageRepository.saveConnectionLog(connLog);
                 notificationService.processDisconnectNotification(existingApp, LocalDate.now());
                 log.info("Processed DISCONNECT for applicationNo: {}", existingApp.getApplicationNo());
 
-            } else if ("RECONNECT".equalsIgnoreCase(action)) {
+            } else if (GrbgConstants.ACTION_RECONNECT.equalsIgnoreCase(action)) {
                 validateOwnerAuthorization(existingApp, requestInfo);
                 validateArrearsCleared(existingApp, requestInfo);
 
@@ -302,53 +317,63 @@ public class GarbageServiceImpl implements GarbageService {
                         .id(UUID.randomUUID().toString())
                         .garbageId(existingApp.getId())
                         .applicationNo(existingApp.getApplicationNo())
-                        .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), "RECONNECTION"))
-                        .status("APPROVED")
-                        .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : "SERVICE_RECONNECTION")
-                        .requestType("RECONNECTION")
+                        .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), GrbgConstants.REQUEST_TYPE_RECONNECTION))
+                        .status(GrbgConstants.STATUS_APPROVED)
+                        .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : GrbgConstants.REASON_SERVICE_RECONNECTION)
+                        .requestType(GrbgConstants.REQUEST_TYPE_RECONNECTION)
                         .reasonDetails(app.getWorkflow().getComments())
                         .effectiveFrom(LocalDate.now())
                         .feeCharged(BigDecimal.ZERO)
                         .auditDetails(AuditDetails.builder().createdBy(userUuid).createdTime(now).build())
                         .build();
 
-                app.setStatus("ACTIVE");
-                app.setConnectionStatus("ACTIVE");
+                app.setStatus(GrbgConstants.STATUS_ACTIVE);
+                app.setConnectionStatus(GrbgConstants.STATUS_ACTIVE);
                 garbageRepository.saveConnectionLog(connLog);
                 notificationService.processReconnectNotification(existingApp);
                 log.info("Processed RECONNECT for applicationNo: {}", existingApp.getApplicationNo());
 
-            } else if ("PERMANENT_DISCONNECT".equalsIgnoreCase(action)) {
+            } else if (GrbgConstants.ACTION_PERMANENT_DISCONNECT.equalsIgnoreCase(action)) {
                 validateOwnerAuthorization(existingApp, requestInfo);
+                app.setBusinessService(GrbgConstants.BUSINESS_SERVICE_DISCONNECTION);
+                workflowService.updateWorkflowStatus(requestInfo, app);
+                if (StringUtils.isBlank(app.getStatus()) || GrbgConstants.STATUS_ACTIVE.equalsIgnoreCase(app.getStatus())) {
+                    app.setStatus(GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED);
+                    app.setConnectionStatus(GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED);
+                } else if (GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED.equalsIgnoreCase(app.getStatus())) {
+                    app.setConnectionStatus(GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED);
+                }
 
                 GarbageConnectionLog connLog = GarbageConnectionLog.builder()
                         .id(UUID.randomUUID().toString())
                         .garbageId(existingApp.getId())
                         .applicationNo(existingApp.getApplicationNo())
-                        .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), "PERMANENT_DISCONNECTION"))
-                        .status("APPROVED")
-                        .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : "PERMANENT_DISCONNECTION")
-                        .requestType("PERMANENT_DISCONNECTION")
+                        .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), GrbgConstants.REQUEST_TYPE_PERMANENT_DISCONNECTION))
+                        .status(GrbgConstants.STATUS_APPROVED)
+                        .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : GrbgConstants.REQUEST_TYPE_PERMANENT_DISCONNECTION)
+                        .requestType(GrbgConstants.REQUEST_TYPE_PERMANENT_DISCONNECTION)
                         .reasonDetails(app.getWorkflow().getComments())
                         .effectiveFrom(LocalDate.now())
                         .feeCharged(BigDecimal.ZERO)
                         .auditDetails(AuditDetails.builder().createdBy(userUuid).createdTime(now).build())
                         .build();
 
-                app.setStatus("PERMANENTLY_DISCONNECTED");
-                app.setConnectionStatus("PERMANENTLY_DISCONNECTED");
                 garbageRepository.saveConnectionLog(connLog);
                 notificationService.processDisconnectNotification(existingApp, LocalDate.now());
                 log.info("Processed PERMANENT_DISCONNECT for applicationNo: {}", existingApp.getApplicationNo());
 
             } else if (app.getWorkflow() != null && StringUtils.isNotBlank(action)) {
-                if (GrbgConstants.WORKFLOW_ACTION_DISCONNECT_INITIATE.equalsIgnoreCase(action)
+                boolean isDiscAction = config.getDisconnectionActions() != null && config.getDisconnectionActions().stream().anyMatch(a -> a.equalsIgnoreCase(action));
+                boolean isPermDiscAction = config.getPermanentDisconnectionActions() != null && config.getPermanentDisconnectionActions().stream().anyMatch(a -> a.equalsIgnoreCase(action));
+
+                if (isDiscAction
+                        || isPermDiscAction
                         || GrbgConstants.BUSINESS_SERVICE_DISCONNECTION.equalsIgnoreCase(app.getBusinessService())
                         || GrbgConstants.BUSINESS_SERVICE_DISCONNECTION.equalsIgnoreCase(existingApp.getBusinessService())) {
                     app.setBusinessService(GrbgConstants.BUSINESS_SERVICE_DISCONNECTION);
                 }
                 workflowService.updateWorkflowStatus(requestInfo, app);
-                if ("APPROVED".equalsIgnoreCase(app.getStatus()) || "ACTIVE".equalsIgnoreCase(app.getStatus())) {
+                if (GrbgConstants.STATUS_APPROVED.equalsIgnoreCase(app.getStatus()) || GrbgConstants.STATUS_ACTIVE.equalsIgnoreCase(app.getStatus())) {
                     notificationService.processApprovalNotification(app);
 
                     // Section 2.2: Parent-child model: parent APPROVED automatically approves all children and sets connection_status = ACTIVE
@@ -359,12 +384,12 @@ public class GarbageServiceImpl implements GarbageService {
                                 .build();
                         List<GarbageApplication> propApps = garbageRepository.getGarbageApplications(childCrit);
                         List<GarbageApplication> childrenToApprove = propApps.stream()
-                                .filter(c -> existingApp.getApplicationNo().equalsIgnoreCase(c.getParentApplicationNo()) && !"APPROVED".equalsIgnoreCase(c.getStatus()))
+                                .filter(c -> existingApp.getApplicationNo().equalsIgnoreCase(c.getParentApplicationNo()) && !GrbgConstants.STATUS_APPROVED.equalsIgnoreCase(c.getStatus()))
                                 .collect(Collectors.toList());
                         if (!childrenToApprove.isEmpty()) {
                             for (GarbageApplication child : childrenToApprove) {
-                                child.setStatus("APPROVED");
-                                child.setConnectionStatus("ACTIVE");
+                                child.setStatus(GrbgConstants.STATUS_APPROVED);
+                                child.setConnectionStatus(GrbgConstants.STATUS_ACTIVE);
                                 if (child.getAuditDetails() != null) {
                                     child.getAuditDetails().setLastModifiedBy(userUuid);
                                     child.getAuditDetails().setLastModifiedTime(now);
@@ -377,15 +402,33 @@ public class GarbageServiceImpl implements GarbageService {
                             garbageRepository.updateGarbageApplication(childUpdReq);
                         }
                     }
-                } else if ("DISCONNECTED".equalsIgnoreCase(app.getStatus())) {
+                } else if (GrbgConstants.STATUS_DISCONNECTED.equalsIgnoreCase(app.getStatus())) {
+                    app.setConnectionStatus(GrbgConstants.STATUS_DISCONNECTED);
                     GarbageConnectionLog connLog = GarbageConnectionLog.builder()
                             .id(UUID.randomUUID().toString())
                             .garbageId(existingApp.getId())
                             .applicationNo(existingApp.getApplicationNo())
-                            .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), "DISCONNECTION"))
-                            .status("APPROVED")
-                            .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : "WORKFLOW_DISCONNECTION")
-                            .requestType("DISCONNECTION")
+                            .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), GrbgConstants.REQUEST_TYPE_DISCONNECTION))
+                            .status(GrbgConstants.STATUS_APPROVED)
+                            .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : GrbgConstants.REASON_WORKFLOW_DISCONNECTION)
+                            .requestType(GrbgConstants.REQUEST_TYPE_DISCONNECTION)
+                            .reasonDetails(app.getWorkflow().getComments())
+                            .effectiveFrom(LocalDate.now())
+                            .feeCharged(BigDecimal.ZERO)
+                            .auditDetails(AuditDetails.builder().createdBy(userUuid).createdTime(now).build())
+                            .build();
+                    garbageRepository.saveConnectionLog(connLog);
+                    notificationService.processDisconnectNotification(existingApp, LocalDate.now());
+                } else if (GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED.equalsIgnoreCase(app.getStatus())) {
+                    app.setConnectionStatus(GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED);
+                    GarbageConnectionLog connLog = GarbageConnectionLog.builder()
+                            .id(UUID.randomUUID().toString())
+                            .garbageId(existingApp.getId())
+                            .applicationNo(existingApp.getApplicationNo())
+                            .requestNo(idgenUtil.generateRequestNumber(requestInfo, existingApp.getTenantId(), GrbgConstants.REQUEST_TYPE_PERMANENT_DISCONNECTION))
+                            .status(GrbgConstants.STATUS_APPROVED)
+                            .reason(app.getWorkflow().getComments() != null ? app.getWorkflow().getComments() : GrbgConstants.REASON_WORKFLOW_PERMANENT_DISCONNECTION)
+                            .requestType(GrbgConstants.REQUEST_TYPE_PERMANENT_DISCONNECTION)
                             .reasonDetails(app.getWorkflow().getComments())
                             .effectiveFrom(LocalDate.now())
                             .feeCharged(BigDecimal.ZERO)
@@ -432,7 +475,7 @@ public class GarbageServiceImpl implements GarbageService {
             } else if (CollectionUtils.isEmpty(criteria.getOwnerUuids()) && CollectionUtils.isEmpty(criteria.getTenantUuids())
                     && StringUtils.isBlank(criteria.getOwnerUuid()) && StringUtils.isBlank(criteria.getTenantUuid())) {
                 if (requestInfo != null && requestInfo.getUserInfo() != null && StringUtils.isNotBlank(requestInfo.getUserInfo().getUuid())) {
-                    boolean isCitizen = "CITIZEN".equalsIgnoreCase(requestInfo.getUserInfo().getType());
+                    boolean isCitizen = GrbgConstants.USER_TYPE_CITIZEN.equalsIgnoreCase(requestInfo.getUserInfo().getType());
                     if (isCitizen) {
                         userUuids = Collections.singletonList(requestInfo.getUserInfo().getUuid());
                     }
@@ -440,12 +483,12 @@ public class GarbageServiceImpl implements GarbageService {
             }
 
             if (!userUuids.isEmpty()) {
-                if ("TENANT".equalsIgnoreCase(resolvedOwnerType)) {
+                if (GrbgConstants.PROPERTY_TYPE_TENANT.equalsIgnoreCase(resolvedOwnerType)) {
                     criteria.setTenantUuids(userUuids);
                     criteria.setTenantUuid(userUuids.get(0));
                     criteria.setOwnerUuids(null);
                     criteria.setOwnerUuid(null);
-                } else if ("OWNER".equalsIgnoreCase(resolvedOwnerType)) {
+                } else if (GrbgConstants.PROPERTY_TYPE_OWNER.equalsIgnoreCase(resolvedOwnerType)) {
                     criteria.setOwnerUuids(userUuids);
                     criteria.setOwnerUuid(userUuids.get(0));
                     criteria.setTenantUuids(null);
@@ -473,12 +516,12 @@ public class GarbageServiceImpl implements GarbageService {
 
         // Link child tenant applications into owner's childGarbageApplications
         Map<String, List<GarbageApplication>> tenantAppsByProp = applications.stream()
-                .filter(a -> a.getGarbageSpecification() != null && "TENANT".equalsIgnoreCase(a.getGarbageSpecification().getPropertyType()))
+                .filter(a -> a.getGarbageSpecification() != null && GrbgConstants.PROPERTY_TYPE_TENANT.equalsIgnoreCase(a.getGarbageSpecification().getPropertyType()))
                 .filter(a -> StringUtils.isNotBlank(a.getPropertyId()))
                 .collect(Collectors.groupingBy(GarbageApplication::getPropertyId));
 
         for (GarbageApplication app : applications) {
-            if (app.getGarbageSpecification() != null && "OWNER".equalsIgnoreCase(app.getGarbageSpecification().getPropertyType())) {
+            if (app.getGarbageSpecification() != null && GrbgConstants.PROPERTY_TYPE_OWNER.equalsIgnoreCase(app.getGarbageSpecification().getPropertyType())) {
                 List<GarbageApplication> children = tenantAppsByProp.get(app.getPropertyId());
                 if (CollectionUtils.isEmpty(children) && StringUtils.isNotBlank(app.getPropertyId())) {
                     GarbageSearchCriteria childCrit = GarbageSearchCriteria.builder()
@@ -489,7 +532,7 @@ public class GarbageServiceImpl implements GarbageService {
                     if (!CollectionUtils.isEmpty(propApps)) {
                         children = propApps.stream()
                                 .filter(c -> (app.getApplicationNo() != null && app.getApplicationNo().equalsIgnoreCase(c.getParentApplicationNo()))
-                                        || (c.getGarbageSpecification() != null && "TENANT".equalsIgnoreCase(c.getGarbageSpecification().getPropertyType()) && !c.getApplicationNo().equalsIgnoreCase(app.getApplicationNo())))
+                                        || (c.getGarbageSpecification() != null && GrbgConstants.PROPERTY_TYPE_TENANT.equalsIgnoreCase(c.getGarbageSpecification().getPropertyType()) && !c.getApplicationNo().equalsIgnoreCase(app.getApplicationNo())))
                                 .collect(Collectors.toList());
                         if (!CollectionUtils.isEmpty(children)) {
                             for (GarbageApplication child : children) {
@@ -524,7 +567,7 @@ public class GarbageServiceImpl implements GarbageService {
         if (!CollectionUtils.isEmpty(requestInfo.getUserInfo().getRoles())) {
             boolean isStaff = requestInfo.getUserInfo().getRoles().stream()
                     .map(Role::getCode)
-                    .anyMatch(r -> r.startsWith("GC_") || "EMPLOYEE".equalsIgnoreCase(r));
+                    .anyMatch(r -> r.startsWith("GC_") || GrbgConstants.USER_TYPE_EMPLOYEE.equalsIgnoreCase(r));
             if (isStaff) {
                 return;
             }
@@ -542,7 +585,7 @@ public class GarbageServiceImpl implements GarbageService {
         }
 
         log.warn("Unauthorized connection action attempt by user {} on application {}", callerUuid, existingApp.getApplicationNo());
-        throw new CustomException("UNAUTHORIZED_CONNECTION_ACTION",
+        throw new CustomException(GrbgConstants.ERROR_UNAUTHORIZED_CONNECTION_ACTION,
                 "Disconnection, Reconnection, and Permanent Disconnection can ONLY be performed by the registered PROPERTY OWNER.");
     }
 
@@ -552,7 +595,7 @@ public class GarbageServiceImpl implements GarbageService {
                     app.getApplicationNo(), app.getBusinessService(), true);
             if (!CollectionUtils.isEmpty(demands)) {
                 for (Demand demand : demands) {
-                    if ("ACTIVE".equalsIgnoreCase(demand.getStatus().toString())) {
+                    if (GrbgConstants.STATUS_ACTIVE.equalsIgnoreCase(demand.getStatus().toString())) {
                         BigDecimal totalDue = BigDecimal.ZERO;
                         if (!CollectionUtils.isEmpty(demand.getDemandDetails())) {
                             for (org.egov.garbageservice.web.models.billing.DemandDetail detail : demand.getDemandDetails()) {
@@ -563,7 +606,7 @@ public class GarbageServiceImpl implements GarbageService {
                             }
                         }
                         if (totalDue.compareTo(BigDecimal.ZERO) > 0) {
-                            throw new CustomException("PENDING_ARREARS_EXIST",
+                            throw new CustomException(GrbgConstants.ERROR_PENDING_ARREARS_EXIST,
                                     "Cannot reconnect service with pending unpaid arrears of Rs " + totalDue.toPlainString());
                         }
                     }
@@ -635,17 +678,17 @@ public class GarbageServiceImpl implements GarbageService {
             if (parent.getGarbageSpecification() != null) {
                 child.setGarbageSpecification(parent.getGarbageSpecification().toBuilder()
                         .id(null)
-                        .propertyType("TENANT")
+                        .propertyType(GrbgConstants.PROPERTY_TYPE_TENANT)
                         .floorNo(child.getFloorNo())
                         .build());
             } else {
                 child.setGarbageSpecification(GarbageSpecification.builder()
-                        .propertyType("TENANT")
+                        .propertyType(GrbgConstants.PROPERTY_TYPE_TENANT)
                         .floorNo(child.getFloorNo())
                         .build());
             }
         } else {
-            child.getGarbageSpecification().setPropertyType("TENANT");
+            child.getGarbageSpecification().setPropertyType(GrbgConstants.PROPERTY_TYPE_TENANT);
             if (StringUtils.isNotBlank(child.getFloorNo())) {
                 child.getGarbageSpecification().setFloorNo(child.getFloorNo());
             }
@@ -669,381 +712,124 @@ public class GarbageServiceImpl implements GarbageService {
         }
     }
 
-    @Override
-    public GarbageConnectionResponse disconnect(GarbageConnectionRequest connectionRequest) {
-        validateConnectionRequest(connectionRequest);
-        RequestInfo requestInfo = connectionRequest.getRequestInfo();
-        GarbageConnectionLog logInput = connectionRequest.getConnectionLog();
-        String callerUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : null;
-
-        List<GarbageApplication> targets = resolveTargetApplications(connectionRequest);
-        if (CollectionUtils.isEmpty(targets)) {
-            throw new CustomException("INVALID_TARGET", "No valid target applications found for disconnection.");
-        }
-
-        // Section 7: Owner guard, state validation, and arrears checks
-        for (GarbageApplication app : targets) {
-            if (callerUuid != null && !callerUuid.equalsIgnoreCase(app.getOwnerUuid())) {
-                throw new CustomException("UNAUTHORIZED_CONNECTION_ACTION", "Only property owner can disconnect connections.");
-            }
-            if ("PERMANENTLY_DISCONNECTED".equalsIgnoreCase(app.getConnectionStatus())) {
-                throw new CustomException("TARGET_TERMINATED", "Cannot disconnect permanently terminated connection: " + app.getApplicationNo());
-            }
-            validateArrearsCleared(app, requestInfo);
-        }
-
-        long now = System.currentTimeMillis();
-        String tenantId = targets.get(0).getTenantId();
-        String requestNo = idgenUtil.generateRequestNumber(requestInfo, tenantId, "DISCONNECTION");
-        String logId = UUID.randomUUID().toString();
-
-        List<GarbageConnectionLogTarget> logTargets = new ArrayList<>();
-        for (GarbageApplication app : targets) {
-            logTargets.add(GarbageConnectionLogTarget.builder()
-                    .id(UUID.randomUUID().toString())
-                    .connectionLogId(logId)
-                    .garbageId(app.getId())
-                    .applicationNo(app.getApplicationNo())
-                    .prevConnectionStatus(app.getConnectionStatus())
-                    .createdTime(now)
-                    .build());
-
-            app.setConnectionStatus("DISCONNECTED");
-            if (app.getAuditDetails() != null) {
-                app.getAuditDetails().setLastModifiedBy(callerUuid);
-                app.getAuditDetails().setLastModifiedTime(now);
-            }
-        }
-
-        GarbageConnectionLog savedLog = GarbageConnectionLog.builder()
-                .id(logId)
-                .garbageId(targets.get(0).getId())
-                .applicationNo(targets.get(0).getApplicationNo())
-                .requestNo(requestNo)
-                .requestType("DISCONNECTION")
-                .scope(logInput.getScope() != null ? logInput.getScope() : "SELECTED")
-                .propertyId(targets.get(0).getPropertyId())
-                .status("APPROVED")
-                .reason(logInput.getReason() != null ? logInput.getReason() : "DIRECT_DISCONNECTION")
-                .reasonDetails(logInput.getReasonDetails())
-                .effectiveFrom(logInput.getEffectiveFrom() != null ? logInput.getEffectiveFrom() : LocalDate.now())
-                .effectiveTo(logInput.getEffectiveTo())
-                .feeCharged(logInput.getFeeCharged() != null ? logInput.getFeeCharged() : BigDecimal.ZERO)
-                .requestedByUuid(callerUuid)
-                .approvedByUuid(callerUuid)
-                .approvedTime(now)
-                .targets(logTargets)
-                .auditDetails(AuditDetails.builder().createdBy(callerUuid).createdTime(now).build())
-                .build();
-
-        garbageRepository.saveConnectionLog(savedLog);
-
-        GarbageRequest updateRequest = GarbageRequest.builder()
-                .requestInfo(requestInfo)
-                .garbageApplications(targets)
-                .build();
-        garbageRepository.updateGarbageApplication(updateRequest);
-
-        for (GarbageApplication app : targets) {
-            notificationService.processDisconnectNotification(app, savedLog.getEffectiveFrom());
-        }
-
-        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
-        return GarbageConnectionResponse.builder()
-                .responseInfo(responseInfo)
-                .connectionLog(savedLog)
-                .affectedApplications(targets)
-                .build();
-    }
-
-    @Override
-    public GarbageConnectionResponse reconnect(GarbageConnectionRequest connectionRequest) {
-        validateConnectionRequest(connectionRequest);
-        RequestInfo requestInfo = connectionRequest.getRequestInfo();
-        GarbageConnectionLog logInput = connectionRequest.getConnectionLog();
-        String callerUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : null;
-
-        List<GarbageApplication> targets = resolveTargetApplications(connectionRequest);
-        if (CollectionUtils.isEmpty(targets)) {
-            throw new CustomException("INVALID_TARGET", "No valid target applications found for reconnection.");
-        }
-
-        for (GarbageApplication app : targets) {
-            if (callerUuid != null && !callerUuid.equalsIgnoreCase(app.getOwnerUuid())) {
-                throw new CustomException("UNAUTHORIZED_CONNECTION_ACTION", "Only property owner can reconnect connections.");
-            }
-            if ("PERMANENTLY_DISCONNECTED".equalsIgnoreCase(app.getConnectionStatus())) {
-                throw new CustomException("TARGET_TERMINATED", "Cannot reconnect permanently terminated connection: " + app.getApplicationNo());
-            }
-            validateArrearsCleared(app, requestInfo);
-        }
-
-        long now = System.currentTimeMillis();
-        String tenantId = targets.get(0).getTenantId();
-        String requestNo = idgenUtil.generateRequestNumber(requestInfo, tenantId, "RECONNECTION");
-        String logId = UUID.randomUUID().toString();
-
-        List<GarbageConnectionLogTarget> logTargets = new ArrayList<>();
-        for (GarbageApplication app : targets) {
-            logTargets.add(GarbageConnectionLogTarget.builder()
-                    .id(UUID.randomUUID().toString())
-                    .connectionLogId(logId)
-                    .garbageId(app.getId())
-                    .applicationNo(app.getApplicationNo())
-                    .prevConnectionStatus(app.getConnectionStatus())
-                    .createdTime(now)
-                    .build());
-        }
-
-        GarbageConnectionLog savedLog = GarbageConnectionLog.builder()
-                .id(logId)
-                .garbageId(targets.get(0).getId())
-                .applicationNo(targets.get(0).getApplicationNo())
-                .requestNo(requestNo)
-                .requestType("RECONNECTION")
-                .scope(logInput.getScope() != null ? logInput.getScope() : "SELECTED")
-                .propertyId(targets.get(0).getPropertyId())
-                .status("INITIATED")
-                .workflowStatus("PENDING_FOR_VERIFICATION")
-                .reason(logInput.getReason() != null ? logInput.getReason() : "RECONNECTION_REQUEST")
-                .reasonDetails(logInput.getReasonDetails())
-                .effectiveFrom(logInput.getEffectiveFrom() != null ? logInput.getEffectiveFrom() : LocalDate.now())
-                .effectiveTo(logInput.getEffectiveTo())
-                .feeCharged(logInput.getFeeCharged() != null ? logInput.getFeeCharged() : BigDecimal.ZERO)
-                .requestedByUuid(callerUuid)
-                .requestSnapshot(logInput.getRequestSnapshot())
-                .targets(logTargets)
-                .auditDetails(AuditDetails.builder().createdBy(callerUuid).createdTime(now).build())
-                .build();
-
-        garbageRepository.saveConnectionLog(savedLog);
-
-        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
-        return GarbageConnectionResponse.builder()
-                .responseInfo(responseInfo)
-                .connectionLog(savedLog)
-                .affectedApplications(targets)
-                .build();
-    }
-
-    @Override
-    public GarbageConnectionResponse permanentDisconnect(GarbageConnectionRequest connectionRequest) {
-        validateConnectionRequest(connectionRequest);
-        RequestInfo requestInfo = connectionRequest.getRequestInfo();
-        GarbageConnectionLog logInput = connectionRequest.getConnectionLog();
-        String callerUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : null;
-
-        List<GarbageApplication> targets = resolveTargetApplications(connectionRequest);
-        if (CollectionUtils.isEmpty(targets)) {
-            throw new CustomException("INVALID_TARGET", "No valid target applications found for permanent disconnection.");
-        }
-
-        for (GarbageApplication app : targets) {
-            if (callerUuid != null && !callerUuid.equalsIgnoreCase(app.getOwnerUuid())) {
-                throw new CustomException("UNAUTHORIZED_CONNECTION_ACTION", "Only property owner can initiate permanent disconnection.");
-            }
-            if ("PERMANENTLY_DISCONNECTED".equalsIgnoreCase(app.getConnectionStatus())) {
-                throw new CustomException("TARGET_TERMINATED", "Connection already permanently disconnected: " + app.getApplicationNo());
-            }
-            validateArrearsCleared(app, requestInfo);
-
-            // Section 7 Rule: Parent permanent disconnection blocked if tenants are active unless scope is PROPERTY
-            if (app.getParentApplicationNo() == null && !"PROPERTY".equalsIgnoreCase(logInput.getScope())) {
-                GarbageSearchCriteria childCrit = GarbageSearchCriteria.builder()
-                        .tenantId(app.getTenantId())
-                        .propertyId(Collections.singletonList(app.getPropertyId()))
-                        .build();
-                List<GarbageApplication> propApps = garbageRepository.getGarbageApplications(childCrit);
-                boolean hasActiveChildren = propApps.stream()
-                        .anyMatch(c -> app.getApplicationNo().equalsIgnoreCase(c.getParentApplicationNo())
-                                && !"PERMANENTLY_DISCONNECTED".equalsIgnoreCase(c.getConnectionStatus())
-                                && !"DISCONNECTED".equalsIgnoreCase(c.getConnectionStatus()));
-                if (hasActiveChildren) {
-                    throw new CustomException("INVALID_CONNECTION_ACTION",
-                            "Parent connection cannot be permanently disconnected while child tenant connections are active. Disconnect tenants first or use scope PROPERTY.");
-                }
-            }
-        }
-
-        long now = System.currentTimeMillis();
-        String tenantId = targets.get(0).getTenantId();
-        String requestNo = idgenUtil.generateRequestNumber(requestInfo, tenantId, "PERMANENT_DISCONNECTION");
-        String logId = UUID.randomUUID().toString();
-
-        List<GarbageConnectionLogTarget> logTargets = new ArrayList<>();
-        for (GarbageApplication app : targets) {
-            logTargets.add(GarbageConnectionLogTarget.builder()
-                    .id(UUID.randomUUID().toString())
-                    .connectionLogId(logId)
-                    .garbageId(app.getId())
-                    .applicationNo(app.getApplicationNo())
-                    .prevConnectionStatus(app.getConnectionStatus())
-                    .createdTime(now)
-                    .build());
-        }
-
-        GarbageConnectionLog savedLog = GarbageConnectionLog.builder()
-                .id(logId)
-                .garbageId(targets.get(0).getId())
-                .applicationNo(targets.get(0).getApplicationNo())
-                .requestNo(requestNo)
-                .requestType("PERMANENT_DISCONNECTION")
-                .scope(logInput.getScope() != null ? logInput.getScope() : "SELECTED")
-                .propertyId(targets.get(0).getPropertyId())
-                .status("INITIATED")
-                .workflowStatus("PENDING_FOR_VERIFICATION")
-                .reason(logInput.getReason() != null ? logInput.getReason() : "PERMANENT_DISCONNECTION_REQUEST")
-                .reasonDetails(logInput.getReasonDetails())
-                .effectiveFrom(logInput.getEffectiveFrom() != null ? logInput.getEffectiveFrom() : LocalDate.now())
-                .effectiveTo(logInput.getEffectiveTo())
-                .feeCharged(logInput.getFeeCharged() != null ? logInput.getFeeCharged() : BigDecimal.ZERO)
-                .requestedByUuid(callerUuid)
-                .targets(logTargets)
-                .auditDetails(AuditDetails.builder().createdBy(callerUuid).createdTime(now).build())
-                .build();
-
-        garbageRepository.saveConnectionLog(savedLog);
-
-        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
-        return GarbageConnectionResponse.builder()
-                .responseInfo(responseInfo)
-                .connectionLog(savedLog)
-                .affectedApplications(targets)
-                .build();
-    }
-
-    @Override
-    public GarbageConnectionResponse updateConnection(GarbageConnectionRequest connectionRequest) {
-        validateConnectionRequest(connectionRequest);
-        RequestInfo requestInfo = connectionRequest.getRequestInfo();
-        GarbageConnectionLog logInput = connectionRequest.getConnectionLog();
-        String userUuid = requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : null;
-        long now = System.currentTimeMillis();
-
-        List<GarbageApplication> targets = resolveTargetApplications(connectionRequest);
-        String action = logInput.getStatus() != null ? logInput.getStatus() : "APPROVED";
-
-        if ("APPROVED".equalsIgnoreCase(action)) {
-            for (GarbageApplication app : targets) {
-                if ("RECONNECTION".equalsIgnoreCase(logInput.getRequestType())) {
-                    app.setConnectionStatus("ACTIVE");
-                    notificationService.processReconnectNotification(app);
-                } else if ("PERMANENT_DISCONNECTION".equalsIgnoreCase(logInput.getRequestType())) {
-                    app.setConnectionStatus("PERMANENTLY_DISCONNECTED");
-                    notificationService.processDisconnectNotification(app, LocalDate.now());
-                }
-                if (app.getAuditDetails() != null) {
-                    app.getAuditDetails().setLastModifiedBy(userUuid);
-                    app.getAuditDetails().setLastModifiedTime(now);
-                }
-            }
-
-            GarbageRequest updateRequest = GarbageRequest.builder()
-                    .requestInfo(requestInfo)
-                    .garbageApplications(targets)
-                    .build();
-            garbageRepository.updateGarbageApplication(updateRequest);
-
-            logInput.setStatus("APPROVED");
-            logInput.setApprovedByUuid(userUuid);
-            logInput.setApprovedTime(now);
-        } else if ("REJECTED".equalsIgnoreCase(action)) {
-            logInput.setStatus("REJECTED");
-        }
-
-        garbageRepository.saveConnectionLog(logInput);
-
-        ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(requestInfo, true);
-        return GarbageConnectionResponse.builder()
-                .responseInfo(responseInfo)
-                .connectionLog(logInput)
-                .affectedApplications(targets)
-                .build();
-    }
 
     @Override
     public List<GarbageConnectionLog> searchConnectionHistory(String propertyId, String applicationNo, RequestInfo requestInfo) {
         return garbageRepository.getConnectionLogs(propertyId, applicationNo);
     }
 
-    private List<GarbageApplication> resolveTargetApplications(GarbageConnectionRequest request) {
-        GarbageConnectionLog logInput = request.getConnectionLog();
-        List<String> targetNos = request.getTargetApplicationNos();
 
-        if ("PROPERTY".equalsIgnoreCase(logInput.getScope()) && StringUtils.isNotBlank(logInput.getPropertyId())) {
-            GarbageSearchCriteria crit = GarbageSearchCriteria.builder()
-                    .propertyId(Collections.singletonList(logInput.getPropertyId()))
-                    .build();
-            return garbageRepository.getGarbageApplications(crit);
-        } else if (!CollectionUtils.isEmpty(targetNos)) {
-            GarbageSearchCriteria crit = GarbageSearchCriteria.builder()
-                    .applicationNumber(targetNos)
-                    .build();
-            return garbageRepository.getGarbageApplications(crit);
-        } else if (StringUtils.isNotBlank(logInput.getApplicationNo())) {
-            GarbageSearchCriteria crit = GarbageSearchCriteria.builder()
-                    .applicationNumber(Collections.singletonList(logInput.getApplicationNo()))
-                    .build();
-            return garbageRepository.getGarbageApplications(crit);
+    private void normalizeAndAllocateFloors(GarbageRequest garbageRequest) {
+        if (garbageRequest == null || CollectionUtils.isEmpty(garbageRequest.getGarbageApplications())) {
+            return;
         }
-        return Collections.emptyList();
-    }
 
-    private void validateConnectionRequest(GarbageConnectionRequest request) {
-        if (request == null || request.getRequestInfo() == null) {
-            throw new CustomException("INVALID_REQUEST", "RequestInfo cannot be null");
+        Map<String, List<GarbageApplication>> appsByProperty = new LinkedHashMap<>();
+        for (GarbageApplication app : garbageRequest.getGarbageApplications()) {
+            String propId = StringUtils.isNotBlank(app.getPropertyId()) ? app.getPropertyId() : GrbgConstants.DEFAULT_STRING;
+            appsByProperty.computeIfAbsent(propId, k -> new ArrayList<>()).add(app);
         }
-        if (request.getConnectionLog() == null) {
-            throw new CustomException("INVALID_REQUEST", "connectionLog cannot be null");
+
+        for (Map.Entry<String, List<GarbageApplication>> entry : appsByProperty.entrySet()) {
+            List<GarbageApplication> propApps = entry.getValue();
+            Set<String> usedFloors = new HashSet<>();
+
+            // 1. Process owner application first
+            for (GarbageApplication app : propApps) {
+                boolean isOwner = Boolean.TRUE.equals(app.getIsOwner());
+                if (isOwner) {
+                    String floor = app.getFloorNo();
+                    if (GrbgConstants.FLOOR_NONE.equalsIgnoreCase(floor) || GrbgConstants.FLOOR_NULL.equalsIgnoreCase(floor)) {
+                        floor = null;
+                    }
+                    // Only default to "0" if single application (no tenants) and floor is blank
+                    if (StringUtils.isBlank(floor) && propApps.size() == 1) {
+                        floor = GrbgConstants.FLOOR_ZERO;
+                    }
+                    app.setFloorNo(floor);
+                    if (app.getGarbageSpecification() != null) {
+                        app.getGarbageSpecification().setFloorNo(floor);
+                    }
+                    if (StringUtils.isNotBlank(floor)) {
+                        usedFloors.add(floor);
+                    }
+                }
+            }
+
+            // 2. Process non-owner (tenant) applications
+            int tenantFloorCounter = usedFloors.contains(GrbgConstants.FLOOR_ZERO) ? 1 : 0;
+            for (GarbageApplication app : propApps) {
+                boolean isOwner = Boolean.TRUE.equals(app.getIsOwner());
+                if (!isOwner) {
+                    String floor = app.getFloorNo();
+                    if (StringUtils.isBlank(floor) || usedFloors.contains(floor)) {
+                        while (usedFloors.contains(String.valueOf(tenantFloorCounter))) {
+                            tenantFloorCounter++;
+                        }
+                        floor = String.valueOf(tenantFloorCounter);
+                        tenantFloorCounter++;
+                    }
+                    app.setFloorNo(floor);
+                    if (app.getGarbageSpecification() != null) {
+                        app.getGarbageSpecification().setFloorNo(floor);
+                    }
+                    usedFloors.add(floor);
+                }
+            }
         }
     }
 
     private void validateCreateRequest(GarbageRequest request) {
         if (request == null || request.getRequestInfo() == null) {
-            throw new CustomException("INVALID_REQUEST", "RequestInfo cannot be null");
+            throw new CustomException(GrbgConstants.ERROR_INVALID_REQUEST, "RequestInfo cannot be null");
         }
         if (CollectionUtils.isEmpty(request.getGarbageApplications())) {
-            throw new CustomException("INVALID_REQUEST", "garbageApplications list cannot be empty");
+            throw new CustomException(GrbgConstants.ERROR_INVALID_REQUEST, "garbageApplications list cannot be empty");
         }
+
+        // Check for duplicate floors within the request itself (excluding null/non-resident floors)
+        Set<String> requestFloorKeys = new HashSet<>();
+        for (GarbageApplication app : request.getGarbageApplications()) {
+            if (StringUtils.isNotBlank(app.getFloorNo())) {
+                String propId = StringUtils.isNotBlank(app.getPropertyId()) ? app.getPropertyId() : "";
+                String key = propId + "_" + app.getFloorNo();
+                if (!requestFloorKeys.add(key)) {
+                    throw new CustomException(GrbgConstants.ERROR_DUPLICATE_APPLICATION,
+                            "Multiple applications in the same request cannot share Property: " + propId + " and Floor: " + app.getFloorNo());
+                }
+            }
+        }
+
         for (GarbageApplication app : request.getGarbageApplications()) {
             if (StringUtils.isBlank(app.getTenantId())) {
-                throw new CustomException("INVALID_TENANT_ID", "TenantId is required for garbage application");
+                throw new CustomException(GrbgConstants.ERROR_INVALID_TENANT_ID, "TenantId is required for garbage application");
             }
             if (StringUtils.isBlank(app.getPropertyId())) {
-                throw new CustomException("INVALID_PROPERTY_ID", "PropertyId is mandatory for garbage application");
+                throw new CustomException(GrbgConstants.ERROR_INVALID_PROPERTY_ID, "PropertyId is mandatory for garbage application");
             }
 
-            // Check if active connection already exists on this property and floor
-            String floorNo = app.getFloorNo();
-            if (StringUtils.isBlank(floorNo) && app.getGarbageSpecification() != null) {
-                floorNo = app.getGarbageSpecification().getFloorNo();
-            }
-            if (StringUtils.isBlank(floorNo)) {
-                floorNo = Boolean.TRUE.equals(app.getIsOwner()) ? "0" : "1";
-            }
-
-            GarbageSearchCriteria criteria = GarbageSearchCriteria.builder()
-                    .tenantId(app.getTenantId())
-                    .propertyId(Collections.singletonList(app.getPropertyId()))
-                    .build();
-            List<GarbageApplication> existingApps = garbageRepository.getGarbageApplications(criteria);
-            if (!CollectionUtils.isEmpty(existingApps)) {
-                final String targetFloor = floorNo;
-                boolean duplicateExists = existingApps.stream().anyMatch(existing -> {
-                    String existingFloor = existing.getFloorNo();
-                    if (StringUtils.isBlank(existingFloor) && existing.getGarbageSpecification() != null) {
-                        existingFloor = existing.getGarbageSpecification().getFloorNo();
+            // Check if active connection already exists on this property and floor (if floor is occupied)
+            if (StringUtils.isNotBlank(app.getFloorNo())) {
+                final String targetFloor = app.getFloorNo();
+                GarbageSearchCriteria criteria = GarbageSearchCriteria.builder()
+                        .tenantId(app.getTenantId())
+                        .propertyId(Collections.singletonList(app.getPropertyId()))
+                        .build();
+                List<GarbageApplication> existingApps = garbageRepository.getGarbageApplications(criteria);
+                if (!CollectionUtils.isEmpty(existingApps)) {
+                    boolean duplicateExists = existingApps.stream().anyMatch(existing -> {
+                        String existingFloor = existing.getFloorNo();
+                        if (StringUtils.isBlank(existingFloor) && existing.getGarbageSpecification() != null) {
+                            existingFloor = existing.getGarbageSpecification().getFloorNo();
+                        }
+                        return targetFloor.equalsIgnoreCase(existingFloor)
+                                && !GrbgConstants.STATUS_PERMANENTLY_DISCONNECTED.equalsIgnoreCase(existing.getConnectionStatus())
+                                && !GrbgConstants.STATUS_REJECTED.equalsIgnoreCase(existing.getStatus());
+                    });
+                    if (duplicateExists) {
+                        throw new CustomException(GrbgConstants.ERROR_DUPLICATE_APPLICATION,
+                                "An active garbage connection already exists for Property: " + app.getPropertyId() + " on Floor: " + targetFloor);
                     }
-                    if (StringUtils.isBlank(existingFloor)) {
-                        existingFloor = "0";
-                    }
-                    return targetFloor.equalsIgnoreCase(existingFloor)
-                            && !"PERMANENTLY_DISCONNECTED".equalsIgnoreCase(existing.getConnectionStatus())
-                            && !"REJECTED".equalsIgnoreCase(existing.getStatus());
-                });
-                if (duplicateExists) {
-                    throw new CustomException("DUPLICATE_APPLICATION",
-                            "An active garbage connection already exists for Property: " + app.getPropertyId() + " on Floor: " + targetFloor);
                 }
             }
         }
@@ -1051,14 +837,14 @@ public class GarbageServiceImpl implements GarbageService {
 
     private void validateUpdateRequest(GarbageRequest request) {
         if (request == null || request.getRequestInfo() == null) {
-            throw new CustomException("INVALID_REQUEST", "RequestInfo cannot be null");
+            throw new CustomException(GrbgConstants.ERROR_INVALID_REQUEST, "RequestInfo cannot be null");
         }
         if (CollectionUtils.isEmpty(request.getGarbageApplications())) {
-            throw new CustomException("INVALID_REQUEST", "garbageApplications list cannot be empty");
+            throw new CustomException(GrbgConstants.ERROR_INVALID_REQUEST, "garbageApplications list cannot be empty");
         }
         for (GarbageApplication app : request.getGarbageApplications()) {
             if (StringUtils.isBlank(app.getApplicationNo()) && app.getId() == null) {
-                throw new CustomException("INVALID_APPLICATION", "ApplicationNo or ID is mandatory for update");
+                throw new CustomException(GrbgConstants.ERROR_INVALID_APPLICATION, "ApplicationNo or ID is mandatory for update");
             }
         }
     }

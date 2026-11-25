@@ -17,8 +17,8 @@ export const GCSearch = {
     return response?.garbageApplications?.[0] || null;
   },
 
-  BookingDetails: ({ application, garbageApplications, garbageAccounts, t }) => {
-    const app = application || garbageApplications || garbageAccounts || {};
+  BookingDetails: ({ application, garbageApplications, t }) => {
+    const app = application || garbageApplications || {};
     const address = app?.propertyLocation || {};
     const collectionUnit = app?.garbageSpecification || {};
     const applicant = app?.applicantDetails?.[0] || {};
@@ -107,7 +107,7 @@ export const GCSearch = {
   },
 
   applicationDetails: async (t, tenantId, applicationNo, userType, args) => {
-    const response = await GCSearch.application(tenantId, { applicationNumber: [applicationNo], ...args });
+    const response = await GCSearch.application(tenantId, { applicationNumber: applicationNo, applicationNo: applicationNo, ...args });
 
     return {
       tenantId: response?.tenantId || tenantId,

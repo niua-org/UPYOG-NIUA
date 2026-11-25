@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.garbageservice.config.GarbageServiceConfig;
 import org.egov.garbageservice.kafka.Producer;
+import org.egov.garbageservice.util.GrbgConstants;
 import org.egov.garbageservice.web.models.garbage.GarbageApplication;
 import org.egov.garbageservice.web.models.garbage.GarbageRequest;
 import org.egov.garbageservice.web.models.notification.SMSRequest;
@@ -65,7 +66,7 @@ public class NotificationService {
                 SMSRequest smsRequest = SMSRequest.builder()
                         .mobileNumber(mobileNumber)
                         .message(message)
-                        .category("TRANSACTION")
+                        .category(GrbgConstants.NOTIFICATION_CATEGORY_TRANSACTION)
                         .build();
 
                 producer.push(config.getNotificationSmsTopic(), smsRequest);
@@ -90,7 +91,7 @@ public class NotificationService {
             SMSRequest smsRequest = SMSRequest.builder()
                     .mobileNumber(app.getMobileNumber())
                     .message(message)
-                    .category("TRANSACTION")
+                    .category(GrbgConstants.NOTIFICATION_CATEGORY_TRANSACTION)
                     .build();
 
             producer.push(config.getNotificationSmsTopic(), smsRequest);
@@ -115,7 +116,7 @@ public class NotificationService {
             SMSRequest smsRequest = SMSRequest.builder()
                     .mobileNumber(app.getMobileNumber())
                     .message(message)
-                    .category("TRANSACTION")
+                    .category(GrbgConstants.NOTIFICATION_CATEGORY_TRANSACTION)
                     .build();
 
             producer.push(config.getNotificationSmsTopic(), smsRequest);
@@ -139,7 +140,7 @@ public class NotificationService {
             SMSRequest smsRequest = SMSRequest.builder()
                     .mobileNumber(app.getMobileNumber())
                     .message(message)
-                    .category("TRANSACTION")
+                    .category(GrbgConstants.NOTIFICATION_CATEGORY_TRANSACTION)
                     .build();
 
             producer.push(config.getNotificationSmsTopic(), smsRequest);
@@ -163,7 +164,7 @@ public class NotificationService {
             SMSRequest smsRequest = SMSRequest.builder()
                     .mobileNumber(app.getMobileNumber())
                     .message(message)
-                    .category("TRANSACTION")
+                    .category(GrbgConstants.NOTIFICATION_CATEGORY_TRANSACTION)
                     .build();
 
             producer.push(config.getNotificationSmsTopic(), smsRequest);
