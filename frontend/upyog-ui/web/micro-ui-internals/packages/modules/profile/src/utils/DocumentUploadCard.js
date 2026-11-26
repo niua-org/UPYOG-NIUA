@@ -81,7 +81,7 @@ const DocumentUploadCard = ({ label, required, options, selectedType, onSelectTy
 
     const allowedMime = ["image/jpeg", "image/png", "image/jpg", "application/pdf"].includes(selectedFile.type);
     const hasAllowedExtension = /\.(jpe?g|png|pdf)$/i.test(selectedFile.name || "");
-    const isAllowedType = selectedFile.type ? allowedMime : hasAllowedExtension;
+    const isAllowedType = (selectedFile.type ? allowedMime : true) && hasAllowedExtension;
 
     if (!isAllowedType) {
       setUploadError(t("PROFILE_DOC_INVALID_TYPE", "Only .jpg, .jpeg, .png and .pdf files are allowed"));

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import {
   Dropdown,
   FormStep,
@@ -149,28 +149,35 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   // `?member=<uuid>` = a member added through Aadhaar; no param (or own uuid) = the applicant themself.
   // Everything below prefills from `user`: the logged-in user's profile, or the Aadhaar-verified details of the member.
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const memberParam = searchParams.get("member");
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const isSelf = !memberParam || memberParam === Digit.UserService.getUser()?.info?.uuid;
+  const routerVerifiedMember = location?.state?.verifiedMember;
 
   const user = useMemo(() => {
     if (isSelf) return loggedInUser;
-    // Strictly require matching memberParam with the stored verified member uuid
-    const verified = getVerifiedMember();
-    if (!verified || verified.userUuid !== memberParam) {
+    // Prefer member passed in router navigation state (in-memory, keeps Aadhaar mobile locked and avoids sessionStorage persistence);
+    // fall back to getVerifiedMember() from sessionStorage if navigating back or refreshing.
+    const routerMatch =
+      routerVerifiedMember?.userUuid === memberParam || routerVerifiedMember?.uuid === memberParam;
+    const verified = routerMatch ? routerVerifiedMember : getVerifiedMember();
+    if (!verified || (verified.userUuid !== memberParam && verified.uuid !== memberParam)) {
       return {};
     }
     const gender = verified.gender || verified.demographics?.gender;
-    const mob = verified.mobileNumber || verified.demographics?.mobileNumber;
+    const mob = routerMatch
+      ? routerVerifiedMember.mobileNumber || routerVerifiedMember.demographics?.mobileNumber
+      : verified.mobileNumber || verified.demographics?.mobileNumber;
     return {
-      userUuid: verified.userUuid,
+      userUuid: verified.userUuid || verified.uuid,
       name: verified.demographics?.name || verified.name || "",
       dob: verified.demographics?.dob || verified.dob || "",
       // Strictly accept only valid 10-digit mobile numbers; masked strings (e.g. XXXXXX1234) fallback to ""
       mobileNumber: /^\d{10}$/.test(String(mob || "")) ? String(mob) : "",
       gender: String(gender || "").length === 1 ? { M: "MALE", F: "FEMALE", T: "TRANSGENDER" }[String(gender).toUpperCase()] : gender,
     };
-  }, [isSelf, memberParam, loggedInUser]);
+  }, [isSelf, memberParam, loggedInUser, routerVerifiedMember]);
 
   // Profile Avatar State
   const [photoId, setPhotoId] = useState(saved.photo || user?.photo || "");

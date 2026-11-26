@@ -21,7 +21,10 @@ const AddFamilyMember = ({ isModal = false, isOpen = true, onClose, onSuccess })
         if (onSuccess) {
           onSuccess({ verifiedMember, aadhaarLast4, maskedMobile });
         } else {
-          navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
+          // Pass verifiedMember in router state so mobile is prefilled & locked without storing PII in sessionStorage
+          navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`, {
+            state: { verifiedMember },
+          });
         }
       }}
     />

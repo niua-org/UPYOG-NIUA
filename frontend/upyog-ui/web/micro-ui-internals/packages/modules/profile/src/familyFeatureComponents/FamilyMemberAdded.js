@@ -425,7 +425,10 @@ const FamilyMemberAdded = () => {
           onClose={() => setShowAddMemberModal(false)}
           onSuccess={({ verifiedMember }) => {
             setShowAddMemberModal(false);
-            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
+            // Pass verifiedMember in router state so mobile is prefilled & locked without storing PII in sessionStorage
+            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`, {
+              state: { verifiedMember },
+            });
           }}
         />
       )}
