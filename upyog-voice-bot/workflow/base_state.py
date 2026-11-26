@@ -22,3 +22,6 @@ class BaseAgentState(TypedDict, total=False):
     
     # Their Login Profile & Auth Tokens, stored as a dictionary so APIs can access the UUID/auth_token instantly
     user_profile: Dict[str, Any]
+
+    # The user's preferred or detected language code ('en', 'hi')
+    user_language: Optional[str]

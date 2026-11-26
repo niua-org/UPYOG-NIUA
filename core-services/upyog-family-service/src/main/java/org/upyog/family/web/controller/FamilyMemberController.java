@@ -6,11 +6,14 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.ResponseInfo;
 import org.upyog.family.domain.service.FamilyMemberService;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AddMemberRequest;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyResponse;
 import org.upyog.family.web.contract.JoinFamilyRequest;
+import org.upyog.family.web.contract.JoinFamilyResponse;
+import org.upyog.family.web.contract.JoinRequestResult;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,14 @@ import java.util.Collections;
 /**
  * REST Controller exposing member lifecycle management endpoints (Add, Join, Leave) in UPYOG.
  *
+ * <p>Exposes member-level mutations adhering to citizen consent protocols, Aadhaar e-KYC integration,
+ * and multi-family residency rules. Coordinates with {@link FamilyMemberService} to handle:</p>
+ * <ul>
+ *   <li>{@code POST /v1/member/_add} - HoF adds a new member with verified Aadhaar consent.</li>
+ *   <li>{@code POST /v1/member/_join} - Citizen joins an existing family unit upon verified HoF OTP consent.</li>
+ *   <li>{@code POST /v1/member/_leave} - Soft-deactivates an exiting member with statutory exit reasons.</li>
+ * </ul>
+ *
  * @author UPYOG Team
  * @since 1.0.0
  */
@@ -37,6 +48,12 @@ public class FamilyMemberController {
     private final FamilyMemberService memberService;
     private final ResponseInfoFactory responseInfoFactory;
 
+    /**
+     * Constructs {@link FamilyMemberController} with required service and factory collaborators.
+     *
+     * @param memberService the domain service orchestrating member lifecycle mutations
+     * @param responseInfoFactory utility factory for standardizing {@link ResponseInfo} headers
+     */
     @Autowired
     public FamilyMemberController(FamilyMemberService memberService, ResponseInfoFactory responseInfoFactory) {
         this.memberService = memberService;
@@ -45,10 +62,16 @@ public class FamilyMemberController {
 
     /**
      * Adds a new verified member to an existing family unit with verified Aadhaar OTP consent in UPYOG.
-     * Looks up or provisions the citizen record in the user service and links the member with ACTIVE status.
      *
-     * @param request the add member request envelope containing member details, relationship with head, and consent token
-     * @return response entity containing the updated Family aggregate with HTTP 200 OK status
+     * <p>Looks up or provisions the citizen record in {@code egov-user}, verifies multi-family residency
+     * exclusivity, and links the member to the family aggregate with {@code ACTIVE} status.</p>
+     *
+     * @param request the add member request envelope containing member details, relationship with head, and consent token;
+     *                must not be {@code null}.
+     * @return {@link ResponseEntity} wrapping {@link FamilyResponse} containing the updated {@link Family} aggregate
+     *         with HTTP 200 OK status.
+     * @throws org.egov.tracer.model.CustomException if caller is unauthorized, target family is missing,
+     *         or Aadhaar consent is invalid.
      */
     @PostMapping("/_add")
     @Operation(summary = "Add a verified member to an existing Family Unit with Aadhaar OTP consent in UPYOG")
@@ -67,24 +90,40 @@ public class FamilyMemberController {
     }
 
     /**
-     * Processes an independent citizen request to join an existing family unit upon Head of Family authorization in UPYOG.
-     * Verifies HoF authorization and registers the applicant as a member of the family.
+     * Processes an independent citizen request to directly join an existing family unit upon Head of Family authorization.
      *
-     * @param request the join family request envelope containing family ID, applicant UUID, and HoF consent token
-     * @return response entity containing the updated Family aggregate with HTTP 200 OK status
+     * <p>Validates the HoF consent token generated during the {@code /family/v1/family/_verifyOtp} flow,
+     * registers the applicant with status {@code JOINED}, and enqueues updates to the Kafka persister.</p>
+     *
+     * @param request the join family request envelope containing family ID, applicant UUID, relationship, and HoF consent token;
+     *                must not be {@code null}.
+     * @return {@link ResponseEntity} wrapping {@link JoinFamilyResponse} containing the join confirmation result
+     *         with HTTP 200 OK status.
+     * @throws org.egov.tracer.model.CustomException if target family does not exist, consent token is invalid,
+     *         or applicant is already in an active family.
      */
     @PostMapping("/_join")
     @Operation(summary = "Citizen requests to join an existing Family Unit with HoF authorization in UPYOG")
-    public ResponseEntity<FamilyResponse> joinFamily(@Valid @RequestBody JoinFamilyRequest request) {
+    public ResponseEntity<JoinFamilyResponse> joinFamily(@Valid @RequestBody JoinFamilyRequest request) {
         log.info("[UPYOG-MEMBER-CONTROLLER] Received /_join request for family: {} by applicant: {}",
                 request.getFamilyId(), request.getApplicantUserUuid());
         Family updatedFamily = memberService.joinFamily(request);
         ResponseInfo responseInfo = responseInfoFactory.createResponseInfoFromRequestInfo(request.getRequestInfo(), true);
 
-        FamilyResponse response = FamilyResponse.builder()
+        Long requestedOn = (request.getRequestInfo() != null && request.getRequestInfo().getTs() != null)
+                ? request.getRequestInfo().getTs()
+                : System.currentTimeMillis();
+
+        JoinRequestResult joinResult = JoinRequestResult.builder()
+                .familyId(request.getFamilyId())
+                .userUuid(request.getApplicantUserUuid())
+                .status(FamilyConstants.STATUS_JOINED)
+                .requestedOn(requestedOn)
+                .build();
+
+        JoinFamilyResponse response = JoinFamilyResponse.builder()
                 .responseInfo(responseInfo)
-                .families(Collections.singletonList(updatedFamily))
-                .totalCount(1)
+                .joinRequest(joinResult)
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -92,13 +131,19 @@ public class FamilyMemberController {
 
     /**
      * Processes a member exit from a family unit due to marriage, demise, relocation, or other reasons in UPYOG.
-     * Updates member status to EXITED, records exit date and reason, and prevents a solitary Head of Family from leaving.
      *
-     * @param request the leave family request envelope containing family ID, member UUID, and exit reason
-     * @return response entity containing the updated Family aggregate with HTTP 200 OK status
+     * <p>Updates member status to {@code EXITED}, records exit timestamp and statutory reason, and guarantees that
+     * a solitary Head of Family cannot exit without first completing succession via {@code /family/v1/head/_assign}.</p>
+     *
+     * @param request the leave family request envelope containing family ID, member UUID, and exit reason;
+     *                must not be {@code null}.
+     * @return {@link ResponseEntity} wrapping {@link FamilyResponse} containing the updated {@link Family} aggregate
+     *         with HTTP 200 OK status.
+     * @throws org.egov.tracer.model.CustomException if target family/member is not found, departing member is the sole HoF,
+     *         or caller is unauthorized.
      */
     @PostMapping("/_leave")
-    @Operation(summary = "Process a member leaving a Family Unit with exit reason and status tracking in UPYOG")
+    @Operation(summary = "Record a member exit from a Family Unit (marriage, demise, relocation) in UPYOG")
     public ResponseEntity<FamilyResponse> leaveFamily(@Valid @RequestBody LeaveFamilyRequest request) {
         log.info("[UPYOG-MEMBER-CONTROLLER] Received /_leaveFamily request for member: {} in family: {}",
                 request.getMemberUserUuid(), request.getFamilyId());

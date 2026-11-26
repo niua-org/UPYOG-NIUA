@@ -1,6 +1,7 @@
 package org.upyog.family.domain.service;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,24 +18,34 @@ import org.upyog.family.domain.validator.JoinFamilyValidator;
 import org.upyog.family.domain.validator.LeaveFamilyValidator;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.UserClient;
+import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.util.KafkaProducer;
 import org.upyog.family.web.contract.AddMemberRequest;
 import org.upyog.family.web.contract.AuditDetails;
+import org.upyog.family.web.contract.CitizenProfile;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
 import org.upyog.family.web.contract.FamilySearchCriteria;
 import org.upyog.family.web.contract.JoinFamilyRequest;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
+import org.upyog.family.web.contract.UrbanPropertyDetail;
+import org.upyog.family.web.contract.UserIncomeDetail;
+import org.upyog.family.web.contract.UserProperty;
+import org.upyog.family.web.contract.UserVehicleDetail;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -105,7 +116,7 @@ class FamilyMemberServiceImplTest {
                 .consentToken("CONSENT-VERIFIED-12345")
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
 
         Family result = memberService.addMember(request);
 
@@ -127,10 +138,10 @@ class FamilyMemberServiceImplTest {
                 .tenantId("pg.citya")
                 .applicantUserUuid("applicant-uuid-3")
                 .relationshipWithHead("DAUGHTER")
-                .hofConsentOtp("OTP-1234")
+                .txnId("OTP-1234")
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
 
         Family result = memberService.joinFamily(request);
 
@@ -161,7 +172,7 @@ class FamilyMemberServiceImplTest {
                 .exitReason(ExitReason.MARRIAGE)
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
 
         Family result = memberService.leaveFamily(request);
 
@@ -195,7 +206,7 @@ class FamilyMemberServiceImplTest {
                 .consentToken("CONSENT-VERIFIED-999")
                 .build();
 
-        when(familyRepository.search(any(FamilySearchCriteria.class))).thenReturn(Collections.singletonList(activeFamily));
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
         when(userClient.searchUsersByMobile(any(), any(), any())).thenReturn(Collections.emptyList());
         when(userClient.createCitizenProfile(any(), any())).thenReturn(org.upyog.family.web.contract.CitizenProfile.builder()
                 .uuid("provisioned-uuid-99")
@@ -211,5 +222,179 @@ class FamilyMemberServiceImplTest {
         assertEquals("provisioned-uuid-99", added.getUserUuid());
         assertTrue(added.getActive());
         verify(userClient).createCitizenProfile(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should successfully join member with declared assets, sync to user service, and publish kafka event")
+    void joinFamily_Success_WithDeclaredAssets() {
+        CitizenProfile profile = CitizenProfile.builder()
+                .name("Joined Citizen")
+                .mobileNumber("9876543222")
+                .gender("MALE")
+                .caste("OBC")
+                .build();
+
+        UserProperty property = UserProperty.builder()
+                .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .urbanPropertyDetail(UrbanPropertyDetail.builder().upyogPropertyId("PG-PT-001").build())
+                .build();
+
+        UserIncomeDetail income = UserIncomeDetail.builder()
+                .occupation("SALARIED_PRIVATE")
+                .annualIncome(BigDecimal.valueOf(600000))
+                .build();
+
+        UserVehicleDetail vehicle = UserVehicleDetail.builder()
+                .vehicleNumber("PB-01-XX-9999")
+                .build();
+
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .requestInfo(new RequestInfo())
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-99")
+                .relationshipWithHead("SON")
+                .txnId("TXN-CONSENT-12345")
+                .citizenDetails(profile)
+                .properties(Collections.singletonList(property))
+                .income(income)
+                .vehicles(Collections.singletonList(vehicle))
+                .build();
+
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
+        when(userClient.syncMemberAssets(any(), eq("pg.citya"), any())).thenReturn(true);
+
+        Family result = memberService.joinFamily(request);
+
+        assertNotNull(result);
+        assertEquals(2, result.getMembers().size());
+        FamilyMember joined = result.getMembers().get(1);
+        assertEquals("applicant-uuid-99", joined.getUserUuid());
+        assertEquals("Joined Citizen", joined.getName());
+        assertEquals("9876543222", joined.getMobileNumber());
+        assertEquals(1, joined.getProperties().size());
+        assertEquals("pg.citya", joined.getProperties().get(0).getTenantId());
+        assertEquals("applicant-uuid-99", joined.getProperties().get(0).getUserUuid());
+        assertEquals(income, joined.getIncome());
+        assertEquals(1, joined.getVehicles().size());
+
+        verify(userClient).syncMemberAssets(any(), eq("pg.citya"), any());
+        verify(kafkaProducer).push(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should successfully add member with declared assets at root level, sync to user service, and publish kafka event")
+    void addMember_Success_WithRootLevelDeclaredAssets() {
+        CitizenProfile profile = CitizenProfile.builder()
+                .name("Added Citizen")
+                .mobileNumber("9876543111")
+                .gender("FEMALE")
+                .caste("GENERAL")
+                .build();
+
+        UserProperty property = UserProperty.builder()
+                .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .urbanPropertyDetail(UrbanPropertyDetail.builder().upyogPropertyId("PG-PT-002").build())
+                .build();
+
+        UserIncomeDetail income = UserIncomeDetail.builder()
+                .occupation("BUSINESS")
+                .annualIncome(BigDecimal.valueOf(800000))
+                .build();
+
+        UserVehicleDetail vehicle = UserVehicleDetail.builder()
+                .vehicleNumber("CH-01-YY-1111")
+                .build();
+
+        AddMemberRequest request = AddMemberRequest.builder()
+                .requestInfo(new RequestInfo())
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .userUuid("member-uuid-88")
+                .relationshipWithHead("DAUGHTER")
+                .consentToken("CONSENT-8888")
+                .citizenDetails(profile)
+                .properties(Collections.singletonList(property))
+                .income(income)
+                .vehicles(Collections.singletonList(vehicle))
+                .build();
+
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
+        when(userClient.syncMemberAssets(any(), eq("pg.citya"), any())).thenReturn(true);
+
+        Family result = memberService.addMember(request);
+
+        assertNotNull(result);
+        assertEquals(2, result.getMembers().size());
+        FamilyMember added = result.getMembers().get(1);
+        assertEquals("member-uuid-88", added.getUserUuid());
+        assertEquals("Added Citizen", added.getName());
+        assertEquals("9876543111", added.getMobileNumber());
+        assertEquals(1, added.getProperties().size());
+        assertEquals("pg.citya", added.getProperties().get(0).getTenantId());
+        assertEquals("member-uuid-88", added.getProperties().get(0).getUserUuid());
+        assertEquals(income, added.getIncome());
+        assertEquals(1, added.getVehicles().size());
+
+        verify(userClient).syncMemberAssets(any(), eq("pg.citya"), any());
+        verify(kafkaProducer).push(any(), any());
+    }
+
+
+    @Test
+    @DisplayName("Should throw exception when declared asset synchronization to user service fails")
+    void joinFamily_AssetSyncFailure_ThrowsException() {
+        CitizenProfile profile = CitizenProfile.builder()
+                .name("Joined Citizen")
+                .caste("GENERAL")
+                .build();
+
+        UserProperty property = UserProperty.builder()
+                .localityType(FamilyConstants.LOCALITY_TYPE_URBAN)
+                .urbanPropertyDetail(UrbanPropertyDetail.builder().upyogPropertyId("PG-PT-001").build())
+                .build();
+
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .requestInfo(new RequestInfo())
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-99")
+                .relationshipWithHead("SON")
+                .txnId("TXN-CONSENT-12345")
+                .citizenDetails(profile)
+                .properties(Collections.singletonList(property))
+                .build();
+
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
+        when(configuration.getFailOnAssetSyncError()).thenReturn(true);
+        when(userClient.syncMemberAssets(any(), eq("pg.citya"), any())).thenReturn(false);
+
+        CustomException ex = assertThrows(CustomException.class, () -> memberService.joinFamily(request));
+        assertEquals(FamilyConstants.ERROR_MEMBER_ASSET_SYNC_FAILED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Should successfully join member without assets")
+    void joinFamily_NoAssets_Success() {
+        JoinFamilyRequest request = JoinFamilyRequest.builder()
+                .requestInfo(new RequestInfo())
+                .familyId("FAM-2026-0001")
+                .tenantId("pg.citya")
+                .applicantUserUuid("applicant-uuid-99")
+                .relationshipWithHead("DAUGHTER")
+                .txnId("TXN-CONSENT-12345")
+                .build();
+
+        when(familyRepository.findByFamilyIdAndTenantId("FAM-2026-0001", "pg.citya")).thenReturn(Optional.of(activeFamily));
+
+        Family result = memberService.joinFamily(request);
+
+        assertNotNull(result);
+        assertEquals(2, result.getMembers().size());
+        FamilyMember joined = result.getMembers().get(1);
+        assertEquals("applicant-uuid-99", joined.getUserUuid());
+        assertEquals(MemberStatus.JOINED, joined.getStatus());
+        assertTrue(joined.getActive());
+        verify(kafkaProducer).push(any(), any());
     }
 }

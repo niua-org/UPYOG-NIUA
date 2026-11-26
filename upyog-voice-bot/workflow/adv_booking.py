@@ -1,12 +1,13 @@
 import json
 import logging
+import re
 from typing import Dict, Any, List, Optional
 import os
 import yaml
 
 from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langgraph.graph import StateGraph, END, START
-from langchain_groq import ChatGroq
+from services.llm_client import get_unified_chat_model
 
 
 from storage.qdrant_manager import MemoryManager, shared_memory
@@ -16,12 +17,14 @@ from prompts.workflow_prompts import (
     build_adv_past_booking_filter_prompt,
 )
 
+from services.validator import validate_field
+
 from workflow.base_state import BaseAgentState
 # BaseAgentState = The universal "ID Card" (TypedDict) for all modules. Contains messages, phone, session_id etc.
 
 logger = logging.getLogger(__name__)
 
-llm = ChatGroq(model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b"), temperature=0) if os.environ.get("GROQ_API_KEY") else None
+llm = get_unified_chat_model(temperature=0)
 
 # ==========================================
 # STATE
@@ -39,6 +42,71 @@ class AdvBookingState(BaseAgentState):
     # Example: ["faceArea", "start_date", "end_date"] means these 3 are still needed.
 
 from mcp_tools import create_booking, mdms_get, slot_search, search_ads
+
+NIGHTLIGHT_YES_VALUES = {"yes", "haan", "ha", "y", "true", "required", "need", "needed", "yes please", "ji haan", "ji ha"}
+NIGHTLIGHT_NO_VALUES = {"no", "nahi", "nahin", "n", "false", "not required", "none", "no thanks", "ji nahi"}
+
+
+def get_adv_cancellation_message(user_language: str = "en") -> str:
+    """Returns localized advertisement booking cancellation confirmation message."""
+    from services.chat_handlers import _load_system_messages
+    sys_msgs = _load_system_messages()
+    cfg = sys_msgs.get("cancellation", {}).get("adv_booking", {})
+    if user_language == "hi":
+        return cfg.get("hi", "आपकी विज्ञापन बुकिंग रद्द कर दी गई है। पोर्टल पर कोई आवेदन दर्ज नहीं किया गया है।\n\nयदि आप किसी अन्य सेवा में सहायता चाहते हैं, तो कृपया मुझे बताएं।")
+    return cfg.get("en", "Your advertisement booking has been cancelled. No submission was made to the portal.\n\nIf you would like help with any other service, please let me know.")
+
+
+def match_option(user_text: str, options_list: list) -> Optional[str]:
+    """
+    Matches user input deterministically against a candidate list of options.
+
+    Evaluation order:
+    1. Digit/index references (e.g., '1', 'Option 2').
+    2. Exact case-insensitive match or whitespace/underscore normalized match.
+    3. Whole-word regex match (e.g. option appears as a distinct word in user input).
+    4. Substring fallback: Requires minimum length of 3 characters, must match
+       options uniquely. If multiple options match or text is too short, returns None
+       to avoid ambiguous or false positive extractions.
+    """
+    if not options_list or not user_text:
+        return None
+    clean_t = user_text.strip().lower()
+    norm_t = re.sub(r'[\s_]+', '', clean_t)
+
+    # 1. Digit / option index match (e.g. "1", "Option 1")
+    idx_match = re.match(r'^(?:option\s*)?(\d+)$', clean_t)
+    if idx_match:
+        idx = int(idx_match.group(1)) - 1
+        if 0 <= idx < len(options_list):
+            return options_list[idx]
+
+    # 2. Exact text or normalized match
+    for opt in options_list:
+        clean_opt = str(opt).strip().lower()
+        if clean_t == clean_opt or norm_t == re.sub(r'[\s_]+', '', clean_opt):
+            return opt
+
+    # 3. Whole-word regex match if option appears as a distinct word in user input
+    word_matches = [
+        opt for opt in options_list
+        if re.search(rf'\b{re.escape(str(opt).strip().lower())}\b', clean_t)
+    ]
+    if len(word_matches) == 1:
+        return word_matches[0]
+
+    # 4. Substring match fallback: require at least 3 characters and unique match
+    if len(clean_t) >= 3 and len(clean_t.split()) <= 4:
+        candidates = [
+            opt for opt in options_list
+            if clean_t in str(opt).strip().lower() or re.sub(r'[\s_]+', '', str(opt).strip().lower()) in norm_t
+        ]
+        if len(candidates) == 1:
+            return candidates[0]
+
+    return None
+
+_match_option = match_option
 
 # Fetches dropdown options (like AdType or Location) directly from the UPYOG master database
 def _mdms_get(module_name: str, master_name: str) -> List[str]:
@@ -120,6 +188,14 @@ FIELD_HINTS = {f["id"]: f.get("label", f["id"]) for f in FORM_FIELDS}
 def get_next_step(draft: dict) -> dict:
     if not isinstance(draft, dict):
         draft = {}
+
+    # If a field just failed validation, ask for that field first before moving to the other missing fields.
+    for f_id in draft.get("_failed_fields", []):
+        if not draft.get(f_id):
+            failed_step = next((f for f in FORM_FIELDS if f["id"] == f_id), None)
+            if failed_step:
+                return failed_step
+        
     for field in FORM_FIELDS:
         if not draft.get(field["id"]):
             return field
@@ -172,17 +248,7 @@ def intent_and_ui_node(state: AdvBookingState):
             logger.error(f"Failed to parse slot payload: {e}")
             
     # 11. Check if the frontend UI sent us a hidden JSON payload for Forms or Document Uploads (starts with { )
-    # Sub-case A: Check if the user submitted the Applicant Details Form
-    if user_msg.strip().startswith("{") and user_msg.strip().endswith("}"):
-        try:
-            parsed = json.loads(user_msg.strip())
-            if "name" in parsed and "mobile" in parsed:
-                # 12. Save the applicant's name and mobile into the draft memory
-                draft_booking["applicant_details"] = parsed
-                user_msg = "I have submitted my details."
-        except Exception: pass
-
-    # Sub-case B: Check if the user uploaded a Document (can be JSON or a text tag)
+    # Check if the user uploaded a document (can be JSON or a text tag)
     uploaded_doc = None
     if user_msg.strip().startswith("{") and user_msg.strip().endswith("}"):
         try:
@@ -205,16 +271,30 @@ def intent_and_ui_node(state: AdvBookingState):
             # 17. Replace the user's message with "continue" to auto-trigger the next question
             user_msg = "continue"
 
-    # 18. Check if the user wants to clear their current booking progress and start over
-    reset_keywords = ["start over", "new booking", "cancel booking", "start new", "restart", "cancel", "clear draft", "delete draft"]
-    if user_msg == "[CANCEL_DRAFT]" or any(w in user_msg.lower() for w in reset_keywords):
-        # 19. Wipe all fields in the draft memory completely clean
+    # 18. Check if the user wants to clear their current booking progress and cancel
+    is_cancel_command = False
+    clean_um = user_msg.strip().lower()
+    if user_msg.strip() == "[CANCEL_DRAFT]":
+        is_cancel_command = True
+    elif len(clean_um.split()) <= 4:
+        cancel_pattern = r'\b(?:start over|new booking|cancel booking|start new|restart|cancel|clear draft|delete draft|don\'t submit|dont submit|do not submit|rehne do|abort)\b'
+        if re.search(cancel_pattern, clean_um) or (re.search(r'\bstop\b', clean_um) and "bus" not in clean_um):
+            is_cancel_command = True
+
+    if is_cancel_command:
         draft_booking = {f: None for f in ALL_FIELDS}
         draft_booking["selected_slots"] = None
         draft_booking["applicant_details"] = None
-        MemoryManager.delete_draft_state(phone_number, "adv_booking")
-        # 20. Tell the user the booking was cancelled and start fresh
-        return {"messages": [AIMessage(content="I have cleared your draft. Let's start a new booking.")], "draft_booking": draft_booking, "missing_fields": ALL_FIELDS}
+        draft_booking["_awaiting_confirm"] = None
+        draft_booking["_cancelled"] = True
+        try:
+            MemoryManager.delete_draft_state(phone_number, "adv_booking")
+        except Exception as e:
+            logger.warning(f"[adv_booking] Qdrant delete draft failed: {e}")
+
+        user_lang = state.get("user_language") or ("hi" if any('ऀ' <= c <= 'ॿ' for c in user_msg) else "en")
+        msg = get_adv_cancellation_message(user_lang)
+        return {"messages": [AIMessage(content=msg)], "draft_booking": draft_booking, "missing_fields": []}
 
     # 3. Resume logic — 'continue' alone (sent by draft switcher) always resumes
     resume_keywords = ["resume", "proceed", "continue", "previous left", "start with previous"]
@@ -384,6 +464,50 @@ def extraction_node(state: AdvBookingState):
             field["id"] for field in extractable_fields
             if field["id"] in missing_fields
         ]
+
+    # Deterministic fast-path extraction for the active or missing fields
+    next_step = get_next_step(draft_booking)
+    curr_field = next_step.get("id") if next_step else None
+    ui_clean = user_msg.strip().lower()
+    cleaned_input = re.sub(r'^\d+[\.\)]\s*', '', user_msg).strip()
+
+    did_fast_extract = False
+    if curr_field and curr_field in llm_extractable_fields:
+        field_def = next((item for item in FORM_FIELDS if item["id"] == curr_field), None)
+        if field_def and field_def.get("mdms"):
+            opts = _mdms_get(*field_def["mdms"])
+            matched = match_option(cleaned_input, opts)
+            if matched:
+                draft_booking[curr_field] = matched
+                did_fast_extract = True
+                logger.info(f"[extract_node] Fast-path exact option match for {curr_field}: {matched}")
+        elif curr_field == "nightLight":
+            if ui_clean in NIGHTLIGHT_YES_VALUES:
+                draft_booking["nightLight"] = "Yes"
+                did_fast_extract = True
+                logger.info("[extract_node] Fast-path match for nightLight: Yes")
+            elif ui_clean in NIGHTLIGHT_NO_VALUES:
+                draft_booking["nightLight"] = "No"
+                did_fast_extract = True
+                logger.info("[extract_node] Fast-path match for nightLight: No")
+        elif curr_field in ["start_date", "end_date"]:
+            date_candidate = user_msg.strip()
+            if re.match(r'^\d{4}-\d{2}-\d{2}$', date_candidate):
+                try:
+                    from datetime import datetime
+                    datetime.strptime(date_candidate, '%Y-%m-%d')
+                    draft_booking[curr_field] = date_candidate
+                    did_fast_extract = True
+                    logger.info(f"[extract_node] Fast-path valid date match for {curr_field}: {date_candidate}")
+                except ValueError:
+                    logger.warning(f"[extract_node] Invalid calendar date format ignored: {date_candidate}")
+
+    # Recalculate remaining missing fields
+    if not is_edit_query and not draft_booking.get("_awaiting_confirm"):
+        llm_extractable_fields = [
+            f for f in llm_extractable_fields
+            if not draft_booking.get(f)
+        ]
     
     if user_msg and llm_extractable_fields and llm:
         schema_hints = {}
@@ -394,7 +518,7 @@ def extraction_node(state: AdvBookingState):
             if field_def and field_def.get("mdms"):
                 options = _mdms_get(*field_def["mdms"])
                 if options:
-                    schema_hints[f] = f"MUST BE EXACTLY ONE OF: {options}. Map the user's input to the closest matching option."
+                    schema_hints[f] = f"Extract whatever {field_def.get('label', f)} the user mentioned as text."
                 else:
                     schema_hints[f] = FIELD_HINTS.get(f, "relevant value")
             elif field_def and field_def.get("extract_fields"):
@@ -418,21 +542,67 @@ def extraction_node(state: AdvBookingState):
         )
         try:
             ext = llm.invoke([SystemMessage(content=extract_prompt)])
-            # The prompt requests JSON only; reject responses that are not JSON objects.
-            extracted_data = json.loads(ext.content.strip())
+            raw_text = ext.content.strip()
+            m = re.search(r'\{.*\}', raw_text, re.DOTALL)
+            if m:
+                extracted_data = json.loads(m.group(0))
+            else:
+                raw_clean = raw_text.replace("```json", "").replace("```", "").strip()
+                extracted_data = json.loads(raw_clean)
             if not isinstance(extracted_data, dict):
                 raise ValueError("Extraction response must be a JSON object")
             for field in llm_extractable_fields:
                 val = extracted_data.get(field)
                 if val is not None and str(val).lower() not in ("null", "none", ""):
-                    if isinstance(val, dict) and isinstance(draft_booking.get(field), dict):
-                        # Merge partial nested details to preserve previously collected keys.
-                        draft_booking[field].update(val)
+                    #1. Look up field configuration from config.yml to determine if it has predefined options
+                    field_def = next((item for item in FORM_FIELDS if item["id"] == field), {})
+                    options = _mdms_get(*field_def["mdms"]) if field_def.get("mdms") else None
+                    
+                    #2. Call Validator.py to check the value 
+                    is_valid, err_msg, clean_val = validate_field(field_def, val, draft=draft_booking, valid_options=options)
+                    if is_valid:
+                        if isinstance(clean_val, dict) and isinstance(draft_booking.get(field), dict):
+                            draft_booking[field].update(clean_val)
+                        else:
+                            draft_booking[field] = clean_val
+                        logger.info(f"[extract_node] {field} validated = {clean_val}")
+
+                        # If this field previously failed, remove it from the failed list
+                        if field in draft_booking.get("_failed_fields", []):
+                            draft_booking["_failed_fields"].remove(field)
+                        draft_booking.get("_field_errors", {}).pop(field, None)  
+
                     else:
-                        draft_booking[field] = val
-                    logger.info(f"[extract_node] {field} = {val}")
+                        logger.warning(f"[extract_node] Validation failed for {field}: {err_msg}")
+                        if not draft_booking.get(field):
+                            draft_booking[field] = None
+
+                        # Save each failed field and its specific error message
+                        draft_booking.setdefault("_failed_fields", [])
+                        if field not in draft_booking["_failed_fields"]:
+                            draft_booking["_failed_fields"].append(field)
+                        draft_booking.setdefault("_field_errors", {})[field] = err_msg
+
         except Exception as e:
             logger.error(f"Extraction error: {e}")
+            # Robust error recovery: match against options for missing fields during LLM failure
+            for f in llm_extractable_fields:
+                if draft_booking.get(f):
+                    continue
+                f_def = next((item for item in FORM_FIELDS if item["id"] == f), None)
+                if f_def and f_def.get("mdms"):
+                    f_opts = _mdms_get(*f_def["mdms"])
+                    fb_match = _match_option(user_msg, f_opts)
+                    if fb_match:
+                        draft_booking[f] = fb_match
+                        logger.info(f"[extract_node fallback] Recovered {f} = {fb_match} during error")
+                elif f == "nightLight":
+                    if ui_clean in NIGHTLIGHT_YES_VALUES:
+                        draft_booking["nightLight"] = "Yes"
+                        logger.info("[extract_node fallback] Recovered nightLight = Yes during error")
+                    elif ui_clean in NIGHTLIGHT_NO_VALUES:
+                        draft_booking["nightLight"] = "No"
+                        logger.info("[extract_node fallback] Recovered nightLight = No during error")
             
     # Date constraint enforcement: bookings cannot start today or in the past
     from datetime import datetime, timedelta
@@ -489,6 +659,11 @@ def ask_next_node(state: AdvBookingState):
         except Exception:
             pass
 
+    # Show the error message for the specific field we are asking
+    val_err = draft_booking.get("_field_errors", {}).pop(next_step.get("id"), None)
+    if val_err:
+        text = f"⚠️ {val_err}\n\n{text}"
+
     if ui_type == "dropdown" and options:
         opts_str = ", ".join(f"'{o}'" for o in options)
         resp = f"{text}\n<ui-dropdown options=[{opts_str}] />"
@@ -505,7 +680,13 @@ def ask_next_node(state: AdvBookingState):
         MemoryManager.save_long_term_interaction(phone_number=phone_number, role="user", content=user_msg)
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
 
-    return {"messages": [AIMessage(content=resp)], "missing_fields": [f for f in ALL_FIELDS if not draft_booking.get(f)], "input_type": "text", "options": []}
+    return {
+        "messages": [AIMessage(content=resp)],
+        "draft_booking": draft_booking,
+        "missing_fields": [f for f in ALL_FIELDS if not draft_booking.get(f)], 
+        "input_type": "text", 
+        "options": []
+    }
 
 
 # Shows a beautiful UI table to the user displaying the available slots they can pick from
@@ -540,18 +721,6 @@ def slot_search_node(state: AdvBookingState):
     return {"messages": [AIMessage(content=resp)], "missing_fields": ["selected_slots"], "input_type": "text", "options": []}
 
 
-# Renders a Form on the screen so the user can type their personal details (Name, Mobile, etc.)
-def applicant_form_node(state: AdvBookingState):
-    phone_number = state.get("phone_number", "default")
-    messages = state.get("messages", [])
-    user_msg = messages[-1].content if messages else ""
-    logger.info(f"[adv_booking.applicant_form_node] Requesting applicant details for phone={phone_number}")
-    
-    resp = f"Great! Please fill in your details to finalize the booking:\n<ui-applicant-form cartAmount=\"0\" />"
-    MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
-    return {"messages": [AIMessage(content=resp)], "missing_fields": ["applicant_details"], "input_type": "text", "options": []}
-
-
 # Shows a final summary "Receipt" of all the details entered and asks for final Confirmation
 def confirm_booking_node(state: AdvBookingState):
     phone_number = state.get("phone_number", "default")
@@ -559,10 +728,9 @@ def confirm_booking_node(state: AdvBookingState):
     draft_booking["_awaiting_confirm"] = True
     logger.info(f"[adv_booking.confirm_booking_node] Building booking summary for phone={phone_number}")
 
-    app_details = draft_booking.get("applicant_details") or {}
-    name = app_details.get("name") or draft_booking.get("applicantName", "N/A")
-    mobile = app_details.get("mobile") or draft_booking.get("mobileNumber") or (phone_number if phone_number != "default" else "N/A")
-    email = app_details.get("email") or draft_booking.get("emailId", "N/A")
+    name = draft_booking.get("applicantName", "N/A")
+    mobile = draft_booking.get("mobileNumber") or (phone_number if phone_number != "default" else "N/A")
+    email = draft_booking.get("emailId", "N/A")
 
     summary_text = (
         "### Advertisement Booking Summary\n\n"
@@ -596,10 +764,12 @@ def create_booking_node(state: AdvBookingState):
     logger.info(f"[adv_booking.create_booking_node] Executing booking registration for phone={phone_number}")
     
     
-    app_details = draft_booking.get("applicant_details", {})
-    draft_booking["applicantName"] = app_details.get("name", "")
-    draft_booking["mobileNumber"] = app_details.get("mobile") or (phone_number if phone_number != "default" else "")
-    draft_booking["emailId"] = app_details.get("email", "")
+    if not draft_booking.get("mobileNumber") and phone_number and phone_number != "default":
+        phone_def = next((item for item in FORM_FIELDS if item["id"] == "mobileNumber"), {"id": "mobileNumber", "type": "mobile"})
+        is_valid, _, clean_phone = validate_field(phone_def, phone_number)
+        draft_booking["mobileNumber"] = clean_phone if is_valid else ""
+    elif not draft_booking.get("mobileNumber"):
+        draft_booking["mobileNumber"] = ""
     draft_booking["phone_number"] = phone_number
     
     raw_resp = create_booking(json.dumps(draft_booking))
@@ -631,6 +801,40 @@ def edit_prompt_node(state: AdvBookingState):
     return {"messages": [AIMessage(content=resp)], "draft_booking": draft_booking, "input_type": "text", "options": []}
 
 
+# Cancels the current booking draft when user declines submission or asks to cancel
+def cancel_booking_node(state: AdvBookingState):
+    """
+    Cancels the active advertisement booking draft, wipes saved state from Qdrant,
+    and returns a localized cancellation confirmation message to the citizen.
+    """
+    phone_number = state.get("phone_number", "default")
+    logger.info(f"[adv_booking.cancel_booking_node] Cancelling booking draft for phone={phone_number}")
+    try:
+        MemoryManager.delete_draft_state(phone_number, "adv_booking")
+    except Exception as e:
+        logger.warning(f"[adv_booking.cancel_booking_node] Qdrant delete draft failed: {e}")
+
+    reset_draft = {f: None for f in ALL_FIELDS}
+    reset_draft["selected_slots"] = None
+    reset_draft["applicant_details"] = None
+    reset_draft["_awaiting_confirm"] = None
+    reset_draft["_cancelled"] = True
+
+    user_lang = state.get("user_language")
+    if not user_lang:
+        messages = state.get("messages", [])
+        last_c = messages[-1].content if messages else ""
+        user_lang = "hi" if any('ऀ' <= c <= 'ॿ' for c in last_c) else "en"
+
+    msg = get_adv_cancellation_message(user_lang)
+    try:
+        MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=msg)
+    except Exception as e:
+        logger.warning(f"[adv_booking.cancel_booking_node] Memory save failed: {e}")
+
+    return {"messages": [AIMessage(content=msg)], "draft_booking": reset_draft, "missing_fields": [], "input_type": "text", "options": []}
+
+
 # The main traffic controller that checks the draft and routes the flow to the correct next step
 def router(state: AdvBookingState) -> str:
     draft_booking = state.get("draft_booking", {})
@@ -641,18 +845,34 @@ def router(state: AdvBookingState) -> str:
         logger.info("[adv_booking.router] Route -> slot_search")
         return "slot_search"
         
-    if draft_booking.get("selected_slots") and not draft_booking.get("applicant_details"):
-        logger.info("[adv_booking.router] Route -> applicant_form")
-        return "applicant_form"
-        
     if all(draft_booking.get(f) for f in ALL_FIELDS):
         if draft_booking.get("_awaiting_confirm"):
-            confirm_words = ["confirm", "submit", "yes", "yeah", "yup", "ok", "okay", "confirm & submit"]
-            if any(w in user_msg.lower() for w in confirm_words):
+            clean_msg = user_msg.strip().lower()
+            cancel_pattern = r'\b(?:cancel|no|don\'t|dont|do not|nahi|nahin|rehne do|stop|abort)\b'
+            confirm_pattern = r'\b(?:confirm|submit|yes|yeah|yup|ok|okay|confirm & submit)\b'
+            negative_pattern = r'\b(?:don\'t|dont|do not|not|no|nahi|nahin)\b'
+
+            has_cancel_kw = bool(re.search(cancel_pattern, clean_msg))
+            has_confirm_kw = bool(re.search(confirm_pattern, clean_msg))
+            has_negation = bool(re.search(negative_pattern, clean_msg))
+
+            if has_negation and has_confirm_kw:
+                logger.info("[adv_booking.router] Route -> cancel (Negated confirmation, e.g. don't submit)")
+                return "cancel"
+
+            if has_cancel_kw and not has_confirm_kw:
+                logger.info("[adv_booking.router] Route -> cancel (User declined confirmation)")
+                return "cancel"
+
+            if has_confirm_kw and not has_negation:
                 logger.info("[adv_booking.router] Route -> create_booking (Confirmed)")
                 return "create_booking"
+
             edit_words = ["edit", "edit details", "modify", "correct", "update"]
-            if any(w in user_msg.lower() for w in edit_words) and not any(f in user_msg.lower() for f in ["location", "address", "date", "type", "area"]):
+            field_words = ["location", "address", "date", "type", "area"]
+            has_edit_kw = any(re.search(rf'\b{re.escape(w)}\b', clean_msg) for w in edit_words)
+            has_specific_field = any(re.search(rf'\b{re.escape(f)}\b', clean_msg) for f in field_words)
+            if has_edit_kw and not has_specific_field:
                 logger.info("[adv_booking.router] Route -> edit_prompt")
                 return "edit_prompt"
         logger.info("[adv_booking.router] Route -> confirm_booking")
@@ -669,11 +889,11 @@ workflow_graph = StateGraph(AdvBookingState)
 workflow_graph.add_node("intent_and_ui", intent_and_ui_node)
 workflow_graph.add_node("extraction", extraction_node)
 workflow_graph.add_node("slot_search", slot_search_node)
-workflow_graph.add_node("applicant_form", applicant_form_node)
 workflow_graph.add_node("confirm_booking", confirm_booking_node)
 workflow_graph.add_node("edit_prompt", edit_prompt_node)
 workflow_graph.add_node("create_booking", create_booking_node)
 workflow_graph.add_node("ask_next", ask_next_node)
+workflow_graph.add_node("cancel", cancel_booking_node)
 
 workflow_graph.add_edge(START, "intent_and_ui")
 workflow_graph.add_conditional_edges(
@@ -689,18 +909,18 @@ workflow_graph.add_conditional_edges(
     router,
     {
         "slot_search": "slot_search",
-        "applicant_form": "applicant_form",
         "confirm_booking": "confirm_booking",
         "edit_prompt": "edit_prompt",
         "create_booking": "create_booking",
-        "ask_next": "ask_next"
+        "ask_next": "ask_next",
+        "cancel": "cancel"
     }
 )
 workflow_graph.add_edge("slot_search", END)
-workflow_graph.add_edge("applicant_form", END)
 workflow_graph.add_edge("confirm_booking", END)
 workflow_graph.add_edge("edit_prompt", END)
 workflow_graph.add_edge("create_booking", END)
 workflow_graph.add_edge("ask_next", END)
+workflow_graph.add_edge("cancel", END)
 
 adv_booking_graph = workflow_graph.compile(checkpointer=shared_memory)

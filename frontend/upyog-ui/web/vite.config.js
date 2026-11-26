@@ -266,6 +266,7 @@ export default defineConfig(({ mode }) => {
     proxy[path] = { target: proxyTarget, changeOrigin: true };
   });
   proxy["/pb-egov-assets"] = { target: assetsTarget, changeOrigin: true };
+  proxy["/pg-egov-assets"] = { target: assetsTarget, changeOrigin: true };
 
   return {
     plugins: [

@@ -3,6 +3,7 @@ package org.egov.user.persistence.repository;
 import lombok.extern.slf4j.Slf4j;
 
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
@@ -11,6 +12,8 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.persistence.dto.FailedLoginAttempt;
 import org.egov.user.repository.builder.RoleQueryBuilder;
 import org.egov.user.repository.builder.UserTypeQueryBuilder;
@@ -19,7 +22,6 @@ import org.egov.user.repository.rowmapper.UserResultSetExtractor;
 import org.egov.user.repository.rowmapper.UserResultSetExtractorV2;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,14 +34,26 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
-import static org.egov.user.repository.builder.UserTypeQueryBuilder.SELECT_FAILED_ATTEMPTS_BY_USER_SQL;
-import static org.egov.user.repository.builder.UserTypeQueryBuilder.SELECT_NEXT_SEQUENCE_USER;
+import static org.egov.user.repository.builder.UserTypeQueryBuilder.*;
 import static org.springframework.util.StringUtils.isEmpty;
 
 /**
- * Repository layer for managing {@link User} entities in the {@code eg_user} table.
- * Supports legacy and V2 CRUD operations, authentication metadata, role associations,
- * and user audit logging.
+ * Repository layer managing persistence operations for {@link User} entities in the {@code eg_user} database table.
+ * <p>
+ * <b>Capabilities & Architectural Features:</b>
+ * <ul>
+ *   <li><b>CRUD Operations (V1 & V2):</b> Supports legacy user creation and updates alongside the V2 schema
+ *       which manages dynamic, multi-address structures and extended demographic attributes.</li>
+ *   <li><b>Role Association & MDMS Enrichment:</b> Links users to their assigned roles in {@code eg_userrole_v1}
+ *       and enriches role descriptors dynamically from MDMS.</li>
+ *   <li><b>Security & Anti-Abuse Auditing:</b> Manages failed login attempts, tracks account locking timestamps,
+ *       and persists security audit trails into {@code eg_user_audit}.</li>
+ *   <li><b>Identity Verification Invariants:</b> Manages identity verification state ({@code isIdentityVerified},
+ *       {@code identityVerifiedDate}, {@code identityVerifiedSource}) strictly honoring trusted authority sources.</li>
+ * </ul>
+ *
+ * <b>Thread Safety:</b> This repository is a Spring-managed singleton component that uses thread-safe
+ * {@link JdbcTemplate} and {@link NamedParameterJdbcTemplate} instances.
  */
 @Repository
 @Slf4j
@@ -54,18 +68,28 @@ public class UserRepository {
     private UserResultSetExtractor userResultSetExtractor;
     private UserResultSetExtractorV2 userResultSetExtractorV2;
 
-    @Value("${user.address.mandatory.fields.enabled}")
-    private boolean addressMandatoryFieldsEnabled;
+    private UserConfiguration userConfiguration;
 
-    @Value("${user.address.update.strategy}")
-    private Boolean addressSoftUpdateFlag;
-
+    /**
+     * Constructs a new {@link UserRepository} with full dependency injection including V2 result set extraction and configuration.
+     *
+     * @param roleRepository             repository for querying role definitions
+     * @param userTypeQueryBuilder       dynamic SQL query builder for user search criteria
+     * @param addressRepository          repository for managing user addresses
+     * @param userResultSetExtractor     Spring JDBC extractor for legacy user rows
+     * @param jdbcTemplate               standard Spring JDBC template
+     * @param namedParameterJdbcTemplate named parameter JDBC template for parameterized queries
+     * @param auditRepository            repository for logging historical user modifications
+     * @param userResultSetExtractorV2   Spring JDBC extractor for V2 user rows with nested address collections
+     * @param userConfiguration          centralized application configuration properties
+     */
     @Autowired
     UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
                    AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
                    JdbcTemplate jdbcTemplate,
                    NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository,
-                   @Autowired(required = false) UserResultSetExtractorV2 userResultSetExtractorV2) {
+                   @Autowired(required = false) UserResultSetExtractorV2 userResultSetExtractorV2,
+                   @Autowired(required = false) UserConfiguration userConfiguration) {
         this.addressRepository = addressRepository;
         this.roleRepository = roleRepository;
         this.userTypeQueryBuilder = userTypeQueryBuilder;
@@ -74,8 +98,41 @@ public class UserRepository {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.auditRepository = auditRepository;
         this.userResultSetExtractorV2 = userResultSetExtractorV2;
+        this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Overloaded constructor for {@link UserRepository} with V2 extractor support.
+     *
+     * @param roleRepository             repository for querying role definitions
+     * @param userTypeQueryBuilder       dynamic SQL query builder for user search criteria
+     * @param addressRepository          repository for managing user addresses
+     * @param userResultSetExtractor     Spring JDBC extractor for legacy user rows
+     * @param jdbcTemplate               standard Spring JDBC template
+     * @param namedParameterJdbcTemplate named parameter JDBC template for parameterized queries
+     * @param auditRepository            repository for logging historical user modifications
+     * @param userResultSetExtractorV2   Spring JDBC extractor for V2 user rows with nested address collections
+     */
+    public UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
+                          AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
+                          JdbcTemplate jdbcTemplate,
+                          NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuditRepository auditRepository,
+                          UserResultSetExtractorV2 userResultSetExtractorV2) {
+        this(roleRepository, userTypeQueryBuilder, addressRepository, userResultSetExtractor,
+             jdbcTemplate, namedParameterJdbcTemplate, auditRepository, userResultSetExtractorV2, null);
+    }
+
+    /**
+     * Legacy constructor for {@link UserRepository} without V2 extractor support.
+     *
+     * @param roleRepository             repository for querying role definitions
+     * @param userTypeQueryBuilder       dynamic SQL query builder for user search criteria
+     * @param addressRepository          repository for managing user addresses
+     * @param userResultSetExtractor     Spring JDBC extractor for legacy user rows
+     * @param jdbcTemplate               standard Spring JDBC template
+     * @param namedParameterJdbcTemplate named parameter JDBC template for parameterized queries
+     * @param auditRepository            repository for logging historical user modifications
+     */
     public UserRepository(RoleRepository roleRepository, UserTypeQueryBuilder userTypeQueryBuilder,
                           AddressRepository addressRepository, UserResultSetExtractor userResultSetExtractor,
                           JdbcTemplate jdbcTemplate,
@@ -85,11 +142,14 @@ public class UserRepository {
     }
 
     /**
-     * api will get the all users by userSearchCriteria.After that roles and
-     * address are set in to the user object.
+     * Searches for user records matching the specified criteria in the legacy schema and enriches their roles.
+     * <p>
+     * If role codes are supplied, users possessing those roles within the tenant are resolved first.
+     * Executes the query built by {@link UserTypeQueryBuilder#getQuery(UserSearchCriteria, List)}
+     * and maps the result set via {@link UserResultSetExtractor}. Finally, enriches role descriptions via MDMS.
      *
-     * @param userSearch
-     * @return
+     * @param userSearch search parameters including IDs, UUIDs, mobile number, username, roles, and active flags
+     * @return list of matching domain {@link User} entities with enriched roles
      */
     public List<User> findAll(UserSearchCriteria userSearch) {
     	log.info("user find all method call");
@@ -119,7 +179,7 @@ public class UserRepository {
         }
         String queryStr = userTypeQueryBuilder.getQuery(userSearch, preparedStatementValues);
         log.info("User search Query : {}", queryStr);
-        log.info("User search Parameters: {}", preparedStatementValues);
+        log.debug("User search Parameters: {}", preparedStatementValues);
         log.info("User search Criteria - UUID: {}, tenantId: {}, active: {}",
                  userSearch.getUuid(), userSearch.getTenantId(), userSearch.getActive());
 
@@ -131,10 +191,10 @@ public class UserRepository {
 
 
     /**
-     * get list of all userids with role in given tenant
+     * Resolves numeric user IDs that possess the roles specified in the search criteria within a given tenant.
      *
-     * @param userSearch
-     * @return
+     * @param userSearch search criteria containing target {@code roleCodes} and {@code tenantId}
+     * @return list of matching numeric user IDs
      */
     public List<Long> findUsersWithRole(UserSearchCriteria userSearch) {
         final List<Object> preparedStatementValues = new ArrayList<>();
@@ -149,15 +209,16 @@ public class UserRepository {
 
 
     /**
-     * Api will check user is present or not with userName And tenantId
+     * Checks whether an active user record already exists for the given username, tenant, and user type.
      *
-     * @param userName
-     * @param tenantId
-     * @return
+     * @param userName username string (mobile number for citizens or username for employees)
+     * @param tenantId tenant identifier (state-level tenant for citizens)
+     * @param userType type of user account (e.g. {@link UserType#CITIZEN} or {@link UserType#EMPLOYEE})
+     * @return {@code true} if at least one matching user record exists; {@code false} otherwise
      */
     public boolean isUserPresent(String userName, String tenantId, UserType userType) {
 
-        String query = userTypeQueryBuilder.getUserPresentByUserNameAndTenant();
+        String query = USER_PRESENT_BY_USERNAME_AND_TENANT_SQL;
 
         final Map<String, Object> parametersMap = new HashMap<String, Object>();
         parametersMap.put("userName", userName);
@@ -170,10 +231,13 @@ public class UserRepository {
     }
 
     /**
-     * this api will create the user.
+     * Persists a new user record in {@code eg_user} and records role mappings.
+     * <p>
+     * Generates a primary key sequence value via {@code seq_eg_user}, assigns a UUID if missing, sets audit dates,
+     * validates roles against MDMS, inserts the base user row, and records role associations in batch.
      *
-     * @param user
-     * @return
+     * @param user domain {@link User} entity containing user details to persist
+     * @return the persisted domain {@link User} entity with generated ID and timestamps
      */
     public User create(User user) {
         validateAndEnrichRoles(Collections.singletonList(user));
@@ -193,12 +257,22 @@ public class UserRepository {
     }
 
     /**
-     * api will update the user details.
+     * Updates an existing user record in {@code eg_user}, captures an audit trail, and synchronizes roles.
+     * <p>
+     * <b>Update Rules:</b>
+     * <ul>
+     *   <li>Captures a snapshot of {@code oldUser} in the audit table via {@link AuditRepository}.</li>
+     *   <li>Ensures identity verification flags ({@code isIdentityVerified}) are only updated if coming from
+     *       an authorized verification source (e.g., AADHAAR, DIGILOCKER, FAMILY_ID).</li>
+     *   <li>Increments the user modification counter ({@code editted_count}).</li>
+     *   <li>Synchronizes roles in {@code eg_userrole_v1} if the role list has changed.</li>
+     * </ul>
      *
-     * @param user
-     * @param uuid 
-     * @param  
-     * @return
+     * @param user    the updated user attributes to persist
+     * @param oldUser the prior database state of the user for auditing and fallback
+     * @param userId  numeric ID of the user performing the modification
+     * @param uuid    UUID of the user performing the modification
+     * @throws CustomException if no rows are updated (data mismatch or record missing)
      */
     public void update(final User user, User oldUser, long userId, String uuid) {
 
@@ -325,8 +399,28 @@ public class UserRepository {
         updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
         updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
         updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
-        updateuserInputs.put("IsIdentityVerified", user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : (oldUser != null && oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false));
-        updateuserInputs.put("IdentityVerifiedDate", user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : (oldUser != null ? oldUser.getIdentityVerifiedDate() : null));
+        updateuserInputs.put("Caste", user.getCaste() != null ? user.getCaste() : (oldUser != null ? oldUser.getCaste() : null));
+        updateuserInputs.put("IsSpeciallyAbled", user.getIsSpeciallyAbled() != null ? user.getIsSpeciallyAbled() : (oldUser != null ? oldUser.getIsSpeciallyAbled() : false));
+        boolean isIdentityAuthSource = user.getIdentityVerifiedSource() != null &&
+                (UserConstants.IDENTITY_SOURCE_AADHAAR.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_DIGILOCKER.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_FAMILY_ID.equalsIgnoreCase(user.getIdentityVerifiedSource()));
+
+        Boolean effectiveVerified = (oldUser != null && oldUser.getIsIdentityVerified() != null)
+                ? (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : oldUser.getIsIdentityVerified())
+                : (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : false);
+
+        Date effectiveVerifiedDate = (oldUser != null && oldUser.getIdentityVerifiedDate() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : oldUser.getIdentityVerifiedDate())
+                : (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : null);
+
+        String effectiveVerifiedSource = (oldUser != null && oldUser.getIdentityVerifiedSource() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : oldUser.getIdentityVerifiedSource())
+                : (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : null);
+
+        updateuserInputs.put("IsIdentityVerified", effectiveVerified);
+        updateuserInputs.put("IdentityVerifiedDate", effectiveVerifiedDate);
+        updateuserInputs.put("IdentityVerifiedSource", effectiveVerifiedSource);
         updateuserInputs.put("LastResyncDate", user.getLastResyncDate() != null ? user.getLastResyncDate() : (oldUser != null ? oldUser.getLastResyncDate() : null));
 
         int currentEditCount = (oldUser != null && oldUser.getEdittedCount() != null) ? oldUser.getEdittedCount() : 0;
@@ -337,13 +431,13 @@ public class UserRepository {
         updateuserInputs.put("LastModifiedDate", new Date());
         updateuserInputs.put("LastModifiedBy", userId );
         if(user.isDigilockerRegistration()) {
-            namedParameterJdbcTemplate.update(userTypeQueryBuilder.getDigilockerUpdateQuery(), updateuserInputs);
+            namedParameterJdbcTemplate.update(UPDATE_DIGILOCKER_ID_SQL, updateuserInputs);
         }else {
             updateAuditDetails(oldUser, userId, uuid);
-            int rowsUpdated = namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);
+            int rowsUpdated = namedParameterJdbcTemplate.update(UPDATE_USER_SQL, updateuserInputs);
             log.info("[USER-REPO] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
             if (rowsUpdated == 0) {
-                log.warn("[USER-REPO] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
+                log.warn("[USER-REPO] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? MaskUtils.maskIdentifier(oldUser.getUsername()) : null);
                 throw new CustomException("DATA_MISMATCH", "Data mismatch: User with id " + targetId + " or uuid " + targetUuid + " does not exist in the database");
             }
             if (user.getRoles() != null && !CollectionUtils.isEmpty(user.getRoles()) && !oldUser.getRoles().equals(user.getRoles())) {
@@ -353,10 +447,22 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Fetches all recorded failed login attempts for the user with the specified UUID.
+     *
+     * @param uuid globally unique user identifier
+     */
 	public void fetchFailedLoginAttemptsByUser(String uuid) {
         fetchFailedAttemptsByUserAndTime(uuid, 0L);
     }
 
+    /**
+     * Fetches active failed login attempts for a user starting from a specific epoch timestamp.
+     *
+     * @param uuid             user UUID
+     * @param attemptStartDate epoch millisecond timestamp cutoff
+     * @return list of matching {@link FailedLoginAttempt} records
+     */
     public List<FailedLoginAttempt> fetchFailedAttemptsByUserAndTime(String uuid, long attemptStartDate) {
         Map<String, Object> params = new HashMap<String, Object>();
         params.put("user_uuid", uuid);
@@ -375,6 +481,12 @@ public class UserRepository {
 
     }
 
+    /**
+     * Records a new failed login attempt in the database for rate-limiting and security tracking.
+     *
+     * @param failedLoginAttempt record containing user UUID, client IP address, attempt timestamp, and active status
+     * @return the persisted {@link FailedLoginAttempt}
+     */
     public FailedLoginAttempt insertFailedLoginAttempt(FailedLoginAttempt failedLoginAttempt) {
         Map<String, Object> inputs = new HashMap<>();
         inputs.put("user_uuid", failedLoginAttempt.getUserUuid());
@@ -387,6 +499,11 @@ public class UserRepository {
         return failedLoginAttempt;
     }
 
+    /**
+     * Deactivates all previous failed login attempt records for the specified user UUID upon successful authentication or account unlock.
+     *
+     * @param uuid user UUID
+     */
     public void resetFailedLoginAttemptsForUser(String uuid) {
 
         namedParameterJdbcTemplate.update(UserTypeQueryBuilder.UPDATE_FAILED_ATTEMPTS_SQL,
@@ -409,6 +526,12 @@ public class UserRepository {
         return validatedRoles;
     }
 
+    /**
+     * Validates that all assigned user roles exist in MDMS master data and enriches their descriptive fields.
+     *
+     * @param users list of domain users whose roles must be validated
+     * @throws CustomException if any assigned role code is missing from MDMS
+     */
     private void validateAndEnrichRoles(List<User> users) {
 
         if (users.isEmpty())
@@ -433,6 +556,11 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Enriches roles on the retrieved user entities with human-readable names and descriptions from MDMS.
+     *
+     * @param users list of domain users whose roles require enrichment
+     */
     private void enrichRoles(List<User> users) {
         log.info("enrichRoles called with {} users", users.size());
 
@@ -469,6 +597,12 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Queries MDMS master data service to retrieve all active role definitions for the tenants present in user list.
+     *
+     * @param users list of domain users
+     * @return map of role code to corresponding {@link Role} definition
+     */
     private Map<String, Role> fetchRolesFromMdms(List<User> users) {
 
         Set<String> roleCodes = new HashSet<>();
@@ -607,13 +741,16 @@ public class UserRepository {
         userInputs.put("father_name", entityUser.getFatherName());
         userInputs.put("mother_name", entityUser.getMotherName());
         userInputs.put("spouse_name", entityUser.getSpouseName());
+        userInputs.put("caste", entityUser.getCaste());
+        userInputs.put("is_specially_abled", entityUser.getIsSpeciallyAbled() != null ? entityUser.getIsSpeciallyAbled() : false);
         userInputs.put("is_identity_verified", entityUser.getIsIdentityVerified() != null ? entityUser.getIsIdentityVerified() : false);
         userInputs.put("identity_verified_date", entityUser.getIdentityVerifiedDate());
+        userInputs.put("identity_verified_source", entityUser.getIdentityVerifiedSource());
         userInputs.put("last_resync_date", entityUser.getLastResyncDate());
         userInputs.put("editted_count", entityUser.getEdittedCount() != null ? entityUser.getEdittedCount() : 0);
         userInputs.put("last_login_method", entityUser.getLastLoginMethod());
 
-        namedParameterJdbcTemplate.update(userTypeQueryBuilder.getInsertUserQuery(), userInputs);
+        namedParameterJdbcTemplate.update(INSERT_USER_SQL, userInputs);
         return entityUser;
     }
 
@@ -656,21 +793,37 @@ public class UserRepository {
         saveUserRoles(user);
     }
 
+    /**
+     * Extracts root state level tenant prefix from a dotted tenant string.
+     *
+     * @param tenantId compound tenant identifier (e.g. "pb.amritsar")
+     * @return root state tenant identifier (e.g. "pb")
+     */
     private String getStateLevelTenant(String tenantId) {
         return tenantId.split("\\.")[0];
     }
 
-	
-	private void updateAuditDetails(User oldUser, long userId, String uuid) {
+    /**
+     * Writes snapshot audit entry for modified user into audit table.
+     *
+     * @param oldUser prior user domain state before update
+     * @param userId  numeric ID of the user performing change
+     * @param uuid    UUID of user entity being audited
+     */
+    private void updateAuditDetails(User oldUser, long userId, String uuid) {
 		auditRepository.auditUser(oldUser,userId,uuid);
 		
 	}
 
     /**
-     * this method will create the user with address part of v2.
+     * Persists a new user record in the V2 schema along with validated role associations.
+     * <p>
+     * Generates a primary key sequence value via {@code seq_eg_user}, assigns a fresh UUID, initializes creation/update
+     * timestamps, validates role definitions against MDMS, inserts the base user row into {@code eg_user},
+     * and persists the role associations.
      *
-     * @param user
-     * @return
+     * @param user domain {@link User} entity to persist
+     * @return the saved {@link User} entity with generated numeric ID and UUID
      */
     public User createWithAddressV2(User user) {
         validateAndEnrichRoles(Collections.singletonList(user));
@@ -705,12 +858,22 @@ public class UserRepository {
     }
 
     /**
-     * method will update the user details with address object with new fields v2.
+     * Updates an existing user record in the V2 schema, audits the previous state, and synchronizes role associations.
+     * <p>
+     * <b>V2 Update Rules:</b>
+     * <ul>
+     *   <li>Captures a snapshot of {@code oldUser} in the audit table via {@link AuditRepository}.</li>
+     *   <li>Ensures identity verification flags ({@code isIdentityVerified}) are only updated if coming from
+     *       an authorized verification source (e.g., AADHAAR, DIGILOCKER, FAMILY_ID).</li>
+     *   <li>Increments the user modification counter ({@code editted_count}).</li>
+     *   <li>Synchronizes roles in {@code eg_userrole_v1} if the role list has changed.</li>
+     * </ul>
      *
-     * @param user
-     * @param uuid
-     * @param
-     * @return
+     * @param user    the modified {@link User} entity containing updated fields
+     * @param oldUser the prior database state of the user for auditing and fallback
+     * @param userId  numeric ID of the updater
+     * @param uuid    UUID of the updater
+     * @throws CustomException if zero rows are updated
      */
     public void updateV2(final User user, User oldUser, long userId, String uuid) {
 
@@ -836,8 +999,28 @@ public class UserRepository {
         updateuserInputs.put("FatherName", user.getFatherName() != null ? user.getFatherName() : (oldUser != null ? oldUser.getFatherName() : null));
         updateuserInputs.put("MotherName", user.getMotherName() != null ? user.getMotherName() : (oldUser != null ? oldUser.getMotherName() : null));
         updateuserInputs.put("SpouseName", user.getSpouseName() != null ? user.getSpouseName() : (oldUser != null ? oldUser.getSpouseName() : null));
-        updateuserInputs.put("IsIdentityVerified", user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : (oldUser != null && oldUser.getIsIdentityVerified() != null ? oldUser.getIsIdentityVerified() : false));
-        updateuserInputs.put("IdentityVerifiedDate", user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : (oldUser != null ? oldUser.getIdentityVerifiedDate() : null));
+        updateuserInputs.put("Caste", user.getCaste() != null ? user.getCaste() : (oldUser != null ? oldUser.getCaste() : null));
+        updateuserInputs.put("IsSpeciallyAbled", user.getIsSpeciallyAbled() != null ? user.getIsSpeciallyAbled() : (oldUser != null ? oldUser.getIsSpeciallyAbled() : false));
+        boolean isIdentityAuthSource = user.getIdentityVerifiedSource() != null &&
+                (UserConstants.IDENTITY_SOURCE_AADHAAR.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_DIGILOCKER.equalsIgnoreCase(user.getIdentityVerifiedSource())
+                        || UserConstants.IDENTITY_SOURCE_FAMILY_ID.equalsIgnoreCase(user.getIdentityVerifiedSource()));
+
+        Boolean effectiveVerified = (oldUser != null && oldUser.getIsIdentityVerified() != null)
+                ? (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : oldUser.getIsIdentityVerified())
+                : (isIdentityAuthSource && user.getIsIdentityVerified() != null ? user.getIsIdentityVerified() : false);
+
+        Date effectiveVerifiedDate = (oldUser != null && oldUser.getIdentityVerifiedDate() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : oldUser.getIdentityVerifiedDate())
+                : (isIdentityAuthSource && user.getIdentityVerifiedDate() != null ? user.getIdentityVerifiedDate() : null);
+
+        String effectiveVerifiedSource = (oldUser != null && oldUser.getIdentityVerifiedSource() != null)
+                ? (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : oldUser.getIdentityVerifiedSource())
+                : (isIdentityAuthSource && user.getIdentityVerifiedSource() != null ? user.getIdentityVerifiedSource() : null);
+
+        updateuserInputs.put("IsIdentityVerified", effectiveVerified);
+        updateuserInputs.put("IdentityVerifiedDate", effectiveVerifiedDate);
+        updateuserInputs.put("IdentityVerifiedSource", effectiveVerifiedSource);
         updateuserInputs.put("LastResyncDate", user.getLastResyncDate() != null ? user.getLastResyncDate() : (oldUser != null ? oldUser.getLastResyncDate() : null));
 
         int currentEditCountV2 = (oldUser != null && oldUser.getEdittedCount() != null) ? oldUser.getEdittedCount() : 0;
@@ -850,10 +1033,10 @@ public class UserRepository {
 
         updateAuditDetails(oldUser, userId, uuid);
 
-        int rowsUpdated = namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateUserQuery(), updateuserInputs);
+        int rowsUpdated = namedParameterJdbcTemplate.update(UPDATE_USER_SQL, updateuserInputs);
         log.info("[USER-REPO-V2] Updated {} rows for user id: {}, uuid: {}", rowsUpdated, targetId, targetUuid);
         if (rowsUpdated == 0) {
-            log.warn("[USER-REPO-V2] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? oldUser.getUsername() : null);
+            log.warn("[USER-REPO-V2] Zero rows updated for user id: {}, uuid: {}, username: {}", targetId, targetUuid, oldUser != null ? MaskUtils.maskIdentifier(oldUser.getUsername()) : null);
             throw new CustomException("DATA_MISMATCH", "Data mismatch: User with id " + targetId + " or uuid " + targetUuid + " does not exist in the database");
         }
         if (user.getRoles() != null && !CollectionUtils.isEmpty(user.getRoles()) && !oldUser.getRoles().equals(user.getRoles())) {
@@ -863,14 +1046,19 @@ public class UserRepository {
     }
 
     /**
-     * Retrieves a list of users along with their addresses based on the provided search criteria.
+     * Retrieves user records along with their complete address collections matching the provided V2 search criteria.
+     * <p>
+     * <b>Processing Steps:</b>
+     * <ol>
+     *   <li>If role codes are supplied, queries {@code eg_userrole_v1} to find user IDs holding those roles in the tenant.</li>
+     *   <li>Constructs the dynamic parameterized SQL query via {@link UserTypeQueryBuilder#getQueryV2(UserSearchCriteria, List)}.</li>
+     *   <li>Executes the query and uses {@link UserResultSetExtractorV2} to map result sets into {@link User} entities
+     *       and assemble nested {@link Address} lists.</li>
+     *   <li>Enriches user roles with names and descriptions retrieved dynamically from MDMS.</li>
+     * </ol>
      *
-     * This method filters users by role codes and tenant ID if specified, constructs the appropriate query,
-     * fetches user details including address information using a result set extractor, and then enriches
-     * the user objects with their associated roles before returning the final user list.
-     *
-     * @param userSearch The criteria used to filter users.
-     * @return A list of users matching the search criteria, with addresses and roles populated.
+     * @param userSearch the filtering criteria (IDs, UUIDs, mobile number, username, roles, and address filters)
+     * @return list of matching domain {@link User} entities with populated address collections and enriched roles
      */
     public List<User> findAllV2(UserSearchCriteria userSearch) {
         final List<Object> preparedStatementValues = new ArrayList<>();
@@ -917,7 +1105,7 @@ public class UserRepository {
             return null;
         }
         try {
-            String query = userTypeQueryBuilder.getUserIdByUuid();
+            String query = SELECT_USER_ID_BY_UUID_SQL;
             MapSqlParameterSource params = new MapSqlParameterSource("uuid", userUuid);
             return namedParameterJdbcTemplate.queryForObject(query, params, Long.class);
         } catch (EmptyResultDataAccessException e) {
@@ -941,7 +1129,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    userTypeQueryBuilder.getTenantIdByUserIdQuery(),
+                    SELECT_TENANT_ID_BY_USER_ID_SQL,
                     Collections.singletonMap("id", userId),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -964,7 +1152,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    userTypeQueryBuilder.getTenantIdByUuidQuery(),
+                    SELECT_TENANT_ID_BY_UUID_SQL,
                     Collections.singletonMap("uuid", uuid),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -987,7 +1175,7 @@ public class UserRepository {
         }
         try {
             return namedParameterJdbcTemplate.queryForObject(
-                    userTypeQueryBuilder.getUuidByUserIdQuery(),
+                    SELECT_UUID_BY_USER_ID_SQL,
                     Collections.singletonMap("id", userId),
                     String.class);
         } catch (EmptyResultDataAccessException e) {
@@ -999,6 +1187,19 @@ public class UserRepository {
     }
 
     /**
+     * Determines whether mandatory address fields (city, pincode, address) are strictly enforced.
+     * Fetches configuration from {@link UserConfiguration} if available, defaulting to true.
+     *
+     * @return true if mandatory address field validation is active, false otherwise
+     */
+    private boolean isAddressMandatoryFieldsEnabled() {
+        if (userConfiguration != null && userConfiguration.getAddressMandatoryFieldsEnabled() != null) {
+            return userConfiguration.getAddressMandatoryFieldsEnabled();
+        }
+        return true;
+    }
+
+    /**
      * Helper method to save address if it has valid required fields.
      *
      * @param address     the address object to persist
@@ -1006,8 +1207,8 @@ public class UserRepository {
      * @param addressType address classification (e.g. correspondence or permanent)
      */
     private void saveAddressIfValid(Address address, User savedUser, String addressType) {
-        if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
-            log.info("Saving {} address for user: {}", addressType, savedUser.getUsername());
+        if (address != null && (isAddressMandatoryFieldsEnabled() ? address.isNotEmpty() : true)) {
+            log.info("Saving {} address for user: {}", addressType, MaskUtils.maskIdentifier(savedUser.getUsername()));
             Address savedAddress = saveAddress(address, savedUser.getId(), savedUser.getTenantId());
             if ("correspondence".equals(addressType)) {
                 savedUser.setCorrespondenceAddress(savedAddress);
@@ -1016,7 +1217,7 @@ public class UserRepository {
             }
         } else {
             log.info("Skipping {} address persistence - missing required fields (city, pincode, or address) for user: {}", 
-                    addressType, savedUser.getUsername());
+                    addressType, MaskUtils.maskIdentifier(savedUser.getUsername()));
         }
     }
 
@@ -1027,13 +1228,13 @@ public class UserRepository {
      * @param savedUser the parent user entity
      */
     private void saveAddressV2IfValid(Address address, User savedUser) {
-        if (address != null && (addressMandatoryFieldsEnabled ? address.isNotEmpty() : true)) {
-            log.info("Saving address with type: {} for user: {}", address.getType(), savedUser.getUsername());
+        if (address != null && (isAddressMandatoryFieldsEnabled() ? address.isNotEmpty() : true)) {
+            log.info("Saving address with type: {} for user: {}", address.getType(), MaskUtils.maskIdentifier(savedUser.getUsername()));
             Address responseAddress = saveAddressV2(address, savedUser.getId(), savedUser.getTenantId());
             savedUser.addAddressItem(responseAddress);
         } else {
             log.info("Skipping address persistence for type: {} - missing required fields (city, pincode, or address) for user: {}", 
-                    address != null ? address.getType() : "null", savedUser.getUsername());
+                    address != null ? address.getType() : "null", MaskUtils.maskIdentifier(savedUser.getUsername()));
         }
     }
 
@@ -1051,7 +1252,7 @@ public class UserRepository {
             Map<String, Object> params = new HashMap<>();
             params.put("id", userId);
             params.put("lastLoginMethod", loginMethod);
-            namedParameterJdbcTemplate.update(userTypeQueryBuilder.getUpdateLastLoginMethodQuery(), params);
+            namedParameterJdbcTemplate.update(UPDATE_LAST_LOGIN_METHOD_SQL, params);
             log.info("[USER-REPO] Updated last_login_method to '{}' for user ID: {}", loginMethod, userId);
         } catch (Exception e) {
             log.warn("[USER-REPO] Failed to update last_login_method for user ID {}: {}", userId, e.getMessage());

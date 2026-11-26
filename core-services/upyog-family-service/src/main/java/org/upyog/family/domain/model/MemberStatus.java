@@ -5,32 +5,26 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Enumeration representing the membership status of an individual within a Family Unit in UPYOG.
+ * Enumeration representing the membership lifecycle states of an individual within a Family Unit in UPYOG
+ * (ACTIVE, EXITED, PENDING_FOR_APPROVAL, JOINED).
  *
  * @author UPYOG Team
  * @since 1.0.0
  */
-import org.upyog.family.util.FamilyConstants;
-
 public enum MemberStatus {
-    ACTIVE(FamilyConstants.STATUS_ACTIVE),
-    EXITED(FamilyConstants.STATUS_EXITED),
-    PENDING_APPROVAL(FamilyConstants.STATUS_PENDING_APPROVAL);
-
-    private final String value;
-
-    MemberStatus(String value) {
-        this.value = value;
-    }
+    ACTIVE,
+    EXITED,
+    PENDING_FOR_APPROVAL,
+    JOINED;
 
     /**
      * Returns the serialized string representation of the MemberStatus enum in UPYOG.
      *
-     * @return enum string representation
+     * @return enum constant name as string representation
      */
     @JsonValue
     public String getValue() {
-        return value;
+        return this.name();
     }
 
     /**
@@ -42,7 +36,7 @@ public enum MemberStatus {
     @JsonCreator
     public static MemberStatus fromValue(String text) {
         for (MemberStatus b : MemberStatus.values()) {
-            if (StringUtils.equalsIgnoreCase(b.value, text)) {
+            if (StringUtils.equalsIgnoreCase(b.name(), text)) {
                 return b;
             }
         }

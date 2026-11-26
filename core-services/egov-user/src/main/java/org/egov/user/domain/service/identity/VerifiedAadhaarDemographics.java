@@ -17,6 +17,12 @@ import java.util.Date;
 @AllArgsConstructor
 public class VerifiedAadhaarDemographics {
 
+    /**
+     * Full 12-digit Aadhaar from verified e-KYC when available.
+     * TODO: mask Aadhaar and move plain-text storage to Aadhaar Data Vault when integrating with UIDAI.
+     */
+    private String fullAadhaarNumber;
+
     private String maskedAadhaar;
     private String name;
     private Gender gender;

@@ -70,7 +70,7 @@ const componentsToRegister = {
   NewNDCStepFormOneEmployee,
   NewNDCStepFormTwoEmployee,
   NDCNewFormSummaryStepThreeEmployee,
-  MyApplications,
+  NDCMyApplications: MyApplications,
   NDCResponseCitizen,
   CitizenApplicationOverview,
   Timeline,

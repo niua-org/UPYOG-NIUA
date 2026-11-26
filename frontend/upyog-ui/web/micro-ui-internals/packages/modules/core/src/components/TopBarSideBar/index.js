@@ -39,8 +39,13 @@ const TopBarSideBar = ({
   //   navigate("/upyog-ui/employee/user/profile");
   // };
   const userProfile = () => {
+    const isCitizen =
+      CITIZEN ||
+      userDetails?.info?.type === "CITIZEN" ||
+      Digit.UserService.getType?.() === "citizen" ||
+      window.location.pathname.includes("/citizen");
     const isEmployee = Digit.UserService?.getType?.() === "employee" || window.location.href.includes("/employee");
-    navigate(isEmployee ? "/upyog-ui/employee/user/profile" : "/upyog-ui/citizen/profile/profile-details");
+    navigate(isCitizen ? "/upyog-ui/citizen/user/profile" : isEmployee ? "/upyog-ui/employee/user/profile" : "/upyog-ui/citizen/profile/profile-details");
   };
   const userOptions = [
     { name: t("EDIT_PROFILE"), icon: <EditPencilIcon className="icon" />, func: userProfile },

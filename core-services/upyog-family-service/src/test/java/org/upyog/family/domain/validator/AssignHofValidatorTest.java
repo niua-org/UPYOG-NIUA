@@ -4,7 +4,11 @@ import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.upyog.family.domain.model.FamilyStatus;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
@@ -14,14 +18,18 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@ExtendWith(MockitoExtension.class)
 class AssignHofValidatorTest {
+
+    @Mock
+    private UserClient userClient;
 
     private AssignHofValidator validator;
     private Family activeFamily;
 
     @BeforeEach
     void setUp() {
-        validator = new AssignHofValidator();
+        validator = new AssignHofValidator(userClient);
 
         FamilyMember head = FamilyMember.builder()
                 .userUuid("head-uuid-1")

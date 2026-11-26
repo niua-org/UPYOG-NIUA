@@ -1,6 +1,5 @@
 package org.egov.user.web.contract;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,6 +14,7 @@ import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.*;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.deserializer.MultiFormatDateDeserializer;
 
 import java.util.Date;
@@ -58,33 +58,67 @@ public class UserRequest {
     private String mobileNumber;
     
     @Pattern(regexp = UserServiceConstants.PATTERN_MOBILE)
-    @JsonAlias({"alternateMobileNumber", "alternateMobileNo"})
     private String alternatemobilenumber;
 
+    /**
+     * Gets the alternate mobile number.
+     *
+     * @return alternate mobile number
+     */
     public String getAlternatemobilenumber() {
         return this.alternatemobilenumber;
     }
 
+    /**
+     * Sets the alternate mobile number.
+     *
+     * @param alternatemobilenumber alternate mobile number
+     */
     public void setAlternatemobilenumber(String alternatemobilenumber) {
         this.alternatemobilenumber = alternatemobilenumber;
     }
 
+    /**
+     * Gets the alternate mobile number (camelCase getter).
+     *
+     * @return alternate mobile number
+     */
     public String getAlternateMobileNumber() {
         return this.alternatemobilenumber;
     }
 
+    /**
+     * Sets the alternate mobile number (camelCase setter).
+     *
+     * @param alternateMobileNumber alternate mobile number
+     */
     public void setAlternateMobileNumber(String alternateMobileNumber) {
         this.alternatemobilenumber = alternateMobileNumber;
     }
 
+    /**
+     * Gets the guardian or father/husband name.
+     *
+     * @return guardian name
+     */
     public String getGuardian() {
         return this.fatherOrHusbandName;
     }
 
+    /**
+     * Sets the guardian or father/husband name.
+     *
+     * @param guardian guardian name
+     */
     public void setGuardian(String guardian) {
         this.fatherOrHusbandName = guardian;
     }
 
+    /**
+     * Gets the string representation of the guardian relationship.
+     *
+     * @return guardian relationship name or null
+     */
     public String getGuardianRelation() {
         return this.relationship != null ? this.relationship.name() : null;
     }
@@ -140,12 +174,10 @@ public class UserRequest {
 
     @Pattern(regexp = UserServiceConstants.PATTERN_NAME)
     @Size(max = 50)
-    @JsonProperty("fatherOrHusbandName")
-    @JsonAlias({"guardian"})
+    @JsonProperty(UserServiceConstants.JSON_PROPERTY_FATHER_OR_HUSBAND_NAME)
     private String fatherOrHusbandName;
 
-    @JsonProperty("relationship")
-    @JsonAlias({"guardianRelation"})
+    @JsonProperty(UserServiceConstants.JSON_PROPERTY_RELATIONSHIP)
     private GuardianRelation relationship;
 
     @Size(max = 300)
@@ -191,28 +223,40 @@ public class UserRequest {
     @Size(max = 100)
     private String spouseName;
 
+    @Size(max = 32)
+    private String caste;
+
+    private Boolean isSpeciallyAbled;
+
     private Boolean isIdentityVerified;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date identityVerifiedDate;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private String identityVerifiedSource;
+
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastResyncDate;
 
     private Integer edittedCount;
     private String lastLoginMethod;
 
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date createdDate;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastModifiedDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DOB)
     @JsonDeserialize(using = MultiFormatDateDeserializer.class)
     private Date dob;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date pwdExpiryDate;
 
+    /**
+     * Converts a domain {@link User} entity into a {@link UserRequest} contract DTO.
+     *
+     * @param user source domain user entity
+     */
     public UserRequest(User user) {
 
         this.id = user.getId();
@@ -252,13 +296,21 @@ public class UserRequest {
         this.fatherName = user.getFatherName();
         this.motherName = user.getMotherName();
         this.spouseName = user.getSpouseName();
+        this.caste = user.getCaste();
+        this.isSpeciallyAbled = user.getIsSpeciallyAbled();
         this.isIdentityVerified = user.getIsIdentityVerified();
         this.identityVerifiedDate = user.getIdentityVerifiedDate();
+        this.identityVerifiedSource = user.getIdentityVerifiedSource();
         this.lastResyncDate = user.getLastResyncDate();
         this.edittedCount = user.getEdittedCount();
         this.lastLoginMethod = user.getLastLoginMethod();
     }
 
+    /**
+     * Maps correspondence address details from the domain {@link User} into this DTO.
+     *
+     * @param user domain user entity
+     */
     private void mapCorrespondenceAddress(User user) {
         if (user.getCorrespondenceAddress() != null) {
             this.correspondenceAddress = user.getCorrespondenceAddress().getAddress();
@@ -267,6 +319,11 @@ public class UserRequest {
         }
     }
 
+    /**
+     * Maps permanent address details from the domain {@link User} into this DTO.
+     *
+     * @param user domain user entity
+     */
     private void mapPermanentAddress(User user) {
         if (user.getPermanentAddress() != null) {
             this.permanentAddress = user.getPermanentAddress().getAddress();
@@ -275,13 +332,19 @@ public class UserRequest {
         }
     }
 
+    /**
+     * Converts a set of domain {@link Role} objects into contract {@link RoleRequest} objects.
+     *
+     * @param roleEntities set of domain role entities
+     * @return set of contract role request objects
+     */
     private Set<RoleRequest> convertDomainRoleToContract(Set<Role> roleEntities) {
         if (roleEntities == null) return new HashSet<>();
         return roleEntities.stream().map(RoleRequest::new).collect(Collectors.toSet());
     }
 
     /**
-     * Converts this {@link UserRequest} DTO to a domain {@link User} entity.
+     * Converts this {@link UserRequest} DTO to a domain {@link User} entity with operator audit metadata.
      *
      * @param loggedInUserId   numeric ID of authenticated requester
      * @param loggedInUserUuid UUID of authenticated requester
@@ -337,14 +400,23 @@ public class UserRequest {
                 .fatherName(this.fatherName)
                 .motherName(this.motherName)
                 .spouseName(this.spouseName)
-                .isIdentityVerified(this.isIdentityVerified)
-                .identityVerifiedDate(this.identityVerifiedDate)
+                .caste(this.caste)
+                .isSpeciallyAbled(this.isSpeciallyAbled)
+                .isIdentityVerified(isCreate ? Boolean.FALSE : null)
+                .identityVerifiedDate(null)
+                .identityVerifiedSource(null)
                 .lastResyncDate(this.lastResyncDate)
                 .edittedCount(this.edittedCount)
                 .lastLoginMethod(this.lastLoginMethod)
                 .build();
     }
 
+    /**
+     * Resolves the active status flag, defaulting to false for new user creation if unset.
+     *
+     * @param isCreate whether this request is creating a new user
+     * @return resolved boolean active indicator
+     */
     private Boolean isActive(boolean isCreate) {
         if (this.active == null && isCreate) {
             return false;
@@ -352,6 +424,12 @@ public class UserRequest {
         return this.active;
     }
 
+    /**
+     * Resolves the account locked flag, defaulting to false for new user creation if unset.
+     *
+     * @param isCreate whether this request is creating a new user
+     * @return resolved boolean account locked indicator
+     */
     private Boolean isAccountLocked(boolean isCreate) {
         if (this.accountLocked == null && isCreate) {
             return false;
@@ -359,6 +437,11 @@ public class UserRequest {
         return this.accountLocked;
     }
 
+    /**
+     * Converts the flat permanent address request fields into an {@link Address} domain object.
+     *
+     * @return constructed permanent address domain entity
+     */
     private Address toDomainPermanentAddress() {
         return Address.builder()
                 .type(AddressType.PERMANENT)
@@ -368,6 +451,11 @@ public class UserRequest {
                 .build();
     }
 
+    /**
+     * Converts the flat correspondence address request fields into an {@link Address} domain object.
+     *
+     * @return constructed correspondence address domain entity
+     */
     private Address toDomainCorrespondenceAddress() {
         return Address.builder()
                 .type(AddressType.CORRESPONDENCE)
@@ -377,6 +465,11 @@ public class UserRequest {
                 .build();
     }
 
+    /**
+     * Maps incoming contract role requests to domain {@link Role} instances.
+     *
+     * @return non-null set of domain roles
+     */
     private Set<Role> toDomainRoles() {
         // CRITICAL FIX: Return empty HashSet instead of null to prevent gateway authorization failures
         return this.roles != null

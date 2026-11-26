@@ -67,6 +67,7 @@ import { ESTComponents, ESTLinks, ESTModule } from "@nudmcdgnpm/upyog-ui-module-
 import { initNDCComponents, NDCReducers } from "@nudmcdgnpm/upyog-ui-module-ndc";
 import { GCModule, GCComponents } from "@nudmcdgnpm/upyog-ui-module-gc";
 import { FinanceModule, FinanceComponents } from "@nudmcdgnpm/upyog-ui-module-finance";
+import { initReportsComponents } from "@nudmcdgnpm/digit-ui-module-reports";
 import { initPROFILEComponents } from "@nudmcdgnpm/upyog-ui-module-profile";
 
 
@@ -186,7 +187,7 @@ initCommonPTComponents();
 initBillsComponents();
 initNDCComponents();
 initPROFILEComponents();
-// initReportsComponents();
+initReportsComponents();
 // initCustomisationComponents();
 
 const moduleReducers = (initData) => ({

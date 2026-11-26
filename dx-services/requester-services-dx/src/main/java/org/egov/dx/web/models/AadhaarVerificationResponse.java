@@ -1,6 +1,5 @@
 package org.egov.dx.web.models;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +15,7 @@ import org.egov.common.contract.response.ResponseInfo;
  * <p>Returned by both:</p>
  * <ul>
  *   <li><b>/_sendOtp:</b> returns {@code status} ("OTP_SENT"), {@code referenceId}, and {@code txnId}.</li>
- *   <li><b>/_verifyOtp:</b> returns {@code isVerified} (true/false), {@code maskedAadhaar}, and {@link UserDemographics} e-KYC profile.</li>
+ *   <li><b>/_verifyOtp:</b> returns {@code isVerified} (true/false), {@code maskedAadhaar}, {@code userUuid}, {@code familyId}, and {@link UserDemographics} e-KYC profile.</li>
  * </ul>
  *
  * @author UPYOG Team
@@ -34,7 +33,6 @@ public class AadhaarVerificationResponse {
      * Standard eGov ResponseInfo block containing request matching metadata and response status.
      */
     @JsonProperty("ResponseInfo")
-    @JsonAlias("responseInfo")
     private ResponseInfo responseInfo;
 
     /**
@@ -68,6 +66,12 @@ public class AadhaarVerificationResponse {
     private String maskedMobile;
 
     /**
+     * 10-digit mobile number associated with the citizen.
+     */
+    @JsonProperty("mobileNumber")
+    private String mobileNumber;
+
+    /**
      * Boolean indicator stating whether Aadhaar verification succeeded.
      */
     @JsonProperty("isVerified")
@@ -78,6 +82,20 @@ public class AadhaarVerificationResponse {
      */
     @JsonProperty("maskedAadhaar")
     private String maskedAadhaar;
+
+    /**
+     * Citizen UUID resolved from egov-user service if a citizen already exists with this Aadhaar.
+     * Null if no citizen account is associated with this verified Aadhaar.
+     */
+    @JsonProperty("userUuid")
+    private String userUuid;
+
+    /**
+     * Active Family ID associated with the resolved citizen (from egov-user / upyog-family-service).
+     * Null when the citizen has no active family membership or lookup failed (non-blocking).
+     */
+    @JsonProperty("familyId")
+    private String familyId;
 
     /**
      * Authenticated citizen demographics and residential address obtained from UIDAI e-KYC.

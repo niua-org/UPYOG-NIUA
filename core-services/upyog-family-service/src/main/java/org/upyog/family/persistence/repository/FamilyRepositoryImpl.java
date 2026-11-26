@@ -7,6 +7,7 @@ import org.upyog.family.domain.model.LineageActionType;
 import org.upyog.family.persistence.builder.FamilyQueryBuilder;
 import org.upyog.family.persistence.rowmapper.FamilyRowMapper;
 import org.upyog.family.util.FamilyConstants;
+import org.upyog.family.util.FamilyJsonConverter;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyDocument;
 import org.upyog.family.web.contract.FamilyLineage;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -34,21 +36,34 @@ public class FamilyRepositoryImpl implements FamilyRepository {
     private final JdbcTemplate jdbcTemplate;
     private final FamilyQueryBuilder queryBuilder;
     private final FamilyRowMapper rowMapper;
-    private final org.upyog.family.util.FamilyJsonConverter jsonConverter;
+    private final FamilyJsonConverter jsonConverter;
 
+    /**
+     * Constructs a FamilyRepositoryImpl with required database access and parsing dependencies.
+     *
+     * @param jdbcTemplate Spring JdbcTemplate for database query execution
+     * @param queryBuilder dynamic SQL query builder for family operations
+     * @param rowMapper extractor mapping relational rows into Family aggregate graphs
+     * @param jsonConverter utility component for JSON serialization of JSONB columns
+     */
     @Autowired
     public FamilyRepositoryImpl(JdbcTemplate jdbcTemplate,
                                 FamilyQueryBuilder queryBuilder,
                                 FamilyRowMapper rowMapper,
-                                org.upyog.family.util.FamilyJsonConverter jsonConverter) {
+                                FamilyJsonConverter jsonConverter) {
         this.jdbcTemplate = jdbcTemplate;
         this.queryBuilder = queryBuilder;
         this.rowMapper = rowMapper;
-        this.jsonConverter = jsonConverter != null ? jsonConverter : new org.upyog.family.util.FamilyJsonConverter(new ObjectMapper());
+        this.jsonConverter = jsonConverter != null ? jsonConverter : new FamilyJsonConverter(new ObjectMapper());
     }
 
     /**
-     * Persists a new Family aggregate, members, and documents to ug_family, ug_family_member, and ug_family_document.
+     * Persists a new Family aggregate, associated members, and verification documents to {@code ug_family},
+     * {@code ug_family_member}, and {@code ug_family_document} relational tables.
+     *
+     * <p>Binds all household attributes including {@code application_status}, {@code application_no},
+     * {@code approved_by}, {@code approval_date}, {@code family_certificate_id}, and creates an immutable snapshot
+     * in {@code ug_family_audit}.</p>
      *
      * @param family the Family aggregate to persist
      * @return the persisted Family aggregate
@@ -63,6 +78,9 @@ public class FamilyRepositoryImpl implements FamilyRepository {
         }
 
         String additionalDetailsJson = convertToJsonString(family.getAdditionalDetails());
+        String familyType = StringUtils.isNotBlank(family.getFamilyType())
+                ? family.getFamilyType()
+                : FamilyConstants.TYPE_UPYOG_INTERNAL;
 
         jdbcTemplate.update(FamilyQueryBuilder.INSERT_FAMILY_SQL,
                 family.getId(),
@@ -71,12 +89,15 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                 family.getHeadUserUuid(),
                 family.getCategory(),
                 family.getStatus() != null ? family.getStatus().name() : FamilyConstants.STATUS_ACTIVE,
+                familyType,
                 additionalDetailsJson,
                 family.getAuditDetails() != null ? family.getAuditDetails().getCreatedBy() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getCreatedTime() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedBy() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedTime() : null
         );
+
+        jdbcTemplate.update(FamilyQueryBuilder.INSERT_FAMILY_AUDIT_SQL, family.getFamilyId());
 
         if (family.getMembers() != null) {
             for (FamilyMember member : family.getMembers()) {
@@ -151,16 +172,22 @@ public class FamilyRepositoryImpl implements FamilyRepository {
         log.info("[UPYOG-FAMILY-REPO] Updating family: familyId={}, status={}", family.getFamilyId(), family.getStatus());
 
         String additionalDetailsJson = convertToJsonString(family.getAdditionalDetails());
+        String familyType = StringUtils.isNotBlank(family.getFamilyType())
+                ? family.getFamilyType()
+                : FamilyConstants.TYPE_UPYOG_INTERNAL;
 
         jdbcTemplate.update(FamilyQueryBuilder.UPDATE_FAMILY_SQL,
                 family.getHeadUserUuid(),
                 family.getCategory(),
                 family.getStatus() != null ? family.getStatus().name() : FamilyConstants.STATUS_ACTIVE,
+                familyType,
                 additionalDetailsJson,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedBy() : null,
                 family.getAuditDetails() != null ? family.getAuditDetails().getLastModifiedTime() : null,
                 family.getFamilyId()
         );
+
+        jdbcTemplate.update(FamilyQueryBuilder.INSERT_FAMILY_AUDIT_SQL, family.getFamilyId());
 
         if (family.getMembers() != null) {
             for (FamilyMember member : family.getMembers()) {
@@ -268,6 +295,28 @@ public class FamilyRepositoryImpl implements FamilyRepository {
     }
 
     /**
+     * Finds a unique Family aggregate by its family identifier and tenant identifier.
+     *
+     * @param familyId unique family identifier
+     * @param tenantId tenant identifier representing city/state hierarchy
+     * @return Optional containing the Family aggregate if found, otherwise Optional.empty()
+     */
+    @Override
+    public Optional<Family> findByFamilyIdAndTenantId(String familyId, String tenantId) {
+        if (StringUtils.isBlank(familyId) || StringUtils.isBlank(tenantId)) {
+            return Optional.empty();
+        }
+        FamilySearchCriteria criteria = FamilySearchCriteria.builder()
+                .familyId(familyId)
+                .tenantId(tenantId)
+                .limit(1)
+                .offset(0)
+                .build();
+        List<Family> families = search(criteria);
+        return (families != null && !families.isEmpty()) ? Optional.of(families.get(0)) : Optional.empty();
+    }
+
+    /**
      * Queries active family IDs for a citizen UUID to enforce multi-family exclusivity in UPYOG.
      *
      * @param userUuid citizen user UUID
@@ -324,16 +373,34 @@ public class FamilyRepositoryImpl implements FamilyRepository {
                 .build(), familyId, familyId);
     }
 
+    /**
+     * Checks if a member record exists in the ug_family_member database table.
+     *
+     * @param memberId unique member record identifier
+     * @return true if the member row exists, false otherwise
+     */
     private boolean existsMember(String memberId) {
         Integer count = jdbcTemplate.queryForObject(FamilyQueryBuilder.EXISTS_MEMBER_SQL, Integer.class, memberId);
         return count != null && count > 0;
     }
 
+    /**
+     * Checks if a document record exists in the ug_family_document database table.
+     *
+     * @param docId unique document record identifier
+     * @return true if the document row exists, false otherwise
+     */
     private boolean existsDocument(String docId) {
         Integer count = jdbcTemplate.queryForObject(FamilyQueryBuilder.EXISTS_DOC_SQL, Integer.class, docId);
         return count != null && count > 0;
     }
 
+    /**
+     * Helper method to serialize an object into a JSON string using the injected jsonConverter.
+     *
+     * @param obj object to serialize
+     * @return JSON string or null if object is null or serialization fails
+     */
     private String convertToJsonString(Object obj) {
         return jsonConverter.convertToJsonString(obj);
     }

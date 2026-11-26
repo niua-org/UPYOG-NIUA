@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.profile;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -81,12 +80,10 @@ public class ProfileCreateRequest {
     private String spouseName;
 
     @Schema(description = "Guardian full name (Mandatory for minors under 18)", example = "Rajesh Sharma")
-    @JsonAlias({"guardianName", "guardian_name"})
     @Size(max = 100)
     private String guardian;
 
     @Schema(description = "Guardian relationship: FATHER, MOTHER, HUSBAND, OTHER (Mandatory for minors under 18)", example = "FATHER")
-    @JsonAlias({"guardianRelationship", "guardian_relation", "guardian_relationship"})
     @Size(max = 32)
     private String guardianRelation;
 
@@ -142,9 +139,16 @@ public class ProfileCreateRequest {
     @Schema(description = "Upload D.O.B. Proof filestore ID (Mandatory if not in documents list)", example = "filestore-dob-1234")
     private String dobProofFileStoreId;
 
+    @Schema(description = "Identity verification status flag", example = "false")
+    @JsonProperty("isIdentityVerified")
+    private Boolean isIdentityVerified;
+
+    @Schema(description = "User type (CITIZEN, EMPLOYEE, etc.)", example = "CITIZEN")
+    @JsonProperty("type")
+    private String type;
+
     @Schema(description = "Nested citizen profile payload supporting standard UPYOG request contracts")
     @JsonProperty("user")
-    @JsonAlias({"profile", "User"})
     private Map<String, Object> user;
 
     public String getTenantId() {
@@ -176,18 +180,24 @@ public class ProfileCreateRequest {
     }
 
     @JsonProperty("user")
-    @JsonAlias({"profile", "User"})
     public Map<String, Object> getUser() {
         return this.user;
     }
 
     @JsonSetter("user")
-    @JsonAlias({"profile", "User"})
+    /**
+     * Deserializes and unrolls legacy nested {@code user} or {@code profile} payload maps into top-level attributes.
+     *
+     * @param userMap raw key-value map representing nested user properties
+     */
     public void setUser(Map<String, Object> userMap) {
         this.user = userMap;
         unpackUserIfPresent();
     }
 
+    /**
+     * Unpacks nested user map entries into top-level fields for backwards compatibility with legacy wrapper payloads.
+     */
     public void unpackUserIfPresent() {
         if (this.user == null) return;
         Map<String, Object> userMap = this.user;
@@ -237,6 +247,18 @@ public class ProfileCreateRequest {
         }
         if (this.dob == null && userMap.get("dob") != null) {
             this.dob = parseDateHelper(userMap.get("dob"));
+        }
+        if (this.isIdentityVerified == null) {
+            if (userMap.get("isIdentityVerified") != null) {
+                this.isIdentityVerified = Boolean.valueOf(String.valueOf(userMap.get("isIdentityVerified")));
+            } else if (userMap.get("isVerified") != null) {
+                this.isIdentityVerified = Boolean.valueOf(String.valueOf(userMap.get("isVerified")));
+            }
+        }
+        if ((this.type == null || this.type.trim().isEmpty()) && userMap.get("type") != null) {
+            this.type = String.valueOf(userMap.get("type"));
+        } else if ((this.type == null || this.type.trim().isEmpty()) && userMap.get("userType") != null) {
+            this.type = String.valueOf(userMap.get("userType"));
         }
         ObjectMapper mapper = new ObjectMapper();
         if (this.address == null && userMap.containsKey("address")) {

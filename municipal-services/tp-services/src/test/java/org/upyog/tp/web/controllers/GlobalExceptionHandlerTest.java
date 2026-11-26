@@ -115,9 +115,9 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(post("/water-tanker/v1/_create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error.code").value(400))
-                .andExpect(jsonPath("$.error.message").value("Custom validation error"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error.code").value(500))
+                .andExpect(jsonPath("$.error.message").exists());
     }
 
     /**

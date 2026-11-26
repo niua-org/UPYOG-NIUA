@@ -6,8 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.enums.Gender;
+import org.egov.user.domain.service.multiauth.MockAadhaarRecordService;
+import org.egov.user.domain.service.multiauth.MockAadhaarRecordService.MockCitizenRecord;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -39,6 +43,13 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
     private final UserConfiguration userConfiguration;
     private final Map<String, Integer> otpAttemptsByRefId = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs an {@code IdentityVerificationServiceImpl} with necessary HTTP clients and configurations.
+     *
+     * @param restTemplate the REST template for dispatching upstream identity verification requests
+     * @param objectMapper the Jackson JSON object mapper for response payload deserialization
+     * @param userConfiguration application configuration properties for service endpoints and timeouts
+     */
     @Autowired
     public IdentityVerificationServiceImpl(RestTemplate restTemplate,
                                            ObjectMapper objectMapper,
@@ -48,38 +59,88 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
         this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Backward-compatible constructor for testing without {@link UserConfiguration}.
+     *
+     * @param restTemplate HTTP REST client
+     * @param objectMapper JSON object mapper
+     */
     public IdentityVerificationServiceImpl(RestTemplate restTemplate, ObjectMapper objectMapper) {
         this(restTemplate, objectMapper, null);
     }
 
+    /**
+     * Retrieves the configured host URL for dx requester service.
+     *
+     * @return base URL string of requester service
+     * @throws CustomException if host is unconfigured
+     */
     private String getRequesterServiceHost() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getRequesterServiceHost()))
-                ? userConfiguration.getRequesterServiceHost()
-                : "https://upyog.niua.org/";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterServiceHost())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_REQUESTER_HOST_NOT_CONFIGURED);
+        }
+        return userConfiguration.getRequesterServiceHost();
     }
 
+    /**
+     * Retrieves the configured endpoint for Aadhaar OTP verification.
+     *
+     * @return endpoint path string
+     * @throws CustomException if endpoint is unconfigured
+     */
     private String getRequesterVerifyEndpoint() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint()))
-                ? userConfiguration.getRequesterAadhaarVerifyEndpoint()
-                : "requester-services-dx/aadhaar/v1/_verifyOtp";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getRequesterAadhaarVerifyEndpoint())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_REQUESTER_VERIFY_ENDPOINT_NOT_CONFIGURED);
+        }
+        return userConfiguration.getRequesterAadhaarVerifyEndpoint();
     }
 
+    /**
+     * Checks if static mock/fixed OTP mode is enabled in the configuration.
+     *
+     * @return {@code true} if fixed OTP is enabled; {@code false} otherwise
+     */
     private boolean isFixedOTPEnabled() {
         return userConfiguration != null && Boolean.TRUE.equals(userConfiguration.getFixedOtpEnabled());
     }
 
+    /**
+     * Retrieves the static/fixed OTP value for testing environments.
+     *
+     * @return expected fixed OTP string
+     * @throws CustomException if fixed OTP password is not set
+     */
     private String getFixedOTPPassword() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFixedOtpPassword()))
-                ? userConfiguration.getFixedOtpPassword()
-                : "123456";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFixedOtpPassword())) {
+            throw new CustomException(UserConstants.ERROR_FIXED_OTP_NOT_CONFIGURED, UserConstants.MSG_FIXED_OTP_NOT_CONFIGURED);
+        }
+        return userConfiguration.getFixedOtpPassword();
     }
 
+    /**
+     * Retrieves the maximum allowed failed OTP attempts before lockout.
+     *
+     * @return max attempts count
+     * @throws CustomException if max attempts is not configured
+     */
     private int getMaxOtpAttempts() {
-        return (userConfiguration != null && userConfiguration.getAadhaarOtpMaxAttempts() != null)
-                ? userConfiguration.getAadhaarOtpMaxAttempts()
-                : 3;
+        if (userConfiguration == null || userConfiguration.getAadhaarOtpMaxAttempts() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "aadhaar.otp.max.attempts is not configured");
+        }
+        return userConfiguration.getAadhaarOtpMaxAttempts();
     }
 
+    /**
+     * Verifies an Aadhaar OTP against the identity verification provider or mock gateway.
+     *
+     * @param requestInfo standard UPYOG request metadata envelope
+     * @param tenantId    tenant identifier
+     * @param refId       transaction reference or session ID
+     * @param rawAadhaar  raw 12-digit Aadhaar number
+     * @param otp         6-digit OTP entered by citizen
+     * @param isResync    flag indicating whether this is a profile resync verification
+     * @return verified demographics envelope
+     */
     @Override
     public VerifiedAadhaarDemographics verifyAadhaarOtp(RequestInfo requestInfo,
                                                         String tenantId,
@@ -88,12 +149,12 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
                                                         String otp,
                                                         boolean isResync) {
         log.info("[IDENTITY-VERIFY-SERVICE] Initiating Aadhaar OTP verification. tenant={}, refId={}, isResync={}",
-                tenantId, refId, isResync);
+                tenantId, MaskUtils.maskIdentifier(refId), isResync);
 
         if (StringUtils.isNotBlank(refId)) {
             int currentAttempts = otpAttemptsByRefId.getOrDefault(refId, 0);
             if (currentAttempts >= getMaxOtpAttempts()) {
-                log.error("[IDENTITY-VERIFY-SERVICE] Locked transaction: refId {} exceeded max invalid OTP attempts ({})", refId, getMaxOtpAttempts());
+                log.error("[IDENTITY-VERIFY-SERVICE] Locked transaction: refId {} exceeded max invalid OTP attempts ({})", MaskUtils.maskIdentifier(refId), getMaxOtpAttempts());
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
             }
         }
@@ -103,22 +164,18 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
             if (StringUtils.isNotBlank(refId)) {
                 otpAttemptsByRefId.remove(refId);
             }
-            return createMockDemographics(rawAadhaar, refId);
+            return createMockDemographics(rawAadhaar, refId, requestInfo);
         }
 
         try {
-            String host = getRequesterServiceHost();
-            String endpoint = getRequesterVerifyEndpoint();
-            String url = host.endsWith("/")
-                    ? host + (endpoint.startsWith("/") ? endpoint.substring(1) : endpoint)
-                    : host + (endpoint.startsWith("/") ? endpoint : "/" + endpoint);
-
+            String url = buildVerifyUrl();
             Map<String, Object> reqBody = new HashMap<>();
-            reqBody.put("RequestInfo", requestInfo);
-            reqBody.put("txnId", refId);
-            reqBody.put("referenceId", refId);
-            reqBody.put("otp", otp);
-            reqBody.put("isResync", isResync);
+            reqBody.put(UserConstants.JSON_KEY_REQUEST_INFO, requestInfo);
+            reqBody.put(UserConstants.JSON_KEY_TXN_ID, refId);
+            reqBody.put(UserConstants.JSON_KEY_REFERENCE_ID, refId);
+            reqBody.put(UserConstants.JSON_KEY_OTP, otp);
+            reqBody.put(UserConstants.PARAM_TENANT_ID, tenantId);
+            reqBody.put(UserConstants.JSON_KEY_IS_RESYNC, isResync);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -129,7 +186,7 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
-                boolean isVerified = root.path("isVerified").asBoolean(false);
+                boolean isVerified = root.path(UserConstants.JSON_KEY_IS_VERIFIED).asBoolean(false);
                 if (!isVerified) {
                     recordFailedOtpAttempt(refId);
                     log.error("[IDENTITY-VERIFY-SERVICE] Identity provider reported verification unsuccessful");
@@ -140,22 +197,7 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
                     otpAttemptsByRefId.remove(refId);
                 }
 
-                String maskedAadhaar = root.path("maskedAadhaar").asText(maskAadhaar(rawAadhaar));
-                JsonNode demoNode = root.path(UserConstants.JSON_KEY_DEMOGRAPHICS);
-                String name = demoNode.hasNonNull(UserConstants.JSON_KEY_NAME) ? demoNode.path(UserConstants.JSON_KEY_NAME).asText() : root.path(UserConstants.JSON_KEY_NAME).asText(null);
-                String genderStr = demoNode.hasNonNull(UserConstants.JSON_KEY_GENDER) ? demoNode.path(UserConstants.JSON_KEY_GENDER).asText() : root.path(UserConstants.JSON_KEY_GENDER).asText(null);
-                String dobStr = demoNode.hasNonNull(UserConstants.JSON_KEY_DOB) ? demoNode.path(UserConstants.JSON_KEY_DOB).asText() : root.path(UserConstants.JSON_KEY_DOB).asText(null);
-                String photo = demoNode.hasNonNull(UserConstants.JSON_KEY_PHOTO) ? demoNode.path(UserConstants.JSON_KEY_PHOTO).asText() : root.path(UserConstants.JSON_KEY_PHOTO).asText(null);
-
-                log.info("[IDENTITY-VERIFY-SERVICE] e-KYC demographics verified successfully. maskedAadhaar={}", maskedAadhaar);
-                return VerifiedAadhaarDemographics.builder()
-                        .maskedAadhaar(maskedAadhaar)
-                        .name(name)
-                        .gender(parseGender(genderStr))
-                        .dob(parseDob(dobStr))
-                        .photo(photo)
-                        .verified(true)
-                        .build();
+                return parseDemographics(root, rawAadhaar);
             }
         } catch (CustomException ce) {
             throw ce;
@@ -171,6 +213,70 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
     }
 
     /**
+     * Constructs the full endpoint URL for requester service Aadhaar OTP verification.
+     *
+     * @return constructed absolute URL string
+     */
+    private String buildVerifyUrl() {
+        String host = getRequesterServiceHost();
+        String endpoint = getRequesterVerifyEndpoint();
+        return host.endsWith("/")
+                ? host + (endpoint.startsWith("/") ? endpoint.substring(1) : endpoint)
+                : host + (endpoint.startsWith("/") ? endpoint : "/" + endpoint);
+    }
+
+    /**
+     * Parses verified demographic elements from the response JSON payload.
+     *
+     * @param root       root JSON tree returned by gateway
+     * @param rawAadhaar raw Aadhaar input used for fallback masking
+     * @return populated {@link VerifiedAadhaarDemographics} envelope
+     */
+    private VerifiedAadhaarDemographics parseDemographics(JsonNode root, String rawAadhaar) {
+        String maskedAadhaar = root.path(UserConstants.JSON_KEY_MASKED_AADHAAR).asText(maskAadhaar(rawAadhaar));
+        JsonNode demoNode = root.path(UserConstants.JSON_KEY_DEMOGRAPHICS);
+        String name = demoNode.hasNonNull(UserConstants.JSON_KEY_NAME) ? demoNode.path(UserConstants.JSON_KEY_NAME).asText() : root.path(UserConstants.JSON_KEY_NAME).asText(null);
+        String genderStr = demoNode.hasNonNull(UserConstants.JSON_KEY_GENDER) ? demoNode.path(UserConstants.JSON_KEY_GENDER).asText() : root.path(UserConstants.JSON_KEY_GENDER).asText(null);
+        String dobStr = demoNode.hasNonNull(UserConstants.JSON_KEY_DOB) ? demoNode.path(UserConstants.JSON_KEY_DOB).asText() : root.path(UserConstants.JSON_KEY_DOB).asText(null);
+        String photo = demoNode.hasNonNull(UserConstants.JSON_KEY_PHOTO) ? demoNode.path(UserConstants.JSON_KEY_PHOTO).asText() : root.path(UserConstants.JSON_KEY_PHOTO).asText(null);
+        String mobile = extractMobileFromNodes(root, demoNode);
+
+        log.info("[IDENTITY-VERIFY-SERVICE] e-KYC demographics verified successfully. maskedAadhaar={}, mobileFound={}",
+                maskedAadhaar, StringUtils.isNotBlank(mobile));
+        return VerifiedAadhaarDemographics.builder()
+                .maskedAadhaar(maskedAadhaar)
+                .name(name)
+                .gender(parseGender(genderStr))
+                .dob(parseDob(dobStr))
+                .mobileNumber(mobile)
+                .photo(photo)
+                .verified(true)
+                .build();
+    }
+
+    /**
+     * Extracts citizen mobile contact from candidate JSON attributes.
+     *
+     * @param root     root JSON response node
+     * @param demoNode nested demographics JSON node
+     * @return mobile phone number string or null
+     */
+    private String extractMobileFromNodes(JsonNode root, JsonNode demoNode) {
+        String[] keys = {UserConstants.JSON_KEY_MOBILE_NUMBER, UserConstants.JSON_KEY_MOBILE, UserConstants.JSON_KEY_PHONE};
+        for (String k : keys) {
+            if (demoNode.hasNonNull(k)) {
+                return demoNode.path(k).asText();
+            }
+        }
+        for (String k : keys) {
+            if (root.hasNonNull(k)) {
+                return root.path(k).asText();
+            }
+        }
+        return null;
+    }
+
+    /**
      * Records failed OTP verification attempts per reference ID.
      * When attempts reach {@code maxOtpAttempts}, locks the session.
      *
@@ -182,30 +288,47 @@ public class IdentityVerificationServiceImpl implements IdentityVerificationServ
             int attempts = otpAttemptsByRefId.compute(refId, (k, v) -> (v == null ? 1 : v + 1));
             if (attempts >= getMaxOtpAttempts()) {
                 log.error("[IDENTITY-VERIFY-SERVICE] refId {} reached max invalid OTP attempts ({}). Invaliding and locking transaction.",
-                        refId, getMaxOtpAttempts());
+                        MaskUtils.maskIdentifier(refId), getMaxOtpAttempts());
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
             }
         }
     }
 
     /**
-     * Creates mock demographic attributes for development or test environments.
+     * Creates mock demographic attributes for development or test environments
+     * by pulling sequentially from the 500+ mock citizen personas dataset.
      *
-     * @param rawAadhaar plain Aadhaar number
-     * @param refId      session reference ID
-     * @return mock {@link VerifiedAadhaarDemographics}
+     * @param rawAadhaar   plain Aadhaar number
+     * @param refId        session reference ID
+     * @param requestInfo  caller RequestInfo context
+     * @return mock {@link VerifiedAadhaarDemographics} containing sequential citizen persona
      */
-    private VerifiedAadhaarDemographics createMockDemographics(String rawAadhaar, String refId) {
+    private VerifiedAadhaarDemographics createMockDemographics(String rawAadhaar, String refId, RequestInfo requestInfo) {
         String masked = maskAadhaar(rawAadhaar);
         if (StringUtils.isBlank(masked)) {
             masked = "XXXXXXXX" + (StringUtils.isNotBlank(refId) && refId.length() >= 4
                     ? refId.substring(refId.length() - 4) : "1234");
         }
+        String mockMobile = null;
+        if (requestInfo != null && requestInfo.getUserInfo() != null && StringUtils.isNotBlank(requestInfo.getUserInfo().getMobileNumber())) {
+            mockMobile = requestInfo.getUserInfo().getMobileNumber();
+        } else if (requestInfo != null && requestInfo.getUserInfo() != null && StringUtils.isNotBlank(requestInfo.getUserInfo().getUserName()) && requestInfo.getUserInfo().getUserName().matches("\\d{10}")) {
+            mockMobile = requestInfo.getUserInfo().getUserName();
+        } else {
+            mockMobile = "9876543210";
+        }
+        // Fix for PR Comment #16 (MockAadhaarRecordService.java:144):
+        // Deterministically select mock citizen persona based on Aadhaar number hash.
+        String aadhaarKey = StringUtils.isNotBlank(rawAadhaar) ? rawAadhaar : refId;
+        MockCitizenRecord record = MockAadhaarRecordService.getRecordForAadhaar(aadhaarKey);
+        Gender gender = UserConstants.GENDER_FEMALE_CODE.equalsIgnoreCase(record.getGender()) ? Gender.FEMALE : Gender.MALE;
+        Date dob = parseDob(record.getDob() != null ? record.getDob() : UserConstants.DEFAULT_MOCK_DOB);
         return VerifiedAadhaarDemographics.builder()
                 .maskedAadhaar(masked)
-                .name("Aadhaar Verified Citizen")
-                .gender(Gender.MALE)
-                .dob(parseDob("1990-01-01"))
+                .name(record.getName())
+                .gender(gender)
+                .dob(dob)
+                .mobileNumber(mockMobile)
                 .verified(true)
                 .build();
     }

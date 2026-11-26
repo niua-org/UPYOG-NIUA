@@ -4,10 +4,10 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.dx.util.Configurations;
@@ -56,11 +56,14 @@ public class DLRequestService {
       
     private static final User User = null;
 
-	@Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+    private final Configurations configurations;
 
     @Autowired
-	private Configurations configurations;
+    public DLRequestService(RestTemplate restTemplate, Configurations configurations) {
+        this.restTemplate = restTemplate;
+        this.configurations = configurations;
+    }
     
 
    
@@ -111,20 +114,19 @@ public class DLRequestService {
     	return encoded;              
     	}
     
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     public String getCodeVerifier()
     {
     	 int leftLimit = 45; // numeral '0'
     	    int rightLimit = 126; // letter 'z'
     	    int targetStringLength = 60;
-    	    Random random = new Random();
 
-    	    String generatedString = random.ints(leftLimit, rightLimit + 1)
+    	    return SECURE_RANDOM.ints(leftLimit, rightLimit + 1)
     	      .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 95) && i!=47 && i!=96 && i!=123 && i!=124 && i!=125)
     	      .limit(targetStringLength)
     	      .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
     	      .toString();
-
-    	    return generatedString;
     }
     
     public TokenRes getToken(TokenReq tokenReq)
@@ -198,8 +200,12 @@ public class DLRequestService {
          
          HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(null,
                  headers);
-         IssuedDocumentList issuedDocumentList= restTemplate.postForEntity(configurations.getApiHost() + configurations.getIssuedFilesURI(), request, IssuedDocumentList.class).getBody();
-         return issuedDocumentList.getItems();
+         ResponseEntity<IssuedDocumentList> responseEntity = restTemplate.postForEntity(
+                 configurations.getApiHost() + configurations.getIssuedFilesURI(), request, IssuedDocumentList.class);
+         IssuedDocumentList issuedDocumentList = responseEntity != null ? responseEntity.getBody() : null;
+         return (issuedDocumentList != null && issuedDocumentList.getItems() != null)
+                 ? issuedDocumentList.getItems()
+                 : Collections.emptyList();
     }
     public byte[] getDoc(TokenReq tokenReq,String uri)
     {
@@ -219,8 +225,11 @@ public class DLRequestService {
          ResponseEntity<String> entity = restTemplate.exchange(configurations.getApiHost() + configurations.getGetFileURI()+"/"+uri, HttpMethod.GET, 
                  request, String.class);
                
-         
-         return entity.getBody().getBytes();
+         String body = entity.getBody();
+         if (body == null) {
+             return new byte[0];
+         }
+         return body.getBytes(StandardCharsets.UTF_8);
     }
 
     public Object getOauthToken(RequestInfo requestinfo , TokenRes tokenRes)

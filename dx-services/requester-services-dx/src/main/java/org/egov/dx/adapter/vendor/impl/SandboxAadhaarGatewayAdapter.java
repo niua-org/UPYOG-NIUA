@@ -41,26 +41,33 @@ public class SandboxAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
 
     private final Configurations configurations;
     private final RestClient restClient;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructs the adapter and configures the underlying synchronous {@link RestClient}
      * with resilient connection and read timeouts.
      *
      * @param configurations application configurations
+     * @param objectMapper object mapper for JSON deserialization
      */
-    public SandboxAadhaarGatewayAdapter(Configurations configurations) {
+    @Autowired
+    public SandboxAadhaarGatewayAdapter(Configurations configurations, ObjectMapper objectMapper) {
         this.configurations = configurations;
+        this.objectMapper = objectMapper;
+
+        if (configurations.getAadhaarGatewayConnectTimeout() == null) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.connect.timeout is not configured");
+        }
+        if (configurations.getAadhaarGatewayReadTimeout() == null) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.read.timeout is not configured");
+        }
+        if (StringUtils.isBlank(configurations.getAadhaarGatewayBaseUrl())) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.base.url is not configured");
+        }
 
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        int connectTimeout = (configurations.getAadhaarGatewayConnectTimeout() != null)
-                ? configurations.getAadhaarGatewayConnectTimeout() : 5000;
-        int readTimeout = (configurations.getAadhaarGatewayReadTimeout() != null)
-                ? configurations.getAadhaarGatewayReadTimeout() : 10000;
-        requestFactory.setConnectTimeout(connectTimeout);
-        requestFactory.setReadTimeout(readTimeout);
+        requestFactory.setConnectTimeout(configurations.getAadhaarGatewayConnectTimeout());
+        requestFactory.setReadTimeout(configurations.getAadhaarGatewayReadTimeout());
 
         this.restClient = RestClient.builder()
                 .baseUrl(configurations.getAadhaarGatewayBaseUrl())
@@ -73,6 +80,19 @@ public class SandboxAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
     @Override
     public VendorSendOtpResponse sendOtp(VendorSendOtpRequest request) {
         String endpointUri = configurations.getAadhaarGatewaySendOtpPath();
+        if (StringUtils.isBlank(endpointUri)) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.send.otp.path is not configured");
+        }
+        if (StringUtils.isBlank(configurations.getAadhaarGatewayApiKey())) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.api.key is not configured");
+        }
+        if (StringUtils.isBlank(configurations.getAadhaarGatewayApiSecret())) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.api.secret is not configured");
+        }
+        if (StringUtils.isBlank(configurations.getAadhaarGatewayApiVersion())) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.api.version is not configured");
+        }
+
         String maskedAadhaar = (request != null) ? request.getMaskedAadhaar() : "null";
 
         log.info("[LIVE] Invoking Sandbox Send OTP endpoint [{}{}] for masked Aadhaar: {}",
@@ -81,9 +101,9 @@ public class SandboxAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
         try {
             return restClient.post()
                     .uri(endpointUri)
-                    .header(AadhaarConstants.HEADER_API_KEY, defaultString(configurations.getAadhaarGatewayApiKey()))
-                    .header(AadhaarConstants.HEADER_API_SECRET, defaultString(configurations.getAadhaarGatewayApiSecret()))
-                    .header(AadhaarConstants.HEADER_API_VERSION, defaultString(configurations.getAadhaarGatewayApiVersion()))
+                    .header(AadhaarConstants.HEADER_API_KEY, configurations.getAadhaarGatewayApiKey())
+                    .header(AadhaarConstants.HEADER_API_SECRET, configurations.getAadhaarGatewayApiSecret())
+                    .header(AadhaarConstants.HEADER_API_VERSION, configurations.getAadhaarGatewayApiVersion())
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
@@ -109,6 +129,19 @@ public class SandboxAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
     @Override
     public VendorVerifyOtpSuccessResponse verifyOtp(VendorVerifyOtpRequest request) {
         String endpointUri = configurations.getAadhaarGatewayVerifyOtpPath();
+        if (StringUtils.isBlank(endpointUri)) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.verify.otp.path is not configured");
+        }
+        if (StringUtils.isBlank(configurations.getAadhaarGatewayApiKey())) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.api.key is not configured");
+        }
+        if (StringUtils.isBlank(configurations.getAadhaarGatewayApiSecret())) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.api.secret is not configured");
+        }
+        if (StringUtils.isBlank(configurations.getAadhaarGatewayApiVersion())) {
+            throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, "aadhaar.gateway.api.version is not configured");
+        }
+
         Long refId = (request != null) ? request.getReferenceId() : null;
 
         log.info("[LIVE] Invoking Sandbox Verify OTP endpoint [{}{}] for referenceId: {}",
@@ -117,9 +150,9 @@ public class SandboxAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
         try {
             return restClient.post()
                     .uri(endpointUri)
-                    .header(AadhaarConstants.HEADER_API_KEY, defaultString(configurations.getAadhaarGatewayApiKey()))
-                    .header(AadhaarConstants.HEADER_API_SECRET, defaultString(configurations.getAadhaarGatewayApiSecret()))
-                    .header(AadhaarConstants.HEADER_API_VERSION, defaultString(configurations.getAadhaarGatewayApiVersion()))
+                    .header(AadhaarConstants.HEADER_API_KEY, configurations.getAadhaarGatewayApiKey())
+                    .header(AadhaarConstants.HEADER_API_SECRET, configurations.getAadhaarGatewayApiSecret())
+                    .header(AadhaarConstants.HEADER_API_VERSION, configurations.getAadhaarGatewayApiVersion())
                     .body(request)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (req, res) -> {
@@ -152,9 +185,5 @@ public class SandboxAadhaarGatewayAdapter implements AadhaarGatewayAdapter {
             throw new CustomException(AadhaarConstants.ERR_CODE_GATEWAY_ERROR,
                     "Failed to communicate with Aadhaar gateway during verification: " + ex.getMessage());
         }
-    }
-
-    private String defaultString(String str) {
-        return (str != null) ? str : "";
     }
 }

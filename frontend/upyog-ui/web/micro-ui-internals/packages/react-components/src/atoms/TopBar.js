@@ -65,7 +65,7 @@ const TopBar = ({
           ) : (
             <div className="location-button">
               <img src="/upyog-ui/images/location.svg" alt="location" />
-              <span>{cityName || "City A"}</span>
+              <span>{cityName || "Delhi"}</span>
             </div>
           )}
         </div>
@@ -116,6 +116,13 @@ const TopBar = ({
                 }
               />
             )}
+          </div>
+          <div className="topbar-right-end-logo">
+            <img
+              src="/upyog-ui/images/logo-mobile.png"
+              alt="UPYOG"
+              className="topbar-right-logo-img"
+            />
           </div>
         </div>
 

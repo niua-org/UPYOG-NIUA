@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.upyog.family.persistence.builder.StateFamilySyncQueryBuilder;
 import org.upyog.family.util.FamilyConstants;
+import org.upyog.family.util.MaskUtils;
 import org.upyog.family.web.contract.state.StateFamily;
 
 import java.util.Map;
@@ -32,6 +33,13 @@ public class StateFamilySyncRepositoryImpl implements StateFamilySyncRepository 
     private final Map<String, StateFamily> cacheByReferenceId = new ConcurrentHashMap<>();
     private final Map<String, String> referenceIdByStateFamilyId = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs a StateFamilySyncRepositoryImpl with required JDBC template, ObjectMapper, and SQL builder.
+     *
+     * @param jdbcTemplate Spring JdbcTemplate for database query execution
+     * @param objectMapper Jackson ObjectMapper for serializing and deserializing state family payloads
+     * @param queryBuilder SQL query builder holding state sync SQL templates
+     */
     @Autowired
     public StateFamilySyncRepositoryImpl(JdbcTemplate jdbcTemplate,
                                          ObjectMapper objectMapper,
@@ -41,6 +49,12 @@ public class StateFamilySyncRepositoryImpl implements StateFamilySyncRepository 
         this.queryBuilder = queryBuilder;
     }
 
+    /**
+     * Persists a staged StateFamily record to both in-memory concurrent cache and ug_state_family_sync database table.
+     *
+     * @param referenceId unique reference identifier generated for this sync operation
+     * @param stateFamily StateFamily aggregate containing family and member details
+     */
     @Override
     public void save(String referenceId, StateFamily stateFamily) {
         long now = System.currentTimeMillis();
@@ -64,12 +78,18 @@ public class StateFamilySyncRepositoryImpl implements StateFamilySyncRepository 
                     now
             );
             log.info("[STATE-SYNC-REPO] Persisted state family sync to DB: refId={}, stateFamilyId={}",
-                    referenceId, stateFamily.getStateFamilyId());
+                    MaskUtils.maskIdentifier(referenceId), stateFamily.getStateFamilyId());
         } catch (Exception e) {
             log.warn("[STATE-SYNC-REPO] Could not persist state family sync to DB (cache intact): {}", e.getMessage());
         }
     }
 
+    /**
+     * Retrieves a staged StateFamily record by its referenceId, checking in-memory cache first before querying database.
+     *
+     * @param referenceId unique reference identifier
+     * @return StateFamily if found, null otherwise
+     */
     @Override
     public StateFamily findByReferenceId(String referenceId) {
         if (StringUtils.isBlank(referenceId)) {
@@ -104,6 +124,13 @@ public class StateFamilySyncRepositoryImpl implements StateFamilySyncRepository 
         return null;
     }
 
+    /**
+     * Retrieves a staged StateFamily record by its state-assigned family identifier (e.g., PPP ID / Samagra ID).
+     * Checks in-memory cache first before falling back to database query.
+     *
+     * @param stateFamilyId state-assigned external family identifier
+     * @return StateFamily if found, null otherwise
+     */
     @Override
     public StateFamily findByStateFamilyId(String stateFamilyId) {
         if (StringUtils.isBlank(stateFamilyId)) {

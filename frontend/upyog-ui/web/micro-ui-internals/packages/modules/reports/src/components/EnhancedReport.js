@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from "react-router-dom";
 import { Loader, Card, Header } from "@nudmcdgnpm/digit-ui-react-components";
@@ -7,58 +7,76 @@ const getSearchParamsObj = (field, data, key, t) => {
   let obj = {}
   if (data[key] === undefined || data[key] === '' || field === undefined || data[key] === t('ALL'))
     return
-  
   switch (field?.type) {
     case "string":
-      if(data[key] === undefined || data[key] === "")
+      if (data[key] === undefined || data[key] === "")
         return
       obj["name"] = key
       obj["input"] = data[key];
-      return obj 
-      
-    case "singlevaluelist":
-      var defaultValueObj = field.defaultValue
-      var isLoc = field.localisationRequired;
-      var input
-      if (isLoc) {
-        input = Object.keys(defaultValueObj).find(el => t(defaultValueObj[el]) === data[key])
-      } else {
-        input = Object.keys(defaultValueObj).find(el => defaultValueObj[el] === data[key])
-      }
-      obj["name"] = key
-      obj["input"] = input;
       return obj
 
-    case "multivaluelist":
-      if(data?.[key]?.[0]?.name === "All")
-       return 
-      var defaultValueObj = field.defaultValue
-      var isLoc = field.localisationRequired;
-      var input
-      if (isLoc) {
-        input = data[key].map(selection => Object.keys(defaultValueObj).find(el => t(defaultValueObj[el]) === t(selection.name)))
-      } else {
-        input = data[key].map(selection => Object.keys(defaultValueObj).find(el => defaultValueObj[el] === selection.name))
-      }
-      obj["name"] = key
+    case "singlevaluelist": {
+      const defaultValueObj = field.defaultValue || {};
+      const selectedVal = typeof data[key] === "object" ? data[key]?.code || data[key]?.name : data[key];
+      const prefix = field.localisationPrefix || "";
+      const input =
+        Object.keys(defaultValueObj).find(
+          (el) =>
+            t(defaultValueObj[el]) === selectedVal ||
+            defaultValueObj[el] === selectedVal ||
+            t(`${prefix}${defaultValueObj[el]}`) === selectedVal ||
+            t(el) === selectedVal ||
+            el === selectedVal
+        ) ?? selectedVal;
+      if (input === undefined || input === "" || input === t("ALL") || input === "All") return;
+      obj["name"] = key;
       obj["input"] = input;
-      return obj
-      
+      return obj;
+    }
+
+    case "multivaluelist": {
+      if (!Array.isArray(data?.[key]) || data[key].length === 0 || data?.[key]?.[0]?.name === "All" || data?.[key]?.[0]?.name === t("ALL"))
+        return;
+      const defaultValueObj = field.defaultValue || {};
+      const prefix = field.localisationPrefix || "";
+      const input = data[key]
+        .map((selection) => {
+          const selName = typeof selection === "object" ? selection?.name : selection;
+          if (selection?.code) return selection.code;
+          return (
+            Object.keys(defaultValueObj).find(
+              (el) =>
+                t(defaultValueObj[el]) === t(selName) ||
+                t(defaultValueObj[el]) === selName ||
+                defaultValueObj[el] === selName ||
+                t(`${prefix}${defaultValueObj[el]}`) === selName ||
+                t(el) === selName ||
+                el === selName
+            ) ?? selName
+          );
+        })
+        .filter((v) => v !== undefined && v !== "" && v !== "All" && v !== t("ALL"));
+      if (input.length === 0) return;
+      obj["name"] = key;
+      obj["input"] = input;
+      return obj;
+    }
+
     case "epoch":
-  obj["name"] = key;
+      obj["name"] = key;
 
-  if (key === "fromDate") {
-    const from = new Date(data.fromDate);
-    from.setHours(0, 0, 0, 0);
-    obj["input"] = from.getTime();
-  } else {
-    const to = new Date(data.toDate);
-    to.setHours(23, 59, 59, 999);
-    obj["input"] = to.getTime();
-  }
+      if (key === "fromDate") {
+        const from = new Date(data.fromDate);
+        from.setHours(0, 0, 0, 0);
+        obj["input"] = from.getTime();
+      } else {
+        const to = new Date(data.toDate);
+        to.setHours(23, 59, 59, 999);
+        obj["input"] = to.getTime();
+      }
 
-  return obj;
-      
+      return obj;
+
     default:
       return
   }
@@ -73,20 +91,126 @@ const EnhancedReport = (props) => {
   const { t } = useTranslation();
   const [filter, setFilter] = useState([]);
   const [searchData, setSearchData] = useState({});
-  
+  const [ulbDefaultValue, setUlbDefaultValue] = useState(null);
+  const [allUlbDefaultValue, setAllUlbDefaultValue] = useState({});
+  const [isAllUlbLoaded, setIsAllUlbLoaded] = useState(false);
+
   // Get tenant ID from session or default
   const tenantId = Digit.ULBService.getCurrentTenantId() || "as";
   // Fetch report metadata
-  const { isLoading: SearchFormIsLoading, data: SearchFormUIData, error: metaError } = 
+  const { isLoading: SearchFormIsLoading, data: SearchFormUIData, error: metaError } =
     Digit.Hooks.reports.useReportMeta.fetchMetaData(moduleName, reportName, tenantId);
 
+  const isMiscDashboardReport =
+    reportName === "MiscDashboardReport" ||
+    SearchFormUIData?.reportDetails?.reportName === "MiscDashboardReport";
+
+  const fetchUlbsByState = useCallback(
+    async (selectedState = "") => {
+      const masterDetail = { name: "nationalInfo" };
+      if (selectedState) {
+        const safeState = String(selectedState).replace(/"/g, '\\"');
+        masterDetail.filter = `[?(@.stateCode=="${safeState}")]`;
+      }
+      const mdmsTenantId = Digit.ULBService.getStateId() || tenantId;
+      try {
+        const response = await Digit.MDMSService.call(mdmsTenantId, {
+          tenantId: mdmsTenantId,
+          moduleDetails: [
+            {
+              moduleName: "tenant",
+              masterDetails: [masterDetail],
+            },
+          ],
+        });
+        const ulbList = response?.MdmsRes?.tenant?.nationalInfo || [];
+        const nextUlbDefaultValue = {};
+        ulbList
+          .filter((item) => item && item.active !== false)
+          .forEach((item) => {
+            nextUlbDefaultValue[item.code] = item.name || item.code;
+          });
+        if (!selectedState) {
+          setAllUlbDefaultValue(nextUlbDefaultValue);
+          setIsAllUlbLoaded(true);
+        }
+        setUlbDefaultValue(nextUlbDefaultValue);
+      } catch (error) {
+        console.error("Error while loading ULB dropdown:", error);
+      }
+    },
+    [tenantId]
+  );
+
+  useEffect(() => {
+    if (isMiscDashboardReport && SearchFormUIData?.reportDetails && !isAllUlbLoaded) {
+      setIsAllUlbLoaded(true);
+      fetchUlbsByState("");
+    }
+  }, [isMiscDashboardReport, SearchFormUIData, isAllUlbLoaded, fetchUlbsByState]);
+
+  const effectiveMetaData = useMemo(() => {
+    if (!SearchFormUIData || !isMiscDashboardReport || ulbDefaultValue === null) {
+      return SearchFormUIData;
+    }
+    const cloned = JSON.parse(JSON.stringify(SearchFormUIData));
+    const searchParams = cloned?.reportDetails?.searchParams || [];
+    const ulbIndex = searchParams.findIndex((field) => field.name === "ulb");
+    if (ulbIndex > -1) {
+      searchParams[ulbIndex].defaultValue = ulbDefaultValue;
+      searchParams[ulbIndex].disabled = false;
+    }
+    return cloned;
+  }, [SearchFormUIData, isMiscDashboardReport, ulbDefaultValue]);
+
+  const handleStateChange = useCallback(
+    (selectedValue) => {
+      if (!isMiscDashboardReport) return;
+      const stateField = effectiveMetaData?.reportDetails?.searchParams?.find((f) => f.name === "state");
+      let stateCode = "";
+      if (selectedValue && selectedValue !== t("ALL") && selectedValue !== "All") {
+        const defaultValueObj = stateField?.defaultValue || {};
+        const prefix = stateField?.localisationPrefix || "";
+        const rawVal = typeof selectedValue === "object" ? selectedValue?.code || selectedValue?.name : selectedValue;
+        stateCode =
+          Object.keys(defaultValueObj).find(
+            (el) =>
+              t(defaultValueObj[el]) === rawVal ||
+              defaultValueObj[el] === rawVal ||
+              t(`${prefix}${defaultValueObj[el]}`) === rawVal ||
+              t(el) === rawVal ||
+              el === rawVal
+          ) ?? rawVal;
+      }
+      if (!stateCode) {
+        if (Object.keys(allUlbDefaultValue).length > 0) {
+          setUlbDefaultValue(allUlbDefaultValue);
+        } else {
+          fetchUlbsByState("");
+        }
+      } else {
+        fetchUlbsByState(stateCode);
+      }
+    },
+    [isMiscDashboardReport, effectiveMetaData, allUlbDefaultValue, fetchUlbsByState, t]
+  );
+
+  const handleClearAll = useCallback(() => {
+    if (!isMiscDashboardReport) return;
+    if (Object.keys(allUlbDefaultValue).length > 0) {
+      setUlbDefaultValue(allUlbDefaultValue);
+    } else {
+      fetchUlbsByState("");
+    }
+  }, [isMiscDashboardReport, allUlbDefaultValue, fetchUlbsByState]);
+
   // Fetch report data
-  const { isLoading: isLoadingReportsData, data: ReportsData, error: dataError } = 
+  const { isLoading: isLoadingReportsData, data: ReportsData, error: dataError } =
     Digit.Hooks.reports.useReportMeta.fetchReportData(moduleName, reportName, tenantId, filter, {
       enabled: isFormSubmitted
     });
 
-    console.log("SearchFormUIData", SearchFormUIData, "");
+  console.log("SearchFormUIData", SearchFormUIData, "");
 
   const SearchApplication = Digit.ComponentRegistryService.getComponent("ReportSearchApplication");
 
@@ -108,10 +232,10 @@ const EnhancedReport = (props) => {
   }, [ReportsData]);
 
   const onSubmit = (data) => {
-    setSearchData(data);   
-    const reportData = SearchFormUIData?.reportDetails?.searchParams || [];
+    setSearchData(data);
+    const reportData = effectiveMetaData?.reportDetails?.searchParams || [];
     let searchParams = [];
-    
+
     Object.keys(data).forEach((key) => {
       const field = reportData.find(field => field.name === key);
       const obj = getSearchParamsObj(field, data, key, t);
@@ -161,81 +285,10 @@ const EnhancedReport = (props) => {
 
   return SearchApplication ? (
     <div className="rpt-enhanced-report-spacing">
-      <style>{`
-        .report-scroll-container {
-          width: 100%;
-          display: block;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          margin-top: 20px;
-          background-color: white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-          padding: 2px;
-        }
-        .report-scroll-container::-webkit-scrollbar {
-          height: 10px;
-        }
-        .report-scroll-container::-webkit-scrollbar-track {
-          background: #f1f1f1; 
-        }
-        .report-scroll-container::-webkit-scrollbar-thumb {
-          background: #c1c1c1; 
-        }
-        .report-scroll-container::-webkit-scrollbar-thumb:hover {
-          background: #a8a8a8; 
-        }
-        .reports-table {
-          width: auto !important;
-          min-width: 100%;
-          max-width: none !important;
-          border-collapse: collapse;
-        }
-        .reports-table th, .reports-table td {
-          border: 1px solid #ddd;
-          padding: 12px;
-          text-align: left;
-          white-space: nowrap !important;
-        }
-        .reports-table .cell-text {
-          white-space: nowrap !important;
-        }
-        .reports-table th {
-          background-color: #a82227;
-          color: white;
-          font-weight: bold;
-        }
-        .reports-table td {
-          color: #0b0c0c;
-        }
-        .reports-table tr:hover {
-          background-color: #f5f5f5;
-        }
-        /* Styles for the HTML snippet structure provided */
-        .report-result-table {
-          margin-top: 20px;
-          background: white;
-          padding: 16px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .report-table-header th, .report-header-cell, .dataTable th {
-          background-color: #a82227 !important;
-          color: white !important;
-          padding: 12px !important;
-          font-weight: bold !important;
-          border: 1px solid #ddd !important;
-        }
-        .dataTable td {
-          padding: 10px !important;
-          border: 1px solid #ddd !important;
-        }
-        .multilink-link-button {
-          color: #a82227 !important;
-        }
-      `}</style>
       <SearchApplication
         onSubmit={onSubmit}
         isLoading={SearchFormIsLoading}
-        data={SearchFormUIData}
+        data={effectiveMetaData}
         tableData={!isLoadingReportsData && processedReportsData?.reportData?.length > 0 ? processedReportsData : { display: "ES_COMMON_NO_DATA" }}
         isTableDataLoading={isLoadingReportsData}
         Count={processedReportsData?.reportData?.length || 0}
@@ -245,6 +298,8 @@ const EnhancedReport = (props) => {
         tabLabel={tabLabel}
         updateTabLabel={updateTabLabel}
         tenantId={tenantId}
+        onStateChange={isMiscDashboardReport ? handleStateChange : undefined}
+        onClearAll={isMiscDashboardReport ? handleClearAll : undefined}
       />
     </div>
   ) : <Loader />;

@@ -4,8 +4,12 @@ import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.upyog.family.domain.model.ExitReason;
 import org.upyog.family.domain.model.FamilyStatus;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
@@ -15,14 +19,18 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@ExtendWith(MockitoExtension.class)
 class LeaveFamilyValidatorTest {
+
+    @Mock
+    private UserClient userClient;
 
     private LeaveFamilyValidator validator;
     private Family activeFamily;
 
     @BeforeEach
     void setUp() {
-        validator = new LeaveFamilyValidator();
+        validator = new LeaveFamilyValidator(userClient);
 
         FamilyMember head = FamilyMember.builder()
                 .userUuid("head-uuid-1")

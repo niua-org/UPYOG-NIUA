@@ -26,8 +26,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
@@ -67,7 +66,7 @@ public class UserServiceTest {
             fail();
         }
 
-        when(serviceRequestRepositoryMock.fetchResult(any(StringBuilder.class),anyObject())).thenReturn(responseWithUser);
+        when(serviceRequestRepositoryMock.fetchResult(any(StringBuilder.class),any())).thenReturn(responseWithUser);
         userServiceMock.createUser(request);
 
         userDetailResponse = mapper.convertValue(responseWithUser,UserDetailResponse.class);
@@ -105,7 +104,7 @@ public class UserServiceTest {
 //                    log.error("Object class: "+invocationOnMock.getArguments()[1].getClass());
                     throw new IllegalArgumentException("unexpected type");
                 }
-            }).when(serviceRequestRepositoryMock).fetchResult(any(),anyObject());
+            }).when(serviceRequestRepositoryMock).fetchResult(any(),any());
         }
         catch(Exception e){
             e.printStackTrace();
@@ -147,7 +146,7 @@ public class UserServiceTest {
                 else {
                     throw new IllegalArgumentException("unexpected type");
                 }
-            }).when(serviceRequestRepositoryMock).fetchResult(any(),anyObject());
+            }).when(serviceRequestRepositoryMock).fetchResult(any(),any());
         }
         catch(Exception e){
             e.printStackTrace();
@@ -180,7 +179,7 @@ public class UserServiceTest {
             e.printStackTrace();
             fail();
         }
-        when(serviceRequestRepositoryMock.fetchResult(any(StringBuilder.class),anyObject())).thenReturn((LinkedHashMap)SerializationUtils.clone(responseWithUser));
+        when(serviceRequestRepositoryMock.fetchResult(any(StringBuilder.class),any())).thenReturn((LinkedHashMap)SerializationUtils.clone(responseWithUser));
         userServiceMock.updateUser(request);
 
         userDetailResponse = mapper.convertValue(responseWithUser,UserDetailResponse.class);

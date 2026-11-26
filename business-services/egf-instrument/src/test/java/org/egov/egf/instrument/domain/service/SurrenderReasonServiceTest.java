@@ -1,7 +1,8 @@
 package org.egov.egf.instrument.domain.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -15,18 +16,18 @@ import org.egov.egf.instrument.TestConfiguration;
 import org.egov.egf.instrument.domain.model.SurrenderReason;
 import org.egov.egf.instrument.domain.model.SurrenderReasonSearch;
 import org.egov.egf.instrument.domain.repository.SurrenderReasonRepository;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.SmartValidator;
 
 @Import(TestConfiguration.class)
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class SurrenderReasonServiceTest {
 
     private SurrenderReasonService surrenderReasonService;
@@ -41,7 +42,7 @@ public class SurrenderReasonServiceTest {
 
     private RequestInfo requestInfo = new RequestInfo();
 
-    @Before
+    @BeforeEach
     public void setup() {
         surrenderReasonService = new SurrenderReasonService(validator, surrenderReasonRepository);
     }
@@ -60,7 +61,7 @@ public class SurrenderReasonServiceTest {
 
     }
 
-    @Test(expected = CustomBindException.class)
+    @Test
     public final void test_save_with_out_kafka_unique_false() {
 
         List<SurrenderReason> expextedResult = getSurrenderReasons();
@@ -68,13 +69,12 @@ public class SurrenderReasonServiceTest {
         when(surrenderReasonRepository.uniqueCheck(any(String.class), any(SurrenderReason.class))).thenReturn(false);
         when(surrenderReasonRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<SurrenderReason> actualResult = surrenderReasonService.create(expextedResult, errors, requestInfo);
+        assertThrows(CustomBindException.class, () -> surrenderReasonService.create(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_save_with_out_kafka_and_with_null_req() {
 
         List<SurrenderReason> expextedResult = getSurrenderReasons();
@@ -82,9 +82,8 @@ public class SurrenderReasonServiceTest {
         when(surrenderReasonRepository.uniqueCheck(any(String.class), any(SurrenderReason.class))).thenReturn(false);
         when(surrenderReasonRepository.save(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<SurrenderReason> actualResult = surrenderReasonService.create(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> surrenderReasonService.create(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -101,16 +100,15 @@ public class SurrenderReasonServiceTest {
 
     }
 
-    @Test(expected = CustomBindException.class)
+    @Test
     public final void test_update_with_out_kafka_unique_false() {
 
         List<SurrenderReason> expextedResult = getSurrenderReasons();
 
         when(surrenderReasonRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
         when(surrenderReasonRepository.uniqueCheck(any(String.class), any(SurrenderReason.class))).thenReturn(false);
-        List<SurrenderReason> actualResult = surrenderReasonService.update(expextedResult, errors, requestInfo);
+        assertThrows(CustomBindException.class, () -> surrenderReasonService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -127,20 +125,19 @@ public class SurrenderReasonServiceTest {
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_with_out_kafka_and_with_null_req() {
 
         List<SurrenderReason> expextedResult = getSurrenderReasons();
 
         when(surrenderReasonRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<SurrenderReason> actualResult = surrenderReasonService.update(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> surrenderReasonService.update(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_update_without_id() {
 
         List<SurrenderReason> expextedResult = getSurrenderReasons();
@@ -148,9 +145,8 @@ public class SurrenderReasonServiceTest {
 
         when(surrenderReasonRepository.update(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<SurrenderReason> actualResult = surrenderReasonService.update(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> surrenderReasonService.update(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
@@ -206,7 +202,7 @@ public class SurrenderReasonServiceTest {
         assertEquals(expextedResult, actualResult);
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_with_out_surrenderreasons() {
 
         List<SurrenderReason> expextedResult = getSurrenderReasons();
@@ -214,13 +210,12 @@ public class SurrenderReasonServiceTest {
 
         when(surrenderReasonRepository.delete(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<SurrenderReason> actualResult = surrenderReasonService.delete(null, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> surrenderReasonService.delete(null, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 
-    @Test(expected = InvalidDataException.class)
+    @Test
     public final void test_delete_with_out_id() {
 
         List<SurrenderReason> expextedResult = getSurrenderReasons();
@@ -228,9 +223,8 @@ public class SurrenderReasonServiceTest {
 
         when(surrenderReasonRepository.delete(any(List.class), any(RequestInfo.class))).thenReturn(expextedResult);
 
-        List<SurrenderReason> actualResult = surrenderReasonService.delete(expextedResult, errors, requestInfo);
+        assertThrows(InvalidDataException.class, () -> surrenderReasonService.delete(expextedResult, errors, requestInfo));
 
-        assertEquals(expextedResult, actualResult);
 
     }
 

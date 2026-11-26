@@ -1,15 +1,18 @@
 import React, { useState, Fragment, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ButtonSelector, CardText, FormStep, LinkButton, OTPInput, CardLabelError } from "@nudmcdgnpm/digit-ui-react-components";
 import useInterval from "../../../hooks/useInterval";
 
 const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, userType = "citizen", canSubmit }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [timeLeft, setTimeLeft] = useState(30);
   const TYPE_REGISTER = { type: "register" };
   const TYPE_LOGIN = { type: "login" };
-  const [errorRegister, setErrorRegister]= useState(false)
+  const [errorRegister, setErrorRegister] = useState(false)
   const getUserType = () => Digit.UserService.getType();
-  const [digilockerAuthentication,setdigilockerAuthentication]=useState(false)
-  let newData={}
+  const [digilockerAuthentication, setdigilockerAuthentication] = useState(false)
+  let newData = {}
   useInterval(
     () => {
       setTimeLeft(timeLeft - 1);
@@ -18,16 +21,16 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
   );
   useEffect(() => {
     const handleDigiLocker = async () => {
-      if(window.location.href.includes("code")) {
+      if (window.location.href.includes("code")) {
         let code = window.location.href.split("=")[1].split("&")[0];
         let TokenReq = {
           code_verifier: localStorage.getItem('code_verfier_register'),
           code: code, module: "SSO",
           redirect_uri: "https://upyog-test.niua.org/upyog-ui/citizen/login/otp",
         };
-        console.log("token",code,TokenReq,localStorage.getItem("code_verfier_register"));
-        const data = await Digit.DigiLockerService.token({TokenReq});
-        console.log("data_token",data);
+        console.log("token", code, TokenReq, localStorage.getItem("code_verfier_register"));
+        const data = await Digit.DigiLockerService.token({ TokenReq });
+        console.log("data_token", data);
         registerUser(data);
         function formatDate(dateStr) {
           if (!dateStr || dateStr.length !== 8) return dateStr;
@@ -46,7 +49,7 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
           mobileNumber: data?.TokenRes.mobile,
         };
         const authData = await Digit.DigiLockerService.oauth(user);
-        console.log("authData",authData);
+        console.log("authData", authData);
         const setCitizenDetail = (authData) => {
           let locale = JSON.parse(sessionStorage.getItem("Digit.initData"))?.value?.selectedLanguage;
           localStorage.setItem("Citizen.tenant-id", authData?.UserRequest?.tenantId);
@@ -68,31 +71,31 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
       } else if (window.location.href.includes("error=")) {
         window.location.href = window.location.href.split("/otp")[0];
       }
-    
-      };
+
+    };
     handleDigiLocker();
   }, [])
   const registerUser = async (response) => {
-    console.log("registerUser",response?.TokenRes?.mobile)
+    console.log("registerUser", response?.TokenRes?.mobile)
     const data = {
-      dob: response?.TokenRes?.dob.substring(0, 2) +"/"+response?.TokenRes?.dob.substring(2,4)+"/"+response?.TokenRes?.dob.substring(4, 8),
+      dob: response?.TokenRes?.dob.substring(0, 2) + "/" + response?.TokenRes?.dob.substring(2, 4) + "/" + response?.TokenRes?.dob.substring(4, 8),
       mobileNumber: response?.TokenRes?.mobile,
       name: response?.TokenRes?.name,
       tenantId: "pg",
       userType: getUserType(),
     };
-      sessionStorage.setItem("userName",response?.TokenRes?.mobile)
-      console.log("datadatadata",data,sessionStorage.getItem("userName"))
-      const [res, err] = await sendOtp({ otp: { ...data, ...TYPE_REGISTER } });
-      if (!err) {
-        navigate(`/otp`, { replace: true, state: { from: getFromLocation(location.state, searchParams) } });
-        return;
-      }
-      else {
-        const [res, err] = await sendOtp({ otp: { ...data, ...TYPE_LOGIN } })
-        sessionStorage.setItem("userName",response?.TokenRes?.mobile)
-      }
-  }; 
+    sessionStorage.setItem("userName", response?.TokenRes?.mobile)
+    console.log("datadatadata", data, sessionStorage.getItem("userName"))
+    const [res, err] = await sendOtp({ otp: { ...data, ...TYPE_REGISTER } });
+    if (!err) {
+      navigate(`/otp`, { replace: true, state: { from: getFromLocation(location.state, searchParams) } });
+      return;
+    }
+    else {
+      const [res, err] = await sendOtp({ otp: { ...data, ...TYPE_LOGIN } })
+      sessionStorage.setItem("userName", response?.TokenRes?.mobile)
+    }
+  };
   const handleResendOtp = () => {
     onResend();
     setTimeLeft(2);
@@ -129,14 +132,26 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
     onSelect();
   };
 
+  const handleBack = () => {
+    const basePath = location.pathname.replace(/\/otp\/?$/, "");
+    navigate(basePath || "/upyog-ui/citizen/login", { state: location.state });
+  };
+
   return (
     <>
-    <div className="login-form-header">
-      <h2>{"OTP Verification"}</h2>
-      <p>
-        {config?.texts?.cardText}
-      </p>
-    </div>
+      <button type="button" className="login-back-btn" onClick={handleBack}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>{t("CS_COMMON_BACK")}</span>
+      </button>
+      <div className="login-form-header">
+        <h2>{t("OTP Verification")}</h2>
+        <p>
+          {config?.texts?.cardText}
+        </p>
+      </div>
       <OTPInput length={6} onChange={onOtpChange} value={otp} />
       {timeLeft > 0 ? (
         <CardText>{`${t("CS_RESEND_ANOTHER_OTP")} ${timeLeft} ${t("CS_RESEND_SECONDS")}`}</CardText>
@@ -154,13 +169,13 @@ const SelectOtp = ({ config, otp, onOtpChange, onResend, onSelect, t, error, use
           disabled={!canSubmitForm}
           onClick={handleSubmit}
         >
-          {"Submit"}
+          {t("Submit")}
         </button>
       </div>
 
       <p className="login-security">
         <span className="login-security-icon" aria-hidden="true">
-          <img src={"/upyog-ui/images/secure.svg"} alt="secure"/>
+          <img src={"/upyog-ui/images/secure.svg"} alt="secure" />
         </span>
         {"Your information is safe and secure with us."}
       </p>

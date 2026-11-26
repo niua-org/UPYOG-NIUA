@@ -1,7 +1,8 @@
 package org.egov.egf.instrument.domain.repository;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import org.egov.egf.instrument.domain.model.InstrumentTypeProperty;
@@ -9,14 +10,15 @@ import org.egov.egf.instrument.domain.model.TransactionType;
 import org.egov.egf.instrument.persistence.entity.InstrumentTypePropertyEntity;
 import org.egov.egf.instrument.persistence.repository.InstrumentTypePropertyJdbcRepository;
 import org.egov.egf.master.web.contract.FinancialStatusContract;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class InstrumentTypePropertyRepositoryTest {
 
     @InjectMocks

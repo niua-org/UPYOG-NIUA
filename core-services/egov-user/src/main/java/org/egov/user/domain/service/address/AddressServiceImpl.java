@@ -37,6 +37,16 @@ public class AddressServiceImpl implements AddressService {
     private final AddressMasterDataService addressMasterDataService;
     private final UserConfiguration userConfiguration;
 
+    /**
+     * Primary constructor injecting all repositories, utilities, and master data services.
+     *
+     * @param addressRepository        repository for address persistence
+     * @param userRepository           repository for user lookups
+     * @param encryptionDecryptionUtil utility for address PII encryption/decryption
+     * @param fileStoreRepository      repository for downloading address proof documents
+     * @param addressMasterDataService service for validating allowed address types from MDMS
+     * @param userConfiguration        application configuration properties
+     */
     @Autowired
     public AddressServiceImpl(AddressRepository addressRepository,
                               UserRepository userRepository,
@@ -52,6 +62,15 @@ public class AddressServiceImpl implements AddressService {
         this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Constructor for testing scenarios with address master data service.
+     *
+     * @param addressRepository        repository for address persistence
+     * @param userRepository           repository for user lookups
+     * @param encryptionDecryptionUtil utility for address PII encryption/decryption
+     * @param fileStoreRepository      repository for downloading address proof documents
+     * @param addressMasterDataService service for validating allowed address types from MDMS
+     */
     public AddressServiceImpl(AddressRepository addressRepository,
                               UserRepository userRepository,
                               EncryptionDecryptionUtil encryptionDecryptionUtil,
@@ -60,6 +79,14 @@ public class AddressServiceImpl implements AddressService {
         this(addressRepository, userRepository, encryptionDecryptionUtil, fileStoreRepository, addressMasterDataService, null);
     }
 
+    /**
+     * Minimal constructor for legacy unit tests.
+     *
+     * @param addressRepository        repository for address persistence
+     * @param userRepository           repository for user lookups
+     * @param encryptionDecryptionUtil utility for address PII encryption/decryption
+     * @param fileStoreRepository      repository for downloading address proof documents
+     */
     public AddressServiceImpl(AddressRepository addressRepository,
                               UserRepository userRepository,
                               EncryptionDecryptionUtil encryptionDecryptionUtil,
@@ -82,9 +109,7 @@ public class AddressServiceImpl implements AddressService {
         }
 
         String userTenant = userRepository.getTenantIdByUserId(userId);
-        String tenantId = StringUtils.isNotBlank(address.getTenantId())
-                ? address.getTenantId().trim()
-                : (StringUtils.isNotBlank(userTenant) ? userTenant.trim() : "pg");
+        String tenantId = resolveTenantId(address.getTenantId(), userTenant);
         address.setTenantId(tenantId);
 
         if (StringUtils.isNotBlank(address.getStatus())) {
@@ -108,7 +133,14 @@ public class AddressServiceImpl implements AddressService {
             addressMasterDataService.validateAddressType(request.getRequestInfo(), tenantId, typeToValidate);
         }
 
-        // Validate attached address proof filestoreId if provided
+        // Validate attached address proof is mandatory for address creation
+        if (StringUtils.isBlank(address.getFilestoreId())) {
+            log.error("[ADDRESS-SERVICE] Address proof filestoreId is mandatory for creating address for userUuid: {}", resolvedUuid);
+            throw new CustomException(UserConstants.UG_USER_ADDRESS_FILESTORE_ID_MANDATORY,
+                    UserConstants.MSG_ADDRESS_FILESTORE_ID_MANDATORY);
+        }
+
+        // Validate attached address proof filestoreId
         validateFileStoreId(tenantId, address.getFilestoreId());
 
         // 1. Fetch existing active addresses for this user to check for duplicates
@@ -202,9 +234,7 @@ public class AddressServiceImpl implements AddressService {
         String userTenant = userRepository.getTenantIdByUserId(userId);
         String tenantId = StringUtils.isNotBlank(address.getTenantId())
                 ? address.getTenantId().trim()
-                : (StringUtils.isNotBlank(existing.getTenantId())
-                    ? existing.getTenantId().trim()
-                    : (StringUtils.isNotBlank(userTenant) ? userTenant.trim() : "pg"));
+                : resolveTenantId(existing.getTenantId(), userTenant);
         address.setTenantId(tenantId);
 
         if (address.getType() == null) {
@@ -231,6 +261,11 @@ public class AddressServiceImpl implements AddressService {
                     ? address.getAddressType()
                     : (address.getType() != null ? address.getType().name() : null);
             addressMasterDataService.validateAddressType(request.getRequestInfo(), tenantId, typeToValidate);
+        }
+
+        // Preserve existing address proof if not provided in update request
+        if (StringUtils.isBlank(address.getFilestoreId()) && StringUtils.isNotBlank(existing.getFilestoreId())) {
+            address.setFilestoreId(existing.getFilestoreId());
         }
 
         // Validate attached address proof filestoreId if provided
@@ -282,7 +317,7 @@ public class AddressServiceImpl implements AddressService {
             criteria.setStatus(criteria.getStatus().toLowerCase());
         }
 
-        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null) {
+        if (StringUtils.isNotBlank(criteria.getUserUuid()) && criteria.getUserId() == null && CollectionUtils.isEmpty(criteria.getUserUuids())) {
             Long userId = userRepository.getUserIdByUuid(criteria.getUserUuid());
             if (userId != null) {
                 criteria.setUserId(userId);
@@ -540,7 +575,7 @@ public class AddressServiceImpl implements AddressService {
             return;
         }
         try {
-            String tenant = StringUtils.isNotBlank(tenantId) ? tenantId : "pb";
+            String tenant = resolveTenantId(tenantId, null);
             Map<String, String> urlMap = fileStoreRepository.getUrlByFileStoreId(tenant, Collections.singletonList(fileStoreId));
             if (urlMap == null || !urlMap.containsKey(fileStoreId) || StringUtils.isBlank(urlMap.get(fileStoreId))) {
                 log.error("[ADDRESS-SERVICE] filestoreId: {} not found in egov-filestore for tenant: {}", fileStoreId, tenant);
@@ -552,5 +587,19 @@ public class AddressServiceImpl implements AddressService {
             log.warn("[ADDRESS-SERVICE] Could not verify filestoreId {} against egov-filestore ({}: {}). Skipping strict validation in unreachable environment.",
                     fileStoreId, e.getClass().getSimpleName(), e.getMessage());
         }
+    }
+
+    private String resolveTenantId(String tenantId, String fallbackTenant) {
+        if (StringUtils.isNotBlank(tenantId)) {
+            return tenantId.trim();
+        }
+        if (StringUtils.isNotBlank(fallbackTenant)) {
+            return fallbackTenant.trim();
+        }
+        if (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getStateLevelTenantId())) {
+            return userConfiguration.getStateLevelTenantId().trim();
+        }
+        log.error("[ADDRESS-SERVICE] Tenant ID cannot be determined: state-level tenant ID is not configured");
+        throw new CustomException(UserConstants.ERROR_TENANT_ID_REQUIRED, "Tenant ID cannot be determined: state-level tenant ID is not configured");
     }
 }

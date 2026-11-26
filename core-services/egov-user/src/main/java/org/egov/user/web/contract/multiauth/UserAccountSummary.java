@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.user.domain.model.User;
+import org.egov.user.util.MaskUtils;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -70,6 +71,10 @@ public class UserAccountSummary implements Serializable {
     @JsonProperty("isIdentityVerified")
     private Boolean isIdentityVerified;
 
+    @Schema(description = "Identity verification source (e.g. AADHAAR, DIGILOCKER, FAMILY_ID)")
+    @JsonProperty("identityVerifiedSource")
+    private String identityVerifiedSource;
+
     @Schema(description = "Father's name")
     @JsonProperty("fatherName")
     private String fatherName;
@@ -77,6 +82,10 @@ public class UserAccountSummary implements Serializable {
     @Schema(description = "Mother's name")
     @JsonProperty("motherName")
     private String motherName;
+
+    @Schema(description = "Citizen family identifier if user belongs to an active family", example = "UPYOG-FAMILY-789012")
+    @JsonProperty("familyId")
+    private String familyId;
 
     /**
      * Factory method creating a {@link UserAccountSummary} from a domain {@link User}.
@@ -94,13 +103,15 @@ public class UserAccountSummary implements Serializable {
                 .name(user.getName())
                 .userName(user.getUsername())
                 .mobileNumber(user.getMobileNumber())
-                .aadhaarNumber(maskAadhaar(user.getAadhaarNumber()))
+                .aadhaarNumber(MaskUtils.maskAadhaar(user.getAadhaarNumber()))
                 .gender(user.getGender() != null ? user.getGender().name() : null)
                 .dob(user.getDob())
                 .photo(user.getPhoto())
                 .isIdentityVerified(user.getIsIdentityVerified())
+                .identityVerifiedSource(user.getIdentityVerifiedSource())
                 .fatherName(user.getFatherName())
                 .motherName(user.getMotherName())
+                .familyId(user.getFamilyId())
                 .build();
     }
 
