@@ -122,25 +122,32 @@ public class UserRequestV2 {
 
     private Boolean isIdentityVerified;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date identityVerifiedDate;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private String identityVerifiedSource;
+
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastResyncDate;
 
     private Integer edittedCount;
     private String lastLoginMethod;
 
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date createdDate;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date lastModifiedDate;
-    @JsonFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DOB)
     private Date dob;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(pattern = UserServiceConstants.DATE_FORMAT_DATETIME)
     private Date pwdExpiryDate;
 
+    /**
+     * Converts a domain {@link User} entity into a {@link UserRequestV2} contract DTO.
+     *
+     * @param user source domain user entity
+     */
     public UserRequestV2(User user) {
 
         this.id = user.getId();
@@ -179,6 +186,7 @@ public class UserRequestV2 {
         this.spouseName = user.getSpouseName();
         this.isIdentityVerified = user.getIsIdentityVerified();
         this.identityVerifiedDate = user.getIdentityVerifiedDate();
+        this.identityVerifiedSource = user.getIdentityVerifiedSource();
         this.lastResyncDate = user.getLastResyncDate();
         this.edittedCount = user.getEdittedCount();
         this.lastLoginMethod = user.getLastLoginMethod();
@@ -191,12 +199,12 @@ public class UserRequestV2 {
     }
 
     /**
-     * Converts this {@link UserRequestV2} DTO to a domain {@link User} entity.
+     * Converts this V2 contract DTO to a domain {@link User} entity with operator audit metadata.
      *
-     * @param loggedInUserId   numeric ID of authenticated requester
-     * @param loggedInUserUuid UUID of authenticated requester
-     * @param isCreate         flag indicating create mode vs update mode
-     * @return populated {@link User} domain entity
+     * @param loggedInUserId   ID of the operating user
+     * @param loggedInUserUuid UUID of the operating user
+     * @param isCreate         flag indicating if this is for a new user creation
+     * @return populated domain {@link User} entity
      */
     @JsonIgnore
     public User toDomain(Long loggedInUserId, String loggedInUserUuid, boolean isCreate) {
@@ -244,8 +252,9 @@ public class UserRequestV2 {
                 .fatherName(this.fatherName)
                 .motherName(this.motherName)
                 .spouseName(this.spouseName)
-                .isIdentityVerified(this.isIdentityVerified)
-                .identityVerifiedDate(this.identityVerifiedDate)
+                .isIdentityVerified(isCreate ? Boolean.FALSE : null)
+                .identityVerifiedDate(null)
+                .identityVerifiedSource(null)
                 .lastResyncDate(this.lastResyncDate)
                 .edittedCount(this.edittedCount)
                 .lastLoginMethod(this.lastLoginMethod)

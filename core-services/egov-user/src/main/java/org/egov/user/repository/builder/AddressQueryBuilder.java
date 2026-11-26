@@ -2,6 +2,7 @@ package org.egov.user.repository.builder;
 
 import org.egov.user.domain.model.AddressSearchCriteria;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -84,7 +85,28 @@ public class AddressQueryBuilder {
 
     private void addWhereClause(AddressSearchCriteria addressSearchCriteria, StringBuilder selectQuery, List<Object> prepareStatementValues) {
 
-        if (addressSearchCriteria.getUserUuid() != null) {
+        if (!CollectionUtils.isEmpty(addressSearchCriteria.getUserUuids())) {
+            addClauseIfRequired(prepareStatementValues, selectQuery);
+            selectQuery.append(" (uadd.user_uuid IN (");
+            for (int i = 0; i < addressSearchCriteria.getUserUuids().size(); i++) {
+                selectQuery.append(i == 0 ? "?" : ", ?");
+                prepareStatementValues.add(addressSearchCriteria.getUserUuids().get(i));
+            }
+            selectQuery.append(") OR uadd.userid IN (SELECT id FROM eg_user WHERE uuid IN (");
+            for (int i = 0; i < addressSearchCriteria.getUserUuids().size(); i++) {
+                selectQuery.append(i == 0 ? "?" : ", ?");
+                prepareStatementValues.add(addressSearchCriteria.getUserUuids().get(i));
+            }
+            selectQuery.append("))) ");
+        } else if (!CollectionUtils.isEmpty(addressSearchCriteria.getUserIds())) {
+            addClauseIfRequired(prepareStatementValues, selectQuery);
+            selectQuery.append(" uadd.userid IN (");
+            for (int i = 0; i < addressSearchCriteria.getUserIds().size(); i++) {
+                selectQuery.append(i == 0 ? "?" : ", ?");
+                prepareStatementValues.add(addressSearchCriteria.getUserIds().get(i));
+            }
+            selectQuery.append(") ");
+        } else if (addressSearchCriteria.getUserUuid() != null) {
             addClauseIfRequired(prepareStatementValues, selectQuery);
             selectQuery.append(" (uadd.user_uuid = ? OR uadd.userid = (select id from eg_user where uuid = ?)) ");
             prepareStatementValues.add(addressSearchCriteria.getUserUuid());

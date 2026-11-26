@@ -1,5 +1,7 @@
 package org.egov.user.domain.service.utils;
 
+import org.egov.user.domain.service.multiauth.MockAadhaarRecordService;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +16,9 @@ import java.util.List;
  */
 public final class UserConstants {
 
+    /**
+     * Private constructor to prevent direct instantiation of constant utility class.
+     */
     private UserConstants() {
         // Utility class - prevent instantiation
     }
@@ -21,6 +26,11 @@ public final class UserConstants {
     // =========================================================================
     // 1. Encryption Keys & Model Types
     // =========================================================================
+    public static final String USER_TYPE_CITIZEN = "CITIZEN";
+    public static final String USER_TYPE_EMPLOYEE = "EMPLOYEE";
+    public static final String USER_TYPE_SYSTEM = "SYSTEM";
+    public static final String SYSTEM_USER_UUID = "SYSTEM";
+    public static final String ROLE_INTERNAL_SYSTEM = "INTERNAL_SYSTEM";
     public static final String USER_ENCRYPTION_KEY = "User";
     public static final String USER_ADDRESS_ENCRYPTION_KEY = "Address";
     public static final String USER_DOCUMENT_ENCRYPTION_KEY = "UserDocument";
@@ -30,8 +40,10 @@ public final class UserConstants {
     // 2. Status Constants
     // =========================================================================
     public static final String STATUS_ACTIVE = "active";
+    public static final String STATUS_ACTIVE_UPPERCASE = "ACTIVE";
     public static final String STATUS_INACTIVE = "inactive";
     public static final String STATUS_SUCCESS = "SUCCESS";
+    public static final String STATUS_PARTIAL_SUCCESS = "PARTIAL_SUCCESS";
     public static final String STATUS_FAILED = "FAILED";
     public static final String ADDRESS_ACTIVE_STATUS = "active";
     public static final String ADDRESS_INACTIVE_STATUS = "inactive";
@@ -62,6 +74,11 @@ public final class UserConstants {
     public static final String ERROR_INVALID_MOBILE_NUMBER = "INVALID_MOBILE_NUMBER";
     public static final String ERROR_AADHAAR_NUMBER_REQUIRED = "AADHAAR_NUMBER_REQUIRED";
     public static final String ERROR_INVALID_AADHAAR_NUMBER = "INVALID_AADHAAR_NUMBER";
+    public static final String ERROR_INVALID_AADHAAR_FORMAT = "INVALID_AADHAAR_FORMAT";
+    public static final String ERROR_CITIZEN_NOT_FOUND = "CITIZEN_NOT_FOUND";
+    public static final String ERROR_FAMILY_NOT_MAPPED = "FAMILY_NOT_MAPPED";
+    public static final String ERROR_FAMILY_NOT_FOUND = "FAMILY_NOT_FOUND";
+    public static final String ERROR_NOT_HEAD_OF_FAMILY = "NOT_HEAD_OF_FAMILY";
     public static final String ERROR_AADHAAR_CANNOT_BE_CHANGED = "AADHAAR_CANNOT_BE_CHANGED";
     public static final String ERROR_FAMILY_ID_REQUIRED = "FAMILY_ID_REQUIRED";
     public static final String ERROR_INVALID_FAMILY_ID = "INVALID_FAMILY_ID";
@@ -73,12 +90,19 @@ public final class UserConstants {
     public static final String ERROR_INVALID_DOCUMENT_REQUEST = "INVALID_DOCUMENT_REQUEST";
     public static final String ERROR_INVALID_DOCUMENTS_REQUEST = "INVALID_DOCUMENTS_REQUEST";
     public static final String ERROR_DOCUMENT_NOT_FOUND = "DOCUMENT_NOT_FOUND";
+    public static final String ERROR_UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS";
+    public static final String ERROR_AADHAAR_MOBILE_MISMATCH = "AADHAAR_MOBILE_MISMATCH";
     public static final String ERROR_DOCUMENT_ID_REQUIRED = "DOCUMENT_ID_REQUIRED";
     public static final String ERROR_DOCUMENT_TYPE_REQUIRED = "DOCUMENT_TYPE_REQUIRED";
     public static final String ERROR_FILESTORE_ID_REQUIRED = "FILESTORE_ID_REQUIRED";
     public static final String ERROR_INVALID_SEARCH_CRITERIA = "INVALID_SEARCH_CRITERIA";
     public static final String ERROR_USER_UUID_REQUIRED = "USER_UUID_REQUIRED";
     public static final String ERROR_INVALID_REQUEST = "INVALID_REQUEST";
+    public static final String ERROR_CALLER_INFO_REQUIRED = "CALLER_INFO_REQUIRED";
+    public static final String MSG_CALLER_INFO_REQUIRED = "Authenticated caller details in RequestInfo.userInfo are required for member asset synchronization.";
+    public static final String ERROR_FAMILY_NOT_SUPPORTED = "FAMILY_NOT_SUPPORTED";
+    public static final String ERROR_OPERATION_NOT_ALLOWED = "OPERATION_NOT_ALLOWED";
+    public static final String MDMS_MASTER_FAMILY_CONFIGURATION = "FamilyConfiguration";
     public static final String ERROR_INVALID_TENANT_ID = "INVALID_TENANT_ID";
     public static final String ERROR_INVALID_AADHAAR_IDENTIFIER = "INVALID_AADHAAR_IDENTIFIER";
     public static final String ERROR_AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED";
@@ -97,6 +121,12 @@ public final class UserConstants {
     public static final String ERROR_ALTERNATE_MOBILE_SAME_AS_PRIMARY = "ALTERNATE_MOBILE_SAME_AS_PRIMARY";
     public static final String ERROR_GUARDIAN_MANDATORY_FOR_MINOR = "GUARDIAN_MANDATORY_FOR_MINOR";
     public static final String ERROR_INVALID_ADDRESS_TYPE = "INVALID_ADDRESS_TYPE";
+    public static final String ERROR_FIXED_OTP_NOT_CONFIGURED = "FIXED_OTP_NOT_CONFIGURED";
+    public static final String ERROR_ACCOUNT_INACTIVE = "ACCOUNT_INACTIVE";
+    public static final String ERROR_UNAUTHORIZED_CITIZEN_SEARCH = "UNAUTHORIZED_CITIZEN_SEARCH";
+    public static final String ERROR_UNVERIFIED_CITIZEN_EXISTS = "UNVERIFIED_CITIZEN_EXISTS";
+    public static final String ERROR_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE = "EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE";
+    public static final String MSG_EMPLOYEE_ALREADY_EXISTS_WITH_MOBILE = "An employee account already exists with this mobile number in the system.";
 
     // =========================================================================
     // 3a. Localization Keys (UG_ standard)
@@ -109,6 +139,7 @@ public final class UserConstants {
     public static final String UG_USER_ADDRESS_LANDMARK_MANDATORY = "UG_USER_ADDRESS_LANDMARK_MANDATORY";
     public static final String UG_USER_ADDRESS_PIN_CODE_MANDATORY = "UG_USER_ADDRESS_PIN_CODE_MANDATORY";
     public static final String UG_USER_ADDRESS_TYPE_MANDATORY = "UG_USER_ADDRESS_TYPE_MANDATORY";
+    public static final String UG_USER_ADDRESS_FILESTORE_ID_MANDATORY = "UG_USER_ADDRESS_FILESTORE_ID_MANDATORY";
 
     // Address Non-Editable Fields
     public static final String UG_USER_ADDRESS_NON_EDITABLE_CITY = "UG_USER_ADDRESS_NON_EDITABLE_CITY";
@@ -181,6 +212,7 @@ public final class UserConstants {
     public static final String MSG_PIN_CODE_MANDATORY = "Pin Code is mandatory for address creation.";
     public static final String MSG_ADDRESS_TYPE_MANDATORY = "Address Type is mandatory for address creation.";
     public static final String MSG_INVALID_ADDRESS_TYPE = "Address type is not valid according to configured master data.";
+    public static final String MSG_ADDRESS_FILESTORE_ID_MANDATORY = "Address Proof is mandatory for address creation.";
 
     // Section 8 Non-Editable Field Modification Messages
     public static final String MSG_NON_EDITABLE_MOBILE = "Mobile Number is non-editable and cannot be changed.";
@@ -197,7 +229,9 @@ public final class UserConstants {
     public static final String MSG_NON_EDITABLE_PIN_CODE = "Pin Code is non-editable and cannot be changed for an address.";
 
     public static final String MSG_OTP_MANDATORY_FOR_RESYNC = "OTP is mandatory for Aadhaar re-sync operation";
-    public static final String MSG_EMPTY_SEARCH_CRITERIA = "At least one search filter (tenantId, uuid, id, mobileNumber, or aadhaarNumber) must be provided";
+    public static final String MSG_EMPTY_SEARCH_CRITERIA = "At least one search filter (tenantId, uuid, mobileNumber, or aadhaarNumber) must be provided";
+    public static final String MSG_MULTIPLE_USERS_SEARCH_NOT_SUPPORTED = "Only a single user profile can be searched at a time. Searching for multiple users is not supported.";
+    public static final String MSG_USER_ID_SEARCH_NOT_SUPPORTED = "Searching by userId is not supported. Only uuid can be used to search citizen profiles.";
     public static final String MSG_AADHAAR_MANDATORY_FOR_RESYNC = "12-digit Aadhaar number is mandatory for Aadhaar re-sync";
     public static final String MSG_AADHAAR_MISMATCH = "Cannot re-sync profile with a different Aadhaar number than previously registered";
     public static final String MSG_USER_IDENTIFIER_REQUIRED = "uuid, id, or mobileNumber is required to locate citizen";
@@ -212,6 +246,7 @@ public final class UserConstants {
     public static final String MSG_MOBILE_AUTH_MOBILE_REQUIRED = "mobileNumber is required for MOBILE channel authentication";
     public static final String MSG_AADHAAR_IDENTIFIER_REQUIRED = "At least one of aadhaarNumber, txnId, or referenceId is required for AADHAAR channel authentication";
     public static final String MSG_FAMILY_ID_REQUIRED = "familyId is required for FAMILY_ID channel authentication";
+    public static final String MSG_FAMILY_NOT_FOUND = "No active family found with the provided familyId";
     public static final String MSG_FAMILY_MEMBER_MOBILE_REQUIRED = "Member mobileNumber is required for FAMILY_ID channel authentication";
     public static final String MSG_SELECTED_USER_NOT_FOUND = "Selected citizen account not found";
     public static final String MSG_AUTH_FAILED_NULL_USER = "Failed to resolve authenticated user";
@@ -240,9 +275,14 @@ public final class UserConstants {
     public static final String MSG_UNAUTHORIZED_RESYNC = "Unauthorized re-sync request: Authenticated user does not match target citizen profile.";
     public static final String MSG_FILESTORE_NOT_FOUND = "The provided filestoreId does not exist or is inaccessible in filestore service: ";
     public static final String MSG_AADHAAR_ALREADY_LINKED = "This Aadhaar number is already linked to another citizen profile. An Aadhaar card cannot be shared across multiple citizen identities.";
+    public static final String MSG_UNVERIFIED_CITIZEN_EXISTS = "Only one citizen profile with unverified identity is allowed per mobile number. All other citizens under this mobile number must be identity verified.";
     public static final String MSG_INVALID_ALTERNATE_MOBILE = "Alternate mobile number must be a valid 10-digit Indian phone number starting with 6-9.";
     public static final String MSG_ALTERNATE_MOBILE_SAME_AS_PRIMARY = "Alternate mobile number cannot be the same as primary mobile number.";
     public static final String MSG_GUARDIAN_MANDATORY_FOR_MINOR = "Guardian Name and Guardian Relation are mandatory for minor citizens under 18 years of age.";
+    public static final String MSG_FIXED_OTP_NOT_CONFIGURED = "Citizen login fixed OTP value is not configured";
+    public static final String MSG_ACCOUNT_INACTIVE = "Citizen account is inactive. Please contact support.";
+    public static final String MSG_UNAUTHORIZED_CITIZEN_SEARCH = "Access denied: Citizens are only permitted to search for their own profile. UUID or mobile number must match the authenticated user.";
+    public static final String MSG_AADHAAR_MOBILE_MISMATCH = "Mobile number registered with Aadhaar does not match your logged-in mobile number.";
 
     // =========================================================================
     // 5. API Identifiers & Response Message Constants
@@ -274,12 +314,319 @@ public final class UserConstants {
     // =========================================================================
     // 7. External Service Endpoints & Integration Keys
     // =========================================================================
-    public static final String AADHAAR_SEND_OTP_PATH = "/aadhaar/v1/_sendOtp";
-    public static final String AADHAAR_VERIFY_OTP_PATH = "/aadhaar/v1/_verifyOtp";
-
     public static final String JSON_KEY_DEMOGRAPHICS = "demographics";
     public static final String JSON_KEY_NAME = "name";
     public static final String JSON_KEY_GENDER = "gender";
     public static final String JSON_KEY_DOB = "dob";
     public static final String JSON_KEY_PHOTO = "photo";
+    public static final String JSON_KEY_MASKED_AADHAAR = "maskedAadhaar";
+    public static final String JSON_KEY_MOBILE = "mobile";
+    public static final String JSON_KEY_MOBILE_NUMBER = "mobileNumber";
+    public static final String JSON_KEY_PHONE = "phone";
+
+    // =========================================================================
+    // 8. Identity Verification Sources & Multi-Auth Constants
+    // =========================================================================
+    public static final String IDENTITY_SOURCE_AADHAAR = "AADHAAR";
+    public static final String IDENTITY_SOURCE_DIGILOCKER = "DIGILOCKER";
+    public static final String IDENTITY_SOURCE_FAMILY_ID = "FAMILY_ID";
+    public static final String IDENTITY_SOURCE_SYSTEM = "SYSTEM";
+    public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
+    public static final String CITIZEN_USERNAME_PREFIX = "CITIZEN_";
+    public static final String DEFAULT_AADHAAR_CITIZEN_NAME = "Aadhaar Verified Citizen";
+
+    public static final List<String> MOCK_CITIZEN_NAMES = Collections.unmodifiableList(Arrays.asList(
+            "Aarav Sharma",
+            "Priya Patel",
+            "Rohan Verma",
+            "Ananya Gupta",
+            "Vikram Singh",
+            "Sneha Reddy",
+            "Rahul Kumar",
+            "Pooja Joshi",
+            "Amitabh Das",
+            "Neha Malhotra",
+            "Rajesh Iyer",
+            "Sunita Meena",
+            "Suresh Nair",
+            "Kavita Rao",
+            "Manish Choudhary",
+            "Deepika Sen",
+            "Aditya Mishra",
+            "Divya Bhat",
+            "Arjun Kapoor",
+            "Ritu Mukherjee"
+    ));
+
+    /**
+     * Retrieves a sequential citizen name from the 500+ mock Aadhaar dataset.
+     * Guaranteed to cycle through all records before repeating.
+     *
+     * @return next citizen name string
+     */
+    public static String getRandomCitizenName() {
+        return MockAadhaarRecordService.getNextRecord().getName();
+    }
+
+    // =========================================================================
+    // 9. Family Service Integration Constants
+    // =========================================================================
+    public static final String FAMILY_PARAM_STATUS = "status";
+    public static final String FAMILY_STATUS_ACTIVE = "ACTIVE";
+    public static final String FIELD_FAMILY_ID = "familyId";
+    public static final String FIELD_FAMILY_STATUS = "status";
+    public static final String FAMILY_PARAM_MEMBER_USER_UUID = "memberUserUuid";
+    public static final String FAMILY_PARAM_MEMBER_USER_UUIDS = "memberUserUuids";
+    public static final String FAMILY_PARAM_HEAD_USER_UUID = "headUserUuid";
+    public static final String FAMILY_PARAM_IS_HEAD = "isHead";
+    public static final String PARAM_TENANT_ID = "tenantId";
+    public static final String JSON_KEY_FAMILIES_UPPER = "Families";
+    public static final String JSON_KEY_FAMILIES_LOWER = "families";
+    public static final String JSON_KEY_MEMBERS = "members";
+    public static final String JSON_KEY_ACTIVE = "active";
+    public static final String JSON_KEY_USER_UUID = "userUuid";
+
+    // =========================================================================
+    // 10. Date Format & Contract Property Constants
+    // =========================================================================
+    public static final String DATE_FORMAT_DATETIME = "dd-MM-yyyy HH:mm:ss";
+    public static final String DATE_FORMAT_DOB = "dd/MM/yyyy";
+    public static final String JSON_PROPERTY_FATHER_OR_HUSBAND_NAME = "fatherOrHusbandName";
+    public static final String JSON_PROPERTY_RELATIONSHIP = "relationship";
+
+    // =========================================================================
+    // 11. Member Asset Synchronization & Document Reference Types
+    // =========================================================================
+    public static final String DOC_REF_TYPE_CITIZEN_PROFILE = "CITIZEN_PROFILE";
+    public static final String DOC_REF_TYPE_PROPERTY = "PROPERTY";
+    public static final String DOC_REF_TYPE_INCOME_SALARY = "INCOME_SALARY";
+    public static final String DOC_REF_TYPE_INCOME_TAX = "INCOME_TAX";
+    public static final String DOC_REF_TYPE_VEHICLE_RC = "VEHICLE_RC";
+
+    public static final String LOCALITY_TYPE_URBAN = "URBAN";
+    public static final String LOCALITY_TYPE_RURAL = "RURAL";
+
+    public static final String UNKNOWN_USER_UUID = "UNKNOWN";
+    public static final String DEFAULT_TENANT_ID = "pg.citya";
+    public static final String DEFAULT_CITIZEN_NAME = "Citizen";
+
+    // =========================================================================
+    // 12. Additional JSON Keys & Verification Messages
+    // =========================================================================
+    public static final String JSON_KEY_REQUEST_INFO = "RequestInfo";
+    public static final String JSON_KEY_TXN_ID = "txnId";
+    public static final String JSON_KEY_REFERENCE_ID = "referenceId";
+    public static final String JSON_KEY_OTP = "otp";
+    public static final String JSON_KEY_IS_RESYNC = "isResync";
+    public static final String JSON_KEY_IS_VERIFIED = "isVerified";
+
+    public static final String ERROR_SERVICE_UNAVAILABLE = "SERVICE_UNAVAILABLE";
+    public static final String MSG_SERVICE_UNAVAILABLE_MEMBER_ASSET = "MemberAssetService is not configured";
+    public static final String MSG_INTER_SERVICE_REQUIRED = "Inter-service call required";
+    public static final String MSG_SEARCH_CITIZEN_BY_AADHAAR_RESTRICTED = "Searching citizen by Aadhaar is restricted to trusted internal services";
+    public static final String MSG_TENANT_ID_UNDETERMINED = "Tenant ID cannot be determined: state-level tenant ID is not configured";
+
+    public static final String MSG_MEMBER_ASSET_SYNC_PAYLOAD_NULL = "MemberAssetSyncRequest payload cannot be null";
+    public static final String MSG_CITIZEN_USER_UUID_REQUIRED = "Citizen userUuid is required for asset synchronization";
+    public static final String MSG_MEMBER_ASSETS_SYNC_SUCCESS = "Member demographics and assets synchronized successfully";
+    public static final String MSG_USER_RECORD_NOT_FOUND_PREFIX = "User record with UUID ";
+    public static final String MSG_USER_RECORD_NOT_FOUND_SUFFIX = " does not exist in eg_user";
+    public static final String MSG_SYNC_ERROR_PREFIX = "Synchronization error: ";
+    public static final String MSG_DOCUMENT_NOT_FOUND_PREFIX = "Document not found with ID: ";
+    public static final String MSG_REQUESTER_HOST_NOT_CONFIGURED = "requester.service.host is not configured";
+    public static final String MSG_REQUESTER_VERIFY_ENDPOINT_NOT_CONFIGURED = "requester.aadhaar.verify.endpoint is not configured";
+    public static final String MSG_ROLES_STATE_LEVEL_NOT_CONFIGURED = "roles.state.level.enabled is not configured";
+    public static final String MSG_AADHAAR_OTP_MAX_ATTEMPTS_NOT_CONFIGURED = "aadhaar.otp.max.attempts is not configured";
+    public static final String GENDER_FEMALE_CODE = "F";
+    public static final String DEFAULT_MOCK_DOB = "1990-01-01";
+
+    // =========================================================================
+    // 13. Rural Property & Asset CRUD Constants
+    // =========================================================================
+    public static final String STATUS_INACTIVE_UPPERCASE = "INACTIVE";
+    public static final String STATUS_ALL = "ALL";
+    public static final String ERROR_PROPERTY_NOT_FOUND = "PROPERTY_NOT_FOUND";
+    public static final String ERROR_INVALID_PROPERTY_REQUEST = "INVALID_PROPERTY_REQUEST";
+    public static final String ERROR_RURAL_PROPERTY_MANDATORY_FIELDS = "RURAL_PROPERTY_MANDATORY_FIELDS";
+    public static final String MSG_RURAL_MANDATORY_FIELDS = "gramPanchayat, villageName, and tenantId are mandatory for rural property declarations";
+    public static final String MSG_PROPERTY_NOT_FOUND = "Rural property not found with ID: ";
+    public static final String MSG_PROPERTY_ACCESS_DENIED = "Unauthorized access: Property does not belong to specified citizen";
+    public static final String MSG_PROPERTY_DEACTIVATED_SUCCESS = "Rural property marked as inactive successfully";
+
+    // =========================================================================
+    // 14. Vehicle CRUD Constants
+    // =========================================================================
+    public static final String ERROR_VEHICLE_NOT_FOUND = "VEHICLE_NOT_FOUND";
+    public static final String ERROR_INVALID_VEHICLE_REQUEST = "INVALID_VEHICLE_REQUEST";
+    public static final String ERROR_VEHICLE_MANDATORY_FIELDS = "VEHICLE_MANDATORY_FIELDS";
+    public static final String ERROR_VEHICLE_ALREADY_REGISTERED = "VEHICLE_ALREADY_REGISTERED";
+    public static final String MSG_VEHICLE_MANDATORY_FIELDS = "vehicleNumber, vehicleType, and tenantId are mandatory for vehicle declarations";
+    public static final String MSG_VEHICLE_NOT_FOUND = "Vehicle record not found with ID: ";
+    public static final String MSG_VEHICLE_ACCESS_DENIED = "Unauthorized access: Vehicle does not belong to specified citizen";
+    public static final String MSG_VEHICLE_ALREADY_REGISTERED = "Vehicle is already actively registered to another citizen with registration number: ";
+    public static final String MSG_VEHICLE_DEACTIVATED_SUCCESS = "Vehicle marked as inactive successfully";
+
+    // =========================================================================
+    // 15. Income CRUD Constants
+    // =========================================================================
+    public static final String ERROR_INCOME_NOT_FOUND = "INCOME_NOT_FOUND";
+    public static final String ERROR_INVALID_INCOME_REQUEST = "INVALID_INCOME_REQUEST";
+    public static final String ERROR_INCOME_MANDATORY_FIELDS = "INCOME_MANDATORY_FIELDS";
+    public static final String MSG_INCOME_MANDATORY_FIELDS = "occupation, annualIncome, identifierType, and tenantId are mandatory for income declarations";
+    public static final String MSG_INCOME_NOT_FOUND = "Income record not found with ID: ";
+    public static final String MSG_INCOME_ACCESS_DENIED = "Unauthorized access: Income record does not belong to specified citizen";
+    public static final String MSG_INCOME_DEACTIVATED_SUCCESS = "Income declaration marked as inactive successfully";
+
+    // =========================================================================
+    // 16. Aadhaar HoF Check Constants
+    // =========================================================================
+    public static final String MSG_INVALID_AADHAAR_FORMAT = "Aadhaar number must be a valid 12-digit numeric identifier";
+    public static final String MSG_CITIZEN_NOT_FOUND_FOR_AADHAAR = "No citizen profile found associated with the provided Aadhaar number";
+    public static final String MSG_CITIZEN_NOT_MAPPED_TO_FAMILY = "Citizen is not mapped to any active family unit";
+    public static final String MSG_CITIZEN_NOT_HEAD_OF_FAMILY = "Citizen is not the designated Head of Family (HoF) for their household";
+    public static final String MSG_CITIZEN_HOF_VERIFIED_SUCCESS = "Citizen is verified as Head of Family";
+    public static final String MSG_FAMILY_SERVICE_COMMUNICATION_ERROR = "Failed to communicate with Family service. Please try again later.";
+
+    // =========================================================================
+    // 17. Urban Property OTP & Consent Constants
+    // =========================================================================
+    public static final String MSG_PROPERTY_SEARCH_MANDATORY_FIELDS = "tenantId and propertyId are mandatory.";
+    public static final String MSG_URBAN_PROPERTY_NOT_FOUND_PREFIX = "No property found for property ID: ";
+
+    public static final String ERROR_INVALID_PROPERTY_OTP_REQUEST = "INVALID_PROPERTY_OTP_REQUEST";
+    public static final String ERROR_PROPERTY_ALREADY_LINKED_TO_CALLER = "PROPERTY_ALREADY_LINKED_TO_CALLER";
+    public static final String MSG_PROPERTY_ALREADY_LINKED_TO_CALLER = "You have already linked this property to your citizen profile.";
+
+    public static final String ERROR_PROPERTY_ALREADY_LINKED = "PROPERTY_ALREADY_LINKED";
+    public static final String MSG_PROPERTY_ALREADY_LINKED = "This property is individually owned and has already been linked to a citizen profile.";
+
+    public static final String ERROR_OWNER_NOT_FOUND = "OWNER_NOT_FOUND";
+    public static final String MSG_OWNER_NOT_FOUND_PREFIX = "No registered owner details found for property ";
+
+    public static final String ERROR_OWNER_MOBILE_NOT_FOUND = "OWNER_MOBILE_NOT_FOUND";
+    public static final String MSG_OWNER_MOBILE_NOT_FOUND = "No registered mobile number found for the property owner in Property Tax records.";
+
+    public static final String ERROR_PROPERTY_MAX_OWNERS_EXCEEDED = "PROPERTY_MAX_OWNERS_EXCEEDED";
+    public static final String MSG_PROPERTY_MAX_OWNERS_EXCEEDED = "All registered owners for this joint property have already linked it with their profiles.";
+
+    public static final String ERROR_INVALID_OWNER_MOBILE = "INVALID_OWNER_MOBILE";
+    public static final String MSG_INVALID_OWNER_MOBILE_PREFIX = "The specified mobile number does not match any registered owner for property ";
+
+    public static final String ERROR_PROPERTY_OWNER_ALREADY_LINKED = "PROPERTY_OWNER_ALREADY_LINKED";
+    public static final String MSG_PROPERTY_OWNER_ALREADY_LINKED = "The owner corresponding to this mobile number has already linked their profile to this property.";
+
+    public static final String ERROR_OWNER_SELECTION_REQUIRED = "OWNER_SELECTION_REQUIRED";
+    public static final String MSG_OWNER_SELECTION_REQUIRED = "Multiple unlinked owners exist for this property. Please specify the owner mobile number to receive the OTP.";
+
+    public static final String ERROR_INVALID_OTP_VERIFY_REQUEST = "INVALID_OTP_VERIFY_REQUEST";
+    public static final String MSG_OTP_VERIFY_MANDATORY_FIELDS = "propertyId, referenceId, and otp are mandatory.";
+
+    public static final String ERROR_INVALID_OTP_SESSION = "INVALID_OTP_SESSION";
+    public static final String MSG_INVALID_OTP_SESSION = "No active OTP session found or session has expired. Please request a new OTP.";
+
+    public static final String MSG_INVALID_OTP_ENTERED = "Invalid OTP entered. Please try again.";
+
+    public static final String ERROR_INVALID_CONSENT_VALIDATE_REQUEST = "INVALID_CONSENT_VALIDATE_REQUEST";
+    public static final String MSG_PROPERTY_ID_MANDATORY = "propertyId is mandatory.";
+
+    public static final String ERROR_INVALID_PROPERTY_CONSENT_TOKEN = "INVALID_PROPERTY_CONSENT_TOKEN";
+    public static final String MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX = "Invalid or expired OTP consent token for urban property: ";
+    public static final String ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED = "PROPERTY_CONSENT_TOKEN_REQUIRED";
+    public static final String MSG_PROPERTY_CONSENT_TOKEN_REQUIRED = "Consent token is mandatory for linking urban property: ";
+    public static final String ERROR_OTP_DISPATCH_FAILED = "OTP_DISPATCH_FAILED";
+    public static final String MSG_OTP_DISPATCH_FAILED = "Failed to dispatch OTP to property owner mobile number. Please try again later.";
+    public static final String ERROR_PROPERTY_LINKING_LIMIT_EXCEEDED = "PROPERTY_LINKING_LIMIT_EXCEEDED";
+    public static final String MSG_PROPERTY_LINKING_LIMIT_EXCEEDED = "Property linking limit exceeded for property: ";
+    public static final String ERROR_OTP_RATE_LIMIT_EXCEEDED = "OTP_RATE_LIMIT_EXCEEDED";
+    public static final String MSG_OTP_RATE_LIMIT_EXCEEDED = "Too many OTP requests for this property. Please wait before trying again.";
+
+    public static final String ERROR_OTP_SERVICE_CONFIG_MISSING = "OTP_SERVICE_CONFIG_MISSING";
+    public static final String MSG_OTP_SERVICE_CONFIG_MISSING = "OTP service configuration is missing.";
+
+    public static final String ERROR_PROPERTY_SERVICE_CONFIG_MISSING = "PROPERTY_SERVICE_CONFIG_MISSING";
+    public static final String MSG_PROPERTY_SERVICE_CONFIG_MISSING = "Property service configuration is missing.";
+
+    public static final String ERROR_PROPERTY_SERVICE_ERROR = "PROPERTY_SERVICE_ERROR";
+    public static final String MSG_PROPERTY_SERVICE_ERROR_PREFIX = "Failed to retrieve property details: ";
+
+    public static final String ERROR_INVALID_PROPERTY_SEARCH_CRITERIA = "INVALID_PROPERTY_SEARCH_CRITERIA";
+
+    public static final String PREFIX_PROP_REF = "PROP-REF-";
+    public static final String PREFIX_PROP_CONSENT = "PROP-CONSENT-";
+
+    public static final String MSG_STATUS_SUCCESSFUL = "SUCCESSFUL";
+    public static final String MSG_OTP_SENT_SUCCESS = "OTP sent successfully to property owner's registered mobile number.";
+    public static final String MSG_PROPERTY_OWNERSHIP_VERIFIED_SUCCESS = "Property ownership verified successfully.";
+    public static final String MSG_CONSENT_TOKEN_VALID = "Property consent token or session is valid.";
+    public static final String MSG_CONSENT_TOKEN_INVALID = "Invalid or expired property consent token.";
+
+    public static final String CATEGORY_INDIVIDUAL = "INDIVIDUAL";
+    public static final String CATEGORY_MULTIPLE = "MULTIPLE";
+    public static final String CATEGORY_JOINT = "JOINT";
+
+    public static final String PT_JSON_PROPERTIES = "Properties";
+    public static final String PT_JSON_PROPERTY_ID = "propertyId";
+    public static final String PT_JSON_PROPERTY_IDS = "propertyIds";
+    public static final String PT_JSON_TENANT_ID = "tenantId";
+    public static final String PT_JSON_STATUS = "status";
+    public static final String PT_JSON_PROPERTY_TYPE = "propertyType";
+    public static final String PT_JSON_OWNERSHIP_CATEGORY = "ownershipCategory";
+    public static final String PT_JSON_ADDRESS = "address";
+    public static final String PT_JSON_DOOR_NO = "doorNo";
+    public static final String PT_JSON_BUILDING_NAME = "buildingName";
+    public static final String PT_JSON_STREET = "street";
+    public static final String PT_JSON_LANDMARK = "landmark";
+    public static final String PT_JSON_CITY = "city";
+    public static final String PT_JSON_PINCODE = "pincode";
+    public static final String PT_JSON_OWNERS = "owners";
+    public static final String PT_JSON_UUID = "uuid";
+    public static final String PT_JSON_NAME = "name";
+    public static final String PT_JSON_MOBILE_NUMBER = "mobileNumber";
+    public static final String PT_JSON_IS_PRIMARY_OWNER = "isPrimaryOwner";
+    public static final String PT_JSON_OWNERSHIP_PERCENTAGE = "ownerShipPercentage";
+    public static final String PT_JSON_OWNER_TYPE = "ownerType";
+
+    public static final String OTP_JSON_OTP = "otp";
+    public static final String OTP_JSON_IDENTITY = "identity";
+    public static final String OTP_JSON_TENANT_ID = "tenantId";
+    public static final String OTP_JSON_REQUEST_INFO = "RequestInfo";
+    public static final String OTP_JSON_IS_VALIDATION_SUCCESSFUL = "isValidationSuccessful";
+    public static final String OTP_JSON_VALIDATION_SUCCESSFUL = "validationSuccessful";
+    public static final String OTP_SMS_TEMPLATE_PREFIX = "Your OTP for linking property is ";
+    public static final String OTP_SMS_TEMPLATE_SUFFIX = ". Valid for 15 minutes. - UPYOG";
+
+    public static final String REDIS_PROP_OTP_CHALLENGE_PREFIX = "UPYOG_PROP_OTP_CHALLENGE:";
+    public static final String REDIS_PROP_CONSENT_PREFIX = "UPYOG_PROP_CONSENT:";
+    public static final String REDIS_PROP_OTP_ATTEMPTS_PREFIX = "UPYOG_PROP_OTP_ATTEMPTS:";
+    public static final String REDIS_PROP_OTP_RATE_PREFIX = "UPYOG_PROP_OTP_RATE:";
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_WINDOW = 3;
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_CALLER = 3;
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_MOBILE = 3;
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_PROPERTY_CEILING = 10;
+    public static final long PROPERTY_OTP_SEND_WINDOW_MS = 15 * 60 * 1000L; // 15 minutes sliding window
+
+    public static final String MSG_UPYOG_PROPERTY_ID_MANDATORY = "upyogPropertyId is mandatory for urban property.";
+    public static final String MSG_URBAN_PROPERTY_SERVICE_UNAVAILABLE = "UrbanPropertyService is unavailable for validating property consent.";
+    public static final String MSG_PROPERTY_LINKAGE_QUERY_FAILED_PREFIX = "Failed to query existing property linkages for property: ";
+    public static final String DEFAULT_API_ID = "org.egov.user";
+    public static final String DEFAULT_VER = "1.0";
+    public static final String ACTION_SEARCH = "search";
+    public static final String DEFAULT_DID = "1";
+    public static final String EMPTY_STRING = "";
+    public static final String MASK_CHAR = "*";
+    public static final String ENCRYPTION_DELIMITER = "|";
+    public static final String JSON_KEY_PROPERTY_RECORD_ID = "propertyRecordId";
+    public static final String JSON_KEY_OWNERSHIP_TYPE = "ownershipType";
+    public static final String COL_USER_UUID = "user_uuid";
+    public static final String COL_MOBILENUMBER = "mobilenumber";
+    public static final String COL_PROPERTY_RECORD_ID = "property_record_id";
+    public static final String COL_OWNERSHIP_TYPE = "ownership_type";
+    public static final String SQL_PARAM_TENANT_ID = "tenant_id";
+    public static final String SQL_PARAM_UPYOG_PROPERTY_ID = "upyog_property_id";
+    public static final String MSG_PROPERTY_SERVICE_CLIENT_REQUIRED = "propertyServiceClient must not be null";
+    public static final String MSG_USER_PROPERTY_REPOSITORY_REQUIRED = "userPropertyRepository must not be null";
+    public static final String MSG_SESSION_REGISTRY_REQUIRED = "sessionRegistry must not be null";
+    public static final String MSG_OWNERSHIP_VALIDATOR_REQUIRED = "ownershipValidator must not be null";
+    public static final String MSG_PROPERTY_OTP_CLIENT_REQUIRED = "propertyOtpClient must not be null";
+    public static final String MSG_USER_CONFIGURATION_REQUIRED = "userConfiguration must not be null";
 }

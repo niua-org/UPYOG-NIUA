@@ -18,6 +18,7 @@ import org.egov.demand.model.*;
 
 import org.egov.demand.repository.querybuilder.BillQueryBuilder;
 import org.egov.demand.repository.rowmapper.BillRowMapperV2;
+import org.egov.demand.repository.rowmapper.ShortBillRowMapperV2;
 import org.egov.demand.util.Util;
 import org.egov.demand.web.contract.BillRequest;
 import org.egov.demand.web.contract.BillRequestV2;
@@ -42,6 +43,9 @@ class BillRepositoryV2Test {
 
     @MockBean
     private BillRowMapperV2 billRowMapperV2;
+
+    @MockBean
+    private ShortBillRowMapperV2 shortBillRowMapperV2;
 
     @MockBean
     private JdbcTemplate jdbcTemplate;

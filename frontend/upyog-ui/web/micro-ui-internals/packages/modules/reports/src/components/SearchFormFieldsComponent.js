@@ -3,8 +3,19 @@ import { TextInput, SubmitBar, DatePicker, SearchField, Dropdown, CardLabelError
 import { useWatch } from "react-hook-form";
 
 
-const getSearchField = (field, formState, Controller, register, control, t) => {
-    const formErrors = formState?.errors; 
+const getSearchField = (field, formState, Controller, register, control, t, extraHandlers = {}) => {
+    const formErrors = formState?.errors;
+    const { onStateChange, setValue, searchParams = [] } = extraHandlers;
+    const handleFieldChange = (val, onChange) => {
+        onChange(val);
+        if (field.name === "state" && onStateChange) {
+            const ulbField = searchParams.find((f) => f.name === "ulb");
+            if (setValue && ulbField) {
+                setValue("ulb", ulbField.type === "multivaluelist" ? [] : "");
+            }
+            onStateChange(val);
+        }
+    };
 
     switch (field.type) {
         case "string":
@@ -39,7 +50,7 @@ const getSearchField = (field, formState, Controller, register, control, t) => {
                     render={({ field: controllerField }) => (
     <Dropdown
         selected={controllerField.value}
-        select={controllerField.onChange}
+        select={(val) => handleFieldChange(val, controllerField.onChange)}
         onBlur={controllerField.onBlur}
         option={optionsArr}
         t={t}
@@ -52,18 +63,20 @@ const getSearchField = (field, formState, Controller, register, control, t) => {
             </SearchField>
             )
         case "multivaluelist":
-            var optionsArr = Object.values(field.defaultValue).map(el => t(el))
-            optionsArr.unshift(t('ALL'))
-            const optionsObjArr = optionsArr.map((option)=> {
-                return {
-                    name: field.islocalisationRequired ? t(`${field.localisationPrefix}${option}`):option
-                }
-            })
-            optionsArr.unshift(t('ALL'))
-           const selectMulti = (listOfSelections, controllerField) => {
-    const res = listOfSelections.map((item) => item[1]);
-    controllerField.onChange(res);
-};
+            const optionsObjArr = [
+                { name: t("ALL"), code: "All" },
+                ...Object.entries(field.defaultValue || {}).map(([key, val]) => {
+                    const translatedVal = t(val);
+                    return {
+                        code: key,
+                        name: field.islocalisationRequired && field.localisationPrefix ? t(`${field.localisationPrefix}${val}`) : translatedVal
+                    };
+                })
+            ];
+            const selectMulti = (listOfSelections, controllerField) => {
+                const res = listOfSelections.map((item) => item[1]);
+                controllerField.onChange(res);
+            };
             return (
             <SearchField>
                 <label>{t(`${field.label}${field.isMandatory ? "*" : ""}`)}</label>
@@ -123,21 +136,27 @@ const getSearchField = (field, formState, Controller, register, control, t) => {
     }
 }
 
-const SearchFormFieldsComponent = ({ formState, Controller, register, control, t,reset,data }) => {
+const SearchFormFieldsComponent = ({ formState, Controller, register, control, setValue, t, reset, data, onStateChange, onClearAll }) => {
     let resetObj={};
 
     data?.reportDetails?.searchParams?.map(el => el.type === "multivaluelist" ? resetObj[el?.name] = [] : resetObj[el?.name] = "")
+    const extraHandlers = {
+        onStateChange,
+        setValue,
+        searchParams: data?.reportDetails?.searchParams || [],
+    };
     return (
         <>
             {data?.reportDetails?.searchParams?.map(field => (
-                getSearchField(field, formState, Controller, register, control, t)
+                getSearchField(field, formState, Controller, register, control, t, extraHandlers)
             ))}
             <SearchField className="submit">
                 <SubmitBar label={t("ES_COMMON_SEARCH")} submit />
                 <p
                     className="rpt-search-form-fields-component-top-spacing"
                     onClick={() => {
-                        reset(resetObj)
+                        reset(resetObj);
+                        onClearAll?.();
                     }}
                 >
                     {t(`ES_COMMON_CLEAR_ALL`)}

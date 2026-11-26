@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.egov.tracer.model.CustomException;
+import org.upyog.family.util.FamilyConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -36,14 +38,37 @@ public class FamilyConfiguration {
     @Value("${egov.idgen.family.id.name}")
     private String idGenFamilyIdName;
 
-    @Value("${egov.idgen.family.id.format}")
-    private String idGenFamilyIdFormat;
+    @Value("${egov.idgen.member.id.name}")
+    private String idGenMemberIdName;
+
+    /**
+     * IdGen format template name configured for generating sequential family registration application numbers (e.g. family.application.num).
+     */
+    @Value("${egov.idgen.family.application.num}")
+    private String idGenApplicationNum;
 
     @Value("${egov.user.host}")
     private String userHost;
 
     @Value("${egov.user.search.path}")
     private String userSearchPath;
+
+    @Value("${egov.user.create.path}")
+    private String userCreatePath;
+
+    @Value("${egov.user.member.asset.sync.path}")
+    private String userMemberAssetSyncPath;
+
+    @Value("${egov.user.property.consent.validate.path}")
+    private String userPropertyConsentValidatePath;
+
+    // Fix for PR Comment #10: Controls whether family creation/update fails if member asset sync fails
+    @Value("${family.member.asset.sync.fail.on.error}")
+    private Boolean failOnAssetSyncError;
+
+    // Fix for PR Comment #14: Whether identity verification is mandatory for all members (including minors/dependents)
+    @Value("${family.member.verification.mandatory.for.all}")
+    private Boolean memberVerificationMandatoryForAll;
 
     @Value("${egov.filestore.host}")
     private String fileStoreHost;
@@ -63,8 +88,35 @@ public class FamilyConfiguration {
     @Value("${requester.services.dx.verify.otp.path}")
     private String requesterDxVerifyOtpPath;
 
-    @Value("${family.consent.mock.enabled:false}")
+    @Value("${family.consent.mock.enabled}")
     private Boolean mockConsentEnabled;
+
+    @Value("${family.consent.mock.fixed.otp}")
+    private String mockFixedOtp;
+
+    @Value("${family.otp.verify.max.attempts}")
+    private Integer familyOtpVerifyMaxAttempts;
+
+    @Value("${family.otp.reference.ttl.minutes}")
+    private Long familyOtpReferenceTtlMinutes;
+
+    @Value("${family.consent.token.ttl.minutes}")
+    private Long consentTokenTtlMinutes;
+
+    @Value("${family.sms.otp.message.template}")
+    private String smsOtpMessageTemplate;
+
+    @Value("${egov.otp.host}")
+    private String otpHost;
+
+    @Value("${egov.otp.create.path}")
+    private String otpCreatePath;
+
+    @Value("${egov.otp.validate.path}")
+    private String otpValidatePath;
+
+    @Value("${kafka.topics.notification.sms}")
+    private String smsNotifTopic;
 
     @Value("${family.mdms.module}")
     private String mdmsFamilyModule;
@@ -77,6 +129,15 @@ public class FamilyConfiguration {
 
     @Value("${family.relationship.cache.ttl}")
     private Long relationshipCacheTtl;
+
+    @Value("${family.mdms.configuration.master}")
+    private String mdmsConfigurationMaster;
+
+    @Value("${family.mdms.configuration.filter}")
+    private String mdmsConfigurationFilter;
+
+    @Value("${family.configuration.cache.ttl}")
+    private Long configurationCacheTtl;
 
     @Value("${family.kafka.create.topic}")
     private String createFamilyTopic;
@@ -107,4 +168,63 @@ public class FamilyConfiguration {
 
     @Value("${family.max.limit}")
     private Integer maxLimit;
+
+    // Workflow Configuration
+    @Value("${egov.workflow.host}")
+    private String wfHost;
+
+    @Value("${egov.workflow.transition.path}")
+    private String wfTransitionPath;
+
+    @Value("${egov.workflow.businessservice.search.path}")
+    private String wfBusinessServiceSearchPath;
+
+    @Value("${egov.workflow.processinstance.search.path}")
+    private String wfProcessInstanceSearchPath;
+
+    @Value("${family.workflow.business.service}")
+    private String familyBusinessService;
+
+    @Value("${family.workflow.module.name}")
+    private String familyModuleName;
+
+    /**
+     * Gets the configured time-to-live (TTL) for consent tokens in milliseconds.
+     * Defaults to 15 minutes if not explicitly configured or non-positive.
+     *
+     * @return TTL duration in milliseconds
+     */
+    public long getConsentTokenTtlMs() {
+        if (consentTokenTtlMinutes == null || consentTokenTtlMinutes <= 0) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "family.consent.token.ttl.minutes is not configured");
+        }
+        return consentTokenTtlMinutes * 60L * 1000L;
+    }
+
+    /**
+     * Returns configured maximum failed OTP validation attempts per reference.
+     *
+     * @return max attempts, at least 1
+     */
+    public int getFamilyOtpVerifyMaxAttempts() {
+        if (familyOtpVerifyMaxAttempts == null || familyOtpVerifyMaxAttempts < 1) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "family.otp.verify.max.attempts is not configured");
+        }
+        return familyOtpVerifyMaxAttempts;
+    }
+
+    /**
+     * Returns OTP reference TTL in milliseconds.
+     *
+     * @return TTL in milliseconds
+     */
+    public long getFamilyOtpReferenceTtlMs() {
+        if (familyOtpReferenceTtlMinutes == null || familyOtpReferenceTtlMinutes <= 0) {
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST,
+                    "family.otp.reference.ttl.minutes is not configured");
+        }
+        return familyOtpReferenceTtlMinutes * 60L * 1000L;
+    }
 }

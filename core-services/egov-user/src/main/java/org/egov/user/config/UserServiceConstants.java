@@ -63,5 +63,13 @@ public class UserServiceConstants {
     public static final String PATTERN_CITY = "^[a-zA-Z. ]*$";
     public static final String PATTERN_TENANT = "^[a-zA-Z. ]*$";
     public static final String PATTERN_PINCODE = "^[1-9][0-9]{5}$";
+
+    public static final String DATE_FORMAT_DATETIME = "dd-MM-yyyy HH:mm:ss";
+    public static final String DATE_FORMAT_DOB = "dd/MM/yyyy";
+    public static final String IDENTITY_SOURCE_AADHAAR = "AADHAAR";
+    public static final String AADHAAR_USERNAME_PREFIX = "AADHAAR_";
+    public static final String CITIZEN_USERNAME_PREFIX = "CITIZEN_";
+    public static final String JSON_PROPERTY_FATHER_OR_HUSBAND_NAME = "fatherOrHusbandName";
+    public static final String JSON_PROPERTY_RELATIONSHIP = "relationship";
 }
 

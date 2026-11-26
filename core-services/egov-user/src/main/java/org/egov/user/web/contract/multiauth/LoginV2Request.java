@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.multiauth;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -87,11 +86,9 @@ public class LoginV2Request implements Serializable {
 
     @Schema(description = "UUID of selected citizen user profile when multiple accounts are linked to this mobile number", example = "e5b881ef-2d88-4c91-b3b3-df7b06b6a482")
     @JsonProperty("selectedUserUuid")
-    @JsonAlias({"userUuid", "uuid"})
     private String selectedUserUuid;
 
     @Schema(description = "Member ID selected from State Family roster during UC2 login", example = "MEM-1")
     @JsonProperty("selectedMemberId")
-    @JsonAlias({"memberId"})
     private String selectedMemberId;
 }

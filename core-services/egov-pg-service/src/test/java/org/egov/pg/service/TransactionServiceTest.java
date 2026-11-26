@@ -27,13 +27,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -105,7 +109,8 @@ public class TransactionServiceTest {
         Transaction resp = transactionService.initiateTransaction(transactionRequest);
 
         assertTrue(resp.getRedirectUrl().equalsIgnoreCase(redirectUrl));
-
+        verify(validator).validateCreateTxn(transactionRequest);
+        verify(gatewayService).initiateTxn(txn);
     }
 
     /**
@@ -233,5 +238,72 @@ public class TransactionServiceTest {
         when(validator.validateUpdateTxn(any(Map.class))).thenThrow(new CustomException("TXN_NOT_FOUND", "Transaction not found"));
 
         transactionService.updateTransaction(requestInfo, Collections.singletonMap("abc", "PT_001"));
+    }
+
+    @Test
+    public void updateTransactionSkipGatewayPath() {
+        Transaction txnStatus = Transaction.builder().txnId("PT_ZERO")
+                .txnAmount("0")
+                .txnStatus(Transaction.TxnStatusEnum.PENDING)
+                .build();
+        when(validator.validateUpdateTxn(any(Map.class))).thenReturn(txnStatus);
+        when(validator.skipGateway(txnStatus)).thenReturn(true);
+        when(validator.shouldGenerateReceipt(txnStatus, txnStatus)).thenReturn(true);
+        when(appProperties.getUpdateTxnTopic()).thenReturn("update-txn");
+        when(appProperties.getUpdateTxnDumpTopic()).thenReturn("update-dump");
+
+        List<Transaction> result = transactionService.updateTransaction(requestInfo, Collections.singletonMap("ORDERID", "PT_ZERO"));
+
+        assertEquals(Transaction.TxnStatusEnum.PENDING, result.get(0).getTxnStatus());
+        verify(paymentsService).registerPayment(any(TransactionRequest.class));
+        verify(enrichmentService, never()).enrichUpdateTransaction(any(), any());
+    }
+
+    @Test
+    public void updateTransactionDoesNotRegisterPaymentWhenReceiptNotRequired() {
+        Transaction txnStatus = Transaction.builder().txnId("PT_002")
+                .txnAmount("100")
+                .txnStatus(Transaction.TxnStatusEnum.PENDING)
+                .build();
+        Transaction gatewayStatus = Transaction.builder().txnId("PT_002")
+                .txnAmount("100")
+                .txnStatus(Transaction.TxnStatusEnum.FAILURE)
+                .responseJson("{}")
+                .build();
+        when(validator.validateUpdateTxn(any(Map.class))).thenReturn(txnStatus);
+        when(validator.skipGateway(txnStatus)).thenReturn(false);
+        when(validator.shouldGenerateReceipt(txnStatus, gatewayStatus)).thenReturn(false);
+        when(gatewayService.getLiveStatus(eq(txnStatus), any(Map.class))).thenReturn(gatewayStatus);
+        when(appProperties.getUpdateTxnTopic()).thenReturn("update-txn");
+        when(appProperties.getUpdateTxnDumpTopic()).thenReturn("update-dump");
+
+        transactionService.updateTransaction(requestInfo, Collections.singletonMap("ORDERID", "PT_002"));
+
+        verify(paymentsService, never()).registerPayment(any(TransactionRequest.class));
+        verify(enrichmentService).enrichUpdateTransaction(any(TransactionRequest.class), eq(gatewayStatus));
+    }
+
+    @Test
+    public void initiateTransactionPushesToKafkaTopics() {
+        when(appProperties.getSaveTxnTopic()).thenReturn("save-txn");
+        when(appProperties.getSaveTxnDumpTopic()).thenReturn("save-dump");
+        Transaction txn = Transaction.builder().txnAmount("100")
+                .billId("ORDER0012")
+                .productInfo("Property Tax Payment")
+                .gateway("PAYTM")
+                .build();
+        TransactionRequest transactionRequest = new TransactionRequest(requestInfo, txn);
+        Mockito.doNothing().when(validator).validateCreateTxn(transactionRequest);
+        when(validator.skipGateway(txn)).thenReturn(false);
+        try {
+            when(gatewayService.initiateTxn(any(Transaction.class))).thenReturn(new URI("https://paytm.com/pay"));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
+        transactionService.initiateTransaction(transactionRequest);
+
+        verify(producer).push(eq("save-txn"), any());
+        verify(producer).push(eq("save-dump"), any());
     }
 }

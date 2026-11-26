@@ -15,6 +15,7 @@ ALTER TABLE eg_user
     ADD COLUMN IF NOT EXISTS spouse_name VARCHAR(100),
     ADD COLUMN IF NOT EXISTS is_identity_verified BOOLEAN DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS identity_verified_date TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS identity_verified_source VARCHAR(64),
     ADD COLUMN IF NOT EXISTS last_resync_date TIMESTAMP,
     ADD COLUMN IF NOT EXISTS editted_count INT DEFAULT 0,
     ADD COLUMN IF NOT EXISTS last_login_method VARCHAR(32);
@@ -27,6 +28,7 @@ ALTER TABLE eg_user_audit_table
     ADD COLUMN IF NOT EXISTS spouse_name VARCHAR(100),
     ADD COLUMN IF NOT EXISTS is_identity_verified BOOLEAN DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS identity_verified_date TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS identity_verified_source VARCHAR(64),
     ADD COLUMN IF NOT EXISTS last_resync_date TIMESTAMP,
     ADD COLUMN IF NOT EXISTS editted_count INT DEFAULT 0,
     ADD COLUMN IF NOT EXISTS last_login_method VARCHAR(32);

@@ -1,6 +1,5 @@
 package org.egov.dx.adapter.vendor.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -34,7 +33,6 @@ public class VendorVerifyOtpRequest {
      */
     @NotNull(message = AadhaarConstants.MSG_REF_ID_MANDATORY)
     @JsonProperty("reference_id")
-    @JsonAlias({"referenceId", "txnId"})
     private Long referenceId;
 
     /**

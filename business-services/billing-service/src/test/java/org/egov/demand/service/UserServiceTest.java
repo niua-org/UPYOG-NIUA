@@ -1,63 +1,107 @@
 package org.egov.demand.service;
 
-import org.egov.common.contract.request.RequestInfo;
-import org.egov.demand.model.Demand;
-import org.egov.demand.model.Owner;
-import org.egov.demand.web.contract.User;
-import org.egov.demand.web.contract.UserResponse;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.Collections;
-import java.util.Map;
-
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
-public class UserServiceTest {
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-    @MockBean
+import org.egov.common.contract.request.RequestInfo;
+import org.egov.demand.config.ApplicationProperties;
+import org.egov.demand.model.Demand;
+import org.egov.demand.web.contract.User;
+import org.egov.demand.web.contract.UserResponse;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.web.client.RestTemplate;
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class UserServiceTest {
+
+    @Mock
     private RestTemplate restTemplate;
 
-    @Autowired
+    @Mock
+    private ApplicationProperties properties;
+
+    @InjectMocks
     private UserService userService;
 
-
     @Test
-    @DisplayName("Should return the user when the user exists")
-    public void testGetUserWhenUserExists() {
+    void getUser_returnsUuidWhenUserFound() {
+        when(properties.getUserServiceHostName()).thenReturn("http://user/");
+        when(properties.getUserServiceSearchPath()).thenReturn("search");
+        User user = new User();
+        user.setUuid("uuid-1");
+        UserResponse response = new UserResponse();
+        response.setUser(List.of(user));
+        when(restTemplate.postForObject(anyString(), any(), eq(UserResponse.class))).thenReturn(response);
 
-        UserResponse userResponse = new UserResponse();
-        userResponse.setUser(Collections.singletonList(new User()));
-        when(restTemplate.postForObject(anyString(), any(), eq(UserResponse.class))).thenReturn(userResponse);
-        Map<String, String> response = userService.getUser(new RequestInfo(), "1234567890", "test", "default");
-        assertTrue(response.containsKey("id"));
+        Map<String, String> result = userService.getUser(new RequestInfo(), "9999999999", "Citizen", "ap.kurnool");
+
+        assertThat(result).containsEntry("id", "uuid-1");
     }
 
     @Test
-    @DisplayName("Should return empty map when the user does not exist")
-    public void testGetUserWhenUserDoesNotExist() {
+    void getUser_returnsEmptyWhenNoUsers() {
+        when(properties.getUserServiceHostName()).thenReturn("http://user/");
+        when(properties.getUserServiceSearchPath()).thenReturn("search");
+        UserResponse response = new UserResponse();
+        response.setUser(Collections.emptyList());
+        when(restTemplate.postForObject(anyString(), any(), eq(UserResponse.class))).thenReturn(response);
 
-        RequestInfo requestInfo = new RequestInfo();
-        String phoneNo = "1234567890";
-        String name = "test";
-        String tenantId = "default";
+        assertThat(userService.getUser(new RequestInfo(), "9999999999", "Citizen", "ap.kurnool")).isEmpty();
+    }
 
-        UserResponse userResponse = new UserResponse();
-        userResponse.setUser(Collections.emptyList());
+    @Test
+    void getUser_returnsEmptyWhenRemoteCallFails() {
+        when(properties.getUserServiceHostName()).thenReturn("http://user/");
+        when(properties.getUserServiceSearchPath()).thenReturn("search");
+        when(restTemplate.postForObject(anyString(), any(), eq(UserResponse.class)))
+                .thenThrow(new RuntimeException("down"));
 
-        when(restTemplate.postForObject(anyString(), any(), eq(UserResponse.class))).thenReturn(userResponse);
+        assertThat(userService.getUser(new RequestInfo(), "9999999999", "Citizen", "ap.kurnool")).isEmpty();
+    }
 
-        Map<String, String> response = userService.getUser(requestInfo, phoneNo, name, tenantId);
+    @Test
+    void createUser_returnsUuidOnSuccess() {
+        when(properties.getUserServiceHostName()).thenReturn("http://user/");
+        when(properties.getUserCreateEnpoint()).thenReturn("create");
+        User payer = new User();
+        payer.setName("Test User");
+        payer.setMobileNumber("8888888888");
+        Demand demand = Demand.builder().tenantId("ap.kurnool").payer(payer).build();
 
-        assertTrue(response.isEmpty());
+        User created = new User();
+        created.setUuid("new-uuid");
+        UserResponse response = new UserResponse();
+        response.setUser(List.of(created));
+        when(restTemplate.postForObject(anyString(), any(), eq(UserResponse.class))).thenReturn(response);
+
+        assertThat(userService.createUser(demand, new RequestInfo())).isEqualTo("new-uuid");
+    }
+
+    @Test
+    void createUser_returnsNullWhenRemoteCallFails() {
+        when(properties.getUserServiceHostName()).thenReturn("http://user/");
+        when(properties.getUserCreateEnpoint()).thenReturn("create");
+        User payer = new User();
+        payer.setName("Test User");
+        payer.setMobileNumber("8888888888");
+        Demand demand = Demand.builder().tenantId("ap.kurnool").payer(payer).build();
+        when(restTemplate.postForObject(anyString(), any(), eq(UserResponse.class)))
+                .thenThrow(new RuntimeException("down"));
+
+        assertThat(userService.createUser(demand, new RequestInfo())).isNull();
     }
 }
-

@@ -1096,7 +1096,8 @@ const generateQRCodes = async (
     'request-service.water_tanker-receipt',
     'request-service.mobile_toilet-receipt',
     'chbpermissionletter',
-    'advpermissionletter'
+    'advpermissionletter',
+    'family-certificate'
   ];
 
   for (var i = 0, len = qrcodeMappings.length; i < len; i++) {

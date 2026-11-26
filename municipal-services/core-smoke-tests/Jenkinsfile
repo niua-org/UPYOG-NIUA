@@ -1,0 +1,66 @@
+library 'ci-libs'
+
+properties([
+    parameters([
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'uat', 'prod'], description: 'Target deployment environment'),
+        string(name: 'SERVICE', defaultValue: 'ALL', description: 'Service name from services.yaml or ALL'),
+        string(name: 'EXPECTED_VERSION', defaultValue: '', description: 'Optional build/version string to assert'),
+        string(name: 'BASE_URL', defaultValue: '', description: 'Gateway base URL (overrides env default when set)')
+    ])
+])
+
+pipeline {
+    agent any
+    options {
+        timeout(time: 10, unit: 'MINUTES')
+        timestamps()
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Wait for rollout') {
+            steps {
+                echo "Ensure ${params.ENVIRONMENT} rollout is complete before smoke (helm/k8s gate upstream)."
+            }
+        }
+        stage('Smoke Tests') {
+            steps {
+                dir('municipal-services/core-smoke-tests') {
+                    withCredentials([
+                        string(credentialsId: "smoke-${params.ENVIRONMENT}-tenant-id", variable: 'SMOKE_TENANT_ID'),
+                        string(credentialsId: "smoke-${params.ENVIRONMENT}-user", variable: 'SMOKE_USER'),
+                        string(credentialsId: "smoke-${params.ENVIRONMENT}-password", variable: 'SMOKE_PASSWORD'),
+                        string(credentialsId: "smoke-${params.ENVIRONMENT}-base-url", variable: 'BASE_URL_CRED')
+                    ]) {
+                        script {
+                            env.ENVIRONMENT = params.ENVIRONMENT
+                            env.SERVICE = params.SERVICE
+                            if (params.BASE_URL?.trim()) {
+                                env.BASE_URL = params.BASE_URL.trim()
+                            } else {
+                                env.BASE_URL = BASE_URL_CRED
+                            }
+                            if (params.EXPECTED_VERSION?.trim()) {
+                                env.EXPECTED_VERSION = params.EXPECTED_VERSION.trim()
+                            }
+                        }
+                        sh '''
+                          mvn -Psmoke -Dservice="${SERVICE}" clean test
+                        '''
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: 'municipal-services/core-smoke-tests/target/surefire-reports/*.xml'
+        }
+        failure {
+            echo 'Notify team channel and consider helm rollback (auto dev/uat, manual approval prod).'
+        }
+    }
+}

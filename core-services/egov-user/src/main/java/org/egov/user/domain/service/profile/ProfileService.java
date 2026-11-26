@@ -1,17 +1,28 @@
 package org.egov.user.domain.service.profile;
 
+import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
+import org.egov.tracer.model.Error;
 import org.egov.user.domain.model.User;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyRequest;
+import org.egov.user.web.contract.profile.AadhaarCitizenVerifyResponse;
+import org.egov.user.web.contract.profile.AadhaarHofCheckRequest;
+import org.egov.user.web.contract.profile.AadhaarHofCheckResponse;
+import org.egov.user.web.contract.profile.AadhaarSearchRequest;
 import org.egov.user.web.contract.profile.ProfileCreateRequest;
+import org.egov.user.web.contract.profile.ProfileIncludeEntity;
 import org.egov.user.web.contract.profile.ProfileInitRequest;
 import org.egov.user.web.contract.profile.ProfileResyncRequest;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service contract for citizen profile lifecycle management, supporting full profile creation,
- * lightweight onboarding, demographic updates with non-editable restrictions, and Aadhaar profile re-sync.
+ * lightweight onboarding, demographic updates with non-editable restrictions, search with entity enrichment,
+ * and Aadhaar profile re-sync.
  *
  * <p>Strictly adheres to SOLID principles:</p>
  * <ul>
@@ -54,13 +65,45 @@ public interface ProfileService {
     User updateProfile(ProfileUpdateRequest request);
 
     /**
-     * Searches citizen profiles by criteria with decrypted PII attributes.
+     * Searches citizen profiles by criteria with decrypted PII attributes, resolving requested entity sections.
      *
      * @param request profile search request payload
      * @return list of matching decrypted citizen profiles
      * @throws org.egov.tracer.model.CustomException if search criteria are empty or malformed
      */
     List<User> searchProfile(ProfileSearchRequest request);
+
+    /**
+     * Searches citizen profiles by criteria with decrypted PII attributes using pre-resolved entity inclusion flags.
+     *
+     * @param request  profile search request payload
+     * @param includes pre-resolved set of {@link ProfileIncludeEntity} sections to enrich
+     * @return list of matching decrypted citizen profiles
+     * @throws org.egov.tracer.model.CustomException if search criteria are empty or malformed
+     */
+    List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes);
+
+    /**
+     * Searches citizen profiles by criteria with decrypted PII attributes using pre-resolved entity inclusion flags,
+     * collecting any partial enrichment errors (e.g. address or document retrieval failure) into the provided list
+     * to support graceful degradation and partial responses.
+     *
+     * @param request          profile search request payload containing filter criteria
+     * @param includes         pre-resolved set of {@link ProfileIncludeEntity} sections to enrich
+     * @param enrichmentErrors mutable list to accumulate partial enrichment errors encountered during address/document retrieval
+     * @return list of matching decrypted citizen profiles
+     * @throws org.egov.tracer.model.CustomException if search criteria are empty or malformed
+     */
+    List<User> searchProfile(ProfileSearchRequest request, Set<ProfileIncludeEntity> includes, List<Error> enrichmentErrors);
+
+    /**
+     * Resolves and normalizes requested entity inclusion flags (PROFILE, ADDRESS, DOCUMENT).
+     * Defaults to [PROFILE] if omitted or empty.
+     *
+     * @param rawIncludes list of {@link ProfileIncludeEntity} sections requested
+     * @return set of normalized {@link ProfileIncludeEntity} include flags
+     */
+    Set<ProfileIncludeEntity> resolveIncludes(List<ProfileIncludeEntity> rawIncludes);
 
     /**
      * Re-synchronizes citizen profile demographics with verified Aadhaar e-KYC.
@@ -70,4 +113,55 @@ public interface ProfileService {
      * @throws org.egov.tracer.model.CustomException if OTP verification fails or target citizen does not exist
      */
     User resyncProfile(ProfileResyncRequest request);
+
+    /**
+     * Verifies Aadhaar OTP via identity provider adapter and resolves citizen identity:
+     * - If matching citizen profile exists in the system: enriches identity verification status,
+     *   active familyId from family service, and returns full citizen demographic details (isNewUser=false).
+     * - If no matching citizen profile exists: auto-provisions a new verified citizen account in eg_user
+     *   from Aadhaar e-KYC demographics and returns full citizen details (isNewUser=true).
+     *
+     * @param request Aadhaar citizen verification request containing referenceId, OTP, and optional Aadhaar/mobile
+     * @return AadhaarCitizenVerifyResponse containing resolved citizen demographics, familyId, and isNewUser flag
+     */
+    AadhaarCitizenVerifyResponse verifyAndResolveAadhaarCitizen(AadhaarCitizenVerifyRequest request);
+
+    /**
+     * Verifies Aadhaar OTP for an authenticated citizen who logged in with their mobile number,
+     * ensuring that the mobile number registered with Aadhaar matches the logged-in user's mobile number.
+     * On match, marks the citizen's profile as identity-verified with Aadhaar, updates e-KYC demographics,
+     * links the masked Aadhaar number, persists changes to the database, and returns the verified profile response.
+     *
+     * @param request Aadhaar citizen verification request containing referenceId and OTP
+     * @return AadhaarCitizenVerifyResponse containing verified citizen profile details and identity verification status
+     * @throws org.egov.tracer.model.CustomException if mobile numbers do not match or Aadhaar is already linked to another account
+     */
+    AadhaarCitizenVerifyResponse verifyLoggedInCitizenProfile(AadhaarCitizenVerifyRequest request);
+
+    /**
+     * Marks an existing citizen profile as Aadhaar-verified after inter-service e-KYC OTP success.
+     *
+     * @param userUuid           citizen UUID
+     * @param fullAadhaarTwelve  verified 12-digit Aadhaar number
+     * @param tenantId           tenant identifier
+     * @param requestInfo        request context
+     */
+    void markCitizenVerifiedAfterAadhaarEkyc(String userUuid, String fullAadhaarTwelve, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Searches citizen profiles specifically by Aadhaar number (Restricted to internal services).
+     *
+     * @param request Aadhaar search request containing Aadhaar number, tenantId, and RequestInfo
+     * @return list containing the matching decrypted citizen profile, or empty list if not found
+     */
+    List<User> searchProfileByAadhaar(AadhaarSearchRequest request);
+
+    /**
+     * Verifies if a citizen profile exists with the provided Aadhaar number and is the active Head of Family (HoF).
+     *
+     * @param request Aadhaar HoF check request containing Aadhaar number, tenantId, and RequestInfo
+     * @return {@link AadhaarHofCheckResponse} containing verification outcome, citizen details, and familyId
+     * @throws org.egov.tracer.model.CustomException if validation fails, citizen not found, not mapped to family, or not HoF
+     */
+    AadhaarHofCheckResponse checkAadhaarHof(AadhaarHofCheckRequest request);
 }

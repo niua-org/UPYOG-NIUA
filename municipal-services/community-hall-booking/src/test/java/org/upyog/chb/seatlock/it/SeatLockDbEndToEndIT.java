@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ import org.upyog.chb.seatlock.service.TimerSeatBookingService;
 		"spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration",
 		"seat.lock.enabled=true", "seat-lock.provider=db", "seat-lock.rate-limit-enabled=false" })
 @DisplayName("Seat lock integration (PostgreSQL)")
-@Ignore
+@Disabled("Requires Docker; run manually in CI with Testcontainers")
 class SeatLockDbEndToEndIT {
 
 	@Container

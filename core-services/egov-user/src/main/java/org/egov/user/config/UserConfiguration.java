@@ -5,9 +5,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Centralized configuration class managing application properties for the egov-user service.
@@ -50,12 +56,37 @@ public class UserConfiguration {
     @Value("${address.types.allowed}")
     private String allowedAddressTypes;
 
+    @Value("${user.address.mandatory.fields.enabled}")
+    private Boolean addressMandatoryFieldsEnabled;
+
+    @Value("${user.address.update.strategy}")
+    private Boolean addressSoftUpdateFlag;
+
     // Cache Configuration
     @Value("${address.type.cache.ttl.millis}")
     private Long addressTypeCacheTtlMillis;
 
     @Value("${address.type.cache.cron}")
     private String addressTypeCacheCron;
+
+    // Income Identifier Type MDMS & Fallback Configuration
+    @Value("${mdms.income.identifier.type.enabled}")
+    private Boolean mdmsIncomeIdentifierTypeEnabled;
+
+    @Value("${mdms.income.identifier.type.moduleName}")
+    private String mdmsIncomeIdentifierTypeModuleName;
+
+    @Value("${mdms.income.identifier.type.masterName}")
+    private String mdmsIncomeIdentifierTypeMasterName;
+
+    @Value("${mdms.income.identifier.type.filter}")
+    private String mdmsIncomeIdentifierTypeFilter;
+
+    @Value("${income.identifier.types.allowed}")
+    private String allowedIncomeIdentifierTypes;
+
+    @Value("${income.identifier.type.cache.ttl.millis}")
+    private Long incomeIdentifierTypeCacheTtlMillis;
 
     // Token Validity & Format Configuration
     @Value("${access.token.validity.in.minutes}")
@@ -68,8 +99,17 @@ public class UserConfiguration {
     private String oauth2TokenFormat;
 
     // Multi-Auth & Verification Configuration
+    @Value("${citizen.login.password.otp.enabled}")
+    private Boolean citizenLoginPasswordOtpEnabled;
+
+    @Value("${employee.login.password.otp.enabled}")
+    private Boolean employeeLoginPasswordOtpEnabled;
+
     @Value("${citizen.login.password.otp.fixed.enabled}")
     private Boolean citizenLoginPasswordOtpFixedEnabled;
+
+    @Value("${citizen.multi.account.selection.enabled}")
+    private Boolean citizenMultiAccountSelectionEnabled;
 
     @Value("${citizen.login.password.otp.fixed.value}")
     private String citizenLoginPasswordOtpFixedValue;
@@ -82,6 +122,13 @@ public class UserConfiguration {
 
     @Value("${aadhaar.otp.max.attempts}")
     private Integer aadhaarOtpMaxAttempts;
+
+    @Value("${aadhaar.mock.enabled}")
+    private Boolean aadhaarMockEnabled;
+
+    public Boolean getAadhaarGatewayMockEnabled() {
+        return this.aadhaarMockEnabled;
+    }
 
     @Value("${requester.service.host}")
     private String requesterServiceHost;
@@ -101,9 +148,210 @@ public class UserConfiguration {
     @Value("${filestore.validation.enabled}")
     private Boolean filestoreValidationEnabled;
 
-    @Value("${family.service.host:http://upyog-family-service.egov:8080/}")
+    @Value("${family.service.host}")
     private String familyServiceHost;
 
-    @Value("${family.service.state.jit.endpoint:family/v1/state/_jitProvision}")
+    @Value("${family.service.state.jit.endpoint}")
     private String familyServiceStateJitEndpoint;
+
+    @Value("${family.service.search.endpoint}")
+    private String familyServiceSearchEndpoint;
+
+    // Family MDMS Configuration
+    @Value("${family.mdms.module}")
+    private String mdmsFamilyModule;
+
+    @Value("${family.mdms.configuration.master}")
+    private String mdmsFamilyConfigurationMaster;
+
+    @Value("${family.mdms.configuration.filter}")
+    private String mdmsFamilyConfigurationFilter;
+
+    @Value("${family.configuration.cache.ttl}")
+    private Long familyConfigurationCacheTtl;
+
+    @Value("${egov.user.oauth.token.endpoint}")
+    private String userOauthTokenEndpoint;
+
+    @Value("${egov.user.host}")
+    private String userHost;
+
+    @Value("${account.unlock.cool.down.period.minutes}")
+    private Long accountUnlockCoolDownPeriod;
+
+    @Value("${max.invalid.login.attempts.period.minutes}")
+    private Long maxInvalidLoginAttemptsPeriod;
+
+    @Value("${create.user.validate.name}")
+    private Boolean createUserValidateName;
+
+    @Value("${max.invalid.login.attempts}")
+    private Long maxInvalidLoginAttempts;
+
+    @Value("${egov.user.pwd.pattern}")
+    private String pwdRegex;
+
+    @Value("${egov.user.pwd.pattern.min.length}")
+    private Integer pwdMinLength;
+
+    @Value("${egov.user.pwd.pattern.max.length}")
+    private Integer pwdMaxLength;
+
+    @Value("${default.password.expiry.in.days}")
+    private Integer defaultPasswordExpiryInDays;
+
+    // DigiLocker Configuration
+    @Value("${digilocker.register}")
+    private Boolean digilockerRegister;
+
+    @Value("${digilocker.search}")
+    private Boolean digilockerSearch;
+
+    @Value("${requester.service.endpoint}")
+    private String requesterServiceEndpoint;
+
+    // User Search & Registration Configuration
+    @Value("${egov.user.search.default.size}")
+    private Integer defaultSearchSize;
+
+    @Value("${mobile.number.validation.workaround.enabled}")
+    private String mobileValidationWorkaroundEnabled;
+
+    @Value("${otp.validation.register.mandatory}")
+    private Boolean otpValidationRegisterMandatory;
+
+    @Value("${citizen.registration.withlogin.enabled}")
+    private Boolean citizenRegistrationWithLoginEnabled;
+
+    // IDGen Configuration
+    @Value("${egov.idgen.host}")
+    private String idGenHost;
+
+    @Value("${egov.idgen.path}")
+    private String idGenPath;
+
+    @Value("${egov.idgen.citizen.id.name}")
+    private String idGenCitizenIdName;
+
+    @Value("${egov.idgen.user.doc.id.name}")
+    private String idGenUserDocIdName;
+
+    @Value("${egov.idgen.rural.property.id.name}")
+    private String idGenRuralPropertyIdName;
+
+    // Asset Authorization Configuration
+    @Value("${egov.asset.privileged.roles}")
+    private String assetPrivilegedRoles;
+
+    // Family Profile Authorization Configuration
+    @Value("${egov.family.privileged.roles}")
+    private String familyPrivilegedRoles;
+
+    // Asset Search Pagination Configuration
+    @Value("${egov.asset.search.default.limit}")
+    private Integer assetSearchDefaultLimit;
+
+    @Value("${egov.asset.search.max.limit}")
+    private Integer assetSearchMaxLimit;
+
+    @Value("${egov.asset.search.default.offset}")
+    private Integer assetSearchDefaultOffset;
+
+    /**
+     * Base HTTP host URL of the UPYOG Property Tax service (property-services).
+     */
+    @Value("${property.service.host}")
+    private String propertyServiceHost;
+
+    /**
+     * Relative context endpoint for querying properties in property-services.
+     */
+    @Value("${property.service.search.endpoint}")
+    private String propertyServiceSearchEndpoint;
+
+    /**
+     * Role code assigned to the system user for internal inter-service calls (e.g. unmasking owner mobiles in property-services).
+     */
+    @Value("${property.service.system.role}")
+    private String propertyServiceSystemRole;
+
+    /**
+     * Flag enabling fixed/mock OTP verification for urban property ownership in test environments.
+     */
+    @Value("${property.otp.fixed.enabled}")
+    private Boolean propertyOtpFixedEnabled;
+
+    /**
+     * Static mock OTP value accepted when fixed OTP verification is enabled.
+     */
+    @Value("${property.otp.fixed.value}")
+    private String propertyOtpFixedValue;
+
+    /**
+     * Time-to-live duration in milliseconds for an active urban property OTP reference challenge session.
+     */
+    @Value("${property.otp.reference.ttl.ms}")
+    private Long propertyOtpReferenceTtlMs;
+
+    /**
+     * Maximum number of invalid OTP verification attempts permitted before session lockout.
+     */
+    @Value("${property.otp.verify.max.attempts}")
+    private Integer propertyOtpVerifyMaxAttempts;
+
+    /**
+     * Time-to-live duration in milliseconds for an issued property authorization consent token.
+     */
+    @Value("${property.consent.token.ttl.ms}")
+    private Long propertyConsentTokenTtlMs;
+
+    /**
+     * Base HTTP host URL of the egov-otp service.
+     */
+    @Value("${egov.otp.host}")
+    private String otpServiceHost;
+
+    /**
+     * Relative context endpoint for creating OTP challenges via egov-otp.
+     */
+    @Value("${egov.services.otp.create_otp}")
+    private String otpCreateEndpoint;
+
+    /**
+     * Relative context endpoint for validating OTPs via egov-otp.
+     */
+    @Value("${egov.services.otp.validate_otp}")
+    private String otpValidateEndpoint;
+
+    /**
+     * Resolves the configured set of privileged role codes permitted to access citizen assets.
+     *
+     * @return set of uppercase role codes
+     */
+    public Set<String> getAssetPrivilegedRoles() {
+        if (StringUtils.isBlank(assetPrivilegedRoles)) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(assetPrivilegedRoles.split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .map(String::toUpperCase)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Resolves the configured set of privileged role codes permitted to access family full profile data across citizens.
+     *
+     * @return set of uppercase role codes, or an empty set if not configured
+     */
+    public Set<String> getFamilyPrivilegedRoles() {
+        if (StringUtils.isBlank(familyPrivilegedRoles)) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(familyPrivilegedRoles.split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .map(String::toUpperCase)
+                .collect(Collectors.toSet());
+    }
 }

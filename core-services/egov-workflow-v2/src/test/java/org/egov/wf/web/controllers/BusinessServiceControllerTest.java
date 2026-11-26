@@ -1,6 +1,7 @@
 package org.egov.wf.web.controllers;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +65,8 @@ class BusinessServiceControllerTest {
                         .string(
                                 "{\"ResponseInfo\":{\"apiId\":null,\"ver\":null,\"ts\":null,\"resMsgId\":null,\"msgId\":null,\"status\":null},"
                                         + "\"BusinessServices\":[]}"));
+
+        verify(this.businessMasterService).create((BusinessServiceRequest) any());
     }
 
 

@@ -73,11 +73,20 @@ public class UserRowMapper implements RowMapper<User> {
         if (hasColumn(rs, "spouse_name")) {
             user.setSpouseName(rs.getString("spouse_name"));
         }
+        if (hasColumn(rs, "caste")) {
+            user.setCaste(rs.getString("caste"));
+        }
+        if (hasColumn(rs, "is_specially_abled")) {
+            user.setIsSpeciallyAbled(rs.getBoolean("is_specially_abled"));
+        }
         if (hasColumn(rs, "is_identity_verified")) {
             user.setIsIdentityVerified(rs.getBoolean("is_identity_verified"));
         }
         if (hasColumn(rs, "identity_verified_date")) {
             user.setIdentityVerifiedDate(rs.getTimestamp("identity_verified_date"));
+        }
+        if (hasColumn(rs, "identity_verified_source")) {
+            user.setIdentityVerifiedSource(rs.getString("identity_verified_source"));
         }
         if (hasColumn(rs, "last_resync_date")) {
             user.setLastResyncDate(rs.getTimestamp("last_resync_date"));
@@ -95,6 +104,14 @@ public class UserRowMapper implements RowMapper<User> {
         return user;
     }
 
+    /**
+     * Checks whether a column is present in the result set metadata to prevent invalid column exceptions.
+     *
+     * @param rs database result set
+     * @param columnName column label or name to check
+     * @return true if column exists in the metadata, false otherwise
+     * @throws SQLException if a database access error occurs
+     */
     private boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
         ResultSetMetaData rsmd = rs.getMetaData();
         int columns = rsmd.getColumnCount();

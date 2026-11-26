@@ -1,0 +1,4 @@
+CREATE SEQUENCE IF NOT EXISTS seq_citizen_id;
+CREATE SEQUENCE IF NOT EXISTS seq_user_doc_id;
+CREATE SEQUENCE IF NOT EXISTS seq_family_id;
+CREATE SEQUENCE IF NOT EXISTS seq_family_member_id;

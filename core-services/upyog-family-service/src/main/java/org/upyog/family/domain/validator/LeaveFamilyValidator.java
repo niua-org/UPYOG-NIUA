@@ -3,11 +3,14 @@ package org.upyog.family.domain.validator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.tracer.model.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.upyog.family.domain.service.config.FamilyConfigurationService;
+import org.upyog.family.persistence.repository.UserClient;
 import org.upyog.family.util.FamilyConstants;
 import org.upyog.family.web.contract.Family;
 import org.upyog.family.web.contract.FamilyMember;
 import org.upyog.family.web.contract.LeaveFamilyRequest;
-import org.springframework.stereotype.Component;
 
 /**
  * Specialized validator validating business rules for a member leaving an existing Family Unit in UPYOG.
@@ -21,6 +24,31 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LeaveFamilyValidator {
 
+    private final UserClient userClient;
+    private final FamilyConfigurationService familyConfigurationService;
+
+    /**
+     * Constructs a LeaveFamilyValidator with the required UserClient and FamilyConfigurationService dependencies.
+     *
+     * @param userClient client for user profile lookups and identity verification
+     * @param familyConfigurationService service validating state family configuration policy
+     */
+    @Autowired
+    public LeaveFamilyValidator(UserClient userClient,
+                                @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
+        this.userClient = userClient;
+        this.familyConfigurationService = familyConfigurationService;
+    }
+
+    /**
+     * Backward-compatible constructor without dynamic family configuration.
+     *
+     * @param userClient client for user profile lookups and identity verification
+     */
+    public LeaveFamilyValidator(UserClient userClient) {
+        this(userClient, null);
+    }
+
     /**
      * Validates a member departure from a Family Unit in UPYOG.
      * Ensures target member exists and is active, validates exit reason,
@@ -33,6 +61,14 @@ public class LeaveFamilyValidator {
     public void validate(LeaveFamilyRequest request, Family existingFamily) {
         log.info("[UPYOG-LEAVE-FAMILY-VALIDATOR] Validating leave request: member={}, familyId={}",
                 request.getMemberUserUuid(), request.getFamilyId());
+
+        // Ensure caller is identity-verified in user registry database
+        userClient.validateCallerIsVerified(request.getRequestInfo());
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateUpyogNativeFamily(request.getRequestInfo(), request.getTenantId());
+        }
 
         if (existingFamily == null) {
             throw new CustomException(FamilyConstants.ERROR_FAMILY_NOT_FOUND,

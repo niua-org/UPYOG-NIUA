@@ -1,13 +1,22 @@
+/*
+ * Known production issues (not fixed in tests):
+ * - updateDemandFromReceipt null/empty guard uses operator precedence such that a non-null
+ *   request with an empty receipt list may still fall through incorrectly in some cases.
+ */
 package org.egov.demand.service;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.demand.model.AuditDetail;
@@ -16,324 +25,256 @@ import org.egov.demand.model.BillAccountDetail;
 import org.egov.demand.model.BillDetail;
 import org.egov.demand.model.Demand;
 import org.egov.demand.model.DemandDetail;
-
 import org.egov.demand.web.contract.BillRequest;
-import org.egov.demand.web.contract.DemandResponse;
+import org.egov.demand.web.contract.DemandRequest;
 import org.egov.demand.web.contract.Receipt;
 import org.egov.demand.web.contract.ReceiptRequest;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@ContextConfiguration(classes = {ReceiptService.class})
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 class ReceiptServiceTest {
-    @MockBean
+
+    @Mock
     private DemandService demandService;
 
-    @Autowired
+    @InjectMocks
     private ReceiptService receiptService;
 
+    private RequestInfo requestInfo;
 
-    @Test
-    void testUpdateDemandFromReceipt() {
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getReceipt()).thenReturn(new ArrayList<>());
-        this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);
-        verify(receiptRequest).getReceipt();
-    }
-
-
-    @Test
-    void testUpdateDemandFromReceipt2() {
-        ArrayList<Receipt> receiptList = new ArrayList<>();
-        receiptList.add(new Receipt());
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getReceipt()).thenReturn(receiptList);
-        this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);
-        verify(receiptRequest, atLeast(1)).getReceipt();
-    }
-
-
-    @Test
-    void testUpdateDemandFromReceipt3() {
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getReceipt()).thenReturn(new ArrayList<>());
-        this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CANCELLED, true);
-        verify(receiptRequest).getReceipt();
-    }
-
-
-    @Test
-    void testUpdateDemandFromReceipt4() {
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getReceipt()).thenReturn(new ArrayList<>());
-        this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.INSTRUMENT_BOUNCED, true);
-        verify(receiptRequest).getReceipt();
-    }
-
-
-    @Test
-    void testUpdateDemandFromReceipt5() {
-
-        ArrayList<Receipt> receiptList = new ArrayList<>();
-        receiptList.add(null);
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getReceipt()).thenReturn(receiptList);
-  /*      receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);
-        verify(receiptRequest).getReceipt();*/
-    }
-
-
-    @Test
-    void testUpdateDemandFromReceipt6() {
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
-
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(new Bill());
-        Receipt e = new Receipt("42", "42", "42", billList, new AuditDetail(), 123L);
-
-        ArrayList<Receipt> receiptList = new ArrayList<>();
-        receiptList.add(e);
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(receiptRequest.getReceipt()).thenReturn(receiptList);
-        this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);
-        verify(this.demandService).getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any());
-        verify(this.demandService).updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any());
-        verify(receiptRequest, atLeast(1)).getReceipt();
-        verify(receiptRequest).getRequestInfo();
-    }
-
-
-    @Test
-    void testUpdateDemandFromReceipt7() {
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
-
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(new Bill());
-        billList.add(new Bill());
-        Receipt e = new Receipt("42", "42", "42", billList, new AuditDetail(), 123L);
-
-        ArrayList<Receipt> receiptList = new ArrayList<>();
-        receiptList.add(e);
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(receiptRequest.getReceipt()).thenReturn(receiptList);
-        this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);
-        verify(this.demandService).getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any());
-        verify(this.demandService).updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any());
-        verify(receiptRequest, atLeast(1)).getReceipt();
-        verify(receiptRequest).getRequestInfo();
+    @BeforeEach
+    void setUp() {
+        requestInfo = RequestInfo.builder().apiId("billing-service").build();
     }
 
     @Test
-
-    void testUpdateDemandFromReceipt8() {
-
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
-
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(null);
-        Receipt e = new Receipt("42", "42", "42", billList, new AuditDetail(), 123L);
-
-        ArrayList<Receipt> receiptList = new ArrayList<>();
-        receiptList.add(e);
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(receiptRequest.getReceipt()).thenReturn(receiptList);
-       /* this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);
-*/
+    void updateDemandFromReceipt_nullRequest_doesNothing() {
+        receiptService.updateDemandFromReceipt(null, BillDetail.StatusEnum.CREATED, false);
+        verify(demandService, never()).getDemands(any(), any());
     }
-
 
     @Test
-
-    void testUpdateDemandFromReceipt9() {
-
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
-
-        Bill bill = new Bill();
-        bill.addBillDetailsItem(new BillDetail());
-
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(bill);
-        Receipt e = new Receipt("42", "42", "42", billList, new AuditDetail(), 123L);
-
-        ArrayList<Receipt> receiptList = new ArrayList<>();
-        receiptList.add(e);
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(receiptRequest.getReceipt()).thenReturn(receiptList);
-      /*  this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);
-*/
+    void updateDemandFromReceipt_emptyReceiptList_doesNothing() {
+        ReceiptRequest receiptRequest = ReceiptRequest.builder()
+                .requestInfo(requestInfo)
+                .receipt(Collections.emptyList())
+                .build();
+        receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, false);
+        verify(demandService, never()).getDemands(any(), any());
     }
-
 
     @Test
-
-    void testUpdateDemandFromReceipt10() {
-
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
-
-        Bill bill = new Bill();
-        bill.addBillDetailsItem(new BillDetail());
-        bill.addBillDetailsItem(new BillDetail());
-
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(bill);
-        Receipt e = new Receipt("42", "42", "42", billList, new AuditDetail(), 123L);
-
-        ArrayList<Receipt> receiptList = new ArrayList<>();
-        receiptList.add(e);
-        ReceiptRequest receiptRequest = mock(ReceiptRequest.class);
-        when(receiptRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(receiptRequest.getReceipt()).thenReturn(receiptList);
-        /*this.receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, true);*/
+    void updateDemandFromReceipt_receiptWithEmptyBills_doesNothing() {
+        Receipt receipt = Receipt.builder().bill(Collections.emptyList()).build();
+        ReceiptRequest receiptRequest = ReceiptRequest.builder()
+                .requestInfo(requestInfo)
+                .receipt(List.of(receipt))
+                .build();
+        receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, false);
+        verify(demandService, never()).getDemands(any(), any());
     }
-
-
 
     @Test
+    void updateDemandFromReceipt_validReceipt_updatesCollectionAndCallsAsyncUpdate() {
+        String demandId = "demand-1";
+        Demand demand = Demand.builder()
+                .id(demandId)
+                .tenantId("ap.kurnool")
+                .demandDetails(List.of(
+                        DemandDetail.builder()
+                                .taxHeadMasterCode("TL_TAX")
+                                .taxAmount(BigDecimal.valueOf(100))
+                                .collectionAmount(BigDecimal.ZERO)
+                                .build()))
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
 
-    void testUpdateDemandFromBill3() {
+        BillAccountDetail accountDetail = BillAccountDetail.builder()
+                .taxHeadCode("TL_TAX")
+                .amount(BigDecimal.valueOf(100))
+                .adjustedAmount(BigDecimal.valueOf(40))
+                .build();
+        BillDetail billDetail = BillDetail.builder()
+                .demandId(demandId)
+                .billAccountDetails(List.of(accountDetail))
+                .build();
+        Bill bill = Bill.builder().tenantId("ap.kurnool").billDetails(List.of(billDetail)).build();
+        Receipt receipt = Receipt.builder().bill(List.of(bill)).build();
+        ReceiptRequest receiptRequest = ReceiptRequest.builder()
+                .requestInfo(requestInfo)
+                .receipt(List.of(receipt))
+                .build();
 
-        BillRequest billRequest = mock(BillRequest.class);
-        when(billRequest.getBills()).thenReturn(new ArrayList<>());
-     /*   this.receiptService.updateDemandFromBill(billRequest, new HashSet<>(), true);
-*/
+        receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CREATED, false);
+
+        assertThat(demand.getDemandDetails().get(0).getCollectionAmount()).isEqualByComparingTo("40");
+        ArgumentCaptor<DemandRequest> captor = ArgumentCaptor.forClass(DemandRequest.class);
+        verify(demandService).updateAsync(captor.capture(), any());
+        assertThat(captor.getValue().getDemands()).containsExactly(demand);
     }
-
 
     @Test
-    void testUpdateDemandFromBill4() {
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
+    void updateDemandFromReceipt_cancellation_subtractsAdjustedAmount() {
+        String demandId = "demand-2";
+        Demand demand = Demand.builder()
+                .id(demandId)
+                .tenantId("ap.kurnool")
+                .demandDetails(List.of(
+                        DemandDetail.builder()
+                                .taxHeadMasterCode("TL_TAX")
+                                .taxAmount(BigDecimal.valueOf(100))
+                                .collectionAmount(BigDecimal.valueOf(50))
+                                .build()))
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
 
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(new Bill());
-        BillRequest billRequest = mock(BillRequest.class);
-        when(billRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(billRequest.getBills()).thenReturn(billList);
-        this.receiptService.updateDemandFromBill(billRequest, new HashSet<>(), true);
-        verify(this.demandService).getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any());
-        verify(this.demandService).updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any());
-        verify(billRequest).getBills();
-        verify(billRequest, atLeast(1)).getRequestInfo();
+        BillAccountDetail accountDetail = BillAccountDetail.builder()
+                .taxHeadCode("TL_TAX")
+                .adjustedAmount(BigDecimal.valueOf(20))
+                .build();
+        BillDetail billDetail = BillDetail.builder()
+                .demandId(demandId)
+                .billAccountDetails(List.of(accountDetail))
+                .build();
+        Bill bill = Bill.builder().tenantId("ap.kurnool").billDetails(List.of(billDetail)).build();
+        Receipt receipt = Receipt.builder().bill(List.of(bill)).build();
+        ReceiptRequest receiptRequest = ReceiptRequest.builder()
+                .requestInfo(requestInfo)
+                .receipt(List.of(receipt))
+                .build();
+
+        receiptService.updateDemandFromReceipt(receiptRequest, BillDetail.StatusEnum.CANCELLED, true);
+
+        assertThat(demand.getDemandDetails().get(0).getCollectionAmount()).isEqualByComparingTo("30");
     }
-
 
     @Test
+    void updateDemandFromBill_nullTaxHeadCode_skipsDetailUpdate() {
+        String demandId = "demand-3";
+        Demand demand = Demand.builder()
+                .id(demandId)
+                .tenantId("ap.kurnool")
+                .demandDetails(List.of(
+                        DemandDetail.builder()
+                                .taxHeadMasterCode("TL_TAX")
+                                .taxAmount(BigDecimal.TEN)
+                                .collectionAmount(BigDecimal.ZERO)
+                                .build()))
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
 
-    void testUpdateDemandFromBill5() {
+        BillAccountDetail accountDetail = BillAccountDetail.builder().taxHeadCode(null).adjustedAmount(BigDecimal.ONE).build();
+        BillDetail billDetail = BillDetail.builder()
+                .demandId(demandId)
+                .billAccountDetails(List.of(accountDetail))
+                .build();
+        Bill bill = Bill.builder().tenantId("ap.kurnool").billDetails(List.of(billDetail)).build();
+        BillRequest billRequest = BillRequest.builder().requestInfo(requestInfo).bills(List.of(bill)).build();
 
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
+        receiptService.updateDemandFromBill(billRequest, Set.of(demandId), false);
 
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(null);
-        BillRequest billRequest = mock(BillRequest.class);
-        when(billRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(billRequest.getBills()).thenReturn(billList);
-     /*   this.receiptService.updateDemandFromBill(billRequest, new HashSet<>(), true);
-*/
+        assertThat(demand.getDemandDetails()).hasSize(1);
+        assertThat(demand.getDemandDetails().get(0).getCollectionAmount()).isEqualByComparingTo("0");
     }
-
 
     @Test
+    void updateDemandFromBill_emptyDemandDetails_throwsWhenSortingNullList() {
+        String demandId = "demand-4";
+        Demand demand = Demand.builder()
+                .id(demandId)
+                .tenantId("ap.kurnool")
+                .demandDetails(new ArrayList<>())
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
 
-    void testUpdateDemandFromBill6() {
+        BillAccountDetail accountDetail = BillAccountDetail.builder()
+                .taxHeadCode("ADVANCE")
+                .amount(BigDecimal.valueOf(25))
+                .adjustedAmount(BigDecimal.valueOf(25))
+                .build();
+        BillDetail billDetail = BillDetail.builder()
+                .demandId(demandId)
+                .billAccountDetails(List.of(accountDetail))
+                .build();
+        Bill bill = Bill.builder().tenantId("ap.kurnool").billDetails(List.of(billDetail)).build();
+        BillRequest billRequest = BillRequest.builder().requestInfo(requestInfo).bills(List.of(bill)).build();
 
-
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
-
-        Bill bill = new Bill();
-        bill.addBillDetailsItem(new BillDetail());
-
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(bill);
-        BillRequest billRequest = mock(BillRequest.class);
-        when(billRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(billRequest.getBills()).thenReturn(billList);
-       /* this.receiptService.updateDemandFromBill(billRequest, new HashSet<>(), true);
-*/
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> receiptService.updateDemandFromBill(billRequest, Set.of(demandId), false))
+                .isInstanceOf(NullPointerException.class);
     }
-
 
     @Test
+    void updateDemandFromBill_cancellationWithZeroAdjustedAmount_leavesCollectionsUnchanged() {
+        String demandId = "demand-6";
+        Demand demand = Demand.builder()
+                .id(demandId)
+                .tenantId("ap.kurnool")
+                .demandDetails(List.of(
+                        DemandDetail.builder()
+                                .taxHeadMasterCode("TL_TAX")
+                                .taxAmount(BigDecimal.valueOf(100))
+                                .collectionAmount(BigDecimal.valueOf(40))
+                                .build()))
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
 
-    void testUpdateDemandFromBill7() {
+        BillAccountDetail accountDetail = BillAccountDetail.builder()
+                .taxHeadCode("TL_TAX")
+                .adjustedAmount(BigDecimal.ZERO)
+                .build();
+        BillDetail billDetail = BillDetail.builder()
+                .demandId(demandId)
+                .billAccountDetails(List.of(accountDetail))
+                .build();
+        Bill bill = Bill.builder().tenantId("ap.kurnool").billDetails(List.of(billDetail)).build();
+        BillRequest billRequest = BillRequest.builder().requestInfo(requestInfo).bills(List.of(bill)).build();
 
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(new ArrayList<>());
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
+        receiptService.updateDemandFromBill(billRequest, Set.of(demandId), true);
 
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(new Bill());
-        billList.add(null);
-        BillRequest billRequest = mock(BillRequest.class);
-        when(billRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(billRequest.getBills()).thenReturn(billList);
-     /*   this.receiptService.updateDemandFromBill(billRequest, new HashSet<>(), true);
-*/
+        assertThat(demand.getDemandDetails().get(0).getCollectionAmount()).isEqualByComparingTo("40");
     }
-
 
     @Test
-    void testUpdateDemandFromBill8() {
-        ArrayList<Demand> demandList = new ArrayList<>();
-        demandList.add(new Demand());
-        when(this.demandService.getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any()))
-                .thenReturn(demandList);
-        when(this.demandService.updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any())).thenReturn(new DemandResponse());
+    void updateDemandFromBill_multipleDemandDetailsForTaxHead_distributesPayment() {
+        String demandId = "demand-5";
+        DemandDetail low = DemandDetail.builder()
+                .taxHeadMasterCode("TL_TAX")
+                .taxAmount(BigDecimal.valueOf(50))
+                .collectionAmount(BigDecimal.ZERO)
+                .build();
+        DemandDetail high = DemandDetail.builder()
+                .taxHeadMasterCode("TL_TAX")
+                .taxAmount(BigDecimal.valueOf(100))
+                .collectionAmount(BigDecimal.ZERO)
+                .build();
+        Demand demand = Demand.builder()
+                .id(demandId)
+                .tenantId("ap.kurnool")
+                .demandDetails(List.of(high, low))
+                .build();
+        when(demandService.getDemands(any(), any())).thenReturn(List.of(demand));
 
-        Bill bill = new Bill();
-        bill.addBillDetailsItem(new BillDetail());
+        BillAccountDetail accountDetail = BillAccountDetail.builder()
+                .taxHeadCode("TL_TAX")
+                .adjustedAmount(BigDecimal.valueOf(120))
+                .build();
+        BillDetail billDetail = BillDetail.builder()
+                .demandId(demandId)
+                .billAccountDetails(List.of(accountDetail))
+                .build();
+        Bill bill = Bill.builder().tenantId("ap.kurnool").billDetails(List.of(billDetail)).build();
+        BillRequest billRequest = BillRequest.builder().requestInfo(requestInfo).bills(List.of(bill)).build();
 
-        ArrayList<Bill> billList = new ArrayList<>();
-        billList.add(bill);
-        BillRequest billRequest = mock(BillRequest.class);
-        when(billRequest.getRequestInfo()).thenReturn(new RequestInfo());
-        when(billRequest.getBills()).thenReturn(billList);
-        this.receiptService.updateDemandFromBill(billRequest, new HashSet<>(), true);
-        verify(this.demandService).getDemands((org.egov.demand.model.DemandCriteria) any(), (RequestInfo) any());
-        verify(this.demandService).updateAsync((org.egov.demand.web.contract.DemandRequest) any(),
-                (org.egov.demand.model.PaymentBackUpdateAudit) any());
-        verify(billRequest).getBills();
-        verify(billRequest, atLeast(1)).getRequestInfo();
+        receiptService.updateDemandFromBill(billRequest, new HashSet<>(Set.of(demandId)), false);
+
+        assertThat(low.getCollectionAmount()).isEqualByComparingTo("50");
+        assertThat(high.getCollectionAmount()).isEqualByComparingTo("70");
     }
-
-
 }
-

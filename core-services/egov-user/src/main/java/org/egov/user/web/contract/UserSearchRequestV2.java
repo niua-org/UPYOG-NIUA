@@ -15,6 +15,12 @@ import org.egov.user.domain.model.enums.UserType;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Contract request payload for searching users and addresses in the V2 user API.
+ * <p>
+ * Supports extended address parameters (such as {@code addressId} and {@code excludeAddressDetails}),
+ * providing {@link #toDomain()} to construct a validated {@link UserSearchCriteria} query object.
+ */
 @Getter
 @Setter
 @ToString
@@ -88,6 +94,11 @@ public class UserSearchRequestV2 {
     private String addressId;
 
 
+    /**
+     * Converts this V2 web search request into a domain {@link UserSearchCriteria} instance.
+     *
+     * @return populated {@link UserSearchCriteria} query object
+     */
     public UserSearchCriteria toDomain() {
         return UserSearchCriteria.builder()
                 .id(id)

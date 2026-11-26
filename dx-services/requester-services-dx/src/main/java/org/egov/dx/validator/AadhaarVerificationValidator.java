@@ -27,6 +27,10 @@ public class AadhaarVerificationValidator {
     private static final Pattern AADHAAR_PATTERN = Pattern.compile(AadhaarConstants.REGEX_AADHAAR);
     private static final Pattern OTP_PATTERN = Pattern.compile(AadhaarConstants.REGEX_OTP);
 
+    private static final String ERR_SEND_OTP_FAILED = "Aadhaar _sendOtp validation failed: {}";
+    private static final String ERR_VERIFY_OTP_FAILED = "Aadhaar _verifyOtp validation failed: {}";
+    private static final String ERR_VALIDATE_FAILED = "Aadhaar _validate validation failed: {}";
+
     @Value("${aadhaar.gateway.mock.enabled}")
     private boolean mockEnabled;
 
@@ -39,18 +43,18 @@ public class AadhaarVerificationValidator {
      */
     public void validateSendOtpRequest(AadhaarVerificationRequest request) {
         if (request == null) {
-            log.error("Aadhaar _sendOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_BODY_NULL);
+            log.error(ERR_SEND_OTP_FAILED, AadhaarConstants.MSG_REQUEST_BODY_NULL);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, AadhaarConstants.MSG_REQUEST_BODY_NULL);
         }
 
         if (request.getRequestInfo() == null) {
-            log.error("Aadhaar _sendOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+            log.error(ERR_SEND_OTP_FAILED, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
         }
 
         String aadhaarNumber = request.getAadhaarNumber();
         if (StringUtils.isBlank(aadhaarNumber) || !AADHAAR_PATTERN.matcher(aadhaarNumber).matches()) {
-            log.warn("Aadhaar _sendOtp validation failed: {}", AadhaarConstants.MSG_INVALID_AADHAAR);
+            log.warn(ERR_SEND_OTP_FAILED, AadhaarConstants.MSG_INVALID_AADHAAR);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
         }
 
@@ -70,12 +74,12 @@ public class AadhaarVerificationValidator {
      */
     public void validateVerifyOtpRequest(AadhaarVerificationRequest request) {
         if (request == null) {
-            log.error("Aadhaar _verifyOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_BODY_NULL);
+            log.error(ERR_VERIFY_OTP_FAILED, AadhaarConstants.MSG_REQUEST_BODY_NULL);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, AadhaarConstants.MSG_REQUEST_BODY_NULL);
         }
 
         if (request.getRequestInfo() == null) {
-            log.error("Aadhaar _verifyOtp validation failed: {}", AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+            log.error(ERR_VERIFY_OTP_FAILED, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
         }
 
@@ -84,7 +88,7 @@ public class AadhaarVerificationValidator {
                 : request.getTxnId();
 
         if (StringUtils.isBlank(referenceId)) {
-            log.warn("Aadhaar _verifyOtp validation failed: {}", AadhaarConstants.MSG_MISSING_REFERENCE_ID);
+            log.warn(ERR_VERIFY_OTP_FAILED, AadhaarConstants.MSG_MISSING_REFERENCE_ID);
             throw new CustomException(AadhaarConstants.ERR_CODE_MISSING_REFERENCE_ID, AadhaarConstants.MSG_MISSING_REFERENCE_ID);
         }
 
@@ -104,18 +108,18 @@ public class AadhaarVerificationValidator {
      */
     public boolean validateVerhoeffChecksum(AadhaarVerificationRequest request) {
         if (request == null) {
-            log.error("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_REQUEST_BODY_NULL);
+            log.error(ERR_VALIDATE_FAILED, AadhaarConstants.MSG_REQUEST_BODY_NULL);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST, AadhaarConstants.MSG_REQUEST_BODY_NULL);
         }
 
         if (request.getRequestInfo() == null) {
-            log.error("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
+            log.error(ERR_VALIDATE_FAILED, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_REQUEST_INFO, AadhaarConstants.MSG_REQUEST_INFO_MANDATORY);
         }
 
         String aadhaarNumber = request.getAadhaarNumber();
         if (StringUtils.isBlank(aadhaarNumber) || !AADHAAR_PATTERN.matcher(aadhaarNumber).matches()) {
-            log.warn("Aadhaar _validate validation failed: {}", AadhaarConstants.MSG_INVALID_AADHAAR);
+            log.warn(ERR_VALIDATE_FAILED, AadhaarConstants.MSG_INVALID_AADHAAR);
             throw new CustomException(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, AadhaarConstants.MSG_INVALID_AADHAAR);
         }
 

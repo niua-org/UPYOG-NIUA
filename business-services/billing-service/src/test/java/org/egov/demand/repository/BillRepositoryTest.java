@@ -3,6 +3,8 @@ package org.egov.demand.repository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doNothing;
@@ -216,8 +218,10 @@ class BillRepositoryTest {
 
     @Test
     void testApportionwithBusinessDetails() throws RestClientException {
-        when(this.restTemplate.postForObject((String) any(), (Object) any(), (Class<Object>) any(), (Object[]) any()))
-                .thenReturn(new BillResponse());
+        BillResponse billResponse = new BillResponse();
+        billResponse.setBill(new ArrayList<>());
+        when(this.restTemplate.postForObject(anyString(), any(), eq(BillResponse.class)))
+                .thenReturn(billResponse);
 
         ArrayList<BusinessServiceDetail> businessServiceDetailList = new ArrayList<>();
         ArrayList<String> collectionModesNotAllowed = new ArrayList<>();
@@ -234,7 +238,7 @@ class BillRepositoryTest {
         List<Bill> actualApportionResult = this.billRepository.apportion(billRequest);
         assertSame(billList, actualApportionResult);
         assertEquals(1, actualApportionResult.size());
-        verify(this.restTemplate).postForObject((String) any(), (Object) any(), (Class<Object>) any(), (Object[]) any());
+        verify(this.restTemplate).postForObject(anyString(), any(), eq(BillResponse.class));
         verify(this.businessServiceDetailRepository).getBussinessServiceDetail((RequestInfo) any(),
                 (org.egov.demand.web.contract.BusinessServiceDetailCriteria) any());
         verify(billRequest).getBills();
