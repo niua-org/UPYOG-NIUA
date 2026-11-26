@@ -13,7 +13,6 @@ import {
   Dropdown,
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { addFamilyMember, getFamilyMembers } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
 
 /**
@@ -171,7 +170,7 @@ const FamilyMemberVerified = () => {
         <CardHeader>{t("FAMILY_MEMBER_VERIFIED")}</CardHeader>
 
         {/* Verification Success Banner */}
-        <div style={profileStyles.verifiedBanner}>
+        <div className="aadhaar-verification-verified-banner">
           <span>✓</span>
           <span>{verifiedMember?.message ? t(verifiedMember.message, verifiedMember.message) : t("AADHAAR_VERIFIED_SUCCESSFULLY", "Aadhaar verified successfully")}</span>
         </div>

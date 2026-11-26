@@ -33,16 +33,13 @@ import {
 } from "@nudmcdgnpm/digit-ui-react-components";
 import { getFamilyHeadFields, getPersonalFields, useProfileUser, withValues } from "../utils";
 import { PROFILE_ROUTES } from "../utils/constants";
-import { profileStyles } from "../utils/profileStyles";
 import { buildJoinFamilyPayload } from "../utils/payloads";
 
 const FoundFamily = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const locationState = useLocation().state || {};
-
-  const styles = profileStyles.foundFamilyDetailSection;
 
   // Retrieve cached join session state from sessionStorage as fallback
   const storedJoinData = useMemo(() => {
@@ -176,7 +173,7 @@ const FoundFamily = () => {
     return (
       <Card>
         <CardHeader>{t("PROFILE_FOUND_FAMILY")}</CardHeader>
-        <div style={profileStyles.message}>{t("PROFILE_FAMILY_NOT_FOUND")}</div>
+        <div className="profile-message">{t("PROFILE_FAMILY_NOT_FOUND")}</div>
       </Card>
     );
   }
@@ -202,89 +199,20 @@ const FoundFamily = () => {
 
       if (res?.JoinRequest?.status !== "JOINED") throw new Error("JOIN_FAILED");
 
-      const joinedFamilyId = verifiedData?.familyId || familyId;
-      const submittedMember = {
-        userUuid,
-        name: profileDetails.name || user?.name,
-        relationshipWithHead: relationshipCode,
-        isHead: false,
-        profileDetails,
-        property: propertyDetails,
-        income: incomeDetails,
-        vehicles: vehicleDetails,
-      };
-      let familyMembers = verifiedData?.family?.members || [];
-
-      try {
-        const familyResponse = await Digit.UserService.familyDashboard(tenantId, joinedFamilyId);
-        const dashboardMembers = familyResponse?.dashboard?.activeMembers;
-        if (Array.isArray(dashboardMembers) && dashboardMembers.length) {
-          const verifiedMembers = familyMembers;
-          familyMembers = dashboardMembers.map((dashboardMember) => {
-            const existingMember = verifiedMembers.find(
-              (member) =>
-                (member.userUuid || member.uuid) === (dashboardMember.userUuid || dashboardMember.uuid)
-            );
-            return {
-              ...existingMember,
-              ...dashboardMember,
-              citizenDetails: {
-                ...existingMember?.citizenDetails,
-                ...dashboardMember?.citizenDetails,
-              },
-              profileDetails: {
-                ...existingMember?.profileDetails,
-                ...dashboardMember?.profileDetails,
-              },
-              income: dashboardMember.income || existingMember?.income,
-              vehicles: dashboardMember.vehicles || existingMember?.vehicles,
-              properties:
-                dashboardMember.properties?.length
-                  ? dashboardMember.properties
-                  : existingMember?.properties,
-              property: dashboardMember.property || existingMember?.property,
-            };
-          });
-          verifiedMembers.forEach((member) => {
-            if (
-              !familyMembers.some(
-                (dashboardMember) =>
-                  (dashboardMember.userUuid || dashboardMember.uuid) === (member.userUuid || member.uuid)
-              )
-            ) {
-              familyMembers.push(member);
-            }
-          });
-        }
-      } catch (familyError) {
-        console.error("Unable to load joined family details for acknowledgement:", familyError);
-      }
-
-      const submittedMemberExists = familyMembers.some(
-        (member) => member.userUuid === userUuid || member.uuid === userUuid
-      );
-      const acknowledgementMembers = submittedMemberExists
-        ? familyMembers.map((member) =>
-            member.userUuid === userUuid || member.uuid === userUuid
-              ? { ...member, ...submittedMember }
-              : member
-          )
-        : [...familyMembers, submittedMember];
-      const acknowledgement = {
-        ...res.JoinRequest,
-        familyId: joinedFamilyId,
-        tenantId,
-        applicationDate: Date.now(),
-        applicantUserUuid: userUuid,
-        members: acknowledgementMembers,
-      };
-
-      // Clean up join session state on successful submission
       sessionStorage.removeItem("Digit.family.joinData");
 
       navigate(PROFILE_ROUTES.FAMILY_JOINED, {
         replace: true,
-        state: { joinData: acknowledgement },
+        state: {
+          familyId: verifiedData?.familyId || familyId,
+          joinData: {
+            familyId: verifiedData?.familyId || familyId,
+            tenantId,
+            applicationDate: Date.now(),
+            applicantUserUuid: userUuid,
+            status: res.JoinRequest.status,
+          },
+        },
       });
     } catch (err) {
       console.log("error on join family page", err);
@@ -300,7 +228,7 @@ const FoundFamily = () => {
         <CardHeader style={{ fontSize: "24px", marginBottom: "16px" }}>
           {t("PROFILE_FOUND_FAMILY")}
         </CardHeader>
-        <div style={styles.sectionBoxStyle}>
+        <div className="found-family-section-box">
           <StatusTable>
             {familyHeadFields.map(([key, val], idx) => (
               <Row key={idx} label={t(key)} text={val || "NA"} />
@@ -312,14 +240,14 @@ const FoundFamily = () => {
       {/* 2. Applicant Review Details Card */}
       <Card>
         {/* Main Header with View and Edit Buttons */}
-        <div style={styles.headerWrap}>
+        <div className="found-family-header-wrap">
           <CardHeader style={{ fontSize: "24px", margin: 0 }}>
             {t("PROFILE_APPLICANT_DETAILS")}
           </CardHeader>
-          <div style={styles.actionsWrap}>
+          <div className="found-family-actions-wrap">
             <button
               type="button"
-              style={styles.actionBtn}
+              className="found-family-action-btn"
               title={t("CORE_COMMON_VIEW")}
               onClick={handleViewApplicant}
             >
@@ -328,7 +256,7 @@ const FoundFamily = () => {
             </button>
             <button
               type="button"
-              style={styles.actionBtn}
+              className="found-family-action-btn"
               title={t("CORE_COMMON_EDIT")}
               onClick={handleEditApplicant}
             >
@@ -339,8 +267,8 @@ const FoundFamily = () => {
         </div>
 
         {/* Section A: Personal Details */}
-        <div style={styles.sectionBoxStyle}>
-          <div style={styles.sectionTitleStyle}>
+        <div className="found-family-section-box">
+          <div className="found-family-section-title">
             <span>{t("CORE_COMMON_PROFILE_PERSONAL_DETAILS")}</span>
           </div>
           {loading ? (
@@ -356,8 +284,8 @@ const FoundFamily = () => {
 
         {/* Section B: Property Details */}
         {propertyFields.length > 0 && (
-          <div style={styles.sectionBoxStyle}>
-            <div style={styles.sectionTitleStyle}>
+          <div className="found-family-section-box">
+            <div className="found-family-section-title">
               <span>{t("ES_TITILE_PROPERTY_DETAILS")}</span>
             </div>
             <StatusTable>
@@ -370,8 +298,8 @@ const FoundFamily = () => {
 
         {/* Section C: Income Details */}
         {incomeFields.length > 0 && (
-          <div style={styles.sectionBoxStyle}>
-            <div style={styles.sectionTitleStyle}>
+          <div className="found-family-section-box">
+            <div className="found-family-section-title">
               <span>{t("ES_TITLE_INCOME_DETAILS")}</span>
             </div>
             <StatusTable>
@@ -384,8 +312,8 @@ const FoundFamily = () => {
 
         {/* Section D: Vehicle Details */}
         {vehicleItems.length > 0 && (
-          <div style={styles.sectionBoxStyle}>
-            <div style={styles.sectionTitleStyle}>
+          <div className="found-family-section-box">
+            <div className="found-family-section-title">
               <span>{t("ES_TITLE_VEHICLE_DETAILS")}</span>
             </div>
             {vehicleItems.map((veh, index) => (

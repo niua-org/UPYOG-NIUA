@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FormStep, Dropdown, TextInput, UploadFile } from "@nudmcdgnpm/digit-ui-react-components";
+import { FormStep, Dropdown, TextInput, UploadFile, RadioButtons } from "@nudmcdgnpm/digit-ui-react-components";
 import { TAX_VALIDATORS, FormField } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 import DocumentUploadCard from "../utils/DocumentUploadCard";
 
@@ -11,15 +10,6 @@ const TAX_ID_OPTIONS = [
   { i18nKey: "PROFILE_PAN_NUMBER", code: "PAN" },
   { i18nKey: "PROFILE_TAN_NUMBER", code: "TAN" },
   { i18nKey: "PROFILE_GST_NUMBER", code: "GST" },
-];
-
-const OCCUPATION_OPTIONS = [
-  { i18nKey: "PROFILE_OCCUPATION_SALARIED", code: "SALARIED" },
-  { i18nKey: "PROFILE_OCCUPATION_SELF_EMPLOYED", code: "SELF_EMPLOYED" },
-  { i18nKey: "PROFILE_OCCUPATION_BUSINESS", code: "BUSINESS" },
-  { i18nKey: "PROFILE_OCCUPATION_FARMER", code: "FARMER" },
-  { i18nKey: "PROFILE_OCCUPATION_UNEMPLOYED", code: "UNEMPLOYED" },
-  { i18nKey: "PROFILE_OCCUPATION_OTHER", code: "OTHER" },
 ];
 
 const INCOME_PROOF_OPTIONS = [
@@ -45,6 +35,8 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
+
+  const [hasIncomeSource, setHasIncomeSource] = useState(saved.hasIncomeSource || null);
   const [taxIdType, setTaxIdType] = useState(saved.taxIdType || null);
   const [taxIdNumber, setTaxIdNumber] = useState(saved.taxIdNumber || "");
   const [annualIncome, setAnnualIncome] = useState(saved.annualIncome || "");
@@ -58,20 +50,38 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const [incomeProofType, setIncomeProofType] = useState(saved.incomeProofType || null);
   const [incomeProofFile, setIncomeProofFile] = useState(saved.incomeProofFile || null);
 
+  // Hook Call to get the Occupation from MDMS
+  const { data: Occupations } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "common-masters", [{ name: "Occupation" }],
+    {
+      select: (data) => {
+        const formattedData = data?.["common-masters"]?.["Occupation"]
+        return formattedData;
+      },
+    });
+  let OCCUPATION_OPTIONS = []; // Empty array which will store the options of Occupations
+
+  Occupations &&
+      Occupations.map((occupations) => {
+        OCCUPATION_OPTIONS.push({ i18nKey: `PROFILE_OCCUPATION_${occupations.code}`, code: `${occupations.code}`, value: `${occupations.name}` });
+      });
+
   const goNext = () => {
     if (isViewMode) {
-      onSelect(config.key, saved, false);
+      onSelect(config.key, saved, false); return; }
+    if (hasIncomeSource === "No") {
+      onSelect(config.key, { hasIncomeSource: "No" }, false);
       return;
     }
    onSelect(config.key, {
+        hasIncomeSource: "Yes",
         occupation,
         annualIncome,
         taxIdType,
         taxIdNumber,
         taxIdValidated,
         uploadedTaxProof,
-        incomeProofType,                                    
-        incomeProofFile,                                   
+        incomeProofType,
+        incomeProofFile,
         uploadedIncomeFile: incomeProofFile?.fileStoreId || null,
     }, false);
   };
@@ -80,7 +90,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
 
   useEffect(() => {
     if (userType === "citizen" && !isViewMode) goNext();
-  }, [taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, incomeProofFile, uploadedTaxProof]);
+  }, [hasIncomeSource, taxIdType, taxIdNumber, taxIdValidated, annualIncome, occupation, incomeProofFile, uploadedTaxProof]);
 
   const handleTaxIdNumberChange = (e) => {
     const val = e.target.value.toUpperCase();
@@ -159,7 +169,10 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
   const isValidateBtnDisabled = !taxIdNumber || !!taxIdError;
   const showTaxProof = validateStatus === "error";
   const taxIdSatisfied = !taxIdType || taxIdValidated || !!uploadedTaxProof;
-  const isDisabled = !annualIncome || !occupation || !incomeProofType || !incomeProofFile?.fileStoreId || !!taxIdError || (taxIdType && !taxIdNumber) || !taxIdSatisfied;
+
+  const isDisabled = hasIncomeSource === null ? true
+    : hasIncomeSource === "No" ? false
+    : !annualIncome || !occupation || !incomeProofType || !incomeProofFile?.fileStoreId || !!taxIdError || (taxIdType && !taxIdNumber) || !taxIdSatisfied;
 
   return (
     <React.Fragment>
@@ -178,7 +191,23 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
         t={t}
         isDisabled={isViewMode ? false : isDisabled}
       >
-        <div style={profileStyles.gridStyle}>
+        <FormField label={t("PROFILE_HAS_INCOME_SOURCE")} required t={t} />
+        <RadioButtons
+          options={[
+            { code: "Yes", i18nKey: "COMMON_YES" },
+            { code: "No", i18nKey: "COMMON_NO" },
+          ]}
+          optionsKey="i18nKey"
+          isDependent={true}
+          selectedOption={hasIncomeSource ? { code: hasIncomeSource } : null}
+          onSelect={(val) => !isViewMode && setHasIncomeSource(val.code)}
+          disabled={isViewMode}
+          name="hasIncomeSource"
+          innerStyles={{ display: "flex", alignItems: "center", marginRight: "24px" }}
+        />
+
+      {hasIncomeSource === "Yes" && (
+        <div className="profile-grid-3col">
           <FormField label={t("PROFILE_OCCUPATION")} required t={t}>
             <Dropdown
               selected={occupation}
@@ -220,8 +249,8 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
 
           {taxIdType && (
             <FormField label={t(taxIdType.i18nKey)} required error={taxIdError} t={t}>
-              <div style={profileStyles.taxIdInputRow}>
-                <div style={profileStyles.taxIdInputWrap}>
+              <div className="income-details-tax-row">
+                <div className="income-details-tax-wrap">
                   <TextInput
                     t={t}
                     type="text"
@@ -238,17 +267,15 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                   type="button"
                   onClick={handleValidateTaxId}
                   disabled={isViewMode || isValidateBtnDisabled}
-                  style={{
-                    ...profileStyles.validateBtn,
-                    ...(taxIdValidated ? profileStyles.validateBtnSuccess : {}),
-                    ...(isViewMode || isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
-                  }}
+                  className={`income-details-validate-btn ${taxIdValidated ? "income-details-validate-btn-success" : ""} ${
+                    isViewMode || isValidateBtnDisabled ? "income-details-validate-btn-disabled" : ""
+                  }`}
                 >
                   {taxIdValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
                 </button>
               </div>
               {validateStatus === "success" && (
-                <p style={profileStyles.validateSuccessMsg}>{t("PROFILE_TAX_ID_VALID")}</p>
+                <p className="income-details-validate-success-msg">{t("PROFILE_TAX_ID_VALID")}</p>
               )}
             </FormField>
           )}
@@ -267,7 +294,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
                 iserror={taxProofError}
                 disabled={isViewMode}
               />
-              <p style={profileStyles.documentUploadCard.fileRestrictionText}>
+              <p className="document-upload-file-restriction">
                 {t("CS_FILE_SIZE_RESTRICTIONS")}
               </p>
             </FormField>
@@ -287,6 +314,7 @@ const IncomeDetails = ({ t, config, onSelect, userType, formData }) => {
             disabled={isViewMode}
           />
         </div>
+      )}
       </FormStep>
     </React.Fragment>
   );

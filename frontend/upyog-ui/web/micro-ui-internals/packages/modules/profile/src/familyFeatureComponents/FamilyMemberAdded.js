@@ -16,7 +16,6 @@ import {
 
 import { getFamilyMembers, clearFamilyMembers, setFamilyMembers } from "../utils";
 import { buildCreateFamilyPayload } from "../utils/payloads";
-import { profileStyles } from "../utils/profileStyles";
 import { PROFILE_ROUTES } from "../utils/constants";
 import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
@@ -72,7 +71,6 @@ const createInitialApplicant = (currentUser, relationshipWithHead = "") => ({
 const FamilyMemberAdded = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const styles = profileStyles.familyMemberAdded;
   const stateId = Digit.ULBService.getStateId() || Digit.ULBService.getCurrentTenantId() || "pg";
   const loggedInUuid = Digit.UserService.getUser()?.info?.uuid;
 
@@ -181,12 +179,12 @@ const FamilyMemberAdded = () => {
         const member = row.original;
         const isApplicant = member.userUuid === loggedInUuid;
         return (
-          <div style={styles.nameWrap}>
-            <span style={styles.nameText}>
+          <div className="family-member-name-wrap">
+            <span className="family-member-name-text">
               {member.name || "Family Member"}
             </span>
             {isApplicant && (
-              <span style={styles.youBadge}>
+              <span className="family-member-you-badge">
                 ({t("CORE_COMMON_YOU", "You")})
               </span>
             )}
@@ -198,7 +196,7 @@ const FamilyMemberAdded = () => {
       Header: t("PROFILE_RELATIONSHIP_WITH_HOF", "Relationship with HOF"),
       accessor: "relationshipWithHead",
       Cell: ({ row }) => (
-        <span style={styles.relationshipText}>
+        <span className="family-member-relationship-text">
           {row.original.relationshipWithHead || "-"}
         </span>
       ),
@@ -211,7 +209,7 @@ const FamilyMemberAdded = () => {
         const isSelected = selectedHeadUuid === member.userUuid;
         return (
           <div
-            style={styles.radioWrap}
+            className="family-member-radio-wrap"
             onClick={() => setSelectedHeadUuid(member.userUuid)}
           >
             <input
@@ -219,7 +217,7 @@ const FamilyMemberAdded = () => {
               name="hof_selection"
               checked={isSelected}
               onChange={() => setSelectedHeadUuid(member.userUuid)}
-              style={styles.radioInput}
+              className="family-member-radio-input"
             />
           </div>
         );
@@ -233,25 +231,25 @@ const FamilyMemberAdded = () => {
         const isApplicant = member.userUuid === loggedInUuid;
 
         return (
-          <div style={styles.actionsWrap}>
-            <button type="button" style={styles.deleteBtn} title={t("CORE_COMMON_VIEW")} onClick={() => handleViewMember(member, isApplicant)}>
+          <div className="family-member-actions-wrap">
+            <button type="button" className="family-member-delete-btn" title={t("CORE_COMMON_VIEW")} onClick={() => handleViewMember(member, isApplicant)}>
               <ViewsIcon />
             </button>
             {/* Applicant edits the profile steps; added members only have their relationship editable */}
-            <button type="button" style={styles.deleteBtn} title={t("CORE_COMMON_EDIT")} onClick={() => handleEditMember(member, isApplicant)}>
+            <button type="button" className="family-member-delete-btn" title={t("CORE_COMMON_EDIT")} onClick={() => handleEditMember(member, isApplicant)}>
               <EditIcon />
             </button>
             {/* If there is only one row, the Delete button should not be displayed */}
             {members.length > 1 && (
-              <button type="button" style={styles.deleteBtn} title={t("REMOVE")} disabled={isApplicant} onClick={() => handleRemoveMember(member.userUuid)}>
-                <DeleteIcon fill={isApplicant ? "#9CA3AF" : styles.deleteIconFill} style={styles.deleteIcon} />
+              <button type="button" className="family-member-delete-btn" title={t("REMOVE")} disabled={isApplicant} onClick={() => handleRemoveMember(member.userUuid)}>
+                <DeleteIcon fill={isApplicant ? "#9CA3AF" : "#a82227"} className="family-member-delete-icon" />
               </button>
             )}
           </div>
         );
       },
     },
-  ], [members, selectedHeadUuid, loggedInUuid, t, styles]);
+  ], [members, selectedHeadUuid, loggedInUuid, t]);
 
   // Open Aadhaar verification modal to add another family member
   const handleAddAnother = () => {
@@ -281,7 +279,7 @@ const FamilyMemberAdded = () => {
     setSubmitting(true);
 
     try {
-      const tenantId = Digit.ULBService.getCurrentTenantId();
+      const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
       const familyDetails = Digit.SessionStorage.get("Family_Details") || {};
 
       // 3. Use validated `members` React state (avoids state vs. storage divergence)
@@ -366,12 +364,12 @@ const FamilyMemberAdded = () => {
       <Card>
         {/* Card Header & Section Subtitle */}
         <CardHeader>{t("FAMILY_MEMBER_ADDED_TITLE")}</CardHeader>
-        <CardLabel style={styles.headLabel}>
+        <CardLabel className="family-member-head-label">
           {t("SELECT_HEAD_OF_FAMILY")}
         </CardLabel>
 
         {/* Member Table */}
-        <div style={styles.tableWrapper}>
+        <div className="family-member-table-wrapper">
           <Table
             t={t}
             data={members}
@@ -379,25 +377,19 @@ const FamilyMemberAdded = () => {
             isPaginationRequired={false}
             totalRecords={members.length}
             getCellProps={() => ({
-              style: styles.tableCell,
+              className: "family-member-table-cell",
             })}
           />
         </div>
 
         {/* Add Another Member Action Button */}
-        <div style={styles.addAnotherSection}>
+        <div className="family-member-add-another-section">
           <button
             type="button"
             onClick={handleAddAnother}
-            style={styles.addBtn}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = styles.addBtnHoverBg;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = styles.addBtn.background;
-            }}
+            className="family-member-add-btn"
           >
-            <span style={styles.addBtnIcon}>+</span>
+            <span className="family-member-add-btn-icon">+</span>
             <span>{t("ADD_ANOTHER_MEMBER_BTN")}</span>
           </button>
         </div>
@@ -433,7 +425,10 @@ const FamilyMemberAdded = () => {
           onClose={() => setShowAddMemberModal(false)}
           onSuccess={({ verifiedMember }) => {
             setShowAddMemberModal(false);
-            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
+            // Pass verifiedMember in router state so mobile is prefilled & locked without storing PII in sessionStorage
+            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`, {
+              state: { verifiedMember },
+            });
           }}
         />
       )}

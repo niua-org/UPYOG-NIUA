@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Card, Loader, Toast } from "@nudmcdgnpm/digit-ui-react-components";
 
 import { PROFILE_ROUTES } from "../utils/constants";
-import { profileStyles } from "../utils/profileStyles";
 import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal";
 
 /**
@@ -17,8 +16,7 @@ import AadhaarVerificationModal from "../verifications/AadhaarVerificationModal"
 const FamilyDashboard = () => {
   const { t } = useTranslation();
   const navigate = Digit.Hooks.useCustomNavigate();
-  const styles = profileStyles.myFamilyDashboard;
-  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const tenantId = Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
@@ -89,15 +87,15 @@ const FamilyDashboard = () => {
 
   if (loading) {
     return (
-      <Card style={styles.pageCard}> <Loader /></Card>
+      <Card className="family-dashboard-page-card"> <Loader /></Card>
     );
   }
 
   if (!dashboard) {
     return (
-      <Card style={styles.pageCard}>
-        <div style={styles.pageTitle}>{t("PROFILE_MY_FAMILY")}</div>
-        <div style={styles.familySummary}> Unable to load family details. </div>
+      <Card className="family-dashboard-page-card">
+        <div className="family-dashboard-page-title">{t("PROFILE_MY_FAMILY")}</div>
+        <div className="family-dashboard-summary">{t("PROFILE_FAMILY_LOAD_ERROR")}</div>
         {toast && (
           <Toast error={toast.error} label={toast.label} onClose={() => setToast(null)} />
         )}
@@ -111,36 +109,32 @@ const FamilyDashboard = () => {
 
   return (
     <React.Fragment>
-      <Card style={styles.pageCard}>
-        <div style={styles.headerRow}>
-          <div style={styles.pageTitle}>{t("PROFILE_MY_FAMILY")} </div>
-          <div style={styles.familyIdBadge}>{dashboard.familyId} </div>
+      <Card className="family-dashboard-page-card">
+        <div className="family-dashboard-header-row">
+          <div className="family-dashboard-page-title">{t("PROFILE_MY_FAMILY")} </div>
+          <div className="family-dashboard-family-id-badge">{dashboard.familyId} </div>
         </div>
 
-        <div style={styles.familySummary}>
-          <div style={styles.summaryLine}>
-            <span style={styles.summaryLabel}>{t("PROFILE_HEAD_OF_FAMILY")}:</span>
-            <span style={styles.summaryValue}>{headOfFamily?.name ||dashboard.headName}
+        <div className="family-dashboard-summary">
+          <div className="family-dashboard-summary-line">
+            <span className="family-dashboard-summary-label">{t("PROFILE_HEAD_OF_FAMILY")}:</span>
+            <span className="family-dashboard-summary-value">{headOfFamily?.name ||dashboard.headName}
             </span>
           </div>
 
-          <div style={styles.summaryLine}>
-            <span style={styles.summaryLabel}>
+          <div className="family-dashboard-summary-line">
+            <span className="family-dashboard-summary-label">
               {t("PROFILE_TOTAL_REGISTERED_MEMBERS")}:
             </span>
-            <span style={styles.summaryValue}> {dashboard.totalMembersCount} </span>
+            <span className="family-dashboard-summary-value"> {dashboard.totalMembersCount} </span>
           </div>
         </div>
-        <div style={styles.membersHeader}>
-          <div style={styles.membersTitle}>
+        <div className="family-dashboard-members-header">
+          <div className="family-dashboard-members-title">
             {t("PROFILE_REGISTERED_MEMBERS")}
           </div>
-          {/* <button type="button" onClick={handleAddNewMember} style={styles.addMemberLink}>
-            <span style={styles.addMemberPlus}> +</span>
-            <span> {t("PROFILE_ADD_NEW_MEMBER") || "Add New Member"}</span>
-          </button> */}
         </div>
-        <div style={styles.membersGrid}>
+        <div className="family-dashboard-members-grid">
           {members.map((member) => {
             const name =
               member.name ||
@@ -152,24 +146,24 @@ const FamilyDashboard = () => {
             const isVerified = member.isVerified === true;
             
             return (
-              <div key={member.id}   style={styles.memberCard}>
-                <div style={styles.avatar}>{getInitials(name)} </div>
-                <div style={styles.memberName}>{name}</div>
-                <div style={styles.memberRelationship}>
-                  <span style={styles.bullet}>•</span>
+              <div key={member.id} className="family-dashboard-member-card">
+                <div className="family-dashboard-avatar">{getInitials(name)} </div>
+                <div className="family-dashboard-member-name">{name}</div>
+                <div className="family-dashboard-member-relationship">
+                  <span className="family-dashboard-bullet">•</span>
                   <span>
                      {isCurrentUser ? (
-                      <span style={styles.youText}>{t("CORE_COMMON_YOU")}</span>
+                      <span className="family-dashboard-you-text">{t("CORE_COMMON_YOU")}</span>
                     ) : (
                       <>
                       {relationship}
-                      {isHead && <span style={styles.youText}>{t("CORE_COMMON_YOU_HEAD")}</span>}
+                      {isHead && <span className="family-dashboard-you-text">{t("CORE_COMMON_YOU_HEAD")}</span>}
                       </>
                     )}
                   </span>
                 </div>
                 {isVerified && (
-                  <div style={styles.verifiedBadge}>
+                  <div className="family-dashboard-verified-badge">
                     {t("PROFILE_VERIFIED")}
                   </div>
                 )}
@@ -192,6 +186,10 @@ const FamilyDashboard = () => {
           onSuccess={({ verifiedMember }) => {
             setShowAddMemberModal(false);
             navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`);
+            // Pass verifiedMember in router state so mobile is prefilled & locked without storing PII in sessionStorage
+            navigate(`${PROFILE_ROUTES.PROFILE_CREATE_FAMILY}/profileDetails?member=${verifiedMember?.userUuid}`, {
+              state: { verifiedMember },
+            });
           }}
         />
       )}

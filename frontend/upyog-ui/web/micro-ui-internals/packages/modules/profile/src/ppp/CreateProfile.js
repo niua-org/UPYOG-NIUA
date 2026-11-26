@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import {
   Dropdown,
   FormStep,
@@ -14,7 +14,6 @@ import {
 import UploadDrawer from "../components/UploadDrawer";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 import { FormField, AvatarUpload, toGenderOption, fetchThumbnail, useProfileUser, getVerifiedMember, getFamilyMembers, setFamilyMembers } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import { DEFAULT_CASTE, SPECIALLY_ABLED_YES } from "../utils/constants";
 import { buildUpdateUserPayload, buildSessionUser } from "../utils/payloads";
 import { validators } from "../utils/profileValidators";
@@ -150,24 +149,35 @@ const CreateProfile = ({ config, onSelect, formData }) => {
   // `?member=<uuid>` = a member added through Aadhaar; no param (or own uuid) = the applicant themself.
   // Everything below prefills from `user`: the logged-in user's profile, or the Aadhaar-verified details of the member.
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const memberParam = searchParams.get("member");
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const isSelf = !memberParam || memberParam === Digit.UserService.getUser()?.info?.uuid;
+  const routerVerifiedMember = location?.state?.verifiedMember;
+
   const user = useMemo(() => {
     if (isSelf) return loggedInUser;
-    const verified = getVerifiedMember();
-    const verifiedUuid = verified?.userUuid || verified?.uuid;
-    if (memberParam && verifiedUuid && verifiedUuid !== memberParam) return {};
-    const gender = verified?.gender || verified?.demographics?.gender;
-    const mob = verified?.mobileNumber || verified?.demographics?.mobileNumber;
+    // Prefer member passed in router navigation state (in-memory, keeps Aadhaar mobile locked and avoids sessionStorage persistence);
+    // fall back to getVerifiedMember() from sessionStorage if navigating back or refreshing.
+    const routerMatch =
+      routerVerifiedMember?.userUuid === memberParam || routerVerifiedMember?.uuid === memberParam;
+    const verified = routerMatch ? routerVerifiedMember : getVerifiedMember();
+    if (!verified || (verified.userUuid !== memberParam && verified.uuid !== memberParam)) {
+      return {};
+    }
+    const gender = verified.gender || verified.demographics?.gender;
+    const mob = routerMatch
+      ? routerVerifiedMember.mobileNumber || routerVerifiedMember.demographics?.mobileNumber
+      : verified.mobileNumber || verified.demographics?.mobileNumber;
     return {
-      ...verified,
-      name: verified?.demographics?.name || verified?.name || "",
-      dob: verified?.demographics?.dob || verified?.dob || "",
-      mobileNumber: mob && /^\d{10}$/.test(String(mob)) ? String(mob) : mob || "",
+      userUuid: verified.userUuid || verified.uuid,
+      name: verified.demographics?.name || verified.name || "",
+      dob: verified.demographics?.dob || verified.dob || "",
+      // Strictly accept only valid 10-digit mobile numbers; masked strings (e.g. XXXXXX1234) fallback to ""
+      mobileNumber: /^\d{10}$/.test(String(mob || "")) ? String(mob) : "",
       gender: String(gender || "").length === 1 ? { M: "MALE", F: "FEMALE", T: "TRANSGENDER" }[String(gender).toUpperCase()] : gender,
     };
-  }, [isSelf, memberParam, loggedInUser]);
+  }, [isSelf, memberParam, loggedInUser, routerVerifiedMember]);
 
   // Profile Avatar State
   const [photoId, setPhotoId] = useState(saved.photo || user?.photo || "");
@@ -501,32 +511,32 @@ const CreateProfile = ({ config, onSelect, formData }) => {
       >
         {/* Profile Avatar / Photo Upload Card */}
         <div
-          style={errors.photo ? profileStyles.photoUploadCardError : profileStyles.photoUploadCard}
+          className={`create-profile-photo-card ${errors.photo ? "create-profile-photo-card-error" : ""}`}
         >
           <AvatarUpload
             imageUrl={photoThumb}
             name={form.name}
             onCameraClick={isViewMode ? undefined : () => setShowUploadDrawer(true)}
           />
-          <div style={profileStyles.photoDetailsWrap}>
-            <h3 style={profileStyles.photoTitle}>
+          <div className="create-profile-photo-details">
+            <h3 className="create-profile-photo-title">
               {form.name || t("CORE_COMMON_PROFILE_DETAILS", "Profile Details")}
             </h3>
-            <span style={profileStyles.photoHelpText}>
+            <span className="create-profile-photo-help">
               {t("PROFILE_PHOTO_UPLOAD_HELP", "Click on the camera icon to upload or update your profile photo.")}
-              <span style={profileStyles.requiredAsterisk}>*</span>
+              <span className="create-profile-required-asterisk">*</span>
             </span>
             {errors.photo && (
-              <span style={profileStyles.photoErrorMessage}>
+              <span className="create-profile-photo-error">
                 {t(errors.photo, "Profile photo is mandatory.")}
               </span>
             )}
-            <div style={profileStyles.photoButtonRow}>
+            <div className="create-profile-photo-button-row">
               {!isViewMode && (
                 <button
                   type="button"
                   onClick={() => setShowUploadDrawer(true)}
-                  style={errors.photo ? profileStyles.photoUploadBtnError : profileStyles.photoUploadBtn}
+                  className={`create-profile-photo-upload-btn ${errors.photo ? "create-profile-photo-upload-btn-error" : ""}`}
                 >
                   📷 {t("UPDATE_PHOTO", "Upload Photo")}
                 </button>
@@ -535,7 +545,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
                 <button
                   type="button"
                   onClick={removeProfilePic}
-                  style={profileStyles.photoRemoveBtn}
+                  className="create-profile-photo-remove-btn"
                 >
                   🗑️ {t("REMOVE_PHOTO", "Remove")}
                 </button>
@@ -545,7 +555,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
         </div>
 
         {/* Form Fields: Dynamic 3-Column Per Row Grid */}
-        <div style={profileStyles.gridStyle}>
+        <div className="profile-grid-3col">
           {/* Row 1 */}
           <FormField label={t("CORE_COMMON_PROFILE_NAME", "Name")} required error={errors.name} t={t}>
             <TextInput
@@ -674,7 +684,7 @@ const CreateProfile = ({ config, onSelect, formData }) => {
               t={t}
               placeholder={t("SELECT", "Select")}
               disable={isViewMode}
-              optionCardStyles={profileStyles.dropDownHeight}
+              optionCardStyles={{ maxHeight: "220px", overflowY: "auto" }}
             />
           </FormField>
 

@@ -11,9 +11,8 @@ import { OTP_LENGTH } from "../utils/constants";
  */
 
 
-const OtpVerify = ({ type, referenceId, userUuid, familyId, onVerified, onError }) => {
+const OtpVerify = ({ type, referenceId, userUuid, familyId, onVerified, onError, tenantId }) => {
   const { t } = useTranslation();
-  const tenantId = Digit.ULBService.getCurrentTenantId();
   const [otp, setOtp] = useState("");
   const [verifying, setVerifying] = useState(false);
 

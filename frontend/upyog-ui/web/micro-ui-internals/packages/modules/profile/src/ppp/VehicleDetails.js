@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FormStep, Dropdown, TextInput, UploadFile, DatePicker, RadioButtons, DeleteIcon } from "@nudmcdgnpm/digit-ui-react-components";
 import { FormField } from "../utils";
-import { profileStyles } from "../utils/profileStyles";
 import FamilyCreateTabs from "../config/FamilyCreateTabs";
 
 /**
@@ -19,11 +18,13 @@ import FamilyCreateTabs from "../config/FamilyCreateTabs";
  * - Independent validation and independent RC document upload for each vehicle.
  * - Stores state in `vehicleList` array in `Family_Details` session storage.
  * - View mode support: read-only inspection.
+ * - RC upload keyed by stable veh.id (not index) to prevent mid-upload race condition.
  *
  * @param {Object} props
  * @returns {React.ReactElement}
  */
 
+// Regex / Validation for vehcile noumber accept both standard vehicle no and bharat no
 const VEHICLE_NO_REGEX = /^([A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}|[0-9]{2}BH[0-9]{4}[A-Z]{1,2})$/;
 const fullWidth = { width: "100%" };
 
@@ -65,7 +66,7 @@ const createBlankVehicle = () => ({
   fileError: null,
 });
 
-const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
+const VehicleDetails = ({ t, config, onSelect, formData }) => {
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get("mode") === "view" || !!config?.isViewMode;
   const saved = formData?.[config?.key] || {};
@@ -80,7 +81,7 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
     if (saved.vehicleNo) {
       return [
         {
-          id: `veh-initial`,
+          id: "veh-initial",
           vehicleType: saved.vehicleType || null,
           vehicleCategory: saved.vehicleCategory || null,
           fuelType: saved.fuelType || null,
@@ -98,82 +99,85 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
     return [createBlankVehicle()];
   });
 
-  // Updates a field of a specific vehicle in the list
-  const updateVehicle = (index, field, value) => {
+  // Keyed by stable id — safe against mid-upload deletes
+  const updateVehicleById = (id, patch) => {
     if (isViewMode) return;
-    setVehicleList((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
+    setVehicleList((prev) => prev.map((v) => (v.id === id ? { ...v, ...patch } : v)));
   };
 
   // Add more vehicle (Max 3)
   const handleAddVehicle = () => {
-    if (isViewMode || vehicleList.length >= 3) return;
+    if (isViewMode /*|| vehicleList.length >= 3*/) return;
     setVehicleList((prev) => [...prev, createBlankVehicle()]);
   };
 
   // Remove vehicle (Vehicle 1 cannot be removed if hasVehicle === Yes)
-  const handleRemoveVehicle = (index) => {
+  const handleRemoveVehicle = (id) => {
     if (isViewMode || vehicleList.length <= 1) return;
-    setVehicleList((prev) => prev.filter((_, i) => i !== index));
+    setVehicleList((prev) => prev.filter((v) => v.id !== id));
   };
 
-  // Validate vehicle number for a specific vehicle card
-  const handleVehicleNoChange = (index, e) => {
+  // derive at render time — never stale
+  const dupNos = useMemo(() => {
+    const seen = new Set(), dups = new Set();
+    vehicleList.forEach(({ vehicleNo }) => vehicleNo && (seen.has(vehicleNo) ? dups.add(vehicleNo) : seen.add(vehicleNo)));
+    return dups;
+  }, [vehicleList]);
+
+  const handleVehicleNoChange = (id, e) => {
     const val = e.target.value.toUpperCase();
     if (val.length > 13) return;
-    updateVehicle(index, "vehicleNo", val);
-    updateVehicle(index, "vehicleNoValidated", false);
-    updateVehicle(index, "vehicleNoValidateStatus", null);
-    updateVehicle(index, "vehicleNoError", val && !VEHICLE_NO_REGEX.test(val) ? t("PROFILE_INVALID_VEHICLE_NO") : null);
+    updateVehicleById(id, {
+      vehicleNo: val,
+      vehicleNoValidated: false,
+      vehicleNoValidateStatus: null,
+      vehicleNoError: val && !VEHICLE_NO_REGEX.test(val) ? t("PROFILE_INVALID_VEHICLE_NO") : null,
+    });
   };
 
-  const handleValidateVehicleNo = (index) => {
-    const veh = vehicleList[index];
+
+  const handleValidateVehicleNo = (veh) => {
     if (!veh?.vehicleNo) return;
     if (VEHICLE_NO_REGEX.test(veh.vehicleNo)) {
-      updateVehicle(index, "vehicleNoValidated", true);
-      updateVehicle(index, "vehicleNoValidateStatus", "success");
-      updateVehicle(index, "vehicleNoError", null);
+      updateVehicleById(veh.id, { vehicleNoValidated: true, vehicleNoValidateStatus: "success", vehicleNoError: null });
     } else {
-      updateVehicle(index, "vehicleNoValidated", false);
-      updateVehicle(index, "vehicleNoValidateStatus", "error");
-      updateVehicle(index, "vehicleNoError", t("PROFILE_INVALID_VEHICLE_NO"));
+      updateVehicleById(veh.id, { vehicleNoValidated: false, vehicleNoValidateStatus: "error", vehicleNoError: t("PROFILE_INVALID_VEHICLE_NO") });
     }
   };
 
-  // Upload RC Document for a specific vehicle
-  const handleFileSelect = (index, e) => {
+  // id captured at call time — index shift during upload cannot corrupt wrong vehicle
+  const handleFileSelect = (id, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size >= 5242880) {
-      updateVehicle(index, "fileError", t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
+      updateVehicleById(id, { fileError: t("CS_MAXIMUM_UPLOAD_SIZE_EXCEEDED") });
       return;
     }
-    updateVehicle(index, "fileError", null);
-    updateVehicle(index, "vehicleRc", file);
-
+    updateVehicleById(id, { fileError: null, vehicleRc: file });
     (async () => {
       try {
         const response = await Digit.UploadServices.Filestorage("profile", file, Digit.ULBService.getStateId());
         if (response?.data?.files?.length > 0) {
-          updateVehicle(index, "uploadedRCFile", response.data.files[0].fileStoreId);
+          updateVehicleById(id, { uploadedRCFile: response.data.files[0].fileStoreId });
         } else {
-          updateVehicle(index, "fileError", t("CS_FILE_UPLOAD_ERROR"));
+          updateVehicleById(id, { fileError: t("CS_FILE_UPLOAD_ERROR") });
         }
       } catch {
-        updateVehicle(index, "fileError", t("CS_FILE_UPLOAD_ERROR"));
+        updateVehicleById(id, { fileError: t("CS_FILE_UPLOAD_ERROR") });
       }
     })();
   };
 
-  // Validation: Check if every added vehicle has all mandatory fields complete
-  const isVehicleComplete = (veh) =>
-    veh.vehicleType && veh.vehicleCategory && veh.fuelType && veh.vehicleNo && veh.vehicleNoValidated && veh.purchaseYear && veh.uploadedRCFile;
+  const isVehicleComplete = (veh) => veh.vehicleType && veh.vehicleCategory && veh.fuelType && veh.vehicleNo && veh.vehicleNoValidated && veh.purchaseYear && veh.uploadedRCFile;
 
-  const isDisabled = hasVehicle === null ? true : hasVehicle === "No" ? false : vehicleList.length === 0 || !vehicleList.every(isVehicleComplete);
+  // To check if user does not enter duplicate number, while adding multiple vehicle
+  const hasDuplicateVehicleNo = () => {
+    const filled = vehicleList.map((v) => v.vehicleNo).filter(Boolean);
+    return filled.length !== new Set(filled).size;
+  };
+
+
+  const isDisabled = hasVehicle === null ? true : hasVehicle === "No" ? false : vehicleList.length === 0 || !vehicleList.every(isVehicleComplete) || hasDuplicateVehicleNo();
 
   const goNext = () => {
     if (isViewMode) {
@@ -235,31 +239,26 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
           onSelect={(val) => !isViewMode && setHasVehicle(val.code)}
           disabled={isViewMode}
           name="hasVehicle"
+          innerStyles={{ display: "flex", alignItems: "center", marginRight: "24px" }}
         />
 
         {/* Vehicle Cards — rendered only when hasVehicle === "Yes" */}
         {hasVehicle === "Yes" && (
-          <div style={profileStyles.vehicleDetails.listWrapper}>
+          <div className="vehicle-details-list-wrapper">
             {vehicleList.map((veh, index) => {
-              const isValidateBtnDisabled = !veh.vehicleNo || !!veh.vehicleNoError;
-
+              const isDuplicate = dupNos.has(veh.vehicleNo);
+              const isValidateBtnDisabled = !veh.vehicleNo || !!veh.vehicleNoError || isDuplicate;
               return (
-                <div
-                  key={veh.id || index}
-                  style={profileStyles.vehicleDetails.card}
-                >
-                  {/* Card Header with Title and Delete Icon (for index > 0) */}
-                  <div
-                    style={profileStyles.vehicleDetails.cardHeader}
-                  >
-                    <div style={profileStyles.vehicleDetails.cardTitle}>
+                <div key={veh.id} className="vehicle-details-card">
+                  <div className="vehicle-details-card-header">
+                    <div className="vehicle-details-card-title">
                      {t("PROFILE_VEHICLE")} {index + 1}
                     </div>
                     {vehicleList.length > 1 && !isViewMode && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveVehicle(index)}
-                        style={profileStyles.vehicleDetails.deleteBtn}
+                        onClick={() => handleRemoveVehicle(veh.id)}
+                        className="vehicle-details-delete-btn"
                         title={t("REMOVE")}
                       >
                         <DeleteIcon fill="#a82227" style={{ width: "20px", height: "20px" }} />
@@ -268,11 +267,11 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
                   </div>
 
                   {/* 6 Vehicle Fields Grid */}
-                  <div style={profileStyles.gridStyle}>
+                  <div className="profile-grid-3col">
                     <FormField label={t("PROFILE_VEHICLE_TYPE")} required t={t}>
                       <Dropdown
                         selected={veh.vehicleType}
-                        select={(val) => updateVehicle(index, "vehicleType", val)}
+                        select={(val) => updateVehicleById(veh.id, { vehicleType: val })}
                         option={VEHICLE_TYPE}
                         optionKey="i18nKey"
                         t={t}
@@ -285,7 +284,7 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
                     <FormField label={t("PROFILE_VEHICLE_CATEGORY")} required t={t}>
                       <Dropdown
                         selected={veh.vehicleCategory}
-                        select={(val) => updateVehicle(index, "vehicleCategory", val)}
+                        select={(val) => updateVehicleById(veh.id, { vehicleCategory: val })}
                         option={VEHICLE_CATEGORY}
                         optionKey="i18nKey"
                         t={t}
@@ -298,7 +297,7 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
                     <FormField label={t("PROFILE_VEHICLE_FUEL_TYPE")} required t={t}>
                       <Dropdown
                         selected={veh.fuelType}
-                        select={(val) => updateVehicle(index, "fuelType", val)}
+                        select={(val) => updateVehicleById(veh.id, { fuelType: val })}
                         option={FUEL_TYPE}
                         optionKey="i18nKey"
                         t={t}
@@ -308,41 +307,41 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
                       />
                     </FormField>
 
-                    <FormField label={t("PROFILE_VEHICLE_NO")} required t={t} error={veh.vehicleNoError}>
-                      <div style={profileStyles.taxIdInputRow}>
-                        <div style={profileStyles.taxIdInputWrap}>
+                    <FormField label={t("PROFILE_VEHICLE_NO")} required t={t} error={veh.vehicleNoError || (isDuplicate ? t("PROFILE_DUPLICATE_VEHICLE_NO") : null)}>
+                      <div className="income-details-tax-row">
+                        <div className="income-details-tax-wrap">
                           <TextInput
                             t={t}
                             type="text"
-                            name={`vehicleNo_${index}`}
+                            name={`vehicleNo_${veh.id}`}
                             value={veh.vehicleNo}
-                            onChange={(e) => handleVehicleNoChange(index, e)}
+                            onChange={(e) => handleVehicleNoChange(veh.id, e)}
                             placeholder="MH12AB1234 / 22BH1234AB"
-                            maxLength={10}
+                            maxLength={13}
                             style={fullWidth}
                             disable={isViewMode}
                           />
                         </div>
                         <button
                           type="button"
-                          onClick={() => handleValidateVehicleNo(index)}
+                          onClick={() => handleValidateVehicleNo(veh)}
                           disabled={isViewMode || isValidateBtnDisabled}
-                          style={{
-                            ...profileStyles.validateBtn,
-                            ...(veh.vehicleNoValidated ? profileStyles.validateBtnSuccess : {}),
-                            ...(isViewMode || isValidateBtnDisabled ? profileStyles.validateBtnDisabled : {}),
-                          }}
+                          className={`income-details-validate-btn ${veh.vehicleNoValidated ? "income-details-validate-btn-success" : ""} ${
+                            isViewMode || isValidateBtnDisabled ? "income-details-validate-btn-disabled" : ""
+                          }`}
                         >
                           {veh.vehicleNoValidated ? `✓ ${t("PROFILE_VALIDATED")}` : t("PROFILE_VALIDATE")}
                         </button>
                       </div>
-                      {veh.vehicleNoValidateStatus === "success" && <p style={profileStyles.validateSuccessMsg}>{t("PROFILE_VEHICLE_NO_VALID")}</p>}
+                      {veh.vehicleNoValidateStatus === "success" && (
+                        <p className="income-details-validate-success-msg">{t("PROFILE_VEHICLE_NO_VALID")}</p>
+                      )}
                     </FormField>
 
                     <FormField label={t("PROFILE_VEHICLE_PURCHASE_YEAR")} required t={t}>
                       <DatePicker
                         date={veh.purchaseYear}
-                        onChange={(val) => updateVehicle(index, "purchaseYear", val)}
+                        onChange={(val) => updateVehicleById(veh.id, { purchaseYear: val })}
                         max={new Date().toISOString().split("T")[0]}
                         disabled={isViewMode}
                       />
@@ -350,38 +349,30 @@ const VehicleDetails = ({ t, config, onSelect, onUpdate, formData }) => {
 
                     <FormField label={t("PROFILE_VEHICLE_RC")} required t={t} error={veh.fileError}>
                       <UploadFile
-                        onUpload={(e) => handleFileSelect(index, e)}
-                        onDelete={
-                          isViewMode
-                            ? undefined
-                            : () => {
-                                updateVehicle(index, "vehicleRc", null);
-                                updateVehicle(index, "uploadedRCFile", null);
-                                updateVehicle(index, "fileError", null);
-                              }
-                        }
+                        onUpload={(e) => handleFileSelect(veh.id, e)}
+                        onDelete={isViewMode ? undefined : () => updateVehicleById(veh.id, { vehicleRc: null, uploadedRCFile: null, fileError: null })}
                         message={veh.vehicleRc ? veh.vehicleRc.name : t("PROFILE_NO_FILE_SELECTED")}
                         accept=".pdf,.jpg,.jpeg,.png"
                         iserror={veh.fileError}
                         disabled={isViewMode}
                       />
-                      <p style={profileStyles.documentUploadCard.fileRestrictionText}>{t("CS_FILE_SIZE_RESTRICTIONS")}</p>
+                      <p className="document-upload-file-restriction">{t("CS_FILE_SIZE_RESTRICTIONS")}</p>
                     </FormField>
                   </div>
                 </div>
               );
             })}
 
-            {/* Add Another Vehicle Button (Visible only when vehicleList < 3) */}
-            {vehicleList.length < 3 && !isViewMode && (
-              <div style={profileStyles.vehicleDetails.addVehicleWrapper}>
+            {/* Add Another Vehicle Button */}
+            {!isViewMode && (
+              <div className="vehicle-details-add-wrapper">
                 <button
                   type="button"
                   onClick={handleAddVehicle}
-                  style={{...profileStyles.validateBtn,}}
+                  className="income-details-validate-btn"
                 >
                   <span>{t("PROFILE_ADD_ANOTHER_VEHICLE")}</span>
-                  <span style={profileStyles.vehicleDetails.vehcileMaxNumber}>({vehicleList.length}/3)</span>
+                  {/* <span className="vehicle-details-max-number">({vehicleList.length}/3)</span> */}
                 </button>
               </div>
             )}

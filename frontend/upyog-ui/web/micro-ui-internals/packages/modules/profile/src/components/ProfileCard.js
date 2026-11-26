@@ -23,8 +23,8 @@ const ProfileCard = () => {
     config: {
       select: (data) => {
         return {
-          totalCount: data?.[0]?.totalCount ?? 0,
-          nearingSlaCount: data?.[0]?.nearingSlaCount ?? 0,
+          totalCount: data?.totalCount ?? 0,
+          nearingSlaCount: data?.nearingSlaCount ?? 0,
         };
       },
       enabled: hasAccess,

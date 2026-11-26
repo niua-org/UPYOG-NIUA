@@ -5,7 +5,6 @@ import UploadDrawer from "./UploadDrawer";
 import { AvatarUpload, FormField, toGenderOption, fetchThumbnail } from "../utils";
 import { buildUpdateUserPayload, buildSessionUser } from "../utils/payloads";
 import { validators, validateProfile, hasErrors } from "../utils/profileValidators";
-import { profileStyles } from "../utils/profileStyles";
 
 
 /*
@@ -120,9 +119,9 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
 
   return (
     <>
-      <div style={profileStyles.card}>
+      <div className="profile-card">
         <AvatarUpload imageUrl={photoThumb} name={form.name} onCameraClick={() => setShowUploadDrawer(true)} />
-        <div style={profileStyles.grid}>
+        <div className="profile-grid">
           <FormField label={t("CORE_COMMON_PROFILE_NAME")} required error={errors.name} t={t}>
             <TextInput t={t} type="text" name="name" value={form.name} onChange={(e) => setField("name", e.target.value)} disable={true} />
           </FormField>
@@ -160,7 +159,7 @@ const EditProfileForm = ({ stateCode, userType, cityDetails, userDetails, onProf
           )}
         </div>
       </div>
-      <div style={profileStyles.actions}>
+      <div className="profile-form-actions">
         <SubmitBar
           label={t("CORE_COMMON_SAVE")}
           onSubmit={handleSave}

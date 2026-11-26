@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { CameraIcon, CardLabelError ,CardLabel } from "@nudmcdgnpm/digit-ui-react-components";
-import { profileStyles } from "./profileStyles";
 
 /**
  * All the Utilities Fucntions for Profile Module are defined here.
@@ -139,19 +138,19 @@ export const ProfilePhoto = ({ photo, name }) => {
   const [hasFailed, setHasFailed] = useState(false);
   const photoUrl = photo;
   if (!photoUrl || hasFailed)
-    return <div style={profileStyles.photoPlaceholder}>{getInitials(name) || "?"}</div>;
-  return <img src={photoUrl} alt={name} style={profileStyles.photo} onError={() => setHasFailed(true)} />;
+    return <div className="profile-details-photo-placeholder">{getInitials(name) || "?"}</div>;
+  return <img src={photoUrl} alt={name} className="profile-details-photo" onError={() => setHasFailed(true)} />;
 };
 
 // Avatar (photo or initials) with camera button — used in EditProfile
 export const AvatarUpload = ({ imageUrl, name, onCameraClick }) => (
-  <div style={profileStyles.avatarWrap}>
+  <div className="edit-profile-avatar-wrap">
     {imageUrl ? (
-      <img src={imageUrl} alt={name} style={profileStyles.photo} />
+      <img src={imageUrl} alt={name} className="profile-details-photo" />
     ) : (
-      <div style={profileStyles.photoPlaceholder}>{getInitials(name) || "?"}</div>
+      <div className="profile-details-photo-placeholder">{getInitials(name) || "?"}</div>
     )}
-    <button type="button" style={profileStyles.cameraButton} onClick={onCameraClick} title="Update Profile Photo">
+    <button type="button" className="edit-profile-camera-btn" onClick={onCameraClick} title="Update Profile Photo">
       <CameraIcon />
     </button>
   </div>
@@ -160,9 +159,9 @@ export const AvatarUpload = ({ imageUrl, name, onCameraClick }) => (
 // Label + input + error — used in EditProfile form fields
 export const FormField = ({ label, required, error, t, children, style }) => (
   <div style={style}>
-    <label style={profileStyles.label}>
+    <label className="profile-form-label">
       {label}
-      {required && <span style={profileStyles.required}> *</span>}
+      {required && <span className="profile-form-required"> *</span>}
     </label>
     {children}
     {error && <CardLabelError>{t(error)}</CardLabelError>}
@@ -174,7 +173,7 @@ export const Field = ({ label, value, fieldKey, tenantId }) => {
   const isDoc = fieldKey === "COMMON_ADDRESS_PROOF";
   return (
     <div>
-      <div style={profileStyles.fieldLabel}>{label}</div>
+      <div className="profile-field-label">{label}</div>
       {isDoc ? (
         <div
           onClick={() => openDocument(value, tenantId)}
@@ -184,14 +183,14 @@ export const Field = ({ label, value, fieldKey, tenantId }) => {
           <PDFSvg width={28} height={28} />
         </div>
       ) : (
-        <div style={profileStyles.fieldValue}>{value}</div>
+        <div className="profile-field-value">{value}</div>
       )}
     </div>
   );
 };
 
 export const FieldGrid = ({ fields, t, tenantId }) => (
-  <div style={profileStyles.grid}>
+  <div className="profile-grid">
     {fields.map(([key, value]) => (
       <Field key={key} fieldKey={key} label={t(key)} value={value} t={t} tenantId={tenantId} />
     ))}
@@ -199,8 +198,8 @@ export const FieldGrid = ({ fields, t, tenantId }) => (
 );
 
 export const Section = ({ title, children }) => (
-  <div style={profileStyles.section}>
-    <h3 style={profileStyles.sectionTitle}>{title}</h3>
+  <div className="profile-section">
+    <h3 className="profile-section-title">{title}</h3>
     {children}
   </div>
 );

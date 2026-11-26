@@ -1,13 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Card, CardText, SubmitBar } from "@nudmcdgnpm/digit-ui-react-components";
 import { PROFILE_ROUTES } from "../utils/constants";
 import getPPPAcknowledgementData from "../getPPPAcknowledgementData";
 
+const getErrorCode = (error) =>
+  error?.response?.data?.Errors?.[0]?.code || error?.Errors?.[0]?.code;
+
 /**
  * PPP Acknowledgement Component
  *
  * Handles acknowledgement display for success and failure cases.
+ * @param {Object} props - Acknowledgement component properties.
+ * @param {"create"|"join"} [props.mode="create"] - Family operation flow.
+ * @param {string} props.familyId - Identifier for the created or joined family.
+ * @param {Object} [props.acknowledgement] - Acknowledgement and applicant data.
+ * @param {Error|Object} [props.error] - Error returned by the family operation.
+ * @param {boolean} [props.isPending=false] - Whether the operation is still pending.
+ * @param {Function} [props.onGoToProfile] - Optional profile navigation callback.
+ * @returns {React.ReactElement} The acknowledgement banner and available actions.
  */
 const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error, isPending = false, onGoToProfile }) => {
   const { t } = useTranslation();
@@ -18,6 +29,22 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
   const [downloadError, setDownloadError] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
 
+  useEffect(() => {
+    if (error) {
+      console.error(
+        "Family acknowledgement operation failed:",
+        getErrorCode(error) || error?.message
+      );
+    }
+  }, [error]);
+
+  const requestRetryMessage = t("PROFILE_PPP_ACKNOWLEDGEMENT_REQUEST_RETRY");
+  const requestErrorCode = getErrorCode(error);
+  const requestErrorMessage = requestErrorCode
+    ? t(`PROFILE_ERR_${requestErrorCode}`, requestRetryMessage)
+    : requestRetryMessage;
+  const downloadRetryMessage = t("PROFILE_PPP_ACKNOWLEDGEMENT_DOWNLOAD_RETRY");
+
   const handleDownload = async () => {
     setDownloadError("");
     setIsDownloading(true);
@@ -27,9 +54,7 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
         Digit.ULBService.getCitizenCurrentTenant(true) ||
         Digit.ULBService.getCurrentTenantId();
       const familyResponse = await Digit.UserService.familySearch(tenantId, { familyId });
-      const family =
-        familyResponse?.Families?.find((item) => item.familyId === familyId) ||
-        familyResponse?.Families?.[0];
+      const family = familyResponse?.Families?.find((item) => item.familyId === familyId);
       if (!family) {
         throw new Error(t("PROFILE_FAMILY_NOT_FOUND"));
       }
@@ -47,13 +72,12 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
         t
       );
       await Digit.Utils.pdf.generate(acknowledgementData);
-    } catch (error) {
-      console.error("Unable to download family acknowledgement:", error);
-      setDownloadError(
-        error?.response?.data?.Errors?.[0]?.message ||
-          error?.message ||
-          t("PROFILE_PPP_ACKNOWLEDGEMENT_RETRY")
+    } catch (downloadErrorCause) {
+      console.error(
+        "Unable to download family acknowledgement:",
+        getErrorCode(downloadErrorCause) || downloadErrorCause?.message
       );
+      setDownloadError(downloadRetryMessage);
     } finally {
       setIsDownloading(false);
     }
@@ -87,9 +111,7 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
 
         {!isSuccess && !isPending && (
           <CardText>
-            {error?.response?.data?.Errors?.[0]?.message ||
-              error?.message ||
-              t("PROFILE_PPP_ACKNOWLEDGEMENT_RETRY")}
+            {requestErrorMessage}
           </CardText>
         )}
         {downloadError && <CardText>{downloadError}</CardText>}

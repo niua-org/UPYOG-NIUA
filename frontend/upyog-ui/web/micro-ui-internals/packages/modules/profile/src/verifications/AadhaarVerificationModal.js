@@ -15,7 +15,6 @@ import {
   CloseSvg,
   Toast,
 } from "@nudmcdgnpm/digit-ui-react-components";
-import { profileStyles } from "../utils/profileStyles";
 import { buildVerifiedMemberInfo } from "../utils/payloads";
 import { getFamilyMembers } from "../utils";
 import { OTP_LENGTH } from "../utils/constants";
@@ -57,7 +56,6 @@ const AadhaarVerificationModal = ({
   showConsentBox = true,
 }) => {
   const { t } = useTranslation();
-  const styles = profileStyles.aadhaarVerification || {};
   const stateId = Digit.ULBService.getStateId();
   const tenantId = Digit.ULBService.getCurrentTenantId() || stateId;
 
@@ -132,6 +130,13 @@ const AadhaarVerificationModal = ({
 
   const handleClose = () => {
     resetForm();
+    // Purge temporary session storage keys if modal is cancelled/closed without completing the flow
+    // to prevent abandoned verification data from persisting and pre-filling subsequent member forms.
+    if (mode === "family") {
+      sessionStorage.removeItem("Digit.family.verifiedMember");
+      sessionStorage.removeItem("Digit.family.aadhaarLast4");
+      sessionStorage.removeItem("Digit.family.maskedMobile");
+    }
     onClose?.();
   };
 
@@ -308,9 +313,14 @@ const AadhaarVerificationModal = ({
         }
 
         try {
+          // For PII privacy compliance, never persist unmasked Aadhaar-linked mobile in browser sessionStorage.
+          // The unmasked mobile is passed in-memory via onSuccess -> router navigation state instead.
           const memberToStore = {
             ...verifiedMember,
-            mobileNumber: verifiedMember?.mobileNumber || response?.demographics?.mobileNumber || linkedMobile,
+            mobileNumber: undefined,
+            demographics: verifiedMember?.demographics
+              ? { ...verifiedMember.demographics, mobileNumber: undefined }
+              : undefined,
           };
           sessionStorage.setItem("Digit.family.verifiedMember", JSON.stringify(memberToStore));
           sessionStorage.setItem("Digit.family.aadhaarLast4", aadhaarLast4);
@@ -385,23 +395,9 @@ const AadhaarVerificationModal = ({
 
       {/* Consent Callout Banner */}
       {showConsentBox && (
-        <div
-          style={
-            styles.consentBox || {
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "10px 14px",
-              backgroundColor: "#F4F5F7",
-              borderRadius: "8px",
-              fontSize: "13px",
-              color: "#505A5F",
-              marginBottom: "16px",
-            }
-          }
-        >
-          <span style={styles.consentIcon || { fontSize: "16px" }}>💡</span>
-          <span style={styles.consentText || { lineHeight: 1.4 }}>
+        <div className="aadhaar-verification-consent-box">
+          <span className="aadhaar-verification-consent-icon">💡</span>
+          <span className="aadhaar-verification-consent-text">
             {t("AADHAAR_OTP_INFO_CALLOUT", "An OTP will be sent to the mobile number registered with this Aadhaar number.")}
           </span>
         </div>

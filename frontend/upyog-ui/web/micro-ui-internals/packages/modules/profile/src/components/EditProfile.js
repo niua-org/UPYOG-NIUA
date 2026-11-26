@@ -5,7 +5,6 @@ import { Loader, Card } from "@nudmcdgnpm/digit-ui-react-components";
 import EditProfileForm from "./EditProfileForm";
 import EditAddress from "./EditAddress";
 import EditDocuments from "./EditDocuments";
-import { profileStyles } from "../utils/profileStyles";
 
 /**
  * EditProfile - Parent Component for edit workflows (Profile, Address, Documents).
@@ -88,21 +87,21 @@ const EditProfile = ({ stateCode, userType, cityDetails }) => {
   return (
     <div>
       <Card>
-        <div style={profileStyles.header}>
-          <div style={profileStyles.headerLeft}>
-            <div style={profileStyles.headerIcon}>👤</div>
-            <h2 style={profileStyles.title}>{t("CORE_COMMON_PROFILE_EDIT_DETAILS")}</h2>
+        <div className="profile-header">
+          <div className="profile-header-left">
+            <div className="profile-header-icon">👤</div>
+            <h2 className="profile-header-title">{t("CORE_COMMON_PROFILE_EDIT_DETAILS")}</h2>
           </div>
         </div>
 
         {!isEmployee && (
-          <div style={profileStyles.tabs}>
+          <div className="profile-tabs">
             {TABS.map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setActiveTab(key)}
-                style={{ ...profileStyles.tab, ...(activeTab === key ? profileStyles.tabActive : {}) }}
+                className={`profile-tab ${activeTab === key ? "profile-tab-active" : ""}`}
               >
                 {t(label)}
               </button>

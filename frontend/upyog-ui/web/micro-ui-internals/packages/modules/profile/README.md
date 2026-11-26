@@ -173,6 +173,7 @@ Step 4: vehicles         →  VehicleDetails.js
 - `FamilyCreatedResponse` and `FamilyJoinedResponse` share `PPPAcknowledgement`.
 - The response page displays the status message and actions, not the submitted form details. Family creation also displays the generated Family ID.
 - The Download acknowledgement action generates a PDF containing the available submitted member, property, income, and vehicle details.
+- PPP acknowledgement PDFs omit the Terms & Conditions section by setting `isTOCRequired` to `false`.
 
 ---
 
@@ -214,7 +215,7 @@ Step 4: vehicles         →  VehicleDetails.js
 |---|---|
 | `buildUpdateUserPayload` | `EditProfileForm`, `CreateProfile` |
 | `buildSessionUser` | Updates localStorage session after profile save |
-| `buildCreateFamilyPayload` | `FamilyMemberAdded` — maps each member's `property.propertiesPortfolio` entry to an API `properties[]` item, and sets the head's primary urban property in `Family.familyAddressPropertyId` |
+| `buildCreateFamilyPayload` | `FamilyMemberAdded` — maps each member's `property.propertiesPortfolio` entry to an API `properties[]` item, and sets the selected urban or rural primary address in `Family.familyAddressPropertyId` (rural uses its survey/khasra number when no property ID exists) |
 | `buildVerifiedMemberInfo` | `AadhaarVerification` — normalizes OTP verify response |
 | `buildUpdateDocumentPayload` | `EditDocuments` |
 | `buildCreateDocumentPayload` | `EditDocuments` |
