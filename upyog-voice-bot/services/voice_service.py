@@ -238,11 +238,18 @@ def text_to_speech(text: str, language_code: str, gender: str = "female"):
     # Edge TTS is configured here for English and Hindi only.
     if USE_EDGE_TTS and language_code in ["en", "hi"]:
         voice_map = {
-            "en": "en-IN-NeerjaNeural",
-            "hi": "hi-IN-SwaraNeural"
+            "en": {
+                "female": "en-IN-NeerjaNeural",
+                "male": "en-IN-PrabhatNeural"
+            },
+            "hi": {
+                "female": "hi-IN-SwaraNeural",
+                "male": "hi-IN-MadhurNeural"
+            }
         }
-        voice = voice_map.get(language_code)
-        logger.info(f"[TTS EDGE-TTS] Attempting Edge-TTS with voice '{voice}'")
+        lang_voices = voice_map.get(language_code, {})
+        voice = lang_voices.get(gender, lang_voices.get("female", "en-IN-NeerjaNeural"))
+        logger.info(f"[TTS EDGE-TTS] Attempting Edge-TTS with voice '{voice}' (lang={language_code}, gender={gender})")
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_audio:
                 temp_path = temp_audio.name

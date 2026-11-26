@@ -146,7 +146,7 @@ CRITICAL: Never classify municipal/urban questions (e.g., trade license, propert
 
 ━━━ CURRENT MESSAGE ━━━
 "{query}"
-Language: {lang} 
+Language: {lang}
 
 Respond ONLY with this JSON, no other text:
 {{

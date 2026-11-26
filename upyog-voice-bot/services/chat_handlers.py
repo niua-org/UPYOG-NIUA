@@ -1242,16 +1242,17 @@ def dispatch_chat_request(
     history_key = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
 
     # 0. Pre-NLU Normalization: Entity Masking, Voice ASR Acoustics, and Closed-Domain Fuzzy Correction
-    # Reason: Intercepts raw speech-to-text transcripts and typed input before intent classification.
-    # Corrects keyboard typos ("complnt", "greivance", "hording") and ASR errors ("uni pole", "p g r")
-    # without corrupting protected tokens (tracking IDs, phone numbers, dates).
+    # Note: working_input is used ONLY for intent classification, fast-path matching, synonym
+    # resolution, and RAG query expansion. Raw unmutated user_input is strictly preserved for
+    # workflow execution, draft handlers, and free-text citizen form answers (names, addresses, etc.).
     from services.normalizer import normalize_voice_and_text
     working_input, has_norm_changes, norm_audit = normalize_voice_and_text(user_input)
     if has_norm_changes:
-        logger.info(
+        logger.debug(
             f"[Pre-NLU Normalizer] Normalized query: '{user_input}' -> '{working_input}' | "
-            f"Actions: {norm_audit} [Reason: Corrected spelling/ASR acoustic variations before NLU]"
+            f"Actions: {norm_audit}"
         )
+        logger.info(f"[Pre-NLU Normalizer] Applied {len(norm_audit)} normalization rules for NLU/routing.")
 
     # 1. Multi-Draft Selection Menu Interception (if citizen is selecting an option)
     is_multi_handled, multi_resp = handle_pending_multi_draft(working_input, user_language, phone, session_id, workflows)
@@ -1407,7 +1408,7 @@ def dispatch_chat_request(
 
     # 10. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
     is_draft_op, draft_resp = handle_draft_management(
-        intent, working_input, user_language, phone, session_id, active_plugin, workflows, config, system_config=system_config
+        intent, user_input, user_language, phone, session_id, active_plugin, workflows, config, system_config=system_config
     )
     if is_draft_op:
         return draft_resp
@@ -1433,8 +1434,10 @@ def dispatch_chat_request(
 
     if should_execute_wf:
         logger.info(f"Routing to dynamic plugin: {target_wf}")
+        # Note: Pass raw user_input so citizen form answers (addresses, names, complaint descriptions)
+        # remain unmutated and preserve exact formatting/spelling.
         return execute_workflow_plugin(
-            target_wf, working_input, user_language, phone, session_id, is_authenticated
+            target_wf, user_input, user_language, phone, session_id, is_authenticated
         )
 
     # 12. Knowledge Base RAG / FAQ Retrieval Fallback

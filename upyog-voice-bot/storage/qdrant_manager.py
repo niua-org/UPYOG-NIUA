@@ -21,9 +21,12 @@ shared_memory = MemorySaver()
 load_dotenv(override=True)
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
-QDRANT_GRPC_PORT = int(os.getenv("QDRANT_GRPC_PORT", 6334))
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
 QDRANT_HTTPS = os.getenv("QDRANT_HTTPS", "false").strip().lower() in ("true", "1", "yes")
+QDRANT_REQUIRE_SERVER = os.getenv("QDRANT_REQUIRE_SERVER", "false").strip().lower() in ("true", "1", "yes")
+
+if QDRANT_API_KEY and not QDRANT_HTTPS and QDRANT_HOST not in ("localhost", "127.0.0.1"):
+    logger.warning("[Qdrant] Security Warning: QDRANT_API_KEY is configured over plain HTTP.")
 
 try:
     # Connect to the standalone Qdrant server
@@ -31,16 +34,17 @@ try:
         host=QDRANT_HOST,
         port=QDRANT_PORT,
         https=QDRANT_HTTPS,
-        # grpc_port=QDRANT_GRPC_PORT,
         api_key=QDRANT_API_KEY,
         prefer_grpc=False,
-        check_compatibility=False,
         timeout=10.0
     )
     # Test connection
     client.get_collections()
     logger.info(f"[Qdrant] Connected successfully to standalone server at {QDRANT_HOST}:{QDRANT_PORT} (https={QDRANT_HTTPS})")
 except Exception as e:
+    if QDRANT_REQUIRE_SERVER:
+        logger.error(f"[Qdrant] Fatal: QDRANT_REQUIRE_SERVER is true but connection to {QDRANT_HOST}:{QDRANT_PORT} failed: {e}")
+        raise RuntimeError(f"Could not connect to required Qdrant server at {QDRANT_HOST}:{QDRANT_PORT}: {e}")
     logger.warning(f"[Qdrant] Could not connect to {QDRANT_HOST}:{QDRANT_PORT} ({e}), falling back to local/in-memory Qdrant client.")
     # Initialize local filesystem Qdrant database with fallback for concurrent access
     try:

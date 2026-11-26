@@ -32,9 +32,11 @@ logger = logging.getLogger(__name__)
 # Reason: Spell checkers and fuzzy matchers must NEVER alter alphanumeric tracking
 # IDs, telephone numbers, or formatted dates. We mask them before correction and
 # unmask them afterward.
+# Note: ID_PATTERN strictly requires uppercase official prefix and at least one digit
+# so ordinary words like "advertisement", "advance", "nocturnal" are never masked as IDs.
 # ==============================================================================
 
-ID_PATTERN = re.compile(r'\b(?:ADV|PGR|PT|TL|WS|BPA|NOC|BND)[-_]?[A-Z0-9-]+\b', re.IGNORECASE)
+ID_PATTERN = re.compile(r'\b(?:ADV|PGR|PT|TL|WS|BPA|NOC|BND)[-_]?(?=[A-Z0-9-]*\d)[A-Z0-9-]+\b')
 PHONE_PATTERN = re.compile(r'(?:\+91[\-\s]?)?[6-9]\d{9}\b')
 DATE_PATTERN = re.compile(r'\b\d{4}[-/]\d{2}[-/]\d{2}\b')
 
@@ -64,6 +66,14 @@ ASR_ACOUSTIC_RULES: List[Tuple[re.Pattern, str, str]] = [
     (re.compile(r'\bsarak\b', re.IGNORECASE), "sadak", "Regional retroflex transliteration for road"),
     (re.compile(r'\blite\b', re.IGNORECASE), "light", "Homophone 'lite' for 'light'"),
     (re.compile(r'\bstreetlite\b', re.IGNORECASE), "streetlight", "Homophone 'streetlite' for 'streetlight'"),
+    # Common citizen texting / ASR shorthand expansions
+    (re.compile(r'\bwht\b', re.IGNORECASE), "what", "Chat shorthand 'wht' -> 'what'"),
+    (re.compile(r'\bhw\b', re.IGNORECASE), "how", "Chat shorthand 'hw' -> 'how'"),
+    (re.compile(r'\bchk\b', re.IGNORECASE), "check", "Chat shorthand 'chk' -> 'check'"),
+    (re.compile(r'\bplz\b|\bpls\b', re.IGNORECASE), "please", "Chat shorthand 'plz/pls' -> 'please'"),
+    (re.compile(r'\babt\b', re.IGNORECASE), "about", "Chat shorthand 'abt' -> 'about'"),
+    # Digital / electronic civic terms
+    (re.compile(r'\b(?:e[\s\-_]+waste|ewaste)\b', re.IGNORECASE), "e-waste", "Normalize e-waste terminology"),
 ]
 
 # ==============================================================================
@@ -77,19 +87,19 @@ ASR_ACOUSTIC_RULES: List[Tuple[re.Pattern, str, str]] = [
 # ==============================================================================
 
 MUNICIPAL_ABBREVIATIONS: List[Tuple[re.Pattern, str, str]] = [
-    (re.compile(r'\bpt\b', re.IGNORECASE), "Property Tax (PT)", "Abbreviation 'PT' -> 'Property Tax'"),
-    (re.compile(r'\btl\b', re.IGNORECASE), "Trade License (TL)", "Abbreviation 'TL' -> 'Trade License'"),
-    (re.compile(r'\bws\b', re.IGNORECASE), "Water & Sewerage (WS)", "Abbreviation 'WS' -> 'Water & Sewerage'"),
-    (re.compile(r'\bpgr\b', re.IGNORECASE), "Public Grievance Redressal (PGR)", "Abbreviation 'PGR' -> 'Public Grievance Redressal'"),
-    (re.compile(r'\badv\b', re.IGNORECASE), "Advertisement (ADV)", "Abbreviation 'ADV' -> 'Advertisement'"),
-    (re.compile(r'\bbpa\b', re.IGNORECASE), "Building Plan Approval (BPA)", "Abbreviation 'BPA' -> 'Building Plan Approval'"),
-    (re.compile(r'\bobps\b', re.IGNORECASE), "Online Building Plan Approval (OBPS)", "Abbreviation 'OBPS' -> 'Online Building Plan'"),
-    (re.compile(r'\bnoc\b', re.IGNORECASE), "No Objection Certificate (NOC)", "Abbreviation 'NOC' -> 'No Objection Certificate'"),
-    (re.compile(r'\bbnd\b', re.IGNORECASE), "Birth & Death (BND)", "Abbreviation 'BND' -> 'Birth & Death'"),
-    (re.compile(r'\bpid\b', re.IGNORECASE), "Property ID (PID)", "Abbreviation 'PID' -> 'Property ID'"),
-    (re.compile(r'\bupic\b', re.IGNORECASE), "Property UPIC", "Abbreviation 'UPIC' -> 'Property UPIC'"),
-    (re.compile(r'\bsaf\b', re.IGNORECASE), "Self Assessment Form (SAF)", "Abbreviation 'SAF' -> 'Self Assessment Form'"),
-    (re.compile(r'\bulb\b', re.IGNORECASE), "Urban Local Body (ULB)", "Abbreviation 'ULB' -> 'Urban Local Body'"),
+    (re.compile(r'\bpt\b(?!\.)', re.IGNORECASE), "Property Tax (PT)", "Abbreviation 'PT' -> 'Property Tax'"),
+    (re.compile(r'\btl\b(?!\.)', re.IGNORECASE), "Trade License (TL)", "Abbreviation 'TL' -> 'Trade License'"),
+    (re.compile(r'\bws\b(?!\.)', re.IGNORECASE), "Water & Sewerage (WS)", "Abbreviation 'WS' -> 'Water & Sewerage'"),
+    (re.compile(r'\bpgr\b(?!\.)', re.IGNORECASE), "Public Grievance Redressal (PGR)", "Abbreviation 'PGR' -> 'Public Grievance Redressal'"),
+    (re.compile(r'\badv\b(?!\.)', re.IGNORECASE), "Advertisement (ADV)", "Abbreviation 'ADV' -> 'Advertisement'"),
+    (re.compile(r'\bbpa\b(?!\.)', re.IGNORECASE), "Building Plan Approval (BPA)", "Abbreviation 'BPA' -> 'Building Plan Approval'"),
+    (re.compile(r'\bobps\b(?!\.)', re.IGNORECASE), "Online Building Plan Approval (OBPS)", "Abbreviation 'OBPS' -> 'Online Building Plan'"),
+    (re.compile(r'\bnoc\b(?!\.)', re.IGNORECASE), "No Objection Certificate (NOC)", "Abbreviation 'NOC' -> 'No Objection Certificate'"),
+    (re.compile(r'\bbnd\b(?!\.)', re.IGNORECASE), "Birth & Death (BND)", "Abbreviation 'BND' -> 'Birth & Death'"),
+    (re.compile(r'\bpid\b(?!\.)', re.IGNORECASE), "Property ID (PID)", "Abbreviation 'PID' -> 'Property ID'"),
+    (re.compile(r'\bupic\b(?!\.)', re.IGNORECASE), "Property UPIC", "Abbreviation 'UPIC' -> 'Property UPIC'"),
+    (re.compile(r'\bsaf\b(?!\.)', re.IGNORECASE), "Self Assessment Form (SAF)", "Abbreviation 'SAF' -> 'Self Assessment Form'"),
+    (re.compile(r'\bulb\b(?!\.)', re.IGNORECASE), "Urban Local Body (ULB)", "Abbreviation 'ULB' -> 'Urban Local Body'"),
 ]
 
 
@@ -99,20 +109,23 @@ MUNICIPAL_ABBREVIATIONS: List[Tuple[re.Pattern, str, str]] = [
 
 _SYNONYMS_CACHE: Optional[Dict] = None
 _DOMAIN_VOCABULARY: Optional[Dict[str, str]] = None
+_COMPILED_SYNONYMS: Optional[List[Tuple[re.Pattern, str, str, str, str, Optional[str]]]] = None
 
 
 def load_synonyms_registry() -> Dict:
-    """Loads the canonical synonyms registry from data/synonyms.yml.
+    """Loads the canonical synonyms registry from data/synonyms.yml and precompiles
+    matching patterns sorted by length descending for optimal specificity and performance.
 
-    Cached in-memory after first load. Falls back gracefully to empty dict
-    if file is missing or unparseable.
+    Cached in-memory after first load. Changes to synonyms.yml require a service restart.
     """
-    global _SYNONYMS_CACHE
+    global _SYNONYMS_CACHE, _COMPILED_SYNONYMS
     if _SYNONYMS_CACHE is not None:
         return _SYNONYMS_CACHE
 
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     syn_path = os.path.join(base_dir, "data", "synonyms.yml")
+
+    patterns: List[Tuple[re.Pattern, str, str, str, str, Optional[str]]] = []
 
     if os.path.exists(syn_path):
         try:
@@ -120,12 +133,35 @@ def load_synonyms_registry() -> Dict:
                 data = yaml.safe_load(f) or {}
                 _SYNONYMS_CACHE = data.get("services", {})
                 logger.info(f"[NORMALIZER] Successfully loaded synonyms registry for {len(_SYNONYMS_CACHE)} services from {syn_path}")
+
+                raw_entries = []
+                for s_key, s_data in _SYNONYMS_CACHE.items():
+                    c_name = s_data.get("canonical_name", s_key)
+                    t_wf = s_data.get("target_workflow", "faq")
+                    # Expressions
+                    for lang_exprs in s_data.get("expressions", {}).values():
+                        if isinstance(lang_exprs, list):
+                            for expr in lang_exprs:
+                                raw_entries.append((expr, s_key, c_name, t_wf, None))
+                    # Civic subcategories
+                    for sub_cat, terms in s_data.get("civic_subcategories", {}).items():
+                        for term in terms:
+                            raw_entries.append((term, s_key, c_name, t_wf, sub_cat))
+
+                # Sort by expression length descending for longest/most specific match first
+                raw_entries.sort(key=lambda x: len(x[0]), reverse=True)
+                for expr, s_key, c_name, t_wf, sub_cat in raw_entries:
+                    rgx = re.compile(rf'\b{re.escape(expr.lower().strip())}\b')
+                    patterns.append((rgx, s_key, c_name, t_wf, expr, sub_cat))
+
+                _COMPILED_SYNONYMS = patterns
                 return _SYNONYMS_CACHE
         except Exception as e:
             logger.error(f"[NORMALIZER] Failed to parse {syn_path}: {e}")
 
     logger.warning("[NORMALIZER] synonyms.yml not found, using empty fallback")
     _SYNONYMS_CACHE = {}
+    _COMPILED_SYNONYMS = []
     return _SYNONYMS_CACHE
 
 
@@ -133,6 +169,20 @@ STOPWORDS_NOT_FUZZY_TARGETS = {
     "par", "per", "ka", "ki", "ke", "ko", "se", "me", "mai", "aur",
     "and", "the", "for", "hai", "hain", "karna", "kare", "karo", "nahi",
     "nahin", "yeh", "woh", "kar", "ho", "tha", "thi", "the", "kya", "aap"
+}
+
+# Protected conversational and dictionary words that must NEVER be fuzzy-corrected
+PROTECTED_COMMON_WORDS: Set[str] = {
+    "thanks", "thank", "night", "evening", "morning", "afternoon", "hello", "hi", "hey",
+    "good", "fine", "ok", "okay", "sure", "yes", "no", "help", "please", "welcome",
+    "what", "how", "when", "where", "which", "who", "whom", "whose", "why", "check",
+    "ewaste", "e-waste", "echallan", "ebill", "eservice", "etender", "eseva", "ekyc", "emutation",
+    "right", "great", "park", "road", "city", "area", "house", "trade", "traders",
+    "office", "name", "date", "time", "week", "month", "year",
+    "kaise", "kare", "karna", "karo", "karni", "karne", "paise", "rupaye", "chahiye",
+    "batao", "bataiye", "dikhao", "dikhaye", "aap", "mera", "meri", "mere", "humara",
+    "apna", "apni", "hatao", "lagao", "kya", "kyun", "kahan", "kab", "kaun", "kitna",
+    "kitne", "kitni", "nahi", "nahin", "theek", "achha", "accha", "din", "raat"
 }
 
 
@@ -192,6 +242,49 @@ def get_domain_vocabulary() -> Dict[str, str]:
 
 
 # ==============================================================================
+# 3B. VALID GENERAL & CIVIC LEXICON (HYPER-CORRECTION SHIELD)
+# ==============================================================================
+# Reason: A spell-checker must ONLY correct non-words / genuine misspellings.
+# Legitimate English and Hinglish words (e.g. 'ewaste', 'drain', 'stall', 'court',
+# 'meter', 'plant', 'store', 'order', 'night') must NEVER be hyper-corrected to
+# municipal domain terms just because of small edit distances.
+# ==============================================================================
+
+_COMMON_LEXICON: Optional[Set[str]] = None
+
+
+def get_common_lexicon() -> Set[str]:
+    """Loads the broad English and Hinglish valid vocabulary lexicon from
+    data/common_lexicon.txt, supplemented by system dictionaries and digital civic terms.
+    Ensures legitimate words (e.g. 'ewaste', 'drain', 'stall', 'court', 'meter')
+    are recognized as valid words and NEVER hyper-corrected to municipal terms.
+    """
+    global _COMMON_LEXICON
+    if _COMMON_LEXICON is not None:
+        return _COMMON_LEXICON
+
+    lexicon: Set[str] = set()
+
+    # 1. Load bundled data/common_lexicon.txt
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    lex_path = os.path.join(base_dir, "data", "common_lexicon.txt")
+    if os.path.exists(lex_path):
+        try:
+            with open(lex_path, "r", encoding="utf-8") as f:
+                lexicon.update(line.strip().lower() for line in f if line.strip())
+            logger.info(f"[NORMALIZER] Loaded {len(lexicon)} valid lexicon words from {lex_path}")
+        except Exception as e:
+            logger.warning(f"[NORMALIZER] Failed to read {lex_path}: {e}")
+
+    # 2. Add protected common words and domain vocabulary
+    lexicon.update(w.lower() for w in PROTECTED_COMMON_WORDS)
+    lexicon.update(get_domain_vocabulary().keys())
+
+    _COMMON_LEXICON = lexicon
+    return _COMMON_LEXICON
+
+
+# ==============================================================================
 # 4. OPTIMIZED DAMERAU-LEVENSHTEIN FUZZY MATCHING ALGORITHM
 # ==============================================================================
 # Reason: Pure Python, zero-external-dependency distance metric with transposition
@@ -238,9 +331,10 @@ def find_closest_domain_token(word: str, vocab: Dict[str, str]) -> Optional[Tupl
 
     Rules:
       - Word must have length >= 4 (short words are skipped to prevent false positives).
-      - Max edit distance = 1 for 4-5 letter words.
-      - Max edit distance = 2 for words >= 6 letters.
-      - Normalized similarity ratio >= 0.82.
+      - Common conversational English and Hinglish words are protected from mutation.
+      - Max edit distance = 1 for words <= 5 characters.
+      - Max edit distance = 2 for words >= 6 characters.
+      - Normalized similarity ratio >= 0.85.
 
     Returns:
         Optional[Tuple[canonical_word, distance, similarity_score]]
@@ -248,7 +342,15 @@ def find_closest_domain_token(word: str, vocab: Dict[str, str]) -> Optional[Tupl
     clean_w = word.lower()
     w_len = len(clean_w)
 
-    if w_len < 4 or clean_w in vocab:
+    lexicon = get_common_lexicon()
+
+    # Core Rule: If the word is already a valid word in the English / Hinglish lexicon,
+    # or in the domain vocabulary, or in protected words, it is NOT a typo. Never alter it!
+    if w_len < 4 or clean_w in lexicon or clean_w in vocab:
+        return None
+
+    # Guard: Do not strip leading 'e' from electronic/digital civic terms (e.g. 'ewaste' -> 'waste', 'echallan' -> 'challan')
+    if clean_w.startswith("e") and (clean_w[1:] in vocab or clean_w[1:] in lexicon):
         return None
 
     max_allowed_dist = 1 if w_len <= 5 else 2
@@ -269,7 +371,7 @@ def find_closest_domain_token(word: str, vocab: Dict[str, str]) -> Optional[Tupl
         dist = damerau_levenshtein_distance(clean_w, candidate)
         if dist <= max_allowed_dist and dist < min_dist:
             score = difflib.SequenceMatcher(None, clean_w, candidate).ratio()
-            if score >= 0.80:
+            if score >= 0.85:
                 min_dist = dist
                 best_candidate = candidate
                 best_score = score
@@ -305,8 +407,13 @@ def normalize_voice_and_text(user_input: str) -> Tuple[str, bool, List[str]]:
 
     text = user_input.strip()
 
-    # Fast-exit for structured JSON / UI payloads (e.g. document uploads, slot selections)
-    # Reason: System payloads like {"document": "..."} must remain verbatim and never undergo text NLP spell-correction.
+    # Fast-exit for structured JSON / UI control payloads (e.g. document uploads, slot selections)
+    # Reason: System payloads like {"document": "..."} or [Uploaded Document: ...]
+    # must remain verbatim and never undergo text NLP spell-correction.
+    if re.match(r"^\[(Uploaded Document|CANCEL_DRAFT|RESUME_DRAFT|SLOT_CHOICE):?", text, re.IGNORECASE):
+        logger.debug(f"[NORMALIZER] Bypassing normalization for UI control tag: {user_input}")
+        return user_input, False, []
+
     if (text.startswith("{") and text.endswith("}")) or (text.startswith("[") and text.endswith("]")):
         try:
             json.loads(text)
@@ -396,7 +503,7 @@ def normalize_voice_and_text(user_input: str) -> Tuple[str, bool, List[str]]:
             corrected_words.append(f"{prefix_punct}{canonical}{suffix_punct}")
             fuzzy_changed = True
             audit_log.append(f"Fuzzy Match: '{w_core}' -> '{canonical}' (dist={dist}, score={score:.2f})")
-            logger.info(f"[NORMALIZER] Fuzzy corrected: '{w_core}' -> '{canonical}' (dist={dist}, score={score:.2f})")
+            logger.debug(f"[NORMALIZER] Fuzzy corrected: '{w_core}' -> '{canonical}' (dist={dist}, score={score:.2f})")
         else:
             corrected_words.append(w)
 
@@ -410,7 +517,8 @@ def normalize_voice_and_text(user_input: str) -> Tuple[str, bool, List[str]]:
 
     has_changes = bool(audit_log) or (text != user_input)
     if has_changes:
-        logger.info(f"[NORMALIZER] Query preprocessed: '{user_input}' -> '{text}' | Actions: {audit_log}")
+        logger.debug(f"[NORMALIZER] Query preprocessed: '{user_input}' -> '{text}' | Actions: {audit_log}")
+        logger.info(f"[NORMALIZER] Applied {len(audit_log)} normalization rules: {', '.join(a.split(':')[0] for a in audit_log)}")
 
     return text, has_changes, audit_log
 
@@ -420,8 +528,8 @@ def normalize_voice_and_text(user_input: str) -> Tuple[str, bool, List[str]]:
 # ==============================================================================
 
 def resolve_service_by_synonyms(query: str) -> Optional[Dict]:
-    """Inspects query text against the canonical service synonyms registry
-    and returns the matched service definition if high-confidence match is found.
+    """Inspects query text against the precompiled service synonyms registry
+    and returns the matched service definition using longest/most-specific match first.
 
     Args:
         query (str): Normalized query string.
@@ -433,39 +541,19 @@ def resolve_service_by_synonyms(query: str) -> Optional[Dict]:
         return None
 
     clean_q = query.lower().strip()
-    registry = load_synonyms_registry()
+    load_synonyms_registry()
 
-    for service_key, service_data in registry.items():
-        expressions = service_data.get("expressions", {})
-        all_exprs: List[str] = []
-        for lang_list in expressions.values():
-            if isinstance(lang_list, list):
-                all_exprs.extend(lang_list)
-
-        # 1. Exact phrase or boundary match
-        for expr in all_exprs:
-            expr_clean = expr.lower().strip()
-            if re.search(rf'\b{re.escape(expr_clean)}\b', clean_q):
-                logger.info(f"[NORMALIZER] Direct synonym match: '{expr}' for service '{service_key}'")
-                return {
-                    "service_key": service_key,
-                    "canonical_name": service_data.get("canonical_name"),
-                    "target_workflow": service_data.get("target_workflow"),
-                    "matched_expression": expr
-                }
-
-        # 2. Subcategory civic terms match
-        subcategories = service_data.get("civic_subcategories", {})
-        for sub_cat, terms in subcategories.items():
-            for term in terms:
-                if re.search(rf'\b{re.escape(term.lower().strip())}\b', clean_q):
-                    logger.info(f"[NORMALIZER] Subcategory civic term match: '{term}' ({sub_cat}) for service '{service_key}'")
-                    return {
-                        "service_key": service_key,
-                        "canonical_name": service_data.get("canonical_name"),
-                        "target_workflow": service_data.get("target_workflow"),
-                        "matched_expression": term,
-                        "subcategory": sub_cat
-                    }
+    for pattern, service_key, canonical_name, target_workflow, expr, sub_cat in (_COMPILED_SYNONYMS or []):
+        if pattern.search(clean_q):
+            logger.info(f"[NORMALIZER] Match: '{expr}' for service '{service_key}'")
+            res = {
+                "service_key": service_key,
+                "canonical_name": canonical_name,
+                "target_workflow": target_workflow,
+                "matched_expression": expr
+            }
+            if sub_cat:
+                res["subcategory"] = sub_cat
+            return res
 
     return None

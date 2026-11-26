@@ -43,7 +43,17 @@ class TestNormalizer(unittest.TestCase):
         self.assertIn("9876543210", normalized)
         self.assertIn("2026-11-23", normalized)
 
-    def test_bypass_json_payloads(self):
+        # ADV prefix with digits is masked, but typo 'advertisment' is NOT masked and gets spell-corrected
+        q_adv = "check my ADV-9871 status"
+        norm_adv, _, _ = normalize_voice_and_text(q_adv)
+        self.assertIn("ADV-9871", norm_adv)
+
+        q_typo = "I want to book an advertisment"
+        norm_typo, _, _ = normalize_voice_and_text(q_typo)
+        self.assertIn("advertisement", norm_typo)
+        self.assertNotIn("advertisment", norm_typo)
+
+    def test_bypass_json_and_ui_tags(self):
         # Structured document upload payload must NEVER be mutated (e.g. 'document' -> 'documents')
         doc_payload = '{"document": "252d4fe7-4dbd-46d8-8381-617f98c70ff5"}'
         normalized, has_changes, audit = normalize_voice_and_text(doc_payload)
@@ -56,6 +66,12 @@ class TestNormalizer(unittest.TestCase):
         norm_arr, changed_arr, _ = normalize_voice_and_text(arr_payload)
         self.assertFalse(changed_arr)
         self.assertEqual(norm_arr, arr_payload)
+
+        # UI control tags
+        ui_tag = "[Uploaded Document: receipt_final.pdf]"
+        norm_ui, changed_ui, _ = normalize_voice_and_text(ui_tag)
+        self.assertFalse(changed_ui)
+        self.assertEqual(norm_ui, ui_tag)
 
     def test_asr_acoustic_replacements(self):
         # Spaced compound words from ASR
@@ -109,6 +125,68 @@ class TestNormalizer(unittest.TestCase):
         norm, changed, _ = normalize_voice_and_text(q)
         # Should remain practically unchanged
         self.assertEqual(norm, q)
+
+        # Common conversational words and common verbs should not be fuzzy-matched to domain vocabulary
+        q_conv = "good evening, thanks for your help. I will do it tomorrow morning"
+        norm_conv, _, _ = normalize_voice_and_text(q_conv)
+        self.assertIn("evening", norm_conv)
+        self.assertIn("thanks", norm_conv)
+        self.assertIn("morning", norm_conv)
+
+        # Hindi verbs like 'karni' should not get corrupted
+        q_verb = "mujhe complaint karni hai"
+        norm_verb, _, _ = normalize_voice_and_text(q_verb)
+        self.assertIn("karni", norm_verb)
+
+    def test_ewaste_and_chat_shorthand_normalization(self):
+        # User query 'wht is ewaste' must normalize to 'what is e-waste', NOT 'wht is waste'
+        q = "wht is ewaste"
+        norm, changed, audit = normalize_voice_and_text(q)
+        self.assertTrue(changed)
+        self.assertEqual(norm, "what is e-waste")
+        self.assertNotIn("waste", norm.split())  # Must be 'e-waste', not standalone 'waste'
+
+        # Chat shorthands 'chk', 'hw', 'plz'
+        q_short = "plz chk hw to file complaint"
+        norm_short, _, _ = normalize_voice_and_text(q_short)
+        self.assertIn("please", norm_short)
+        self.assertIn("check", norm_short)
+        self.assertIn("how", norm_short)
+
+    def test_valid_words_never_hyper_corrected(self):
+        # A valid English or Hinglish word must NEVER be fuzzy-corrected to another domain word
+        test_queries = [
+            ("clean the drain near my house", "drain"),
+            ("apply for a temporary food stall", "stall"),
+            ("matter is pending in court", "court"),
+            ("water meter is spinning fast", "meter"),
+            ("plant trees in the park", "plant"),
+            ("standing near the light post at night", "night"),
+            ("placed an order for goods", "order"),
+            ("e-waste collection center location", "e-waste"),
+            ("submit paper documents at office", "paper"),
+            ("temporary police booth outside", "booth"),
+            ("grocery store license fees", "store"),
+            ("check price of registration", "price"),
+            ("commercial hotel property tax", "hotel"),
+            ("primary school complaint", "school"),
+        ]
+
+        for query, expected_word in test_queries:
+            norm, _, _ = normalize_voice_and_text(query)
+            self.assertIn(expected_word, norm, f"Valid word '{expected_word}' was corrupted in normalized text: '{norm}'")
+
+    def test_honorific_abbreviations_not_expanded(self):
+        # Honorific abbreviations with dot like Pt. (Pandit) or Adv. (Advocate) must NEVER expand to municipal abbreviations
+        q_pt = "meeting at Pt. Nehru Marg near circle"
+        norm_pt, _, _ = normalize_voice_and_text(q_pt)
+        self.assertIn("Pt. Nehru Marg", norm_pt)
+        self.assertNotIn("Property Tax (PT)", norm_pt)
+
+        q_adv = "Adv. Sharma will represent the firm"
+        norm_adv, _, _ = normalize_voice_and_text(q_adv)
+        self.assertIn("Adv. Sharma", norm_adv)
+        self.assertNotIn("Advertisement (ADV)", norm_adv)
 
     def test_service_synonym_resolution(self):
         # English synonym
