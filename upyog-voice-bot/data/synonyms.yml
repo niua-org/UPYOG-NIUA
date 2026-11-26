@@ -1,0 +1,403 @@
+# ==============================================================================
+# UPYOG Voice Bot — Canonical Service Synonyms & Alternative Expressions
+# ==============================================================================
+# Purpose:
+#   Provides a single source of truth for recognizing service names, multilingual
+#   aliases (English, Hindi Devanagari, and Romanized Hindi/Hinglish), domain-specific
+#   colloquialisms, and action triggers across UPYOG municipal urban services.
+#
+# Consumption:
+#   1. services/normalizer.py: Builds fast-path fuzzy lookup and domain vocabulary.
+#   2. services/chat_handlers.py: Direct service routing in resolve_active_and_target_plugin.
+#   3. prompts/intent_prompts.py: Dynamic prompt injection for LLM intent classification.
+#   4. services/rag_service.py: Query expansion for knowledge retrieval (FAQ/FRS).
+# ==============================================================================
+
+services:
+  # --------------------------------------------------------------------------
+  # 1. Advertisement Booking (Transactional LangGraph Workflow)
+  # --------------------------------------------------------------------------
+  adv_booking:
+    canonical_name: "Advertisement Booking"
+    service_code: "ADV"
+    target_workflow: "adv_booking"
+    description: "Booking municipal hoardings, unipoles, kiosks, or banner advertisement spaces"
+    id_prefixes: ["ADV-", "ADV"]
+    
+    # Verbs that signal active intent to initiate a booking vs informational query
+    action_triggers:
+      en: ["book", "rent", "hire", "apply", "reserve", "put up", "display", "place"]
+      hi: ["बुक", "लगाना", "लगवाना", "आरक्षित", "चाहिए"]
+      hinglish: ["book karna", "lagwana", "lagana", "chahiye", "book karo", "rent pe"]
+
+    # Multilingual expressions and synonyms
+    expressions:
+      en:
+        - "advertisement"
+        - "advertisement booking"
+        - "ad booking"
+        - "ad space"
+        - "hoarding"
+        - "hoardings"
+        - "billboard"
+        - "billboards"
+        - "unipole"
+        - "unipoles"
+        - "kiosk"
+        - "kiosks"
+        - "banner"
+        - "banners"
+        - "display board"
+        - "commercial display"
+        - "promo space"
+      hi:
+        - "विज्ञापन"
+        - "विज्ञापन बुकिंग"
+        - "होर्डिंग"
+        - "यूनिपोल"
+        - "कियोस्क"
+        - "बैनर"
+        - "प्रचार बोर्ड"
+        - "पोस्टर"
+      hinglish:
+        - "ad"
+        - "ads"
+        - "adv"
+        - "ishtehaar"
+        - "ishtihar"
+        - "prachar"
+        - "banner lagwana"
+        - "board lagana"
+        - "poster chipkana"
+        - "chauraha par board"
+        - "flex banner"
+        - "flex board"
+        - "cutout lagwana"
+        - "hoarding booking"
+        - "unipole booking"
+
+  # --------------------------------------------------------------------------
+  # 2. Public Grievance Redressal (Transactional LangGraph Workflow)
+  # --------------------------------------------------------------------------
+  grievance:
+    canonical_name: "Public Grievance Redressal (PGR)"
+    service_code: "PGR"
+    target_workflow: "grievance"
+    description: "Lodging and tracking citizen complaints regarding municipal civic issues"
+    id_prefixes: ["PGR-", "PGR"]
+
+    action_triggers:
+      en: ["file", "lodge", "register", "submit", "report", "raise", "escalate"]
+      hi: ["दर्ज", "शिकायत", "रिपोर्ट", "करना"]
+      hinglish: ["darj", "karna", "karo", "karni hai", "report karna", "daalna"]
+
+    expressions:
+      en:
+        - "grievance"
+        - "grievances"
+        - "complaint"
+        - "complaints"
+        - "pgr"
+        - "civic complaint"
+        - "ticket"
+        - "problem report"
+        - "issue report"
+        - "complain"
+      hi:
+        - "शिकायत"
+        - "शिकायत दर्ज"
+        - "समस्या"
+        - "कम्प्लेंट"
+        - "परेशानी"
+        - "नागरिक शिकायत"
+      hinglish:
+        - "shikayat"
+        - "shikayet"
+        - "samasya"
+        - "complain karna"
+        - "complaint lodge"
+        - "ticket raise"
+        - "report karo"
+    
+    # Subcategory civic expressions that map to grievance intent
+    civic_subcategories:
+      garbage_sanitation:
+        - "kachra"
+        - "kooda"
+        - "garbage"
+        - "trash"
+        - "safai"
+        - "waste dump"
+        - "e-waste"
+        - "ewaste"
+        - "electronic waste"
+        - "e waste"
+        - "dustbin overflow"
+        - "cleaning"
+        - "kachrewala nahi aaya"
+        - "safai wale nahi aaye"
+        - "kooda nahi utha"
+        - "dustbin saaf nahi"
+        - "kachrewala"
+        - "safai karmi"
+      water_drainage:
+        - "ganda pani"
+        - "water leakage"
+        - "no water supply"
+        - "paani nahi aa raha"
+        - "sewer overflow"
+        - "nali jaam"
+        - "gutter"
+        - "drainage blockage"
+        - "nal se ganda pani"
+        - "pani me badbu"
+        - "tanki overflow"
+        - "septic tank"
+        - "gutter ubal raha"
+        - "meter tez chal raha"
+      street_lighting:
+        - "street light"
+        - "streetlight"
+        - "light band hai"
+        - "pole light"
+        - "dark street"
+        - "light kharab"
+        - "andhera pada hai"
+        - "khamba toot gaya"
+        - "pole light kharab"
+      roads_infrastructure:
+        - "pothole"
+        - "sadak tuti"
+        - "broken road"
+        - "gaddha"
+        - "footpath"
+        - "road repair"
+        - "sadak khod di"
+        - "sadak khod ke chhod di"
+        - "gaddha pada hai"
+        - "khadde"
+      animal_vector_control:
+        - "awarah kutte"
+        - "kutto ka aatank"
+        - "stray dog"
+        - "machhar marne wali dawai"
+        - "fogging karwao"
+        - "dengue dawai"
+
+  # --------------------------------------------------------------------------
+  # 3. Property Tax (RAG / FAQ Knowledge Base)
+  # --------------------------------------------------------------------------
+  property_tax:
+    canonical_name: "Property Tax"
+    service_code: "PT"
+    target_workflow: "faq"
+    description: "Property tax assessment, dues payment, receipts, and ownership mutations"
+    id_prefixes: ["PT-"]
+
+    expressions:
+      en:
+        - "property tax"
+        - "house tax"
+        - "holding tax"
+        - "municipal tax"
+        - "vacant land tax"
+        - "property assessment"
+        - "property mutation"
+        - "property transfer"
+        - "pt"
+        - "pt bill"
+        - "pid"
+        - "upic"
+        - "saf form"
+        - "self assessment"
+      hi:
+        - "संपत्ति कर"
+        - "गृह कर"
+        - "मकान टैक्स"
+        - "हाउस टैक्स"
+        - "होल्डिंग टैक्स"
+        - "संपत्ति नामांतरण"
+        - "पीटी बिल"
+        - "दाखिल खारिज"
+        - "नाम चढ़वाना"
+        - "घर की रसीद"
+        - "पावती"
+      hinglish:
+        - "sampatti kar"
+        - "makan tax"
+        - "ghar patti"
+        - "house tax payment"
+        - "property tax receipt"
+        - "namantaran"
+        - "mutation"
+        - "pt ka bill"
+        - "pt payment"
+        - "naam chadwana"
+        - "dakhil kharij"
+        - "ghar ki pauti"
+        - "tax rasid"
+        - "saf form"
+        - "pid number"
+        - "upic number"
+        - "chungi"
+
+  # --------------------------------------------------------------------------
+  # 4. Trade License (RAG / FAQ Knowledge Base)
+  # --------------------------------------------------------------------------
+  trade_license:
+    canonical_name: "Trade License"
+    service_code: "TL"
+    target_workflow: "faq"
+    description: "Application, documents, and renewal for municipal trade and business permits"
+    id_prefixes: ["TL-"]
+
+    expressions:
+      en:
+        - "trade license"
+        - "business license"
+        - "commercial license"
+        - "shop license"
+        - "trade permit"
+        - "trade renewal"
+        - "tl"
+        - "tl renewal"
+        - "vending permit"
+        - "street vendor permit"
+      hi:
+        - "व्यापार लाइसेंस"
+        - "ट्रेड लाइसेंस"
+        - "दुकान लाइसेंस"
+        - "व्यापार परमिट"
+        - "गुमास्ता लाइसेंस"
+        - "ठेला लगाने की अनुमति"
+        - "दुकान का कागज"
+      hinglish:
+        - "vyapar license"
+        - "dukan license"
+        - "trade license renewal"
+        - "dukan ka parwana"
+        - "tl renew"
+        - "tl fee"
+        - "gumasta license"
+        - "gumasta"
+        - "thela lagane ki permission"
+        - "dukan chalane ki permission"
+        - "parwana"
+        - "challan kat gaya"
+
+  # --------------------------------------------------------------------------
+  # 5. Water & Sewerage Services (RAG / FAQ Knowledge Base)
+  # --------------------------------------------------------------------------
+  water_sewerage:
+    canonical_name: "Water & Sewerage Connection"
+    service_code: "WS"
+    target_workflow: "faq"
+    description: "New drinking water tap connection, sewerage connection, and bill payments"
+    id_prefixes: ["WS-"]
+
+    expressions:
+      en:
+        - "water connection"
+        - "water supply"
+        - "new water tap"
+        - "water bill"
+        - "sewerage connection"
+        - "drainage connection"
+        - "sewer bill"
+        - "ws"
+        - "ws bill"
+        - "water meter"
+      hi:
+        - "जल कनेक्शन"
+        - "पानी का कनेक्शन"
+        - "सीवरेज कनेक्शन"
+        - "पानी का बिल"
+        - "नल कनेक्शन"
+        - "नल लगवाना"
+        - "पानी का मीटर"
+        - "सीवर का बिल"
+      hinglish:
+        - "pani connection"
+        - "jal connection"
+        - "paani bill"
+        - "nal ka connection"
+        - "sewer connection"
+        - "ws bill"
+        - "nal lagwana"
+        - "pani meter"
+        - "boring karwana"
+
+  # --------------------------------------------------------------------------
+  # 6. Building Plan Approval (RAG / FAQ Knowledge Base)
+  # --------------------------------------------------------------------------
+  building_plan:
+    canonical_name: "Building Plan Approval (OBPS)"
+    service_code: "BPA"
+    target_workflow: "faq"
+    description: "Online building plan approvals, site permits, architect sanctions"
+    id_prefixes: ["BPA-"]
+
+    expressions:
+      en:
+        - "building plan"
+        - "building plan approval"
+        - "obps"
+        - "construction permit"
+        - "site plan sanction"
+        - "building map"
+      hi:
+        - "भवन निर्माण स्वीकृति"
+        - "नक्शा पास"
+        - "बिल्डिंग प्लान"
+      hinglish:
+        - "naksha pass"
+        - "building permit"
+        - "construction permission"
+        - "makan ka naksha"
+
+  # --------------------------------------------------------------------------
+  # 7. Fire NOC (RAG / FAQ Knowledge Base)
+  # --------------------------------------------------------------------------
+  fire_noc:
+    canonical_name: "Fire NOC"
+    service_code: "NOC"
+    target_workflow: "faq"
+    description: "Fire safety inspection, No Objection Certificate issuance & renewal"
+    id_prefixes: ["NOC-"]
+
+    expressions:
+      en:
+        - "fire noc"
+        - "fire safety certificate"
+        - "fire clearance"
+      hi:
+        - "फायर एनओसी"
+        - "अग्निशमन प्रमाण पत्र"
+      hinglish:
+        - "fire noc"
+        - "fire certificate"
+
+  # --------------------------------------------------------------------------
+  # 8. Birth and Death Certificate (RAG / FAQ Knowledge Base)
+  # --------------------------------------------------------------------------
+  birth_death:
+    canonical_name: "Birth & Death Registration"
+    service_code: "BND"
+    target_workflow: "faq"
+    description: "Civil registration of births and deaths, issuance of certificates"
+    id_prefixes: ["BND-"]
+
+    expressions:
+      en:
+        - "birth certificate"
+        - "death certificate"
+        - "birth registration"
+        - "death registration"
+      hi:
+        - "जन्म प्रमाण पत्र"
+        - "मृत्यु प्रमाण पत्र"
+        - "जन्म पंजीकरण"
+      hinglish:
+        - "janam praman patra"
+        - "mrityu praman patra"
+        - "birth certificate download"

@@ -207,7 +207,20 @@ def get_next_step(draft: dict) -> dict:
 # ==========================================
 
 # Checks if the user is clicking UI buttons (canceling, resuming, or uploading documents) before talking to the AI
-def intent_and_ui_node(state: AdvBookingState):
+def intent_and_ui_node(state: AdvBookingState) -> dict:
+    """Processes incoming UI actions, slot choices, file uploads, and control commands.
+
+    Inspects the latest user message for structured JSON payloads (slot reservations,
+    uploaded document identifiers), UI control tags (cancel/resume), and user inputs,
+    updating the draft booking state and routing indicators accordingly.
+
+    Args:
+        state (AdvBookingState): The current LangGraph state dictionary containing messages,
+            draft_booking, phone_number, and missing_fields.
+
+    Returns:
+        dict: State updates containing modified messages, draft_booking, and control flags.
+    """
     # 1. Fetch current chat history and user's phone number from the state memory
     messages = state.get("messages", [])
     phone_number = state.get("phone_number", "default")
@@ -253,10 +266,11 @@ def intent_and_ui_node(state: AdvBookingState):
     if user_msg.strip().startswith("{") and user_msg.strip().endswith("}"):
         try:
             parsed = json.loads(user_msg.strip())
-            if "document" in parsed:
+            if "document" in parsed and isinstance(parsed["document"], str):
                 # 13. Extract the unique fileStoreId of the uploaded document
                 uploaded_doc = parsed["document"]
-        except Exception: pass
+        except Exception as e:
+            logger.debug(f"[adv_booking] Failed to parse document payload: {e}")
     elif user_msg.strip().startswith("[Uploaded Document:"):
         uploaded_doc = user_msg.strip()
 
