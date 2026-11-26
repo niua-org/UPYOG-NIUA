@@ -239,7 +239,7 @@ def text_to_speech(text: str, language_code: str, gender: str = "female"):
     if USE_EDGE_TTS and language_code in ["en", "hi"]:
         voice_map = {
             "en": "en-IN-NeerjaNeural",
-            "hi": "hi-IN-MadhurNeural"
+            "hi": "hi-IN-SwaraNeural"
         }
         voice = voice_map.get(language_code)
         logger.info(f"[TTS EDGE-TTS] Attempting Edge-TTS with voice '{voice}'")

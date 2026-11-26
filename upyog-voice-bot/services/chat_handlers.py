@@ -571,6 +571,19 @@ def resolve_active_and_target_plugin(
                 plugin_intent = s_key
                 break
 
+        # Check canonical synonym registry for alternative expressions (e.g. billboard, unipole, kachra, light band)
+        # Reason: Bridges citizen colloquialisms and voice synonyms to official workflow plugins
+        if not plugin_intent and intent != "profile":
+            from services.normalizer import resolve_service_by_synonyms
+            syn_match = resolve_service_by_synonyms(ui_lower)
+            if syn_match and syn_match.get("target_workflow") in workflows:
+                plugin_intent = syn_match["target_workflow"]
+                logger.info(
+                    f"[Router] Target plugin resolved via service synonyms: '{plugin_intent}' "
+                    f"(matched expression: '{syn_match.get('matched_expression')}') "
+                    f"[Reason: Citizen used alternative/colloquial expression for supported service]"
+                )
+
         if not plugin_intent and intent != "profile":
             if intent in ["grievance_candidate", "grievance_status_candidate"]:
                 plugin_intent = "grievance"
@@ -1228,13 +1241,25 @@ def dispatch_chat_request(
     phone = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
     history_key = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
 
+    # 0. Pre-NLU Normalization: Entity Masking, Voice ASR Acoustics, and Closed-Domain Fuzzy Correction
+    # Reason: Intercepts raw speech-to-text transcripts and typed input before intent classification.
+    # Corrects keyboard typos ("complnt", "greivance", "hording") and ASR errors ("uni pole", "p g r")
+    # without corrupting protected tokens (tracking IDs, phone numbers, dates).
+    from services.normalizer import normalize_voice_and_text
+    working_input, has_norm_changes, norm_audit = normalize_voice_and_text(user_input)
+    if has_norm_changes:
+        logger.info(
+            f"[Pre-NLU Normalizer] Normalized query: '{user_input}' -> '{working_input}' | "
+            f"Actions: {norm_audit} [Reason: Corrected spelling/ASR acoustic variations before NLU]"
+        )
+
     # 1. Multi-Draft Selection Menu Interception (if citizen is selecting an option)
-    is_multi_handled, multi_resp = handle_pending_multi_draft(user_input, user_language, phone, session_id, workflows)
+    is_multi_handled, multi_resp = handle_pending_multi_draft(working_input, user_language, phone, session_id, workflows)
     if is_multi_handled:
         return multi_resp
 
     # 2. Fast-Path Keyword Matching (bypass expensive LLM call for exact greetings & login queries)
-    clean_in = re.sub(r'[\s_]+', ' ', user_input.strip().lower())
+    clean_in = re.sub(r'[\s_]+', ' ', working_input.strip().lower())
     greeting_kws = [k.lower() for k in system_config.get("system_messages", {}).get("greeting", {}).get("keywords", [])]
     if not greeting_kws:
         greeting_kws = ["hello", "hi", "hey", "namaste", "नमस्ते", "हेलो"]
@@ -1243,7 +1268,7 @@ def dispatch_chat_request(
     login_query_kws = [k.lower() for k in login_cfg.get("keywords_query", ["how to login", "how do i login", "login kaise kare", "login help"])]
     login_claim_kws = [k.lower() for k in login_cfg.get("keywords_claim", ["login done", "logged in", "login ho gaya", "maine login kar liya"])]
 
-    special_intent = detect_special_intents(user_input)
+    special_intent = detect_special_intents(working_input)
     if special_intent:
         intent_data = special_intent
     elif clean_in in greeting_kws:
@@ -1274,7 +1299,7 @@ def dispatch_chat_request(
             "reasoning": "fast-path login claim keyword match"
         }
     else:
-        intent_data = classify_intent(user_input, history, user_language)
+        intent_data = classify_intent(working_input, history, user_language)
 
     # 3. Save citizen name if introduction was extracted and passes security validation
     extracted_name = intent_data.get("extracted_name")
@@ -1289,7 +1314,7 @@ def dispatch_chat_request(
     is_question = bool(intent_data.get("is_question", False)) or (intent == "faq")
     config = {"configurable": {"thread_id": phone}}
     active_plugin, plugin_intent, target_wf = resolve_active_and_target_plugin(
-        user_input, intent, phone, session_id, workflows, services_registry, config, is_question=is_question
+        working_input, intent, phone, session_id, workflows, services_registry, config, is_question=is_question
     )
 
     # 5. Service / Workflow Cancellation Intent (adv_cancel, grievance_cancel, booking_cancel)
@@ -1367,22 +1392,22 @@ def dispatch_chat_request(
 
     # 8. Login guidance & claim verification
     if intent in ["login_query", "login_claim"]:
-        is_login_handled, login_resp = handle_login_intent(user_input, user_language, is_authenticated, cached_info, detected_intent=intent)
+        is_login_handled, login_resp = handle_login_intent(working_input, user_language, is_authenticated, cached_info, detected_intent=intent)
         if is_login_handled:
             return login_resp
 
     # 9. Mid-Workflow Interruption / FAQ
-    ui_lower = user_input.strip().lower()
+    ui_lower = working_input.strip().lower()
     is_ui_payload = (ui_lower.startswith("[") and ui_lower.endswith("]")) or (ui_lower.startswith("{") and ui_lower.endswith("}"))
     is_interrupted, faq_resp = handle_workflow_interruption_or_faq(
-        user_input, user_language, history, session_id, phone, active_plugin, workflows, config, is_ui_payload, intent_data=intent_data
+        working_input, user_language, history, session_id, phone, active_plugin, workflows, config, is_ui_payload, intent_data=intent_data
     )
     if is_interrupted:
         return faq_resp
 
     # 10. Explicit Draft Management Operations (Continue, Save, Resume, Delete)
     is_draft_op, draft_resp = handle_draft_management(
-        intent, user_input, user_language, phone, session_id, active_plugin, workflows, config, system_config=system_config
+        intent, working_input, user_language, phone, session_id, active_plugin, workflows, config, system_config=system_config
     )
     if is_draft_op:
         return draft_resp
@@ -1392,7 +1417,7 @@ def dispatch_chat_request(
     wf_intents_cfg = (system_config or {}).get("system_messages", {}).get("workflow_intents") or DEFAULT_WORKFLOW_INTENTS
     workflow_intents = set(wf_intents_cfg)
 
-    is_query_question = is_informational_question(user_input, intent_data, system_config=system_config)
+    is_query_question = is_informational_question(working_input, intent_data, system_config=system_config)
 
     has_genuine_tracking_id = any(
         _has_valid_tracking_id(clean_in, srv.get("id_prefixes", []))
@@ -1409,9 +1434,9 @@ def dispatch_chat_request(
     if should_execute_wf:
         logger.info(f"Routing to dynamic plugin: {target_wf}")
         return execute_workflow_plugin(
-            target_wf, user_input, user_language, phone, session_id, is_authenticated
+            target_wf, working_input, user_language, phone, session_id, is_authenticated
         )
 
     # 12. Knowledge Base RAG / FAQ Retrieval Fallback
-    return execute_rag_fallback(user_input, user_language, detected_script, history, session_id)
+    return execute_rag_fallback(working_input, user_language, detected_script, history, session_id)
 

@@ -4,7 +4,7 @@
 memory:
   # Number of days to retain long-term chat history in Qdrant before cleanup
   # Configurable per environment or pod (default: 1 day for sandbox/storage limits)
-  retention_days: 30
+  retention_days: 90
 
 # ============================================================
 # System Messages & Intent Responses Configuration

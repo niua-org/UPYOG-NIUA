@@ -12,7 +12,8 @@ Classify the user message into exactly one category.
 "greeting" — User says hello, hi, namaste, good morning, good evening, or any social opener with NO service request.
 Examples: "hello", "hi", "namaste", "good morning", "नमस्ते"
 
-"faq" — User wants INFORMATION, EXPLANATION, RULES, FEES, PROCESS, DOCUMENTS, or details about ANY UPYOG service (including advertisement booking, grievance redressal, property tax, trade license, water, etc.).
+"faq" — User wants INFORMATION, EXPLANATION, RULES, FEES, PROCESS, DOCUMENTS, or details about ANY UPYOG service (including advertisement booking, grievance redressal, property tax / house tax / holding tax, trade license / vyapar license, water / sewerage connection, building plan approval, fire noc, birth/death certificate, etc.).
+Alternative expressions/synonyms & abbreviations: PT (Property Tax), TL (Trade License), WS (Water Sewerage), BPA/OBPS (Building Plan), SAF, PID, gumasta, charges, fees, rules, documents, process, helpline, office timing, penalty, renewal, kya hai, kaise kare, kitne paise lagenge, process batao.
 Examples:
 → "what is advertisement booking?"
 → "how to file a grievance?"
@@ -22,14 +23,31 @@ Examples:
 → "what documents are needed for grievance?"
 → "advertisement ke charges kitne hain"
 → "grievance kaise karte hain"
+→ "PT ka bill check karna hai"
+→ "property tax kaise bhare"
+→ "PT payment online kaise kare"
+→ "dukan ka gumasta license banwana hai"
+→ "TL renew karwane ki fees kitni hai"
+→ "makan ka naksha pass karwane ka process kya hai"
+→ "property me naam chadwana hai kya documents lagenge"
+→ "water connection ke rules"
+→ "WS bill pay karna hai"
 
 "grievance_candidate" — User is describing an ACTUAL CIVIC PROBLEM happening right now to them specifically, or explicitly stating they want to lodge a complaint/grievance now (NOT asking informational questions about how complaints work or rules).
+Alternative expressions/synonyms & colloquialisms: complaint, grievance, pgr, shikayat, samasya, ticket, report issue, kachra/kooda/safai/kachrewala nahi aaya/safai karmi, ganda pani/drainage/sewer leakage/sewer overflow/nal/water supply issue, street light/light band hai/pole light/andhera pada hai/khamba toot gaya, pothole/sadak tuti/sadak khod di/gaddha/road repair, awarah kutte/stray dog, machhar/dengue dawai/fogging.
 Examples:
 → "street light is broken in my area"
 → "there is no water supply since morning"
 → "garbage is piled up on 5th main road"
 → "I want to file a complaint for water leakage"
 → "meri gali me kachra pada hai complaint karni hai"
+→ "kachrewala subah se nahi aaya kooda uthwao"
+→ "safai wale nahi aaye gali me kachra pada hai"
+→ "ganda pani aa raha hai shikayat darj karo"
+→ "gali me andhera pada hai street light kharab hai"
+→ "sadak khod ke chhod di hai bada gaddha hai complaint karo"
+→ "colony me awarah kutto ka aatank hai report karni hai"
+→ "machhar marne wali dawai ka chhidkao karwao"
 
 "grievance_confirm" — User is saying YES to bot's offer to file a grievance.
 "grievance_cancel" — User says NO to the grievance offer.
@@ -39,6 +57,7 @@ Examples:
 → "show my latest complaints"
 → "track my complaint"
 → "my complaint status"
+→ "shikayat ki sthiti dikhao"
 
 "profile" — User is asking about their personal identity, user profile, account details, name, registered phone number, or who they are.
 Examples:
@@ -57,11 +76,14 @@ Examples:
 "booking_cancel" — User says NO to the booking offer.
 
 "adv_candidate" — User explicitly states they want to BOOK or APPLY for an advertisement space, hoarding, or unipole right now (NOT asking informational questions about charges, rules, or how it works).
+Alternative expressions/synonyms: advertisement, hoarding, billboard, unipole, kiosk, banner, display board, promo board, ishtehaar, prachar board, board lagwana, poster lagana.
 Examples:
 → "I want to book an advertisement"
 → "book a hoarding in Indiranagar"
 → "mujhe banner lagwana hai"
 → "advertisement book karna hai"
+→ "unipole rent karna hai"
+→ "billboard space book karni hai"
 
 "adv_confirm" — User says YES to the bot's offer to book an ad.
 "adv_cancel" — User says NO to the ad booking offer.
@@ -124,7 +146,7 @@ CRITICAL: Never classify municipal/urban questions (e.g., trade license, propert
 
 ━━━ CURRENT MESSAGE ━━━
 "{query}"
-Language: {lang}
+Language: {lang} 
 
 Respond ONLY with this JSON, no other text:
 {{

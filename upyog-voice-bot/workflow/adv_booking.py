@@ -256,6 +256,8 @@ def intent_and_ui_node(state: AdvBookingState):
             if "document" in parsed:
                 # 13. Extract the unique fileStoreId of the uploaded document
                 uploaded_doc = parsed["document"]
+            elif "documents" in parsed:
+                uploaded_doc = parsed["documents"]
         except Exception: pass
     elif user_msg.strip().startswith("[Uploaded Document:"):
         uploaded_doc = user_msg.strip()
