@@ -36,7 +36,7 @@ Please refer to the [Swagget API Contract](https://editor.swagger.io/?url=https:
    - Downloads the file from S3 to temporary storage (`/tmp`) and processes rows in streaming batches (default 100 rows) using Apache POI to prevent OutOfMemory errors.
    - Supports both cell-embedded JSON payloads (`payload_json`) and tabular column data, propagating caller authentication context (`RequestInfo`).
    - Individual row failures are isolated and captured without aborting the entire batch.
-   - Captures granular inbound API audit logs in `ug_external_api_message_detail`, `ug_external_api_message_raw_detail`, and `ug_external_api_error_detail`.
+   - Captures granular inbound API audit logs in `ug_external_api_audit_request` and `ug_external_api_audit_response`.
    - Tracks job completion status (`COMPLETED` or `FAILED`) and row counts via `egov-persister`.
 
 

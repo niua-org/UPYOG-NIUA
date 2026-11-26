@@ -154,10 +154,6 @@ class MemoryManager:
                 points_selector=Filter(
                     must=[
                         FieldCondition(
-                            key="phone_number",
-                            match=MatchValue(value=phone_number)
-                        ),
-                        FieldCondition(
                             key="timestamp",
                             range=Range(lt=cutoff_timestamp)
                         )
