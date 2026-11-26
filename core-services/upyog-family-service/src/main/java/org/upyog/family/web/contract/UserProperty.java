@@ -73,6 +73,12 @@ public class UserProperty {
     private Boolean declarationConfirmed;
 
     /**
+     * OTP-verified property consent token validating ownership authorization.
+     */
+    @JsonProperty("consentToken")
+    private String consentToken;
+
+    /**
      * Detailed landholding and panchayat metadata for rural properties.
      */
     @Valid

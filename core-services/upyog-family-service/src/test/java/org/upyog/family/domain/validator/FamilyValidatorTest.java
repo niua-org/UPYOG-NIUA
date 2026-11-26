@@ -16,6 +16,7 @@ import org.upyog.family.web.contract.FamilyMergeRequest;
 import org.upyog.family.web.contract.FamilyRequest;
 import org.upyog.family.web.contract.FamilySplitRequest;
 import org.upyog.family.web.contract.RuralPropertyDetail;
+import org.upyog.family.web.contract.UrbanPropertyDetail;
 import org.upyog.family.web.contract.UserIncomeDetail;
 import org.upyog.family.web.contract.UserProperty;
 import org.upyog.family.web.contract.UserVehicleDetail;
@@ -305,6 +306,102 @@ class FamilyValidatorTest {
         family.setFamilyAddressPropertyId("KHASRA-842/1");
 
         assertDoesNotThrow(() -> validator.validateCreate(request));
+    }
+
+    /**
+     * Verifies that family creation succeeds when declared urban property has a valid OTP consent token.
+     */
+    @Test
+    @DisplayName("validateCreate should succeed with urban property when valid consent token is provided")
+    void validateCreate_UrbanProperty_ValidConsentToken_Success() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+        when(userClient.validatePropertyConsentToken(eq("PB-PT-2026-001"), eq("PROP-CONSENT-123"), any()))
+                .thenReturn(true);
+
+        UserProperty urbanProp = UserProperty.builder()
+                .localityType("URBAN")
+                .ownershipType("INDIVIDUAL")
+                .consentToken("PROP-CONSENT-123")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("PB-PT-2026-001")
+                        .urbanAddress("House 123, Amritsar")
+                        .build())
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(urbanProp));
+        family.setFamilyAddressPropertyId("PB-PT-2026-001");
+
+        assertDoesNotThrow(() -> validator.validateCreate(request));
+    }
+
+    /**
+     * Verifies that family creation throws INVALID_PROPERTY_CONSENT_TOKEN when urban property has an invalid or expired token.
+     */
+    @Test
+    @DisplayName("validateCreate should fail with urban property when invalid consent token is provided")
+    void validateCreate_UrbanProperty_InvalidConsentToken_ThrowsException() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+        when(userClient.validatePropertyConsentToken(eq("PB-PT-2026-001"), eq("PROP-CONSENT-INVALID"), any()))
+                .thenReturn(false);
+
+        UserProperty urbanProp = UserProperty.builder()
+                .localityType("URBAN")
+                .ownershipType("INDIVIDUAL")
+                .consentToken("PROP-CONSENT-INVALID")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("PB-PT-2026-001")
+                        .urbanAddress("House 123, Amritsar")
+                        .build())
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(urbanProp));
+        family.setFamilyAddressPropertyId("PB-PT-2026-001");
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateCreate should fail with urban property when consent token is missing")
+    void validateCreate_UrbanProperty_MissingConsentToken_ThrowsException() {
+        when(familyRepository.findActiveFamilyIdsByMemberUuid(anyString())).thenReturn(Collections.emptyList());
+
+        UserProperty urbanProp = UserProperty.builder()
+                .localityType("URBAN")
+                .ownershipType("INDIVIDUAL")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("PB-PT-2026-001")
+                        .urbanAddress("House 123, Amritsar")
+                        .build())
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(urbanProp));
+        family.setFamilyAddressPropertyId("PB-PT-2026-001");
+
+        CustomException ex = assertThrows(CustomException.class, () -> validator.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("validateCreate should fail with urban property when userClient is null")
+    void validateCreate_UrbanProperty_NullUserClient_ThrowsException() {
+        FamilyValidator validatorWithoutClient = new FamilyValidator(familyRepository, fileStoreClient, familyMasterDataService, null);
+
+        UserProperty urbanProp = UserProperty.builder()
+                .localityType("URBAN")
+                .ownershipType("INDIVIDUAL")
+                .consentToken("PROP-CONSENT-123")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("PB-PT-2026-001")
+                        .urbanAddress("House 123, Amritsar")
+                        .build())
+                .build();
+
+        family.getMembers().get(0).setProperties(Collections.singletonList(urbanProp));
+        family.setFamilyAddressPropertyId("PB-PT-2026-001");
+
+        CustomException ex = assertThrows(CustomException.class, () -> validatorWithoutClient.validateCreate(request));
+        assertEquals(FamilyConstants.ERROR_INVALID_REQUEST, ex.getCode());
     }
 
     /**

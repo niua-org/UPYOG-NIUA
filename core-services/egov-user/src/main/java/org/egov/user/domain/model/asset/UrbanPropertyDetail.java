@@ -93,6 +93,12 @@ public class UrbanPropertyDetail {
     private Long lastModifiedTime;
 
     /**
+     * OTP-verified property consent token validating ownership authorization.
+     */
+    @JsonProperty("consentToken")
+    private String consentToken;
+
+    /**
      * Resolves effective property record ID between {@code propertyRecordId} and {@code id}.
      *
      * @return effective property record ID string

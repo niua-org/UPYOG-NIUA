@@ -109,4 +109,20 @@ class UserPropertyRepositoryTest {
         assertNull(propertyRepository.findRuralPropertyIdByPropertyId("user-1", "  "));
         assertNull(propertyRepository.findRuralPropertyIdByPropertyId("", null));
     }
+
+    @Test
+    @DisplayName("findActiveLinkedUsersForUrbanProperty fails closed throwing CustomException on DB error")
+    void testFindActiveLinkedUsersForUrbanProperty_DbError_ThrowsException() {
+        when(namedParameterJdbcTemplate.query(
+                eq(UserPropertyQueryBuilder.SELECT_LINKED_USERS_BY_UPYOG_PROPERTY_ID_SQL),
+                anyMap(),
+                any(RowMapper.class)
+        )).thenThrow(new RuntimeException("Database down"));
+
+        org.egov.tracer.model.CustomException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                org.egov.tracer.model.CustomException.class,
+                () -> propertyRepository.findActiveLinkedUsersForUrbanProperty("pg.citya", "PB-PT-001")
+        );
+        assertEquals(org.egov.user.domain.service.utils.UserConstants.ERROR_PROPERTY_SERVICE_ERROR, ex.getCode());
+    }
 }

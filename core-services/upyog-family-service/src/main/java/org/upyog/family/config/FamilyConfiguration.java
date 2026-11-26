@@ -59,6 +59,9 @@ public class FamilyConfiguration {
     @Value("${egov.user.member.asset.sync.path}")
     private String userMemberAssetSyncPath;
 
+    @Value("${egov.user.property.consent.validate.path}")
+    private String userPropertyConsentValidatePath;
+
     // Fix for PR Comment #10: Controls whether family creation/update fails if member asset sync fails
     @Value("${family.member.asset.sync.fail.on.error}")
     private Boolean failOnAssetSyncError;

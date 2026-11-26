@@ -54,4 +54,10 @@ public class UrbanPropertyDetail {
      */
     @JsonProperty("urbanAddress")
     private String urbanAddress;
+
+    /**
+     * OTP-verified property consent token validating ownership authorization.
+     */
+    @JsonProperty("consentToken")
+    private String consentToken;
 }

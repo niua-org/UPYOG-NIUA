@@ -3,6 +3,7 @@ package org.egov.user.persistence.repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.asset.PropertyOwner;
 import org.egov.user.domain.model.asset.RuralPropertyDetail;
@@ -305,6 +306,44 @@ public class UserPropertyRepository {
         } catch (Exception e) {
             log.debug("[USER-PROP-REPO] Failed to lookup existing urban property by upyogPropertyId: {}", e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Finds all active citizen profiles linked to an urban property by upyogPropertyId and tenantId.
+     *
+     * @param tenantId tenant identifier
+     * @param upyogPropertyId municipal property assessment ID
+     * @return list of maps containing userUuid, mobileNumber, propertyRecordId, and ownershipType
+     */
+    public List<Map<String, Object>> findActiveLinkedUsersForUrbanProperty(String tenantId, String upyogPropertyId) {
+        // Fast-fail if query parameters are missing or blank
+        if (StringUtils.isBlank(tenantId) || StringUtils.isBlank(upyogPropertyId)) {
+            return Collections.emptyList();
+        }
+        try {
+            // Bind query parameters to avoid SQL injection
+            Map<String, Object> params = new HashMap<>();
+            params.put(UserConstants.SQL_PARAM_TENANT_ID, tenantId.trim());
+            params.put(UserConstants.SQL_PARAM_UPYOG_PROPERTY_ID, upyogPropertyId.trim());
+
+            // Query active linkages joining ug_user_property, ug_user_urban_property, and eg_user
+            return namedParameterJdbcTemplate.query(
+                    UserPropertyQueryBuilder.SELECT_LINKED_USERS_BY_UPYOG_PROPERTY_ID_SQL,
+                    params,
+                    (rs, rowNum) -> {
+                        Map<String, Object> row = new HashMap<>();
+                        row.put(UserConstants.JSON_KEY_USER_UUID, rs.getString(UserConstants.COL_USER_UUID));
+                        row.put(UserConstants.PT_JSON_MOBILE_NUMBER, rs.getString(UserConstants.COL_MOBILENUMBER));
+                        row.put(UserConstants.JSON_KEY_PROPERTY_RECORD_ID, rs.getString(UserConstants.COL_PROPERTY_RECORD_ID));
+                        row.put(UserConstants.JSON_KEY_OWNERSHIP_TYPE, rs.getString(UserConstants.COL_OWNERSHIP_TYPE));
+                        return row;
+                    }
+            );
+        } catch (Exception e) {
+            log.error("[USER-PROP-REPO] Error querying active linked users for urban property {}: {}", upyogPropertyId, e.getMessage());
+            throw new CustomException(UserConstants.ERROR_PROPERTY_SERVICE_ERROR,
+                    UserConstants.MSG_PROPERTY_LINKAGE_QUERY_FAILED_PREFIX + upyogPropertyId);
         }
     }
 

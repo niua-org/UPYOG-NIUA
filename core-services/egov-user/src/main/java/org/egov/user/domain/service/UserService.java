@@ -2028,4 +2028,36 @@ public class UserService {
             }
         }
     }
+
+    private enum UserField { USERNAME, MOBILE_NUMBER }
+
+    /**
+     * Bulk-encrypt a list of plaintext values (usernames or mobile numbers)
+     * by wrapping them into transient User objects and passing the list
+     * through {@link EncryptionDecryptionUtil#encryptObject} — which detects
+     * the Collection and issues ONE HTTP call to enc-service for the whole
+     * list. Since the "User" SecurityPolicy uses deterministic encryption
+     * for both fields, the resulting ciphertexts match what's stored in
+     * eg_user and can be used directly in a WHERE ... IN (...) clause.
+     */
+    @SuppressWarnings("unchecked")
+    private List<String> encryptStringListAsUserField(List<String> values, UserField field) {
+        if (values == null || values.isEmpty()) return values;
+
+        List<User> wrappers = values.stream()
+                .map(v -> {
+                    User u = User.builder().build();
+                    if (field == UserField.USERNAME) u.setUsername(v);
+                    else u.setMobileNumber(v);
+                    return u;
+                })
+                .collect(Collectors.toList());
+
+        List<User> encrypted = (List<User>) encryptionDecryptionUtil
+                .encryptObject(wrappers, "User", User.class);
+
+        return encrypted.stream()
+                .map(u -> field == UserField.USERNAME ? u.getUsername() : u.getMobileNumber())
+                .collect(Collectors.toList());
+    }
 }

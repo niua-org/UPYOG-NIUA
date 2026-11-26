@@ -55,6 +55,7 @@ public class MemberAssetProcessor {
     private final UserVehicleRepository vehicleRepository;
     private final UserDocumentRepository documentRepository;
     private final IdGenRepository idGenRepository;
+    private final UrbanPropertyService urbanPropertyService;
 
     /**
      * Primary constructor injecting persistence repositories and optional IdGen repository.
@@ -65,6 +66,7 @@ public class MemberAssetProcessor {
      * @param vehicleRepository  repository for persisting declared vehicle assets
      * @param documentRepository repository for persisting user documents and verification statuses
      * @param idGenRepository    repository for generating business identifiers
+     * @param urbanPropertyService urban property service validating OTP consent tokens
      */
     @Autowired
     public MemberAssetProcessor(UserRepository userRepository,
@@ -72,13 +74,27 @@ public class MemberAssetProcessor {
                                 UserIncomeRepository incomeRepository,
                                 UserVehicleRepository vehicleRepository,
                                 UserDocumentRepository documentRepository,
-                                @Autowired(required = false) IdGenRepository idGenRepository) {
+                                @Autowired(required = false) IdGenRepository idGenRepository,
+                                @Autowired(required = false) UrbanPropertyService urbanPropertyService) {
         this.userRepository = userRepository;
         this.propertyRepository = propertyRepository;
         this.incomeRepository = incomeRepository;
         this.vehicleRepository = vehicleRepository;
         this.documentRepository = documentRepository;
         this.idGenRepository = idGenRepository;
+        this.urbanPropertyService = urbanPropertyService;
+    }
+
+    /**
+     * Backward-compatible constructor for testing without {@link UrbanPropertyService}.
+     */
+    public MemberAssetProcessor(UserRepository userRepository,
+                                UserPropertyRepository propertyRepository,
+                                UserIncomeRepository incomeRepository,
+                                UserVehicleRepository vehicleRepository,
+                                UserDocumentRepository documentRepository,
+                                IdGenRepository idGenRepository) {
+        this(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository, idGenRepository, null);
     }
 
     /**
@@ -322,12 +338,15 @@ public class MemberAssetProcessor {
         for (UserProperty prop : properties) {
             if (prop == null) continue;
 
+            boolean isNewUrbanLink = false;
             // Natural key deduplication: if id is blank, attempt to reuse existing property record ID
             if (StringUtils.isBlank(prop.getId())) {
                 if (prop.getUrbanPropertyDetail() != null && StringUtils.isNotBlank(prop.getUrbanPropertyDetail().getUpyogPropertyId())) {
                     String existingId = propertyRepository.findUrbanPropertyId(existingUser.getUuid(), prop.getUrbanPropertyDetail().getUpyogPropertyId());
                     if (existingId != null) {
                         prop.setId(existingId);
+                    } else {
+                        isNewUrbanLink = true;
                     }
                 } else if (prop.getRuralPropertyDetail() != null && StringUtils.isNotBlank(prop.getRuralPropertyDetail().getPropertyId())) {
                     String existingId = propertyRepository.findRuralPropertyIdByPropertyId(existingUser.getUuid(), prop.getRuralPropertyDetail().getPropertyId());
@@ -350,6 +369,7 @@ public class MemberAssetProcessor {
                     log.warn("[MEMBER-ASSET-PROCESSOR] Cross-user property access blocked. Property {} belongs to {}, caller supplied citizen {}",
                             prop.getId(), existingOwner, existingUser.getUuid());
                     prop.setId(UUID.randomUUID().toString());
+                    isNewUrbanLink = true;
                 }
             }
             prop.setUserUuid(existingUser.getUuid());
@@ -379,6 +399,35 @@ public class MemberAssetProcessor {
             // Urban property specialization
             if (UserConstants.LOCALITY_TYPE_URBAN.equalsIgnoreCase(prop.getLocalityType()) && prop.getUrbanPropertyDetail() != null) {
                 UrbanPropertyDetail urban = prop.getUrbanPropertyDetail();
+                if (StringUtils.isBlank(urban.getUpyogPropertyId())) {
+                    throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_UPYOG_PROPERTY_ID_MANDATORY);
+                }
+                // Validate property ownership authorization consent token (mandatory for newly declared urban properties)
+                String token = StringUtils.isNotBlank(urban.getConsentToken()) ? urban.getConsentToken() : prop.getConsentToken();
+                if (isNewUrbanLink && StringUtils.isBlank(token)) {
+                    log.warn("[MEMBER-ASSET-PROCESSOR] Missing mandatory property consent token for newly declared urban property ID {}", urban.getUpyogPropertyId());
+                    throw new CustomException(UserConstants.ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED,
+                            UserConstants.MSG_PROPERTY_CONSENT_TOKEN_REQUIRED + urban.getUpyogPropertyId());
+                }
+                if (StringUtils.isNotBlank(token)) {
+                    if (urbanPropertyService == null) {
+                        log.error("[MEMBER-ASSET-PROCESSOR] UrbanPropertyService is unavailable for validating property consent");
+                        throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                                UserConstants.MSG_URBAN_PROPERTY_SERVICE_UNAVAILABLE);
+                    }
+                    String consentCaller = StringUtils.isNotBlank(actorUuid) ? actorUuid : existingUser.getUuid();
+                    String consentTenant = StringUtils.isNotBlank(prop.getTenantId())
+                            ? prop.getTenantId()
+                            : (detail != null && StringUtils.isNotBlank(detail.getTenantId()) ? detail.getTenantId() : existingUser.getTenantId());
+
+                    boolean consumed = urbanPropertyService.consumeConsentToken(
+                            urban.getUpyogPropertyId(), token, consentCaller, consentTenant);
+                    if (!consumed) {
+                        log.warn("[MEMBER-ASSET-PROCESSOR] Invalid or expired property consent token for property ID {}", urban.getUpyogPropertyId());
+                        throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,
+                                UserConstants.MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX + urban.getUpyogPropertyId());
+                    }
+                }
                 urban.setPropertyRecordId(prop.getId());
                 urban.setUserUuid(existingUser.getUuid());
                 urban.setTenantId(prop.getTenantId());

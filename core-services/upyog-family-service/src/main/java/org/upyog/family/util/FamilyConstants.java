@@ -206,7 +206,6 @@ public final class FamilyConstants {
     public static final String USER_TYPE_EMPLOYEE = "EMPLOYEE";
     public static final String GENDER_OTHERS = "OTHERS";
     public static final String STATUS_OK = "OK";
-    public static final String DEFAULT_MEMBER_ASSET_SYNC_PATH = "/user/profile/_sync-member-assets";
     public static final String KEY_MEMBER_ASSET_SYNC_STATUS = "memberAssetSyncStatus";
     public static final String KEY_MEMBER_ASSET_SYNC_TIMESTAMP = "memberAssetSyncTimestamp";
     public static final String STATUS_SUCCESS = "SUCCESS";
@@ -313,4 +312,18 @@ public final class FamilyConstants {
     public static final String MSG_IDGEN_MEMBER_ID_FAILED = "Failed to generate member ID from idgen";
     public static final String MSG_IDGEN_APPLICATION_NUM_NOT_CONFIGURED = "egov.idgen.family.application.num is not configured";
     public static final String MSG_IDGEN_APPLICATION_NUM_FAILED = "Failed to generate application number from idgen";
+
+    // ==========================================
+    // Urban Property Verification Constants
+    // ==========================================
+    public static final String ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED = "PROPERTY_CONSENT_TOKEN_REQUIRED";
+    public static final String MSG_PROPERTY_CONSENT_TOKEN_REQUIRED = "Consent token is mandatory for urban property declaration: ";
+    public static final String ERROR_INVALID_PROPERTY_CONSENT_TOKEN = "INVALID_PROPERTY_CONSENT_TOKEN";
+    public static final String MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX = "Invalid or expired OTP consent token for urban property: ";
+    public static final String PROP_JSON_REQUEST_INFO = "RequestInfo";
+    public static final String PROP_JSON_PROPERTY_ID = "propertyId";
+    public static final String PROP_JSON_CONSENT_TOKEN = "consentToken";
+    public static final String PROP_JSON_VALID = "valid";
+    public static final String MSG_USER_CLIENT_UNAVAILABLE = "User verification client is unavailable";
+    public static final String MSG_USER_CLIENT_UNAVAILABLE_FOR_CONSENT = "User verification client is unavailable for validating property consent";
 }

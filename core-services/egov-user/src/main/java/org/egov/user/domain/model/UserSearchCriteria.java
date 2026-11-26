@@ -47,6 +47,11 @@ public class UserSearchCriteria {
     private String addressStatus; // This field is used to search address with particular status
     private String aadhaarNumber;
 
+    // Bulk criteria — when non-empty, produce SQL "IN (...)" and take
+    // precedence over the scalar userName/mobileNumber counterparts.
+    private List<String> userNames;
+    private List<String> mobileNumbers;
+
     /**
      * Validates that the search criteria conforms to service security rules and contains necessary criteria.
      * <p>
