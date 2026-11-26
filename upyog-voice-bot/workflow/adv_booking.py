@@ -512,26 +512,32 @@ def extraction_node(state: AdvBookingState):
 
     did_fast_extract = False
 
-    # Guard: If citizen entered a refusal / bare negation ("no", "nahi")
-    # For nightLight: "no" is a VALID choice ("No"), NOT a refusal!
-    # For all other fields (addType, location, faceArea): "no" is a refusal and must raise a required error.
-    if curr_field and (is_bare_negation(ui_clean) or ui_clean in EXCLUDED_FIELD_WORDS):
-        if curr_field == "nightLight":
+    # Fast-path for nightLight ("yes"/"no" are valid choices here, not generic excluded words)
+    if curr_field == "nightLight":
+        if ui_clean in NIGHTLIGHT_YES_VALUES:
+            draft_booking["nightLight"] = "Yes"
+            did_fast_extract = True
+            logger.info("[extract_node] Citizen selected 'Yes' for nightLight facility.")
+        elif ui_clean in NIGHTLIGHT_NO_VALUES or is_bare_negation(ui_clean):
             draft_booking["nightLight"] = "No"
             did_fast_extract = True
             logger.info("[extract_node] Citizen selected 'No' for nightLight facility.")
-        else:
-            field_def = next((item for item in FORM_FIELDS if item["id"] == curr_field), {})
-            field_name = field_def.get("label", curr_field)
-            draft_booking.setdefault("_failed_fields", [])
-            if curr_field not in draft_booking["_failed_fields"]:
-                draft_booking["_failed_fields"].append(curr_field)
-            draft_booking.setdefault("_field_errors", {})[curr_field] = (
-                f"**{field_name} is required** to search and book advertisement slots. "
-                "Please select an option from the list below, or type **'cancel'** to exit."
-            )
-            logger.info(f"[extract_node] Refusal detected for mandatory field '{curr_field}'. Prompting with required warning.")
-            return {"draft_booking": draft_booking}
+
+    # Guard: If citizen entered a refusal / bare negation ("no", "nahi")
+    # For nightLight: "no" is a VALID choice ("No"), NOT a refusal!
+    # For all other fields (addType, location, faceArea): "no" is a refusal and must raise a required error.
+    elif curr_field and (is_bare_negation(ui_clean) or ui_clean in EXCLUDED_FIELD_WORDS):
+        field_def = next((item for item in FORM_FIELDS if item["id"] == curr_field), {})
+        field_name = field_def.get("label", curr_field)
+        draft_booking.setdefault("_failed_fields", [])
+        if curr_field not in draft_booking["_failed_fields"]:
+            draft_booking["_failed_fields"].append(curr_field)
+        draft_booking.setdefault("_field_errors", {})[curr_field] = (
+            f"**{field_name} is required** to search and book advertisement slots. "
+            "Please select an option from the list below, or type **'cancel'** to exit."
+        )
+        logger.info(f"[extract_node] Refusal detected for mandatory field '{curr_field}'. Prompting with required warning.")
+        return {"draft_booking": draft_booking}
 
 
     # Recalculate remaining missing fields
