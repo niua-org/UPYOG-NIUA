@@ -95,7 +95,7 @@ const FamilyDashboard = () => {
     return (
       <Card className="family-dashboard-page-card">
         <div className="family-dashboard-page-title">{t("PROFILE_MY_FAMILY")}</div>
-        <div className="family-dashboard-summary"> Unable to load family details. </div>
+        <div className="family-dashboard-summary">{t("PROFILE_FAMILY_LOAD_ERROR")}</div>
         {toast && (
           <Toast error={toast.error} label={toast.label} onClose={() => setToast(null)} />
         )}
