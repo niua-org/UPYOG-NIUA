@@ -286,7 +286,7 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
     if (properties.length > 1 && !hasPrimaryProperty) {
       setToast({
         error: true,
-        label: t(("PROFILE_MARK_AS_PRIMARY")),
+        label: t(("PROFILE_SELECT_PRIMARY_URBAN_PROPERTY")),
       });
       return;
     }
@@ -390,30 +390,32 @@ const PropertyDetails = ({ t, config, onSelect, onUpdate, formData }) => {
 
       {toast && (<Toast error={toast.error} label={toast.label}  onClose={() => setToast(null)}/> )}
       {drawerOpen && createPortal(
-        <div className="property-details-drawer-overlay" role="dialog" aria-modal="true" aria-label="Add Property">
-          <div className="profile-property-drawer property-details-drawer">
-            <div className="property-details-drawer-header">
-              <h2 style={{ margin: 0 }}>{editingIndex !== null ? "Edit Property" : "Add Property"}</h2>
-              <button type="button" className="property-details-drawer-close-btn" onClick={closeDrawer} aria-label="Close">×</button>
-            </div>
+        <div className="profile-citizen">
+          <div className="property-details-drawer-overlay" role="dialog" aria-modal="true" aria-label="Add Property">
+            <div className="profile-property-drawer property-details-drawer">
+              <div className="property-details-drawer-header">
+                <h2 style={{ margin: 0 }}>{editingIndex !== null ? "Edit Property" : "Add Property"}</h2>
+                <button type="button" className="property-details-drawer-close-btn" onClick={closeDrawer} aria-label="Close">×</button>
+              </div>
 
-            <div className="profile-property-drawer-body property-details-drawer-body">
-              <CardLabel>Locality Type <span className="astericColor">*</span></CardLabel>
-              <Dropdown selected={localityType} select={handleLocalityTypeChange} option={LOCALITY_TYPE_OPTIONS}
-                optionKey="name" placeholder="Urban/Rural" />
-              {localityType?.code === "URBAN" && (<UrbanPropertyForm t={t} data={draft} onChange={updateDraft}
-                  existingPropertyIds={properties.filter((property, index) => index !== editingIndex && property.localityType === "URBAN")
-                    .map((property) => property.propertyId)}
-                />
-              )}
-              {localityType?.code === "RURAL" && (<RuralPropertyForm t={t} data={draft} onChange={updateDraft} />)}
-            </div>
+              <div className="profile-property-drawer-body property-details-drawer-body">
+                <CardLabel>Locality Type <span className="astericColor">*</span></CardLabel>
+                <Dropdown selected={localityType} select={handleLocalityTypeChange} option={LOCALITY_TYPE_OPTIONS}
+                  optionKey="name" placeholder="Urban/Rural" />
+                {localityType?.code === "URBAN" && (<UrbanPropertyForm t={t} data={draft} onChange={updateDraft}
+                    existingPropertyIds={properties.filter((property, index) => index !== editingIndex && property.localityType === "URBAN")
+                      .map((property) => property.propertyId)}
+                  />
+                )}
+                {localityType?.code === "RURAL" && (<RuralPropertyForm t={t} data={draft} onChange={updateDraft} />)}
+              </div>
 
-            <div className="profile-property-drawer-footer property-details-drawer-footer">
-              <button type="button" className="property-details-drawer-cancel-btn" onClick={closeDrawer}>
-                {t(("CORE_COMMON_CANCEL"))}
-              </button>
-              <SubmitBar label={t(("PROFILE_SAVE_PROPERTY"))} onSubmit={saveProperty} disabled={!canSaveProperty} />
+              <div className="profile-property-drawer-footer property-details-drawer-footer">
+                <button type="button" className="property-details-drawer-cancel-btn" onClick={closeDrawer}>
+                  {t(("CORE_COMMON_CANCEL"))}
+                </button>
+                <SubmitBar label={t(("PROFILE_SAVE_PROPERTY"))} onSubmit={saveProperty} disabled={!canSaveProperty} />
+              </div>
             </div>
           </div>
         </div>,

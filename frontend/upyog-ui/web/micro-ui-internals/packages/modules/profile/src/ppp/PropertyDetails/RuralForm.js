@@ -27,7 +27,9 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
           ?.filter((option) => option.active !== false)
           .map((option) => ({
             code: option.code,
-            name: option.code === "ORGANISATION" ? "Organisation/Institution" : option.name || option.code,
+            name: t(`PROFILE_OWNERSHIP_${option.code}`, {
+              defaultValue: option.name || option.code,
+            }),
           })) || [];
       },
     }
@@ -88,29 +90,53 @@ const RuralPropertyForm = ({ data = {}, onChange, t, disabled = false }) => {
 
   const gramPanchayatOptions = [
     {
-      name: "Select Gram Panchayat",
-      code: "SELECT",
+      name: "Select Gram Panchayat 1",
+      code: "Select Gram Panchayat 1",
+    },
+     {
+      name: "Select Gram Panchayat 2",
+      code: "Select Gram Panchayat 2",
+    },
+     {
+      name: "Select Gram Panchayat 3",
+      code: "Select Gram Panchayat 3",
     },
   ];
 
   const villageOptions = [
     {
-      name: "Select Village",
-      code: "SELECT",
+      name: "Select Village 1",
+      code: "Select Village 1",
+    },
+     {
+      name: "Select Village 2",
+      code: "Select Village 2",
+    },
+     {
+      name: "Select Village 3",
+      code: "Select Village 3",
     },
   ];
 
   const wardOptions = [
     {
-      name: "Select Ward",
-      code: "SELECT",
+      name: "Select Ward 1",
+      code: "Select Ward 1",
     },
-  ];
+     {
+      name: "Select Ward 2",
+      code: "Select Ward 2",
+    },
+     {
+      name: "Select Ward 3",
+      code: "Select Ward 3",
+    },
+  ];  
 
   const documentTypeOptions = [
     {
-      code: "Aadhaar",
-      name: "Aadhaar",
+      code: "Electricity Bill",
+      name: "Electricity Bill",
     },
     {
       code: "VoterID",

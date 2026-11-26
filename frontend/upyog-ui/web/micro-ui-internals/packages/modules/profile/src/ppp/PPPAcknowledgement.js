@@ -4,6 +4,9 @@ import { Banner, Card, CardText, SubmitBar } from "@nudmcdgnpm/digit-ui-react-co
 import { PROFILE_ROUTES } from "../utils/constants";
 import getPPPAcknowledgementData from "../getPPPAcknowledgementData";
 
+const getErrorCode = (error) =>
+  error?.response?.data?.Errors?.[0]?.code || error?.Errors?.[0]?.code;
+
 /**
  * PPP Acknowledgement Component
  *
@@ -28,9 +31,19 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
 
   useEffect(() => {
     if (error) {
-      console.error("Family acknowledgement operation failed:", error);
+      console.error(
+        "Family acknowledgement operation failed:",
+        getErrorCode(error) || error?.message
+      );
     }
   }, [error]);
+
+  const requestRetryMessage = t("PROFILE_PPP_ACKNOWLEDGEMENT_REQUEST_RETRY");
+  const requestErrorCode = getErrorCode(error);
+  const requestErrorMessage = requestErrorCode
+    ? t(`PROFILE_ERR_${requestErrorCode}`, requestRetryMessage)
+    : requestRetryMessage;
+  const downloadRetryMessage = t("PROFILE_PPP_ACKNOWLEDGEMENT_DOWNLOAD_RETRY");
 
   const handleDownload = async () => {
     setDownloadError("");
@@ -60,8 +73,11 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
       );
       await Digit.Utils.pdf.generate(acknowledgementData);
     } catch (downloadErrorCause) {
-      console.error("Unable to download family acknowledgement:", downloadErrorCause);
-      setDownloadError(t("PROFILE_PPP_ACKNOWLEDGEMENT_DOWNLOAD_RETRY"));
+      console.error(
+        "Unable to download family acknowledgement:",
+        getErrorCode(downloadErrorCause) || downloadErrorCause?.message
+      );
+      setDownloadError(downloadRetryMessage);
     } finally {
       setIsDownloading(false);
     }
@@ -95,7 +111,7 @@ const PPPAcknowledgement = ({ mode = "create", familyId, acknowledgement, error,
 
         {!isSuccess && !isPending && (
           <CardText>
-            {t("PROFILE_PPP_ACKNOWLEDGEMENT_REQUEST_RETRY")}
+            {requestErrorMessage}
           </CardText>
         )}
         {downloadError && <CardText>{downloadError}</CardText>}
