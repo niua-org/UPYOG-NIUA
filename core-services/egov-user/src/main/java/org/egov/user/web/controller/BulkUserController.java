@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * v2 bulk user create endpoint.
  * <p>
- * POST /users/v2/_create
+ * POST /users/v2/bulk/_create
  * <pre>
  * {
  *   "RequestInfo": { ... },
@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  * v1 endpoints ({@code /users/_createnovalidate} etc.) are untouched.
  */
 @RestController
-@RequestMapping("/users/v2")
+@RequestMapping("/users/v2/bulk")
 @Slf4j
 public class BulkUserController {
 
