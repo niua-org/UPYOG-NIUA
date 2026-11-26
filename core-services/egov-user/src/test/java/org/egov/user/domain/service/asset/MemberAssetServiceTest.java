@@ -762,4 +762,84 @@ class MemberAssetServiceTest {
         assertEquals("FAILED", response.getResults().get(0).getStatus());
         assertTrue(response.getResults().get(0).getMessage().contains("Consent token is mandatory for linking urban property"));
     }
+
+    /**
+     * Verifies that when Head of Family (HoF) declares and verifies property on behalf of another family member,
+     * consumeConsentToken correctly validates the token against HoF's actor UUID (who ran the OTP)
+     * and falls back to memberDetail.getTenantId() when prop.getTenantId() is blank.
+     */
+    @Test
+    @DisplayName("syncMemberAssets: HoF links property for another member with token bound to HoF and blank prop tenant")
+    void syncMemberAssets_hofLinksPropertyForOtherMember_succeeds() {
+        UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
+
+        String hofUuid = "hof-operator-uuid";
+        String memberUuid = "family-member-uuid";
+        String tenantId = "pg.citya";
+
+        // Verified consent token was generated during /otp/_verify by HoF (callerUuid = hofUuid)
+        // Verify consumeConsentToken is called with HoF's UUID and fallback tenant from memberDetail
+        when(mockUrbanService.consumeConsentToken(eq("UPYOG-PROP-HOF"), eq("TOKEN-HOF"), eq(hofUuid), eq(tenantId)))
+                .thenReturn(true);
+
+        MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
+                userRepository,
+                propertyRepository,
+                incomeRepository,
+                vehicleRepository,
+                documentRepository,
+                null,
+                mockUrbanService
+        );
+
+        User memberUser = User.builder()
+                .id(201L)
+                .uuid(memberUuid)
+                .tenantId(tenantId)
+                .username("familymember")
+                .build();
+
+        when(userRepository.findAll(any(UserSearchCriteria.class)))
+                .thenReturn(Collections.singletonList(memberUser));
+
+        // Property has blank tenantId to test fallback to memberDetail.getTenantId()
+        UserProperty prop = UserProperty.builder()
+                .localityType("URBAN")
+                .tenantId(null) // Blank tenantId -> must fall back to memberDetail.getTenantId()
+                .consentToken("TOKEN-HOF")
+                .urbanPropertyDetail(UrbanPropertyDetail.builder()
+                        .upyogPropertyId("UPYOG-PROP-HOF")
+                        .build())
+                .build();
+
+        MemberAssetDetail detail = MemberAssetDetail.builder()
+                .userUuid(memberUuid)
+                .tenantId(tenantId)
+                .properties(Collections.singletonList(prop))
+                .build();
+
+        RequestInfo hofRequestInfo = RequestInfo.builder()
+                .userInfo(org.egov.common.contract.request.User.builder()
+                        .id(1L)
+                        .uuid(hofUuid)
+                        .build())
+                .build();
+
+        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
+                .requestInfo(hofRequestInfo)
+                .members(Collections.singletonList(detail))
+                .build();
+
+        MemberAssetServiceImpl service = new MemberAssetServiceImpl(processorWithUrban);
+        MemberAssetSyncResponse response = service.syncMemberAssets(request);
+
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+        assertEquals(1, response.getResults().size());
+        assertEquals("SUCCESS", response.getResults().get(0).getStatus());
+        assertEquals(1, response.getResults().get(0).getPropertiesSynced());
+
+        verify(mockUrbanService, times(1))
+                .consumeConsentToken(eq("UPYOG-PROP-HOF"), eq("TOKEN-HOF"), eq(hofUuid), eq(tenantId));
+    }
 }

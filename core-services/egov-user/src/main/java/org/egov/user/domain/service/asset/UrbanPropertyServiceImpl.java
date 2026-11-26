@@ -86,9 +86,9 @@ public class UrbanPropertyServiceImpl implements UrbanPropertyService {
         RequestInfo requestInfo = request.getRequestInfo();
         String callerUuid = requestInfo != null && requestInfo.getUserInfo() != null ? requestInfo.getUserInfo().getUuid() : null;
 
-        // Rate limiting check: maximum 3 OTP dispatches per 15 minutes per property (prevents SMS flooding)
-        if (!sessionRegistry.isOtpDispatchAllowed(propertyId)) {
-            log.warn("[URBAN-PROPERTY-SERVICE] Rate limit exceeded for OTP send on property: {}", propertyId);
+        // Rate limiting pre-check on (callerUuid, propertyId) to fail early before downstream searches
+        if (!sessionRegistry.isOtpDispatchAllowed(callerUuid, propertyId, null)) {
+            log.warn("[URBAN-PROPERTY-SERVICE] Rate limit exceeded for OTP send on property: {} by caller: {}", propertyId, callerUuid);
             throw new CustomException(UserConstants.ERROR_OTP_RATE_LIMIT_EXCEEDED, UserConstants.MSG_OTP_RATE_LIMIT_EXCEEDED);
         }
 
@@ -110,15 +110,25 @@ public class UrbanPropertyServiceImpl implements UrbanPropertyService {
         String targetOwnerMobile = ownershipValidator.validateAndResolveTargetOwnerMobile(
                 property, linkedUsers, callerUuid, request.getOwnerMobileNumber(), requestInfo);
 
-        // Dispatch OTP via decoupled OTP client (SRP / DIP)
+        // Atomically reserve OTP dispatch slot across (callerUuid, propertyId), destination mobile, and property ceiling
+        // Reserve slot BEFORE dispatching OTP to prevent race conditions and concurrent bypass
+        if (!sessionRegistry.tryReserveOtpDispatchSlot(callerUuid, propertyId, targetOwnerMobile)) {
+            log.warn("[URBAN-PROPERTY-SERVICE] Rate limit exceeded on dispatch slot for property: {}, mobile: {}",
+                    propertyId, MaskUtils.maskMobile(targetOwnerMobile));
+            throw new CustomException(UserConstants.ERROR_OTP_RATE_LIMIT_EXCEEDED, UserConstants.MSG_OTP_RATE_LIMIT_EXCEEDED);
+        }
+
+        try {
+            // Dispatch OTP via decoupled OTP client (SRP / DIP)
+            propertyOtpClient.sendOtp(targetOwnerMobile, tenantId, requestInfo);
+        } catch (Exception e) {
+            sessionRegistry.releaseOtpDispatchSlot(callerUuid, propertyId, targetOwnerMobile);
+            throw e;
+        }
+
         String referenceId = UserConstants.PREFIX_PROP_REF + UUID.randomUUID().toString().substring(0, 8);
-        long ttlMs = userConfiguration.getPropertyOtpReferenceTtlMs() != null ? userConfiguration.getPropertyOtpReferenceTtlMs() : 900000L;
-        int maxAttempts = userConfiguration.getPropertyOtpVerifyMaxAttempts() != null ? userConfiguration.getPropertyOtpVerifyMaxAttempts() : 3;
-
-        propertyOtpClient.sendOtp(targetOwnerMobile, tenantId, requestInfo);
-
-        // Record successful dispatch for rate-limiting tracking
-        sessionRegistry.recordOtpDispatch(propertyId);
+        long ttlMs = userConfiguration.getPropertyOtpReferenceTtlMs();
+        int maxAttempts = userConfiguration.getPropertyOtpVerifyMaxAttempts();
 
         // Register challenge in session registry with callerUuid
         sessionRegistry.registerChallenge(referenceId, propertyId, tenantId, targetOwnerMobile, callerUuid, ttlMs, maxAttempts);
@@ -163,8 +173,8 @@ public class UrbanPropertyServiceImpl implements UrbanPropertyService {
                 challenge.getMobileNumber(), submittedOtp, tenantId, request.getRequestInfo());
 
         if (!otpValid) {
-            challenge.recordFailedAttempt();
-            if (challenge.isExhausted()) {
+            int attempts = sessionRegistry.recordFailedAttempt(referenceId);
+            if (attempts >= challenge.getMaxAttempts() || challenge.isExhausted()) {
                 sessionRegistry.invalidateChallenge(referenceId);
                 log.warn("[URBAN-PROPERTY-SERVICE] Reference {} exhausted max OTP attempts", MaskUtils.maskIdentifier(referenceId));
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED,
@@ -178,7 +188,7 @@ public class UrbanPropertyServiceImpl implements UrbanPropertyService {
 
         // Generate verified consent token bound to callerUuid and tenantId
         String consentToken = UserConstants.PREFIX_PROP_CONSENT + UUID.randomUUID();
-        long ttlMs = userConfiguration.getPropertyConsentTokenTtlMs() != null ? userConfiguration.getPropertyConsentTokenTtlMs() : 900000L;
+        long ttlMs = userConfiguration.getPropertyConsentTokenTtlMs();
         long expiresAt = System.currentTimeMillis() + ttlMs;
 
         sessionRegistry.registerConsentToken(consentToken, propertyId, tenantId, challenge.getMobileNumber(),
@@ -241,33 +251,40 @@ public class UrbanPropertyServiceImpl implements UrbanPropertyService {
         try {
             RequestInfo systemRequestInfo = createSystemRequestInfo(null);
             UrbanPropertyInfo property = propertyServiceClient.fetchPropertyById(tenantId, propertyId, systemRequestInfo);
-            if (property != null) {
-                List<Map<String, Object>> linkedUsers = userPropertyRepository.findActiveLinkedUsersForUrbanProperty(tenantId, propertyId);
-                int linkedCount = linkedUsers != null ? linkedUsers.size() : 0;
-                int totalOwners = property.getOwners() != null ? property.getOwners().size() : 1;
-                if (!ownershipValidator.isEligibleForLinking(property.getOwnershipCategory(), totalOwners, linkedCount)) {
-                    log.warn("[URBAN-PROPERTY-SERVICE] Linking capacity exceeded at consumption time for property {}", propertyId);
-                    throw new CustomException(UserConstants.ERROR_PROPERTY_LINKING_LIMIT_EXCEEDED,
-                            UserConstants.MSG_PROPERTY_LINKING_LIMIT_EXCEEDED + propertyId);
-                }
+            if (property == null) {
+                log.warn("[URBAN-PROPERTY-SERVICE] Property not found during consumption capacity check for property {}", propertyId);
+                throw new CustomException(UserConstants.ERROR_PROPERTY_NOT_FOUND,
+                        UserConstants.MSG_URBAN_PROPERTY_NOT_FOUND_PREFIX + propertyId);
+            }
+            List<Map<String, Object>> linkedUsers = userPropertyRepository.findActiveLinkedUsersForUrbanProperty(tenantId, propertyId);
+            int linkedCount = linkedUsers != null ? linkedUsers.size() : 0;
+            int totalOwners = property.getOwners() != null ? property.getOwners().size() : 1;
+            if (!ownershipValidator.isEligibleForLinking(property.getOwnershipCategory(), totalOwners, linkedCount)) {
+                log.warn("[URBAN-PROPERTY-SERVICE] Linking capacity exceeded at consumption time for property {}", propertyId);
+                throw new CustomException(UserConstants.ERROR_PROPERTY_LINKING_LIMIT_EXCEEDED,
+                        UserConstants.MSG_PROPERTY_LINKING_LIMIT_EXCEEDED + propertyId);
             }
         } catch (CustomException ce) {
             throw ce;
         } catch (Exception e) {
-            log.warn("[URBAN-PROPERTY-SERVICE] Non-blocking capacity check warning at consumption for property {}: {}",
-                    propertyId, e.getMessage());
+            log.error("[URBAN-PROPERTY-SERVICE] Error checking linking capacity at consumption for property {}: {}",
+                    propertyId, e.getMessage(), e);
+            throw new CustomException(UserConstants.ERROR_PROPERTY_SERVICE_ERROR,
+                    "Failed to verify property linking capacity for property: " + propertyId);
         }
 
         return true;
     }
 
     private RequestInfo createSystemRequestInfo(RequestInfo callerRequestInfo) {
+        String systemRole = userConfiguration.getPropertyServiceSystemRole();
+
         User systemUser = User.builder()
                 .uuid(UserConstants.SYSTEM_USER_UUID)
                 .type(UserConstants.USER_TYPE_SYSTEM)
                 .roles(Collections.singletonList(Role.builder()
-                        .name(UserConstants.ROLE_INTERNAL_SYSTEM)
-                        .code(UserConstants.ROLE_INTERNAL_SYSTEM)
+                        .name(systemRole)
+                        .code(systemRole)
                         .build()))
                 .build();
         return RequestInfo.builder()

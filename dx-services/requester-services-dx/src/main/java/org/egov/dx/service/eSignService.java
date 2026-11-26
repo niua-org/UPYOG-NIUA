@@ -58,6 +58,14 @@ public class eSignService {
 	private final Producer producer;
 	private final TransactionRepository transactionRepository;
 
+	/**
+	 * Constructs an {@link eSignService} with required configuration, ID generation, messaging, and persistence dependencies.
+	 *
+	 * @param configurations        application configuration settings for eSign endpoints and gateway URLs
+	 * @param idGenService          service for generating unique transaction identifiers
+	 * @param producer              Kafka message producer for async audit and event notifications
+	 * @param transactionRepository repository for persisting eSign transaction records
+	 */
 	@Autowired
 	public eSignService(Configurations configurations,
 						IdGenService idGenService,

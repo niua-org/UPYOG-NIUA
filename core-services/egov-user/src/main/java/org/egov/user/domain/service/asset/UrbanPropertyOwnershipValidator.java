@@ -6,6 +6,7 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.egov.user.web.contract.property.UrbanPropertyInfo;
 import org.egov.user.web.contract.property.UrbanPropertyOwnerInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -152,7 +153,11 @@ public class UrbanPropertyOwnershipValidator {
             return targetOwnerMobile.trim();
         } else {
             // Case B: Multiple Owners Property Rule
-            int totalOwners = property.getOwners() != null ? property.getOwners().size() : 0;
+            if (property.getOwners() == null || property.getOwners().isEmpty()) {
+                throw new CustomException(UserConstants.ERROR_OWNER_NOT_FOUND, UserConstants.MSG_OWNER_NOT_FOUND_PREFIX + propertyId);
+            }
+
+            int totalOwners = property.getOwners().size();
             int linkedCount = linkedUsers.size();
 
             if (linkedCount >= totalOwners) {
@@ -160,6 +165,17 @@ public class UrbanPropertyOwnershipValidator {
                         propertyId, linkedCount, totalOwners);
                 throw new CustomException(UserConstants.ERROR_PROPERTY_MAX_OWNERS_EXCEEDED,
                         UserConstants.MSG_PROPERTY_MAX_OWNERS_EXCEEDED);
+            }
+
+            // Guard against masked or missing owner mobiles from PT response across all registered owners
+            for (UrbanPropertyOwnerInfo owner : property.getOwners()) {
+                String rawMobile = owner.getRawMobileNumber();
+                if (StringUtils.isBlank(rawMobile) || rawMobile.contains(UserConstants.MASK_CHAR)) {
+                    log.warn("[URBAN-PROPERTY-VALIDATOR] Owner mobile is missing or masked for multi-owner property {}: {}",
+                            propertyId, MaskUtils.maskMobile(rawMobile));
+                    throw new CustomException(UserConstants.ERROR_OWNER_MOBILE_NOT_FOUND,
+                            UserConstants.MSG_OWNER_MOBILE_NOT_FOUND);
+                }
             }
 
             // Identify unlinked owners
@@ -174,6 +190,10 @@ public class UrbanPropertyOwnershipValidator {
 
             if (StringUtils.isNotBlank(requestedMobileNumber)) {
                 String requestedMobile = requestedMobileNumber.trim();
+                if (requestedMobile.contains(UserConstants.MASK_CHAR)) {
+                    throw new CustomException(UserConstants.ERROR_INVALID_OWNER_MOBILE,
+                            UserConstants.MSG_INVALID_OWNER_MOBILE_PREFIX + propertyId);
+                }
                 boolean matchesOwner = property.getOwners().stream()
                         .anyMatch(o -> requestedMobile.equalsIgnoreCase(o.getRawMobileNumber()));
                 boolean alreadyLinked = linkedMobiles.contains(requestedMobile);
@@ -185,7 +205,12 @@ public class UrbanPropertyOwnershipValidator {
                 return requestedMobile;
             } else {
                 if (unlinkedOwners.size() == 1) {
-                    return unlinkedOwners.get(0).getRawMobileNumber().trim();
+                    String targetMobile = unlinkedOwners.get(0).getRawMobileNumber();
+                    if (StringUtils.isBlank(targetMobile) || targetMobile.contains(UserConstants.MASK_CHAR)) {
+                        throw new CustomException(UserConstants.ERROR_OWNER_MOBILE_NOT_FOUND,
+                                UserConstants.MSG_OWNER_MOBILE_NOT_FOUND);
+                    }
+                    return targetMobile.trim();
                 } else {
                     throw new CustomException(UserConstants.ERROR_OWNER_SELECTION_REQUIRED,
                             UserConstants.MSG_OWNER_SELECTION_REQUIRED);

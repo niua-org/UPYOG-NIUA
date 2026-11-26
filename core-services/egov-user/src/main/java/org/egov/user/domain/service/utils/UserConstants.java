@@ -597,7 +597,12 @@ public final class UserConstants {
 
     public static final String REDIS_PROP_OTP_CHALLENGE_PREFIX = "UPYOG_PROP_OTP_CHALLENGE:";
     public static final String REDIS_PROP_CONSENT_PREFIX = "UPYOG_PROP_CONSENT:";
+    public static final String REDIS_PROP_OTP_ATTEMPTS_PREFIX = "UPYOG_PROP_OTP_ATTEMPTS:";
+    public static final String REDIS_PROP_OTP_RATE_PREFIX = "UPYOG_PROP_OTP_RATE:";
     public static final int MAX_PROPERTY_OTP_SENDS_PER_WINDOW = 3;
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_CALLER = 3;
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_MOBILE = 3;
+    public static final int MAX_PROPERTY_OTP_SENDS_PER_PROPERTY_CEILING = 10;
     public static final long PROPERTY_OTP_SEND_WINDOW_MS = 15 * 60 * 1000L; // 15 minutes sliding window
 
     public static final String MSG_UPYOG_PROPERTY_ID_MANDATORY = "upyogPropertyId is mandatory for urban property.";

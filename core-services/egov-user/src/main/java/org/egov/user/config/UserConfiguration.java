@@ -243,6 +243,10 @@ public class UserConfiguration {
     @Value("${egov.asset.privileged.roles}")
     private String assetPrivilegedRoles;
 
+    // Family Profile Authorization Configuration
+    @Value("${egov.family.privileged.roles}")
+    private String familyPrivilegedRoles;
+
     // Asset Search Pagination Configuration
     @Value("${egov.asset.search.default.limit}")
     private Integer assetSearchDefaultLimit;
@@ -264,6 +268,12 @@ public class UserConfiguration {
      */
     @Value("${property.service.search.endpoint}")
     private String propertyServiceSearchEndpoint;
+
+    /**
+     * Role code assigned to the system user for internal inter-service calls (e.g. unmasking owner mobiles in property-services).
+     */
+    @Value("${property.service.system.role}")
+    private String propertyServiceSystemRole;
 
     /**
      * Flag enabling fixed/mock OTP verification for urban property ownership in test environments.
@@ -323,6 +333,22 @@ public class UserConfiguration {
             return Collections.emptySet();
         }
         return Arrays.stream(assetPrivilegedRoles.split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .map(String::toUpperCase)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Resolves the configured set of privileged role codes permitted to access family full profile data across citizens.
+     *
+     * @return set of uppercase role codes, or an empty set if not configured
+     */
+    public Set<String> getFamilyPrivilegedRoles() {
+        if (StringUtils.isBlank(familyPrivilegedRoles)) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(familyPrivilegedRoles.split(","))
                 .map(String::trim)
                 .filter(StringUtils::isNotBlank)
                 .map(String::toUpperCase)

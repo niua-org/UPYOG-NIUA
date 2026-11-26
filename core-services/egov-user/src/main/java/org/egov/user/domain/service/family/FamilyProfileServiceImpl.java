@@ -3,8 +3,10 @@ package org.egov.user.domain.service.family;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.common.contract.request.Role;
 import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
+import org.egov.user.config.UserConfiguration;
 import org.egov.user.domain.model.Address;
 import org.egov.user.domain.model.AddressSearchCriteria;
 import org.egov.user.domain.model.User;
@@ -69,6 +71,10 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
             EnumSet.allOf(ProfileIncludeEntity.class)
     );
 
+    private static final Set<ProfileIncludeEntity> SUMMARY_INCLUDES = Collections.unmodifiableSet(
+            EnumSet.of(ProfileIncludeEntity.PROFILE)
+    );
+
     private final FamilyRestRepository familyRestRepository;
     private final AssetAuthorizationService assetAuthorizationService;
     private final UserRepository userRepository;
@@ -79,9 +85,10 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
     private final UserVehicleRepository userVehicleRepository;
     private final EncryptionDecryptionUtil encryptionDecryptionUtil;
     private final FamilyConfigurationService familyConfigurationService;
+    private final UserConfiguration userConfiguration;
 
     /**
-     * Primary constructor injecting all persistence, authorization, and helper components.
+     * Primary constructor injecting all persistence, authorization, configuration, and helper components.
      *
      * @param familyRestRepository      REST client for upyog-family-service
      * @param assetAuthorizationService centralized authorization evaluator
@@ -93,6 +100,7 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
      * @param userVehicleRepository     vehicle declaration repository
      * @param encryptionDecryptionUtil  PII encryption/decryption utility
      * @param familyConfigurationService tenant-level MDMS family configuration service
+     * @param userConfiguration         central application configuration
      */
     @Autowired
     public FamilyProfileServiceImpl(FamilyRestRepository familyRestRepository,
@@ -104,7 +112,8 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
                                    UserIncomeRepository userIncomeRepository,
                                    UserVehicleRepository userVehicleRepository,
                                    EncryptionDecryptionUtil encryptionDecryptionUtil,
-                                   @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
+                                   @Autowired(required = false) FamilyConfigurationService familyConfigurationService,
+                                   @Autowired(required = false) UserConfiguration userConfiguration) {
         this.familyRestRepository = familyRestRepository;
         this.assetAuthorizationService = assetAuthorizationService;
         this.userRepository = userRepository;
@@ -115,6 +124,25 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
         this.userVehicleRepository = userVehicleRepository;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.familyConfigurationService = familyConfigurationService;
+        this.userConfiguration = userConfiguration;
+    }
+
+    /**
+     * Backward-compatible constructor without {@link UserConfiguration}.
+     */
+    public FamilyProfileServiceImpl(FamilyRestRepository familyRestRepository,
+                                   AssetAuthorizationService assetAuthorizationService,
+                                   UserRepository userRepository,
+                                   AddressRepository addressRepository,
+                                   UserDocumentRepository userDocumentRepository,
+                                   UserPropertyRepository userPropertyRepository,
+                                   UserIncomeRepository userIncomeRepository,
+                                   UserVehicleRepository userVehicleRepository,
+                                   EncryptionDecryptionUtil encryptionDecryptionUtil,
+                                   FamilyConfigurationService familyConfigurationService) {
+        this(familyRestRepository, assetAuthorizationService, userRepository, addressRepository,
+             userDocumentRepository, userPropertyRepository, userIncomeRepository, userVehicleRepository,
+             encryptionDecryptionUtil, familyConfigurationService, null);
     }
 
     /**
@@ -144,7 +172,7 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
         }
 
         // 2. Authorize caller access: Citizens must belong to the requested family; Employees/Admins have cross-family access
-        authorizeAccess(familyDetail, requestInfo);
+        FamilyAccessContext accessContext = authorizeAccess(familyDetail, requestInfo);
 
         // 3. Extract unique member citizen UUIDs (including Head of Family)
         List<String> memberUuids = extractMemberUuids(familyDetail);
@@ -163,8 +191,8 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
             Map<String, UserIncome> incomeByUser = userIncomeRepository.findActiveIncomesByUserUuids(memberUuids, Boolean.TRUE);
             Map<String, List<UserProperty>> propertiesByUser = userPropertyRepository.findPropertiesByUserUuids(memberUuids, Boolean.TRUE);
 
-            // 7. Enrich member aggregates with profiles and assets
-            enrichFamilyMembers(familyDetail, userMap, vehiclesByUser, incomeByUser, propertiesByUser);
+            // 7. Enrich member aggregates with profiles and assets (enforcing data minimisation for non-HoF callers)
+            enrichFamilyMembers(familyDetail, userMap, vehiclesByUser, incomeByUser, propertiesByUser, accessContext);
 
             // 8. Enrich headName on family aggregate if missing
             if (StringUtils.isBlank(familyDetail.getHeadName()) && StringUtils.isNotBlank(familyDetail.getHeadUserUuid())) {
@@ -205,25 +233,109 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
         }
     }
 
-    private void authorizeAccess(FamilyDetail familyDetail, RequestInfo requestInfo) {
-        if (assetAuthorizationService.isPrivilegedCaller(requestInfo)) {
-            log.debug("[FAMILY-PROFILE-SERVICE] Privileged caller permitted cross-family profile search for: {}",
-                    familyDetail.getFamilyId());
-            return;
+    private FamilyAccessContext authorizeAccess(FamilyDetail familyDetail, RequestInfo requestInfo) {
+        org.egov.common.contract.request.User callerInfo = requestInfo != null ? requestInfo.getUserInfo() : null;
+        if (callerInfo == null || StringUtils.isBlank(callerInfo.getUuid())) {
+            log.warn("[FAMILY-PROFILE-SERVICE] Access denied: RequestInfo.userInfo is missing or blank");
+            throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS, "Unauthorized: Caller userInfo is mandatory");
         }
 
         String callerUuid = assetAuthorizationService.resolveCallerUuid(requestInfo);
+        String userType = callerInfo.getType();
 
+        // 1. Privileged Employee / System caller authorization
+        boolean isEmployeeOrSystem = UserType.EMPLOYEE.name().equalsIgnoreCase(userType)
+                || UserType.SYSTEM.name().equalsIgnoreCase(userType);
+
+        if (isEmployeeOrSystem) {
+            Set<String> dedicatedRoles = userConfiguration.getFamilyPrivilegedRoles();
+
+            String matchingRole = null;
+            if (callerInfo.getRoles() != null) {
+                for (Role role : callerInfo.getRoles()) {
+                    if (role != null && StringUtils.isNotBlank(role.getCode())
+                            && dedicatedRoles.contains(role.getCode().trim().toUpperCase())) {
+                        matchingRole = role.getCode().trim().toUpperCase();
+                        break;
+                    }
+                }
+            }
+
+            if (matchingRole == null) {
+                log.warn("[FAMILY-PROFILE-SERVICE] Access denied: Caller {} ({}) lacks dedicated family access role. Roles: {}",
+                        callerUuid, userType, callerInfo.getRoles());
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS,
+                        "Unauthorized: Caller cannot access family profile without dedicated authorization");
+            }
+
+            // Employee Tenant Check
+            String employeeTenant = callerInfo.getTenantId();
+            String familyTenant = familyDetail.getTenantId();
+            if (!isTenantAllowed(employeeTenant, familyTenant)) {
+                log.warn("[FAMILY-PROFILE-SERVICE] Access denied: Employee {} (tenant: {}) attempted access to family {} in tenant {}",
+                        callerUuid, employeeTenant, familyDetail.getFamilyId(), familyTenant);
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS,
+                        "Unauthorized: Tenant mismatch between employee and family");
+            }
+
+            // Audit log entry: who viewed which family
+            log.info("[FAMILY-PROFILE-AUDIT] Privileged employee {} (tenant: {}, role: {}) viewed details for family: {} (tenant: {})",
+                    callerUuid, employeeTenant, matchingRole, familyDetail.getFamilyId(), familyTenant);
+
+            return new FamilyAccessContext(true, callerUuid);
+        }
+
+        // 2. Citizen caller authorization
         boolean isHead = callerUuid.equalsIgnoreCase(familyDetail.getHeadUserUuid());
-        boolean isMember = familyDetail.getMembers() != null && familyDetail.getMembers().stream()
-                .anyMatch(m -> callerUuid.equalsIgnoreCase(m.getUserUuid()));
+        FamilyMemberDetail callerMember = familyDetail.getMembers() != null ? familyDetail.getMembers().stream()
+                .filter(m -> m != null && callerUuid.equalsIgnoreCase(m.getUserUuid()))
+                .findFirst()
+                .orElse(null) : null;
 
-        if (!isHead && !isMember) {
-            log.warn("[FAMILY-PROFILE-SERVICE] Access denied: Citizen caller {} is neither HoF nor member of family {}",
+        boolean isMemberActive = callerMember != null
+                && Boolean.TRUE.equals(callerMember.getActive())
+                && UserConstants.STATUS_ACTIVE_UPPERCASE.equalsIgnoreCase(callerMember.getStatus());
+
+        if (isHead) {
+            // If HoF exists in member list, ensure not deactivated or rejected
+            if (callerMember != null && (Boolean.FALSE.equals(callerMember.getActive())
+                    || "INACTIVE".equalsIgnoreCase(callerMember.getStatus())
+                    || "REJECTED".equalsIgnoreCase(callerMember.getStatus()))) {
+                log.warn("[FAMILY-PROFILE-SERVICE] Access denied: HoF caller {} is marked inactive/rejected in family {}",
+                        callerUuid, familyDetail.getFamilyId());
+                throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS,
+                        "Unauthorized: You are not authorized to view information for family " + familyDetail.getFamilyId());
+            }
+            return new FamilyAccessContext(true, callerUuid);
+        }
+
+        if (!isMemberActive) {
+            log.warn("[FAMILY-PROFILE-SERVICE] Access denied: Citizen caller {} is not an active member of family {}",
                     callerUuid, familyDetail.getFamilyId());
             throw new CustomException(UserConstants.ERROR_UNAUTHORIZED_ACCESS,
                     "Unauthorized: You are not authorized to view information for family " + familyDetail.getFamilyId());
         }
+
+        // Citizen non-HoF active member: allowed access with data minimisation (full view for self only)
+        return new FamilyAccessContext(false, callerUuid);
+    }
+
+    private boolean isTenantAllowed(String employeeTenant, String familyTenant) {
+        if (StringUtils.isBlank(employeeTenant) || StringUtils.isBlank(familyTenant)) {
+            return false;
+        }
+        String empTrim = employeeTenant.trim();
+        String famTrim = familyTenant.trim();
+
+        if (empTrim.equalsIgnoreCase(famTrim)) {
+            return true;
+        }
+
+        if (famTrim.toLowerCase().startsWith(empTrim.toLowerCase() + ".")) {
+            return true;
+        }
+
+        return false;
     }
 
     private List<String> extractMemberUuids(FamilyDetail familyDetail) {
@@ -349,10 +461,14 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
                                      Map<String, User> userMap,
                                      Map<String, List<UserVehicle>> vehiclesByUser,
                                      Map<String, UserIncome> incomeByUser,
-                                     Map<String, List<UserProperty>> propertiesByUser) {
+                                     Map<String, List<UserProperty>> propertiesByUser,
+                                     FamilyAccessContext accessContext) {
         if (familyDetail.getMembers() == null) {
             return;
         }
+
+        boolean allowFullViewAll = accessContext != null && accessContext.isFullView();
+        String callerUuid = accessContext != null ? accessContext.getCallerUuid() : null;
 
         for (FamilyMemberDetail member : familyDetail.getMembers()) {
             if (member == null) {
@@ -360,6 +476,9 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
             }
             String userUuid = member.getUserUuid();
             User user = userMap.get(userUuid);
+
+            boolean isCallerSelf = callerUuid != null && callerUuid.equalsIgnoreCase(userUuid);
+            boolean canViewFull = allowFullViewAll || isCallerSelf;
 
             List<UserVehicle> memberVehicles = vehiclesByUser != null && userUuid != null
                     ? vehiclesByUser.getOrDefault(userUuid, Collections.emptyList())
@@ -372,25 +491,67 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
                     : Collections.emptyList();
 
             if (user != null) {
-                user.setVehicles(memberVehicles);
-                user.setIncome(memberIncome);
-                user.setProperties(memberProperties);
-                user.setFamilyId(familyDetail.getFamilyId());
+                if (canViewFull) {
+                    user.setVehicles(memberVehicles);
+                    user.setIncome(memberIncome);
+                    user.setProperties(memberProperties);
+                    user.setFamilyId(familyDetail.getFamilyId());
 
-                UserSearchResponseContent profileContent = new UserSearchResponseContent(user, ALL_INCLUDES);
-                member.setProfile(profileContent);
+                    UserSearchResponseContent profileContent = new UserSearchResponseContent(user, ALL_INCLUDES);
+                    member.setProfile(profileContent);
+                } else {
+                    // Data minimisation: return only summary profile for other family members
+                    UserSearchResponseContent summaryContent = new UserSearchResponseContent(user, SUMMARY_INCLUDES);
+                    member.setProfile(summaryContent);
+                }
             }
 
-            member.setVehicles(memberVehicles);
-            member.setIncome(memberIncome);
-            member.setProperties(memberProperties);
+            if (canViewFull) {
+                member.setVehicles(memberVehicles);
+                member.setIncome(memberIncome);
+                member.setProperties(memberProperties);
+            } else {
+                // Data minimisation: other members' vehicles, income, and properties omitted
+                member.setVehicles(Collections.emptyList());
+                member.setIncome(null);
+                member.setProperties(Collections.emptyList());
+            }
         }
     }
 
     private String resolveStateTenant(String tenantId) {
-        if (StringUtils.isBlank(tenantId)) {
-            return "pg";
+        if (StringUtils.isNotBlank(tenantId)) {
+            return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId.trim();
         }
-        return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
+
+        String stateTenant = userConfiguration.getStateLevelTenantId();
+        if (StringUtils.isNotBlank(stateTenant)) {
+            return stateTenant.trim();
+        }
+
+        log.error("[FAMILY-PROFILE-SERVICE] Tenant ID cannot be resolved: neither request/family tenantId nor state.level.tenant.id configured");
+        throw new CustomException(UserConstants.ERROR_TENANT_ID_REQUIRED,
+                UserConstants.MSG_TENANT_ID_UNDETERMINED);
+    }
+
+    /**
+     * Authorization context holding evaluated caller scope and permissions for family profile search.
+     */
+    private static class FamilyAccessContext {
+        private final boolean fullView;
+        private final String callerUuid;
+
+        public FamilyAccessContext(boolean fullView, String callerUuid) {
+            this.fullView = fullView;
+            this.callerUuid = callerUuid;
+        }
+
+        public boolean isFullView() {
+            return fullView;
+        }
+
+        public String getCallerUuid() {
+            return callerUuid;
+        }
     }
 }

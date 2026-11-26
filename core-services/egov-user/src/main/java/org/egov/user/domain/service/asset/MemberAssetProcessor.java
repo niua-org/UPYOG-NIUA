@@ -415,8 +415,13 @@ public class MemberAssetProcessor {
                         throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
                                 UserConstants.MSG_URBAN_PROPERTY_SERVICE_UNAVAILABLE);
                     }
+                    String consentCaller = StringUtils.isNotBlank(actorUuid) ? actorUuid : existingUser.getUuid();
+                    String consentTenant = StringUtils.isNotBlank(prop.getTenantId())
+                            ? prop.getTenantId()
+                            : (detail != null && StringUtils.isNotBlank(detail.getTenantId()) ? detail.getTenantId() : existingUser.getTenantId());
+
                     boolean consumed = urbanPropertyService.consumeConsentToken(
-                            urban.getUpyogPropertyId(), token, existingUser.getUuid(), prop.getTenantId());
+                            urban.getUpyogPropertyId(), token, consentCaller, consentTenant);
                     if (!consumed) {
                         log.warn("[MEMBER-ASSET-PROCESSOR] Invalid or expired property consent token for property ID {}", urban.getUpyogPropertyId());
                         throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,

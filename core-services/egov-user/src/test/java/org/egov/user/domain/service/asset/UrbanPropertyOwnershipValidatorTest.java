@@ -114,4 +114,54 @@ class UrbanPropertyOwnershipValidatorTest {
                 validator.validateAndResolveTargetOwnerMobile(property, List.of(linked), "caller-uuid", null));
         assertEquals("PROPERTY_ALREADY_LINKED_TO_CALLER", ex.getCode());
     }
+
+    @Test
+    @DisplayName("Individual property with masked mobile number should throw OWNER_MOBILE_NOT_FOUND")
+    void testValidateIndividual_MaskedMobile_ThrowsError() {
+        UrbanPropertyInfo property = UrbanPropertyInfo.builder()
+                .propertyId("PT-101")
+                .ownershipCategory("INDIVIDUAL.SINGLEOWNER")
+                .owners(List.of(
+                        UrbanPropertyOwnerInfo.builder().rawMobileNumber("98*****210").build()
+                ))
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                validator.validateAndResolveTargetOwnerMobile(property, Collections.emptyList(), "caller-uuid", null));
+        assertEquals("OWNER_MOBILE_NOT_FOUND", ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Multiple-owner property with masked mobile number should throw OWNER_MOBILE_NOT_FOUND")
+    void testValidateMultipleOwners_MaskedMobile_ThrowsError() {
+        UrbanPropertyInfo property = UrbanPropertyInfo.builder()
+                .propertyId("PT-102")
+                .ownershipCategory("INDIVIDUAL.MULTIPLEOWNERS")
+                .owners(List.of(
+                        UrbanPropertyOwnerInfo.builder().rawMobileNumber("98*****210").build(),
+                        UrbanPropertyOwnerInfo.builder().rawMobileNumber("9123456780").build()
+                ))
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                validator.validateAndResolveTargetOwnerMobile(property, Collections.emptyList(), "caller-uuid", "9123456780"));
+        assertEquals("OWNER_MOBILE_NOT_FOUND", ex.getCode());
+    }
+
+    @Test
+    @DisplayName("Multiple-owner property with requested masked mobile should throw INVALID_OWNER_MOBILE")
+    void testValidateMultipleOwners_RequestedMobile_Masked_ThrowsError() {
+        UrbanPropertyInfo property = UrbanPropertyInfo.builder()
+                .propertyId("PT-102")
+                .ownershipCategory("INDIVIDUAL.MULTIPLEOWNERS")
+                .owners(List.of(
+                        UrbanPropertyOwnerInfo.builder().rawMobileNumber("9876543210").build(),
+                        UrbanPropertyOwnerInfo.builder().rawMobileNumber("9123456780").build()
+                ))
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                validator.validateAndResolveTargetOwnerMobile(property, Collections.emptyList(), "caller-uuid", "98*****210"));
+        assertEquals("INVALID_OWNER_MOBILE", ex.getCode());
+    }
 }

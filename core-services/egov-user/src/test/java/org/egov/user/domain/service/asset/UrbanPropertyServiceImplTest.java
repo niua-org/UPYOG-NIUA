@@ -4,6 +4,7 @@ import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.config.UserConfiguration;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.PropertyOtpClient;
 import org.egov.user.persistence.repository.PropertyServiceClient;
 import org.egov.user.persistence.repository.UserPropertyRepository;
@@ -65,6 +66,7 @@ public class UrbanPropertyServiceImplTest {
         when(userConfiguration.getPropertyOtpReferenceTtlMs()).thenReturn(900000L);
         when(userConfiguration.getPropertyOtpVerifyMaxAttempts()).thenReturn(3);
         when(userConfiguration.getPropertyConsentTokenTtlMs()).thenReturn(900000L);
+        when(userConfiguration.getPropertyServiceSystemRole()).thenReturn("INTERNAL_MICROSERVICE_ROLE");
 
         when(propertyOtpClient.validateOtp(any(), eq("123456"), any(), any())).thenReturn(true);
         when(propertyOtpClient.validateOtp(any(), eq("999999"), any(), any())).thenReturn(false);
@@ -320,12 +322,45 @@ public class UrbanPropertyServiceImplTest {
     }
 
     /**
+     * Verifies that exhausting maximum OTP verification attempts throws MAX_OTP_ATTEMPTS_EXCEEDED
+     * and invalidates the session registry challenge.
+     */
+    @Test
+    @DisplayName("Verify OTP exhausting max attempts should throw MAX_OTP_ATTEMPTS_EXCEEDED")
+    void testVerifyOtp_MaxAttemptsExceeded_ThrowsError() {
+        sessionRegistry.registerChallenge("REF-MAX", PROPERTY_ID, TENANT_ID, "9876543210", 60000L, 3);
+
+        UrbanPropertyOtpVerifyRequest request = UrbanPropertyOtpVerifyRequest.builder()
+                .tenantId(TENANT_ID)
+                .propertyId(PROPERTY_ID)
+                .referenceId("REF-MAX")
+                .otp("999999")
+                .build();
+
+        // Attempt 1: INVALID_OTP
+        CustomException ex1 = assertThrows(CustomException.class, () -> service.verifyUrbanPropertyOtp(request));
+        assertEquals("INVALID_OTP", ex1.getCode());
+
+        // Attempt 2: INVALID_OTP
+        CustomException ex2 = assertThrows(CustomException.class, () -> service.verifyUrbanPropertyOtp(request));
+        assertEquals("INVALID_OTP", ex2.getCode());
+
+        // Attempt 3: MAX_OTP_ATTEMPTS_EXCEEDED
+        CustomException ex3 = assertThrows(CustomException.class, () -> service.verifyUrbanPropertyOtp(request));
+        assertEquals("MAX_OTP_ATTEMPTS_EXCEEDED", ex3.getCode());
+
+        // Subsequent attempt: challenge is now invalidated / expired
+        CustomException ex4 = assertThrows(CustomException.class, () -> service.verifyUrbanPropertyOtp(request));
+        assertEquals("INVALID_OTP_SESSION", ex4.getCode());
+    }
+
+    /**
      * Verifies that the consent validation endpoint returns valid=true for an active, unexpired consent token.
      */
     @Test
     @DisplayName("Validate consent token endpoint should return valid=true for existing token")
     void testValidateConsentToken_Endpoint() {
-        sessionRegistry.registerConsentToken("TOKEN-ABC", PROPERTY_ID, TENANT_ID, "9876543210", null, 60000L);
+        sessionRegistry.registerConsentToken("TOKEN-ABC", PROPERTY_ID, TENANT_ID, "9876543210", null, null, 60000L);
 
         UrbanPropertyConsentValidateRequest request = UrbanPropertyConsentValidateRequest.builder()
                 .propertyId(PROPERTY_ID)
@@ -344,7 +379,7 @@ public class UrbanPropertyServiceImplTest {
     @Test
     @DisplayName("Validate consent token endpoint should return invalid when consentToken is null")
     void testValidateConsentToken_NullToken_Rejected() {
-        sessionRegistry.registerConsentToken("TOKEN-ABC", PROPERTY_ID, TENANT_ID, "9876543210", null, 60000L);
+        sessionRegistry.registerConsentToken("TOKEN-ABC", PROPERTY_ID, TENANT_ID, "9876543210", null, null, 60000L);
 
         UrbanPropertyConsentValidateRequest request = UrbanPropertyConsentValidateRequest.builder()
                 .propertyId(PROPERTY_ID)
@@ -360,6 +395,15 @@ public class UrbanPropertyServiceImplTest {
     @Test
     @DisplayName("consumeConsentToken validates, consumes single-use token, and prevents replay")
     void testConsumeConsentToken_SingleUse() {
+        UrbanPropertyInfo property = UrbanPropertyInfo.builder()
+                .propertyId(PROPERTY_ID)
+                .tenantId(TENANT_ID)
+                .ownershipCategory("INDIVIDUAL.SINGLEOWNER")
+                .owners(Collections.singletonList(UrbanPropertyOwnerInfo.builder().rawMobileNumber("9876543210").build()))
+                .build();
+        when(propertyServiceClient.fetchPropertyById(eq(TENANT_ID), eq(PROPERTY_ID), any()))
+                .thenReturn(property);
+
         sessionRegistry.registerConsentToken("TOKEN-ONCE", PROPERTY_ID, TENANT_ID, "9876543210", null, "caller-uuid-1", 60000L);
 
         // First consumption succeeds
@@ -369,6 +413,56 @@ public class UrbanPropertyServiceImplTest {
         // Second consumption fails (single-use replay prevention)
         boolean second = service.consumeConsentToken(PROPERTY_ID, "TOKEN-ONCE", "caller-uuid-1", TENANT_ID);
         assertFalse(second);
+    }
+
+    @Test
+    @DisplayName("consumeConsentToken fails closed when non-CustomException occurs during capacity re-check")
+    void testConsumeConsentToken_NonCustomException_FailsClosedWithCustomException() {
+        when(propertyServiceClient.fetchPropertyById(eq(TENANT_ID), eq(PROPERTY_ID), any()))
+                .thenThrow(new RuntimeException("property-services connection reset"));
+
+        sessionRegistry.registerConsentToken("TOKEN-ERR", PROPERTY_ID, TENANT_ID, "9876543210", null, "caller-uuid-1", 60000L);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                service.consumeConsentToken(PROPERTY_ID, "TOKEN-ERR", "caller-uuid-1", TENANT_ID));
+        assertEquals(UserConstants.ERROR_PROPERTY_SERVICE_ERROR, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("consumeConsentToken throws PROPERTY_NOT_FOUND when property service returns null")
+    void testConsumeConsentToken_PropertyNotFound_ThrowsCustomException() {
+        when(propertyServiceClient.fetchPropertyById(eq(TENANT_ID), eq(PROPERTY_ID), any()))
+                .thenReturn(null);
+
+        sessionRegistry.registerConsentToken("TOKEN-404", PROPERTY_ID, TENANT_ID, "9876543210", null, "caller-uuid-1", 60000L);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                service.consumeConsentToken(PROPERTY_ID, "TOKEN-404", "caller-uuid-1", TENANT_ID));
+        assertEquals(UserConstants.ERROR_PROPERTY_NOT_FOUND, ex.getCode());
+    }
+
+    @Test
+    @DisplayName("consumeConsentToken throws PROPERTY_LINKING_LIMIT_EXCEEDED when capacity is exceeded")
+    void testConsumeConsentToken_LinkingLimitExceeded_ThrowsCustomException() {
+        UrbanPropertyInfo property = UrbanPropertyInfo.builder()
+                .propertyId(PROPERTY_ID)
+                .tenantId(TENANT_ID)
+                .ownershipCategory("INDIVIDUAL.SINGLEOWNER")
+                .owners(Collections.singletonList(UrbanPropertyOwnerInfo.builder().rawMobileNumber("9876543210").build()))
+                .build();
+        when(propertyServiceClient.fetchPropertyById(eq(TENANT_ID), eq(PROPERTY_ID), any()))
+                .thenReturn(property);
+
+        Map<String, Object> linkedRow = new HashMap<>();
+        linkedRow.put("userUuid", "already-linked-user");
+        when(userPropertyRepository.findActiveLinkedUsersForUrbanProperty(eq(TENANT_ID), eq(PROPERTY_ID)))
+                .thenReturn(Collections.singletonList(linkedRow));
+
+        sessionRegistry.registerConsentToken("TOKEN-FULL", PROPERTY_ID, TENANT_ID, "9876543210", null, "caller-uuid-1", 60000L);
+
+        CustomException ex = assertThrows(CustomException.class, () ->
+                service.consumeConsentToken(PROPERTY_ID, "TOKEN-FULL", "caller-uuid-1", TENANT_ID));
+        assertEquals(UserConstants.ERROR_PROPERTY_LINKING_LIMIT_EXCEEDED, ex.getCode());
     }
 
     @Test
@@ -413,5 +507,92 @@ public class UrbanPropertyServiceImplTest {
         // 4th send blocked by rate limiter
         CustomException ex = assertThrows(CustomException.class, () -> service.sendUrbanPropertyOtp(req));
         assertEquals("OTP_RATE_LIMIT_EXCEEDED", ex.getCode());
+    }
+
+    /**
+     * Verifies that when an attacker caller exhausts their rate limit on a property,
+     * genuine owners with different caller UUID and destination mobile are NOT locked out.
+     */
+    @Test
+    @DisplayName("Rate limiting on (callerUuid, propertyId) prevents attacker from locking out real owner")
+    void testSendUrbanPropertyOtp_AttackerRateLimited_RealOwnerNotBlocked() {
+        List<UrbanPropertyOwnerInfo> owners = new ArrayList<>();
+        owners.add(UrbanPropertyOwnerInfo.builder().name("Owner 1").rawMobileNumber("9876543210").build());
+        owners.add(UrbanPropertyOwnerInfo.builder().name("Owner 2").rawMobileNumber("9123456789").build());
+
+        UrbanPropertyInfo info = UrbanPropertyInfo.builder()
+                .propertyId("PB-PT-SHARED")
+                .tenantId(TENANT_ID)
+                .ownershipCategory("INDIVIDUAL.MULTIPLEOWNERS")
+                .owners(owners)
+                .build();
+
+        when(propertyServiceClient.fetchPropertyById(eq(TENANT_ID), eq("PB-PT-SHARED"), any()))
+                .thenReturn(info);
+        when(userPropertyRepository.findActiveLinkedUsersForUrbanProperty(eq(TENANT_ID), eq("PB-PT-SHARED")))
+                .thenReturn(Collections.emptyList());
+
+        // Attacker caller tries 3 times to send OTP for Owner 1
+        UrbanPropertyOtpRequest attackerReq = UrbanPropertyOtpRequest.builder()
+                .tenantId(TENANT_ID)
+                .propertyId("PB-PT-SHARED")
+                .ownerMobileNumber("9876543210")
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("attacker-uuid").build()).build())
+                .build();
+
+        service.sendUrbanPropertyOtp(attackerReq);
+        service.sendUrbanPropertyOtp(attackerReq);
+        service.sendUrbanPropertyOtp(attackerReq);
+
+        // 4th attempt by attacker is rate-limited
+        CustomException ex = assertThrows(CustomException.class, () -> service.sendUrbanPropertyOtp(attackerReq));
+        assertEquals("OTP_RATE_LIMIT_EXCEEDED", ex.getCode());
+
+        // Genuine Owner 2 with different callerUuid and mobile can still request OTP
+        UrbanPropertyOtpRequest ownerReq = UrbanPropertyOtpRequest.builder()
+                .tenantId(TENANT_ID)
+                .propertyId("PB-PT-SHARED")
+                .ownerMobileNumber("9123456789")
+                .requestInfo(RequestInfo.builder().userInfo(User.builder().uuid("owner2-uuid").build()).build())
+                .build();
+
+        UrbanPropertyOtpResponse ownerResp = service.sendUrbanPropertyOtp(ownerReq);
+        assertNotNull(ownerResp);
+        assertEquals("PB-PT-SHARED", ownerResp.getPropertyId());
+    }
+
+    @Test
+    @DisplayName("sendUrbanPropertyOtp should use configured system role in system RequestInfo when calling property-services")
+    void testSendUrbanPropertyOtp_UsesConfiguredSystemRoleInRequestInfo() {
+        UrbanPropertyOwnerInfo owner = UrbanPropertyOwnerInfo.builder()
+                .name("Ramesh Kumar")
+                .rawMobileNumber("9876543210")
+                .build();
+        UrbanPropertyInfo info = UrbanPropertyInfo.builder()
+                .propertyId("PB-PT-ROLE-CHECK")
+                .tenantId(TENANT_ID)
+                .ownershipCategory("INDIVIDUAL.SINGLEOWNER")
+                .owners(Collections.singletonList(owner))
+                .build();
+
+        org.mockito.ArgumentCaptor<RequestInfo> requestInfoCaptor = org.mockito.ArgumentCaptor.forClass(RequestInfo.class);
+        when(propertyServiceClient.fetchPropertyById(eq(TENANT_ID), eq("PB-PT-ROLE-CHECK"), requestInfoCaptor.capture()))
+                .thenReturn(info);
+        when(userPropertyRepository.findActiveLinkedUsersForUrbanProperty(eq(TENANT_ID), eq("PB-PT-ROLE-CHECK")))
+                .thenReturn(Collections.emptyList());
+
+        UrbanPropertyOtpRequest request = UrbanPropertyOtpRequest.builder()
+                .tenantId(TENANT_ID)
+                .propertyId("PB-PT-ROLE-CHECK")
+                .build();
+
+        service.sendUrbanPropertyOtp(request);
+
+        RequestInfo captured = requestInfoCaptor.getValue();
+        assertNotNull(captured);
+        assertNotNull(captured.getUserInfo());
+        assertEquals("SYSTEM", captured.getUserInfo().getType());
+        assertEquals(1, captured.getUserInfo().getRoles().size());
+        assertEquals("INTERNAL_MICROSERVICE_ROLE", captured.getUserInfo().getRoles().get(0).getCode());
     }
 }
