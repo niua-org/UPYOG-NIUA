@@ -45,22 +45,28 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
         })
     }
 
+    const rowHeaders = tableData?.reportHeader ? JSON.parse(JSON.stringify(tableData.reportHeader)) : [];
+    if (rowHeaders?.[0]?.label !== "#") {
+        rowHeaders.unshift({ label: "#" });
+    }
+
     if (rowData && rowData.length > 0 && rowData[rowData.length - 1][0] !== "Total") {
         const totalRow = new Array(rowData[0].length).fill("");
         totalRow[0] = "Total";
+        rowHeaders.forEach((header, index) => {
+            if (header?.total !== true || index === 0) return;
+            const values = rowData
+                .map((row) => row[index])
+                .filter((value) => value !== null && value !== undefined && value !== "")
+                .map(Number)
+                .filter(Number.isFinite);
+            if (values.length > 0) {
+                totalRow[index] = values.reduce((sum, value) => sum + value, 0);
+            }
+        });
         rowData.push(totalRow);
     }
-    
 
-    const rowHeaders = tableData?.reportHeader
-    
-    
-    if(rowHeaders?.[0]?.label!=="#"){
-        rowHeaders?.unshift({
-            label: "#"
-        }) 
-    }
-    
     const rowHeadersCopy = rowHeaders && JSON.parse(JSON.stringify(rowHeaders))//deep copy
     
     const headersXLS = rowHeadersCopy?.map(header => t(header.label))
@@ -81,7 +87,7 @@ const ReportSearchApplication = ({ onSubmit, isLoading, data, tableData, isTable
             }
         }
         const rowVal = header?.localisationRequired ? t(`${header?.localisationPrefix}${row[index]}`) : row?.[index]
-        return rowVal ? rowVal : "-"
+        return rowVal === null || rowVal === undefined || rowVal === "" ? "-" : rowVal
     }
 
   const columns = useMemo(() => {

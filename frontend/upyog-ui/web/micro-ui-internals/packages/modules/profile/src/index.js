@@ -17,9 +17,6 @@ const App = () => {
   const FamilyCreatedResponse = Digit?.ComponentRegistryService?.getComponent("FamilyCreatedResponse");
   const FamilyDashboard = Digit?.ComponentRegistryService?.getComponent("FamilyDashboard");
   const FamilyCreate = Digit?.ComponentRegistryService?.getComponent("FamilyCreate");
-
-
-
  
   return (
     <span className={`${"profile-citizen"}`}>

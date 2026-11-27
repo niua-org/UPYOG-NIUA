@@ -21,6 +21,7 @@ const EmployeeApp = ({ path, userType }) => {
   if (!isFamilyApprover) {
     return <Navigate to="/upyog-ui/employee" replace />;
   }
+  const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
 
   return (
     <AppContainer>
@@ -58,6 +59,14 @@ const EmployeeApp = ({ path, userType }) => {
             element={
               <PrivateRoute>
                 <ApplicationDetails parentRoute={path} />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="FamilyIDCoverageReport/*"
+            element={
+              <PrivateRoute>
+                <EnhancedReport parentRoute={path} moduleName="rainmaker-family" reportName="FamilyIDCoverageReport" />
               </PrivateRoute>
             }
           />
