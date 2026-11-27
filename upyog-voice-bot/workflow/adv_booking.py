@@ -24,7 +24,7 @@ from workflow.workflow_helper import (
     parse_consent_response,
     make_consent_node,
     consent_router,
-    maybe_build_consent_prompt,
+    build_consent_node,
 )
 # BaseAgentState = The universal "ID Card" (TypedDict) for all modules. Contains messages, phone, session_id etc.
 
@@ -794,7 +794,7 @@ def ask_next_node(state: AdvBookingState):
     if val_err:
         text = f"⚠️ {val_err}\n\n{text}"
     else:
-        consent_resp = maybe_build_consent_prompt("adv_booking", draft_booking, "draft_booking", ALL_FIELDS, state)
+        consent_resp = build_consent_node("adv_booking", draft_booking, "draft_booking", ALL_FIELDS, state)
         if consent_resp:
             return consent_resp
 

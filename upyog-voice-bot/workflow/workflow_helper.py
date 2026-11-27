@@ -292,7 +292,7 @@ def consent_router(state: Dict[str, Any]) -> str:
     return "extraction"
 
 
-def maybe_build_consent_prompt(
+def build_consent_node(
     workflow_key: str,
     draft: Dict[str, Any],
     draft_key: str,

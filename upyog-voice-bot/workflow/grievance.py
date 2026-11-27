@@ -19,7 +19,7 @@ from workflow.base_state import BaseAgentState
 from workflow.workflow_helper import (
     make_consent_node,
     consent_router,
-    maybe_build_consent_prompt,
+    build_consent_node,
 )
 
 logger = logging.getLogger(__name__)
@@ -530,7 +530,7 @@ def ask_next_node(state: GrievanceState):
     if val_err:
         text = f"⚠️ {val_err}\n\n{text}"
     else:
-        consent_resp = maybe_build_consent_prompt("grievance", draft, "draft_grievance", ALL_FIELDS, state)
+        consent_resp = build_consent_node("grievance", draft, "draft_grievance", ALL_FIELDS, state)
         if consent_resp:
             return consent_resp
 
