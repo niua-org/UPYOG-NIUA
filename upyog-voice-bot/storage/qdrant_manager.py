@@ -19,35 +19,39 @@ shared_memory = MemorySaver()
 
 
 load_dotenv(override=True)
-# QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
-# QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
-# QDRANT_GRPC_PORT = int(os.getenv("QDRANT_GRPC_PORT", 6334))
-# QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
+QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
+QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
+QDRANT_GRPC_PORT = int(os.getenv("QDRANT_GRPC_PORT", 6334))
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", None)
+QDRANT_HTTPS = os.getenv("QDRANT_HTTPS", "false").strip().lower() in ("true", "1", "yes")
 
-# try:
-#     # Connect to the standalone Qdrant server via high-speed gRPC
-#     client = QdrantClient(
-#         host=QDRANT_HOST,
-#         port=QDRANT_PORT,
-#         grpc_port=QDRANT_GRPC_PORT,
-#         api_key=QDRANT_API_KEY,
-#         prefer_grpc=True,
-#         timeout=5.0
-#     )
-#     # Test connection
-#     client.get_collections()
-#     logger.info(f"[Qdrant] Connected successfully to standalone server at {QDRANT_HOST}:{QDRANT_PORT}")
-# except Exception as e:
-#     logger.warning(f"[Qdrant] Could not connect to {QDRANT_HOST}:{QDRANT_PORT} ({e}), falling back to in-memory.")
-#     client = QdrantClient(":memory:")
-    
-
-# Initialize local filesystem Qdrant database with fallback for concurrent access
 try:
-    client = QdrantClient(path="./qdrant_storage")
+    # Connect to the standalone Qdrant server
+    client = QdrantClient(
+        host=QDRANT_HOST,
+        port=QDRANT_PORT,
+        https=QDRANT_HTTPS,
+        # grpc_port=QDRANT_GRPC_PORT,
+        api_key=QDRANT_API_KEY,
+        prefer_grpc=False,
+        timeout=10.0
+    )
+    # Test connection
+    client.get_collections()
+    logger.info(f"[Qdrant] Connected successfully to standalone server at {QDRANT_HOST}:{QDRANT_PORT} (https={QDRANT_HTTPS})")
 except Exception as e:
-    logger.warning(f"Could not open ./qdrant_storage ({e}), falling back to in-memory Qdrant client.")
-    client = QdrantClient(":memory:")
+    logger.warning(f"[Qdrant] Could not connect to {QDRANT_HOST}:{QDRANT_PORT} ({e}), falling back to local/in-memory Qdrant client.")
+    # Initialize local filesystem Qdrant database with fallback for concurrent access
+    try:
+        storage_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "qdrant_storage")
+        if not os.path.exists(storage_path):
+            storage_path = "./qdrant_storage"
+        client = QdrantClient(path=storage_path)
+        logger.info(f"[Qdrant] Connected successfully to local filesystem Qdrant database at {storage_path}")
+    except Exception as storage_err:
+        logger.warning(f"[Qdrant] Could not open local storage ({storage_err}), falling back to in-memory Qdrant client.")
+        client = QdrantClient(":memory:")
+        logger.info("[Qdrant] Operating with in-memory Qdrant client.")
 
 LONG_TERM_MEMORY_COLLECTION = "long_term_chat_memory"
 KNOWLEDGE_BASE_COLLECTION = "upyog_knowledge_base"
@@ -116,7 +120,10 @@ def get_memory_retention_days() -> int:
             logger.warning(f"Invalid integer in MEMORY_RETENTION_DAYS env variable: {env_days}")
 
     try:
-        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yml")
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config_path = os.path.join(base_dir, "config.yml")
+        if not os.path.exists(config_path):
+            config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.yml")
         if os.path.exists(config_path):
             with open(config_path, "r", encoding="utf-8") as f:
                 cfg = yaml.safe_load(f) or {}
@@ -146,27 +153,6 @@ class MemoryManager:
 
         try:
             # NOTE: Deletes ALL chat history older than cutoff_date for the current user (This code to be used when qdrant database is set up)
-            # client.delete(
-            #     collection_name=LONG_TERM_MEMORY_COLLECTION,
-            #     points_selector=Filter(
-            #         must=[
-            #             FieldCondition(
-            #                 key="phone_number",
-            #                 match=MatchValue(value=phone_number)
-            #             ),
-            #             FieldCondition(
-            #                 key="timestamp",
-            #                 range=Range(lt=cutoff_timestamp)
-            #             )
-            #         ]
-            #     )
-            # )
-            # logger.info(f"Enforced sliding window. Deleted records older than {cutoff_date} ({retention_days} days) for {phone_number}.")
-
-
-            # --- Global Pod Storage Cleanup ---
-            # NOTE: Deletes ALL chat history older than configured retention_days across all users
-            # (Fixes memory filling issue in voice-bot pod in sandbox / containerized environments)
             client.delete(
                 collection_name=LONG_TERM_MEMORY_COLLECTION,
                 points_selector=Filter(
@@ -178,7 +164,24 @@ class MemoryManager:
                     ]
                 )
             )
-            logger.info(f"Enforced global sliding window. Deleted all records older than {cutoff_date} ({retention_days} days retention).")
+            logger.info(f"Enforced sliding window. Deleted records older than {cutoff_date} ({retention_days} days) for {phone_number}.")
+
+
+            # --- Global Pod Storage Cleanup ---
+            # NOTE: Deletes ALL chat history older than configured retention_days across all users
+            # (Fixes memory filling issue in voice-bot pod in sandbox / containerized environments)
+            # client.delete(
+            #     collection_name=LONG_TERM_MEMORY_COLLECTION,
+            #     points_selector=Filter(
+            #         must=[
+            #             FieldCondition(
+            #                 key="timestamp",
+            #                 range=Range(lt=cutoff_timestamp)
+            #             )
+            #         ]
+            #     )
+            # )
+            # logger.info(f"Enforced global sliding window. Deleted all records older than {cutoff_date} ({retention_days} days retention).")
         except Exception as e:
             logger.error(f"Error enforcing sliding window: {e}")
 

@@ -24,12 +24,11 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 llm = None
-if os.environ.get("GROQ_API_KEY"):
-    try:
-        from langchain_groq import ChatGroq
-        llm = ChatGroq(model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b"), temperature=0)
-    except ImportError:
-        pass
+try:
+    from services.llm_client import get_unified_chat_model
+    llm = get_unified_chat_model(temperature=0)
+except Exception as e:
+    logger.warning(f"Could not initialize unified LLM in upyog_client: {e}")
 
 
 SENSITIVE_LOG_KEYS = {

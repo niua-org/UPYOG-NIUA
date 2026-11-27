@@ -15,9 +15,11 @@ import org.springframework.util.CollectionUtils;
 import org.upyog.family.domain.model.FamilyStatus;
 import org.upyog.family.domain.model.MemberStatus;
 import org.upyog.family.domain.service.StateFamilySyncService;
+import org.upyog.family.domain.service.config.FamilyConfigurationService;
 import org.upyog.family.persistence.repository.FamilyRepository;
 import org.upyog.family.persistence.repository.StateFamilySyncRepository;
 import org.upyog.family.util.FamilyConstants;
+import org.upyog.family.util.MaskUtils;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AuditDetails;
 import org.upyog.family.web.contract.Family;
@@ -53,24 +55,66 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
     private final FamilyRepository familyRepository;
     private final ResponseInfoFactory responseInfoFactory;
     private final ObjectMapper objectMapper;
+    private final FamilyConfigurationService familyConfigurationService;
 
+    /**
+     * Constructs a StateFamilySyncServiceImpl with default Jackson ObjectMapper.
+     *
+     * @param stateFamilySyncRepository repository for staging state family registry payloads
+     * @param familyRepository repository for UPYOG family persistence and exclusivity queries
+     * @param responseInfoFactory factory creating standard UPYOG response headers
+     */
     public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
                                       FamilyRepository familyRepository,
                                       ResponseInfoFactory responseInfoFactory) {
-        this(stateFamilySyncRepository, familyRepository, responseInfoFactory, new ObjectMapper());
+        this(stateFamilySyncRepository, familyRepository, responseInfoFactory, new ObjectMapper(), null);
     }
 
-    @Autowired
+    /**
+     * Constructs a StateFamilySyncServiceImpl with explicit ObjectMapper and repository dependencies.
+     *
+     * @param stateFamilySyncRepository repository for staging state family registry payloads
+     * @param familyRepository repository for UPYOG family persistence and exclusivity queries
+     * @param responseInfoFactory factory creating standard UPYOG response headers
+     * @param objectMapper Jackson ObjectMapper for JSON mapping
+     */
     public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
                                       FamilyRepository familyRepository,
                                       ResponseInfoFactory responseInfoFactory,
                                       ObjectMapper objectMapper) {
+        this(stateFamilySyncRepository, familyRepository, responseInfoFactory, objectMapper, null);
+    }
+
+    /**
+     * Constructs a StateFamilySyncServiceImpl with all dependencies including FamilyConfigurationService.
+     *
+     * @param stateFamilySyncRepository repository for staging state family registry payloads
+     * @param familyRepository repository for UPYOG family persistence and exclusivity queries
+     * @param responseInfoFactory factory creating standard UPYOG response headers
+     * @param objectMapper Jackson ObjectMapper for JSON mapping
+     * @param familyConfigurationService service validating state family configuration policy
+     */
+    @Autowired
+    public StateFamilySyncServiceImpl(StateFamilySyncRepository stateFamilySyncRepository,
+                                      FamilyRepository familyRepository,
+                                      ResponseInfoFactory responseInfoFactory,
+                                      ObjectMapper objectMapper,
+                                      @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.stateFamilySyncRepository = stateFamilySyncRepository;
         this.familyRepository = familyRepository;
         this.responseInfoFactory = responseInfoFactory;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+        this.familyConfigurationService = familyConfigurationService;
     }
 
+    /**
+     * Ingests and stages external State Family Registry data into UPYOG.
+     * Generates a unique referenceId and stages the family unit for the "Family Found" UI screen.
+     *
+     * @param request state family sync request containing external state registry payload
+     * @return StateFamilySyncResponse containing referenceId and masked member profiles
+     * @throws CustomException if stateFamily, stateFamilyId, tenantId, or members are invalid
+     */
     @Override
     public StateFamilySyncResponse syncStateFamily(StateFamilySyncRequest request) {
         log.info("[STATE-FAMILY-SYNC-SVC] Received State Family Sync request from State Wrapper");
@@ -90,10 +134,15 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
             throw new CustomException(FamilyConstants.ERROR_INVALID_MEMBERS_LIST, "State Family must contain at least one member");
         }
 
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateStateRegistryFamily(request.getRequestInfo(), stateFamily.getTenantId());
+        }
+
         // Generate unique reference ID for UPYOG UI ingestion and session binding
         String referenceId = FamilyConstants.PREFIX_REF + UUID.randomUUID().toString();
         log.info("[STATE-FAMILY-SYNC-SVC] Staging state family: stateFamilyId={}, refId={}, membersCount={}",
-                stateFamily.getStateFamilyId(), referenceId, stateFamily.getMembers().size());
+                stateFamily.getStateFamilyId(), MaskUtils.maskIdentifier(referenceId), stateFamily.getMembers().size());
 
         // Assign memberIds if absent
         int memberIndex = 1;
@@ -119,10 +168,19 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .build();
     }
 
+    /**
+     * Retrieves a staged StateFamily record by referenceId or stateFamilyId for UPYOG UI rendering.
+     *
+     * @param referenceId staging reference ID generated during sync
+     * @param stateFamilyId state-assigned external family identifier
+     * @param requestInfo UPYOG request context envelope
+     * @return StateFamilySyncResponse containing staged state family with masked PII
+     * @throws CustomException if state family is not found in staging repository
+     */
     @Override
     public StateFamilySyncResponse getStateFamily(String referenceId, String stateFamilyId, RequestInfo requestInfo) {
         log.info("[STATE-FAMILY-SYNC-SVC] Fetching State Family for UI: refId={}, stateFamilyId={}",
-                referenceId, stateFamilyId);
+                MaskUtils.maskIdentifier(referenceId), stateFamilyId);
 
         StateFamily stateFamily = null;
         if (StringUtils.isNotBlank(referenceId)) {
@@ -134,7 +192,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
 
         if (stateFamily == null) {
             log.error("[STATE-FAMILY-SYNC-SVC] State Family not found for refId: {}, stateFamilyId: {}",
-                    referenceId, stateFamilyId);
+                    MaskUtils.maskIdentifier(referenceId), stateFamilyId);
             throw new CustomException(FamilyConstants.ERROR_STATE_FAMILY_NOT_FOUND, "State Family record not found in UPYOG staging");
         }
 
@@ -150,6 +208,14 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .build();
     }
 
+    /**
+     * Executes Just-In-Time (JIT) check and provisioning of a Family aggregate and its members upon citizen selection.
+     * Enforces multi-family exclusivity and idempotently provisions the family if not previously created.
+     *
+     * @param request JIT provision request containing member selection and state family references
+     * @return provisioned or updated Family domain aggregate
+     * @throws CustomException if exclusivity constraints are violated or state family is not found
+     */
     @Override
     @Transactional
     public Family jitProvisionFamilyAndMember(StateFamilyJitProvisionRequest request) {
@@ -159,6 +225,11 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
 
         log.info("[STATE-FAMILY-SYNC-SVC] Executing JIT check & provision: stateFamilyId={}, userUuid={}, tenant={}",
                 stateFamilyId, userUuid, tenantId);
+
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateStateRegistryFamily(request.getRequestInfo(), tenantId);
+        }
 
         // Enforce Multi-Family Exclusivity: Verify citizen is not already an active member of another family
         if (StringUtils.isNotBlank(userUuid)) {
@@ -255,7 +326,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
             if (matchedMember == null && StringUtils.isNotBlank(targetAadhaar)) {
                 matchedMember = placeholderMembers.stream()
                         .filter(m -> targetAadhaar.equals(extractFieldFromAdditionalDetails(m.getAdditionalDetails(), "aadhaarNumber"))
-                                || maskAadhaar(targetAadhaar).equals(extractFieldFromAdditionalDetails(m.getAdditionalDetails(), "maskedAadhaar")))
+                                || MaskUtils.maskAadhaar(targetAadhaar).equals(extractFieldFromAdditionalDetails(m.getAdditionalDetails(), "maskedAadhaar")))
                         .findFirst().orElse(null);
             }
 
@@ -276,7 +347,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 Map<String, Object> memberDetailsMap = getOrConvertToMap(matchedMember.getAdditionalDetails());
                 if (StringUtils.isNotBlank(targetMemberId)) memberDetailsMap.put("memberId", targetMemberId);
                 if (StringUtils.isNotBlank(targetMobile)) memberDetailsMap.put("mobileNumber", targetMobile);
-                if (StringUtils.isNotBlank(targetAadhaar)) memberDetailsMap.put("maskedAadhaar", maskAadhaar(targetAadhaar));
+                if (StringUtils.isNotBlank(targetAadhaar)) memberDetailsMap.put("maskedAadhaar", MaskUtils.maskAadhaar(targetAadhaar));
                 if (stagedMember != null) {
                     if (StringUtils.isNotBlank(stagedMember.getName()) && !memberDetailsMap.containsKey("name")) {
                         memberDetailsMap.put("name", stagedMember.getName());
@@ -298,7 +369,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 Map<String, Object> newMemberDetails = new HashMap<>();
                 if (StringUtils.isNotBlank(targetMemberId)) newMemberDetails.put("memberId", targetMemberId);
                 if (StringUtils.isNotBlank(targetMobile)) newMemberDetails.put("mobileNumber", targetMobile);
-                if (StringUtils.isNotBlank(targetAadhaar)) newMemberDetails.put("maskedAadhaar", maskAadhaar(targetAadhaar));
+                if (StringUtils.isNotBlank(targetAadhaar)) newMemberDetails.put("maskedAadhaar", MaskUtils.maskAadhaar(targetAadhaar));
                 if (stagedMember != null) {
                     if (StringUtils.isNotBlank(stagedMember.getName())) newMemberDetails.put("name", stagedMember.getName());
                     if (StringUtils.isNotBlank(stagedMember.getGender())) newMemberDetails.put("gender", stagedMember.getGender());
@@ -395,7 +466,9 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                         .name(sm.getName())
                         .mobileNumber(sm.getMobileNumber())
                         .gender(sm.getGender())
-                        .relationshipWithHead(StringUtils.isNotBlank(sm.getRelationshipWithHead()) ? sm.getRelationshipWithHead() : (isHead ? "HEAD" : "MEMBER"))
+                        .relationshipWithHead(StringUtils.isNotBlank(sm.getRelationshipWithHead()) && !FamilyConstants.RELATIONSHIP_HEAD.equalsIgnoreCase(sm.getRelationshipWithHead())
+                                ? sm.getRelationshipWithHead()
+                                : (isHead ? FamilyConstants.RELATIONSHIP_SELF : "MEMBER"))
                         .isHead(isHead)
                         .isVerified(isSelectedMember)
                         .active(true)
@@ -420,7 +493,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                     .familyId(stateFamilyId)
                     .tenantId(tenantId)
                     .userUuid(userUuid)
-                    .relationshipWithHead("HEAD")
+                    .relationshipWithHead(FamilyConstants.RELATIONSHIP_SELF)
                     .isHead(true)
                     .isVerified(true)
                     .active(true)
@@ -443,6 +516,7 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .headUserUuid(userUuid)
                 .category(stagedStateFamily != null && StringUtils.isNotBlank(stagedStateFamily.getCategory()) ? stagedStateFamily.getCategory() : FamilyConstants.CATEGORY_GENERAL)
                 .status(FamilyStatus.ACTIVE)
+                .familyType(FamilyConstants.TYPE_STATE_REGISTRY)
                 .additionalDetails(additionalDetails)
                 .members(members)
                 .auditDetails(AuditDetails.builder()
@@ -476,8 +550,8 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                         .dob(m.getDob())
                         .isVerified(m.getIsVerified())
                         .userUuid(m.getUserUuid())
-                        .maskedMobile(maskMobile(m.getMobileNumber()))
-                        .maskedAadhaar(maskAadhaar(m.getAadhaarNumber()))
+                        .maskedMobile(MaskUtils.maskMobile(m.getMobileNumber()))
+                        .maskedAadhaar(MaskUtils.maskAadhaar(m.getAadhaarNumber()))
                         .build();
                 maskedMembers.add(copy);
             }
@@ -494,23 +568,13 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
                 .build();
     }
 
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) return null;
-        if (mobile.length() >= 6) {
-            return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-        }
-        return "******";
-    }
-
-    private String maskAadhaar(String aadhaar) {
-        if (StringUtils.isBlank(aadhaar)) return null;
-        String clean = aadhaar.trim().replaceAll("\\s+", "");
-        if (clean.length() == 12) {
-            return "XXXXXXXX" + clean.substring(8);
-        }
-        return "XXXXXXXX" + (clean.length() >= 4 ? clean.substring(clean.length() - 4) : "****");
-    }
-
+    /**
+     * Extracts a string field value from an additionalDetails object (supporting JsonNode or Map).
+     *
+     * @param additionalDetails additionalDetails container object
+     * @param fieldName target field name to extract
+     * @return extracted string value or null if absent or null
+     */
     private String extractFieldFromAdditionalDetails(Object additionalDetails, String fieldName) {
         if (additionalDetails == null) {
             return null;
@@ -526,6 +590,12 @@ public class StateFamilySyncServiceImpl implements StateFamilySyncService {
         return null;
     }
 
+    /**
+     * Converts an arbitrary additionalDetails object into a mutable Map of String to Object.
+     *
+     * @param additionalDetails additionalDetails container object
+     * @return map of key-value attributes
+     */
     @SuppressWarnings("unchecked")
     private Map<String, Object> getOrConvertToMap(Object additionalDetails) {
         if (additionalDetails == null) {

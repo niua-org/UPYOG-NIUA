@@ -65,6 +65,9 @@ class RequesterDxClientImplTest {
 
         boolean mockOtpResult = client.verifyConsentToken("MOCK-OTP-9999", "user-1", "FAM-001", "pg.citya", requestInfo);
         assertFalse(mockOtpResult, "MOCK-OTP- token must be rejected when mockConsentEnabled is false");
+
+        boolean txnMockResult = client.verifyConsentToken("TXN-MOCK-12345", "user-1", "FAM-001", "pg.citya", requestInfo);
+        assertFalse(txnMockResult, "TXN-MOCK- token must be rejected when mockConsentEnabled is false");
     }
 
     @Test
@@ -74,6 +77,9 @@ class RequesterDxClientImplTest {
 
         boolean result = client.verifyConsentToken("CONSENT-VERIFIED-TEST", "user-1", "FAM-001", "pg.citya", requestInfo);
         assertTrue(result, "Mock token should pass when mockConsentEnabled is explicitly true");
+
+        boolean txnMockResult = client.verifyConsentToken("TXN-MOCK-TEST", "user-1", "FAM-001", "pg.citya", requestInfo);
+        assertTrue(txnMockResult, "TXN-MOCK token should pass when mockConsentEnabled is explicitly true");
     }
 
     @Test
@@ -184,5 +190,37 @@ class RequesterDxClientImplTest {
         // Replay attempt using same token for citizen-Alice in different family FAM-002: REJECTED
         boolean replayDiffFamily = client.verifyConsentToken("REF-REPLAY-TOKEN:123456", "citizen-Alice", "FAM-002", "pg.citya", requestInfo);
         assertFalse(replayDiffFamily, "Replay attack for a different family must be rejected");
+    }
+
+    @Test
+    @DisplayName("Registered token check: Succeeds when consumed within configurable TTL")
+    void verifyConsentToken_RegisteredToken_SuccessWithinTtl() {
+        when(configuration.getConsentTokenTtlMs()).thenReturn(10 * 60 * 1000L); // 10 minutes
+
+        client.registerConsentToken("TOKEN-VALID-123", "FAM-001", "user-alice");
+
+        boolean verified = client.verifyConsentToken("TOKEN-VALID-123", "user-alice", "FAM-001", "pg.citya", requestInfo);
+        assertTrue(verified, "Token should be verified successfully within configurable TTL");
+
+        // Single-use eviction: Second verification must fail
+        boolean secondUse = client.verifyConsentToken("TOKEN-VALID-123", "user-alice", "FAM-001", "pg.citya", requestInfo);
+        assertFalse(secondUse, "Token should be evicted after first successful consumption");
+    }
+
+    @Test
+    @DisplayName("Registered token check: Rejected when token exceeds configurable TTL")
+    void verifyConsentToken_RegisteredToken_ExpiredTtl() {
+        // Configure short TTL of 1 millisecond
+        when(configuration.getConsentTokenTtlMs()).thenReturn(1L);
+
+        client.registerConsentToken("TOKEN-EXPIRED-999", "FAM-001", "user-bob");
+
+        // Sleep briefly to exceed TTL
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException ignored) {}
+
+        boolean verified = client.verifyConsentToken("TOKEN-EXPIRED-999", "user-bob", "FAM-001", "pg.citya", requestInfo);
+        assertFalse(verified, "Token must be rejected after exceeding configurable TTL");
     }
 }

@@ -10,12 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import org.upyog.cdwm.service.impl.CNDServiceImpl;
 import org.upyog.cdwm.utils.TestRequestObjectBuilder;
 import org.upyog.cdwm.web.models.*;
@@ -40,7 +38,7 @@ class GlobalExceptionHandlerTest {
 
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private CNDServiceImpl cndService;
 
     @Mock
@@ -50,7 +48,7 @@ class GlobalExceptionHandlerTest {
     private CNDController cndController;
 
     @BeforeEach
-    void setUp(WebApplicationContext webApplicationContext) {
+    void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(cndController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

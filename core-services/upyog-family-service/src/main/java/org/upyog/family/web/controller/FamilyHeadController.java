@@ -9,6 +9,8 @@ import org.upyog.family.domain.service.FamilyHeadService;
 import org.upyog.family.util.ResponseInfoFactory;
 import org.upyog.family.web.contract.AssignHofRequest;
 import org.upyog.family.web.contract.Family;
+import org.upyog.family.web.contract.FamilyHofCheckRequest;
+import org.upyog.family.web.contract.FamilyHofCheckResponse;
 import org.upyog.family.web.contract.FamilyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,10 @@ import java.util.Collections;
 /**
  * REST Controller exposing Head of Family role succession and transfer endpoints in UPYOG.
  *
+ * <p>Handles HTTP transport and serialization for household representation succession flows. Coordinates
+ * with {@link FamilyHeadService} to ensure that only authorized heads can transfer representation and that
+ * the target successor is an active resident member of the family unit.</p>
+ *
  * @author UPYOG Team
  * @since 1.0.0
  */
@@ -35,6 +41,12 @@ public class FamilyHeadController {
     private final FamilyHeadService headService;
     private final ResponseInfoFactory responseInfoFactory;
 
+    /**
+     * Constructs {@link FamilyHeadController} with required domain service and response factory.
+     *
+     * @param headService service orchestrating HoF succession
+     * @param responseInfoFactory utility creating standard UPYOG {@link ResponseInfo} headers
+     */
     @Autowired
     public FamilyHeadController(FamilyHeadService headService, ResponseInfoFactory responseInfoFactory) {
         this.headService = headService;
@@ -43,10 +55,16 @@ public class FamilyHeadController {
 
     /**
      * Transfers or assigns the Head of Family (HoF) role to an existing active member of the family unit in UPYOG.
-     * Validates that the new head is an active member, revokes head status from the previous head, and updates family metadata.
      *
-     * @param request the HoF assignment request envelope containing family ID, new head UUID, and optional justification
-     * @return response entity containing the updated Family aggregate with HTTP 200 OK status
+     * <p>Enforces caller authorization (current HoF only), verifies candidate member status, revokes headship
+     * from the incumbent, promotes the successor, and records audit trail before publishing to Kafka.</p>
+     *
+     * @param request the HoF assignment request envelope containing family ID, new head UUID, and optional justification;
+     *                must not be {@code null}.
+     * @return {@link ResponseEntity} wrapping {@link FamilyResponse} containing the updated {@link Family} aggregate
+     *         with HTTP 200 OK status.
+     * @throws org.egov.tracer.model.CustomException if caller is unauthorized, target family or member is not found,
+     *         or candidate is already the HoF.
      */
     @PostMapping("/_assign")
     @Operation(summary = "Transfer or assign Head of Family (HoF) role to an active member in UPYOG")
@@ -62,6 +80,23 @@ public class FamilyHeadController {
                 .totalCount(1)
                 .build();
 
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Checks whether the authenticated caller in {@code RequestInfo} is the Head of Family (HoF).
+     *
+     * @param request the HoF check request envelope containing {@code RequestInfo}, {@code familyId}, and optional {@code tenantId};
+     *                must not be {@code null}.
+     * @return {@link ResponseEntity} wrapping {@link FamilyHofCheckResponse} stating whether the user is HoF,
+     *         with HTTP 200 OK status.
+     * @throws org.egov.tracer.model.CustomException if caller is unauthenticated or target family is not found.
+     */
+    @PostMapping("/_isHof")
+    @Operation(summary = "Check whether the authenticated caller is the Head of Family (HoF)")
+    public ResponseEntity<FamilyHofCheckResponse> isHeadOfFamily(@Valid @RequestBody FamilyHofCheckRequest request) {
+        log.info("[UPYOG-HEAD-CONTROLLER] Received /_isHof request for family: {}", request.getFamilyId());
+        FamilyHofCheckResponse response = headService.isHeadOfFamily(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

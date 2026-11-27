@@ -7,6 +7,8 @@ import org.egov.user.domain.model.Role;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserSearchCriteria;
 import org.egov.user.domain.model.enums.UserType;
+import org.egov.user.domain.service.config.FamilyConfigurationService;
+import org.egov.user.web.contract.config.FamilyConfig;
 import org.egov.user.domain.service.UserService;
 import org.egov.user.persistence.repository.OtpRepository;
 import org.egov.user.persistence.repository.UserRepository;
@@ -17,6 +19,7 @@ import org.egov.user.web.contract.multiauth.LoginV2Request;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.user.domain.service.utils.EncryptionDecryptionUtil;
 import org.egov.user.domain.service.utils.UserConstants;
+import org.egov.user.util.MaskUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -56,23 +59,55 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
     private final RestTemplate restTemplate;
 
     private final org.egov.user.config.UserConfiguration userConfiguration;
+    private final FamilyConfigurationService familyConfigurationService;
     private final Map<String, Integer> invalidOtpAttempts = new ConcurrentHashMap<>();
 
+    /**
+     * Primary constructor injecting repositories, utilities, and configuration.
+     *
+     * @param userService              user domain service for provisioning
+     * @param userRepository           user repository for persistence lookups
+     * @param otpRepository            OTP repository for OTP validation
+     * @param encryptionDecryptionUtil utility for encrypted criteria and decryption
+     * @param restTemplate             HTTP client for invoking state JIT family provisioning
+     * @param userConfiguration        application configuration properties
+     * @param familyConfigurationService dynamic state family configuration service
+     */
     @Autowired
     public FamilyIdAuthStrategy(UserService userService,
                                 UserRepository userRepository,
                                 OtpRepository otpRepository,
                                 EncryptionDecryptionUtil encryptionDecryptionUtil,
                                 @Autowired(required = false) RestTemplate restTemplate,
-                                @Autowired(required = false) org.egov.user.config.UserConfiguration userConfiguration) {
+                                @Autowired(required = false) org.egov.user.config.UserConfiguration userConfiguration,
+                                @Autowired(required = false) FamilyConfigurationService familyConfigurationService) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.restTemplate = restTemplate;
         this.userConfiguration = userConfiguration;
+        this.familyConfigurationService = familyConfigurationService;
     }
 
+    public FamilyIdAuthStrategy(UserService userService,
+                                UserRepository userRepository,
+                                OtpRepository otpRepository,
+                                EncryptionDecryptionUtil encryptionDecryptionUtil,
+                                RestTemplate restTemplate,
+                                org.egov.user.config.UserConfiguration userConfiguration) {
+        this(userService, userRepository, otpRepository, encryptionDecryptionUtil, restTemplate, userConfiguration, null);
+    }
+
+    /**
+     * Constructor without RestTemplate for testing scenarios.
+     *
+     * @param userService              user domain service for provisioning
+     * @param userRepository           user repository for persistence lookups
+     * @param otpRepository            OTP repository for OTP validation
+     * @param encryptionDecryptionUtil utility for encrypted criteria and decryption
+     * @param userConfiguration        application configuration properties
+     */
     public FamilyIdAuthStrategy(UserService userService,
                                 UserRepository userRepository,
                                 OtpRepository otpRepository,
@@ -81,6 +116,14 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         this(userService, userRepository, otpRepository, encryptionDecryptionUtil, null, userConfiguration);
     }
 
+    /**
+     * Minimal constructor for legacy unit tests.
+     *
+     * @param userService              user domain service for provisioning
+     * @param userRepository           user repository for persistence lookups
+     * @param otpRepository            OTP repository for OTP validation
+     * @param encryptionDecryptionUtil utility for encrypted criteria and decryption
+     */
     public FamilyIdAuthStrategy(UserService userService,
                                 UserRepository userRepository,
                                 OtpRepository otpRepository,
@@ -108,16 +151,36 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                 : 3;
     }
 
+    /**
+     * Checks if this strategy supports the given authentication channel type.
+     *
+     * @param authType the authentication channel type
+     * @return true if authType is FAMILY_ID, false otherwise
+     */
     @Override
     public boolean supports(AuthType authType) {
         return AuthType.FAMILY_ID.equals(authType);
     }
 
+    /**
+     * Determines whether this strategy can handle the incoming login request based on presence of familyId.
+     *
+     * @param request the login request payload
+     * @return true if request contains familyId
+     */
     @Override
     public boolean canHandle(LoginV2Request request) {
         return request != null && StringUtils.isNotBlank(request.getFamilyId());
     }
 
+    /**
+     * Authenticates the citizen via family member OTP, resolves or auto-provisions profile,
+     * triggers JIT family membership mapping, and strictly blocks inactive user accounts.
+     *
+     * @param request the login request payload
+     * @return result containing authenticated domain user or list of candidates
+     * @throws CustomException if validation fails or account is inactive
+     */
     @Override
     public AuthenticatedUserResult authenticateAndResolveUser(LoginV2Request request) {
         String familyId = request.getFamilyId();
@@ -134,6 +197,11 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
             throw new CustomException(UserConstants.ERROR_INVALID_OTP, UserConstants.MSG_LOGIN_OTP_REQUIRED);
         }
 
+        // Validate state family configuration policy
+        if (familyConfigurationService != null) {
+            familyConfigurationService.validateFamilySupported(request.getRequestInfo(), tenantId);
+        }
+
         // Determine effective identifier for OTP and user resolution: mobileNumber OR aadhaarNumber OR familyId
         String effectiveIdentifier;
         if (StringUtils.isNotBlank(mobileNumber)) {
@@ -144,7 +212,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
             effectiveIdentifier = familyId;
         }
         log.info("[FAMILY-AUTH-STRATEGY] Initiating family login: familyId={}, mobile={}, aadhaar={}, effectiveIdentifier={}, tenant={}",
-                familyId, maskMobile(mobileNumber), maskMobile(request.getAadhaarNumber()), maskMobile(effectiveIdentifier), tenantId);
+                familyId, MaskUtils.maskMobile(mobileNumber), MaskUtils.maskAadhaar(request.getAadhaarNumber()), MaskUtils.maskIdentifier(effectiveIdentifier), tenantId);
 
         // 1. Validate OTP for member mobile number or familyId
         validateOtp(effectiveIdentifier, otp, tenantId, request);
@@ -164,7 +232,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         // 2b. If client specified a selected user UUID, verify that it belongs to the matched accounts for this verified identifier
         if (StringUtils.isNotBlank(request.getSelectedUserUuid())) {
             log.info("[FAMILY-AUTH-STRATEGY] Resolving selected user UUID: {} for effective identifier: {}",
-                    request.getSelectedUserUuid(), maskMobile(effectiveIdentifier));
+                    request.getSelectedUserUuid(), MaskUtils.maskIdentifier(effectiveIdentifier));
             User selectedUser = matchedUsers.stream()
                     .filter(u -> request.getSelectedUserUuid().equals(u.getUuid()))
                     .findFirst()
@@ -174,7 +242,25 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                 log.error("[FAMILY-AUTH-STRATEGY] Selected citizen profile not found or does not belong to verified identifier: {}", request.getSelectedUserUuid());
                 throw new CustomException(UserConstants.ERROR_USER_NOT_FOUND, UserConstants.MSG_SELECTED_USER_NOT_FOUND);
             }
+            if (Boolean.FALSE.equals(selectedUser.getActive())) {
+                log.error("[FAMILY-AUTH-STRATEGY] Selected citizen profile {} is inactive", selectedUser.getUuid());
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
             selectedUser.setLastLoginMethod(AuthType.FAMILY_ID.name());
+            if (StringUtils.isNotBlank(request.getAadhaarNumber()) && !Boolean.TRUE.equals(selectedUser.getIsIdentityVerified())) {
+                selectedUser.setIsIdentityVerified(true);
+                selectedUser.setIdentityVerifiedDate(new Date());
+                selectedUser.setIdentityVerifiedSource(UserConstants.IDENTITY_SOURCE_FAMILY_ID);
+                if (StringUtils.isBlank(selectedUser.getAadhaarNumber())) {
+                    selectedUser.setAadhaarNumber(request.getAadhaarNumber());
+                }
+                try {
+                    userRepository.update(selectedUser, selectedUser, selectedUser.getId(), selectedUser.getUuid());
+                } catch (Exception e) {
+                    log.warn("[FAMILY-AUTH-STRATEGY] Could not persist updated verification fields for user {}: {}",
+                            selectedUser.getId(), e.getMessage());
+                }
+            }
             triggerFamilyJitProvision(selectedUser, request);
             return AuthenticatedUserResult.builder()
                     .user(selectedUser)
@@ -185,8 +271,13 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
 
         // 2c. Edge Case: If 2 or more users are linked to same identifier, return list for user selection
         if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() > 1) {
+            boolean allInactive = matchedUsers.stream().allMatch(u -> Boolean.FALSE.equals(u.getActive()));
+            if (allInactive) {
+                log.error("[FAMILY-AUTH-STRATEGY] All matching citizen accounts for familyId {} are inactive", familyId);
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
             log.info("[FAMILY-AUTH-STRATEGY] Found {} citizen profiles linked to effective identifier: {}. Returning list for selection.",
-                    matchedUsers.size(), maskMobile(effectiveIdentifier));
+                    matchedUsers.size(), MaskUtils.maskIdentifier(effectiveIdentifier));
             return AuthenticatedUserResult.builder()
                     .multipleUsersFound(true)
                     .matchedUsers(matchedUsers)
@@ -197,9 +288,27 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         // 2d. If exactly 1 user found, proceed with login
         if (!CollectionUtils.isEmpty(matchedUsers) && matchedUsers.size() == 1) {
             User user = matchedUsers.get(0);
+            if (Boolean.FALSE.equals(user.getActive())) {
+                log.error("[FAMILY-AUTH-STRATEGY] Citizen profile ID {} for familyId {} is inactive", user.getId(), familyId);
+                throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+            }
             log.info("[FAMILY-AUTH-STRATEGY] Matched single citizen ID: {}, UUID: {} for familyId: {}",
                     user.getId(), user.getUuid(), familyId);
             user.setLastLoginMethod(AuthType.FAMILY_ID.name());
+            if (StringUtils.isNotBlank(request.getAadhaarNumber()) && !Boolean.TRUE.equals(user.getIsIdentityVerified())) {
+                user.setIsIdentityVerified(true);
+                user.setIdentityVerifiedDate(new Date());
+                user.setIdentityVerifiedSource(UserConstants.IDENTITY_SOURCE_FAMILY_ID);
+                if (StringUtils.isBlank(user.getAadhaarNumber())) {
+                    user.setAadhaarNumber(request.getAadhaarNumber());
+                }
+                try {
+                    userRepository.update(user, user, user.getId(), user.getUuid());
+                } catch (Exception e) {
+                    log.warn("[FAMILY-AUTH-STRATEGY] Could not persist updated verification fields for user {}: {}",
+                            user.getId(), e.getMessage());
+                }
+            }
             triggerFamilyJitProvision(user, request);
             return AuthenticatedUserResult.builder()
                     .user(user)
@@ -210,7 +319,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
 
         // 2e. Auto-create citizen profile for family member / head if not found
         log.info("[FAMILY-AUTH-STRATEGY] Citizen account not found for identifier: {}. Auto-provisioning citizen profile.",
-                maskMobile(effectiveIdentifier));
+                MaskUtils.maskIdentifier(effectiveIdentifier));
         String defaultName = StringUtils.isNotBlank(mobileNumber) ? "Family Member"
                 : (StringUtils.isNotBlank(request.getAadhaarNumber()) ? "Aadhaar Citizen" : "Family Citizen");
         String name = StringUtils.isNotBlank(request.getName()) ? request.getName().trim() : defaultName;
@@ -222,6 +331,7 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                 .aadhaarNumber(StringUtils.isNotBlank(request.getAadhaarNumber()) ? request.getAadhaarNumber() : null)
                 .isIdentityVerified(StringUtils.isNotBlank(request.getAadhaarNumber()))
                 .identityVerifiedDate(StringUtils.isNotBlank(request.getAadhaarNumber()) ? new Date() : null)
+                .identityVerifiedSource(StringUtils.isNotBlank(request.getAadhaarNumber()) ? UserConstants.IDENTITY_SOURCE_FAMILY_ID : null)
                 .tenantId(stateTenant)
                 .type(UserType.CITIZEN)
                 .active(true)
@@ -233,6 +343,11 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         User createdUser = userService.createUser(newUser, request.getRequestInfo());
         log.info("[FAMILY-AUTH-STRATEGY] Successfully provisioned new family citizen ID: {}, UUID: {}",
                 createdUser.getId(), createdUser.getUuid());
+
+        if (!Boolean.TRUE.equals(createdUser.getActive())) {
+            log.error("[FAMILY-AUTH-STRATEGY] Existing family citizen account ID {} is inactive", createdUser.getId());
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
 
         triggerFamilyJitProvision(createdUser, request);
         return AuthenticatedUserResult.builder()
@@ -253,18 +368,34 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
         if (user == null || (StringUtils.isBlank(request.getFamilyId()) && StringUtils.isBlank(request.getReferenceId()))) {
             return;
         }
+
+        // Only invoke State JIT provision endpoint if tenant policy is configured for STATE_REGISTRY
+        if (familyConfigurationService != null) {
+            FamilyConfig config = familyConfigurationService.getActiveFamilyConfiguration(request.getRequestInfo(), request.getTenantId());
+            if (config != null && !config.isStateRegistry()) {
+                log.info("[FAMILY-AUTH-STRATEGY] Skipping State Family JIT provision: tenant {} is configured as {}",
+                        request.getTenantId(), config.getFamilyType());
+                return;
+            }
+        }
+
         if (restTemplate == null) {
             log.debug("[FAMILY-AUTH-STRATEGY] RestTemplate not configured, skipping JIT family notification");
             return;
         }
         try {
-            String host = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceHost()))
-                    ? userConfiguration.getFamilyServiceHost()
-                    : "http://localhost:8092/";
-            String endpoint = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getFamilyServiceStateJitEndpoint()))
-                    ? userConfiguration.getFamilyServiceStateJitEndpoint()
-                    : "/family/v1/state/_jitProvision";
+            if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getFamilyServiceHost())) {
+                throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "family.service.host is not configured");
+            }
+            if (StringUtils.isBlank(userConfiguration.getFamilyServiceStateJitEndpoint())) {
+                throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, "family.service.state.jit.endpoint is not configured");
+            }
 
+            String host = userConfiguration.getFamilyServiceHost().trim();
+            if (!host.endsWith("/")) {
+                host += "/";
+            }
+            String endpoint = userConfiguration.getFamilyServiceStateJitEndpoint().trim();
             String url = host + (endpoint.startsWith("/") ? endpoint.substring(1) : endpoint);
 
             Map<String, Object> jitRequest = new HashMap<>();
@@ -314,19 +445,19 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
      * @throws CustomException if OTP verification is rejected
      */
     private void validateOtp(String identity, String otp, String tenantId, LoginV2Request request) {
-        log.debug("[FAMILY-AUTH-STRATEGY] Validating OTP for identity: {}", maskMobile(identity));
+        log.debug("[FAMILY-AUTH-STRATEGY] Validating OTP for identity: {}", MaskUtils.maskIdentifier(identity));
 
         if (StringUtils.isNotBlank(identity)) {
             int currentAttempts = invalidOtpAttempts.getOrDefault(identity, 0);
             if (currentAttempts >= getMaxOtpAttempts()) {
                 log.error("[FAMILY-AUTH-STRATEGY] Locked: identity {} has exceeded maximum allowed OTP attempts ({})",
-                        maskMobile(identity), getMaxOtpAttempts());
+                        MaskUtils.maskIdentifier(identity), getMaxOtpAttempts());
                 throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
             }
         }
 
         if (isFixedOTPEnabled() && StringUtils.isNotBlank(getFixedOTPPassword()) && getFixedOTPPassword().equals(otp)) {
-            log.info("[FAMILY-AUTH-STRATEGY] Fixed OTP matched for family identity: {}", maskMobile(identity));
+            log.info("[FAMILY-AUTH-STRATEGY] Fixed OTP matched for family identity: {}", MaskUtils.maskIdentifier(identity));
             if (StringUtils.isNotBlank(identity)) {
                 invalidOtpAttempts.remove(identity);
             }
@@ -350,18 +481,18 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
                 int attempts = invalidOtpAttempts.compute(identity, (k, v) -> (v == null ? 1 : v + 1));
                 if (attempts >= getMaxOtpAttempts()) {
                     log.error("[FAMILY-AUTH-STRATEGY] Identity {} reached max invalid OTP attempts ({}). Lockout triggered.",
-                            maskMobile(identity), getMaxOtpAttempts());
+                            MaskUtils.maskIdentifier(identity), getMaxOtpAttempts());
                     throw new CustomException(UserConstants.ERROR_MAX_OTP_ATTEMPTS_EXCEEDED, UserConstants.MSG_MAX_OTP_ATTEMPTS_EXCEEDED);
                 }
             }
-            log.error("[FAMILY-AUTH-STRATEGY] OTP verification rejected by egov-otp for identity: {}", maskMobile(identity));
-            throw new CustomException(UserConstants.ERROR_INVALID_OTP, "Invalid or expired OTP for family identity: " + maskMobile(identity));
+            log.error("[FAMILY-AUTH-STRATEGY] OTP verification rejected by egov-otp for identity: {}", MaskUtils.maskIdentifier(identity));
+            throw new CustomException(UserConstants.ERROR_INVALID_OTP, "Invalid or expired OTP for family identity: " + MaskUtils.maskIdentifier(identity));
         }
 
         if (StringUtils.isNotBlank(identity)) {
             invalidOtpAttempts.remove(identity);
         }
-        log.info("[FAMILY-AUTH-STRATEGY] OTP verified successfully for family identity: {}", maskMobile(identity));
+        log.info("[FAMILY-AUTH-STRATEGY] OTP verified successfully for family identity: {}", MaskUtils.maskIdentifier(identity));
     }
 
     /**
@@ -540,19 +671,5 @@ public class FamilyIdAuthStrategy implements MultiAuthStrategy {
             return tenantId.split("\\.")[0];
         }
         return tenantId;
-    }
-
-    /**
-     * Masks the member's mobile number for log security.
-     *
-     * @param mobile 10-digit mobile number
-     * @return masked mobile string
-     */
-    private String maskMobile(String mobile) {
-        if (StringUtils.isBlank(mobile)) return "N/A";
-        if (mobile.length() >= 6) {
-            return mobile.substring(0, 2) + "******" + mobile.substring(mobile.length() - 2);
-        }
-        return "******";
     }
 }

@@ -72,6 +72,13 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
     private final Map<String, CacheEntry> tenantAddressTypeCache = new ConcurrentHashMap<>();
 
     @Autowired
+    /**
+     * Constructs the address master data service with required REST client and configuration.
+     *
+     * @param restTemplate      HTTP client for invoking MDMS service
+     * @param objectMapper      Jackson object mapper for parsing MDMS JSON payloads
+     * @param userConfiguration application properties including cache TTL and endpoint URLs
+     */
     public AddressMasterDataServiceImpl(RestTemplate restTemplate,
                                       ObjectMapper objectMapper,
                                       UserConfiguration userConfiguration) {
@@ -93,9 +100,11 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
     @Override
     public Set<String> getAllowedAddressTypes(RequestInfo requestInfo, String tenantId) {
         String stateTenant = getStateLevelTenant(tenantId);
-        long ttlMillis = (userConfiguration != null && userConfiguration.getAddressTypeCacheTtlMillis() != null)
-                ? userConfiguration.getAddressTypeCacheTtlMillis()
-                : 86400000L; // Default 24 hours
+        if (userConfiguration == null || userConfiguration.getAddressTypeCacheTtlMillis() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "address.type.cache.ttl.millis is not configured");
+        }
+        long ttlMillis = userConfiguration.getAddressTypeCacheTtlMillis();
 
         CacheEntry entry = tenantAddressTypeCache.get(stateTenant);
         if (entry != null && !entry.isExpired(ttlMillis)) {
@@ -196,15 +205,23 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
      * @return set of active uppercase address type codes
      */
     private Set<String> fetchAddressTypesFromMdms(RequestInfo requestInfo, String stateTenant, String mdmsHost, String mdmsPath) {
-        String moduleName = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsAddressTypeModuleName()))
-                ? userConfiguration.getMdmsAddressTypeModuleName()
-                : "common-masters";
-        String masterName = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsAddressTypeMasterName()))
-                ? userConfiguration.getMdmsAddressTypeMasterName()
-                : "AddressType";
-        String filter = (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getMdmsAddressTypeFilter()))
-                ? userConfiguration.getMdmsAddressTypeFilter()
-                : "[?(@.active==true)]";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getMdmsAddressTypeModuleName())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "mdms.address.type.moduleName is not configured");
+        }
+        String moduleName = userConfiguration.getMdmsAddressTypeModuleName();
+
+        if (StringUtils.isBlank(userConfiguration.getMdmsAddressTypeMasterName())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "mdms.address.type.masterName is not configured");
+        }
+        String masterName = userConfiguration.getMdmsAddressTypeMasterName();
+
+        if (StringUtils.isBlank(userConfiguration.getMdmsAddressTypeFilter())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "mdms.address.type.filter is not configured");
+        }
+        String filter = userConfiguration.getMdmsAddressTypeFilter();
 
         String url = mdmsHost.endsWith("/")
                 ? mdmsHost + mdmsPath
@@ -266,16 +283,20 @@ public class AddressMasterDataServiceImpl implements AddressMasterDataService {
     }
 
     /**
-     * Derives the state-level tenant ID from a given tenant (e.g. "pb.amritsar" -> "pb").
+     * Derives the state-level tenant ID from a given tenant (e.g. "pb.amritsar" -> stateTenant).
+     * If tenantId is blank, retrieves state-level tenant ID from userConfiguration.
+     * Throws CustomException if getStateLevelTenantId() is null or blank.
      *
      * @param tenantId input tenant
      * @return state-level tenant string
      */
     private String getStateLevelTenant(String tenantId) {
         if (StringUtils.isBlank(tenantId)) {
-            return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getStateLevelTenantId()))
-                    ? userConfiguration.getStateLevelTenantId()
-                    : "pb";
+            if (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getStateLevelTenantId())) {
+                return userConfiguration.getStateLevelTenantId().trim();
+            }
+            log.error("[ADDRESS-MDMS-SERVICE] Tenant ID is blank and state-level tenant ID is not configured");
+            throw new CustomException(UserConstants.ERROR_TENANT_ID_REQUIRED, "Tenant ID cannot be determined: state-level tenant ID is not configured");
         }
         return tenantId.contains(".") ? tenantId.split("\\.")[0] : tenantId;
     }

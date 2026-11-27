@@ -6,14 +6,17 @@ import org.egov.dx.adapter.vendor.dto.VendorSendOtpRequest;
 import org.egov.dx.adapter.vendor.dto.VendorSendOtpResponse;
 import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpRequest;
 import org.egov.dx.adapter.vendor.dto.VendorVerifyOtpSuccessResponse;
+import org.egov.dx.service.AadhaarSessionManager;
+import org.egov.dx.service.UserRegistryService;
+import org.egov.dx.service.impl.AadhaarSessionManagerImpl;
 import org.egov.dx.util.AadhaarConstants;
 import org.egov.dx.validator.AadhaarVerificationValidator;
 import org.egov.dx.web.models.AadhaarVerificationRequest;
 import org.egov.dx.web.models.AadhaarVerificationResponse;
+import org.egov.dx.web.models.UserRegistryRecord;
 import org.egov.tracer.model.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -21,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class AadhaarVerificationControllerTest {
+class AadhaarVerificationControllerTest {
 
     private AadhaarGatewayAdapter gatewayAdapter;
     private AadhaarVerificationValidator validator;
@@ -34,6 +37,11 @@ public class AadhaarVerificationControllerTest {
         controller = new AadhaarVerificationController(gatewayAdapter, validator);
     }
 
+    /**
+     * Tests Send Otp under the success scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testSendOtp_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -65,6 +73,11 @@ public class AadhaarVerificationControllerTest {
         verify(gatewayAdapter, times(1)).sendOtp(any(VendorSendOtpRequest.class));
     }
 
+    /**
+     * Tests Send Otp under the validation error_returns bad request scenario.
+     *
+     * Verifies interactions with the underlying mock dependencies.
+     */
     @Test
     void testSendOtp_ValidationError_ReturnsBadRequest() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder().build();
@@ -83,6 +96,11 @@ public class AadhaarVerificationControllerTest {
         verify(gatewayAdapter, never()).sendOtp(any());
     }
 
+    /**
+     * Tests Verify Otp under the success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyOtp_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -118,6 +136,11 @@ public class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerifyOtpRequest(request);
     }
 
+    /**
+     * Tests Verify Otp under the gateway failure_returns bad request scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
     @Test
     void testVerifyOtp_GatewayFailure_ReturnsBadRequest() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -139,6 +162,11 @@ public class AadhaarVerificationControllerTest {
         assertEquals("Invalid OTP", body.getMessage());
     }
 
+    /**
+     * Tests Verify Otp under the resync flow_success scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
     @Test
     void testVerifyOtp_ResyncFlow_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -178,6 +206,11 @@ public class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerifyOtpRequest(request);
     }
 
+    /**
+     * Tests Validate Checksum under the success scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testValidateChecksum_Success() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -200,6 +233,11 @@ public class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerhoeffChecksum(request);
     }
 
+    /**
+     * Tests Validate Checksum under the invalid checksum scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testValidateChecksum_InvalidChecksum() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
@@ -222,6 +260,11 @@ public class AadhaarVerificationControllerTest {
         verify(validator, times(1)).validateVerhoeffChecksum(request);
     }
 
+    /**
+     * Tests Validate Checksum under the validation error_returns bad request scenario.
+     *
+     * Verifies that the check evaluates to false.
+     */
     @Test
     void testValidateChecksum_ValidationError_ReturnsBadRequest() {
         AadhaarVerificationRequest request = AadhaarVerificationRequest.builder().build();
@@ -238,5 +281,285 @@ public class AadhaarVerificationControllerTest {
         assertEquals(AadhaarConstants.ERR_CODE_INVALID_AADHAAR, body.getStatus());
         assertFalse(body.getIsVerified());
         assertEquals("Invalid Aadhaar format", body.getMessage());
+    }
+
+    /**
+     * Tests Verify Otp under the with existing citizen in egov user_returns user uuid scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
+    @Test
+    void testVerifyOtp_WithExistingCitizenInEgovUser_ReturnsUserUuid() {
+        UserRegistryService userRegistryService = mock(UserRegistryService.class);
+        AadhaarSessionManager sessionManager = new AadhaarSessionManagerImpl(3, null);
+        AadhaarVerificationController customController = new AadhaarVerificationController(
+                gatewayAdapter, validator, sessionManager, userRegistryService);
+
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .referenceId("998877")
+                .otp("123456")
+                .aadhaarNumber("548796521458")
+                .tenantId("pg.citya")
+                .build();
+
+        VendorVerifyOtpSuccessResponse mockVendorRes = VendorVerifyOtpSuccessResponse.builder()
+                .code(200)
+                .transactionId("TXN-VERIFY-1")
+                .data(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.builder()
+                        .status("VALID")
+                        .aadhaarNumber("XXXXXXXX1458")
+                        .name("Citizen Name")
+                        .build())
+                .build();
+
+        when(gatewayAdapter.verifyOtp(any(VendorVerifyOtpRequest.class))).thenReturn(mockVendorRes);
+        UserRegistryRecord mockRecord = UserRegistryRecord.builder()
+                .userUuid("0b90ae1c-7506-4114-b409-d48093e5db45")
+                .build();
+        when(userRegistryService.searchCitizenByAadhaar(eq("548796521458"), eq("pg.citya"), any()))
+                .thenReturn(mockRecord);
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = customController.verifyOtp(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertTrue(body.getIsVerified());
+        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", body.getUserUuid());
+        assertEquals("XXXXXXXX1458", body.getMaskedAadhaar());
+        verify(userRegistryService, times(1)).searchCitizenByAadhaar(eq("548796521458"), eq("pg.citya"), any());
+        verify(userRegistryService, never()).searchUserUuidByAadhaar(any(), any(), any());
+        verify(userRegistryService, never()).searchFamilyIdByAadhaar(any(), any(), any());
+    }
+
+    /**
+     * Tests Send Otp under the then verify otp_session carries aadhaar and resolves user uuid scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
+    @Test
+    void testSendOtp_ThenVerifyOtp_SessionCarriesAadhaarAndResolvesUserUuid() {
+        UserRegistryService userRegistryService = mock(UserRegistryService.class);
+        AadhaarSessionManager sessionManager = new AadhaarSessionManagerImpl(3, null);
+        AadhaarVerificationController customController = new AadhaarVerificationController(
+                gatewayAdapter, validator, sessionManager, userRegistryService);
+
+        // 1. Send OTP
+        AadhaarVerificationRequest sendReq = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .aadhaarNumber("548796521458")
+                .tenantId("pg.citya")
+                .build();
+
+        VendorSendOtpResponse mockSendRes = VendorSendOtpResponse.builder()
+                .code(200)
+                .transactionId("TXN-SEND-1")
+                .data(VendorSendOtpResponse.VendorSendOtpResponseDetails.builder()
+                        .referenceId(445566L)
+                        .message("OTP sent successfully")
+                        .build())
+                .build();
+
+        when(gatewayAdapter.sendOtp(any())).thenReturn(mockSendRes);
+        ResponseEntity<AadhaarVerificationResponse> sendResEntity = customController.sendOtp(sendReq);
+        assertEquals(HttpStatus.OK, sendResEntity.getStatusCode());
+
+        // 2. Verify OTP with ONLY referenceId (no aadhaarNumber provided in verify request)
+        AadhaarVerificationRequest verifyReq = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .referenceId("445566")
+                .otp("123456")
+                .build();
+
+        VendorVerifyOtpSuccessResponse mockVerifyRes = VendorVerifyOtpSuccessResponse.builder()
+                .code(200)
+                .transactionId("TXN-VERIFY-2")
+                .data(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.builder()
+                        .status("VALID")
+                        .aadhaarNumber("XXXXXXXX1234") // Gateway returns default mock
+                        .name("Citizen Name")
+                        .build())
+                .build();
+
+        when(gatewayAdapter.verifyOtp(any())).thenReturn(mockVerifyRes);
+        UserRegistryRecord mockSessionRecord = UserRegistryRecord.builder()
+                .userUuid("0b90ae1c-7506-4114-b409-d48093e5db45")
+                .build();
+        when(userRegistryService.searchCitizenByAadhaar(eq("548796521458"), any(), any()))
+                .thenReturn(mockSessionRecord);
+
+        ResponseEntity<AadhaarVerificationResponse> verifyResEntity = customController.verifyOtp(verifyReq);
+
+        assertNotNull(verifyResEntity);
+        assertEquals(HttpStatus.OK, verifyResEntity.getStatusCode());
+        AadhaarVerificationResponse body = verifyResEntity.getBody();
+        assertNotNull(body);
+        assertTrue(body.getIsVerified());
+        // Masked Aadhaar was enriched from session
+        assertEquals("XXXXXXXX1458", body.getMaskedAadhaar());
+        // User UUID was successfully looked up using session Aadhaar
+        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", body.getUserUuid());
+    }
+
+    /**
+     * Tests Verify Otp under the citizen not found in egov user_auto provisions and returns new user uuid scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
+    @Test
+    void testVerifyOtp_CitizenNotFoundInEgovUser_AutoProvisionsAndReturnsNewUserUuid() {
+        UserRegistryService userRegistryService = mock(UserRegistryService.class);
+        AadhaarSessionManager sessionManager = new AadhaarSessionManagerImpl(3, null);
+        AadhaarVerificationController customController = new AadhaarVerificationController(
+                gatewayAdapter, validator, sessionManager, userRegistryService);
+
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .referenceId("112233")
+                .otp("123456")
+                .aadhaarNumber("999988887777")
+                .build();
+
+        VendorVerifyOtpSuccessResponse mockVendorRes = VendorVerifyOtpSuccessResponse.builder()
+                .code(200)
+                .transactionId("TXN-NOT-FOUND")
+                .data(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.builder()
+                        .status("VALID")
+                        .aadhaarNumber("XXXXXXXX7777")
+                        .name("New Citizen")
+                        .build())
+                .build();
+
+        when(gatewayAdapter.verifyOtp(any(VendorVerifyOtpRequest.class))).thenReturn(mockVendorRes);
+        when(userRegistryService.searchCitizenByAadhaar(eq("999988887777"), any(), any()))
+                .thenReturn(null);
+        when(userRegistryService.resolveOrCreateUserUuid(eq("999988887777"), any(), any(), any()))
+                .thenReturn("newly-provisioned-citizen-uuid-999");
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = customController.verifyOtp(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertTrue(body.getIsVerified());
+        assertEquals("newly-provisioned-citizen-uuid-999", body.getUserUuid());
+    }
+
+    /**
+     * Tests Verify Otp under the with existing citizen and family id_returns user uuid and family id scenario.
+     *
+     * Verifies that the condition evaluates to true.
+     */
+    @Test
+    void testVerifyOtp_WithExistingCitizenAndFamilyId_ReturnsUserUuidAndFamilyId() {
+        UserRegistryService userRegistryService = mock(UserRegistryService.class);
+        AadhaarSessionManager sessionManager = new AadhaarSessionManagerImpl(3, null);
+        AadhaarVerificationController customController = new AadhaarVerificationController(
+                gatewayAdapter, validator, sessionManager, userRegistryService);
+
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .referenceId("998877")
+                .otp("123456")
+                .aadhaarNumber("548796521458")
+                .tenantId("pg.citya")
+                .build();
+
+        VendorVerifyOtpSuccessResponse mockVendorRes = VendorVerifyOtpSuccessResponse.builder()
+                .code(200)
+                .transactionId("TXN-VERIFY-1")
+                .data(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.builder()
+                        .status("VALID")
+                        .aadhaarNumber("XXXXXXXX1458")
+                        .name("Citizen Name")
+                        .build())
+                .build();
+
+        UserRegistryRecord mockRecord = UserRegistryRecord.builder()
+                .userUuid("0b90ae1c-7506-4114-b409-d48093e5db45")
+                .familyId("FAM-2026-F638A3E1")
+                .build();
+
+        when(gatewayAdapter.verifyOtp(any(VendorVerifyOtpRequest.class))).thenReturn(mockVendorRes);
+        when(userRegistryService.searchCitizenByAadhaar(eq("548796521458"), eq("pg.citya"), any()))
+                .thenReturn(mockRecord);
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = customController.verifyOtp(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertTrue(body.getIsVerified());
+        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", body.getUserUuid());
+        assertEquals("FAM-2026-F638A3E1", body.getFamilyId());
+        assertEquals("XXXXXXXX1458", body.getMaskedAadhaar());
+        verify(userRegistryService, times(1)).searchCitizenByAadhaar(eq("548796521458"), eq("pg.citya"), any());
+        verify(userRegistryService, never()).searchFamilyIdByUserUuid(any(), any(), any());
+        verify(userRegistryService, never()).searchUserUuidByAadhaar(any(), any(), any());
+        verify(userRegistryService, never()).searchFamilyIdByAadhaar(any(), any(), any());
+    }
+
+    /**
+     * Tests Verify Otp under the citizen found with null family id_fallback queries family id by user uuid scenario.
+     *
+     * Verifies the expected response and model assertions.
+     */
+    @Test
+    void testVerifyOtp_CitizenFoundWithNullFamilyId_FallbackQueriesFamilyIdByUserUuid() {
+        UserRegistryService userRegistryService = mock(UserRegistryService.class);
+        AadhaarSessionManager sessionManager = new AadhaarSessionManagerImpl(3, null);
+        AadhaarVerificationController customController = new AadhaarVerificationController(
+                gatewayAdapter, validator, sessionManager, userRegistryService);
+
+        AadhaarVerificationRequest request = AadhaarVerificationRequest.builder()
+                .requestInfo(new RequestInfo())
+                .referenceId("998877")
+                .otp("123456")
+                .aadhaarNumber("548796521458")
+                .tenantId("pg.citya")
+                .build();
+
+        VendorVerifyOtpSuccessResponse mockVendorRes = VendorVerifyOtpSuccessResponse.builder()
+                .code(200)
+                .transactionId("TXN-VERIFY-1")
+                .data(VendorVerifyOtpSuccessResponse.VendorVerifyOtpSuccessResponseDetails.builder()
+                        .status("VALID")
+                        .aadhaarNumber("XXXXXXXX1458")
+                        .name("Citizen Name")
+                        .build())
+                .build();
+
+        UserRegistryRecord mockRecord = UserRegistryRecord.builder()
+                .userUuid("0b90ae1c-7506-4114-b409-d48093e5db45")
+                .familyId(null)
+                .build();
+
+        when(gatewayAdapter.verifyOtp(any(VendorVerifyOtpRequest.class))).thenReturn(mockVendorRes);
+        when(userRegistryService.searchCitizenByAadhaar(eq("548796521458"), eq("pg.citya"), any()))
+                .thenReturn(mockRecord);
+        when(userRegistryService.searchFamilyIdByUserUuid(eq("0b90ae1c-7506-4114-b409-d48093e5db45"), eq("pg.citya"), any()))
+                .thenReturn("FAM-FALLBACK-123");
+
+        ResponseEntity<AadhaarVerificationResponse> responseEntity = customController.verifyOtp(request);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        AadhaarVerificationResponse body = responseEntity.getBody();
+        assertNotNull(body);
+        assertTrue(body.getIsVerified());
+        assertEquals("0b90ae1c-7506-4114-b409-d48093e5db45", body.getUserUuid());
+        assertEquals("FAM-FALLBACK-123", body.getFamilyId());
+        assertEquals("XXXXXXXX1458", body.getMaskedAadhaar());
+
+        // Assert: searchFamilyIdByUserUuid is invoked once and its value is returned on the response
+        verify(userRegistryService, times(1)).searchFamilyIdByUserUuid(eq("0b90ae1c-7506-4114-b409-d48093e5db45"), eq("pg.citya"), any());
+
+        // Assert: searchUserUuidByAadhaar and searchFamilyIdByAadhaar are never called
+        verify(userRegistryService, never()).searchUserUuidByAadhaar(any(), any(), any());
+        verify(userRegistryService, never()).searchFamilyIdByAadhaar(any(), any(), any());
     }
 }

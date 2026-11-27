@@ -33,7 +33,7 @@
         "backgroundUrl": "/upyog-ui/images/onboarding-bg.jpg",
         "mainlogo": {
           "dualLogo": false,
-          "url": "/upyog-ui/images/Logo.png"
+          "url": "/upyog-ui/images/logo-secondary.png"
         },
         "headers": {
           "title": "One Platform",
@@ -50,6 +50,7 @@
         "pointers": {
           "enabled": true,
           "showIcons": true,
+          "isWhiteCard": true,
           "hasBackground": true,
           "data": [
             {
@@ -520,14 +521,14 @@
     "theme": "metroBurgundy",
     "layout": {
       "loginUI": {
-        "backgroundUrl": "/upyog-ui/images/citizen-metro-bg.jpg",
+        "backgroundUrl": "/upyog-ui/images/UPYOG_Login_Background_Image.png",
         "isFormOnLeft": false,
-        "isSplitBg": true,
+        "isSplitBg": false,
         "hasHeroCard": true,
         "isHeaderReq": true,
         "mainlogo": {
           "dualLogo": false,
-          "url": "/upyog-ui/images/Logo.png"
+          "url": "/upyog-ui/images/logo-secondary.png"
         },
         "headers": {
           "title": "One Platform,",
@@ -608,7 +609,7 @@
         "backgroundUrl": "/upyog-ui/images/onboarding-bg.jpg",
         "mainlogo": {
           "dualLogo": false,
-          "url": "/upyog-ui/images/Logo.png"
+          "url": "/upyog-ui/images/logo-secondary.png"
         },
         "headers": {
           "title": "One Platform",
@@ -625,6 +626,7 @@
         "pointers": {
           "enabled": true,
           "showIcons": true,
+          "isWhiteCard": true,
           "hasBackground": true,
           "data": [
             {
@@ -666,11 +668,12 @@
     "theme": "upyogPurple",
     "layout": {
       "loginUI": {
-        "backgroundUrl": "/upyog-ui/images/empbg.png",
+        "backgroundUrl": "/upyog-ui/images/UPYOG_Login_Background_Image.png",
         "isEmployeeV2": true,
+        "hasHeroCard": true,
         "mainlogo": {
           "dualLogo": false,
-          "url": "/upyog-ui/images/Logo.png"
+          "url": "/upyog-ui/images/logo-secondary.png"
         },
         "headers": {
           "title": "One Platform",
@@ -686,6 +689,7 @@
         "pointers": {
           "enabled": true,
           "showIcons": true,
+          "isWhiteCard": true,
           "hasBackground": true,
           "data": [
             {

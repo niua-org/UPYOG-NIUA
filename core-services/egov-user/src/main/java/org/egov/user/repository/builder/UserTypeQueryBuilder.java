@@ -48,8 +48,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -63,11 +66,11 @@ import static org.springframework.util.CollectionUtils.isEmpty;
 public class UserTypeQueryBuilder {
 
     private static final String SELECT_USER_QUERY = "SELECT userdata.title, userdata.salutation, userdata.dob, userdata.locale, userdata.username, userdata" +
-            ".password, userdata.pwdexpirydate,  userdata.mobilenumber, userdata.altcontactnumber, userdata.emailid, userdata.createddate, userdata" +
+    		".password, userdata.pwdexpirydate,  userdata.mobilenumber, userdata.altcontactnumber, userdata.emailid, userdata.createddate, userdata" +
             ".lastmodifieddate,  userdata.createdby,userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber, " +
-            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
+            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.caste, userdata.is_specially_abled, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
             "addr.id as addr_id, addr.type as " +
             "addr_type, addr .address as addr_address,  addr.city as addr_city, addr.pincode as addr_pincode, addr" +
             ".tenantid as " +
@@ -93,7 +96,47 @@ public class UserTypeQueryBuilder {
     public static final String UPDATE_FAILED_ATTEMPTS_SQL = " UPDATE eg_user_login_failed_attempts SET active = " +
             "'false' WHERE user_uuid = :user_uuid";
 
+    public static final String INSERT_USER_SQL = "insert into eg_user (id,uuid,digilockerid,tenantid,salutation,dob,locale,username,password,pwdexpirydate,mobilenumber,altcontactnumber,emailid,active,name,gender,pan,aadhaarnumber,"
+            + "type,guardian,guardianrelation,signature,accountlocked,bloodgroup,photo,identificationmark,createddate,lastmodifieddate,createdby,lastmodifiedby,alternatemobilenumber,"
+            + "father_name,mother_name,spouse_name,caste,is_specially_abled,is_identity_verified,identity_verified_date,identity_verified_source,last_resync_date,editted_count,last_login_method) values (:id,:uuid,:digilockerid,:tenantid,:salutation,"
+            + ":dob,:locale,:username,:password,:pwdexpirydate,:mobilenumber,:altcontactnumber,:emailid,:active,:name,:gender,:pan,:aadhaarnumber,:type,:guardian,:guardianrelation,:signature,"
+            + ":accountlocked,:bloodgroup,:photo,:identificationmark,:createddate,:lastmodifieddate,:createdby,:lastmodifiedby,:alternatemobilenumber,"
+            + ":father_name,:mother_name,:spouse_name,:caste,:is_specially_abled,:is_identity_verified,:identity_verified_date,:identity_verified_source,:last_resync_date,:editted_count,:last_login_method) ";
+
+    public static final String UPDATE_DIGILOCKER_ID_SQL = "update eg_user set digilockerid=:DigilockerID, is_identity_verified=:IsIdentityVerified, identity_verified_date=:IdentityVerifiedDate, identity_verified_source=:IdentityVerifiedSource where id=:id";
+
+    public static final String UPDATE_LAST_LOGIN_METHOD_SQL = "update eg_user set last_login_method=:lastLoginMethod where id=:id";
+
+    public static final String UPDATE_USER_SQL = "update eg_user set salutation=:Salutation,dob=:Dob,locale=:Locale,password=:Password,pwdexpirydate=:PasswordExpiryDate,mobilenumber=:MobileNumber,altcontactnumber=:AltContactNumber,emailid=:EmailId,active=:Active,name=:Name,gender=:Gender,pan=:Pan,aadhaarnumber=:AadhaarNumber,"
+            + "type=:Type,guardian=:Guardian,guardianrelation=:GuardianRelation,signature=:Signature,"
+            + "accountlocked=:AccountLocked, accountlockeddate=:AccountLockedDate, bloodgroup=:BloodGroup,"
+            + "photo=:Photo, identificationmark=:IdentificationMark,lastmodifieddate=:LastModifiedDate,"
+            + "lastmodifiedby=:LastModifiedBy, alternatemobilenumber=:alternatemobilenumber, digilockerid=:DigilockerID,"
+            + "father_name=:FatherName, mother_name=:MotherName, spouse_name=:SpouseName, caste=:Caste, is_specially_abled=:IsSpeciallyAbled, is_identity_verified=:IsIdentityVerified, identity_verified_date=:IdentityVerifiedDate, identity_verified_source=:IdentityVerifiedSource, last_resync_date=:LastResyncDate, editted_count=:EdittedCount, last_login_method=:LastLoginMethod where id = :id or uuid = :uuid or (username=:username and tenantid=:tenantid and type=:type)";
+
+    public static final String USER_PRESENT_BY_USERNAME_AND_TENANT_SQL = "select count(*) from eg_user where username =:userName and tenantId =:tenantId and type = :userType ";
+
+    public static final String SELECT_USER_ID_BY_UUID_SQL = "select id from eg_user where uuid = :uuid";
+
+    public static final String SELECT_TENANT_ID_BY_USER_ID_SQL = "select tenantid from eg_user where id = :id";
+
+    public static final String SELECT_TENANT_ID_BY_UUID_SQL = "select tenantid from eg_user where uuid = :uuid";
+
+    public static final String SELECT_UUID_BY_USER_ID_SQL = "select uuid from eg_user where id = :id";
+
     private static final String SELECT_USER_ROLE_QUERY = "SELECT distinct(user_id) from eg_userrole_v1 ur";
+
+    /**
+     * Sortable eg_user columns: every column in SELECT_USER_QUERY except password, pan,
+     * aadhaarnumber, signature and photo. Those are deliberately excluded — ordering by a
+     * sensitive column leaks the relative order of stored values (an extraction oracle in
+     * deployments without field-level encryption), bypassing response masking.
+     */
+    private static final Set<String> ALLOWED_SORT_COLUMNS = new HashSet<>(Arrays.asList(
+            "id", "uuid", "tenantid", "username", "name", "gender", "type", "active", "title", "salutation",
+            "mobilenumber", "countrycode", "alternatemobilenumber", "altcontactnumber", "emailid", "locale", "dob",
+            "pwdexpirydate", "version", "guardian", "guardianrelation", "accountlocked", "accountlockeddate",
+            "bloodgroup", "identificationmark", "createddate", "lastmodifieddate", "createdby", "lastmodifiedby"));
 
     // Below is the query to bring the user details along with the addresses and roles part of V2 api endpoints
     private static final String SELECT_USER_QUERY_V2 = "SELECT userdata.title, userdata.salutation, userdata.dob, userdata.locale, userdata.username, userdata" +
@@ -101,7 +144,7 @@ public class UserTypeQueryBuilder {
             ".lastmodifieddate,  userdata.createdby, userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber, " +
-            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
+            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.caste, userdata.is_specially_abled, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
             "addr.id as addr_id, addr.type as " +
             "addr_type, addr .address as addr_address,  addr.city as addr_city, addr.pincode as addr_pincode, addr" +
             ".tenantid as " +
@@ -116,9 +159,16 @@ public class UserTypeQueryBuilder {
             ".lastmodifieddate,  userdata.createdby, userdata.digilockerid, userdata.lastmodifiedby, userdata.active, userdata.name, userdata.gender, userdata.pan, userdata.aadhaarnumber, userdata" +
             ".type,  userdata.version, userdata.guardian, userdata.guardianrelation, userdata.signature, userdata.accountlocked, userdata.accountlockeddate, userdata" +
             ".bloodgroup, userdata.photo, userdata.identificationmark,  userdata.tenantid, userdata.id, userdata.uuid, userdata.alternatemobilenumber," +
-            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.is_identity_verified, userdata.identity_verified_date, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
+            "userdata.father_name, userdata.mother_name, userdata.spouse_name, userdata.caste, userdata.is_specially_abled, userdata.is_identity_verified, userdata.identity_verified_date, userdata.identity_verified_source, userdata.last_resync_date, userdata.editted_count, userdata.last_login_method, " +
             " ur.role_code as role_code, ur.role_tenantid as role_tenantid \n" +
             "\tFROM eg_user userdata LEFT OUTER JOIN eg_userrole_v1 ur ON userdata.id = ur.user_id AND userdata.tenantid = ur.user_tenantid  ";
+    /**
+     * Builds the main SQL select query for searching users without full address expansion.
+     *
+     * @param userSearchCriteria search filters
+     * @param preparedStatementValues list to accumulate positional query parameter bindings
+     * @return constructed SQL query string
+     */
     @SuppressWarnings("rawtypes")
     public String getQuery(final UserSearchCriteria userSearchCriteria, final List preparedStatementValues) {
         StringBuilder selectQuery = new StringBuilder(SELECT_USER_QUERY_V2_NO_ADDRESS);
@@ -128,6 +178,13 @@ public class UserTypeQueryBuilder {
         return addPagingClause(selectQuery, preparedStatementValues, userSearchCriteria);
     }
 
+    /**
+     * Builds the SQL select query for retrieving user role mappings.
+     *
+     * @param userSearchCriteria search filters
+     * @param preparedStatementValues list to accumulate positional query parameter bindings
+     * @return constructed SQL query string
+     */
     @SuppressWarnings("rawtypes")
     public String getQueryUserRoleSearch(final UserSearchCriteria userSearchCriteria, final List preparedStatementValues) {
         final StringBuilder selectQuery = new StringBuilder(SELECT_USER_ROLE_QUERY);
@@ -138,6 +195,13 @@ public class UserTypeQueryBuilder {
     }
 
 
+    /**
+     * Appends dynamic WHERE criteria based on non-null search fields in {@link UserSearchCriteria}.
+     *
+     * @param selectQuery string builder holding the select query
+     * @param preparedStatementValues list to accumulate positional query parameter bindings
+     * @param userSearchCriteria user search criteria
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void addWhereClause(final StringBuilder selectQuery, final List preparedStatementValues,
                                 final UserSearchCriteria userSearchCriteria) {
@@ -168,6 +232,13 @@ public class UserTypeQueryBuilder {
             isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, selectQuery);
             selectQuery.append(" userdata.username = ?");
             preparedStatementValues.add(userSearchCriteria.getUserName().trim());
+        }
+        
+        if (!isEmpty(userSearchCriteria.getUserNames())) {
+            isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, selectQuery);
+            selectQuery.append(" userdata.username IN (")
+                    .append(getQueryForCollection(userSearchCriteria.getUserNames(), preparedStatementValues))
+                    .append(" )");
         }
 
         if (!userSearchCriteria.isFuzzyLogic() && userSearchCriteria.getName() != null) {
@@ -222,7 +293,8 @@ public class UserTypeQueryBuilder {
 
         if (userSearchCriteria.isFuzzyLogic() && userSearchCriteria.getName() != null) {
             isAppendAndClause = addAndClauseIfRequired(isAppendAndClause, selectQuery);
-            selectQuery.append(" userdata.name like " + "'%").append(userSearchCriteria.getName().trim()).append("%'");
+            selectQuery.append(" userdata.name like ?");
+            preparedStatementValues.add("%" + userSearchCriteria.getName().trim() + "%");
         }
 
         if (!isEmpty(userSearchCriteria.getUuid())) {
@@ -237,12 +309,35 @@ public class UserTypeQueryBuilder {
 //        }
     }
 
+    /**
+     * Appends an ORDER BY clause according to the requested sort field or defaults to userdata.name.
+     *
+     * @param selectQuery        string builder containing the query being constructed
+     * @param userSearchCriteria search criteria containing sort parameters
+     */
     private void addOrderByClause(final StringBuilder selectQuery, final UserSearchCriteria userSearchCriteria) {
-        final String sortBy = userSearchCriteria.getSort() != null && !userSearchCriteria.getSort().isEmpty()
-                ? " userdata." + userSearchCriteria.getSort().get(0) : "userdata.name";
+    	 String sortBy = "userdata.name";
+         if (userSearchCriteria.getSort() != null && !userSearchCriteria.getSort().isEmpty()) {
+             final String[] parts = userSearchCriteria.getSort().get(0).trim().toLowerCase().split("\\s+");
+             final boolean validColumn = ALLOWED_SORT_COLUMNS.contains(parts[0]);
+             final boolean validDirection = parts.length == 1
+                     || (parts.length == 2 && (parts[1].equals("asc") || parts[1].equals("desc")));
+             if (validColumn && validDirection)
+                 sortBy = "userdata." + parts[0] + (parts.length == 2 ? " " + parts[1] : "");
+             else
+                 log.warn("Ignoring invalid sort value in user search; defaulting to name");
+         }
         selectQuery.append(" ORDER BY ").append(sortBy);
     }
 
+    /**
+     * Appends pagination wrapper and binds offset/limit parameters.
+     *
+     * @param selectQuery string builder holding the select query
+     * @param preparedStatementValues list to accumulate positional query parameter bindings
+     * @param criteria user search criteria containing offset and limit
+     * @return paginated SQL query string
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private String addPagingClause(final StringBuilder selectQuery, final List preparedStatementValues,
                                    final UserSearchCriteria criteria) {
@@ -261,6 +356,13 @@ public class UserTypeQueryBuilder {
 
     }
 
+    /**
+     * Appends WHERE clauses specific to user role searches matching role tenant and role codes.
+     *
+     * @param selectQuery            query string builder
+     * @param preparedStatementValues list accumulating prepared statement parameters
+     * @param userSearchCriteria     search criteria
+     */
     private void addWhereClauseUserRoles(final StringBuilder selectQuery, final List preparedStatementValues,
                                          final UserSearchCriteria userSearchCriteria) {
 
@@ -283,6 +385,13 @@ public class UserTypeQueryBuilder {
 
     }
 
+    /**
+     * Generates a comma-separated parameter placeholder string (e.g. "?, ?, ?") for SQL IN clauses.
+     *
+     * @param ids              collection of items to bind
+     * @param preparedStmtList list accumulating positional prepared statement parameters
+     * @return comma-separated placeholder string
+     */
     private String getQueryForCollection(List<?> ids, List<Object> preparedStmtList) {
         StringBuilder builder = new StringBuilder();
         Iterator<?> iterator = ids.iterator();
@@ -311,55 +420,6 @@ public class UserTypeQueryBuilder {
         return true;
     }
 
-    public String getInsertUserQuery() {
-        return "insert into eg_user (id,uuid,digilockerid,tenantid,salutation,dob,locale,username,password,pwdexpirydate,mobilenumber,altcontactnumber,emailid,active,name,gender,pan,aadhaarnumber,"
-                + "type,guardian,guardianrelation,signature,accountlocked,bloodgroup,photo,identificationmark,createddate,lastmodifieddate,createdby,lastmodifiedby,alternatemobilenumber,"
-                + "father_name,mother_name,spouse_name,is_identity_verified,identity_verified_date,last_resync_date,editted_count,last_login_method) values (:id,:uuid,:digilockerid,:tenantid,:salutation,"
-                + ":dob,:locale,:username,:password,:pwdexpirydate,:mobilenumber,:altcontactnumber,:emailid,:active,:name,:gender,:pan,:aadhaarnumber,:type,:guardian,:guardianrelation,:signature,"
-                + ":accountlocked,:bloodgroup,:photo,:identificationmark,:createddate,:lastmodifieddate,:createdby,:lastmodifiedby,:alternatemobilenumber,"
-                + ":father_name,:mother_name,:spouse_name,:is_identity_verified,:identity_verified_date,:last_resync_date,:editted_count,:last_login_method) ";
-    }
-    /**
-     * Returns the SQL query to update the DigiLocker ID for a given user ID.
-     *
-     * @return SQL update query string
-     */
-    public String getDigilockerUpdateQuery(){
-        return "update eg_user set digilockerid=:DigilockerID where id=:id";
-    }
-
-    /**
-     * Returns the SQL query to update the last login method for a given user ID.
-     *
-     * @return SQL update query string
-     */
-    public String getUpdateLastLoginMethodQuery(){
-        return "update eg_user set last_login_method=:lastLoginMethod where id=:id";
-    }
-
-    /**
-     * Returns the SQL query to update a user entity including demographic and verification columns.
-     *
-     * @return SQL update query string
-     */
-    public String getUpdateUserQuery() {
-        return "update eg_user set salutation=:Salutation,dob=:Dob,locale=:Locale,password=:Password,pwdexpirydate=:PasswordExpiryDate,mobilenumber=:MobileNumber,altcontactnumber=:AltContactNumber,emailid=:EmailId,active=:Active,name=:Name,gender=:Gender,pan=:Pan,aadhaarnumber=:AadhaarNumber,"
-                + "type=:Type,guardian=:Guardian,guardianrelation=:GuardianRelation,signature=:Signature," +
-                "accountlocked=:AccountLocked, accountlockeddate=:AccountLockedDate, bloodgroup=:BloodGroup," +
-                "photo=:Photo, identificationmark=:IdentificationMark,lastmodifieddate=:LastModifiedDate," +
-                "lastmodifiedby=:LastModifiedBy, alternatemobilenumber=:alternatemobilenumber, digilockerid=:DigilockerID," +
-                "father_name=:FatherName, mother_name=:MotherName, spouse_name=:SpouseName, is_identity_verified=:IsIdentityVerified, identity_verified_date=:IdentityVerifiedDate, last_resync_date=:LastResyncDate, editted_count=:EdittedCount, last_login_method=:LastLoginMethod where id = :id or uuid = :uuid or (username=:username and tenantid=:tenantid and type=:type)";
-    }
-
-    /**
-     * Returns the SQL query to check existence of a user matching username, tenant, and type.
-     *
-     * @return SQL select count query string
-     */
-    public String getUserPresentByUserNameAndTenant() {
-        return "select count(*) from eg_user where username =:userName and tenantId =:tenantId and type = :userType ";
-    }
-
     /**
      * Constructs a SQL query to fetch user details based on the provided search criteria.
      *
@@ -377,41 +437,5 @@ public class UserTypeQueryBuilder {
 
         addOrderByClause(selectQuery, userSearchCriteria);
         return addPagingClause(selectQuery, preparedStatementValues, userSearchCriteria);
-    }
-
-    /**
-     * Returns the SQL query to find user ID by UUID string.
-     *
-     * @return SQL select query string
-     */
-    public String getUserIdByUuid() {
-        return "select id from eg_user where uuid = :uuid";
-    }
-
-    /**
-     * Returns the SQL query to get tenant ID for a user by id.
-     *
-     * @return SQL select query string
-     */
-    public String getTenantIdByUserIdQuery() {
-        return "select tenantid from eg_user where id = :id";
-    }
-
-    /**
-     * Returns the SQL query to get tenant ID for a user by uuid.
-     *
-     * @return SQL select query string
-     */
-    public String getTenantIdByUuidQuery() {
-        return "select tenantid from eg_user where uuid = :uuid";
-    }
-
-    /**
-     * Returns the SQL query to get uuid for a user by id.
-     *
-     * @return SQL select query string
-     */
-    public String getUuidByUserIdQuery() {
-        return "select uuid from eg_user where id = :id";
     }
 }

@@ -3,10 +3,12 @@ package org.egov.user.domain.service.multiauth;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.response.ResponseInfo;
+import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.SecureUser;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.UserService;
+import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.web.contract.auth.Role;
 import org.egov.user.web.contract.multiauth.AuthType;
 import org.egov.user.web.contract.multiauth.LoginV2Response;
@@ -40,6 +42,14 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
     private final UserService userService;
     private final org.egov.user.config.UserConfiguration userConfiguration;
 
+    /**
+     * Primary constructor injecting token storage, encoders, and configuration properties.
+     *
+     * @param redisTemplate     Redis template for caching OAuth tokens
+     * @param jwtEncoder        JWT encoder for signed token generation (if configured)
+     * @param userService       core user service for user details
+     * @param userConfiguration application properties including token validity TTL
+     */
     @Autowired
     public TokenGenerationServiceImpl(RedisTemplate<String, Object> redisTemplate,
                                      @Autowired(required = false) JwtEncoder jwtEncoder,
@@ -51,6 +61,13 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
         this.userConfiguration = userConfiguration;
     }
 
+    /**
+     * Testing constructor without userConfiguration.
+     *
+     * @param redisTemplate Redis template for token storage
+     * @param jwtEncoder    JWT encoder for token signing
+     * @param userService   core user service
+     */
     public TokenGenerationServiceImpl(RedisTemplate<String, Object> redisTemplate,
                                      JwtEncoder jwtEncoder,
                                      UserService userService) {
@@ -58,25 +75,49 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
     }
 
     private int getAccessTokenValidityInMinutes() {
-        return (userConfiguration != null && userConfiguration.getAccessTokenValidityInMinutes() != null)
-                ? userConfiguration.getAccessTokenValidityInMinutes()
-                : 10080;
+        if (userConfiguration == null || userConfiguration.getAccessTokenValidityInMinutes() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "access.token.validity.in.minutes is not configured");
+        }
+        return userConfiguration.getAccessTokenValidityInMinutes();
     }
 
     private int getRefreshTokenValidityInMinutes() {
-        return (userConfiguration != null && userConfiguration.getRefreshTokenValidityInMinutes() != null)
-                ? userConfiguration.getRefreshTokenValidityInMinutes()
-                : 20160;
+        if (userConfiguration == null || userConfiguration.getRefreshTokenValidityInMinutes() == null) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "refresh.token.validity.in.minutes is not configured");
+        }
+        return userConfiguration.getRefreshTokenValidityInMinutes();
     }
 
     private String getTokenFormat() {
-        return (userConfiguration != null && StringUtils.isNotBlank(userConfiguration.getOauth2TokenFormat()))
-                ? userConfiguration.getOauth2TokenFormat()
-                : "opaque";
+        if (userConfiguration == null || StringUtils.isBlank(userConfiguration.getOauth2TokenFormat())) {
+            throw new CustomException(UserConstants.ERROR_INVALID_REQUEST,
+                    "oauth2.token.format is not configured");
+        }
+        return userConfiguration.getOauth2TokenFormat();
     }
 
+    /**
+     * Generates access and refresh tokens, converts domain user to contract User,
+     * and strictly blocks inactive user accounts from receiving tokens.
+     *
+     * @param domainUser domain user entity
+     * @param scope      OAuth token scope
+     * @param authType   channel via which user authenticated
+     * @param isNewUser  flag indicating if account was newly provisioned
+     * @return login response containing generated tokens and user details
+     * @throws CustomException if user is inactive
+     */
     @Override
     public LoginV2Response generateTokensAndResponse(User domainUser, String scope, AuthType authType, boolean isNewUser) {
+        if (domainUser == null || !Boolean.TRUE.equals(domainUser.getActive())) {
+            log.error("[TOKEN-GEN-SERVICE] Cannot mint tokens: user {} (ID: {}) is inactive",
+                    domainUser != null ? domainUser.getUsername() : "null",
+                    domainUser != null ? domainUser.getId() : "null");
+            throw new CustomException(UserConstants.ERROR_ACCOUNT_INACTIVE, UserConstants.MSG_ACCOUNT_INACTIVE);
+        }
+
         String effectiveScope = StringUtils.isNotBlank(scope) ? scope : "read write";
 
         // 1. Convert domain User to Contract User with full demographic & resync fields
@@ -111,6 +152,7 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
                 .authenticatedVia(authType)
                 .isNewUser(isNewUser)
                 .isProfileCompleted(contractUser != null && Boolean.TRUE.equals(contractUser.getIsProfileCompleted()))
+                .familyId(domainUser.getFamilyId())
                 .build();
     }
 
@@ -159,9 +201,11 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
             userInfo.put("spouseName", user.getSpouseName());
             userInfo.put("isIdentityVerified", user.getIsIdentityVerified());
             userInfo.put("identityVerifiedDate", user.getIdentityVerifiedDate());
+            userInfo.put("identityVerifiedSource", user.getIdentityVerifiedSource());
             userInfo.put("lastResyncDate", user.getLastResyncDate());
             userInfo.put("edittedCount", user.getEdittedCount());
             userInfo.put("lastLoginMethod", user.getLastLoginMethod());
+            userInfo.put("familyId", user.getFamilyId());
 
             if (user.getRoles() != null && !user.getRoles().isEmpty()) {
                 List<Map<String, String>> rolesList = user.getRoles().stream()
@@ -318,10 +362,12 @@ public class TokenGenerationServiceImpl implements TokenGenerationService {
                 .spouseName(domainUser.getSpouseName())
                 .isIdentityVerified(domainUser.getIsIdentityVerified())
                 .identityVerifiedDate(domainUser.getIdentityVerifiedDate() != null ? domainUser.getIdentityVerifiedDate().getTime() : null)
+                .identityVerifiedSource(domainUser.getIdentityVerifiedSource())
                 .lastResyncDate(domainUser.getLastResyncDate() != null ? domainUser.getLastResyncDate().getTime() : null)
                 .edittedCount(domainUser.getEdittedCount())
                 .lastLoginMethod(domainUser.getLastLoginMethod())
                 .isProfileCompleted(isProfileComplete)
+                .familyId(domainUser.getFamilyId())
                 .roles(authRoles)
                 .build();
     }

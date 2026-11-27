@@ -7,14 +7,15 @@ import java.util.Map;
 
 import org.egov.egf.instrument.web.requests.InstrumentRequest;
 import org.egov.tracer.kafka.LogAwareKafkaTemplate;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class FinancialInstrumentProducerTest {
 
     private static final String TOPIC_NAME = "topic";
@@ -27,7 +28,7 @@ public class FinancialInstrumentProducerTest {
     @InjectMocks
     private FinancialInstrumentProducer financialInstrumentProducer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         financialInstrumentProducer = new FinancialInstrumentProducer(kafkaTemplate);
     }

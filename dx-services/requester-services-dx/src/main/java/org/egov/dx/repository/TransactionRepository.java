@@ -19,11 +19,14 @@ public class TransactionRepository {
 	
     private static final TransactionRowMapper rowMapper = new TransactionRowMapper();
 
-    @Autowired(required=true)
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+    private final TransactionQueryBuilder transactionQueryBuilder;
 
     @Autowired
-    private TransactionQueryBuilder transactionQueryBuilder;
+    public TransactionRepository(JdbcTemplate jdbcTemplate, TransactionQueryBuilder transactionQueryBuilder) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.transactionQueryBuilder = transactionQueryBuilder;
+    }
    
  
     public List<Transaction> fetchTransactions(TransactionCriteria transactionCriteria) {

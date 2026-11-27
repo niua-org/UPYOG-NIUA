@@ -172,4 +172,71 @@ public class FamilyIdAuthStrategyTest {
 
         assertThrows(CustomException.class, () -> familyIdAuthStrategy.authenticateAndResolveUser(request));
     }
+
+    @Test
+    @DisplayName("Should throw ACCOUNT_INACTIVE when single matched user is inactive in Family ID login")
+    public void testLogin_WhenSingleUserInactive_ThrowsAccountInactive() {
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.FAMILY_ID)
+                .familyId("HR-PPP-123")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        User inactiveUser = buildUser(501L, "uuid-member", "9876543210", "9876543210", "Member One");
+        inactiveUser.setActive(false);
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(inactiveUser));
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), any(), any())).thenReturn(inactiveUser);
+
+        CustomException ex = assertThrows(CustomException.class, () -> familyIdAuthStrategy.authenticateAndResolveUser(request));
+        assertEquals("ACCOUNT_INACTIVE", ex.getCode());
+        assertEquals("Citizen account is inactive. Please contact support.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should throw ACCOUNT_INACTIVE when selected user UUID is inactive in Family ID login")
+    public void testLogin_WhenSelectedUserInactive_ThrowsAccountInactive() {
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.FAMILY_ID)
+                .familyId("HR-PPP-123")
+                .selectedUserUuid("uuid-member")
+                .otp("123456")
+                .tenantId("pg.citya")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        User inactiveUser = buildUser(501L, "uuid-member", "9876543210", "9876543210", "Member One");
+        inactiveUser.setActive(false);
+        when(userRepository.findAll(any())).thenReturn(Collections.singletonList(inactiveUser));
+        when(encryptionDecryptionUtil.decryptObject(any(), any(), any(), any())).thenReturn(inactiveUser);
+
+        CustomException ex = assertThrows(CustomException.class, () -> familyIdAuthStrategy.authenticateAndResolveUser(request));
+        assertEquals("ACCOUNT_INACTIVE", ex.getCode());
+        assertEquals("Citizen account is inactive. Please contact support.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("authenticateAndResolveUser: Rejects login when FamilyConfigurationService throws FAMILY_NOT_SUPPORTED")
+    void authenticateAndResolveUser_FamilyNotSupported_ThrowsException() {
+        org.egov.user.domain.service.config.FamilyConfigurationService configService =
+                mock(org.egov.user.domain.service.config.FamilyConfigurationService.class);
+        doThrow(new CustomException("FAMILY_NOT_SUPPORTED", "Family concept is disabled for tenant: ul"))
+                .when(configService).validateFamilySupported(any(), eq("ul"));
+
+        FamilyIdAuthStrategy strategyWithConfig = new FamilyIdAuthStrategy(
+                userService, userRepository, otpRepository, encryptionDecryptionUtil, null, userConfiguration, configService
+        );
+
+        LoginV2Request request = LoginV2Request.builder()
+                .authType(AuthType.FAMILY_ID)
+                .familyId("UL-FAM-001")
+                .otp("123456")
+                .tenantId("ul")
+                .requestInfo(new RequestInfo())
+                .build();
+
+        CustomException ex = assertThrows(CustomException.class, () -> strategyWithConfig.authenticateAndResolveUser(request));
+        assertEquals("FAMILY_NOT_SUPPORTED", ex.getCode());
+    }
 }

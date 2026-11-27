@@ -8,6 +8,7 @@ requests
 langdetect
 scikit-learn
 groq
+openai
 openai-whisper
 edge-tts
 python-dotenv

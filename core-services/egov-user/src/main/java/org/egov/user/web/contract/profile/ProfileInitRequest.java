@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.profile;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -59,7 +58,6 @@ public class ProfileInitRequest {
 
     @Schema(description = "Nested citizen profile payload supporting standard UPYOG request contracts")
     @JsonProperty("user")
-    @JsonAlias({"profile", "User"})
     private Map<String, Object> user;
 
     public String getTenantId() {
@@ -83,13 +81,11 @@ public class ProfileInitRequest {
     }
 
     @JsonProperty("user")
-    @JsonAlias({"profile", "User"})
     public Map<String, Object> getUser() {
         return this.user;
     }
 
     @JsonSetter("user")
-    @JsonAlias({"profile", "User"})
     public void setUser(Map<String, Object> userMap) {
         this.user = userMap;
         unpackUserIfPresent();

@@ -1,10 +1,5 @@
 package org.egov.dx.service;
 
-/*
- * TODO: Sync this complete class with the latest PwC integration file later on.
- * eSign functionality is temporarily commented out as requested.
-
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,9 +13,9 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 
@@ -58,15 +53,29 @@ import okhttp3.RequestBody;
 @Slf4j
 public class eSignService {
 
-	@Autowired
-	Configurations configurations;
+	private final Configurations configurations;
+	private final IdGenService idGenService;
+	private final Producer producer;
+	private final TransactionRepository transactionRepository;
 
+	/**
+	 * Constructs an {@link eSignService} with required configuration, ID generation, messaging, and persistence dependencies.
+	 *
+	 * @param configurations        application configuration settings for eSign endpoints and gateway URLs
+	 * @param idGenService          service for generating unique transaction identifiers
+	 * @param producer              Kafka message producer for async audit and event notifications
+	 * @param transactionRepository repository for persisting eSign transaction records
+	 */
 	@Autowired
-	private IdGenService idGenService;
-	@Autowired
-	private Producer producer;
-	@Autowired
-	private TransactionRepository transactionRepository;
+	public eSignService(Configurations configurations,
+						IdGenService idGenService,
+						Producer producer,
+						TransactionRepository transactionRepository) {
+		this.configurations = configurations;
+		this.idGenService = idGenService;
+		this.producer = producer;
+		this.transactionRepository = transactionRepository;
+	}
 	
 
 	private byte[] readInputStreamToByteArray(InputStream inputStream) throws IOException {
@@ -296,4 +305,3 @@ public class eSignService {
 
 	}
 }
-*/

@@ -1,14 +1,13 @@
 import { BackButton, WhatsappIcon, Card, CitizenHomeCard, CitizenInfoLabel, PrivateRoute, AdvertisementModuleCard } from "@nudmcdgnpm/digit-ui-react-components";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Route, Routes, Link } from "react-router-dom";
+import { Route, Routes, Link, useLocation, Navigate } from "react-router-dom";
 import ErrorBoundary from "../../components/ErrorBoundaries";
+import Footer from "../../components/Footer";
 import { AppHome, processLinkData } from "../../components/Home";
 import TopBarSideBar from "../../components/TopBarSideBar";
 import StaticCitizenSideBar from "../../components/TopBarSideBar/SideBar/StaticCitizenSideBar";
 import CitizenHome from "./Home";
-import LanguageSelection from "./Home/LanguageSelection";
-import LocationSelection from "./Home/LocationSelection";
 import Login from "./Login";
 import UserProfile from "./Home/UserProfile";
 import ErrorComponent from "../../components/ErrorComponent";
@@ -26,13 +25,11 @@ import { newConfig as newConfigEDCR } from "../../config/edcrConfig";
 import CreateAnonymousEDCR from "./Home/EDCR";
 import EDCRAcknowledgement from "./Home/EDCR/EDCRAcknowledgement";
 import appContent from "../../config/appContent.json";
-
 const layout = appContent.citizen8.layout;
 
 const sidebarHiddenFor = [
+  "/upyog-ui/citizen/register",
   "/upyog-ui/citizen/register/name",
-  "/upyog-ui/citizen/select-language",
-  "/upyog-ui/citizen/select-location",
   "/upyog-ui/citizen/login",
   "/upyog-ui/citizen/register/otp",
 ];
@@ -90,6 +87,13 @@ const Home = (props) => {
 
   // replacing useRouteMatch
   const path = "/upyog-ui/citizen";
+  const location = useLocation();
+
+  const isLoginPage =
+    location?.pathname?.includes("/login") ||
+    location?.pathname?.includes("/register") ||
+    window.location.href.includes("/citizen/login") ||
+    window.location.href.includes("/citizen/register");
 
   const navigate = Digit.Hooks.useCustomNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -103,7 +107,9 @@ const Home = (props) => {
   let { data: newConfig } = Digit.Hooks.obps.SearchMdmsTypes.getFormConfig(stateId, []);
   newConfig = newConfig?.EdcrConfig ? newConfig?.EdcrConfig : newConfigEDCR;
 
-  const hideSidebar = sidebarHiddenFor.some((e) => window.location.href.includes(e));
+  const hideSidebar =
+    isLoginPage ||
+    sidebarHiddenFor.some((e) => location?.pathname?.includes(e) || window.location.href.includes(e));
   const toggleSidebarWidth = () => {
     if (window.innerWidth <= 780 || window.Digit.Utils.browser.isMobile()) {
       setIsMobileSidebarOpen((prev) => !prev);
@@ -273,8 +279,8 @@ const Home = (props) => {
       )}
       <div className={`main center-container citizen-home-container ${isSidebarCollapsed ? "citizen-home-container--collapsed" : ""} ${hideSidebar ? "citizen-home-container--no-sidebar" : ""}`}>
         <div className={`main-body ${hideSidebar ? "body-topBar" : ""}`}>
-            <Routes>
-              {/* <Route path={path} element={<CitizenHome />} />
+          <Routes>
+            {/* <Route path={path} element={<CitizenHome />} />
 
             <Route path={`/feedback`} element={<PrivateRoute><CitizenFeedback /></PrivateRoute>} />
             <Route path={`/feedback-acknowledgement`} element={<PrivateRoute><AcknowledgementCF /></PrivateRoute>} />
@@ -295,53 +301,54 @@ const Home = (props) => {
             <Route path={`/Audit`} element={<Search />} />
             <Route path={`/payment/verification`} element={<QRCode />} /> */}
 
-              <Route path="*" element={<CitizenHome onToggleSidebarWidth={toggleSidebarWidth} layout={layout} isSidebarCollapsed={isSidebarCollapsed} />} />
-              <Route path="login/*" element={<Login stateCode={stateCode} layout={layout} />} />
-              <Route path="register/*" element={<Login stateCode={stateCode} isUserRegistered={false} layout={layout} />} />
-              <Route path="select-language" element={<LanguageSelection />} />
-              <Route path="select-location" element={<LocationSelection />} />
-              <Route path="error" element={<ErrorComponent initData={initData} goToHome={() => navigate("/upyog-ui/citizen")} />} />
-              <Route path="all-services" element={
-                <AppHome
-                  userType="citizen"
-                  modules={modules}
-                  getCitizenMenu={linkData}
-                  fetchedCitizen={isLinkDataFetched}
-                  isLoading={islinkDataLoading}
-                />} />
-              <Route path="feedback" element={<PrivateRoute><CitizenFeedback /></PrivateRoute>} />
-              <Route path="feedback-acknowledgement" element={<PrivateRoute><AcknowledgementCF /></PrivateRoute>} />
-              <Route path="user/profile" element={<PrivateRoute><UserProfile stateCode={stateCode} userType={"citizen"} cityDetails={cityDetails} /></PrivateRoute>} />
-              <Route path="verificationsearch-home" element={<VSearchCertificate />} />
-              <Route path="assets/services" element={<AssetsQRCode />} />
-              <Route path="challan/details" element={<ChallanQRCode />} />
-              <Route path={`${APPLICATION_PATH}/citizen/core/edcr/scrutiny`} element={<CreateAnonymousEDCR />} />
-              <Route path={`${APPLICATION_PATH}/citizen/core/edcr/scrutiny/acknowledgement`} element={<EDCRAcknowledgement />} />
-              <Route path="Audit" element={<Search />} />
-              <Route path="payment/verification" element={<QRCode />} />
-              {Digit?.ComponentRegistryService?.getComponent("PTCitizenHomeScreen") && (
-                <Route
-                  path="pt-home"
-                  element={React.createElement(Digit.ComponentRegistryService.getComponent("PTCitizenHomeScreen"))}
-                />
-              )}
-              {Digit?.ComponentRegistryService?.getComponent("TLCitizenHomeScreen") && (
-                <Route
-                  path="tl-home"
-                  element={React.createElement(Digit.ComponentRegistryService.getComponent("TLCitizenHomeScreen"))}
-                />
-              )}
-              {Digit?.ComponentRegistryService?.getComponent("WSCitizenHomeScreen") && (
-                <Route
-                  path="ws-home"
-                  element={React.createElement(Digit.ComponentRegistryService.getComponent("WSCitizenHomeScreen"))}
-                />
-              )}
+            <Route path="*" element={<CitizenHome onToggleSidebarWidth={toggleSidebarWidth} layout={layout} isSidebarCollapsed={isSidebarCollapsed} />} />
+            <Route path="login/*" element={<Login stateCode={stateCode} layout={layout} />} />
+            <Route path="register/*" element={<Login stateCode={stateCode} isUserRegistered={false} layout={layout} />} />
+            <Route path="select-language" element={<Navigate to="/upyog-ui/citizen/login" replace />} />
+            <Route path="select-location" element={<Navigate to="/upyog-ui/citizen/login" replace />} />
+            <Route path="error" element={<ErrorComponent initData={initData} goToHome={() => navigate("/upyog-ui/citizen")} />} />
+            <Route path="all-services" element={
+              <AppHome
+                userType="citizen"
+                modules={modules}
+                getCitizenMenu={linkData}
+                fetchedCitizen={isLinkDataFetched}
+                isLoading={islinkDataLoading}
+              />} />
+            <Route path="feedback" element={<PrivateRoute><CitizenFeedback /></PrivateRoute>} />
+            <Route path="feedback-acknowledgement" element={<PrivateRoute><AcknowledgementCF /></PrivateRoute>} />
+            <Route path="user/profile" element={<PrivateRoute><UserProfile stateCode={stateCode} userType={"citizen"} cityDetails={cityDetails} /></PrivateRoute>} />
+            <Route path="verificationsearch-home" element={<VSearchCertificate />} />
+            <Route path="assets/services" element={<AssetsQRCode />} />
+            <Route path="challan/details" element={<ChallanQRCode />} />
+            <Route path={`${APPLICATION_PATH}/citizen/core/edcr/scrutiny`} element={<CreateAnonymousEDCR />} />
+            <Route path={`${APPLICATION_PATH}/citizen/core/edcr/scrutiny/acknowledgement`} element={<EDCRAcknowledgement />} />
+            <Route path="Audit" element={<Search />} />
+            <Route path="payment/verification" element={<QRCode />} />
+            {Digit?.ComponentRegistryService?.getComponent("PTCitizenHomeScreen") && (
+              <Route
+                path="pt-home"
+                element={React.createElement(Digit.ComponentRegistryService.getComponent("PTCitizenHomeScreen"))}
+              />
+            )}
+            {Digit?.ComponentRegistryService?.getComponent("TLCitizenHomeScreen") && (
+              <Route
+                path="tl-home"
+                element={React.createElement(Digit.ComponentRegistryService.getComponent("TLCitizenHomeScreen"))}
+              />
+            )}
+            {Digit?.ComponentRegistryService?.getComponent("WSCitizenHomeScreen") && (
+              <Route
+                path="ws-home"
+                element={React.createElement(Digit.ComponentRegistryService.getComponent("WSCitizenHomeScreen"))}
+              />
+            )}
 
-              {appRoutes}
-              {ModuleLevelLinkHomePages}
-            </Routes>
+            {appRoutes}
+            {ModuleLevelLinkHomePages}
+          </Routes>
         </div>
+        {!isLoginPage && <Footer isEmployee={false} />}
       </div>
     </div>
   );

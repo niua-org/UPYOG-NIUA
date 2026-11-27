@@ -1,6 +1,5 @@
 package org.egov.user.web.contract.document;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -40,7 +39,6 @@ public class UserDocumentRequest {
 
     @Schema(description = "Citizen UUID associated with these documents", example = "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
     @JsonProperty("uuid")
-    @JsonAlias({"userUuid", "user_uuid"})
     private String uuid;
 
     @Schema(description = "Internal user numeric ID", example = "1024")

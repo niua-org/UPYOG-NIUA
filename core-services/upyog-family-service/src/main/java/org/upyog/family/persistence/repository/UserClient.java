@@ -1,7 +1,9 @@
 package org.upyog.family.persistence.repository;
 
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
 import org.upyog.family.web.contract.CitizenProfile;
+import org.upyog.family.web.contract.FamilyMember;
 
 import java.util.List;
 import java.util.Map;
@@ -42,4 +44,45 @@ public interface UserClient {
      * @return created or local CitizenProfile instance with populated UUID
      */
     CitizenProfile createCitizenProfile(CitizenProfile profile, RequestInfo requestInfo);
+
+    /**
+     * Validates that the authenticated caller is verified in the user database.
+     * Bypasses internal system users (e.g. SYSTEM_USER) and official employees.
+     *
+     * @param requestInfo UPYOG request context envelope
+     * @return CitizenProfile if resolved, or null if system/employee bypass
+     * @throws org.egov.tracer.model.CustomException if caller is unauthenticated, not found, or not identity-verified
+     */
+    CitizenProfile validateCallerIsVerified(RequestInfo requestInfo);
+
+    /**
+     * Validates that the specified user UUID is identity-verified in the user database.
+     *
+     * @param userUuid citizen user UUID
+     * @param requestInfo UPYOG request context envelope
+     * @return CitizenProfile of the verified user
+     * @throws CustomException if user is not found or not identity-verified
+     */
+    CitizenProfile validateUserIsVerified(String userUuid, RequestInfo requestInfo);
+
+    /**
+     * Synchronizes family member demographic profiles and asset declarations (properties, income,
+     * vehicles, attached documents) to the core UPYOG registry in {@code egov-user}.
+     *
+     * @param members list of family members with asset declarations
+     * @param tenantId tenant identifier
+     * @param requestInfo UPYOG request context envelope
+     * @return true if synchronization succeeded, false otherwise
+     */
+    boolean syncMemberAssets(List<FamilyMember> members, String tenantId, RequestInfo requestInfo);
+
+    /**
+     * Validates an urban property consent token against the user service.
+     *
+     * @param propertyId municipal property identifier
+     * @param consentToken OTP-verified consent token
+     * @param requestInfo platform request context
+     * @return true if valid and unexpired
+     */
+    boolean validatePropertyConsentToken(String propertyId, String consentToken, RequestInfo requestInfo);
 }

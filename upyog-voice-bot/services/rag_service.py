@@ -17,10 +17,7 @@ from prompts.system_prompt import (
     build_query_rewriter_prompt,
 )
 
-try:
-    from groq import Groq
-except ImportError:
-    Groq = None
+from services.llm_client import get_llm_client
 
 from services.voice_service import (
     translate_text,
@@ -184,11 +181,8 @@ def contextualize_query_for_search(query: str, history: list) -> str:
         return query
 
     try:
-        api_key = GROQ_API_KEY or os.environ.get("GROQ_API_KEY")
-        if not groq_client and Groq and api_key:
-            groq_client = Groq(api_key=api_key)
-
-        if not groq_client:
+        client = get_llm_client()
+        if not client.is_configured():
             return query
 
         recent_history = history[-8:] if len(history) >= 8 else history
@@ -208,7 +202,7 @@ def contextualize_query_for_search(query: str, history: list) -> str:
         history_text = "\n".join(hist_lines)
         prompt = build_query_rewriter_prompt(query=query, history_text=history_text)
 
-        resp = groq_client.chat.completions.create(
+        resp = client.chat.completions.create(
             model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=300,
@@ -302,6 +296,19 @@ def get_rag_response(query: str, history: list, lang: str, search_lang: str = No
                 query_for_search = translated
                 logger.info(f"[RAG FAISS] Translated query for vector search: '{query_for_search}'")
 
+        # Synonym expansion: append canonical service terms to boost vector recall for colloquial queries
+        # Reason: Bridges citizen colloquial terms (e.g., 'ghar patti', 'ishtehaar') to English FAQ embeddings
+        try:
+            from services.normalizer import resolve_service_by_synonyms
+            syn_info = resolve_service_by_synonyms(query)
+            if syn_info and syn_info.get("canonical_name"):
+                c_name = syn_info["canonical_name"]
+                if c_name.lower() not in query_for_search.lower():
+                    query_for_search = f"{query_for_search} {c_name}"
+                    logger.info(f"[RAG FAISS] Synonym-expanded query: '{query_for_search}' [Reason: Boost recall for '{syn_info.get('matched_expression')}']")
+        except Exception as e:
+            logger.debug(f"[RAG FAISS] Synonym expansion skipped: {e}")
+
         relevant_chunks = []
         if model and index is not None:
             query_embedding = model.encode([query_for_search])
@@ -363,17 +370,15 @@ Keep the answer accurate, professional, and helpful.
     messages.extend(history_messages)
     messages.append({"role": "user", "content": query})
 
-    logger.info(f"[GROQ RAG] Calling Groq API with {len(messages)} messages (history turns: {len(history_messages)})")
+    logger.info(f"[RAG] Calling LLM with {len(messages)} messages (history turns: {len(history_messages)})")
     start_time = time.time()
 
     try:
-        if not groq_client and Groq:
-            groq_client = Groq(api_key=GROQ_API_KEY)
-
-        if not groq_client:
+        client = get_llm_client()
+        if not client.is_configured():
             return "I'm sorry, AI services are currently unconfigured."
 
-        response = groq_client.chat.completions.create(
+        response = client.chat.completions.create(
             model=GROQ_MODEL,
             messages=messages,
             max_tokens=650,
@@ -381,7 +386,7 @@ Keep the answer accurate, professional, and helpful.
         )
         ans = response.choices[0].message.content.strip()
         elapsed = time.time() - start_time
-        logger.info(f"[GROQ RAG] Received answer in {elapsed:.2f}s (len: {len(ans)} chars)")
+        logger.info(f"[RAG] Received answer in {elapsed:.2f}s (len: {len(ans)} chars)")
 
         if lang == 'en' and any('ऀ' <= c <= 'ॿ' for c in ans):
             logger.info("[GROQ RAG] Output contained Devanagari for English query — translating to English")
@@ -452,13 +457,12 @@ def retrieve_document_stream(query: str, user_lang: str, history: list, phone_an
 
         logger.info(f"[STREAMING] Context chunks matched: FAQ={len(faq_context)}, FRS={len(frs_context)}")
 
-        if not Groq or not GROQ_API_KEY:
-            logger.warning("[STREAMING] Groq SDK/Key not present — sending fallback response")
+        client = get_llm_client()
+        if not client.is_configured():
+            logger.warning("[STREAMING] LLM client not configured — sending fallback response")
             response_text = faq_context[0]['a'] if faq_context else "I'm sorry, I'm having trouble thinking right now."
             yield f"data: {json.dumps({'type': 'text', 'text': response_text})}\n\n"
             return
-
-        client = Groq(api_key=GROQ_API_KEY)
 
         if user_lang == "hi":
             lang_instruction = (

@@ -14,7 +14,7 @@ import java.util.Map;
 @Component
 public class CustomTokenEnhancer implements OAuth2TokenCustomizer<JwtEncodingContext> {
 
-    @Value("${jwt.token.optimize-size:true}")
+    @Value("${jwt.token.optimize-size}")
     private boolean optimizeTokenSize;
 
     @Override
