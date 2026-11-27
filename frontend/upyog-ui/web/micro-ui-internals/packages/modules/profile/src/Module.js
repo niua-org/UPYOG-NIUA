@@ -29,7 +29,7 @@ import IncomeDetails from "./ppp/IncomeDetails";
 import VehicleDetails from "./ppp/VehicleDetails";
 import PropertyDetails from "./ppp/PropertyDetails/PropertyDetails";
 import DocumentDetails from "./ppp/DocumentDetails";
-import { EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
+import { ReportSearchApplication, EnhancedReport } from "@nudmcdgnpm/digit-ui-module-reports";
 
 
 /**
@@ -82,6 +82,7 @@ ProfileApplicationDetails,
 ProfileSearchApp: SearchApp,
 FamilyDesktopInbox,
 FamilyInboxTableConfig,
+ReportSearchApplication,
 EnhancedReport
 };
 

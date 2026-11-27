@@ -17,6 +17,7 @@ const App = () => {
   const FamilyCreatedResponse = Digit?.ComponentRegistryService?.getComponent("FamilyCreatedResponse");
   const FamilyDashboard = Digit?.ComponentRegistryService?.getComponent("FamilyDashboard");
   const FamilyCreate = Digit?.ComponentRegistryService?.getComponent("FamilyCreate");
+  const EnhancedReport = Digit?.ComponentRegistryService?.getComponent("EnhancedReport");
  
   return (
     <span className={`${"profile-citizen"}`}>
@@ -37,6 +38,8 @@ const App = () => {
           <Route path="family-create-acknowledgement" element={<PrivateRoute><FamilyCreatedResponse /></PrivateRoute>} />
           <Route path="family-dashboard" element={<PrivateRoute><FamilyDashboard /></PrivateRoute>} />
           <Route path="create-family/*" element={<PrivateRoute><FamilyCreate /></PrivateRoute>} />
+          <Route path="FamilyIDCoverageReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-profile" reportName="FamilyIDCoverageReport" /></PrivateRoute>} />
+
         </Routes>
       </AppContainer>
     </span>

@@ -119,7 +119,7 @@ const EmployeeApp = ({ path, url, userType }) => {
             <Route path="AssetDisposalReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-asset" reportName="AssetDisposalReport" /></PrivateRoute>} />
             <Route path="AssetAssignmentReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-asset" reportName="AssetAssignmentReport" /></PrivateRoute>} />
             <Route path="DetailedBuildingAssetsReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-asset" reportName="DetailedBuildingAssetsReport" /></PrivateRoute>} />
-            <Route path="PlantsMachineryReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-asset" reportName="PlantsMachineryReport" /></PrivateRoute>} />
+            <Route path="PlantsMachineryReport/*" element={<PrivateRoute><EnhancedReport parentRoute={path} moduleName="rainmaker-asset" reportName="PlantsMachineryReport" /></PrivateRoute>} />            
           </Routes>
         </div>
       </React.Fragment>
