@@ -1017,13 +1017,14 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               </div>
               <TextInput
                 t={t}
-                type={"tel"}
+                type={"text"}
                 isMandatory={false}
                 optionKey="i18nKey"
                 onKeyPress={additionalNumberValidation}
                 name="pincode"
                 value={address?.pincode || ""}
                 onChange={(e) => {
+                  if (e.target.value.length > 6) return;
                   setAddress({ ...address, pincode: e.target.value });
                 }}
                 {...(validation = {

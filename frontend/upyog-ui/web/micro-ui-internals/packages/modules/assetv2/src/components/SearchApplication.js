@@ -33,13 +33,9 @@ const ASSETSearchApplication = ({ isLoading, t, onSubmit, onClear, data, count, 
   })
 
   useEffect(() => {
-    register("offset", 0)
-    register("limit", 10)
-    register("sortBy", "commencementDate")
-    register("sortOrder", "DESC")
     setValue("fromDate", fromDateFormatted);
     setValue("toDate", today);
-  }, [register, setValue, today, fromDateFormatted])
+  }, [setValue, today, fromDateFormatted])
 
   // Get base path
 
