@@ -594,7 +594,222 @@ function disablePreviousInteractiveElements() {
   });
 }
 
-function addUserMessage(text) {
+// ============== DOCUMENT PREVIEW & MODAL HELPERS ==============
+let currentPreviewBlobUrl = null;
+
+function dataURLtoBlob(dataurl) {
+  if (!dataurl || typeof dataurl !== 'string') return null;
+  if (!dataurl.startsWith('data:')) return null;
+  try {
+    const arr = dataurl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'application/pdf';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  } catch (e) {
+    console.error("Error creating blob from dataURL:", e);
+    return null;
+  }
+}
+
+function showToast(message) {
+  let toast = document.getElementById('doc-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'doc-toast';
+    toast.className = 'doc-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2800);
+}
+
+function openDocPreviewModal(fileName, fileData) {
+  let modal = document.getElementById('doc-preview-modal');
+  if (!modal) return;
+
+  const isPdf = (fileName || '').toLowerCase().endsWith('.pdf') || (fileData || '').startsWith('data:application/pdf');
+
+  // Title
+  const titleEl = document.getElementById('doc-preview-title');
+  if (titleEl) {
+    titleEl.textContent = fileName || '';
+    titleEl.title = fileName || '';
+  }
+
+  // Body container (scrollable document viewer)
+  const bodyEl = document.getElementById('doc-preview-modal-body');
+  if (bodyEl) {
+    bodyEl.innerHTML = '';
+
+    if (currentPreviewBlobUrl) {
+      try { URL.revokeObjectURL(currentPreviewBlobUrl); } catch (e) {}
+      currentPreviewBlobUrl = null;
+    }
+
+    if (isPdf) {
+      const blob = dataURLtoBlob(fileData);
+      const url = blob ? URL.createObjectURL(blob) : fileData;
+      currentPreviewBlobUrl = blob ? url : null;
+
+      const iframe = document.createElement('iframe');
+      iframe.className = 'doc-pdf-iframe';
+      // Hide PDF toolbar so no blob ID or viewer bar is shown at top; fit page width and enable smooth scroll
+      iframe.src = url + '#toolbar=0&navpanes=0&scrollbar=1&view=FitH';
+      bodyEl.appendChild(iframe);
+    } else {
+      const scrollWrap = document.createElement('div');
+      scrollWrap.className = 'doc-image-scroll-wrapper';
+      const img = document.createElement('img');
+      img.className = 'doc-full-image';
+      img.src = fileData;
+      img.alt = fileName || 'Uploaded Document';
+      scrollWrap.appendChild(img);
+      bodyEl.appendChild(scrollWrap);
+    }
+  }
+
+  // Close button (cross sign ✕)
+  const closeBtn = document.getElementById('doc-preview-close-btn');
+  if (closeBtn) {
+    closeBtn.onclick = closeDocPreviewModal;
+  }
+
+  // Backdrop click to close
+  modal.onclick = function (e) {
+    if (e.target === modal) {
+      closeDocPreviewModal();
+    }
+  };
+
+  modal.style.display = 'flex';
+  requestAnimationFrame(() => {
+    modal.classList.add('active');
+  });
+
+  window.addEventListener('keydown', handleEscCloseDocModal);
+}
+
+function handleEscCloseDocModal(e) {
+  if (e.key === 'Escape') {
+    closeDocPreviewModal();
+  }
+}
+
+function closeDocPreviewModal() {
+  const modal = document.getElementById('doc-preview-modal');
+  if (!modal) return;
+  window.removeEventListener('keydown', handleEscCloseDocModal);
+  modal.classList.remove('active');
+  setTimeout(() => {
+    modal.style.display = 'none';
+    const bodyEl = document.getElementById('doc-preview-modal-body');
+    if (bodyEl) bodyEl.innerHTML = '';
+    if (currentPreviewBlobUrl) {
+      try { URL.revokeObjectURL(currentPreviewBlobUrl); } catch (e) {}
+      currentPreviewBlobUrl = null;
+    }
+  }, 220);
+}
+
+function renderDocCardInMessage(container, fileName, fileData) {
+  const isPdf = (fileName || '').toLowerCase().endsWith('.pdf') || (fileData || '').startsWith('data:application/pdf');
+  const cardId = 'doc_' + Math.random().toString(36).substring(2, 9);
+
+  const card = document.createElement('div');
+  card.className = 'user-doc-card';
+  card.id = cardId;
+
+  // Thumbnail ("small pic type")
+  const thumb = document.createElement('div');
+  thumb.className = 'user-doc-thumb' + (isPdf ? ' is-pdf' : ' is-image');
+  thumb.title = 'Click to preview document (80% window)';
+
+  if (isPdf) {
+    thumb.innerHTML = `
+      <div class="user-doc-pdf-graphic">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span class="pdf-tag">PDF</span>
+      </div>
+      <div class="thumb-hover-overlay">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </div>
+    `;
+  } else {
+    thumb.innerHTML = `
+      <img src="${fileData}" alt="${fileName}" class="user-doc-thumb-img" />
+      <div class="thumb-hover-overlay">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </div>
+    `;
+  }
+
+  // Info
+  const info = document.createElement('div');
+  info.className = 'user-doc-info';
+
+  const title = document.createElement('div');
+  title.className = 'user-doc-title';
+  title.textContent = fileName;
+  title.title = fileName;
+
+  const meta = document.createElement('div');
+  meta.className = 'user-doc-meta';
+  meta.innerHTML = `
+    <span class="user-doc-badge ${isPdf ? 'badge-pdf' : 'badge-img'}">${isPdf ? 'PDF' : 'IMAGE'}</span>
+    <span class="user-doc-view-hint">Tap to preview</span>
+  `;
+
+  info.appendChild(title);
+  info.appendChild(meta);
+
+  // Actions (Preview button only - no delete)
+  const actions = document.createElement('div');
+  actions.className = 'user-doc-actions';
+
+  const viewBtn = document.createElement('button');
+  viewBtn.type = 'button';
+  viewBtn.className = 'doc-action-btn view-btn';
+  viewBtn.title = 'Preview document (80% window)';
+  viewBtn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    </svg>
+  `;
+
+  actions.appendChild(viewBtn);
+
+  card.appendChild(thumb);
+  card.appendChild(info);
+  card.appendChild(actions);
+  container.appendChild(card);
+
+  const handleOpenPreview = (e) => {
+    if (e) e.stopPropagation();
+    openDocPreviewModal(fileName, fileData);
+  };
+
+  card.addEventListener('click', handleOpenPreview);
+  thumb.addEventListener('click', handleOpenPreview);
+  info.addEventListener('click', handleOpenPreview);
+  viewBtn.addEventListener('click', handleOpenPreview);
+}
+
+function addUserMessage(text, fileData = null, fileName = null) {
   disablePreviousInteractiveElements();
   const hero = document.getElementById('hero-welcome');
   if (hero) hero.classList.add('hidden');
@@ -606,7 +821,14 @@ function addUserMessage(text) {
   rowDiv.className = 'message-row user-row';
   const msgDiv = document.createElement('div');
   msgDiv.className = 'message user';
-  msgDiv.innerText = text;
+
+  if (fileData && fileName) {
+    msgDiv.classList.add('has-doc-card');
+    renderDocCardInMessage(msgDiv, fileName, fileData);
+  } else {
+    msgDiv.innerText = text;
+  }
+
   const avatarDiv = document.createElement('div');
   avatarDiv.className = 'user-avatar';
   avatarDiv.innerHTML = (typeof ICONS !== 'undefined' && ICONS.avatar) ? ICONS.avatar : '';
@@ -855,17 +1077,65 @@ function addBotMessage(text, mode, inputType, options, field, minDate) {
     fileLabel.style.color = '#666';
     fileLabel.style.marginRight = '10px';
 
+    const pendingChip = document.createElement('div');
+    pendingChip.className = 'file-pending-preview-chip';
+    pendingChip.style.display = 'none';
+
     uploadBtn.onclick = function () {
       fileInput.click();
     };
 
     let selectedFile = null;
+    let selectedFileData = null;
+
     fileInput.onchange = function (e) {
       const file = e.target.files[0];
       if (file) {
         selectedFile = file;
-        fileLabel.textContent = file.name;
         confirmBtn.disabled = false;
+        fileLabel.style.display = 'none';
+
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          selectedFileData = evt.target.result;
+          const isPdf = file.name.toLowerCase().endsWith('.pdf') || (selectedFileData || '').startsWith('data:application/pdf');
+
+          pendingChip.innerHTML = `
+            <div class="file-pending-thumb" title="Click to preview (80% window)">
+              ${isPdf 
+                ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>'
+                : `<img src="${selectedFileData}" alt="preview"/>`
+              }
+            </div>
+            <div class="file-pending-info" title="Click to preview (80% window)">
+              <div class="file-pending-name">${file.name}</div>
+              <div class="file-pending-sub">${isPdf ? 'PDF Document' : 'Image'} • Tap to preview (80%)</div>
+            </div>
+            <button type="button" class="file-pending-remove-btn" title="Remove selected file">✕</button>
+          `;
+          pendingChip.style.display = 'flex';
+
+          const openPrev = () => openDocPreviewModal(file.name, selectedFileData);
+          const thumbEl = pendingChip.querySelector('.file-pending-thumb');
+          const infoEl = pendingChip.querySelector('.file-pending-info');
+          if (thumbEl) thumbEl.onclick = openPrev;
+          if (infoEl) infoEl.onclick = openPrev;
+
+          const removeBtn = pendingChip.querySelector('.file-pending-remove-btn');
+          if (removeBtn) {
+            removeBtn.onclick = function (ev) {
+              ev.stopPropagation();
+              selectedFile = null;
+              selectedFileData = null;
+              fileInput.value = '';
+              pendingChip.style.display = 'none';
+              fileLabel.style.display = 'inline';
+              fileLabel.textContent = 'No file chosen';
+              confirmBtn.disabled = true;
+            };
+          }
+        };
+        reader.readAsDataURL(file);
       }
     };
 
@@ -879,18 +1149,23 @@ function addBotMessage(text, mode, inputType, options, field, minDate) {
       fileInput.disabled = true;
       uploadBtn.disabled = true;
       confirmBtn.disabled = true;
+      pendingChip.style.display = 'none';
 
-      const reader = new FileReader();
-      reader.onload = function (evt) {
-        const base64Data = evt.target.result;
-        sendQuery('', selectedFile.name, base64Data);
-      };
-      reader.readAsDataURL(selectedFile);
+      if (selectedFileData) {
+        sendQuery('', selectedFile.name, selectedFileData);
+      } else {
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          sendQuery('', selectedFile.name, evt.target.result);
+        };
+        reader.readAsDataURL(selectedFile);
+      }
     };
 
     fileContainer.appendChild(fileInput);
     fileContainer.appendChild(uploadBtn);
     fileContainer.appendChild(fileLabel);
+    fileContainer.appendChild(pendingChip);
     fileContainer.appendChild(confirmBtn);
     wrapper.appendChild(fileContainer);
   }
@@ -1052,7 +1327,9 @@ async function sendQuery(transcript, file_name = null, file_data = null, display
   setState(States.PROCESSING);
   if (typeof clearInterimDisplay === 'function') clearInterimDisplay();
   if (currentFetch) { currentFetch.abort(); currentFetch = null; }
-  if (file_name) {
+  if (file_name && file_data) {
+    addUserMessage(`[Uploaded Document: ${file_name}]`, file_data, file_name);
+  } else if (file_name) {
     addUserMessage(`[Uploaded Document: ${file_name}]`);
   } else {
     addUserMessage(display_text || transcript);

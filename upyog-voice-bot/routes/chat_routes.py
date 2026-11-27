@@ -120,16 +120,23 @@ def chat():
             if isinstance(raw_hist, list):
                 history = [h for h in raw_hist if isinstance(h, dict) and "role" in h and "content" in h]
 
-        # 4. Handle Document Uploads if attached 
-        if file_name and file_data and token:
-            from mcp_tools import upload_to_filestore
-            file_store_id = upload_to_filestore(file_name, file_data, token)
-            if file_store_id:
-                user_input = json.dumps({"document": file_store_id})
-                file_name = None
+        # 4. Handle Document Uploads if attached (validate format: JPG, PNG, PDF and size < 2 MB)
+        if file_name:
+            from services.validator import validate_document
+            is_valid_doc, doc_err, _ = validate_document(file_name, file_data)
+            if not is_valid_doc:
+                audio_output = text_to_speech(doc_err, "en")
+                return jsonify({"response": f"⚠️ {doc_err}", "lang": "en", "audio": audio_output, "mode": "validation_error"})
 
-        if file_name and not user_input:
-            user_input = json.dumps({"document": file_name})
+            if file_data and token:
+                from mcp_tools import upload_to_filestore
+                file_store_id = upload_to_filestore(file_name, file_data, token)
+                if file_store_id:
+                    user_input = json.dumps({"document": file_store_id})
+                    file_name = None
+            elif not user_input:
+                user_input = json.dumps({"document": file_name})
+                file_name = None
 
         if not user_input and not file_name:
             return jsonify({"response": "", "lang": "en", "audio": ""})

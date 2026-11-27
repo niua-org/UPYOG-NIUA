@@ -14,8 +14,8 @@ system_messages:
     response_en: "Hello! I'm UPYOG AI. How can I help you today?"
     response_hi: "नमस्ते! मैं UPYOG AI हूँ। मैं आपकी क्या सहायता कर सकता हूँ?"
   blocked:
-    response_en: "I can only help with UPYOG and urban government services."
-    response_hi: "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।"
+    response_en: "I can only assist with UPYOG and its services (such as Property Tax, Trade License, Water & Sewerage, Grievances, and Advertisement Bookings). Please ask a question related to municipal services."
+    response_hi: "मैं केवल UPYOG और शहरी नगरपालिका नागरिक सेवाओं (जैसे संपत्ति कर, व्यापार लाइसेंस, जल और सीवरेज, शिकायत निवारण, और विज्ञापन बुकिंग) में सहायता कर सकता हूँ। कृपया नगर सेवाओं से संबंधित प्रश्न पूछें।"
   login:
     keywords_query: ["how to login", "how do i login", "login kaise kare", "login help", "लॉगिन कैसे करें"]
     keywords_claim: ["login done", "logged in", "login ho gaya", "maine login kar liya", "लॉगिन हो गया"]
@@ -25,6 +25,21 @@ system_messages:
     verified_hi: "बहुत बढ़िया! आपकी पहचान सत्यापित हो गई है ({name})। अब आप विज्ञापन बुकिंग कर सकते हैं या शिकायत दर्ज कर सकते हैं। आप क्या करना चाहते हैं?"
     unverified_en: "I do not detect an active logged-in session yet. Please complete the login by clicking **Login** in the left sidebar and entering your mobile number and OTP."
     unverified_hi: "मुझे अभी आपका सक्रिय लॉगिन सत्र नहीं मिला है। कृपया बाईं ओर के साइडबार में नीचे **Login** विकल्प पर क्लिक करके अपने मोबाइल नंबर और OTP से लॉगिन पूरा करें।"
+  applicant_profile:
+    prompt_en: "I can use your registered profile details for this advertisement booking:\n\n• **Name**: {name}\n• **Mobile Number**: {mobile}\n• **Email Address**: {email}\n\nWould you like to proceed with these profile details or edit them?"
+    prompt_hi: "मैं इस विज्ञापन बुकिंग के लिए आपके पंजीकृत प्रोफ़ाइल विवरण का उपयोग कर सकता हूँ:\n\n• **नाम**: {name}\n• **मोबाइल नंबर**: {mobile}\n• **ईमेल**: {email}\n\nक्या आप इन प्रोफ़ाइल विवरणों के साथ आगे बढ़ना चाहते हैं या इनमें बदलाव करना चाहते हैं?"
+    options_en: ["Use Profile Details", "Edit Details"]
+    options_hi: ["प्रोफ़ाइल विवरण का उपयोग करें", "विवरण बदलें"]
+    edit_prompt_en: "Which detail would you like to change?"
+    edit_prompt_hi: "आप कौन सा विवरण बदलना चाहते हैं?"
+    edit_options_en:
+      "Name": "applicantName"
+      "Mobile Number": "mobileNumber"
+      "Email Address": "emailId"
+    edit_options_hi:
+      "नाम": "applicantName"
+      "मोबाइल नंबर": "mobileNumber"
+      "ईमेल आईडी": "emailId"
   faq_question:
     question_starters: [
       "what", "how", "why", "when", "where", "who", "which", "whose", "whom",
@@ -52,6 +67,28 @@ system_messages:
     general:
       en: "Understood. The request has been cancelled. How else can I assist you today?"
       hi: "ठीक है, अनुरोध रद्द कर दिया गया है। मैं आपकी और क्या सहायता कर सकता हूँ?"
+
+  workflow_templates:
+    intro_with_extracted:
+      en: "I have noted your preferences for {service_name}:\n{extracted_details}\n\nTo proceed, here are the steps involved in the application process:\n{stages}\n\nShall we proceed with your application?"
+      hi: "आपकी {service_name} के लिए निम्नलिखित विवरण नोट कर लिए गए हैं:\n{extracted_details}\n\nआगे बढ़ने के लिए, आवेदन प्रक्रिया के चरण इस प्रकार हैं:\n{stages}\n\nक्या हम आपके आवेदन के साथ आगे बढ़ें?"
+    intro_generic:
+      en: "To proceed with your {service_name}, here are the steps involved in the application process:\n{stages}\n\nShall we proceed with your application?"
+      hi: "आपकी {service_name} प्रक्रिया के लिए, आवेदन प्रक्रिया के चरण इस प्रकार हैं:\n{stages}\n\nक्या हम आपके आवेदन के साथ आगे बढ़ें?"
+    consent_options:
+      en: ["Yes, proceed", "No, cancel"]
+      hi: ["हाँ, आगे बढ़ें", "नहीं, रद्द करें"]
+    initiation_triggers:
+      en: ["help", "book", "file", "register", "start", "new", "apply", "create", "lodge", "raise"]
+      hi: ["मदद", "सहायता", "बुक", "दर्ज", "शिकायत", "आवेदन", "शुरू", "नया", "नई", "karna", "darj"]
+
+  workflow_intros:
+    grievance:
+      stages_en: "• **Complaint Details**: Selection of grievance category, complaint type, and problem description.\n• **Location Information**: Specification of the affected locality or area.\n• **Review & Submission**: Verification of complaint details prior to generating your service ticket."
+      stages_hi: "• **शिकायत का विवरण**: शिकायत की श्रेणी, प्रकार तथा समस्या का विवरण।\n• **स्थान की जानकारी**: प्रभावित इलाका अथवा संबंधित क्षेत्र का चयन।\n• **समीक्षा एवं सबमिशन**: शिकायत टिकट दर्ज करने से पूर्व सभी विवरणों की समीक्षा।"
+    adv_booking:
+      stages_en: "• **Advertisement & Slot Details**: Selection of advertisement category, location, dimensions, and booking schedule.\n• **Applicant Information**: Collection of applicant name, contact information, and address.\n• **Review & Confirmation**: Verification of all booking details prior to final submission."
+      stages_hi: "• **विज्ञापन एवं स्लॉट विवरण**: विज्ञापन श्रेणी, स्थान, माप तथा बुकिंग समय-सारणी का चयन।\n• **आवेदक का विवरण**: आवेदक का नाम, मोबाइल नंबर एवं पते की जानकारी।\n• **समीक्षा एवं पुष्टि**: आवेदन अंतिम रूप से जमा करने से पूर्व सभी विवरणों की समीक्षा।"
 
 
 # ============================================================
@@ -270,7 +307,7 @@ forms:
 
       - id: "start_date"
         type: "date"
-        label: "From Date"
+        label: "Start Date"
         extractable: true
         validation:
           required: true
@@ -278,7 +315,7 @@ forms:
 
       - id: "end_date"
         type: "date"
-        label: "To Date"
+        label: "End Date"
         extractable: true
         validation:
           required: true

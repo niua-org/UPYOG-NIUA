@@ -16,6 +16,11 @@ from prompts.workflow_prompts import (
 )
 from services.validator import validate_field
 from workflow.base_state import BaseAgentState
+from workflow.workflow_helper import (
+    make_consent_node,
+    consent_router,
+    maybe_build_consent_prompt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -202,12 +207,12 @@ def intent_and_ui_node(state: GrievanceState):
     return {"draft_grievance": draft}
 
 
-# Decides whether to stop here or send the chat to the AI for data extraction
+# Decides whether to stop here or send the chat to the consent node
 def intent_router(state: GrievanceState) -> str:
     messages = state.get("messages", [])
     if messages and isinstance(messages[-1], AIMessage):
         return END
-    return "extraction"
+    return "consent"
 
 
 # Uses AI and deterministic matching to extract missing complaint details
@@ -249,8 +254,8 @@ def extraction_node(state: GrievanceState):
         "start over", "cancel draft", "delete draft", "clear draft",
         "aage badho", "chalu karo", "continue please", "proceed", "next", "skip"
     ]
-    if any(ui_lower == w or ui_lower.startswith(w + " ") for w in meta_commands):
-        logger.info(f"[grievance extract_node] User message '{user_msg}' is a meta/resume command; skipping field extraction.")
+    if draft.pop("_just_consented", False) or any(ui_lower == w or ui_lower.startswith(w + " ") for w in meta_commands):
+        logger.info(f"[grievance extract_node] User message '{user_msg}' is a consent/meta/resume command; skipping field extraction.")
         return {"draft_grievance": draft}
 
     # Detect if user's message is a question/FAQ query rather than a form answer
@@ -524,6 +529,10 @@ def ask_next_node(state: GrievanceState):
     val_err = draft.get("_field_errors", {}).pop(field_id, None)
     if val_err:
         text = f"⚠️ {val_err}\n\n{text}"
+    else:
+        consent_resp = maybe_build_consent_prompt("grievance", draft, "draft_grievance", ALL_FIELDS, state)
+        if consent_resp:
+            return consent_resp
 
     if field_type == "dropdown" and options:
         opts_str = ", ".join(f"'{o}'" for o in options)
@@ -536,12 +545,13 @@ def ask_next_node(state: GrievanceState):
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
 
     logger.info(f"[grievance.ask_next_node] Asked citizen for '{field_id}'. Missing fields left: {[f for f in ALL_FIELDS if not draft.get(f)]}")
+    out_input_type = "dropdown" if (field_type == "dropdown" and options) else "text"
     return {
         "messages":        [AIMessage(content=resp)],
         "draft_grievance": draft,
         "missing_fields":  [f for f in ALL_FIELDS if not draft.get(f)],
-        "input_type":      "text",
-        "options":         []
+        "input_type":      out_input_type,
+        "options":         options if (field_type == "dropdown" and options) else []
     }
 
 
@@ -599,6 +609,9 @@ def create_complaint_node(state: GrievanceState):
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
 
     reset_draft = {f: None for f in ALL_FIELDS}
+    reset_draft["_steps_communicated"] = None
+    reset_draft["_consent_granted"] = None
+    reset_draft["_consent_pending"] = None
     MemoryManager.delete_draft_state(phone_number, "grievance")
     return {"messages": [AIMessage(content=resp)], "draft_grievance": reset_draft, "missing_fields": ALL_FIELDS, "input_type": "text", "options": []}
 
@@ -619,6 +632,10 @@ def cancel_node(state: GrievanceState):
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
 
     reset_draft = {f: None for f in ALL_FIELDS}
+    reset_draft["_steps_communicated"] = None
+    reset_draft["_consent_granted"] = None
+    reset_draft["_consent_pending"] = None
+    reset_draft["_cancelled"] = True
     MemoryManager.delete_draft_state(phone_number, "grievance")
     return {"messages": [AIMessage(content=resp)], "draft_grievance": reset_draft, "missing_fields": ALL_FIELDS}
 
@@ -631,6 +648,7 @@ def router(state: GrievanceState) -> str:
     if draft.get("_cancelled"):
         logger.info("[grievance.router] Route -> cancel")
         return "cancel"
+
     if draft.get("_confirmed"):
         logger.info("[grievance.router] Route -> create_complaint")
         return "create_complaint"
@@ -648,6 +666,10 @@ def router(state: GrievanceState) -> str:
 _wf = StateGraph(GrievanceState)
 
 _wf.add_node("intent_and_ui",    intent_and_ui_node)
+_wf.add_node(
+    "consent",
+    make_consent_node("grievance", "draft_grievance", ALL_FIELDS),
+)
 _wf.add_node("extraction",       extraction_node)
 _wf.add_node("ask_next",         ask_next_node)
 _wf.add_node("confirm",          confirm_node)
@@ -658,6 +680,11 @@ _wf.add_edge(START, "intent_and_ui")
 _wf.add_conditional_edges(
     "intent_and_ui",
     intent_router,
+    {"consent": "consent", END: END}
+)
+_wf.add_conditional_edges(
+    "consent",
+    consent_router,
     {"extraction": "extraction", END: END}
 )
 _wf.add_conditional_edges(

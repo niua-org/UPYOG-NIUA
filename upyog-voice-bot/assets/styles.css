@@ -1773,3 +1773,398 @@ header h1 span.logo-icon {
     background: white;
     box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
 }
+
+/* ===== DOCUMENT UPLOAD PREVIEW (SMALL PIC TYPE) ===== */
+.message.user.has-doc-card {
+    padding: 8px 10px;
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.98) 0%, rgba(249, 115, 22, 0.98) 60%, rgba(234, 88, 12, 0.98) 100%);
+    box-shadow: 0 16px 36px rgba(234, 88, 12, 0.32);
+}
+
+.user-doc-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 16px;
+    padding: 8px 12px 8px 8px;
+    min-width: 260px;
+    max-width: 380px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+
+.user-doc-card:hover {
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-1px);
+}
+
+/* Small thumbnail ("small pic type") */
+.user-doc-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: transform 0.2s ease;
+}
+
+.user-doc-thumb:hover {
+    transform: scale(1.04);
+}
+
+.user-doc-thumb.is-pdf {
+    background: #fff5f5;
+    border-color: #fecaca;
+}
+
+.user-doc-pdf-graphic {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.user-doc-pdf-graphic .pdf-tag {
+    font-size: 9px;
+    font-weight: 800;
+    color: #ef4444;
+    letter-spacing: 0.6px;
+    line-height: 1;
+}
+
+.user-doc-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.thumb-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.user-doc-thumb:hover .thumb-hover-overlay {
+    opacity: 1;
+}
+
+/* Info */
+.user-doc-info {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.user-doc-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.user-doc-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.user-doc-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+    line-height: 1.2;
+}
+
+.user-doc-badge.badge-pdf {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.user-doc-badge.badge-img {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.user-doc-view-hint {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+}
+
+/* Actions */
+.user-doc-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.doc-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.doc-action-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.06);
+}
+
+/* Inline pending doc chip in file prompt */
+.file-pending-preview-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.file-pending-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.file-pending-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.file-pending-info {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.file-pending-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-pending-sub {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.file-pending-remove-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: #fee2e2;
+    color: #ef4444;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.15s ease;
+}
+
+.file-pending-remove-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* ===== 80% DOCUMENT PREVIEW POPUP MODAL ===== */
+.doc-preview-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.22s ease-out;
+}
+
+.doc-preview-modal-backdrop.active {
+    opacity: 1;
+}
+
+.doc-preview-modal-card {
+    /* 80% Pop up size as requested */
+    width: 80vw;
+    height: 80vh;
+    max-width: 1200px;
+    max-height: 900px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.96);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.doc-preview-modal-backdrop.active .doc-preview-modal-card {
+    transform: scale(1);
+}
+
+/* Minimal, clean modal header with document title and cross sign (no badges, no icons, no delete sign) */
+.doc-preview-modal-header {
+    height: 46px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.doc-preview-title {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 44px);
+}
+
+.doc-preview-close-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    margin-left: auto;
+}
+
+.doc-preview-close-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Scrollable Modal Body */
+.doc-preview-modal-body {
+    flex: 1;
+    width: 100%;
+    height: calc(100% - 46px);
+    overflow: auto;
+    background: #e2e8f0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-overflow-scrolling: touch;
+}
+
+.doc-pdf-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+.doc-image-scroll-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px;
+    background: #cbd5e1;
+}
+
+.doc-full-image {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    background: white;
+}
+
+/* Toast */
+.doc-toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #0f172a;
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-size: 13.5px;
+    font-weight: 500;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 10001;
+}
+
+.doc-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
