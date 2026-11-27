@@ -942,7 +942,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"tel"}
                 isMandatory={false}
                 optionKey="i18nKey"
-                onKeyPress={specialCharacterValidation}
+                onKeyPress={additionalNumberValidation}
                 name="plotNumber"
                 value={address?.plotNumber || ""}
                 onChange={(e) => {
@@ -950,7 +950,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 }}
                 {...(validation = {
                   isRequired: true,
-                  pattern: regexPattern("text"),
+                  pattern: "^[0-9]+$",
                   type: "text",
                   title: t("VALID_LAT_LONG"),
                 })}
@@ -1649,7 +1649,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
         </React.Fragment>
 
         <React.Fragment>
-          <CardHeader>{t("AST_PHYSICAL_CHARACTERISTICS_DETAILSS")}</CardHeader>
+          <CardHeader>{t("AST_PHYSICAL_CHARACTERISTICS_DETAILS")}</CardHeader>
           <div style={assetStyles.formGridStyles}>
             {assettype?.code &&
               formJson
