@@ -19,6 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * v1 endpoints ({@code /users/_createnovalidate} etc.) are untouched.
  */
+@Tag(name = "Bulk User Management", description = "V2 bulk user provisioning endpoints")
 @RestController
 @RequestMapping("/users/v2/bulk")
 @Slf4j
@@ -59,6 +64,15 @@ public class BulkUserController {
         this.mapper = mapper;
     }
 
+    @Operation(
+            summary = "Bulk Create Users (V2)",
+            description = "Creates multiple user accounts in bulk and returns created users along with per-user error details."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Bulk user creation processed"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PostMapping("/_create")
     public Map<String, Object> createUsersInBulk(@RequestBody Map<String, Object> body) {
 

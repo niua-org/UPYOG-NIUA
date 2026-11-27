@@ -9,9 +9,6 @@ import org.egov.user.domain.model.AddressSearchCriteria;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.UserSearchCriteria;
-import org.egov.user.domain.model.asset.UserIncome;
-import org.egov.user.domain.model.asset.UserProperty;
-import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.asset.AssetAuthorizationService;
 import org.egov.user.domain.service.config.FamilyConfigurationService;
@@ -20,10 +17,7 @@ import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
-import org.egov.user.persistence.repository.UserIncomeRepository;
-import org.egov.user.persistence.repository.UserPropertyRepository;
 import org.egov.user.persistence.repository.UserRepository;
-import org.egov.user.persistence.repository.UserVehicleRepository;
 import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.web.contract.family.FamilyDetail;
 import org.egov.user.web.contract.family.FamilyMemberDetail;
@@ -74,15 +68,6 @@ class FamilyProfileServiceImplTest {
     private UserDocumentRepository userDocumentRepository;
 
     @Mock
-    private UserPropertyRepository userPropertyRepository;
-
-    @Mock
-    private UserIncomeRepository userIncomeRepository;
-
-    @Mock
-    private UserVehicleRepository userVehicleRepository;
-
-    @Mock
     private EncryptionDecryptionUtil encryptionDecryptionUtil;
 
     @Mock
@@ -108,9 +93,6 @@ class FamilyProfileServiceImplTest {
                 userRepository,
                 addressRepository,
                 userDocumentRepository,
-                userPropertyRepository,
-                userIncomeRepository,
-                userVehicleRepository,
                 encryptionDecryptionUtil,
                 familyConfigurationService,
                 userConfiguration
@@ -235,38 +217,6 @@ class FamilyProfileServiceImplTest {
         when(userDocumentRepository.search(any(UserDocumentSearchCriteria.class)))
                 .thenReturn(Collections.singletonList(doc));
 
-        // Mock Assets: Vehicles
-        UserVehicle vehicle = UserVehicle.builder()
-                .id("veh-1")
-                .userUuid("citizen-caller-uuid")
-                .vehicleNumber("HR26DK8899")
-                .vehicleType("FOUR_WHEELER")
-                .status("ACTIVE")
-                .build();
-        when(userVehicleRepository.findVehiclesByUserUuids(anyList(), eq(Boolean.TRUE)))
-                .thenReturn(Map.of("citizen-caller-uuid", List.of(vehicle)));
-
-        // Mock Assets: Income
-        UserIncome income = UserIncome.builder()
-                .id("inc-1")
-                .userUuid("citizen-caller-uuid")
-                .annualIncome(java.math.BigDecimal.valueOf(650000.0))
-                .occupation("SALARIED")
-                .status("ACTIVE")
-                .build();
-        when(userIncomeRepository.findActiveIncomesByUserUuids(anyList(), eq(Boolean.TRUE)))
-                .thenReturn(Map.of("citizen-caller-uuid", income));
-
-        // Mock Assets: Properties
-        UserProperty property = UserProperty.builder()
-                .id("prop-1")
-                .userUuid("citizen-caller-uuid")
-                .localityType("URBAN")
-                .status("ACTIVE")
-                .build();
-        when(userPropertyRepository.findPropertiesByUserUuids(anyList(), eq(Boolean.TRUE)))
-                .thenReturn(Map.of("citizen-caller-uuid", List.of(property)));
-
         FamilyProfileResponse response = familyProfileService.searchFamilyProfile(request);
 
         assertNotNull(response);
@@ -282,19 +232,6 @@ class FamilyProfileServiceImplTest {
         assertEquals("citizen-caller-uuid", memberDetail2.getUserUuid());
         assertNotNull(memberDetail2.getProfile());
         assertEquals("Sunita Kumar", memberDetail2.getProfile().getName());
-        assertEquals(1, memberDetail2.getVehicles().size());
-        assertEquals("HR26DK8899", memberDetail2.getVehicles().get(0).getVehicleNumber());
-        assertNotNull(memberDetail2.getIncome());
-        assertEquals(java.math.BigDecimal.valueOf(650000.0), memberDetail2.getIncome().getAnnualIncome());
-        assertEquals(1, memberDetail2.getProperties().size());
-        assertEquals("URBAN", memberDetail2.getProperties().get(0).getLocalityType());
-
-        // Verify profile also holds assets
-        assertNotNull(memberDetail2.getProfile().getVehicles());
-        assertEquals(1, memberDetail2.getProfile().getVehicles().size());
-        assertNotNull(memberDetail2.getProfile().getIncome());
-        assertNotNull(memberDetail2.getProfile().getProperties());
-        assertEquals(1, memberDetail2.getProfile().getProperties().size());
         assertNotNull(memberDetail2.getProfile().getAddresses());
         assertNotNull(memberDetail2.getProfile().getDocuments());
 
@@ -303,16 +240,12 @@ class FamilyProfileServiceImplTest {
         assertEquals("head-uuid-1", memberDetail1.getUserUuid());
         assertNotNull(memberDetail1.getProfile());
         assertEquals("Rajesh Kumar", memberDetail1.getProfile().getName());
-        assertNull(memberDetail1.getProfile().getIncome());
         assertNull(memberDetail1.getProfile().getAddresses());
         assertNull(memberDetail1.getProfile().getDocuments());
-        assertTrue(memberDetail1.getVehicles().isEmpty());
-        assertNull(memberDetail1.getIncome());
-        assertTrue(memberDetail1.getProperties().isEmpty());
     }
 
     @Test
-    @DisplayName("searchFamilyProfile: Head of Family (HoF) caller receives full profile and assets for all members")
+    @DisplayName("searchFamilyProfile: Head of Family (HoF) caller receives full profile for all members")
     void testSearchFamilyProfile_HoFCaller_GetsFullViewForAllMembers() {
         String familyId = "FAM-2026-HOF";
         String tenantId = "pg.citya";
@@ -362,20 +295,13 @@ class FamilyProfileServiceImplTest {
         when(encryptionDecryptionUtil.decryptObject(eq(user1), any(), any(), any())).thenReturn(user1);
         when(encryptionDecryptionUtil.decryptObject(eq(user2), any(), any(), any())).thenReturn(user2);
 
-        UserProperty prop = UserProperty.builder().id("p1").userUuid("member-uuid-2").status("ACTIVE").build();
-        when(userPropertyRepository.findPropertiesByUserUuids(anyList(), eq(Boolean.TRUE)))
-                .thenReturn(Map.of("member-uuid-2", List.of(prop)));
-
         FamilyProfileResponse response = familyProfileService.searchFamilyProfile(request);
 
         assertNotNull(response);
         FamilyMemberDetail m2 = response.getFamily().getMembers().get(1);
         assertEquals("member-uuid-2", m2.getUserUuid());
         assertNotNull(m2.getProfile());
-        // HoF is authorized to view full profile including properties for other household members
-        assertEquals(1, m2.getProperties().size());
-        assertNotNull(m2.getProfile().getProperties());
-        assertEquals(1, m2.getProfile().getProperties().size());
+        assertEquals("Member Name", m2.getProfile().getName());
     }
 
     @Test
@@ -676,9 +602,6 @@ class FamilyProfileServiceImplTest {
         assertNotNull(response);
         FamilyMemberDetail m = response.getFamily().getMembers().get(0);
         assertNull(m.getProfile());
-        assertTrue(m.getVehicles().isEmpty());
-        assertNull(m.getIncome());
-        assertTrue(m.getProperties().isEmpty());
     }
 
     @Test

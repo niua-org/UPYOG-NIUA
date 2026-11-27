@@ -8,17 +8,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.egov.user.domain.model.asset.UserIncome;
-import org.egov.user.domain.model.asset.UserProperty;
-import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.web.contract.UserSearchResponseContent;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Detailed family member payload encapsulating membership metadata, citizen profile,
- * and declared 3NF assets (vehicles, income, properties).
+ * Detailed family member payload encapsulating membership metadata and citizen profile.
  *
  * @author UPYOG Team
  * @since 1.0.0
@@ -61,15 +54,4 @@ public class FamilyMemberDetail {
 
     @JsonProperty("profile")
     private UserSearchResponseContent profile;
-
-    @JsonProperty("vehicles")
-    @Builder.Default
-    private List<UserVehicle> vehicles = new ArrayList<>();
-
-    @JsonProperty("income")
-    private UserIncome income;
-
-    @JsonProperty("properties")
-    @Builder.Default
-    private List<UserProperty> properties = new ArrayList<>();
 }

@@ -20,14 +20,14 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * Centralized authorization component securing citizen asset CRUD operations (Rural Property, Vehicle, Income).
+ * Centralized authorization component securing citizen and household profile access.
  *
  * <p>Enforces:</p>
  * <ul>
  *   <li>Non-repudiable caller identification from {@link RequestInfo#getUserInfo()}.</li>
- *   <li>Strict citizen isolation: Citizen callers can only access their own assets or those of household
+ *   <li>Strict citizen isolation: Citizen callers can only access their own records or those of household
  *       members where the caller is verified as the Head of Family (HoF) in {@code upyog-family-service}.</li>
- *   <li>Privileged employee and internal system roles can manage assets across citizens.</li>
+ *   <li>Privileged employee and internal system roles can access records across citizens.</li>
  *   <li>Search scope enforcement preventing unauthorized data harvesting.</li>
  * </ul>
  *

@@ -134,6 +134,7 @@ public class UserController {
      *         or a {@link UserDetailResponse} containing the created citizen profile.
      * @throws org.egov.tracer.model.CustomException if OTP is invalid, mobile number already exists, or validation rules fail.
      */
+    @Operation(summary = "Create Citizen", description = "Registers a new citizen account with OTP verification and optional auto-login.")
     @PostMapping("/citizen/_create")
     public Object createCitizen(@RequestBody @Valid CreateUserRequest createUserRequest) {
         log.info("Received Citizen Registration Request for mobile: {}", createUserRequest != null && createUserRequest.getUser() != null ? MaskUtils.maskMobile(createUserRequest.getUser().getMobileNumber()) : null);
@@ -158,6 +159,7 @@ public class UserController {
      * @return a {@link UserDetailResponse} wrapping the newly provisioned user account.
      * @throws org.egov.tracer.model.CustomException if mandatory fields are missing or username/mobile collisions occur.
      */
+    @Operation(summary = "Create User Without Validation", description = "Administrative endpoint to create an employee, citizen, or system user account without OTP verification.")
     @PostMapping("/users/_createnovalidate")
     public UserDetailResponse createUserWithoutValidation(@RequestBody @Valid CreateUserRequest createUserRequest,
                                                           @RequestHeader HttpHeaders headers) {
@@ -232,6 +234,7 @@ public class UserController {
      * @param headers HTTP headers used to distinguish internal microservice calls from external client queries.
      * @return {@link UserSearchResponse} containing decrypted user records matching the filter criteria.
      */
+    @Operation(summary = "Search Active Users", description = "Searches active user accounts based on filter criteria (defaults active=true when omitted).")
     @PostMapping("/_search")
     public UserSearchResponse get(@RequestBody @Valid UserSearchRequest request, @RequestHeader HttpHeaders headers) {
 
@@ -252,6 +255,7 @@ public class UserController {
      * @param headers incoming HTTP headers used for internal service detection.
      * @return {@link UserSearchResponse} containing matching user accounts across all activation states.
      */
+    @Operation(summary = "Search Users (V1)", description = "Searches user accounts based on filter criteria across both active and inactive states.")
     @PostMapping("/v1/_search")
     public UserSearchResponse getV1(@RequestBody UserSearchRequest request, @RequestHeader HttpHeaders headers) {
         return searchUsers(request, headers);
@@ -267,6 +271,7 @@ public class UserController {
      * @return the common contract {@link org.egov.common.contract.request.User} object representing the authenticated principal.
      * @throws org.egov.tracer.model.CustomException if the token is expired, invalid, or unrecognized.
      */
+    @Operation(summary = "Get User Details by Token", description = "Resolves authenticated citizen or employee details and roles from an active OAuth2 access token.")
     @PostMapping("/_details")
     public org.egov.common.contract.request.User getUser(@RequestParam(value = "access_token") String accessToken) {
         log.info("/_details endpoint called with token: {}...", accessToken.substring(0, Math.min(8, accessToken.length())));
@@ -331,6 +336,7 @@ public class UserController {
      * @return an {@link UpdateResponse} containing the updated user account details.
      * @throws org.egov.tracer.model.CustomException if update fails.
      */
+    @Operation(summary = "Update User Without Validation", description = "Updates an existing user account without requiring SMS OTP verification.")
     @PostMapping("/users/_updatenovalidate")
     public UpdateResponse updateUserWithoutValidation(@RequestBody final @Valid CreateUserRequest createUserRequest,
                                                       @RequestHeader HttpHeaders headers) {
@@ -354,6 +360,7 @@ public class UserController {
      * @param headers           HTTP headers from incoming request
      * @return response containing citizen user details and generated access tokens
      */
+    @Operation(summary = "Authenticate via DigiLocker", description = "Authenticates and registers or updates a citizen profile using a DigiLocker access token.")
     @PostMapping("/digilocker/oauth/token")
     public Object authDigiLocker(@RequestBody @Valid CreateUserRequest createUserRequest, @RequestHeader HttpHeaders headers) {
         return digiLockerService.authDigiLocker(createUserRequest, headers);
@@ -412,6 +419,7 @@ public class UserController {
      * @param addressRequest The address details to be saved.
      * @return AddressResponse containing the created address details and response info.
      */
+    @Operation(summary = "Create User Address (V1)", description = "Creates a new address record for a user identified by UUID.")
     @PostMapping("/_createAddress")
     public ResponseEntity<AddressResponse> createAddress(@RequestBody AddressRequest addressRequest) {
 
@@ -429,6 +437,7 @@ public class UserController {
      * @param tenantId The tenant ID associated with the user.
      * @return AddressResponse containing the user's address details and response info.
      */
+    @Operation(summary = "Get User Addresses (V1)", description = "Retrieves address records for a user by UUID and tenantId.")
     @PostMapping("/_getAddress")
     public AddressResponse getAddress(@RequestParam(value = "uuid") String uuid, @RequestParam(value = "tenantId") String tenantId) {
 
@@ -443,6 +452,7 @@ public class UserController {
      * @param addressRequest The address details to be updated.
      * @return AddressResponse containing the updated address details and response info.
      */
+    @Operation(summary = "Update User Address (V1)", description = "Updates an existing address record for a user.")
     @PostMapping("/_updateAddress")
     public AddressResponse updateAddress(@RequestBody AddressRequest addressRequest) {
 

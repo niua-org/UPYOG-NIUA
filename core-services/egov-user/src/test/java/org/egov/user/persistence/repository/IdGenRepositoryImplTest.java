@@ -85,43 +85,6 @@ class IdGenRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("generateRuralPropertyId: Successfully generates rural property ID via IDGen without format")
-    void testGenerateRuralPropertyId_Success() {
-        when(configuration.getIdGenHost()).thenReturn("http://localhost:8088");
-        when(configuration.getIdGenPath()).thenReturn("/egov-idgen/id/_generate");
-        when(configuration.getIdGenRuralPropertyIdName()).thenReturn("rural.property.id");
-
-        Map<String, Object> mockResponse = new HashMap<>();
-        Map<String, Object> idRes = new HashMap<>();
-        idRes.put("id", "PG-RP-2026-11-16-000001");
-        mockResponse.put("idResponses", Collections.singletonList(idRes));
-
-        when(restTemplate.postForObject(eq("http://localhost:8088/egov-idgen/id/_generate"), any(HttpEntity.class), eq(Map.class)))
-                .thenReturn(mockResponse);
-
-        String propertyId = idGenRepository.generateRuralPropertyId(new RequestInfo(), "pg.citya");
-
-        assertEquals("PG-RP-2026-11-16-000001", propertyId);
-
-        ArgumentCaptor<HttpEntity> captor = ArgumentCaptor.forClass(HttpEntity.class);
-        verify(restTemplate, atLeastOnce()).postForObject(anyString(), captor.capture(), eq(Map.class));
-        Map<String, Object> body = (Map<String, Object>) captor.getValue().getBody();
-        List<Map<String, Object>> requests = (List<Map<String, Object>>) body.get("idRequests");
-        assertEquals(1, requests.size());
-        assertEquals("rural.property.id", requests.get(0).get("idName"));
-        assertEquals("pg", requests.get(0).get("tenantId"));
-        assertNull(requests.get(0).get("format"));
-    }
-
-    @Test
-    @DisplayName("generateRuralPropertyId: Throws CustomException when rural property id name is missing")
-    void testGenerateRuralPropertyId_MissingName_ThrowsCustomException() {
-        when(configuration.getIdGenRuralPropertyIdName()).thenReturn(null);
-
-        assertThrows(CustomException.class, () -> idGenRepository.generateRuralPropertyId(new RequestInfo(), "pg.citya"));
-    }
-
-    @Test
     @DisplayName("generateCitizenId: Throws CustomException when citizen id name is missing")
     void testGenerateCitizenId_MissingName_ThrowsCustomException() {
         when(configuration.getIdGenCitizenIdName()).thenReturn(null);
