@@ -25,16 +25,6 @@ const i18nextConfig = () => ({
     en_IN: {
       translations: {
         welcome: "Welcome",
-        ACTION_TEST_FAMILY_ID_REPORTS: "Family ID Reports",
-        ACTION_TEST_FAMILY_ID_COVERAGE_REPORT: "Family ID Coverage Report",
-        "rainmaker.family.total_registered_families": "Total Registered Families",
-        "rainmaker.family.total_registered_members": "Total Registered Members",
-        "rainmaker.family.families_verified": "Families Verified",
-        "rainmaker.family.families_pending_verification": "Families Pending Verification",
-        "rainmaker.family.families_rejected": "Families Rejected",
-        "rainmaker.family.families_without_status": "Families Without Status",
-        "rainmaker.family.fromDate": "From Date",
-        "rainmaker.family.toDate": "To Date",
       },
     },
   },
