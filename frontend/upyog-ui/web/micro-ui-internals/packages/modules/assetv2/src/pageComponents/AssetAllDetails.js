@@ -902,7 +902,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
               {assetDetails?.location && (
                 <div>
-                  <button className="assetv2-asset-all-details-action-btn" onClick={() => setShowMap(true)}>
+                  <button type="button" className="assetv2-asset-all-details-action-btn" onClick={() => setShowMap(true)}>
                     {geometry ? t("ASSET_EDIT_MAP") : t("ASSET_MARK_MAP")}
                   </button>
                 </div>
@@ -1864,6 +1864,7 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
 
   if (doc?.code === "OWNER.ASSETPHOTO" && (!latitude || !longitude)) {
     setError("Please upload a photo with location details");
+    setTimeout(() => setError(null), 2000); // to clear the toast
   }
 };
 

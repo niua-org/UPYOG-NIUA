@@ -126,6 +126,8 @@ const MarkOnMap = ({
   useEffect(() => {
     if (geometry && area) {
       setShowToast({ label: "Marking Successfully Captured" });
+      const timer = setTimeout(() => setShowToast(null), 2000);
+      return () => clearTimeout(timer);
     }
   }, [geometry, area]);
 
