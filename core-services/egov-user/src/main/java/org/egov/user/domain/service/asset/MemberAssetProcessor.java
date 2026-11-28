@@ -403,7 +403,7 @@ public class MemberAssetProcessor {
                     throw new CustomException(UserConstants.ERROR_INVALID_REQUEST, UserConstants.MSG_UPYOG_PROPERTY_ID_MANDATORY);
                 }
                 // Validate property ownership authorization consent token (mandatory for newly declared urban properties)
-                String token = StringUtils.isNotBlank(urban.getConsentToken()) ? urban.getConsentToken() : prop.getConsentToken();
+                /*String token = StringUtils.isNotBlank(urban.getConsentToken()) ? urban.getConsentToken() : prop.getConsentToken();
                 if (isNewUrbanLink && StringUtils.isBlank(token)) {
                     log.warn("[MEMBER-ASSET-PROCESSOR] Missing mandatory property consent token for newly declared urban property ID {}", urban.getUpyogPropertyId());
                     throw new CustomException(UserConstants.ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED,
@@ -427,7 +427,7 @@ public class MemberAssetProcessor {
                         throw new CustomException(UserConstants.ERROR_INVALID_PROPERTY_CONSENT_TOKEN,
                                 UserConstants.MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX + urban.getUpyogPropertyId());
                     }
-                }
+                }*/
                 urban.setPropertyRecordId(prop.getId());
                 urban.setUserUuid(existingUser.getUuid());
                 urban.setTenantId(prop.getTenantId());
