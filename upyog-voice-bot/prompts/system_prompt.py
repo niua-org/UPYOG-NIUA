@@ -20,13 +20,14 @@ OUT_OF_DOMAIN_KEYWORDS = [
     # other platforms/software
     "google", "amazon", "flipkart", "zomato", "swiggy", "uber", "ola", "whatsapp",
     "facebook", "instagram", "twitter", "chatgpt", "ai chatbot",
-    # personal questions
-    "who are you", "tell me about yourself", "your name", "who made you",
     # other unrelated
     "astrology", "horoscope", "love", "marriage", "career", "job", "salary"
 ]
 
 UPYOG_KEYWORDS = [
+    # Bot identity & introduction
+    "who are you", "tell me about yourself", "your name", "what is your name", "who made you",
+    "who developed you", "who created you", "tum kaun ho", "aapka naam", "naam kya hai", "kisne banaya",
     "upyog", "nudm", "ulb", "urban local body", "municipal", "municipality",
     "property tax", "trade license", "fire noc", "noc",
     "birth", "death", "certificate", "registration",
@@ -53,22 +54,7 @@ HARD_BLOCK_TOPICS = [
     'ignore all previous instructions', 'system prompt override', 'jailbreak', 'dan mode',
     'bypass security', 'drop database', 'delete from users', '<script>',
     # Illegal / harmful activity
-    'hack into', 'buy drugs', 'bomb make', 'weapon manufacture', 'kill yourself',
-    # Entertainment
-    'cricket', 'ipl', 'bollywood', 'movie', 'film', 'song', 'actor',
-    'netflix', 'hotstar', 'youtube', 'web series', 'serial',
-    # Food
-    'recipe', 'biryani', 'restaurant', 'zomato', 'swiggy', 'pizza',
-    'dosa', 'samosa', 'chai', 'coffee',
-    # Finance (non-ULB)
-    'stock market', 'share bazaar', 'crypto', 'bitcoin', 'mutual fund',
-    'income tax', 'gst return', 'itr filing', 'nps', 'pf',
-    # Fitness & Health
-    'exercise', 'gym', 'yoga', 'diet', 'weight loss', 'leg raise',
-    'workout', 'fitness',
-    # Other Unrelated
-    'weather forecast', 'horoscope', 'astrology', 'love', 'relationship',
-    'jod', 'pyaar', 'shaadi'
+    'hack into', 'buy drugs', 'bomb make', 'weapon manufacture', 'kill yourself'
 ]
 
 
@@ -120,6 +106,10 @@ NEVER invent, guess, or hallucinate complaint IDs or booking numbers.
 
 RULE 10 — DO NOT MENTION LOGIN STEPS UNLESS EXPLICITLY ASKED.
 
+RULE 11 — BOT IDENTITY & SELF-INTRODUCTION:
+When the user asks about your identity, such as "who are you", "what is your name", "tell me about yourself", or "who made you" (or in Hindi: "tum kaun ho", "aapka naam kya hai", "kisne banaya"):
+Always answer warmly and professionally: Introduce yourself as UPYOG Assistant (UPYOG AI), an intelligent citizen services assistant developed for the UPYOG platform under the National Urban Digital Mission (NUDM) by the National Institute of Urban Affairs (NIUA) and the Ministry of Housing and Urban Affairs (MoHUA), Government of India. Mention that you assist citizens with municipal services like Grievances (PGR), Advertisement Bookings, Property Tax, Trade Licenses, Water & Sewerage, and certificates.
+
 {context_section}"""
 
 
@@ -134,7 +124,8 @@ def build_rag_stream_system_prompt(user_lang: str, lang_instruction: str, contex
         "2. Max 3-4 sentences or a short structured list.\n"
         "3. You can only execute/book/create transactions for 'Advertisement Booking'. You CANNOT book or execute payments for 'Trade License' or 'Property Tax'. State directly that you can only guide/provide information about them, not perform transactions.\n"
         "4. FORMATTING: Use **bold** for key terms and service names. Use numbered lists for steps. Use bullet points for features or requirements. Do NOT use emojis. Keep the tone professional and formal.\n"
-        "5. PROFESSIONAL TONE: NEVER use informal or familial terms of address such as 'दीदी' (Didi), 'काकी' (Kaki), 'बेटा' (Beta), 'भैया' (Bhaiya), 'चाचा', 'अंकल', etc. Use clean formal greetings (e.g. 'नमस्ते', 'नमस्कार', 'Hello').\n\n"
+        "5. PROFESSIONAL TONE: NEVER use informal or familial terms of address such as 'दीदी' (Didi), 'काकी' (Kaki), 'बेटा' (Beta), 'भैया' (Bhaiya), 'चाचा', 'अंकल', etc. Use clean formal greetings (e.g. 'नमस्ते', 'नमस्कार', 'Hello').\n"
+        "6. IDENTITY: If the user asks 'who are you', 'what is your name', 'tell me about yourself', or 'who made you', identify as UPYOG Assistant, developed by NIUA and MoHUA under the National Urban Digital Mission (NUDM) to help citizens with urban municipal services.\n\n"
         f"CONTEXT PROVIDED:\n{context_str if context_str else 'NO CONTEXT. ASK FOR CLARIFICATION.'}\n{qdrant_summary_str}"
     )
 

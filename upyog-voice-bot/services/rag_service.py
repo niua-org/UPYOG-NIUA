@@ -12,6 +12,7 @@ import faiss
 from dotenv import load_dotenv
 from prompts.system_prompt import (
     HARD_BLOCK_TOPICS,
+    OUT_OF_DOMAIN_KEYWORDS,
     build_rag_system_prompt,
     build_rag_stream_system_prompt,
     build_query_rewriter_prompt,
@@ -110,42 +111,17 @@ threading.Thread(target=load_resources, daemon=True).start()
 
 def is_hard_blocked(query: str) -> bool:
     q = query.lower()
-    blocked = any(topic in q for topic in HARD_BLOCK_TOPICS)
+    # Check both malicious injection/hard topics AND broad out-of-domain keywords (fitness, cooking, stocks, etc.)
+    all_blocked = HARD_BLOCK_TOPICS + OUT_OF_DOMAIN_KEYWORDS
+    blocked = any(re.search(rf"\b{re.escape(topic)}\b", q) for topic in all_blocked)
     if blocked:
-        matched = [t for t in HARD_BLOCK_TOPICS if t in q]
-        logger.info(f"[DOMAIN CHECK] Query '{query}' matched hard-block topics: {matched}")
-    else:
-        logger.debug(f"[DOMAIN CHECK] Query '{query}' passed hard-block check.")
+        logger.info(f"[DOMAIN CHECK] Query '{query}' matched out-of-domain topics.")
     return blocked
-
 
 def is_in_domain(query: str) -> tuple:
     if is_hard_blocked(query):
         return False, "out_of_domain"
     return True, "ok"
-
-
-def get_rejection_message(reason: str, lang: str) -> str:
-    logger.info(f"[REJECTION] Generating rejection message for reason='{reason}', lang='{lang}'")
-    if reason == "out_of_domain":
-        if lang == 'hi':
-            return (
-                "मैं केवल UPYOG और NUDM (National Urban Digital Mission) से संबंधित नागरिक सेवाओं में सहायता कर सकता हूँ, "
-                "जैसे कि संपत्ति कर (Property Tax), व्यापार लाइसेंस (Trade License), जल और सीवरेज (Water & Sewerage), "
-                "जन्म व मृत्यु प्रमाण पत्र, शिकायत निवारण आदि।\n\n"
-                "कृपया शहरी सेवाओं से संबंधित प्रश्न पूछें।"
-            )
-        return (
-            "I can only assist with UPYOG and NUDM (National Urban Digital Mission) citizen services, "
-            "such as Property Tax, Trade License, Water & Sewerage, Birth & Death certificates, "
-            "Grievance Redressal, and other municipal services.\n\n"
-            "Please ask a question related to government urban services."
-        )
-    return (
-        "क्षमा करें, मैं इस प्रश्न का उत्तर देने में असमर्थ हूँ। कृपया UPYOG सेवाओं से संबंधित प्रश्न पूछें।"
-        if lang == 'hi' else
-        "I'm sorry, I cannot answer this query. Please ask a question related to UPYOG urban services."
-    )
 
 
 # ============== RAG & RESPONSE GENERATION ==============

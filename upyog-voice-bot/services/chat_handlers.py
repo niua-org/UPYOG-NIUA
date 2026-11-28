@@ -126,6 +126,9 @@ def get_workflow_reset_draft(wf_name: str, cancelled: bool = False) -> dict:
         reset_draft["locality_code"] = None
         reset_draft["_awaiting_confirm"] = None
         reset_draft["_confirmed"] = None
+    reset_draft["_steps_communicated"] = None
+    reset_draft["_consent_granted"] = None
+    reset_draft["_consent_pending"] = None
     if cancelled:
         reset_draft["_cancelled"] = True
     return reset_draft
@@ -521,6 +524,13 @@ def is_informational_question(
     """
     if not user_input:
         return False
+
+    # Workflow initiations (e.g. "help me file a grievance", "book an adv...", "file a complaint")
+    # are transactional service requests and must not be intercepted as FAQ questions.
+    from workflow.workflow_helper import is_workflow_initiation
+    if is_workflow_initiation(user_input):
+        return False
+
     intent = (intent_data or {}).get("intent", "")
     is_question = bool((intent_data or {}).get("is_question", False))
     if intent == "faq" or is_question or "?" in user_input:
@@ -592,7 +602,11 @@ def resolve_active_and_target_plugin(
             elif intent in ["adv_confirm", "booking_confirm", "grievance_confirm"]:
                 plugin_intent = active_plugin or ("adv_booking" if "adv" in intent or "booking" in intent else "grievance")
 
-    is_generic_response = ui_lower in ["yes", "no", "yeah", "yup", "ya", "ok", "okay", "sure", "confirm", "cancel", "haan", "nahi", "nahin", "1", "2", "option 1", "option 2"]
+    from workflow.workflow_helper import parse_consent_response
+    is_generic_response = (
+        ui_lower in ["yes", "no", "yeah", "yup", "ya", "ok", "okay", "sure", "confirm", "cancel", "haan", "nahi", "nahin", "1", "2", "option 1", "option 2"]
+        or parse_consent_response(ui_lower) is not None
+    )
     if plugin_intent and active_plugin and plugin_intent != active_plugin and not is_generic_response:
         logger.info(f"[Router] User switched service: {active_plugin} -> {plugin_intent}")
         if active_plugin in workflows:
@@ -659,6 +673,11 @@ def handle_workflow_interruption_or_faq(
             - dict | None: Response dictionary containing FAQ response and draft save note if interrupted.
     """
     if not active_plugin or active_plugin not in workflows or is_ui_payload:
+        return False, None
+
+    # Never treat workflow initiation requests (e.g. switching to grievance or starting adv) as FAQ interruptions
+    from workflow.workflow_helper import is_workflow_initiation
+    if is_workflow_initiation(user_input):
         return False, None
 
     # 1. Option selection guard: check if user_input matches active workflow options or numbers
@@ -1038,12 +1057,17 @@ def execute_workflow_plugin(target_wf: str, user_input: str, user_language: str,
 
 def execute_rag_fallback(user_input: str, user_language: str, detected_script: str, history: list, session_id: str) -> dict:
     """Executes domain checking, Faiss/Groq retrieval, and grievance offering checks."""
-    from services.rag_service import is_in_domain, get_rejection_message, retrieve_document
+    from services.rag_service import is_in_domain, retrieve_document
     from services.voice_service import text_to_speech
 
     in_domain, reason = is_in_domain(user_input)
     if not in_domain and reason == "out_of_domain":
-        message = get_rejection_message("out_of_domain", user_language)
+        sys_blocked = _SYSTEM_MESSAGES.get("blocked", {})
+        message = (
+            sys_blocked.get("response_hi", "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।")
+            if user_language == 'hi' else
+            sys_blocked.get("response_en", "I can only help with UPYOG and urban government services.")
+        )
         audio_output = text_to_speech(message, user_language)
         return {
             "response": message,
@@ -1053,26 +1077,16 @@ def execute_rag_fallback(user_input: str, user_language: str, detected_script: s
             "audio": audio_output
         }
 
-    if not in_domain and reason == "too_short":
-        message = get_rejection_message("too_short", user_language)
-        audio_output = text_to_speech(message, user_language)
-        return {
-            "response": message,
-            "lang": user_language,
-            "mode": "clarify",
-            "audio": audio_output
-        }
-
     response_text = retrieve_document(user_input, user_language, history, session_id=session_id)
 
-    if response_text and ("शिकायत" in response_text or "grievance" in response_text.lower() or "एक शिकायत" in response_text):
-        audio_output = text_to_speech(response_text, user_language)
-        return {
-            "response": response_text,
-            "lang": user_language,
-            "mode": "grievance_offered",
-            "audio": audio_output
-        }
+    # if response_text and ("शिकायत" in response_text or "grievance" in response_text.lower() or "एक शिकायत" in response_text):
+    #     audio_output = text_to_speech(response_text, user_language)
+    #     return {
+    #         "response": response_text,
+    #         "lang": user_language,
+    #         "mode": "grievance_offered",
+    #         "audio": audio_output
+    #     }
 
     response_text = re.sub(r'\bUpyog\b', 'UPYOG', response_text, flags=re.IGNORECASE)
     audio_output = text_to_speech(response_text, user_language)
@@ -1133,7 +1147,6 @@ def build_chat_error_response(error: Exception, user_language: str = "en") -> di
         "mode": mode,
         "audio": audio_output
     }
-
 
 def validate_and_sanitize_name(name: Any) -> Optional[str]:
     """Validates and sanitizes citizen name extracted by LLM.
@@ -1241,7 +1254,7 @@ def dispatch_chat_request(
     phone = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
     history_key = phone_anchor if (phone_anchor and phone_anchor != "default") else session_id
 
-    # 0. Pre-NLU Normalization: Entity Masking, Voice ASR Acoustics, and Closed-Domain Fuzzy Correction
+    # 0. Pre-NLU : Entity NormalizationMasking, Voice ASR Acoustics, and Closed-Domain Fuzzy Correction
     # Note: working_input is used ONLY for intent classification, fast-path matching, synonym
     # resolution, and RAG query expansion. Raw unmutated user_input is strictly preserved for
     # workflow execution, draft handlers, and free-text citizen form answers (names, addresses, etc.).
@@ -1382,12 +1395,11 @@ def dispatch_chat_request(
 
     # 7. Out-of-domain conversational queries (Semantic Domain Filter - only when NOT in an active workflow)
     if not active_plugin and intent == "out_of_domain":
-        from services.rag_service import get_rejection_message
-        sys_blocked = (system_config or {}).get("system_messages", {}).get("blocked", {})
+        sys_blocked = (system_config or {}).get("system_messages", {}).get("blocked", {}) or _SYSTEM_MESSAGES.get("blocked", {})
         if user_language == 'hi':
-            blocked_msg = sys_blocked.get("response_hi") or get_rejection_message("out_of_domain", "hi")
+            blocked_msg = sys_blocked.get("response_hi", "मैं केवल UPYOG और शहरी सरकारी सेवाओं के बारे में सहायता कर सकता हूँ।")
         else:
-            blocked_msg = sys_blocked.get("response_en") or get_rejection_message("out_of_domain", "en")
+            blocked_msg = sys_blocked.get("response_en", "I can only help with UPYOG and urban government services.")
         audio_output = text_to_speech(blocked_msg, user_language)
         return {"response": blocked_msg, "lang": user_language, "audio": audio_output, "mode": "blocked"}
 

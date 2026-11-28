@@ -353,7 +353,7 @@ def find_closest_domain_token(word: str, vocab: Dict[str, str]) -> Optional[Tupl
     if clean_w.startswith("e") and (clean_w[1:] in vocab or clean_w[1:] in lexicon):
         return None
 
-    max_allowed_dist = 1 if w_len <= 5 else 2
+    max_allowed_dist = 2 if w_len <= 5 else 4
     best_candidate = None
     min_dist = max_allowed_dist + 1
     best_score = 0.0

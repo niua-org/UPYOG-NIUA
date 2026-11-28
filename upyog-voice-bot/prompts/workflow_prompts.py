@@ -13,6 +13,11 @@ def build_adv_extract_prompt(
     user_msg: str
 ) -> str:
     """Builds prompt for extracting advertisement booking form fields from user messages."""
+    from datetime import datetime
+    today_dt = datetime.now()
+    today_str = today_dt.strftime("%Y-%m-%d")
+    current_year = today_dt.year
+
     return f"""You are a strict data extraction AI for UPYOG Advertisement bookings.
 Your ONLY job is to extract ANY updated or newly specified fields from the user's message.
 Target fields to extract: {json.dumps(llm_extractable_fields)}
@@ -23,6 +28,7 @@ Question the user is answering: "{last_assistant_msg}"
 User message: "{user_msg}"
 
 CRITICAL RULES:
+- Today's reference date is {today_str} (Year {current_year}). When dates are mentioned (e.g., "from 19th nov to 20th nov", "tomorrow", "next week"), resolve them into YYYY-MM-DD format using year {current_year}.
 - If the user's message clearly answers or updates one or more target fields, extract them.
 - If a field is not mentioned or changed, return null for that field.
 - If already collected fields contain selected_slots, their dates are authoritative for start_date and end_date; do not restore a wider date range from earlier messages.

@@ -20,6 +20,12 @@ from prompts.workflow_prompts import (
 from services.validator import validate_field
 
 from workflow.base_state import BaseAgentState
+from workflow.workflow_helper import (
+    parse_consent_response,
+    make_consent_node,
+    consent_router,
+    build_consent_node,
+)
 # BaseAgentState = The universal "ID Card" (TypedDict) for all modules. Contains messages, phone, session_id etc.
 
 logger = logging.getLogger(__name__)
@@ -300,6 +306,10 @@ def intent_and_ui_node(state: AdvBookingState) -> dict:
         draft_booking["selected_slots"] = None
         draft_booking["applicant_details"] = None
         draft_booking["_awaiting_confirm"] = None
+        draft_booking["_consent_pending"] = False
+        draft_booking["_consent_granted"] = False
+        draft_booking["_steps_communicated"] = False
+        draft_booking["_profile_handled"] = None
         draft_booking["_cancelled"] = True
         try:
             MemoryManager.delete_draft_state(phone_number, "adv_booking")
@@ -430,7 +440,36 @@ def intent_router(state: AdvBookingState) -> str:
         # The last message is from the AI (bot already responded in intent_and_ui_node).
         # e.g. Bot sent back a booking history table. No more processing needed this turn.
         return END      
-    return "extraction"  
+    return "consent"  
+
+
+def extract_date_range_from_text(text: str) -> tuple[Optional[str], Optional[str]]:
+    """Extracts start and end dates from user message (e.g. 'from 19th nov to 20th nov', '19/11/2026 to 20/11/2026')."""
+    try:
+        from datetime import datetime
+        from dateutil import parser
+        now = datetime.now()
+        m_iso = re.search(r"(\d{4}[-/]\d{1,2}[-/]\d{1,2})\s+(?:to|till|-)\s+(\d{4}[-/]\d{1,2}[-/]\d{1,2})", text, re.IGNORECASE)
+        if m_iso:
+            return parser.parse(m_iso.group(1), default=now).strftime("%Y-%m-%d"), parser.parse(m_iso.group(2), default=now).strftime("%Y-%m-%d")
+        m = re.search(
+            r"(?:from\s+)?(\d{1,2}(?:st|nd|rd|th)?(?:\s+[a-zA-Z]+|\s*[-/]\s*\d{1,2}(?:[-/]\s*\d{2,4})?)?)\s+(?:to|till|-)\s+(\d{1,2}(?:st|nd|rd|th)?(?:\s+[a-zA-Z]+|\s*[-/]\s*\d{1,2}(?:[-/]\s*\d{2,4})?)(?:\s+\d{2,4})?)",
+            text,
+            re.IGNORECASE,
+        )
+        if m:
+            s1 = m.group(1).strip()
+            s2 = m.group(2).strip()
+            if not re.search(r"[a-zA-Z]{3,}", s1) and re.search(r"[a-zA-Z]{3,}", s2):
+                month_match = re.search(r"[a-zA-Z]{3,}(?:\s+\d{2,4})?", s2)
+                if month_match:
+                    s1 = f"{s1} {month_match.group(0)}"
+            d1 = parser.parse(s1, default=now, dayfirst=True).strftime("%Y-%m-%d")
+            d2 = parser.parse(s2, default=now, dayfirst=True).strftime("%Y-%m-%d")
+            return d1, d2
+    except Exception:
+        pass
+    return None, None
 
 
 # Uses LLM (AI) to read the user's English sentence and extract the actual data (like Date or Location) into our draft memory
@@ -451,7 +490,49 @@ def extraction_node(state: AdvBookingState):
         return {"draft_booking": draft_booking}
     if user_msg.strip().startswith("{") and user_msg.strip().endswith("}"):
         return {"draft_booking": draft_booking}
-    
+
+    if draft_booking.pop("_just_consented", False):
+        logger.info(f"[adv_booking extract_node] User message '{user_msg}' was consent approval; skipping field extraction.")
+        return {"draft_booking": draft_booking}
+
+    # Handle citizen response to profile details confirmation dynamically
+    if draft_booking.get("_profile_prompt"):
+        prof_data = draft_booking.pop("_profile_prompt")
+        opts = prof_data.get("options", [])
+        matched = match_option(user_msg, opts)
+        consent = parse_consent_response(user_msg)
+
+        draft_booking["_profile_handled"] = True
+        if (opts and matched == opts[0]) or consent is True:
+            draft_booking["applicantName"] = prof_data.get("name")
+            draft_booking["mobileNumber"] = prof_data.get("mobile")
+            draft_booking["emailId"] = prof_data.get("email") or ""
+            logger.info(f"[adv_booking] Auto-populated profile details: name={draft_booking.get('applicantName')}, mobile={draft_booking.get('mobileNumber')}")
+            return {"draft_booking": draft_booking}
+        elif (opts and len(opts) > 1 and matched == opts[1]) or consent is False:
+            # Citizen chose "Edit Details" -> pre-fill profile data so they don't have to re-enter all fields
+            draft_booking["applicantName"] = prof_data.get("name")
+            draft_booking["mobileNumber"] = prof_data.get("mobile")
+            draft_booking["emailId"] = prof_data.get("email") or ""
+            draft_booking["_profile_edit_pending"] = True
+            logger.info("[adv_booking] Citizen selected 'Edit Details'. Preparing to ask which detail to change.")
+            return {"draft_booking": draft_booking}
+        else:
+            draft_booking["applicantName"] = prof_data.get("name")
+            draft_booking["mobileNumber"] = prof_data.get("mobile")
+            draft_booking["emailId"] = prof_data.get("email") or ""
+
+    # Handle citizen choice of which profile detail to edit
+    if draft_booking.get("_awaiting_profile_field_choice"):
+        fields_map = draft_booking.pop("_awaiting_profile_field_choice")
+        if isinstance(fields_map, dict):
+            matched_label = match_option(user_msg, list(fields_map.keys()))
+            if matched_label and matched_label in fields_map:
+                target_field = fields_map[matched_label]
+                draft_booking[target_field] = None
+                logger.info(f"[adv_booking] Citizen chose to edit {matched_label} -> cleared {target_field}")
+                return {"draft_booking": draft_booking}
+
     generic_confirmations = ["yes", "yeah", "sure", "ok", "okay", "yep", "start", "begin", "y"]
     if not draft_booking and user_msg.strip().lower() in generic_confirmations:
         user_msg = ""
@@ -505,16 +586,26 @@ def extraction_node(state: AdvBookingState):
                 did_fast_extract = True
                 logger.info("[extract_node] Fast-path match for nightLight: No")
         elif curr_field in ["start_date", "end_date"]:
-            date_candidate = user_msg.strip()
-            if re.match(r'^\d{4}-\d{2}-\d{2}$', date_candidate):
-                try:
-                    from datetime import datetime
-                    datetime.strptime(date_candidate, '%Y-%m-%d')
-                    draft_booking[curr_field] = date_candidate
-                    did_fast_extract = True
-                    logger.info(f"[extract_node] Fast-path valid date match for {curr_field}: {date_candidate}")
-                except ValueError:
-                    logger.warning(f"[extract_node] Invalid calendar date format ignored: {date_candidate}")
+            f_def = next((item for item in FORM_FIELDS if item["id"] == curr_field), {"id": curr_field, "type": "date"})
+            is_valid, _, clean_d = validate_field(f_def, user_msg.strip(), draft=draft_booking)
+            if is_valid and clean_d:
+                draft_booking[curr_field] = clean_d
+                did_fast_extract = True
+                logger.info(f"[extract_node] Fast-path valid date match for {curr_field}: {clean_d}")
+
+    # Deterministic date-range extraction if dates are mentioned anywhere in user message
+    if ("start_date" in llm_extractable_fields or "end_date" in llm_extractable_fields) and not draft_booking.get("selected_slots"):
+        d_start, d_end = extract_date_range_from_text(user_msg)
+        if d_start and d_end:
+            s_field = next((item for item in FORM_FIELDS if item["id"] == "start_date"), {"id": "start_date", "type": "date"})
+            e_field = next((item for item in FORM_FIELDS if item["id"] == "end_date"), {"id": "end_date", "type": "date"})
+            is_valid_s, _, clean_s = validate_field(s_field, d_start, draft=draft_booking)
+            is_valid_e, _, clean_e = validate_field(e_field, d_end, draft={"start_date": clean_s or d_start})
+            if is_valid_s and is_valid_e:
+                draft_booking["start_date"] = clean_s
+                draft_booking["end_date"] = clean_e
+                did_fast_extract = True
+                logger.info(f"[extract_node] Fast-path date range match: {clean_s} to {clean_e}")
 
     # Recalculate remaining missing fields
     if not is_edit_query and not draft_booking.get("_awaiting_confirm"):
@@ -644,6 +735,31 @@ def ask_next_node(state: AdvBookingState):
         draft_booking = {}
     messages = state.get("messages", [])
     user_msg = messages[-1].content if messages else ""
+    is_hindi = any('ऀ' <= c <= 'ॿ' for c in user_msg)
+
+    # If citizen chose to edit applicant details, ask which specific detail they want to change
+    if draft_booking.get("_profile_edit_pending"):
+        draft_booking["_profile_edit_pending"] = False
+        user_lang = state.get("user_language") or ("hi" if is_hindi else "en")
+        cfg_ap = _raw_cfg.get("system_messages", {}).get("applicant_profile", {})
+        edit_prompt = cfg_ap.get(f"edit_prompt_{user_lang}") or cfg_ap.get("edit_prompt_en", "Which detail would you like to change?")
+        fields_map = cfg_ap.get(f"edit_options_{user_lang}") or cfg_ap.get("edit_options_en", {})
+        edit_opts = list(fields_map.keys())
+        opts_str = ", ".join(f"'{o}'" for o in edit_opts)
+        resp = f"{edit_prompt}\n<ui-dropdown options=[{opts_str}] />"
+        draft_booking["_awaiting_profile_field_choice"] = fields_map
+
+        if user_msg and user_msg not in ["continue", "hello"]:
+            MemoryManager.save_long_term_interaction(phone_number=phone_number, role="user", content=user_msg)
+        MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
+
+        return {
+            "messages": [AIMessage(content=resp)],
+            "draft_booking": draft_booking,
+            "missing_fields": [f for f in ALL_FIELDS if not draft_booking.get(f)],
+            "input_type": "dropdown",
+            "options": edit_opts
+        }
     
     next_step = get_next_step(draft_booking)
     if not next_step:
@@ -657,8 +773,8 @@ def ask_next_node(state: AdvBookingState):
         options = _mdms_get(*next_step["mdms"])
 
     text = f"Please provide the {field_label}."
+    is_hindi = any('ऀ' <= c <= 'ॿ' for c in user_msg)
     if llm:
-        is_hindi = any('ऀ' <= c <= 'ॿ' for c in user_msg)
         lang_rule = "Respond in Hindi." if is_hindi else "Respond in English. Do NOT output any Devanagari or Hindi text."
         ctx = build_adv_question_prompt(
             draft_booking=draft_booking,
@@ -677,6 +793,49 @@ def ask_next_node(state: AdvBookingState):
     val_err = draft_booking.get("_field_errors", {}).pop(next_step.get("id"), None)
     if val_err:
         text = f"⚠️ {val_err}\n\n{text}"
+    else:
+        consent_resp = build_consent_node("adv_booking", draft_booking, "draft_booking", ALL_FIELDS, state)
+        if consent_resp:
+            return consent_resp
+
+    # Dynamic profile details confirmation for applicant details
+    cfg_ap = _raw_cfg.get("system_messages", {}).get("applicant_profile", {})
+    profile_field_ids = set((cfg_ap.get("edit_options_en") or {}).values()) or {"applicantName", "mobileNumber", "emailId"}
+    if next_step.get("id") in profile_field_ids and not draft_booking.get("_profile_handled"):
+        from services.user_service import get_user_profile_info
+        prof = get_user_profile_info(phone_number) or {}
+        prof_name = (draft_booking.get("applicantName") or prof.get("name") or "").strip()
+        prof_phone = (draft_booking.get("mobileNumber") or prof.get("mobileNumber") or (phone_number if (phone_number and phone_number != "default") else "")).strip()
+        prof_email = (draft_booking.get("emailId") or prof.get("emailId") or "").strip()
+
+        if prof_name or prof_phone:
+            user_lang = state.get("user_language") or ("hi" if is_hindi else "en")
+            tmpl = cfg_ap.get(f"prompt_{user_lang}") or cfg_ap.get("prompt_en", "")
+            opts = cfg_ap.get(f"options_{user_lang}") or cfg_ap.get("options_en", ["Use Profile Details", "Edit Details"])
+
+            not_avail = "उपलब्ध नहीं" if user_lang == "hi" else "Not provided"
+            profile_msg = tmpl.format(
+                name=prof_name or not_avail,
+                mobile=prof_phone or not_avail,
+                email=prof_email or not_avail
+            )
+            draft_booking["_profile_prompt"] = {"name": prof_name, "mobile": prof_phone, "email": prof_email, "options": opts}
+            opts_str = ", ".join(f"'{o}'" for o in opts)
+            resp = f"{profile_msg}\n<ui-dropdown options=[{opts_str}] />"
+
+            if user_msg and user_msg not in ["continue", "hello", "I have selected a slot."]:
+                MemoryManager.save_long_term_interaction(phone_number=phone_number, role="user", content=user_msg)
+            MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
+
+            return {
+                "messages": [AIMessage(content=resp)],
+                "draft_booking": draft_booking,
+                "missing_fields": [f for f in ALL_FIELDS if not draft_booking.get(f)],
+                "input_type": "dropdown",
+                "options": opts
+            }
+        else:
+            draft_booking["_profile_handled"] = True
 
     if ui_type == "dropdown" and options:
         opts_str = ", ".join(f"'{o}'" for o in options)
@@ -687,6 +846,10 @@ def ask_next_node(state: AdvBookingState):
             resp = f"{text}\n<ui-calendar mode=\"single\" minDate=\"{s_date}\" />"
         else:
             resp = f"{text}\n<ui-calendar mode=\"single\" minDate=\"tomorrow\" />"
+    elif ui_type == "file" or next_step.get("id", "").startswith("doc_"):
+        if not val_err:
+            text = f"Please upload your {field_label} in JPG, PNG, or PDF format (file size must be less than 2 MB)."
+        resp = text
     else:
         resp = text
 
@@ -694,12 +857,14 @@ def ask_next_node(state: AdvBookingState):
         MemoryManager.save_long_term_interaction(phone_number=phone_number, role="user", content=user_msg)
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
 
+    out_input_type = "dropdown" if (ui_type == "dropdown" and options) else ("date" if ui_type == "date" else ("file" if (ui_type == "file" or next_step.get("id", "").startswith("doc_")) else "text"))
+
     return {
         "messages": [AIMessage(content=resp)],
         "draft_booking": draft_booking,
         "missing_fields": [f for f in ALL_FIELDS if not draft_booking.get(f)], 
-        "input_type": "text", 
-        "options": []
+        "input_type": out_input_type, 
+        "options": options if ui_type == "dropdown" else []
     }
 
 
@@ -797,6 +962,10 @@ def create_booking_node(state: AdvBookingState):
     reset_draft["selected_slots"] = None
     reset_draft["applicant_details"] = None
     reset_draft["_awaiting_confirm"] = None
+    reset_draft["_steps_communicated"] = None
+    reset_draft["_consent_granted"] = None
+    reset_draft["_consent_pending"] = None
+    reset_draft["_profile_handled"] = None
     
     # Delete from Qdrant since it's now a completed booking, no longer a draft
     MemoryManager.delete_draft_state(phone_number, "adv_booking")
@@ -832,6 +1001,10 @@ def cancel_booking_node(state: AdvBookingState):
     reset_draft["selected_slots"] = None
     reset_draft["applicant_details"] = None
     reset_draft["_awaiting_confirm"] = None
+    reset_draft["_steps_communicated"] = None
+    reset_draft["_consent_granted"] = None
+    reset_draft["_consent_pending"] = None
+    reset_draft["_profile_handled"] = None
     reset_draft["_cancelled"] = True
 
     user_lang = state.get("user_language")
@@ -854,7 +1027,15 @@ def router(state: AdvBookingState) -> str:
     draft_booking = state.get("draft_booking", {})
     messages = state.get("messages", [])
     user_msg = messages[-1].content if messages else ""
-    
+
+    if draft_booking.get("_cancelled"):
+        logger.info("[adv_booking.router] Route -> cancel")
+        return "cancel"
+
+    if draft_booking.get("_profile_edit_pending"):
+        logger.info("[adv_booking.router] Route -> ask_next (_profile_edit_pending)")
+        return "ask_next"
+
     if all(draft_booking.get(f) for f in SEARCH_FIELDS) and not draft_booking.get("selected_slots"):
         logger.info("[adv_booking.router] Route -> slot_search")
         return "slot_search"
@@ -901,6 +1082,16 @@ def router(state: AdvBookingState) -> str:
 workflow_graph = StateGraph(AdvBookingState)
 
 workflow_graph.add_node("intent_and_ui", intent_and_ui_node)
+workflow_graph.add_node(
+    "consent",
+    make_consent_node(
+        "adv_booking",
+        "draft_booking",
+        ALL_FIELDS,
+        get_adv_cancellation_message,
+        extra_reset_keys=["selected_slots", "applicant_details", "_awaiting_confirm", "_profile_handled"],
+    ),
+)
 workflow_graph.add_node("extraction", extraction_node)
 workflow_graph.add_node("slot_search", slot_search_node)
 workflow_graph.add_node("confirm_booking", confirm_booking_node)
@@ -913,6 +1104,14 @@ workflow_graph.add_edge(START, "intent_and_ui")
 workflow_graph.add_conditional_edges(
     "intent_and_ui",
     intent_router,
+    {
+        "consent": "consent",
+        END: END
+    }
+)
+workflow_graph.add_conditional_edges(
+    "consent",
+    consent_router,
     {
         "extraction": "extraction",
         END: END
