@@ -57,7 +57,6 @@ import org.egov.user.web.contract.profile.ProfileResyncRequest;
 import org.egov.user.web.contract.profile.ProfileSearchRequest;
 import org.egov.user.web.contract.profile.ProfileUpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -65,7 +64,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -75,7 +73,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
+
 /**
  * Core implementation of {@link ProfileService} orchestrating citizen profile onboarding,
  * demographic updates with source-based field protection, and real-time Aadhaar profile re-sync.
@@ -870,6 +868,7 @@ public class ProfileServiceImpl implements ProfileService {
         profileValidator.validateSearch(request);
 
         String stateTenant = resolveStateTenant(request.getTenantId());
+        String tenant = request.getTenantId();
         UserSearchCriteria criteria = UserSearchCriteria.builder()
                 .tenantId(stateTenant)
                 .uuid(StringUtils.isNotBlank(request.getUuid()) ? Collections.singletonList(request.getUuid().trim()) : null)
@@ -897,7 +896,7 @@ public class ProfileServiceImpl implements ProfileService {
         batchEnrichAssets(decryptedUsers, includes, active, errors, stateTenant, request != null ? request.getRequestInfo() : null);
 
         for (User user : decryptedUsers) {
-            enrichRelatedEntities(user, stateTenant, includes, request != null ? request.getRequestInfo() : null, active, errors);
+            enrichRelatedEntities(user, tenant, includes, request != null ? request.getRequestInfo() : null, active, errors);
         }
 
         return decryptedUsers;
@@ -912,20 +911,20 @@ public class ProfileServiceImpl implements ProfileService {
      * the error is captured into {@code errors} allowing partial degradation. Otherwise, a {@link CustomException} is thrown.
      *
      * @param user         decrypted user entity to enrich
-     * @param stateTenant  resolved state-level tenant identifier
+     * @param tenant  resolved state-level tenant identifier
      * @param includes     set of entity sections to include (e.g. ADDRESS, DOCUMENT)
      * @param requestInfo  UPYOG request audit context
      * @param active       optional active status filter from search request
      * @param errors       optional list to collect partial enrichment errors
      * @throws CustomException if enriching address or document entities fails and errors list is null
      */
-    private void enrichRelatedEntities(User user, String stateTenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, Boolean active, List<Error> errors) {
+    private void enrichRelatedEntities(User user, String tenant, Set<ProfileIncludeEntity> includes, RequestInfo requestInfo, Boolean active, List<Error> errors) {
         if (user == null) {
             return;
         }
 
         // Dynamically enrich familyId for citizen from upyog-family-service (Single Source of Truth)
-        enrichFamilyId(user, stateTenant, requestInfo);
+        enrichFamilyId(user, tenant, requestInfo);
 
         if (CollectionUtils.isEmpty(includes)) {
             return;
@@ -995,7 +994,7 @@ public class ProfileServiceImpl implements ProfileService {
             try {
                 UserDocumentSearchCriteria docCriteria = UserDocumentSearchCriteria.builder()
                         .uuid(user.getUuid())
-                        .tenantId(stateTenant)
+                        .tenantId(tenant)
                         .active(active)
                         .build();
 
@@ -1042,7 +1041,7 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        boolean canAccessAssets = isAuthorizedForAssetAccess(user, stateTenant, requestInfo);
+        boolean canAccessAssets = isAuthorizedForAssetAccess(user, tenant, requestInfo);
 
         if (includeProperties) {
             if (!canAccessAssets) {
@@ -2450,7 +2449,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         FamilyHofStatus hofStatus = familyRestRepository.checkUserHofStatus(
-                citizen.getUuid(), stateTenant, request.getRequestInfo());
+                citizen.getUuid(), rawTenant, request.getRequestInfo());
 
         if (hofStatus == null || !hofStatus.isFamilyFound() || !hofStatus.isHof()) {
             log.warn("[PROFILE-SERVICE] Citizen {} is not mapped to an active family or is not HoF", citizen.getUuid());
