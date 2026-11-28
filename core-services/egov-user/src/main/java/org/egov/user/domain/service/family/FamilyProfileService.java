@@ -5,8 +5,7 @@ import org.egov.user.web.contract.family.FamilyProfileSearchRequest;
 
 /**
  * Service abstraction for retrieving complete family household information,
- * including member demographic profiles, identity proofs, addresses, and 3NF declared assets
- * (vehicles, income declarations, and properties).
+ * including member demographic profiles, identity proofs, and addresses.
  *
  * <p>Strictly adheres to SOLID principles:</p>
  * <ul>
@@ -22,8 +21,8 @@ public interface FamilyProfileService {
 
     /**
      * Searches complete family household details by familyId, resolving active members
-     * from upyog-family-service and enriching each member with demographics, addresses, documents,
-     * vehicles, income, and properties from egov-user core registry.
+     * from upyog-family-service and enriching each member with demographics, addresses, and documents
+     * from egov-user core registry.
      *
      * @param request family profile search request payload containing familyId, optional tenantId, and RequestInfo
      * @return {@link FamilyProfileResponse} containing the complete family unit aggregate with enriched members

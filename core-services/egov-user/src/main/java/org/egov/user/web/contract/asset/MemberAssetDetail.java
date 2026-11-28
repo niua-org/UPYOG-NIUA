@@ -10,15 +10,12 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.user.domain.model.UserDocument;
-import org.egov.user.domain.model.asset.UserIncome;
-import org.egov.user.domain.model.asset.UserProperty;
-import org.egov.user.domain.model.asset.UserVehicle;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Payload detailing citizen profile demographics and asset declarations (properties, income, vehicles, documents)
+ * Payload detailing citizen profile demographics and attached documents
  * for a family member synchronized from family service to {@code egov-user}.
  *
  * @author UPYOG Team
@@ -123,32 +120,6 @@ public class MemberAssetDetail {
     @JsonProperty("documents")
     @Builder.Default
     private List<UserDocument> documents = new ArrayList<>();
-
-    /**
-     * Declared property assets (Rural and Urban) owned by this member (excluded from toString).
-     */
-    @Valid
-    @ToString.Exclude
-    @JsonProperty("properties")
-    @Builder.Default
-    private List<UserProperty> properties = new ArrayList<>();
-
-    /**
-     * Declared income and tax identifier details for this member (financial PII excluded from toString).
-     */
-    @Valid
-    @ToString.Exclude
-    @JsonProperty("income")
-    private UserIncome income;
-
-    /**
-     * Declared vehicle ownerships for this member (asset details excluded from toString).
-     */
-    @Valid
-    @ToString.Exclude
-    @JsonProperty("vehicles")
-    @Builder.Default
-    private List<UserVehicle> vehicles = new ArrayList<>();
 
     /**
      * Resolves effective citizen UUID between direct {@code userUuid} and nested {@code citizenDetails.uuid}.

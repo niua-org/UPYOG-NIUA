@@ -22,9 +22,6 @@ import org.egov.user.domain.model.enums.BloodGroup;
 import org.egov.user.domain.model.enums.Gender;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
-import org.egov.user.domain.model.asset.UserIncome;
-import org.egov.user.domain.model.asset.UserProperty;
-import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.springframework.util.CollectionUtils;
 
@@ -79,9 +76,6 @@ public class User {
     private Address correspondenceAddress;
     private Set<Address> addresses;
     private List<UserDocument> documents;
-    private List<UserProperty> properties;
-    private UserIncome income;
-    private List<UserVehicle> vehicles;
     private Boolean active;
     @Builder.Default
     private Set<Role> roles = new HashSet<>();

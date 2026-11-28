@@ -455,16 +455,16 @@ public class ProfileController {
     }
 
     /**
-     * Inter-service endpoint to synchronize member profile demographics, attached documents, and asset declarations
-     * (properties, income, vehicles) into egov-user core registry.
+     * Inter-service endpoint to synchronize member profile demographics and attached documents
+     * into egov-user core registry.
      *
      * @param request member asset sync request payload
      * @param headers HTTP headers used to validate inter-service origin
      * @return response summarizing synchronization results for each member
      */
     @Operation(
-            summary = "Synchronize Member Assets and Demographics",
-            description = "Synchronizes member profile demographics (father/mother/spouse name, caste, specially-abled status), attached documents, and declarations (properties, income, vehicles) into egov-user core registry. Restricted to trusted internal services."
+            summary = "Synchronize Member Demographics and Documents",
+            description = "Synchronizes member profile demographics (father/mother/spouse name, caste, specially-abled status) and attached documents into egov-user core registry. Restricted to trusted internal services."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Member assets synchronized successfully",
@@ -491,15 +491,15 @@ public class ProfileController {
 
     /**
      * Searches complete family household details by familyId, resolving active members
-     * from upyog-family-service and enriching each member with demographics, addresses, documents,
-     * vehicles, income, and properties from egov-user core registry.
+     * from upyog-family-service and enriching each member with demographics, addresses, and documents
+     * from egov-user core registry.
      *
      * @param request family profile search request payload containing familyId, optional tenantId, and RequestInfo
      * @return HTTP 200 response enclosing the complete family aggregate and member asset details
      */
     @Operation(
-            summary = "Search Family Full Profile and Assets",
-            description = "Searches complete household information by familyId, retrieving demographics, addresses, documents, vehicles, income declarations, and properties for all members of the family."
+            summary = "Search Family Full Profile",
+            description = "Searches complete household information by familyId, retrieving demographics, addresses, and documents for all members of the family."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Family profile and member assets retrieved successfully",

@@ -52,7 +52,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // 1. Infrastructure, Health & API Documentation
                 .requestMatchers("/actuator/**", "/health/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml", "/swagger-resources/**", "/webjars/**").permitAll()
                 .requestMatchers("/error").permitAll()
 
                 // 2. OAuth2 & Authentication Endpoints (Unauthenticated / Public)
@@ -74,8 +74,7 @@ public class SecurityConfig {
 				
 								   // TODO: need to check how to handle this later , currently allowing all
 				// Controller modules - access control is enforced centrally by Zuul Gateway via MDMS
-				.requestMatchers("/profile/**", "/address/**", "/document/**", "/users/**", "/citizen/**",
-								 "/v1/rural-property/**", "/v1/vehicle/**", "/v1/income/**").permitAll()
+				.requestMatchers("/profile/**", "/address/**", "/document/**", "/users/**", "/citizen/**").permitAll()
 
                 .anyRequest().authenticated()
             )

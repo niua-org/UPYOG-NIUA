@@ -6,10 +6,7 @@ import org.egov.common.contract.response.ResponseInfo;
 import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.UserDocumentRepository;
-import org.egov.user.persistence.repository.UserIncomeRepository;
-import org.egov.user.persistence.repository.UserPropertyRepository;
 import org.egov.user.persistence.repository.UserRepository;
-import org.egov.user.persistence.repository.UserVehicleRepository;
 import org.egov.user.web.contract.asset.MemberAssetDetail;
 import org.egov.user.web.contract.asset.MemberAssetSyncRequest;
 import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
@@ -60,17 +57,11 @@ public class MemberAssetServiceImpl implements MemberAssetService {
      * Backwards-compatible constructor for existing tests and components.
      *
      * @param userRepository     repository for querying and updating user demographic records
-     * @param propertyRepository repository for persisting 3NF property assets and ownership
-     * @param incomeRepository   repository for persisting citizen income declarations
-     * @param vehicleRepository  repository for persisting declared vehicle assets
      * @param documentRepository repository for persisting user documents and verification statuses
      */
     public MemberAssetServiceImpl(UserRepository userRepository,
-                                  UserPropertyRepository propertyRepository,
-                                  UserIncomeRepository incomeRepository,
-                                  UserVehicleRepository vehicleRepository,
                                   UserDocumentRepository documentRepository) {
-        this(new MemberAssetProcessor(userRepository, propertyRepository, incomeRepository, vehicleRepository, documentRepository));
+        this(new MemberAssetProcessor(userRepository, documentRepository));
     }
 
     /**

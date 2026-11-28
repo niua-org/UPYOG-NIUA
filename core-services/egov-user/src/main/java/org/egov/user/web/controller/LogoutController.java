@@ -1,5 +1,11 @@
 package org.egov.user.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.response.Error;
 import org.egov.common.contract.response.ErrorResponse;
@@ -14,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 
+@Tag(name = "Session Logout", description = "Endpoint for revoking active OAuth2 access tokens and terminating user sessions")
 @RestController
 @Slf4j
 public class LogoutController {
@@ -34,6 +41,16 @@ public class LogoutController {
      * @return ResponseInfo indicating success or failure
      * @throws Exception
      */
+    @Operation(
+            summary = "Logout User Session",
+            description = "Revokes the provided OAuth2 access token and removes the associated authorization session."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Session logged out or token already expired",
+                    content = @Content(schema = @Schema(implementation = ResponseInfo.class))),
+            @ApiResponse(responseCode = "400", description = "Access token missing or logout failed",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping("/_logout")
     public ResponseInfo deleteToken(@RequestBody TokenWrapper tokenWrapper) throws Exception {
         String accessToken = tokenWrapper.getAccessToken();

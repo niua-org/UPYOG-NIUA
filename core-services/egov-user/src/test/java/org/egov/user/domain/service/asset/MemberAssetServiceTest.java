@@ -5,33 +5,22 @@ import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.UserSearchCriteria;
-import org.egov.user.domain.model.asset.PropertyOwner;
-import org.egov.user.domain.model.asset.RuralPropertyDetail;
-import org.egov.user.domain.model.asset.UrbanPropertyDetail;
-import org.egov.user.domain.model.asset.UserIncome;
-import org.egov.user.domain.model.asset.UserProperty;
-import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.model.enums.GuardianRelation;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.persistence.repository.UserDocumentRepository;
-import org.egov.user.persistence.repository.UserIncomeRepository;
-import org.egov.user.persistence.repository.UserPropertyRepository;
 import org.egov.user.persistence.repository.UserRepository;
-import org.egov.user.persistence.repository.UserVehicleRepository;
 import org.egov.user.web.contract.asset.CitizenProfileDetail;
 import org.egov.user.web.contract.asset.MemberAssetDetail;
 import org.egov.user.web.contract.asset.MemberAssetSyncRequest;
 import org.egov.user.web.contract.asset.MemberAssetSyncResponse;
 import org.egov.user.web.contract.asset.MemberAssetSyncResult;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,33 +38,15 @@ class MemberAssetServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private UserPropertyRepository propertyRepository;
-
-    @Mock
-    private UserIncomeRepository incomeRepository;
-
-    @Mock
-    private UserVehicleRepository vehicleRepository;
-
-    @Mock
     private UserDocumentRepository documentRepository;
-
-    @Mock
-    private UrbanPropertyService urbanPropertyService;
 
     private MemberAssetServiceImpl memberAssetService;
 
     @BeforeEach
     void setUp() {
-        lenient().when(urbanPropertyService.consumeConsentToken(any(), any(), any(), any())).thenReturn(true);
         MemberAssetProcessor processor = new MemberAssetProcessor(
                 userRepository,
-                propertyRepository,
-                incomeRepository,
-                vehicleRepository,
-                documentRepository,
-                null,
-                urbanPropertyService
+                documentRepository
         );
         memberAssetService = new MemberAssetServiceImpl(processor);
     }
@@ -133,7 +104,6 @@ class MemberAssetServiceTest {
 
     @Test
     void syncMemberAssets_tenantMismatch_returnsFailedResult() {
-        // Given an existing user in tenant 'pg.citya'
         String citizenUuid = "citizen-uuid-tenant-test";
         User existingUser = User.builder()
                 .id(101L)
@@ -145,10 +115,9 @@ class MemberAssetServiceTest {
         when(userRepository.findAll(any(UserSearchCriteria.class)))
                 .thenReturn(Collections.singletonList(existingUser));
 
-        // When a payload supplies an incompatible tenant 'pb.amritsar'
         MemberAssetDetail detail = MemberAssetDetail.builder()
                 .userUuid(citizenUuid)
-                .tenantId("pb.amritsar") // Incompatible tenant state root
+                .tenantId("pb.amritsar")
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
@@ -158,7 +127,6 @@ class MemberAssetServiceTest {
 
         MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
 
-        // Then synchronization should fail for that member with tenant mismatch error
         assertNotNull(response);
         assertEquals(1, response.getResults().size());
         MemberAssetSyncResult result = response.getResults().get(0);
@@ -167,7 +135,7 @@ class MemberAssetServiceTest {
     }
 
     @Test
-    void syncMemberAssets_successfulSyncWithAllAssets() {
+    void syncMemberAssets_successfulSyncDemographicsAndDocuments() {
         String citizenUuid = "citizen-uuid-001";
         User existingUser = User.builder()
                 .id(101L)
@@ -201,76 +169,11 @@ class MemberAssetServiceTest {
                 ))
                 .build();
 
-        // 1 Urban Property
-        UserProperty urbanProp = UserProperty.builder()
-                .localityType("URBAN")
-                .ownershipType("INDIVIDUAL")
-                .consentToken("TOKEN-VALID-1")
-                .urbanPropertyDetail(UrbanPropertyDetail.builder()
-                        .upyogPropertyId("UPYOG-PROP-001")
-                        .consentToken("TOKEN-VALID-1")
-                        .propertyTaxAmount(new BigDecimal("1200.00"))
-                        .urbanAddress("House 12, Sector 4")
-                        .build())
-                .document(UserDocument.builder()
-                        .documentType("PROPERTY_TAX_RECEIPT")
-                        .filestoreId("file-tax-rec-456")
-                        .build())
-                .build();
-
-        // 1 Rural Property with 1 Joint Owner
-        UserProperty ruralProp = UserProperty.builder()
-                .localityType("RURAL")
-                .ownershipType("JOINT")
-                .ruralPropertyDetail(RuralPropertyDetail.builder()
-                        .gramPanchayat("Khedi GP")
-                        .villageName("Khedi")
-                        .wardNumber("4")
-                        .surveyNumber("KHASRA-99")
-                        .propertyType("AGRICULTURAL")
-                        .build())
-                .owners(Collections.singletonList(
-                        PropertyOwner.builder()
-                                .ownerType("JOINT_OWNER")
-                                .userUuid("joint-owner-uuid-002")
-                                .build()
-                ))
-                .build();
-
-        // Income
-        UserIncome income = UserIncome.builder()
-                .occupation("SALARIED")
-                .annualIncome(new BigDecimal("650000.00"))
-                .identifierType("PAN")
-                .identifierValue("ABCDE1234F")
-                .salaryProofDocument(UserDocument.builder()
-                        .documentType("SALARY_SLIP")
-                        .filestoreId("file-salary-789")
-                        .build())
-                .build();
-
-        // Vehicle
-        UserVehicle vehicle = UserVehicle.builder()
-                .vehicleNumber("DL01AB1234")
-                .purchaseDate("2022-04-15")
-                .vehicleType("4_WHEELER")
-                .makerModel("Maruti Brezza")
-                .fuelType("PETROL")
-                .category("LMV")
-                .rcDocument(UserDocument.builder()
-                        .documentType("RC_BOOK")
-                        .filestoreId("file-rc-999")
-                        .build())
-                .build();
-
         MemberAssetDetail memberDetail = MemberAssetDetail.builder()
                 .userUuid(citizenUuid)
                 .tenantId("pg.citya")
                 .familyId("FAM-2026-001")
                 .citizenDetails(citizenDetails)
-                .properties(List.of(urbanProp, ruralProp))
-                .income(income)
-                .vehicles(Collections.singletonList(vehicle))
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
@@ -287,11 +190,8 @@ class MemberAssetServiceTest {
         MemberAssetSyncResult result = response.getResults().get(0);
         assertEquals("SUCCESS", result.getStatus());
         assertEquals(citizenUuid, result.getUserUuid());
-        assertEquals(2, result.getPropertiesSynced());
-        assertTrue(result.isIncomeSynced());
-        assertEquals(1, result.getVehiclesSynced());
+        assertEquals(1, result.getDocumentsSynced());
 
-        // Verify demographic update in userRepository
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         verify(userRepository, atLeastOnce()).update(userCaptor.capture(), any(), anyLong(), anyString());
         User updatedUser = userCaptor.getValue();
@@ -302,141 +202,11 @@ class MemberAssetServiceTest {
         assertEquals(Boolean.FALSE, updatedUser.getIsSpeciallyAbled());
         assertEquals(GuardianRelation.FATHER, updatedUser.getGuardianRelation());
 
-        // Verify property repository interactions
-        verify(propertyRepository, times(2)).saveProperty(any(UserProperty.class));
-        verify(propertyRepository, times(1)).saveUrbanProperty(any(UrbanPropertyDetail.class));
-        verify(propertyRepository, times(1)).saveRuralProperty(any(RuralPropertyDetail.class));
-        verify(propertyRepository, times(1)).savePropertyOwner(any(PropertyOwner.class));
-
-        // Verify income repository interactions
-        verify(incomeRepository, times(1)).saveIncome(any(UserIncome.class));
-
-        // Verify vehicle repository interactions
-        org.mockito.ArgumentCaptor<UserVehicle> vehicleCaptor = org.mockito.ArgumentCaptor.forClass(UserVehicle.class);
-        verify(vehicleRepository, times(1)).saveVehicle(vehicleCaptor.capture());
-        assertEquals("PETROL", vehicleCaptor.getValue().getFuelType());
-        assertEquals("LMV", vehicleCaptor.getValue().getCategory());
-
-        // Verify documents persisted with referenceType and referenceId
-        verify(documentRepository, atLeast(4)).create(any(UserDocument.class));
-    }
-
-    @Test
-    void syncMemberAssets_idempotency_reusesExistingIdsOnResync() {
-        // Given an existing user and pre-existing asset records in the database
-        String citizenUuid = "citizen-uuid-resync-001";
-        User existingUser = User.builder()
-                .id(101L)
-                .uuid(citizenUuid)
-                .tenantId("pg.citya")
-                .type(UserType.CITIZEN)
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class)))
-                .thenReturn(Collections.singletonList(existingUser));
-
-        // Mock existing record lookups returning existing IDs
-        when(propertyRepository.findUrbanPropertyId(citizenUuid, "UPYOG-PROP-001"))
-                .thenReturn("existing-prop-id-123");
-        when(incomeRepository.findActiveIncomeIdByUserUuid(citizenUuid))
-                .thenReturn("existing-income-id-456");
-        when(vehicleRepository.findVehicleIdByUserAndNumber(citizenUuid, "DL01AB1234"))
-                .thenReturn("existing-veh-id-789");
-
-        UserProperty urbanProp = UserProperty.builder()
-                .localityType("URBAN")
-                .urbanPropertyDetail(UrbanPropertyDetail.builder()
-                        .upyogPropertyId("UPYOG-PROP-001")
-                        .build())
-                .build();
-
-        UserIncome income = UserIncome.builder()
-                .occupation("SALARIED")
-                .annualIncome(new BigDecimal("500000.00"))
-                .build();
-
-        UserVehicle vehicle = UserVehicle.builder()
-                .vehicleNumber("DL01AB1234")
-                .build();
-
-        MemberAssetDetail memberDetail = MemberAssetDetail.builder()
-                .userUuid(citizenUuid)
-                .tenantId("pg.citya")
-                .properties(Collections.singletonList(urbanProp))
-                .income(income)
-                .vehicles(Collections.singletonList(vehicle))
-                .build();
-
-        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(createTestRequestInfo())
-                .members(Collections.singletonList(memberDetail))
-                .build();
-
-        // When re-syncing assets without client-supplied IDs
-        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
-
-        // Then verify existing IDs were reused, preserving idempotency
-        assertNotNull(response);
-        assertEquals("SUCCESS", response.getStatus());
-        MemberAssetSyncResult result = response.getResults().get(0);
-        assertEquals("existing-income-id-456", result.getIncomeId());
-        assertTrue(result.getPropertyIds().contains("existing-prop-id-123"));
-        assertTrue(result.getVehicleIds().contains("existing-veh-id-789"));
-    }
-
-    @Test
-    void syncMemberAssets_foreignIdSupplied_blocksCrossUserOverwrite() {
-        // Given an existing user
-        String citizenUuid = "citizen-uuid-legit";
-        User existingUser = User.builder()
-                .id(101L)
-                .uuid(citizenUuid)
-                .tenantId("pg.citya")
-                .type(UserType.CITIZEN)
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class)))
-                .thenReturn(Collections.singletonList(existingUser));
-
-        // Mock ownership checks: the provided property ID belongs to a foreign user
-        when(propertyRepository.findUserUuidByPropertyId("foreign-prop-id-999"))
-                .thenReturn("victim-user-uuid-888");
-
-        UserProperty maliciousProp = UserProperty.builder()
-                .id("foreign-prop-id-999") // Client maliciously supplies foreign property ID
-                .localityType("URBAN")
-                .consentToken("TOKEN-ATTACK")
-                .urbanPropertyDetail(UrbanPropertyDetail.builder()
-                        .upyogPropertyId("UPYOG-PROP-ATTACK")
-                        .consentToken("TOKEN-ATTACK")
-                        .build())
-                .build();
-
-        MemberAssetDetail memberDetail = MemberAssetDetail.builder()
-                .userUuid(citizenUuid)
-                .tenantId("pg.citya")
-                .properties(Collections.singletonList(maliciousProp))
-                .build();
-
-        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(createTestRequestInfo())
-                .members(Collections.singletonList(memberDetail))
-                .build();
-
-        // When sync is performed
-        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
-
-        // Then the foreign property ID is blocked from overwrite and a new UUID is generated
-        assertNotNull(response);
-        assertEquals("SUCCESS", response.getStatus());
-        MemberAssetSyncResult result = response.getResults().get(0);
-        assertFalse(result.getPropertyIds().contains("foreign-prop-id-999"),
-                "Foreign property ID must not be reused to prevent cross-user overwrite");
+        verify(documentRepository, times(1)).create(any(UserDocument.class));
     }
 
     @Test
     void syncMemberAssets_singleMemberException_setsTopLevelStatusFailedAndSanitizesError() {
-        // Given a member whose processing encounters an internal database/SQL exception
         String citizenUuid = "citizen-uuid-crash";
         User existingUser = User.builder()
                 .id(101L)
@@ -448,18 +218,17 @@ class MemberAssetServiceTest {
         when(userRepository.findAll(any(UserSearchCriteria.class)))
                 .thenReturn(Collections.singletonList(existingUser));
 
-        // Simulate database exception during property save
         doThrow(new org.springframework.dao.DataIntegrityViolationException("ERROR: duplicate key value violates unique constraint 'pg_catalog.idx_raw_sql'"))
-                .when(propertyRepository).saveProperty(any(UserProperty.class));
-
-        UserProperty prop = UserProperty.builder()
-                .localityType("URBAN")
-                .build();
+                .when(documentRepository).create(any(UserDocument.class));
 
         MemberAssetDetail detail = MemberAssetDetail.builder()
                 .userUuid(citizenUuid)
                 .tenantId("pg.citya")
-                .properties(Collections.singletonList(prop))
+                .documents(Collections.singletonList(
+                        UserDocument.builder()
+                                .documentType("AADHAAR")
+                                .filestoreId("file-doc-1")
+                                .build()))
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
@@ -467,10 +236,8 @@ class MemberAssetServiceTest {
                 .members(Collections.singletonList(detail))
                 .build();
 
-        // When sync is performed
         MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
 
-        // Then overall status is FAILED (not SUCCESS) and raw SQL text is sanitized
         assertNotNull(response);
         assertEquals("FAILED", response.getStatus());
         assertEquals("FAILED", response.getResponseInfo().getStatus());
@@ -484,7 +251,6 @@ class MemberAssetServiceTest {
 
     @Test
     void syncMemberAssets_partialFailure_setsTopLevelStatusPartialSuccess() {
-        // Given two members: member 1 succeeds, member 2 fails with tenant mismatch
         String uuidSuccess = "citizen-uuid-success";
         String uuidFail = "citizen-uuid-fail";
 
@@ -520,7 +286,7 @@ class MemberAssetServiceTest {
 
         MemberAssetDetail detail2 = MemberAssetDetail.builder()
                 .userUuid(uuidFail)
-                .tenantId("pb.amritsar") // Incompatible tenant -> will fail
+                .tenantId("pb.amritsar")
                 .build();
 
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
@@ -528,10 +294,8 @@ class MemberAssetServiceTest {
                 .members(List.of(detail1, detail2))
                 .build();
 
-        // When sync is performed
         MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
 
-        // Then overall status is PARTIAL_SUCCESS
         assertNotNull(response);
         assertEquals("PARTIAL_SUCCESS", response.getStatus());
         assertEquals("PARTIAL_SUCCESS", response.getResponseInfo().getStatus());
@@ -543,7 +307,6 @@ class MemberAssetServiceTest {
 
     @Test
     void syncMemberAssets_auditActor_usesCallerUserInfoWhenPresent() {
-        // Fix for PR Comment #4: Ensure caller credentials from RequestInfo.userInfo are strictly used
         String citizenUuid = "citizen-uuid-actor-001";
         User existingUser = User.builder()
                 .id(101L)
@@ -578,7 +341,6 @@ class MemberAssetServiceTest {
         assertNotNull(response);
         assertEquals("SUCCESS", response.getStatus());
 
-        // Verify that userRepository.update received the caller's ID and UUID, not the citizen's
         verify(userRepository).update(any(User.class), any(User.class), eq(777L), eq("caller-employee-uuid"));
     }
 
@@ -591,7 +353,6 @@ class MemberAssetServiceTest {
                 .fatherName("New Father")
                 .build();
 
-        // RequestInfo without userInfo
         MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
                 .requestInfo(RequestInfo.builder().build())
                 .members(Collections.singletonList(detail))
@@ -601,245 +362,5 @@ class MemberAssetServiceTest {
                 memberAssetService.syncMemberAssets(request)
         );
         assertEquals("CALLER_INFO_REQUIRED", exception.getCode());
-    }
-
-    /**
-     * Verifies that synchronizing declared urban property fails when the provided consent token is invalid or expired.
-     */
-    @Test
-    @DisplayName("syncMemberAssets with invalid urban property consent token should fail")
-    void syncMemberAssets_urbanProperty_withInvalidConsentToken_fails() {
-        UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
-        when(mockUrbanService.consumeConsentToken(eq("UPYOG-PROP-INVALID"), eq("TOKEN-BAD"), any(), any()))
-                .thenReturn(false);
-
-        MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
-                userRepository,
-                propertyRepository,
-                incomeRepository,
-                vehicleRepository,
-                documentRepository,
-                null,
-                mockUrbanService
-        );
-
-        String citizenUuid = "citizen-uuid-token-test";
-        User existingUser = User.builder()
-                .id(101L)
-                .uuid(citizenUuid)
-                .tenantId("pg.citya")
-                .username("citizen1")
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class)))
-                .thenReturn(Collections.singletonList(existingUser));
-
-        UserProperty prop = UserProperty.builder()
-                .localityType("URBAN")
-                .consentToken("TOKEN-BAD")
-                .urbanPropertyDetail(UrbanPropertyDetail.builder()
-                        .upyogPropertyId("UPYOG-PROP-INVALID")
-                        .build())
-                .build();
-
-        MemberAssetDetail detail = MemberAssetDetail.builder()
-                .userUuid(citizenUuid)
-                .tenantId("pg.citya")
-                .properties(Collections.singletonList(prop))
-                .build();
-
-        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(createTestRequestInfo())
-                .members(Collections.singletonList(detail))
-                .build();
-
-        MemberAssetServiceImpl service = new MemberAssetServiceImpl(processorWithUrban);
-        MemberAssetSyncResponse response = service.syncMemberAssets(request);
-
-        assertNotNull(response);
-        assertEquals("FAILED", response.getStatus());
-        assertEquals(1, response.getResults().size());
-        assertEquals("FAILED", response.getResults().get(0).getStatus());
-        assertTrue(response.getResults().get(0).getMessage().contains("Invalid or expired OTP consent token"));
-    }
-
-    /**
-     * Verifies that synchronizing declared urban property succeeds when a valid consent token is provided.
-     */
-    @Test
-    @DisplayName("syncMemberAssets with valid urban property consent token should succeed")
-    void syncMemberAssets_urbanProperty_withValidConsentToken_succeeds() {
-        UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
-        when(mockUrbanService.consumeConsentToken(eq("UPYOG-PROP-VALID"), eq("TOKEN-GOOD"), any(), any()))
-                .thenReturn(true);
-
-        MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
-                userRepository,
-                propertyRepository,
-                incomeRepository,
-                vehicleRepository,
-                documentRepository,
-                null,
-                mockUrbanService
-        );
-
-        String citizenUuid = "citizen-uuid-token-test-2";
-        User existingUser = User.builder()
-                .id(102L)
-                .uuid(citizenUuid)
-                .tenantId("pg.citya")
-                .username("citizen2")
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class)))
-                .thenReturn(Collections.singletonList(existingUser));
-
-        UserProperty prop = UserProperty.builder()
-                .localityType("URBAN")
-                .consentToken("TOKEN-GOOD")
-                .urbanPropertyDetail(UrbanPropertyDetail.builder()
-                        .upyogPropertyId("UPYOG-PROP-VALID")
-                        .build())
-                .build();
-
-        MemberAssetDetail detail = MemberAssetDetail.builder()
-                .userUuid(citizenUuid)
-                .tenantId("pg.citya")
-                .properties(Collections.singletonList(prop))
-                .build();
-
-        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(createTestRequestInfo())
-                .members(Collections.singletonList(detail))
-                .build();
-
-        MemberAssetServiceImpl service = new MemberAssetServiceImpl(processorWithUrban);
-        MemberAssetSyncResponse response = service.syncMemberAssets(request);
-
-        assertNotNull(response);
-        assertEquals("SUCCESS", response.getStatus());
-        assertEquals(1, response.getResults().size());
-        assertEquals("SUCCESS", response.getResults().get(0).getStatus());
-        assertEquals(1, response.getResults().get(0).getPropertiesSynced());
-    }
-
-    @Test
-    @DisplayName("syncMemberAssets with newly declared urban property lacking consent token should fail")
-    void syncMemberAssets_urbanProperty_missingConsentToken_fails() {
-        String citizenUuid = "citizen-uuid-token-missing";
-        User existingUser = User.builder()
-                .id(103L)
-                .uuid(citizenUuid)
-                .tenantId("pg.citya")
-                .username("citizen3")
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class)))
-                .thenReturn(Collections.singletonList(existingUser));
-
-        UserProperty prop = UserProperty.builder()
-                .localityType("URBAN")
-                .urbanPropertyDetail(UrbanPropertyDetail.builder()
-                        .upyogPropertyId("UPYOG-PROP-NEW")
-                        .build())
-                .build();
-
-        MemberAssetDetail detail = MemberAssetDetail.builder()
-                .userUuid(citizenUuid)
-                .tenantId("pg.citya")
-                .properties(Collections.singletonList(prop))
-                .build();
-
-        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(createTestRequestInfo())
-                .members(Collections.singletonList(detail))
-                .build();
-
-        MemberAssetSyncResponse response = memberAssetService.syncMemberAssets(request);
-
-        assertNotNull(response);
-        assertEquals("FAILED", response.getStatus());
-        assertEquals("FAILED", response.getResults().get(0).getStatus());
-        assertTrue(response.getResults().get(0).getMessage().contains("Consent token is mandatory for linking urban property"));
-    }
-
-    /**
-     * Verifies that when Head of Family (HoF) declares and verifies property on behalf of another family member,
-     * consumeConsentToken correctly validates the token against HoF's actor UUID (who ran the OTP)
-     * and falls back to memberDetail.getTenantId() when prop.getTenantId() is blank.
-     */
-    @Test
-    @DisplayName("syncMemberAssets: HoF links property for another member with token bound to HoF and blank prop tenant")
-    void syncMemberAssets_hofLinksPropertyForOtherMember_succeeds() {
-        UrbanPropertyService mockUrbanService = mock(UrbanPropertyService.class);
-
-        String hofUuid = "hof-operator-uuid";
-        String memberUuid = "family-member-uuid";
-        String tenantId = "pg.citya";
-
-        // Verified consent token was generated during /otp/_verify by HoF (callerUuid = hofUuid)
-        // Verify consumeConsentToken is called with HoF's UUID and fallback tenant from memberDetail
-        when(mockUrbanService.consumeConsentToken(eq("UPYOG-PROP-HOF"), eq("TOKEN-HOF"), eq(hofUuid), eq(tenantId)))
-                .thenReturn(true);
-
-        MemberAssetProcessor processorWithUrban = new MemberAssetProcessor(
-                userRepository,
-                propertyRepository,
-                incomeRepository,
-                vehicleRepository,
-                documentRepository,
-                null,
-                mockUrbanService
-        );
-
-        User memberUser = User.builder()
-                .id(201L)
-                .uuid(memberUuid)
-                .tenantId(tenantId)
-                .username("familymember")
-                .build();
-
-        when(userRepository.findAll(any(UserSearchCriteria.class)))
-                .thenReturn(Collections.singletonList(memberUser));
-
-        // Property has blank tenantId to test fallback to memberDetail.getTenantId()
-        UserProperty prop = UserProperty.builder()
-                .localityType("URBAN")
-                .tenantId(null) // Blank tenantId -> must fall back to memberDetail.getTenantId()
-                .consentToken("TOKEN-HOF")
-                .urbanPropertyDetail(UrbanPropertyDetail.builder()
-                        .upyogPropertyId("UPYOG-PROP-HOF")
-                        .build())
-                .build();
-
-        MemberAssetDetail detail = MemberAssetDetail.builder()
-                .userUuid(memberUuid)
-                .tenantId(tenantId)
-                .properties(Collections.singletonList(prop))
-                .build();
-
-        RequestInfo hofRequestInfo = RequestInfo.builder()
-                .userInfo(org.egov.common.contract.request.User.builder()
-                        .id(1L)
-                        .uuid(hofUuid)
-                        .build())
-                .build();
-
-        MemberAssetSyncRequest request = MemberAssetSyncRequest.builder()
-                .requestInfo(hofRequestInfo)
-                .members(Collections.singletonList(detail))
-                .build();
-
-        MemberAssetServiceImpl service = new MemberAssetServiceImpl(processorWithUrban);
-        MemberAssetSyncResponse response = service.syncMemberAssets(request);
-
-        assertNotNull(response);
-        assertEquals("SUCCESS", response.getStatus());
-        assertEquals(1, response.getResults().size());
-        assertEquals("SUCCESS", response.getResults().get(0).getStatus());
-        assertEquals(1, response.getResults().get(0).getPropertiesSynced());
-
-        verify(mockUrbanService, times(1))
-                .consumeConsentToken(eq("UPYOG-PROP-HOF"), eq("TOKEN-HOF"), eq(hofUuid), eq(tenantId));
     }
 }

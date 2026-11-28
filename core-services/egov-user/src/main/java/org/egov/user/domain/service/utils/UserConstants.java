@@ -395,16 +395,9 @@ public final class UserConstants {
     public static final String JSON_PROPERTY_RELATIONSHIP = "relationship";
 
     // =========================================================================
-    // 11. Member Asset Synchronization & Document Reference Types
+    // 11. Member Synchronization & Document Reference Types
     // =========================================================================
     public static final String DOC_REF_TYPE_CITIZEN_PROFILE = "CITIZEN_PROFILE";
-    public static final String DOC_REF_TYPE_PROPERTY = "PROPERTY";
-    public static final String DOC_REF_TYPE_INCOME_SALARY = "INCOME_SALARY";
-    public static final String DOC_REF_TYPE_INCOME_TAX = "INCOME_TAX";
-    public static final String DOC_REF_TYPE_VEHICLE_RC = "VEHICLE_RC";
-
-    public static final String LOCALITY_TYPE_URBAN = "URBAN";
-    public static final String LOCALITY_TYPE_RURAL = "RURAL";
 
     public static final String UNKNOWN_USER_UUID = "UNKNOWN";
     public static final String DEFAULT_TENANT_ID = "pg.citya";
@@ -441,44 +434,7 @@ public final class UserConstants {
     public static final String DEFAULT_MOCK_DOB = "1990-01-01";
 
     // =========================================================================
-    // 13. Rural Property & Asset CRUD Constants
-    // =========================================================================
-    public static final String STATUS_INACTIVE_UPPERCASE = "INACTIVE";
-    public static final String STATUS_ALL = "ALL";
-    public static final String ERROR_PROPERTY_NOT_FOUND = "PROPERTY_NOT_FOUND";
-    public static final String ERROR_INVALID_PROPERTY_REQUEST = "INVALID_PROPERTY_REQUEST";
-    public static final String ERROR_RURAL_PROPERTY_MANDATORY_FIELDS = "RURAL_PROPERTY_MANDATORY_FIELDS";
-    public static final String MSG_RURAL_MANDATORY_FIELDS = "gramPanchayat, villageName, and tenantId are mandatory for rural property declarations";
-    public static final String MSG_PROPERTY_NOT_FOUND = "Rural property not found with ID: ";
-    public static final String MSG_PROPERTY_ACCESS_DENIED = "Unauthorized access: Property does not belong to specified citizen";
-    public static final String MSG_PROPERTY_DEACTIVATED_SUCCESS = "Rural property marked as inactive successfully";
-
-    // =========================================================================
-    // 14. Vehicle CRUD Constants
-    // =========================================================================
-    public static final String ERROR_VEHICLE_NOT_FOUND = "VEHICLE_NOT_FOUND";
-    public static final String ERROR_INVALID_VEHICLE_REQUEST = "INVALID_VEHICLE_REQUEST";
-    public static final String ERROR_VEHICLE_MANDATORY_FIELDS = "VEHICLE_MANDATORY_FIELDS";
-    public static final String ERROR_VEHICLE_ALREADY_REGISTERED = "VEHICLE_ALREADY_REGISTERED";
-    public static final String MSG_VEHICLE_MANDATORY_FIELDS = "vehicleNumber, vehicleType, and tenantId are mandatory for vehicle declarations";
-    public static final String MSG_VEHICLE_NOT_FOUND = "Vehicle record not found with ID: ";
-    public static final String MSG_VEHICLE_ACCESS_DENIED = "Unauthorized access: Vehicle does not belong to specified citizen";
-    public static final String MSG_VEHICLE_ALREADY_REGISTERED = "Vehicle is already actively registered to another citizen with registration number: ";
-    public static final String MSG_VEHICLE_DEACTIVATED_SUCCESS = "Vehicle marked as inactive successfully";
-
-    // =========================================================================
-    // 15. Income CRUD Constants
-    // =========================================================================
-    public static final String ERROR_INCOME_NOT_FOUND = "INCOME_NOT_FOUND";
-    public static final String ERROR_INVALID_INCOME_REQUEST = "INVALID_INCOME_REQUEST";
-    public static final String ERROR_INCOME_MANDATORY_FIELDS = "INCOME_MANDATORY_FIELDS";
-    public static final String MSG_INCOME_MANDATORY_FIELDS = "occupation, annualIncome, identifierType, and tenantId are mandatory for income declarations";
-    public static final String MSG_INCOME_NOT_FOUND = "Income record not found with ID: ";
-    public static final String MSG_INCOME_ACCESS_DENIED = "Unauthorized access: Income record does not belong to specified citizen";
-    public static final String MSG_INCOME_DEACTIVATED_SUCCESS = "Income declaration marked as inactive successfully";
-
-    // =========================================================================
-    // 16. Aadhaar HoF Check Constants
+    // 13. Aadhaar HoF Check Constants
     // =========================================================================
     public static final String MSG_INVALID_AADHAAR_FORMAT = "Aadhaar number must be a valid 12-digit numeric identifier";
     public static final String MSG_CITIZEN_NOT_FOUND_FOR_AADHAAR = "No citizen profile found associated with the provided Aadhaar number";
@@ -486,147 +442,4 @@ public final class UserConstants {
     public static final String MSG_CITIZEN_NOT_HEAD_OF_FAMILY = "Citizen is not the designated Head of Family (HoF) for their household";
     public static final String MSG_CITIZEN_HOF_VERIFIED_SUCCESS = "Citizen is verified as Head of Family";
     public static final String MSG_FAMILY_SERVICE_COMMUNICATION_ERROR = "Failed to communicate with Family service. Please try again later.";
-
-    // =========================================================================
-    // 17. Urban Property OTP & Consent Constants
-    // =========================================================================
-    public static final String MSG_PROPERTY_SEARCH_MANDATORY_FIELDS = "tenantId and propertyId are mandatory.";
-    public static final String MSG_URBAN_PROPERTY_NOT_FOUND_PREFIX = "No property found for property ID: ";
-
-    public static final String ERROR_INVALID_PROPERTY_OTP_REQUEST = "INVALID_PROPERTY_OTP_REQUEST";
-    public static final String ERROR_PROPERTY_ALREADY_LINKED_TO_CALLER = "PROPERTY_ALREADY_LINKED_TO_CALLER";
-    public static final String MSG_PROPERTY_ALREADY_LINKED_TO_CALLER = "You have already linked this property to your citizen profile.";
-
-    public static final String ERROR_PROPERTY_ALREADY_LINKED = "PROPERTY_ALREADY_LINKED";
-    public static final String MSG_PROPERTY_ALREADY_LINKED = "This property is individually owned and has already been linked to a citizen profile.";
-
-    public static final String ERROR_OWNER_NOT_FOUND = "OWNER_NOT_FOUND";
-    public static final String MSG_OWNER_NOT_FOUND_PREFIX = "No registered owner details found for property ";
-
-    public static final String ERROR_OWNER_MOBILE_NOT_FOUND = "OWNER_MOBILE_NOT_FOUND";
-    public static final String MSG_OWNER_MOBILE_NOT_FOUND = "No registered mobile number found for the property owner in Property Tax records.";
-
-    public static final String ERROR_PROPERTY_MAX_OWNERS_EXCEEDED = "PROPERTY_MAX_OWNERS_EXCEEDED";
-    public static final String MSG_PROPERTY_MAX_OWNERS_EXCEEDED = "All registered owners for this joint property have already linked it with their profiles.";
-
-    public static final String ERROR_INVALID_OWNER_MOBILE = "INVALID_OWNER_MOBILE";
-    public static final String MSG_INVALID_OWNER_MOBILE_PREFIX = "The specified mobile number does not match any registered owner for property ";
-
-    public static final String ERROR_PROPERTY_OWNER_ALREADY_LINKED = "PROPERTY_OWNER_ALREADY_LINKED";
-    public static final String MSG_PROPERTY_OWNER_ALREADY_LINKED = "The owner corresponding to this mobile number has already linked their profile to this property.";
-
-    public static final String ERROR_OWNER_SELECTION_REQUIRED = "OWNER_SELECTION_REQUIRED";
-    public static final String MSG_OWNER_SELECTION_REQUIRED = "Multiple unlinked owners exist for this property. Please specify the owner mobile number to receive the OTP.";
-
-    public static final String ERROR_INVALID_OTP_VERIFY_REQUEST = "INVALID_OTP_VERIFY_REQUEST";
-    public static final String MSG_OTP_VERIFY_MANDATORY_FIELDS = "propertyId, referenceId, and otp are mandatory.";
-
-    public static final String ERROR_INVALID_OTP_SESSION = "INVALID_OTP_SESSION";
-    public static final String MSG_INVALID_OTP_SESSION = "No active OTP session found or session has expired. Please request a new OTP.";
-
-    public static final String MSG_INVALID_OTP_ENTERED = "Invalid OTP entered. Please try again.";
-
-    public static final String ERROR_INVALID_CONSENT_VALIDATE_REQUEST = "INVALID_CONSENT_VALIDATE_REQUEST";
-    public static final String MSG_PROPERTY_ID_MANDATORY = "propertyId is mandatory.";
-
-    public static final String ERROR_INVALID_PROPERTY_CONSENT_TOKEN = "INVALID_PROPERTY_CONSENT_TOKEN";
-    public static final String MSG_INVALID_PROPERTY_CONSENT_TOKEN_PREFIX = "Invalid or expired OTP consent token for urban property: ";
-    public static final String ERROR_PROPERTY_CONSENT_TOKEN_REQUIRED = "PROPERTY_CONSENT_TOKEN_REQUIRED";
-    public static final String MSG_PROPERTY_CONSENT_TOKEN_REQUIRED = "Consent token is mandatory for linking urban property: ";
-    public static final String ERROR_OTP_DISPATCH_FAILED = "OTP_DISPATCH_FAILED";
-    public static final String MSG_OTP_DISPATCH_FAILED = "Failed to dispatch OTP to property owner mobile number. Please try again later.";
-    public static final String ERROR_PROPERTY_LINKING_LIMIT_EXCEEDED = "PROPERTY_LINKING_LIMIT_EXCEEDED";
-    public static final String MSG_PROPERTY_LINKING_LIMIT_EXCEEDED = "Property linking limit exceeded for property: ";
-    public static final String ERROR_OTP_RATE_LIMIT_EXCEEDED = "OTP_RATE_LIMIT_EXCEEDED";
-    public static final String MSG_OTP_RATE_LIMIT_EXCEEDED = "Too many OTP requests for this property. Please wait before trying again.";
-
-    public static final String ERROR_OTP_SERVICE_CONFIG_MISSING = "OTP_SERVICE_CONFIG_MISSING";
-    public static final String MSG_OTP_SERVICE_CONFIG_MISSING = "OTP service configuration is missing.";
-
-    public static final String ERROR_PROPERTY_SERVICE_CONFIG_MISSING = "PROPERTY_SERVICE_CONFIG_MISSING";
-    public static final String MSG_PROPERTY_SERVICE_CONFIG_MISSING = "Property service configuration is missing.";
-
-    public static final String ERROR_PROPERTY_SERVICE_ERROR = "PROPERTY_SERVICE_ERROR";
-    public static final String MSG_PROPERTY_SERVICE_ERROR_PREFIX = "Failed to retrieve property details: ";
-
-    public static final String ERROR_INVALID_PROPERTY_SEARCH_CRITERIA = "INVALID_PROPERTY_SEARCH_CRITERIA";
-
-    public static final String PREFIX_PROP_REF = "PROP-REF-";
-    public static final String PREFIX_PROP_CONSENT = "PROP-CONSENT-";
-
-    public static final String MSG_STATUS_SUCCESSFUL = "SUCCESSFUL";
-    public static final String MSG_OTP_SENT_SUCCESS = "OTP sent successfully to property owner's registered mobile number.";
-    public static final String MSG_PROPERTY_OWNERSHIP_VERIFIED_SUCCESS = "Property ownership verified successfully.";
-    public static final String MSG_CONSENT_TOKEN_VALID = "Property consent token or session is valid.";
-    public static final String MSG_CONSENT_TOKEN_INVALID = "Invalid or expired property consent token.";
-
-    public static final String CATEGORY_INDIVIDUAL = "INDIVIDUAL";
-    public static final String CATEGORY_MULTIPLE = "MULTIPLE";
-    public static final String CATEGORY_JOINT = "JOINT";
-
-    public static final String PT_JSON_PROPERTIES = "Properties";
-    public static final String PT_JSON_PROPERTY_ID = "propertyId";
-    public static final String PT_JSON_PROPERTY_IDS = "propertyIds";
-    public static final String PT_JSON_TENANT_ID = "tenantId";
-    public static final String PT_JSON_STATUS = "status";
-    public static final String PT_JSON_PROPERTY_TYPE = "propertyType";
-    public static final String PT_JSON_OWNERSHIP_CATEGORY = "ownershipCategory";
-    public static final String PT_JSON_ADDRESS = "address";
-    public static final String PT_JSON_DOOR_NO = "doorNo";
-    public static final String PT_JSON_BUILDING_NAME = "buildingName";
-    public static final String PT_JSON_STREET = "street";
-    public static final String PT_JSON_LANDMARK = "landmark";
-    public static final String PT_JSON_CITY = "city";
-    public static final String PT_JSON_PINCODE = "pincode";
-    public static final String PT_JSON_OWNERS = "owners";
-    public static final String PT_JSON_UUID = "uuid";
-    public static final String PT_JSON_NAME = "name";
-    public static final String PT_JSON_MOBILE_NUMBER = "mobileNumber";
-    public static final String PT_JSON_IS_PRIMARY_OWNER = "isPrimaryOwner";
-    public static final String PT_JSON_OWNERSHIP_PERCENTAGE = "ownerShipPercentage";
-    public static final String PT_JSON_OWNER_TYPE = "ownerType";
-
-    public static final String OTP_JSON_OTP = "otp";
-    public static final String OTP_JSON_IDENTITY = "identity";
-    public static final String OTP_JSON_TENANT_ID = "tenantId";
-    public static final String OTP_JSON_REQUEST_INFO = "RequestInfo";
-    public static final String OTP_JSON_IS_VALIDATION_SUCCESSFUL = "isValidationSuccessful";
-    public static final String OTP_JSON_VALIDATION_SUCCESSFUL = "validationSuccessful";
-    public static final String OTP_SMS_TEMPLATE_PREFIX = "Your OTP for linking property is ";
-    public static final String OTP_SMS_TEMPLATE_SUFFIX = ". Valid for 15 minutes. - UPYOG";
-
-    public static final String REDIS_PROP_OTP_CHALLENGE_PREFIX = "UPYOG_PROP_OTP_CHALLENGE:";
-    public static final String REDIS_PROP_CONSENT_PREFIX = "UPYOG_PROP_CONSENT:";
-    public static final String REDIS_PROP_OTP_ATTEMPTS_PREFIX = "UPYOG_PROP_OTP_ATTEMPTS:";
-    public static final String REDIS_PROP_OTP_RATE_PREFIX = "UPYOG_PROP_OTP_RATE:";
-    public static final int MAX_PROPERTY_OTP_SENDS_PER_WINDOW = 3;
-    public static final int MAX_PROPERTY_OTP_SENDS_PER_CALLER = 3;
-    public static final int MAX_PROPERTY_OTP_SENDS_PER_MOBILE = 3;
-    public static final int MAX_PROPERTY_OTP_SENDS_PER_PROPERTY_CEILING = 10;
-    public static final long PROPERTY_OTP_SEND_WINDOW_MS = 15 * 60 * 1000L; // 15 minutes sliding window
-
-    public static final String MSG_UPYOG_PROPERTY_ID_MANDATORY = "upyogPropertyId is mandatory for urban property.";
-    public static final String MSG_URBAN_PROPERTY_SERVICE_UNAVAILABLE = "UrbanPropertyService is unavailable for validating property consent.";
-    public static final String MSG_PROPERTY_LINKAGE_QUERY_FAILED_PREFIX = "Failed to query existing property linkages for property: ";
-    public static final String DEFAULT_API_ID = "org.egov.user";
-    public static final String DEFAULT_VER = "1.0";
-    public static final String ACTION_SEARCH = "search";
-    public static final String DEFAULT_DID = "1";
-    public static final String EMPTY_STRING = "";
-    public static final String MASK_CHAR = "*";
-    public static final String ENCRYPTION_DELIMITER = "|";
-    public static final String JSON_KEY_PROPERTY_RECORD_ID = "propertyRecordId";
-    public static final String JSON_KEY_OWNERSHIP_TYPE = "ownershipType";
-    public static final String COL_USER_UUID = "user_uuid";
-    public static final String COL_MOBILENUMBER = "mobilenumber";
-    public static final String COL_PROPERTY_RECORD_ID = "property_record_id";
-    public static final String COL_OWNERSHIP_TYPE = "ownership_type";
-    public static final String SQL_PARAM_TENANT_ID = "tenant_id";
-    public static final String SQL_PARAM_UPYOG_PROPERTY_ID = "upyog_property_id";
-    public static final String MSG_PROPERTY_SERVICE_CLIENT_REQUIRED = "propertyServiceClient must not be null";
-    public static final String MSG_USER_PROPERTY_REPOSITORY_REQUIRED = "userPropertyRepository must not be null";
-    public static final String MSG_SESSION_REGISTRY_REQUIRED = "sessionRegistry must not be null";
-    public static final String MSG_OWNERSHIP_VALIDATOR_REQUIRED = "ownershipValidator must not be null";
-    public static final String MSG_PROPERTY_OTP_CLIENT_REQUIRED = "propertyOtpClient must not be null";
-    public static final String MSG_USER_CONFIGURATION_REQUIRED = "userConfiguration must not be null";
 }

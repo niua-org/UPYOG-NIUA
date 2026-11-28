@@ -69,25 +69,6 @@ public class UserConfiguration {
     @Value("${address.type.cache.cron}")
     private String addressTypeCacheCron;
 
-    // Income Identifier Type MDMS & Fallback Configuration
-    @Value("${mdms.income.identifier.type.enabled}")
-    private Boolean mdmsIncomeIdentifierTypeEnabled;
-
-    @Value("${mdms.income.identifier.type.moduleName}")
-    private String mdmsIncomeIdentifierTypeModuleName;
-
-    @Value("${mdms.income.identifier.type.masterName}")
-    private String mdmsIncomeIdentifierTypeMasterName;
-
-    @Value("${mdms.income.identifier.type.filter}")
-    private String mdmsIncomeIdentifierTypeFilter;
-
-    @Value("${income.identifier.types.allowed}")
-    private String allowedIncomeIdentifierTypes;
-
-    @Value("${income.identifier.type.cache.ttl.millis}")
-    private Long incomeIdentifierTypeCacheTtlMillis;
-
     // Token Validity & Format Configuration
     @Value("${access.token.validity.in.minutes}")
     private Integer accessTokenValidityInMinutes;
@@ -236,9 +217,6 @@ public class UserConfiguration {
     @Value("${egov.idgen.user.doc.id.name}")
     private String idGenUserDocIdName;
 
-    @Value("${egov.idgen.rural.property.id.name}")
-    private String idGenRuralPropertyIdName;
-
     // Asset Authorization Configuration
     @Value("${egov.asset.privileged.roles}")
     private String assetPrivilegedRoles;
@@ -246,82 +224,6 @@ public class UserConfiguration {
     // Family Profile Authorization Configuration
     @Value("${egov.family.privileged.roles}")
     private String familyPrivilegedRoles;
-
-    // Asset Search Pagination Configuration
-    @Value("${egov.asset.search.default.limit}")
-    private Integer assetSearchDefaultLimit;
-
-    @Value("${egov.asset.search.max.limit}")
-    private Integer assetSearchMaxLimit;
-
-    @Value("${egov.asset.search.default.offset}")
-    private Integer assetSearchDefaultOffset;
-
-    /**
-     * Base HTTP host URL of the UPYOG Property Tax service (property-services).
-     */
-    @Value("${property.service.host}")
-    private String propertyServiceHost;
-
-    /**
-     * Relative context endpoint for querying properties in property-services.
-     */
-    @Value("${property.service.search.endpoint}")
-    private String propertyServiceSearchEndpoint;
-
-    /**
-     * Role code assigned to the system user for internal inter-service calls (e.g. unmasking owner mobiles in property-services).
-     */
-    @Value("${property.service.system.role}")
-    private String propertyServiceSystemRole;
-
-    /**
-     * Flag enabling fixed/mock OTP verification for urban property ownership in test environments.
-     */
-    @Value("${property.otp.fixed.enabled}")
-    private Boolean propertyOtpFixedEnabled;
-
-    /**
-     * Static mock OTP value accepted when fixed OTP verification is enabled.
-     */
-    @Value("${property.otp.fixed.value}")
-    private String propertyOtpFixedValue;
-
-    /**
-     * Time-to-live duration in milliseconds for an active urban property OTP reference challenge session.
-     */
-    @Value("${property.otp.reference.ttl.ms}")
-    private Long propertyOtpReferenceTtlMs;
-
-    /**
-     * Maximum number of invalid OTP verification attempts permitted before session lockout.
-     */
-    @Value("${property.otp.verify.max.attempts}")
-    private Integer propertyOtpVerifyMaxAttempts;
-
-    /**
-     * Time-to-live duration in milliseconds for an issued property authorization consent token.
-     */
-    @Value("${property.consent.token.ttl.ms}")
-    private Long propertyConsentTokenTtlMs;
-
-    /**
-     * Base HTTP host URL of the egov-otp service.
-     */
-    @Value("${egov.otp.host}")
-    private String otpServiceHost;
-
-    /**
-     * Relative context endpoint for creating OTP challenges via egov-otp.
-     */
-    @Value("${egov.services.otp.create_otp}")
-    private String otpCreateEndpoint;
-
-    /**
-     * Relative context endpoint for validating OTPs via egov-otp.
-     */
-    @Value("${egov.services.otp.validate_otp}")
-    private String otpValidateEndpoint;
 
     /**
      * Resolves the configured set of privileged role codes permitted to access citizen assets.

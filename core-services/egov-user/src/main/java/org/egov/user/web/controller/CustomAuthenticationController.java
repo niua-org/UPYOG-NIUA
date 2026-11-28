@@ -1,5 +1,9 @@
 package org.egov.user.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.user.domain.exception.MultipleUsersFoundException;
@@ -39,6 +43,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Tag(name = "OAuth2 Authentication", description = "OAuth2 token issuance, introspection, and revocation endpoints")
 @RestController
 @RequestMapping("/oauth")
 @Slf4j
@@ -98,6 +103,16 @@ public class CustomAuthenticationController {
      * @param request    HttpServletRequest containing additional parameters
      * @return response entity containing OAuth2 token payload or error description
      */
+    @Operation(
+            summary = "Issue OAuth2 Access Token",
+            description = "Authenticates credentials using password or client_credentials grant and issues OAuth2 access and refresh tokens."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token issued successfully"),
+            @ApiResponse(responseCode = "400", description = "Unsupported grant type or invalid request parameters"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials or inactive account"),
+            @ApiResponse(responseCode = "500", description = "Token generation failed")
+    })
     @PostMapping("/token")
     public ResponseEntity<?> authenticate(@RequestParam("grant_type") String grantType,
                                         @RequestParam(value = "username", required = false) String username,
@@ -717,6 +732,13 @@ public class CustomAuthenticationController {
     /**
      * Token introspection endpoint for opaque tokens
      */
+    @Operation(
+            summary = "Introspect OAuth2 Token",
+            description = "Validates an opaque access or refresh token and returns its active status and metadata."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token introspection result returned")
+    })
     @PostMapping("/introspect")
     public ResponseEntity<?> introspectToken(@RequestParam("token") String token,
                                            @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint) {
@@ -763,6 +785,14 @@ public class CustomAuthenticationController {
     /**
      * Token revocation endpoint
      */
+    @Operation(
+            summary = "Revoke OAuth2 Token",
+            description = "Revokes an active opaque access or refresh token from the token store."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token revoked successfully"),
+            @ApiResponse(responseCode = "500", description = "Failed to revoke token")
+    })
     @PostMapping("/revoke")
     public ResponseEntity<?> revokeToken(@RequestParam("token") String token,
                                        @RequestParam(value = "token_type_hint", required = false) String tokenTypeHint) {

@@ -277,7 +277,7 @@ public class UserDocumentRepository {
      * Looks up existing active document ID by reference and filestore ID for natural key deduplication.
      *
      * @param userUuid citizen user UUID
-     * @param referenceType entity category (e.g. CITIZEN_PROFILE, PROPERTY, INCOME_SALARY, VEHICLE_RC)
+     * @param referenceType entity category (e.g. CITIZEN_PROFILE, ADDRESS_PROOF)
      * @param referenceId associated entity record ID
      * @param filestoreId file storage system ID
      * @return document ID or null

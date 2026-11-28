@@ -12,9 +12,6 @@ import org.egov.user.domain.model.AddressSearchCriteria;
 import org.egov.user.domain.model.User;
 import org.egov.user.domain.model.UserDocument;
 import org.egov.user.domain.model.UserSearchCriteria;
-import org.egov.user.domain.model.asset.UserIncome;
-import org.egov.user.domain.model.asset.UserProperty;
-import org.egov.user.domain.model.asset.UserVehicle;
 import org.egov.user.domain.model.enums.UserType;
 import org.egov.user.domain.service.asset.AssetAuthorizationService;
 import org.egov.user.domain.service.config.FamilyConfigurationService;
@@ -23,10 +20,7 @@ import org.egov.user.domain.service.utils.UserConstants;
 import org.egov.user.persistence.repository.AddressRepository;
 import org.egov.user.persistence.repository.FamilyRestRepository;
 import org.egov.user.persistence.repository.UserDocumentRepository;
-import org.egov.user.persistence.repository.UserIncomeRepository;
-import org.egov.user.persistence.repository.UserPropertyRepository;
 import org.egov.user.persistence.repository.UserRepository;
-import org.egov.user.persistence.repository.UserVehicleRepository;
 import org.egov.user.web.contract.UserSearchResponseContent;
 import org.egov.user.web.contract.document.UserDocumentSearchCriteria;
 import org.egov.user.web.contract.family.FamilyDetail;
@@ -50,14 +44,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Service implementation managing family full profile and asset discovery.
+ * Service implementation managing family full profile discovery.
  *
  * <p>Orchestrates:</p>
  * <ul>
  *   <li>Household resolution via {@code upyog-family-service}.</li>
  *   <li>Citizen security isolation: verifying caller identity against family membership or privileged role.</li>
  *   <li>Batch pre-fetching and decryption of member profiles, documents, and addresses from {@code egov-user}.</li>
- *   <li>Batch pre-fetching of declared 3NF assets (vehicles, income, properties) avoiding N+1 database queries.</li>
  * </ul>
  *
  * @author UPYOG Team
@@ -80,9 +73,6 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final UserDocumentRepository userDocumentRepository;
-    private final UserPropertyRepository userPropertyRepository;
-    private final UserIncomeRepository userIncomeRepository;
-    private final UserVehicleRepository userVehicleRepository;
     private final EncryptionDecryptionUtil encryptionDecryptionUtil;
     private final FamilyConfigurationService familyConfigurationService;
     private final UserConfiguration userConfiguration;
@@ -90,17 +80,14 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
     /**
      * Primary constructor injecting all persistence, authorization, configuration, and helper components.
      *
-     * @param familyRestRepository      REST client for upyog-family-service
-     * @param assetAuthorizationService centralized authorization evaluator
-     * @param userRepository            citizen profile repository
-     * @param addressRepository         postal address repository
-     * @param userDocumentRepository    attached documents repository
-     * @param userPropertyRepository    property asset repository
-     * @param userIncomeRepository      income declaration repository
-     * @param userVehicleRepository     vehicle declaration repository
-     * @param encryptionDecryptionUtil  PII encryption/decryption utility
+     * @param familyRestRepository       REST client for upyog-family-service
+     * @param assetAuthorizationService  centralized authorization evaluator
+     * @param userRepository             citizen profile repository
+     * @param addressRepository          postal address repository
+     * @param userDocumentRepository     attached documents repository
+     * @param encryptionDecryptionUtil   PII encryption/decryption utility
      * @param familyConfigurationService tenant-level MDMS family configuration service
-     * @param userConfiguration         central application configuration
+     * @param userConfiguration          central application configuration
      */
     @Autowired
     public FamilyProfileServiceImpl(FamilyRestRepository familyRestRepository,
@@ -108,9 +95,6 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
                                    UserRepository userRepository,
                                    AddressRepository addressRepository,
                                    UserDocumentRepository userDocumentRepository,
-                                   UserPropertyRepository userPropertyRepository,
-                                   UserIncomeRepository userIncomeRepository,
-                                   UserVehicleRepository userVehicleRepository,
                                    EncryptionDecryptionUtil encryptionDecryptionUtil,
                                    @Autowired(required = false) FamilyConfigurationService familyConfigurationService,
                                    @Autowired(required = false) UserConfiguration userConfiguration) {
@@ -119,9 +103,6 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.userDocumentRepository = userDocumentRepository;
-        this.userPropertyRepository = userPropertyRepository;
-        this.userIncomeRepository = userIncomeRepository;
-        this.userVehicleRepository = userVehicleRepository;
         this.encryptionDecryptionUtil = encryptionDecryptionUtil;
         this.familyConfigurationService = familyConfigurationService;
         this.userConfiguration = userConfiguration;
@@ -135,20 +116,16 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
                                    UserRepository userRepository,
                                    AddressRepository addressRepository,
                                    UserDocumentRepository userDocumentRepository,
-                                   UserPropertyRepository userPropertyRepository,
-                                   UserIncomeRepository userIncomeRepository,
-                                   UserVehicleRepository userVehicleRepository,
                                    EncryptionDecryptionUtil encryptionDecryptionUtil,
                                    FamilyConfigurationService familyConfigurationService) {
         this(familyRestRepository, assetAuthorizationService, userRepository, addressRepository,
-             userDocumentRepository, userPropertyRepository, userIncomeRepository, userVehicleRepository,
-             encryptionDecryptionUtil, familyConfigurationService, null);
+             userDocumentRepository, encryptionDecryptionUtil, familyConfigurationService, null);
     }
 
     /**
      * Searches complete family household details by familyId, resolving active members
-     * from upyog-family-service and enriching each member with demographics, addresses, documents,
-     * vehicles, income, and properties from egov-user core registry.
+     * from upyog-family-service and enriching each member with demographics, addresses, and documents
+     * from egov-user core registry.
      *
      * @param request family profile search request payload
      * @return {@link FamilyProfileResponse} containing the complete family unit aggregate with enriched members
@@ -186,13 +163,8 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
             // 5. Batch pre-fetch related postal addresses and uploaded KYC documents
             batchEnrichAddressesAndDocuments(userMap, memberUuids, stateTenant);
 
-            // 6. Batch pre-fetch 3NF assets (vehicles, income, properties)
-            Map<String, List<UserVehicle>> vehiclesByUser = userVehicleRepository.findVehiclesByUserUuids(memberUuids, Boolean.TRUE);
-            Map<String, UserIncome> incomeByUser = userIncomeRepository.findActiveIncomesByUserUuids(memberUuids, Boolean.TRUE);
-            Map<String, List<UserProperty>> propertiesByUser = userPropertyRepository.findPropertiesByUserUuids(memberUuids, Boolean.TRUE);
-
-            // 7. Enrich member aggregates with profiles and assets (enforcing data minimisation for non-HoF callers)
-            enrichFamilyMembers(familyDetail, userMap, vehiclesByUser, incomeByUser, propertiesByUser, accessContext);
+            // 6. Enrich member aggregates with profiles (enforcing data minimisation for non-HoF callers)
+            enrichFamilyMembers(familyDetail, userMap, accessContext);
 
             // 8. Enrich headName on family aggregate if missing
             if (StringUtils.isBlank(familyDetail.getHeadName()) && StringUtils.isNotBlank(familyDetail.getHeadUserUuid())) {
@@ -459,9 +431,6 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
 
     private void enrichFamilyMembers(FamilyDetail familyDetail,
                                      Map<String, User> userMap,
-                                     Map<String, List<UserVehicle>> vehiclesByUser,
-                                     Map<String, UserIncome> incomeByUser,
-                                     Map<String, List<UserProperty>> propertiesByUser,
                                      FamilyAccessContext accessContext) {
         if (familyDetail.getMembers() == null) {
             return;
@@ -480,21 +449,8 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
             boolean isCallerSelf = callerUuid != null && callerUuid.equalsIgnoreCase(userUuid);
             boolean canViewFull = allowFullViewAll || isCallerSelf;
 
-            List<UserVehicle> memberVehicles = vehiclesByUser != null && userUuid != null
-                    ? vehiclesByUser.getOrDefault(userUuid, Collections.emptyList())
-                    : Collections.emptyList();
-            UserIncome memberIncome = incomeByUser != null && userUuid != null
-                    ? incomeByUser.get(userUuid)
-                    : null;
-            List<UserProperty> memberProperties = propertiesByUser != null && userUuid != null
-                    ? propertiesByUser.getOrDefault(userUuid, Collections.emptyList())
-                    : Collections.emptyList();
-
             if (user != null) {
                 if (canViewFull) {
-                    user.setVehicles(memberVehicles);
-                    user.setIncome(memberIncome);
-                    user.setProperties(memberProperties);
                     user.setFamilyId(familyDetail.getFamilyId());
 
                     UserSearchResponseContent profileContent = new UserSearchResponseContent(user, ALL_INCLUDES);
@@ -504,17 +460,6 @@ public class FamilyProfileServiceImpl implements FamilyProfileService {
                     UserSearchResponseContent summaryContent = new UserSearchResponseContent(user, SUMMARY_INCLUDES);
                     member.setProfile(summaryContent);
                 }
-            }
-
-            if (canViewFull) {
-                member.setVehicles(memberVehicles);
-                member.setIncome(memberIncome);
-                member.setProperties(memberProperties);
-            } else {
-                // Data minimisation: other members' vehicles, income, and properties omitted
-                member.setVehicles(Collections.emptyList());
-                member.setIncome(null);
-                member.setProperties(Collections.emptyList());
             }
         }
     }

@@ -70,21 +70,6 @@ public class IdGenRepositoryImpl implements IdGenRepository {
      * {@inheritDoc}
      */
     @Override
-    public String generateRuralPropertyId(RequestInfo requestInfo, String tenantId) {
-        if (StringUtils.isBlank(configuration.getIdGenRuralPropertyIdName())) {
-            throw new CustomException("INVALID_CONFIGURATION", "egov.idgen.rural.property.id.name is not configured");
-        }
-        List<String> ids = getIdList(requestInfo, tenantId, configuration.getIdGenRuralPropertyIdName(), null, 1);
-        if (CollectionUtils.isEmpty(ids)) {
-            throw new CustomException("IDGEN_ERROR", "Failed to generate rural property ID from idgen");
-        }
-        return ids.get(0);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     @SuppressWarnings("unchecked")
     public List<String> getIdList(RequestInfo requestInfo, String tenantId, String idName, String format, int count) {
         if (count <= 0) {
