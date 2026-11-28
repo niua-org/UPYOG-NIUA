@@ -449,9 +449,8 @@ public class UserClientImpl implements UserClient {
     @Override
     @SuppressWarnings("unchecked")
     public boolean validatePropertyConsentToken(String propertyId, String consentToken, RequestInfo requestInfo) {
-        return  true;
         // Fast-fail if propertyId or consentToken is empty or blank
-      /*  if (StringUtils.isBlank(propertyId) || StringUtils.isBlank(consentToken)) {
+        if (StringUtils.isBlank(propertyId) || StringUtils.isBlank(consentToken)) {
             return false;
         }
         // Fail closed if userHost is unconfigured
@@ -488,7 +487,7 @@ public class UserClientImpl implements UserClient {
         } catch (Exception e) {
             log.error("[USER-CLIENT] Failed to validate property consent token at {}: {}", url, e.getMessage());
             return false;
-        }*/
+        }
     }
 
     /**
