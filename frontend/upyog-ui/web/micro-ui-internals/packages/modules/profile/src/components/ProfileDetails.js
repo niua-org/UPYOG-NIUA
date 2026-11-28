@@ -22,7 +22,7 @@ const useProfileUser = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const uuid = Digit.UserService.getUser()?.info?.uuid;
-  const tenantId = Digit.ULBService.getCurrentTenantId();
+  const tenantId =  Digit.ULBService.getCitizenCurrentTenant(true) || Digit.ULBService.getCurrentTenantId();
 
   const isMountedRef = useRef(true);
   const requestIdRef = useRef(0);

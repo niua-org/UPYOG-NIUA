@@ -153,7 +153,10 @@ const FamilyDashboard = () => {
                   <span className="family-dashboard-bullet">•</span>
                   <span>
                      {isCurrentUser ? (
-                      <span className="family-dashboard-you-text">{t("CORE_COMMON_YOU")}</span>
+                      <>
+                      {relationship}
+                      {isCurrentUser&&<span className="family-dashboard-you-text">{t("CORE_COMMON_YOU")}</span>}
+                      </>
                     ) : (
                       <>
                       {relationship}
