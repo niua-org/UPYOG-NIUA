@@ -451,44 +451,46 @@ public class UserClientImpl implements UserClient {
     public boolean validatePropertyConsentToken(String propertyId, String consentToken, RequestInfo requestInfo) {
         return true;
         // Fast-fail if propertyId or consentToken is empty or blank
-        // if (StringUtils.isBlank(propertyId) || StringUtils.isBlank(consentToken)) {
-        //     return false;
-        // }
-        // // Fail closed if userHost is unconfigured
-        // if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
-        //     log.error("[USER-CLIENT] User service host is not configured; failing closed for property consent validation.");
-        //     throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_HOST_NOT_CONFIGURED);
-        // }
+        /*
+        if (StringUtils.isBlank(propertyId) || StringUtils.isBlank(consentToken)) {
+            return false;
+        }
+        // Fail closed if userHost is unconfigured
+        if (configuration == null || StringUtils.isBlank(configuration.getUserHost())) {
+            log.error("[USER-CLIENT] User service host is not configured; failing closed for property consent validation.");
+            throw new CustomException(FamilyConstants.ERROR_INVALID_REQUEST, FamilyConstants.MSG_USER_HOST_NOT_CONFIGURED);
+        }
 
-        // // Resolve validation endpoint path from configuration
-        // String path = configuration.getUserPropertyConsentValidatePath();
-        // if (StringUtils.isBlank(path)) {
-        //     log.error("[USER-CLIENT] egov.user.property.consent.validate.path is not configured.");
-        //     return false;
-        // }
-        // String url = buildUrl(configuration.getUserHost(), path);
+        // Resolve validation endpoint path from configuration
+        String path = configuration.getUserPropertyConsentValidatePath();
+        if (StringUtils.isBlank(path)) {
+            log.error("[USER-CLIENT] egov.user.property.consent.validate.path is not configured.");
+            return false;
+        }
+        String url = buildUrl(configuration.getUserHost(), path);
 
-        // // Prepare request body with RequestInfo, target propertyId, and consentToken
-        // Map<String, Object> body = new HashMap<>();
-        // body.put(FamilyConstants.PROP_JSON_REQUEST_INFO, requestInfo);
-        // body.put(FamilyConstants.PROP_JSON_PROPERTY_ID, propertyId.trim());
-        // body.put(FamilyConstants.PROP_JSON_CONSENT_TOKEN, consentToken.trim());
+        // Prepare request body with RequestInfo, target propertyId, and consentToken
+        Map<String, Object> body = new HashMap<>();
+        body.put(FamilyConstants.PROP_JSON_REQUEST_INFO, requestInfo);
+        body.put(FamilyConstants.PROP_JSON_PROPERTY_ID, propertyId.trim());
+        body.put(FamilyConstants.PROP_JSON_CONSENT_TOKEN, consentToken.trim());
 
-        // HttpHeaders headers = new HttpHeaders();
-        // headers.setContentType(MediaType.APPLICATION_JSON);
-        // HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
-        // try {
-        //     // Execute remote validation call against egov-user
-        //     Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
-        //     if (response != null && response.containsKey(FamilyConstants.PROP_JSON_VALID)) {
-        //         return Boolean.TRUE.equals(response.get(FamilyConstants.PROP_JSON_VALID));
-        //     }
-        //     return false;
-        // } catch (Exception e) {
-        //     log.error("[USER-CLIENT] Failed to validate property consent token at {}: {}", url, e.getMessage());
-        //     return false;
-        // }
+        try {
+            // Execute remote validation call against egov-user
+            Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
+            if (response != null && response.containsKey(FamilyConstants.PROP_JSON_VALID)) {
+                return Boolean.TRUE.equals(response.get(FamilyConstants.PROP_JSON_VALID));
+            }
+            return false;
+        } catch (Exception e) {
+            log.error("[USER-CLIENT] Failed to validate property consent token at {}: {}", url, e.getMessage());
+            return false;
+        }
+        */
     }
 
     /**
