@@ -325,7 +325,7 @@ public class UserRegistryServiceImpl implements UserRegistryService {
                     .queryParam("memberUserUuid", userUuid)
                     .queryParam("status", "ACTIVE");
             if (StringUtils.isNotBlank(tenantId)) {
-                uriBuilder.queryParam(TENANT_ID, resolveTenantId(tenantId));
+                uriBuilder.queryParam(TENANT_ID, tenantId);
             }
 
             HttpHeaders headers = new HttpHeaders();
