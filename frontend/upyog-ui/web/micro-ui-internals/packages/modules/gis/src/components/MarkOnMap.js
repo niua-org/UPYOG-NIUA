@@ -56,7 +56,7 @@ const MarkOnMap = ({
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // 🔥 destroy old map if exists
+    // destroy old map if exists
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
@@ -114,7 +114,7 @@ const MarkOnMap = ({
 
     mapInstanceRef.current = map;
 
-    // 🔥 fix half map issue
+    // fix half map issue
     setTimeout(() => map.invalidateSize(), 200);
 
     return () => {
@@ -126,6 +126,8 @@ const MarkOnMap = ({
   useEffect(() => {
     if (geometry && area) {
       setShowToast({ label: "Marking Successfully Captured" });
+      const timer = setTimeout(() => setShowToast(null), 2000);
+      return () => clearTimeout(timer);
     }
   }, [geometry, area]);
 

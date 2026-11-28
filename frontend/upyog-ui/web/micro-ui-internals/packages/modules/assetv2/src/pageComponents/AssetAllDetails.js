@@ -18,6 +18,21 @@ import { assetStyles } from "../utils/assetStyles";
 import { validateMandatoryFields } from "../utils";
 import { MarkOnMap } from "@nudmcdgnpm/upyog-ui-module-gis";
 
+
+/**
+ * AssetAllDetails Component
+ *
+ * Handles the complete asset details form, including:
+ * - Asset classification, parent category, category and subcategory selection.
+ * - Dynamic form fields based on MDMS configuration.
+ * - Asset general, acquisition, physical and financial details.
+ * - Conditional field visibility and clearing of stale values on category changes.
+ * - Depreciation details and book value calculation.
+ * - Address, location and GIS map-based geometry/area selection.
+ * - Document uploads and mandatory document validation.
+ * - Form data validation and submission to the next workflow step.
+ */
+
 const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   const { control } = useForm({
     defaultValues: {
@@ -68,19 +83,16 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
   const [enableSubmit, setEnableSubmit] = useState(true);
   const [checkRequiredFields, setCheckRequiredFields] = useState(true);
 
-  const [geometry, setGeometry] = useState(formData.assetDetails?.geometry || null);
+  const [geometry, setGeometry] = useState(formData?.assetDetails?.geometry || null);
   const [showMap, setShowMap] = useState(false);
-  const [area, setArea] = useState(formData.assetDetails?.area || null);
+  const [area, setArea] = useState(formData?.assetDetails?.area || null);
 
-  const [assetDetails, setAssetDetails] = useState(
-    formData?.assetDetails
-      ? formData?.assetDetails
-      : {
-        assetParentCategory: formData?.asset?.assettype?.code,
-        geometry: formData?.assetDetails?.geometry || null,
-        area: formData?.assetDetails?.area || null,
-      }
-  );
+  const [assetDetails, setAssetDetails] = useState(() => ({
+    ...(formData?.assetDetails || {}),
+    assetParentCategory: formData?.asset?.assettype?.code || formData?.assetDetails?.assetParentCategory || "",
+    geometry: formData?.assetDetails?.geometry || null,
+    area: formData?.assetDetails?.area || null,
+  }));
 
   const cities = allCities?.filter((city) => city.code === tenantId);
 
@@ -112,8 +124,6 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     });
 
   const [currentLocation, setCurrentLocation] = useState(null);
-
-  const [categoriesWiseData, setCategoriesWiseData] = useState();
 
   // const { data: Menu_Asset } = Digit.Hooks.asset.useAssetClassification(stateTenantId, "ASSETV2", "assetClassification"); // hook for asset classification Type
   const { data: Menu_Asset } = Digit.Hooks.useEnabledMDMS(Digit.ULBService.getStateId(), "ASSETV2", [{ name: "assetClassification" }], {
@@ -218,32 +228,28 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
     },
   });
 
+  const categoriesWiseData = stateResponseObject?.data;
+
   const { isLoading: isDocumentLoading, data: documentData } = Digit.Hooks.asset.useAssetDocumentsMDMS(stateTenantId, "ASSET", "Documents");
 
-  useEffect(() => {
-    let combinedData;
-    // if city level master is not available then fetch  from state-level
-    if (stateResponseObject?.data) {
-      combinedData = stateResponseObject.data;
-    } else {
-      combinedData = []; // Or an appropriate default value for empty data
-    }
-    setCategoriesWiseData(combinedData);
-  }, [stateResponseObject]);
 
-  let formJson = [];
-  if (Array.isArray(categoriesWiseData)) {
-    // Filter categories based on the selected assetParentCategory
-    formJson = categoriesWiseData
-      .filter((category) => {
-        const isMatch = category.assetParentCategory === assettype?.code || category.assetParentCategory === "COMMON";
-        return isMatch;
-      })
-      .map((category) => category.fields) // Extract the fields array
-      .flat() // Flatten the fields array
-      .filter((field) => field.active === true && field.isNeeded !== false); // Filter by active status
-  };
+  // Generate dynamic form fields
+  const formJson = useMemo(() => {
+    if (!Array.isArray(categoriesWiseData)) return [];
 
+    return categoriesWiseData
+      .filter(
+        (category) =>
+          category.assetParentCategory === assettype?.code ||
+          category.assetParentCategory === "COMMON"
+      )
+      .flatMap((category) => category.fields || [])
+      .filter(
+        (field) => field.active === true && field.isNeeded !== false
+      );
+  }, [categoriesWiseData, assettype?.code]);
+
+  // Validate mandatory fields
   const isFormValid = useMemo(() => {
     return validateMandatoryFields(formJson, assetDetails);
   }, [formJson, assetDetails]); // Dependencies: recalculate when these change
@@ -290,8 +296,9 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
         code: `${asset_type_mdms.code}`,
         value: `${asset_type_mdms.name}`,
         assetClassification: `${asset_type_mdms.assetClassification}`,
-        depriciationRate: `${asset_type_mdms.depriciationRate}`,
-        depriciationMethod: `${asset_type_mdms.depriciationMethod}`,
+        depriciationRate: asset_type_mdms.depriciationRate ?? "",
+        // MDMS stores the option code; resolve it against the dynamic field options below.
+        depriciationMethod: asset_type_mdms.depriciationMethod ?? "",
       });
     });
 
@@ -360,70 +367,111 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
 
 
-  // Set State Dynamically!
-  const handleInputChange = (e) => {
-    // Get the name & value from the input and select field
-    const { name, value } = e.target ? e.target : { name: e.name, value: e };
+  // Resolve dropdown values consistently. DIGIT Dropdown expects the complete option object.
+  const getOptionByCode = (options = [], value) => {
+    if (!value) return "";
+    const code = typeof value === "object" ? value.code : value;
+    return options.find((option) => option.code === code || option.value === code || option.i18nKey === code) || "";
+  };
 
-    if (name === "area" && value.length > 8) {
-      // Validation for life of Asset
+  const getDynamicFieldsForParent = (parentCode) => {
+    if (!Array.isArray(categoriesWiseData)) return [];
+    return categoriesWiseData
+      .filter((category) => category.assetParentCategory === parentCode || category.assetParentCategory === "COMMON")
+      .flatMap((category) => category.fields || [])
+      .filter((field) => field.active === true && field.isNeeded !== false);
+  };
+
+  const clearFieldsNoLongerAvailable = (currentDetails, previousParentCode, nextParentCode) => {
+    const previousFields = getDynamicFieldsForParent(previousParentCode);
+    const nextFieldNames = new Set(getDynamicFieldsForParent(nextParentCode).map((field) => field.name));
+    const nextDetails = { ...currentDetails };
+
+    previousFields.forEach((field) => {
+      if (!nextFieldNames.has(field.name)) nextDetails[field.name] = "";
+    });
+
+    return nextDetails;
+  };
+
+  const clearHiddenConditionalFields = (details, fields) => {
+    const nextDetails = { ...details };
+    let changed = true;
+    // Repeat so nested conditional fields are cleared after their parent field is cleared.
+    while (changed) {
+      changed = false;
+      fields.forEach((field) => {
+        if (!field.conditionalField) return;
+        const { dependsOn, showWhen } = field.conditionalField;
+        const dependency = nextDetails[dependsOn];
+        const dependencyValue = dependency && typeof dependency === "object" ? dependency.code : dependency;
+        if (dependencyValue !== showWhen && nextDetails[field.name] !== "") {
+          nextDetails[field.name] = "";
+          changed = true;
+        }
+      });
+    }
+    return nextDetails;
+  };
+
+  // Set State Dynamically. Hidden/disabled dependent values are also removed from the payload.
+  const handleInputChange = (e) => {
+    const { name, value } = e?.target ? e.target : { name: e.name, value: e.value ?? e };
+    if (!name) return;
+
+    if (name === "area" && String(value ?? "").length > 8) {
       setShowToast({ error: true, label: t("NUMBER_CANT_GO_MORE_THAN_THIS") });
-      return false;
+      return;
     }
 
     setAssetDetails((prevData) => {
-      // Update the current field
-      const updatedData = {
-        ...prevData,
-        [name]: value,
-      };
+      let updatedData = { ...prevData, [name]: value };
 
-      // Check if both acquisitionCost and purchaseCost are set and calculate bookValue
-      const acquisitionCost = parseFloat(updatedData.acquisitionCost) || 0;
-      const purchaseCost = parseFloat(updatedData.purchaseCost) || 0;
-
-      if (acquisitionCost >= 0 || purchaseCost >= 0) {
-        updatedData.bookValue = acquisitionCost + purchaseCost;
+      // Clear values belonging to mutually exclusive acquisition modes.
+      if (name === "modeOfPossessionOrAcquisition") {
+        const mode = value?.code ?? value;
+        if (mode !== "PURCHASE") {
+          updatedData.purchaseDate = "";
+          updatedData.purchaseOrderNumber = "";
+        }
+        if (mode !== "CONSTRUCTED") {
+          updatedData.estimateConstructionDate = "";
+          updatedData.dateOfConstruction = "";
+          updatedData.costOfCostruction = "";
+        }
       }
 
+      // If a conditional controller changes, remove values from fields that are now hidden.
+      updatedData = clearHiddenConditionalFields(updatedData, formJson);
+
+      const acquisitionCost = Number.parseFloat(updatedData.acquisitionCost) || 0;
+      const purchaseCost = Number.parseFloat(updatedData.purchaseCost) || 0;
+      updatedData.bookValue = acquisitionCost + purchaseCost;
       return updatedData;
     });
   };
 
   useEffect(() => {
     if (assettype?.assetClassification && menu_Asset.length > 0) {
-      // Automatically set the filtered classification
-      setassetclassification(menu_Asset[0]);
+      const selectedClassification = menu_Asset[0];
+      setassetclassification(selectedClassification);
     } else if (!assettype) {
-      // Clear when no parent selected
       setassetclassification("");
     }
-  }, [assettype, menu_Asset.length]);
+  }, [assettype, Menu_Asset]);
 
+  // Parent category supplies depreciation defaults. The method is stored as the exact
+  // option object from AssetParentCategoryFields so the dropdown can display it correctly.
   useEffect(() => {
-    if (assettype?.code && assettype?.depriciationRate) {
-      // Auto-populate depreciation rate from selected asset type
-      setAssetDetails((prevDetails) => ({
-        ...prevDetails,
-        depriciationRate: assettype.depriciationRate,
-        // Also set depreciation method if it exists
-        ...(assettype.depriciationMethod && {
-          depriciationMethod: {
-            code: assettype.depriciationMethod,
-            i18nKey: assettype.depriciationMethod,
-            value: assettype.depriciationMethod,
-          },
-        }),
-      }));
-    } else if (!assettype) {
-      // Clear depreciation rate when no asset type is selected
-      setAssetDetails((prevDetails) => ({
-        ...prevDetails,
-        depriciationRate: "",
-        depriciationMethod: "",
-      }));
-    }
-  }, [assettype]);
+    const methodField = formJson.find((field) => field.name === "depriciationMethod");
+    const selectedMethod = getOptionByCode(methodField?.options || [], assettype?.depriciationMethod);
+
+    setAssetDetails((prevDetails) => ({
+      ...prevDetails,
+      depriciationRate: assettype?.depriciationRate ?? "",
+      depriciationMethod: selectedMethod,
+    }));
+  }, [assettype, formJson]);
 
   useEffect(() => {
     if (showToast) {
@@ -455,6 +503,33 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
       alert("Geolocation is not supported by your browser.");
     }
   };
+
+  function setAssetType(nextAssetType) {
+    const nextType = nextAssetType || "";
+    const previousCode = assettype?.code;
+    const nextCode = nextType?.code;
+
+    setassettype(nextType);
+    setassetsubtype("");
+
+    setAssetDetails((previousDetails) => {
+      let nextDetails = clearFieldsNoLongerAvailable(previousDetails, previousCode, nextCode);
+      nextDetails.assetParentCategory = nextCode || "";
+
+      // Depreciation values are category-specific and will be repopulated by the effect.
+      nextDetails.depriciationRate = "";
+      nextDetails.depriciationMethod = "";
+
+      // Invoice details are not applicable to land/building categories.
+      if (["LAND", "BUILDING"].includes(nextCode)) {
+        nextDetails.invoiceDate = "";
+        nextDetails.invoiceNumber = "";
+      }
+
+      nextDetails = clearHiddenConditionalFields(nextDetails, getDynamicFieldsForParent(nextCode));
+      return nextDetails;
+    });
+  }
 
   const goNext = () => {
     // Create separate objects for each section
@@ -577,7 +652,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 defaultValue={assettype}
                 rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
                 render={(props) => (
-                  <Dropdown selected={assettype} select={setassettype} option={asset_type} optionKey="i18nKey" placeholder={"Select"} t={t} className="assetv2-asset-all-details-wrapper" />
+                  <Dropdown selected={assettype || ""} select={setAssetType} option={asset_type} optionKey="i18nKey" placeholder={"Select"} t={t} className="assetv2-asset-all-details-wrapper" />
                 )}
               />
             </div>
@@ -627,8 +702,8 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 rules={{ required: t("CORE_COMMON_REQUIRED_ERRMSG") }}
                 render={(props) => (
                   <Dropdown
-                    selected={assetsubtype}
-                    select={setassetsubtype}
+                    selected={assetsubtype || ""}
+                    select={(value) => setassetsubtype(value || "")}
                     option={asset_sub_type}
                     optionKey="i18nKey"
                     placeholder={"Select"}
@@ -756,9 +831,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                             <Dropdown
                               // className="form-field"
                               selected={assetDetails[row.name]}
-                              select={(value) => {
-                                handleInputChange({ name: row.name, ...value });
-                              }}
+                              select={(value) => handleInputChange({ name: row.name, value })}
                               option={row.options}
                               optionKey="i18nKey"
                               placeholder={"Select"}
@@ -829,8 +902,8 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
 
               {assetDetails?.location && (
                 <div>
-                  <button className="assetv2-asset-all-details-action-btn" onClick={() => setShowMap(true)}>
-                    {geometry ? "Edit Marked Asset" : "Mark Asset on Map"}
+                  <button type="button" className="assetv2-asset-all-details-action-btn" onClick={() => setShowMap(true)}>
+                    {geometry ? t("ASSET_EDIT_MAP") : t("ASSET_MARK_MAP")}
                   </button>
                 </div>
               )}
@@ -869,7 +942,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 type={"tel"}
                 isMandatory={false}
                 optionKey="i18nKey"
-                onKeyPress={specialCharacterValidation}
+                onKeyPress={additionalNumberValidation}
                 name="plotNumber"
                 value={address?.plotNumber || ""}
                 onChange={(e) => {
@@ -877,7 +950,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                 }}
                 {...(validation = {
                   isRequired: true,
-                  pattern: regexPattern("text"),
+                  pattern: "^[0-9]+$",
                   type: "text",
                   title: t("VALID_LAT_LONG"),
                 })}
@@ -944,13 +1017,14 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
               </div>
               <TextInput
                 t={t}
-                type={"tel"}
+                type={"text"}
                 isMandatory={false}
                 optionKey="i18nKey"
                 onKeyPress={additionalNumberValidation}
                 name="pincode"
                 value={address?.pincode || ""}
                 onChange={(e) => {
+                  if (e.target.value.length > 6) return;
                   setAddress({ ...address, pincode: e.target.value });
                 }}
                 {...(validation = {
@@ -1491,7 +1565,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                             <Dropdown
                               // className="form-field"
                               selected={assetDetails[row.name]}
-                              select={(value) => handleInputChange({ name: row.name, ...value })}
+                              select={(value) => handleInputChange({ name: row.name, value })}
                               option={row.options}
                               optionKey="i18nKey"
                               placeholder={"Select"}
@@ -1628,7 +1702,7 @@ const AssetAllDetails = ({ t, config, onSelect, userType, formData }) => {
                             <Dropdown
                               // className="form-field"
                               selected={assetDetails[row.name]}
-                              select={(value) => handleInputChange({ name: row.name, ...value })}
+                              select={(value) => handleInputChange({ name: row.name, value })}
                               option={row.options}
                               optionKey="i18nKey"
                               placeholder={"Select"}
@@ -1791,6 +1865,7 @@ function DocumentUploadField({ t, document: doc, setDocuments, setError, documen
 
   if (doc?.code === "OWNER.ASSETPHOTO" && (!latitude || !longitude)) {
     setError("Please upload a photo with location details");
+    setTimeout(() => setError(null), 2000); // to clear the toast
   }
 };
 
