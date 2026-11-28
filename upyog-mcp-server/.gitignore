@@ -1,0 +1,8 @@
+target/
+logs/
+scripts/mcp-smoke-test.env
+.idea/
+*.iml
+.classpath
+.project
+.settings/

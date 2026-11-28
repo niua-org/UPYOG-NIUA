@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upyog-mcp-server
+  namespace: egov
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: upyog-mcp-server
+  template:
+    metadata:
+      labels:
+        app: upyog-mcp-server
+    spec:
+      containers:
+        - name: upyog-mcp-server
+          image: upyog-mcp-server:1.0.0-SNAPSHOT
+          ports:
+            - containerPort: 8088
+          env:
+            - name: UPYOG_GATEWAY_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: upyog-mcp-server
+                  key: gateway-base-url
+            - name: UPYOG_UI_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: upyog-mcp-server
+                  key: ui-base-url
+            - name: UPYOG_MCP_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: upyog-mcp-server
+                  key: token-secret
+            - name: REDIS_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: upyog-mcp-server
+                  key: redis-enabled
+            - name: REDIS_URI
+              valueFrom:
+                secretKeyRef:
+                  name: upyog-mcp-server
+                  key: redis-uri
+            - name: UPYOG_MCP_TRUST_GATEWAY_IDENTITY
+              value: "true"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8088
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8088
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: upyog-mcp-server
+  namespace: egov
+spec:
+  selector:
+    app: upyog-mcp-server
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8088
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upyog-mcp-server
+  namespace: egov
+data:
+  gateway-base-url: http://gateway.egov:8080
+  ui-base-url: https://upyog.niua.org
+  redis-enabled: "true"
+  trust-gateway-identity: "true"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: upyog-mcp-server
+  namespace: egov
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: upyog-mcp-server
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
