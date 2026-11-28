@@ -63,7 +63,7 @@ def _load_config() -> dict:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config_path = os.path.join(base_dir, "config.yml")
     try:
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             cfg = yaml.safe_load(f)
         logger.info(f"Config loaded from {config_path}")
         return cfg.get("upyog", {})
@@ -897,15 +897,18 @@ def slot_search(addType: str, faceArea: str, location: str,
     if not req_info:
         req_info = api_client.get_system_request_info()
 
+    # UPYOG /_slot-search expects nightLight as a string ("true"/"false") and bookingId="" to match the frontend payload
+    is_nl_req=nightLight is True or str(nightLight).strip().lower() in ("true","yes","1")
     payload = {
         "RequestInfo": req_info,
         "advertisementSlotSearchCriteria": [{
+            "bookingId": "",
             "addType":          addType,
             "faceArea":         faceArea,
             "location":         location,
             "bookingStartDate": start_date,
             "bookingEndDate":   end_date,
-            "nightLight":       str(nightLight).lower() == "true" or nightLight is True or str(nightLight).lower() == "yes",
+            "nightLight":  "true" if is_nl_req else "false",           
             "isTimerRequired":  False,
             "tenantId":         tenant_id
         }]
@@ -928,10 +931,16 @@ def slot_search(addType: str, faceArea: str, location: str,
                 if not d or str(d).strip() <= today_str:
                     continue
 
+                # Parse nightLight explicitly so string "false" isn't treated as truthy in Python
+                raw_nl = s.get("nightLight")
+                if raw_nl is None:
+                    raw_nl=is_nl_req
+                is_nl_slot = raw_nl is True or str(raw_nl).strip().lower() in ("true", "yes", "1")
+
                 normalized.append({
                     "type":   s.get("addType")       or addType,
                     "area":   s.get("faceArea")       or faceArea,
-                    "light":  "Yes" if s.get("nightLight", nightLight) else "No",
+                    "light":  "Yes" if is_nl_slot else "No",
                     "date":   d,
                     "status": s.get("status") or s.get("bookingStatus") or "AVAILABLE"
                 })

@@ -16,6 +16,14 @@ from prompts.workflow_prompts import (
 )
 from services.validator import validate_field
 from workflow.base_state import BaseAgentState
+from services.nlu_lexicon import (
+    is_bare_negation,
+    is_start_new_workflow,
+    is_generic_service_initiation,
+    is_explicit_cancel,
+    is_affirmative,
+    EXCLUDED_FIELD_WORDS
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,24 +60,96 @@ class GrievanceState(BaseAgentState):
 # CONFIG
 # ==========
 
-_this_dir = os.path.dirname(os.path.abspath(__file__))
-_config_path = os.path.join(os.path.dirname(_this_dir), "config.yml")
-if not os.path.exists(_config_path):
-    _config_path = os.path.join(_this_dir, "config.yml")
+# _this_dir = os.path.dirname(os.path.abspath(__file__))
+# _config_path = os.path.join(os.path.dirname(_this_dir), "config.yml")
+# if not os.path.exists(_config_path):
+#     _config_path = os.path.join(_this_dir, "config.yml")
 
-try:
-    with open(_config_path, "r") as _f:
-        _raw_cfg = yaml.safe_load(_f)
-except Exception as e:
-    logger.error(f"Failed to load config.yml in grievance.py: {e}")
-    _raw_cfg = {}
+# try:
+#     with open(_config_path, encoding="utf-8", "r") as _f:
+#         _raw_cfg = yaml.safe_load(_f)
+# except Exception as e:
+#     logger.error(f"Failed to load config.yml in grievance.py: {e}")
+#     _raw_cfg = {}
 
-_grv_form_cfg = _raw_cfg.get("forms", {}).get("grievance", {})
-FORM_FIELDS   = _grv_form_cfg.get("fields", [])
-ALL_FIELDS    = [f["id"] for f in FORM_FIELDS]
-# Only fields explicitly enabled in config.yml are eligible for chat extraction.
-EXTRACTABLE_FIELDS = [f["id"] for f in FORM_FIELDS if f.get("extractable", False)]
-FIELD_HINTS   = {f["id"]: f.get("label", f["id"]) for f in FORM_FIELDS}
+# _grv_form_cfg = _raw_cfg.get("forms", {}).get("grievance", {})
+# FORM_FIELDS   = _grv_form_cfg.get("fields", [])
+# ALL_FIELDS    = [f["id"] for f in FORM_FIELDS]
+# # Only fields explicitly enabled in config.yml are eligible for chat extraction.
+# EXTRACTABLE_FIELDS = [f["id"] for f in FORM_FIELDS if f.get("extractable", False)]
+# FIELD_HINTS   = {f["id"]: f.get("label", f["id"]) for f in FORM_FIELDS}
+
+def load_and_validate_grievance_config(config_path: str = None, yaml_content: str = None):
+    """
+    Loads and validates grievance form configuration from config.yml.
+    
+    Why this is required:
+    1. Uses encoding="utf-8" so Windows doesn't crash on Hindi characters (e.g. नमस्ते).
+    2. Validates that required fields actually exist instead of silently returning empty lists.
+    3. Prevents the bot from ever entering an empty or broken workflow state.
+    """
+    if yaml_content is not None:
+        raw_cfg = yaml.safe_load(yaml_content) or {}
+    else:
+        if not config_path:
+            this_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(os.path.dirname(this_dir), "config.yml")
+            if not os.path.exists(config_path):
+                config_path = os.path.join(this_dir, "config.yml")
+
+        if not os.path.exists(config_path):
+            raise FileNotFoundError(f"Configuration file not found at: {config_path}")
+
+        # Note: "r" must come before encoding="utf-8"
+        with open(config_path, "r", encoding="utf-8") as f:
+            raw_cfg = yaml.safe_load(f) or {}
+
+    # Check that the grievance form section exists
+    forms_cfg = raw_cfg.get("forms")
+    if not isinstance(forms_cfg, dict) or "grievance" not in forms_cfg:
+        raise ValueError("Configuration error: Missing 'forms.grievance' section in config.yml")
+
+    # Check that grievance fields list is present and non-empty
+    grv_form_cfg = forms_cfg.get("grievance", {})
+    form_fields = grv_form_cfg.get("fields")
+    if not isinstance(form_fields, list) or len(form_fields) == 0:
+        raise ValueError("Configuration error: 'forms.grievance.fields' must be a non-empty list")
+
+    # Validate each individual field definition
+    seen_ids = set()
+    valid_types = {"text", "dropdown", "date", "slots", "file", "number", "choice", "checkbox"}
+
+    for idx, field in enumerate(form_fields):
+        if not isinstance(field, dict):
+            raise ValueError(f"Configuration error: Field at index {idx} must be a dictionary")
+
+        f_id = field.get("id")
+        if not f_id or not isinstance(f_id, str) or not f_id.strip():
+            raise ValueError(f"Configuration error: Field at index {idx} is missing a valid 'id'")
+
+        if f_id in seen_ids:
+            raise ValueError(f"Configuration error: Duplicate field ID '{f_id}' found at index {idx}")
+        seen_ids.add(f_id)
+
+        f_label = field.get("label")
+        if not f_label or not isinstance(f_label, str) or not f_label.strip():
+            raise ValueError(f"Configuration error: Field '{f_id}' is missing a valid 'label'")
+
+        f_type = field.get("type")
+        if not f_type or f_type not in valid_types:
+            raise ValueError(f"Configuration error: Field '{f_id}' has an invalid widget type '{f_type}'")
+
+    # Compute lookup variables used by the rest of the workflow
+    all_fields = [f["id"] for f in form_fields]
+    extractable_fields = [f["id"] for f in form_fields if f.get("extractable", False)]
+    field_hints = {f["id"]: f.get("label", f["id"]) for f in form_fields}
+
+    return form_fields, all_fields, extractable_fields, field_hints
+
+
+# Load and validate configuration at startup
+FORM_FIELDS, ALL_FIELDS, EXTRACTABLE_FIELDS, FIELD_HINTS = load_and_validate_grievance_config()
+
 
 
 # Checks the draft memory and figures out which complaint detail is missing next
@@ -126,19 +206,38 @@ def intent_and_ui_node(state: GrievanceState):
     user_msg     = messages[-1].content if messages else ""
     ui_lower     = user_msg.lower().strip()
 
+    # CLEAR STALE FLAGS FROM PREVIOUS SESSIONS:
+    # Why this is required:
+    # If a citizen previously cancelled or completed a complaint, LangGraph's persistent
+    # checkpointer retains '_cancelled: True' or '_confirmed: True' in memory for this phone number.
+    # When the citizen sends a fresh message, we must clear these flags so the router
+    # does not mistakenly cancel or re-submit their new request.
+
+    draft.pop("_cancelled", None)
+    draft.pop("_confirmed", None)
+    
+    # If the draft fields are empty, ensure awaiting confirmation is also cleared
+    if not all(draft.get(f) for f in ALL_FIELDS):
+        draft.pop("_awaiting_confirm", None)
+
     # Cancel command from draft management system
     if user_msg == "[CANCEL_DRAFT]":
         draft = {f: None for f in ALL_FIELDS}
+        draft.pop("_awaiting_confirm", None)
         MemoryManager.delete_draft_state(phone_number, "grievance")
         return {"draft_grievance": draft, "missing_fields": ALL_FIELDS}
 
-    # Reset — only match deliberate cancel/reset phrases, not substrings
-    reset_phrases = [
-        r"\bstart over\b", r"\bcancel\b", r"\brestart\b",
-        r"\bnew complaint\b", r"\bstart new\b", r"\bclear draft\b",
-        r"\breset\b", r"\bshuruaat karo\b"
-    ]
-    if any(re.search(p, ui_lower) for p in reset_phrases) and not draft.get("_awaiting_confirm"):
+    # 1. START NEW / ANOTHER COMPLAINT:
+    # Handles: "file another complaint", "new complaint", "start over", "register another complaint"
+    # Works ANYTIME — even if currently awaiting confirmation on a previous draft!
+    if is_start_new_workflow(ui_lower):
+        logger.info(f"[grievance.intent_and_ui] Citizen requested fresh complaint: '{user_msg}'. Discarding old draft.")
+        draft = {f: None for f in ALL_FIELDS}
+        draft.pop("_awaiting_confirm", None)
+        MemoryManager.delete_draft_state(phone_number, "grievance")
+        return {"draft_grievance": draft, "missing_fields": ALL_FIELDS}
+
+    if is_explicit_cancel(ui_lower) and not draft.get("_awaiting_confirm"):
         draft = {f: None for f in ALL_FIELDS}
         MemoryManager.delete_draft_state(phone_number, "grievance")
         resp  = (
@@ -221,23 +320,41 @@ def extraction_node(state: GrievanceState):
 
     user_msg = messages[-1].content.strip()
     ui_lower = user_msg.lower()
+    phone_number = state.get("phone_number", "default")
     last_ai  = ""
     if len(messages) >= 2 and isinstance(messages[-2], AIMessage):
         last_ai = messages[-2].content
 
+    # Detect yes/no at confirmation step using word boundaries
+    # Prevents words like "nothing","normal" from matching "no"
     # Detect yes/no at confirmation step
     if draft.get("_awaiting_confirm"):
-        _confirm = ["yes", "yeah", "yup", "ya", "ok", "okay", "sure", "haan", "confirm",
-                    "submit", "file", "bilkul", "zaroor", "1", "option 1"]
-        _cancel  = ["no", "nope", "cancel", "nahi", "nahin", "mat", "band", "2", "option 2"]
-        if any(w in ui_lower for w in _cancel):
+        clean_msg = ui_lower.strip()
+
+        # If citizen says "file another complaint" or "start new", clear and start fresh
+        if is_start_new_workflow(clean_msg):
+            logger.info(f"[grievance.extraction_node] Citizen requested new complaint at confirmation: '{clean_msg}'. Discarding draft.")
+            draft = {f: None for f in ALL_FIELDS}
+            draft.pop("_awaiting_confirm", None)
+            MemoryManager.delete_draft_state(phone_number, "grievance")
+            return {"draft_grievance": draft, "missing_fields": ALL_FIELDS}
+
+        # 1. Explicit cancellation anywhere in message:
+        # Matches: "cancel", "leave it", "rehne do", "don't want to file", "do not want to continue", "nahi karna"
+        has_cancel = is_explicit_cancel(clean_msg) or is_bare_negation(clean_msg) or clean_msg in ("2", "option 2")
+        has_confirm = is_affirmative(clean_msg)
+
+        if has_cancel and not has_confirm:
             draft["_cancelled"] = True
             draft["_awaiting_confirm"] = False
             return {"draft_grievance": draft}
-        if any(w in ui_lower for w in _confirm):
+        if has_confirm and not has_cancel:
             draft["_confirmed"] = True
             draft["_awaiting_confirm"] = False
             return {"draft_grievance": draft}
+
+        # If user typed something else (e.g. "there is no streetlight in my area"),
+        # do NOT cancel! Keep awaiting_confirm True so the prompt repeats safely.
         return {"draft_grievance": draft}
 
     # Meta / navigation / draft resume commands should NEVER be extracted as form field values
@@ -249,8 +366,14 @@ def extraction_node(state: GrievanceState):
         "start over", "cancel draft", "delete draft", "clear draft",
         "aage badho", "chalu karo", "continue please", "proceed", "next", "skip"
     ]
-    if any(ui_lower == w or ui_lower.startswith(w + " ") for w in meta_commands):
-        logger.info(f"[grievance extract_node] User message '{user_msg}' is a meta/resume command; skipping field extraction.")
+    ui_clean = re.sub(r'[^\w\s]', '', user_msg).strip().lower()
+    is_meta_cmd = any(ui_clean == w or ui_clean.startswith(w + " ") for w in meta_commands)  
+
+    # Navigation / resume commands should NEVER be extracted as form values or trigger validation errors
+    if is_meta_cmd or is_generic_service_initiation(user_msg):
+        logger.info(f"[grievance extract_node] User message '{user_msg}' is a navigation/resume command; skipping extraction.")
+        draft.pop("_field_errors", None)
+        draft.pop("_failed_fields", None)
         return {"draft_grievance": draft}
 
     # Detect if user's message is a question/FAQ query rather than a form answer
@@ -312,7 +435,9 @@ def extraction_node(state: GrievanceState):
 
     # Deterministic extraction based on the active step being answered
     cleaned_input = re.sub(r'^\d+[\.\)]\s*', '', user_msg).strip() # Strip leading numbering e.g. "1. PropertyTax" -> "PropertyTax"
-
+    # Use centralized lexicon to ensure consistent exclusion across all fields
+    EXCLUDED_WORDS = EXCLUDED_FIELD_WORDS
+    
     if curr_field == "category":
         cats = draft.get("_category_options") or _pgr_categories()
         draft["_category_options"] = cats
@@ -331,9 +456,27 @@ def extraction_node(state: GrievanceState):
         
         if not draft.get("category"):
             norm_input = re.sub(r'[\s_]+', '', cleaned_input.lower())
-            matched_cat = next((k for k in cat_keys if re.sub(r'[\s_]+', '', k.lower()) == norm_input), None)
-            if not matched_cat:
-                matched_cat = next((k for k in cat_keys if norm_input in re.sub(r'[\s_]+', '', k.lower()) or re.sub(r'[\s_]+', '', k.lower()) in norm_input), None)
+            matched_cat = None
+            # Guard: Refusal when asked for Category
+            if norm_input in EXCLUDED_WORDS:
+                draft.setdefault("_failed_fields", [])
+                if "category" not in draft["_failed_fields"]:
+                    draft["_failed_fields"].append("category")
+                draft.setdefault("_field_errors", {})["category"] = (
+                    "**Grievance Category is required** to direct your complaint to the correct municipal department. "
+                    "Please select a category from the options below, or type **'cancel'** to exit."
+                )
+
+            # Guard: Refusal words must NEVER match as a category
+            if norm_input not in EXCLUDED_WORDS:
+                # 1. Exact match
+                matched_cat = next((k for k in cat_keys if re.sub(r'[\s_]+', '', k.lower()) == norm_input), None)
+                # 2. Substring match only if input has 3+ characters (prevents short words like "no" matching)
+                if not matched_cat and len(norm_input) >= 3:
+                    matched_cat = next(
+                        (k for k in cat_keys if norm_input in re.sub(r'[\s_]+', '', k.lower()) or (len(k) >= 3 and re.sub(r'[\s_]+', '', k.lower()) in norm_input)),
+                                None
+                    )
             
             if matched_cat:
                 is_valid, err_msg, clean_val = _validate_and_set("category", matched_cat, cat_keys)
@@ -361,14 +504,33 @@ def extraction_node(state: GrievanceState):
 
         if not draft.get("sub_category") and sub_ops:
             norm_input = re.sub(r'[\s_]+', '', cleaned_input.lower())
-            matched = next((s for s in sub_ops if re.sub(r'[\s_]+', '', s["name"].lower()) == norm_input), None)
-            if not matched:
-                matched = next((s for s in sub_ops if norm_input in re.sub(r'[\s_]+', '', s["name"].lower()) or re.sub(r'[\s_]+', '', s["name"].lower()) in norm_input), None)
-            if matched:
-                is_valid, err_msg, clean_val = _validate_and_set("sub_category", matched["name"], sub_names)
-                if is_valid:
-                    draft["category_code"] = matched["code"]
-                    logger.info(f"[grievance extract] sub_category matched: {clean_val}")
+            matched = None
+            # Guard: Refusal when asked for Sub-Category / Complaint Type
+            if norm_input in EXCLUDED_WORDS:
+                draft.setdefault("_failed_fields", [])
+                if "sub_category" not in draft["_failed_fields"]:
+                    draft["_failed_fields"].append("sub_category")
+                draft.setdefault("_field_errors", {})["sub_category"] = (
+                    "**Complaint Type is required** so the right field crew and equipment can be dispatched. "
+                    "Please select an option from the list, or type **'cancel'** to exit."
+                )
+     
+            # Guard: Refusal words must NEVER match as a sub-category
+            if norm_input not in EXCLUDED_WORDS:
+            # 1. Exact match
+                matched = next((s for s in sub_ops if re.sub(r'[\s_]+', '', s["name"].lower()) == norm_input), None)
+                # 2. Substring match only if input has 3+ characters
+                if not matched and len(norm_input) >= 3:
+                    matched = next(
+                    (s for s in sub_ops if norm_input in re.sub(r'[\s_]+', '', s["name"].lower()) or (len(s["name"]) >= 3 and re.sub(r'[\s_]+', '', s["name"].lower()) in norm_input)),
+                            None
+                    )
+                if matched:
+                    is_valid, err_msg, clean_val = _validate_and_set("sub_category", matched["name"], sub_names)
+                    if is_valid:
+                        draft["category_code"] = matched["code"]
+                        logger.info(f"[grievance extract] sub_category matched: {clean_val}")
+
 
     elif curr_field == "locality":
         loc_ops = draft.get("_locality_options") or _pgr_localities()
@@ -385,11 +547,25 @@ def extraction_node(state: GrievanceState):
                     draft["locality_code"] = chosen_loc["code"]
                     logger.info(f"[grievance extract] locality resolved by index {idx+1}: {clean_val}")
 
+        # Guard: Refusal words must NEVER match as an area or locality
+
         if not draft.get("locality") and loc_ops:
             norm_input = re.sub(r'[\s_]+', '', cleaned_input.lower())
-            matched = next((l for l in loc_ops if re.sub(r'[\s_]+', '', l["name"].lower()) == norm_input), None)
-            if not matched:
-                matched = next((l for l in loc_ops if norm_input in re.sub(r'[\s_]+', '', l["name"].lower()) or re.sub(r'[\s_]+', '', l["name"].lower()) in norm_input), None)
+            matched = None
+            # Guard: Refusal when asked for Area / Locality
+            if norm_input in EXCLUDED_WORDS:
+                draft.setdefault("_failed_fields", [])
+                if "locality" not in draft["_failed_fields"]:
+                    draft["_failed_fields"].append("locality")
+                draft.setdefault("_field_errors", {})["locality"] = (
+                    "**Area / Locality is required** so our municipal officers can locate and resolve the issue. "
+                    "Please select your locality from the list, or type **'cancel'** to exit."
+                )
+            if norm_input not in EXCLUDED_WORDS:
+                matched = next((l for l in loc_ops if re.sub(r'[\s_]+', '', l["name"].lower()) == norm_input), None)
+            # 2. Substring match only if input has 3+ characters (prevents "no" matching "Gali No.")
+            if not matched and len(norm_input) >= 3:
+                matched = next((l for l in loc_ops if norm_input in re.sub(r'[\s_]+', '', l["name"].lower()) or (len(l["name"]) >= 3 and re.sub(r'[\s_]+', '', l["name"].lower()) in norm_input)), None)
             if matched:
                 is_valid, err_msg, clean_val = _validate_and_set("locality", matched["name"], loc_names)
                 if is_valid:
@@ -459,6 +635,43 @@ def extraction_node(state: GrievanceState):
                                     draft["locality_code"] = matched["code"]
         except Exception as e:
             logger.error(f"[grievance] LLM extraction error: {e}")
+    # CONTEXT-AWARE FIELD WARNING GUARD:
+    # Why this is required:
+    # In multi-turn chat, 'last_ai' might contain an out-of-domain reply, greeting, or FAQ answer
+    # (e.g. "I can only help with UPYOG services"). If the citizen then says "register complaint",
+    # that is a workflow trigger — NOT an invalid category name.
+    # Therefore, we ONLY warn the citizen if the bot ACTUALLY asked for that specific field
+    # in the previous turn and the citizen's response failed to match.
+    field_prompt_signatures = {
+        "category": ["category"],
+        "sub_category": ["complaint type", "sub category", "subcategory"],
+        "locality": ["locality", "area", "mohalla"]
+    }
+    
+    bot_actually_asked = any(
+        kw in last_ai.lower() for kw in field_prompt_signatures.get(curr_field, [])
+    )
+
+    if bot_actually_asked and curr_field and not draft.get(curr_field) and curr_field not in draft.get("_field_errors", {}):
+        if not is_start_new_workflow(user_msg) and not is_meta_cmd and norm_input not in EXCLUDED_WORDS:
+            if curr_field == "sub_category":
+                # Wipe mismatched description so it doesn't linger and contradict the chosen complaint type
+                draft["description"] = None
+                draft.setdefault("_field_errors", {})["sub_category"] = (
+                    f"**'{user_msg}' does not match any complaint type for {draft.get('category')}.** "
+                    "Please select an option from the list below, or type **'cancel'** to exit."
+                )
+            elif curr_field == "category":
+                draft["description"] = None
+                draft.setdefault("_field_errors", {})["category"] = (
+                    f"**'{user_msg}' was not recognized as a supported category.** "
+                    "Please choose from the options below, or type **'cancel'** to exit."
+                )
+            elif curr_field == "locality":
+                draft.setdefault("_field_errors", {})["locality"] = (
+                    f"**'{user_msg}' was not found in our municipal locality database.** "
+                    "Please select your locality from the list below so officers can locate the issue."
+                )
 
     # Auto-Save to Qdrant Disk Store on every turn if fields are present
     phone_number = state.get("phone_number", "default")
@@ -617,16 +830,74 @@ def cancel_node(state: GrievanceState):
     )
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="user", content=user_msg)
     MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
+    
 
+    # Clean up draft and ensure all control flags are explicitly set to False/None
+    # Why this is required: Prevents leaving a '_cancelled: True' state in the checkpointer
     reset_draft = {f: None for f in ALL_FIELDS}
+    reset_draft["_cancelled"]=False
+    reset_draft["_confirmed"]=False
+    reset_draft["_awaiting_confirm"]=False
     MemoryManager.delete_draft_state(phone_number, "grievance")
     return {"messages": [AIMessage(content=resp)], "draft_grievance": reset_draft, "missing_fields": ALL_FIELDS}
 
 
 # The main traffic controller that routes the flow to the correct next step based on what's missing
+# def router(state: GrievanceState) -> str:
+#     draft      = state.get("draft_grievance") or {}
+#     all_filled = all(draft.get(f) for f in ALL_FIELDS)
+
+#     if draft.get("_cancelled"):
+#         logger.info("[grievance.router] Route -> cancel")
+#         return "cancel"
+#     if draft.get("_confirmed"):
+#         logger.info("[grievance.router] Route -> create_complaint")
+#         return "create_complaint"
+#     if not all_filled:
+#         logger.info(f"[grievance.router] Route -> ask_next (missing fields: {[f for f in ALL_FIELDS if not draft.get(f)]})")
+#         return "ask_next"
+#     logger.info("[grievance.router] Route -> confirm")
+#     return "confirm"
+# Handles configuration or critical runtime errors gracefully
+def error_node(state: GrievanceState):
+    """
+    Why this is required:
+    If form fields are ever missing at runtime, this node informs the citizen
+    honestly that the service is temporarily unavailable, rather than falsely
+    saying 'Complaint Withdrawn' or displaying an empty confirmation screen.
+    """
+    phone_number = state.get("phone_number", "default")
+    logger.error(f"[grievance.error_node] Grievance workflow halted due to missing ALL_FIELDS for phone={phone_number}")
+
+    resp = (
+        "**Service Temporarily Unavailable**\n\n"
+        "We are unable to process your complaint registration at this time due to a technical configuration issue. "
+        "No submission was made to the municipal portal.\n\n"
+        "Please try again shortly or contact the municipal helpdesk."
+    )
+    MemoryManager.save_long_term_interaction(phone_number=phone_number, role="assistant", content=resp)
+
+    # Clean up draft so the user is not trapped in a broken state
+    reset_draft = {f: None for f in ALL_FIELDS} if ALL_FIELDS else {}
+    MemoryManager.delete_draft_state(phone_number, "grievance")
+    return {
+        "messages": [AIMessage(content=resp)],
+        "draft_grievance": reset_draft,
+        "missing_fields": [],
+        "input_type": "text",
+        "options": []
+    }
+
+
+# The main traffic controller that routes the flow to the correct next step based on what's missing
 def router(state: GrievanceState) -> str:
-    draft      = state.get("draft_grievance") or {}
-    all_filled = all(draft.get(f) for f in ALL_FIELDS)
+    draft = state.get("draft_grievance") or {}
+
+    # DEFENSIVE GUARD: If form fields are empty, route to error node.
+    # Why: In Python, all([]) is True! Without this check, empty fields cause an immediate jump to confirmation.
+    if not ALL_FIELDS:
+        logger.error("[grievance.router] Route -> error: ALL_FIELDS is empty. Workflow misconfigured.")
+        return "error"
 
     if draft.get("_cancelled"):
         logger.info("[grievance.router] Route -> cancel")
@@ -634,9 +905,12 @@ def router(state: GrievanceState) -> str:
     if draft.get("_confirmed"):
         logger.info("[grievance.router] Route -> create_complaint")
         return "create_complaint"
+
+    all_filled = all(draft.get(f) for f in ALL_FIELDS)
     if not all_filled:
         logger.info(f"[grievance.router] Route -> ask_next (missing fields: {[f for f in ALL_FIELDS if not draft.get(f)]})")
         return "ask_next"
+
     logger.info("[grievance.router] Route -> confirm")
     return "confirm"
 
@@ -653,6 +927,7 @@ _wf.add_node("ask_next",         ask_next_node)
 _wf.add_node("confirm",          confirm_node)
 _wf.add_node("create_complaint", create_complaint_node)
 _wf.add_node("cancel",           cancel_node)
+_wf.add_node("error", error_node)
 
 _wf.add_edge(START, "intent_and_ui")
 _wf.add_conditional_edges(
@@ -668,12 +943,14 @@ _wf.add_conditional_edges(
         "confirm":          "confirm",
         "create_complaint": "create_complaint",
         "cancel":           "cancel",
+        "error":            "error",
     }
 )
 _wf.add_edge("ask_next",         END)
 _wf.add_edge("confirm",          END)
 _wf.add_edge("create_complaint", END)
 _wf.add_edge("cancel",           END)
+_wf.add_edge("error",            END)
 
 # Export -- auto-discovered by load_plugins() via the <module>_graph naming convention
 grievance_graph = _wf.compile(checkpointer=shared_memory)
